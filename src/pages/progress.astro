@@ -1,0 +1,15 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import { ProgressView } from '../components/StaticDataViews';
+---
+
+<DocsLayout title="Progress Dashboard" description="Living dashboard of weekly study progress, metrics, and notes">
+  <div class="space-y-2 mb-6">
+    <h1 class="text-3xl font-bold">Progress Dashboard</h1>
+    <p class="text-zinc-400 text-sm">
+      Track your study hours and reflections. <a class="text-blue-400 hover:underline" href="/journal">Edit your journal →</a>
+    </p>
+  </div>
+
+  <ProgressView client:only="react" />
+</DocsLayout>

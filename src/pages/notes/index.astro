@@ -1,0 +1,8 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { WorkspaceEditor } from '../../components/WorkspaceEditor';
+---
+<DocsLayout title="Notes" description="Ideas, questions, and references organized by topic">
+  <header class="mb-6 space-y-2"><h1 class="text-3xl font-bold">Notes</h1><p class="text-zinc-400">A place for ideas, questions, and things worth remembering.</p></header>
+  <WorkspaceEditor kind="note" client:load />
+</DocsLayout>

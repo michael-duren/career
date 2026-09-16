@@ -1,0 +1,16 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import { LogsView } from '../components/StaticDataViews';
+---
+
+<DocsLayout title="Logs" description="Searchable, faceted explorer for the weekly study journal">
+  <div class="space-y-2 mb-6">
+    <h1 class="text-3xl font-bold">Logs</h1>
+    <p class="text-zinc-400 text-sm">
+      Every daily entry as a searchable document. Filter by the fields on the left, search across
+      all notes, and click any value to drill in. <a class="text-blue-400 hover:underline" href="/journal">Write in your journal →</a>
+    </p>
+  </div>
+
+  <LogsView client:only="react" />
+</DocsLayout>

@@ -1,0 +1,65 @@
+<div class="site-search relative min-w-0 flex-1 max-w-xl" role="search" aria-label="Site search">
+  <label for="site-search" class="sr-only">Search the whole site</label>
+  <input id="site-search" type="search" placeholder="Search the whole site…" autocomplete="off"
+    class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    aria-controls="search-results" aria-describedby="search-status" />
+  <div id="search-panel" hidden class="absolute left-0 top-full z-50 mt-2 w-full min-w-64 rounded-lg border border-zinc-700 bg-zinc-900 shadow-xl">
+    <p id="search-status" role="status" class="px-4 py-3 text-sm text-zinc-400"></p>
+    <ul id="search-results" class="max-h-[60vh] overflow-y-auto"></ul>
+  </div>
+</div>
+<script>
+  const root = document.querySelector<HTMLElement>('.site-search')!;
+  const input = document.querySelector<HTMLInputElement>('#site-search')!;
+  const panel = document.querySelector<HTMLElement>('#search-panel')!;
+  const status = document.querySelector<HTMLElement>('#search-status')!;
+  const results = document.querySelector<HTMLElement>('#search-results')!;
+  let timer: ReturnType<typeof setTimeout>;
+
+  async function render() {
+    const query = input.value.trim();
+    results.replaceChildren();
+    panel.hidden = false;
+    if (!query) { status.textContent = 'Search titles and content. Typos are OK.'; return; }
+    status.textContent = 'Searching…';
+    let matches: Array<{ kind: string; id: string; title: string; body: string }>;
+    try {
+      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`, { cache: 'no-store' });
+      if (!response.ok) throw new Error(response.status === 401 ? 'Sign in again to search.' : 'Search could not load. Type again to retry.');
+      matches = (await response.json()).results;
+    } catch (error) { status.textContent = error instanceof Error ? error.message : 'Search could not load. Try again.'; return; }
+    if (query !== input.value.trim() || !root.contains(document.activeElement) || panel.hidden) return;
+    results.replaceChildren();
+    status.textContent = matches.length ? `${matches.length} results${matches.length === 50 ? ' (top matches)' : ''}` : 'No results. Try a different word.';
+    for (const item of matches) {
+      const li = document.createElement('li');
+      const link = document.createElement('a');
+      const encoded = item.id.split('/').map(encodeURIComponent).join('/');
+      link.href = item.kind === 'note' ? `/notes/${encoded}` : item.kind === 'document' ? (item.id === 'index' ? '/' : `/documents/${encoded}`) : item.kind === 'company' ? `/companies/${encoded}` : item.kind === 'book' ? `/books?id=${encodeURIComponent(item.id)}` : item.kind === 'personal' ? `/personal-journal?id=${encodeURIComponent(item.id)}` : `/journal?id=${encodeURIComponent(item.id)}`;
+      link.className = 'block border-t border-zinc-800 px-4 py-3 hover:bg-zinc-800 focus:bg-zinc-800 focus:outline-none';
+      const title = document.createElement('div');
+      title.className = 'text-sm font-medium text-white';
+      title.textContent = `${item.title} · ${item.kind}`;
+      const snippet = document.createElement('p');
+      snippet.className = 'mt-1 text-xs text-zinc-400 break-words';
+      const start = Math.max(0, item.body.toLowerCase().indexOf(query.toLowerCase()) - 40);
+      snippet.textContent = (start ? '…' : '') + item.body.slice(start, start + 160).replace(/[#*`\n]/g, ' ') + (item.body.length > start + 160 ? '…' : '');
+      link.append(title, snippet);
+      li.append(link);
+      results.append(li);
+    }
+  }
+  input.addEventListener('input', () => { clearTimeout(timer); results.replaceChildren(); timer = setTimeout(render, 150); });
+  input.addEventListener('focus', render);
+  root.addEventListener('keydown', (event) => {
+    const e = event as KeyboardEvent;
+    if (e.key === 'Escape') { input.focus(); panel.hidden = true; }
+    const links = [...results.querySelectorAll('a')];
+    const index = links.indexOf(document.activeElement as HTMLAnchorElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); links[Math.min(index + 1, links.length - 1)]?.focus(); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); if (index <= 0) input.focus(); else links[index - 1].focus(); }
+    if (e.key === 'Enter' && document.activeElement === input) { e.preventDefault(); links[0]?.click(); }
+  });
+  document.addEventListener('pointerdown', e => { if (!root.contains(e.target as Node)) panel.hidden = true; });
+  root.addEventListener('focusout', e => { if (!root.contains(e.relatedTarget as Node)) panel.hidden = true; });
+</script>

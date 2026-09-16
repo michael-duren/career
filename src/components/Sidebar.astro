@@ -1,0 +1,260 @@
+---
+import {
+  Home,
+  TrendingUp,
+  Calendar,
+  ChevronRight,
+  Target,
+  Database,
+  Terminal,
+  Cpu,
+  BarChart3,
+  Bot,
+  NotebookPen,
+  ChartGantt,
+  Files,
+  BriefcaseBusiness,
+  StickyNote,
+  Building2,
+  ListFilter,
+  BookOpen
+} from 'lucide-react';
+
+const currentPath = Astro.url.pathname;
+
+const isActive = (href: string) => {
+  return currentPath === href || currentPath === href + '/';
+};
+
+const yearSections = [
+  { year: '2026', items: [
+    { label: 'Study plan', href: '/2026/career-study-plan', icon: Target, children: [] as { label: string; href: string }[] },
+    { label: 'OSTEP notes', href: '/notes/ostep', icon: Cpu, children: [] as { label: string; href: string }[] },
+    { label: 'eBPF notes', href: '/notes/ebpf', icon: Terminal, children: [] as { label: string; href: string }[] },
+    { label: 'Database notes', href: '/notes/database', icon: Database, children: [] as { label: string; href: string }[] },
+  ] },
+];
+
+const mainItems = [
+  { label: 'Agent context', href: '/agents', icon: Bot },
+  { label: 'Personal journal', href: '/personal-journal', icon: NotebookPen },
+  { label: 'Timeline', href: '/timeline', icon: ChartGantt },
+  { label: 'Pages', href: '/documents', icon: Files },
+  { label: 'Work journal', href: '/journal', icon: BriefcaseBusiness },
+  { label: 'Notes', href: '/notes', icon: StickyNote },
+  { label: 'Companies', href: '/companies', icon: Building2 },
+  {
+    label: 'Home',
+    href: '/',
+    icon: Home
+  },
+  {
+    label: 'Progress',
+    href: '/progress',
+    icon: BarChart3
+  },
+  {
+    label: 'Logs',
+    href: '/logs',
+    icon: ListFilter
+  },
+  {
+    label: 'Bookshelf',
+    href: '/books',
+    icon: BookOpen
+  }
+];
+
+const alphabetical = (a: { label: string }, b: { label: string }) => a.label.localeCompare(b.label, 'en', { sensitivity: 'base' });
+mainItems.sort(alphabetical);
+for (const section of yearSections) {
+  section.items.sort(alphabetical);
+  for (const item of section.items) item.children.sort(alphabetical);
+}
+
+// Auto-expand year that contains current path
+const currentYear = currentPath.match(/\/(\d{4})\//)?.[1];
+---
+
+<div class="h-full overflow-y-auto sidebar-container">
+  <style>
+    .sidebar-container {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .year-toggle, .section-toggle {
+      -webkit-tap-highlight-color: rgba(59, 130, 246, 0.2);
+      cursor: pointer;
+      user-select: none;
+      touch-action: manipulation; /* Prevent double-tap zoom */
+      position: relative;
+    }
+  </style>
+  <div class="p-6">
+    <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+      <TrendingUp className="w-5 h-5 text-blue-400" />
+      Career Strategy
+    </h2>
+
+    <nav class="space-y-4">
+      <!-- Main Links -->
+      <div class="space-y-1">
+        {mainItems.map(item => {
+          const Icon = item.icon;
+          return (
+            <a
+              href={item.href}
+              class={`flex items-center gap-2 px-3 py-1.5 rounded transition-all text-sm relative ${
+                isActive(item.href)
+                  ? 'bg-blue-600/20 text-blue-400 font-medium before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-5 before:bg-blue-500 before:rounded-r'
+                  : 'text-zinc-300 hover:text-white hover:bg-zinc-800'
+              }`}
+            >
+              <Icon className="w-4 h-4 flex-shrink-0" />
+              <span class="flex-1">{item.label}</span>
+            </a>
+          );
+        })}
+      </div>
+
+      <!-- Year Sections -->
+      {yearSections.map(section => {
+        const isExpanded = section.year === currentYear || section.items.some(item => isActive(item.href));
+        return (
+          <div class="border-t border-zinc-800 pt-4">
+            <button
+              type="button"
+              data-year={section.year}
+              class="year-toggle flex items-center gap-2 w-full px-3 py-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors"
+            >
+              <Calendar className="w-4 h-4" />
+              <span class="flex-1 text-left">{section.year}</span>
+              <span class={`chevron transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
+                <ChevronRight className="w-4 h-4" />
+              </span>
+            </button>
+
+            <div class={`year-content mt-2 space-y-1 ${isExpanded ? '' : 'hidden'}`} data-year={section.year}>
+              {section.items.map(item => {
+                const Icon = item.icon;
+                const hasChildren = item.children && item.children.length > 0;
+                const isItemActive = isActive(item.href);
+                const isChildActive = item.children?.some(child => isActive(child.href));
+                const shouldExpand = isItemActive || isChildActive;
+
+                return (
+                  <div>
+                    {hasChildren ? (
+                      <>
+                        <button
+                          type="button"
+                          data-section={item.href}
+                          class={`section-toggle flex items-center gap-2 px-3 py-2 rounded transition-all text-sm w-full relative ${
+                            isItemActive
+                              ? 'bg-blue-600/20 text-blue-400 font-medium before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-5 before:bg-blue-500 before:rounded-r'
+                              : 'text-zinc-300 hover:text-white hover:bg-zinc-800'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4 flex-shrink-0" />
+                          <span class="flex-1 text-left">{item.label}</span>
+                          <span class={`chevron transition-transform ${shouldExpand ? 'rotate-90' : ''}`}>
+                            <ChevronRight className="w-3 h-3" />
+                          </span>
+                        </button>
+                        <div class={`section-content mt-1 space-y-0.5 ${shouldExpand ? '' : 'hidden'}`} data-section={item.href}>
+                          {item.children.map(child => (
+                            <a
+                              href={child.href}
+                              class={`flex items-center gap-2 px-3 py-1.5 rounded transition-all text-xs ml-6 relative ${
+                                isActive(child.href)
+                                  ? 'bg-blue-600/20 text-blue-400 font-medium before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-5 before:bg-blue-500 before:rounded-r'
+                                  : 'text-zinc-300 hover:text-white hover:bg-zinc-800'
+                              }`}
+                            >
+                              {child.label}
+                            </a>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <a
+                        href={item.href}
+                        class={`flex items-center gap-2 px-3 py-1.5 rounded transition-all text-sm relative ${
+                          isItemActive
+                            ? 'bg-blue-600/20 text-blue-400 font-medium before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-5 before:bg-blue-500 before:rounded-r'
+                            : 'text-zinc-300 hover:text-white hover:bg-zinc-800'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4 flex-shrink-0" />
+                        <span class="flex-1">{item.label}</span>
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </nav>
+    <details class="install-help mt-6 border-t border-zinc-800 pt-4 text-sm text-zinc-400">
+      <summary class="cursor-pointer py-3">Install on iPhone</summary>
+      <p class="mt-2 leading-relaxed">Open this site in Safari, tap Share, then Add to Home Screen. Enable Open as Web App if shown, then tap Add.</p>
+    </details>
+  </div>
+</div>
+
+<script>
+  // Initialize all sidebars when DOM ready
+  function initSidebars() {
+    // Get all sidebar containers (handles both desktop and mobile)
+    const sidebars = document.querySelectorAll('.sidebar-container');
+
+    sidebars.forEach(sidebar => {
+      // Use click with event delegation for each sidebar
+      sidebar.addEventListener('click', function(e) {
+        // Check if clicked on toggle button
+        const target = e.target as Element | null;
+        const yearBtn = target?.closest('.year-toggle') as HTMLElement | null;
+        const sectionBtn = target?.closest('.section-toggle') as HTMLElement | null;
+
+        if (yearBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const year = yearBtn.dataset.year;
+          // Find content within THIS sidebar
+          const content = sidebar.querySelector(`.year-content[data-year="${year}"]`);
+          const chevron = yearBtn.querySelector('.chevron');
+
+          if (content) {
+            content.classList.toggle('hidden');
+            chevron?.classList.toggle('rotate-90');
+          }
+        }
+
+        if (sectionBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const section = sectionBtn.dataset.section;
+          // Find content within THIS sidebar
+          const content = sidebar.querySelector(`.section-content[data-section="${section}"]`);
+          const chevron = sectionBtn.querySelector('.chevron');
+
+          if (content) {
+            content.classList.toggle('hidden');
+            chevron?.classList.toggle('rotate-90');
+          }
+        }
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSidebars);
+  } else {
+    initSidebars();
+  }
+</script>

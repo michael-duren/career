@@ -1,0 +1,142 @@
+[
+  {
+    "slug": "scylladb",
+    "domain": "scylladb.com",
+    "source": "https://www.google.com/s2/favicons?domain=scylladb.com&sz=128"
+  },
+  {
+    "slug": "polar-signals",
+    "domain": "polarsignals.com",
+    "source": "https://www.google.com/s2/favicons?domain=polarsignals.com&sz=128"
+  },
+  {
+    "slug": "greptime",
+    "domain": "greptime.com",
+    "source": "https://www.google.com/s2/favicons?domain=greptime.com&sz=128"
+  },
+  {
+    "slug": "buoyant",
+    "domain": "buoyant.io",
+    "source": "https://www.google.com/s2/favicons?domain=buoyant.io&sz=128"
+  },
+  {
+    "slug": "amazon",
+    "domain": "amazon.com",
+    "source": "https://www.google.com/s2/favicons?domain=amazon.com&sz=128"
+  },
+  {
+    "slug": "new-relic",
+    "domain": "newrelic.com",
+    "source": "https://www.google.com/s2/favicons?domain=newrelic.com&sz=128"
+  },
+  {
+    "slug": "mongodb",
+    "domain": "mongodb.com",
+    "source": "https://www.google.com/s2/favicons?domain=mongodb.com&sz=128"
+  },
+  {
+    "slug": "hashicorp",
+    "domain": "hashicorp.com",
+    "source": "https://www.google.com/s2/favicons?domain=hashicorp.com&sz=128"
+  },
+  {
+    "slug": "baseten",
+    "domain": "baseten.co",
+    "source": "https://www.google.com/s2/favicons?domain=baseten.co&sz=128"
+  },
+  {
+    "slug": "honeycomb",
+    "domain": "honeycomb.io",
+    "source": "https://www.google.com/s2/favicons?domain=honeycomb.io&sz=128"
+  },
+  {
+    "slug": "clickhouse",
+    "domain": "clickhouse.com",
+    "source": "https://www.google.com/s2/favicons?domain=clickhouse.com&sz=128"
+  },
+  {
+    "slug": "openai",
+    "domain": "openai.com",
+    "source": "https://www.google.com/s2/favicons?domain=openai.com&sz=128"
+  },
+  {
+    "slug": "isovalent",
+    "domain": "isovalent.com",
+    "source": "https://www.google.com/s2/favicons?domain=isovalent.com&sz=128"
+  },
+  {
+    "slug": "yugabyte",
+    "domain": "yugabyte.com",
+    "source": "https://www.google.com/s2/favicons?domain=yugabyte.com&sz=128"
+  },
+  {
+    "slug": "redpanda",
+    "domain": "redpanda.com",
+    "source": "https://www.google.com/s2/favicons?domain=redpanda.com&sz=128"
+  },
+  {
+    "slug": "chronosphere",
+    "domain": "chronosphere.io",
+    "source": "https://www.google.com/s2/favicons?domain=chronosphere.io&sz=128"
+  },
+  {
+    "slug": "tigerbeetle",
+    "domain": "tigerbeetle.com",
+    "source": "https://www.google.com/s2/favicons?domain=tigerbeetle.com&sz=128"
+  },
+  {
+    "slug": "cloudflare",
+    "domain": "cloudflare.com",
+    "source": "https://www.google.com/s2/favicons?domain=cloudflare.com&sz=128"
+  },
+  {
+    "slug": "modal",
+    "domain": "modal.com",
+    "source": "https://www.google.com/s2/favicons?domain=modal.com&sz=128"
+  },
+  {
+    "slug": "dynatrace",
+    "domain": "dynatrace.com",
+    "source": "https://www.google.com/s2/favicons?domain=dynatrace.com&sz=128"
+  },
+  {
+    "slug": "together-ai",
+    "domain": "together.ai",
+    "source": "https://www.google.com/s2/favicons?domain=together.ai&sz=128"
+  },
+  {
+    "slug": "cockroachdb",
+    "domain": "cockroachlabs.com",
+    "source": "https://www.google.com/s2/favicons?domain=cockroachlabs.com&sz=128"
+  },
+  {
+    "slug": "datadog",
+    "domain": "datadoghq.com",
+    "source": "https://www.google.com/s2/favicons?domain=datadoghq.com&sz=128"
+  },
+  {
+    "slug": "netflix",
+    "domain": "netflix.com",
+    "source": "https://www.google.com/s2/favicons?domain=netflix.com&sz=128"
+  },
+  {
+    "slug": "anthropic",
+    "domain": "anthropic.com",
+    "source": "https://www.google.com/s2/favicons?domain=anthropic.com&sz=128"
+  },
+  {
+    "slug": "fireworks-ai",
+    "domain": "fireworks.ai",
+    "source": "https://www.google.com/s2/favicons?domain=fireworks.ai&sz=128"
+  },
+  {
+    "slug": "groundcover",
+    "domain": "groundcover.com",
+    "source": "https://www.google.com/s2/favicons?domain=groundcover.com&sz=128"
+  },
+  {
+    "slug": "grafana-labs",
+    "domain": "grafana.com",
+    "source": "https://cdn.simpleicons.org/grafana"
+  }
+]

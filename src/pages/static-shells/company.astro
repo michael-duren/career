@@ -1,0 +1,5 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { CompaniesView } from '../../components/StaticDataViews';
+---
+<DocsLayout wide title="Company"><a class="mb-6 inline-block text-sm text-blue-400 hover:underline" href="/companies">← All companies</a><CompaniesView detail client:only="react" /></DocsLayout>

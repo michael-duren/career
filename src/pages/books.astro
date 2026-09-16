@@ -1,0 +1,17 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import { BooksView } from '../components/StaticDataViews';
+---
+
+<DocsLayout title="Bookshelf" description="Books and courses to read, with per-book progress and notes">
+  <div class="space-y-2 mb-6">
+    <h1 class="text-3xl font-bold">Bookshelf</h1>
+    <p class="text-zinc-400 text-sm">
+      Track your reading, update progress, and keep notes as you go.
+    </p>
+  </div>
+
+  <a class="mb-6 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-500" href="/manage/books">Add or edit books & courses</a>
+
+  <BooksView client:only="react" />
+</DocsLayout>

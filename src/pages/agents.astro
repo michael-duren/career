@@ -1,0 +1,5 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import { AgentView } from '../components/StaticDataViews';
+---
+<DocsLayout title="Agent context"><header class="mb-8 space-y-3"><h1 class="text-3xl font-bold">Agent context</h1><p class="text-zinc-400">Your timeline is the source of truth. This page reflects saved goals each time it loads.</p><div class="flex flex-wrap gap-4 text-sm text-blue-400"><a class="underline" href="/api/agent-context?format=markdown">Complete Markdown</a><a class="underline" href="/api/agent-context">Complete JSON</a><a class="underline" href="/timeline">Edit timeline</a></div></header><AgentView client:only="react" /></DocsLayout>

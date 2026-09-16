@@ -1,0 +1,12 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import MarkdownPreview from './MarkdownPreview';
+import type { Document } from '../lib/workspace';
+interface Props { page: Document }
+const { page } = Astro.props;
+---
+<DocsLayout title={page.title} description={page.description}>
+  <a class="mb-6 inline-block text-sm text-blue-400 hover:underline" href={`/documents?id=${encodeURIComponent(page.id)}`}>Edit this page →</a>
+  {!/^# /m.test(page.body) && <h1 class="mb-6 text-3xl font-bold">{page.title}</h1>}
+  <MarkdownPreview body={page.body} />
+</DocsLayout>

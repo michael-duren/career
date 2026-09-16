@@ -1,0 +1,208 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-zinc-950 text-zinc-100;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-zinc-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-zinc-700 rounded;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-zinc-600;
+  }
+}
+
+@layer components {
+  /* Prose heading styles - explicit because Tailwind v4 needs them */
+  .prose h1 {
+    @apply text-4xl font-bold mb-4 mt-8 text-zinc-100;
+  }
+
+  .prose h2 {
+    @apply text-3xl font-semibold mb-4 mt-6 text-zinc-100;
+  }
+
+  .prose h3 {
+    @apply text-2xl font-semibold mb-3 mt-4 text-zinc-100;
+  }
+
+  .prose h4 {
+    @apply text-xl font-semibold mb-3 mt-4 text-zinc-100;
+  }
+
+  .prose h5 {
+    @apply text-lg font-semibold mb-2 mt-3 text-zinc-100;
+  }
+
+  .prose h6 {
+    @apply text-base font-semibold mb-2 mt-3 text-zinc-100;
+  }
+
+  /* Prose paragraph and list styles */
+  .prose p {
+    @apply mb-4 text-zinc-300 leading-relaxed;
+  }
+
+  .prose ul {
+    @apply mb-4 ml-6 list-disc text-zinc-300;
+  }
+
+  .prose ol {
+    @apply mb-4 ml-6 list-decimal text-zinc-300;
+  }
+
+  .prose li {
+    @apply mb-2;
+  }
+
+  /* Links */
+  .prose a {
+    @apply text-blue-400 hover:text-blue-300 underline;
+  }
+
+  /* Code blocks */
+  .prose code {
+    @apply px-1 py-0.5 bg-zinc-800 text-zinc-100 rounded text-sm;
+  }
+
+  .prose pre {
+    @apply p-4 bg-zinc-900 border border-zinc-800 rounded-lg overflow-x-auto mb-4;
+  }
+
+  .prose pre code {
+    @apply p-0 bg-transparent text-zinc-100;
+  }
+
+  /* Blockquotes */
+  .prose blockquote {
+    @apply pl-4 border-l-4 border-zinc-700 italic text-zinc-400 my-4;
+  }
+
+  /* Tables */
+  .prose table {
+    @apply w-full mb-4 border-collapse;
+  }
+
+  .prose th {
+    @apply text-left p-2 border-b-2 border-zinc-700 font-semibold text-zinc-100;
+  }
+
+  .prose td {
+    @apply p-2 border-b border-zinc-800 text-zinc-300;
+  }
+
+  /* Horizontal rules */
+  .prose hr {
+    @apply my-8 border-zinc-800;
+  }
+
+  /* Strong/Bold */
+  .prose strong {
+    @apply font-semibold text-zinc-100;
+  }
+
+  /* Emphasis/Italic */
+  .prose em {
+    @apply italic text-zinc-300;
+  }
+
+  /* Images */
+  .prose img {
+    @apply rounded-lg my-4;
+  }
+
+  /* Lead paragraph */
+  .prose .lead {
+    @apply text-xl text-zinc-400 mb-6;
+  }
+
+  /* Nested lists */
+  .prose ul ul,
+  .prose ol ol,
+  .prose ul ol,
+  .prose ol ul {
+    @apply mt-2 mb-2;
+  }
+
+  /* Heading anchors */
+  .prose .anchor {
+    @apply no-underline hover:no-underline;
+  }
+
+  /* Scroll margin for anchored headings */
+  .prose h1[id],
+  .prose h2[id],
+  .prose h3[id],
+  .prose h4[id],
+  .prose h5[id],
+  .prose h6[id] {
+    @apply scroll-mt-20;
+  }
+}
+/* Shared phone ergonomics, including landscape notches and standalone mode. */
+body { min-height: 100dvh; }
+main, article, section, form, fieldset { min-width: 0; }
+.prose { overflow-wrap: anywhere; }
+.prose pre { max-width: 100%; overflow-wrap: normal; }
+.prose table { display: block; max-width: 100%; overflow-x: auto; }
+img { max-width: 100%; }
+button, a, summary { touch-action: manipulation; }
+:focus-visible { outline: 2px solid #60a5fa; outline-offset: 3px; }
+.app-header { padding-top: max(12px, env(safe-area-inset-top)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+.app-content { padding-bottom: max(32px, env(safe-area-inset-bottom)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+#mobile-sidebar { width: min(320px, calc(100vw - 48px)); padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); padding-left: env(safe-area-inset-left); overscroll-behavior: contain; }
+#mobile-sidebar .sidebar-container { height: calc(100% - 48px); }
+.mobile-menu-close { display: block; margin-left: auto; margin-right: 12px; width: 44px; height: 44px; font-size: 28px; }
+.skip-link { position: fixed; top: -100px; left: 16px; z-index: 100; padding: 12px; background: #2563eb; }
+.skip-link:focus { top: max(12px, env(safe-area-inset-top)); }
+@media (max-width: 1023px) {
+  button, select, input:not([type=checkbox]):not([type=radio]), summary { min-height: 44px; }
+  input:not([type=checkbox]):not([type=radio]), select, textarea { font-size: 16px !important; max-width: 100%; }
+  input[type=date] { min-width: 0; }
+  .sidebar-container a { min-height: 44px; }
+  #mobile-menu-button { display: grid; place-items: center; width: 44px; }
+  .app-header { position: relative; gap: 8px; }
+  .site-search { position: static; }
+  #search-panel { left: 12px; right: 12px; width: auto; min-width: 0; }
+  #search-results { max-height: 50dvh; overscroll-behavior: contain; }
+  .app-content { padding-top: 24px; }
+}
+@media (max-width: 639px) {
+  h1, .prose h1 { font-size: 1.875rem; line-height: 1.2; overflow-wrap: anywhere; }
+  .prose h2 { font-size: 1.5rem; }
+  .prose h3 { font-size: 1.25rem; }
+  .goal-timeline dialog { max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px); }
+  .goal-timeline .calendar-days button { min-height: 44px; }
+  .goal-timeline .timeline-goal button { min-height: 0; }
+  .timeline-scroll { overscroll-behavior-x: contain; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+@media (display-mode: standalone) { .install-help { display: none; } }
+.book-modal { max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px); }
+.login-shell { min-height: 100dvh; padding-top: max(32px, env(safe-area-inset-top)); padding-bottom: max(32px, env(safe-area-inset-bottom)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+@media (min-width: 640px) {
+  .app-header, .app-content { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); }
+}

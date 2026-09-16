@@ -1,0 +1,41 @@
+package database
+
+import "context"
+
+type SearchResult struct {
+	Kind  string `json:"kind"`
+	ID    string `json:"id"`
+	Title string `json:"title"`
+	Body  string `json:"body"`
+}
+
+// Search performs one bounded database query. It never exports or materializes the workspace.
+func (s *Store) Search(ctx context.Context, query string, limit int) ([]SearchResult, error) {
+	if limit < 1 || limit > 100 {
+		return nil, ErrInvalid
+	}
+	rows, err := s.DB.QueryContext(ctx, `
+		SELECT kind,id,title,body FROM (
+			SELECT 'note' kind,id,title,body,updated_at FROM notes
+			UNION ALL SELECT 'document',id,title,body,updated_at FROM documents
+			UNION ALL SELECT 'personal',id,title,body,updated_at FROM personal_journal_entries
+			UNION ALL SELECT 'week',slug,'Week ' || week || ' · ' || dates::text,body,updated_at FROM journal_weeks
+			UNION ALL SELECT 'book',slug,title,body,updated_at FROM books
+			UNION ALL SELECT 'company',slug,title,body,updated_at FROM companies
+		) entries
+		WHERE title ILIKE '%' || $1 || '%' OR body ILIKE '%' || $1 || '%'
+		ORDER BY updated_at DESC NULLS LAST,kind,id LIMIT $2`, query, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []SearchResult{}
+	for rows.Next() {
+		var item SearchResult
+		if err := rows.Scan(&item.Kind, &item.ID, &item.Title, &item.Body); err != nil {
+			return nil, err
+		}
+		out = append(out, item)
+	}
+	return out, rows.Err()
+}

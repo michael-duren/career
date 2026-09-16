@@ -1,0 +1,6 @@
+---
+import { QuickJournal } from '../components/WorkspaceEditor';
+import { DocumentView, ProgressView } from '../components/StaticDataViews';
+import DocsLayout from '../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Career Strategy"><div class="space-y-6"><DocumentView id="index" home client:only="react" /><QuickJournal client:load /><ProgressView compact client:only="react" /><nav class="grid sm:grid-cols-2 gap-3" aria-label="Career resources">{[['/2026/career-study-plan', 'Study plan'], ['/books', 'Bookshelf'], ['/notes', 'Topic notes'], ['/companies', 'Application targets'], ['/logs', 'Study journal']].map(([href, label]) => <a class="rounded-lg border border-zinc-800 p-4 text-blue-400 hover:border-blue-400" href={href}>{label} →</a>)}</nav></div></DocsLayout>

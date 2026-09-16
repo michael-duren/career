@@ -1,0 +1,162 @@
+{
+  "version": 2,
+  "catalogVersion": 1,
+  "journalsVersion": 2,
+  "notes": [
+    {
+      "id": "systems/nested-note",
+      "title": "Unicode — café 🦆",
+      "topic": "Systems",
+      "description": "",
+      "tags": [
+        "Go",
+        "Go",
+        "数据库"
+      ],
+      "body": "# Exact bytes\r\n\r\n<script>alert(\"fixture\")</script>\r\n**Markdown** & Unicode 🦆\r\n",
+      "updatedAt": "2026-09-14T10:20:30.123Z"
+    }
+  ],
+  "weeks": [
+    {
+      "slug": "2026/week-22",
+      "week": 22,
+      "year": 2026,
+      "dates": "2026-09-14 to 2026-09-20",
+      "hours": {
+        "historical track": 0,
+        "OS": 2.5
+      },
+      "targets": {},
+      "tags": [],
+      "body": "## What I did\n\n### Monday — Sep 14\n- Studied\n"
+    }
+  ],
+  "books": [
+    {
+      "slug": "books/test",
+      "title": "Test book",
+      "authors": [
+        "A",
+        "A",
+        "李"
+      ],
+      "category": "Systems",
+      "type": "book",
+      "status": "reading",
+      "featured": true,
+      "priority": "high",
+      "tags": [],
+      "edition": "",
+      "isbn": "",
+      "body": "## Chapters\n- [x] One\n```md\n- [ ] Ignore fenced task\n```\n1. [ ] Two\n## Log\n### 2026-09-14\n- Read **one**\n",
+      "progress": {
+        "unit": "page",
+        "total": 100,
+        "completed": 20
+      },
+      "started": "2026-09-01",
+      "rating": 0
+    },
+    {
+      "slug": "course",
+      "title": "Course",
+      "authors": [],
+      "category": "Online Course",
+      "type": "course",
+      "status": "completed",
+      "featured": false,
+      "priority": "low",
+      "tags": [],
+      "body": "## Modules\n- [ ] One\n"
+    }
+  ],
+  "companies": [
+    {
+      "slug": "company/nested",
+      "title": "Example",
+      "category": "AI Infrastructure",
+      "type": "company",
+      "url": "https://example.com",
+      "status": "not_started",
+      "featured": false,
+      "priority": "medium",
+      "tags": [],
+      "body": "## Why\n\nMeaningful **work**\n\n## Steps\n- [ ] Research the role\n- [x] Reach out and start building a relationship\n\n## Log\n\n- 2026-09-14: Hello\n  continuation\n",
+      "contacts": [
+        {
+          "id": "11111111-1111-4111-8111-111111111111",
+          "name": "Zoë",
+          "role": "",
+          "email": "",
+          "url": "",
+          "notes": "Markdown **ok**"
+        }
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "id": "index",
+      "title": "Home",
+      "description": "",
+      "tags": [],
+      "body": "# Core\n"
+    },
+    {
+      "id": "2026/custom",
+      "title": "Custom",
+      "description": "",
+      "tags": [],
+      "body": "<div>Original HTML</div>\n"
+    }
+  ],
+  "personalJournal": [
+    {
+      "id": "bio",
+      "title": "Undated",
+      "date": "",
+      "description": "",
+      "tags": [],
+      "body": "History 🦆\n"
+    },
+    {
+      "id": "2026/day",
+      "title": "Dated",
+      "date": "2026-09-14",
+      "description": "",
+      "tags": [],
+      "body": "Today\n"
+    }
+  ],
+  "goals": [
+    {
+      "id": "22222222-2222-4222-8222-222222222222",
+      "title": "Learn",
+      "startDate": "2026-09-14",
+      "endDate": "2026-09-14",
+      "color": "#123abc",
+      "dailyHours": 0,
+      "createdAt": "2026-09-14T10:20:30.123Z",
+      "updatedAt": "2026-09-14T10:20:30.123Z",
+      "notes": [
+        {
+          "id": "33333333-3333-4333-8333-333333333333",
+          "body": "Notes 🦆",
+          "createdAt": "2026-09-14T10:20:30.123Z"
+        }
+      ],
+      "steps": [
+        {
+          "id": "44444444-4444-4444-8444-444444444444",
+          "title": "First",
+          "done": false
+        }
+      ],
+      "metadata": {
+        "空": "",
+        "purpose": "learning"
+      }
+    }
+  ]
+}

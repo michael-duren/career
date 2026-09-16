@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: career-config
+  namespace: career-strategy
+data:
+  APP_ENV: production
+  LISTEN_ADDR: ":8080"
+  STATIC_DIR: /app/dist
+  PUBLIC_ORIGIN: https://career.michaelduren.com
+

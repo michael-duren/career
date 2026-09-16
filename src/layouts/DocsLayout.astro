@@ -1,0 +1,145 @@
+---
+import PwaHead from '../components/PwaHead.astro';
+import '../styles/global.css';
+import Sidebar from '../components/Sidebar.astro';
+import SiteSearch from '../components/SiteSearch.astro';
+
+export interface Props {
+  title?: string;
+  wide?: boolean;
+  description?: string;
+}
+
+const { wide = false, title = 'Career Strategy', description = 'Personal career development and study plan documentation' } = Astro.props;
+
+// Get authentication info from cookies
+const authUsername = 'User';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <PwaHead />
+    <title>{title}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <div class="min-h-screen flex">
+      <!-- Sidebar -->
+      <aside class="w-64 bg-zinc-900 border-r border-zinc-800 hidden lg:block fixed h-full">
+        <Sidebar />
+      </aside>
+
+      <!-- Mobile backdrop -->
+      <div id="mobile-backdrop" class="lg:hidden fixed inset-0 z-30 bg-black/50 hidden"></div>
+
+      <!-- Mobile sidebar -->
+      <aside id="mobile-sidebar" inert role="dialog" aria-modal="true" aria-label="Navigation" tabindex="-1" class="lg:hidden fixed inset-y-0 left-0 z-40 w-64 bg-zinc-900 border-r border-zinc-800 transform -translate-x-full transition-transform">
+        <button id="mobile-menu-close" class="mobile-menu-close" aria-label="Close navigation">×</button>
+        <Sidebar />
+      </aside>
+
+      <!-- Main content -->
+      <main id="main-content" class="min-w-0 flex-1 lg:ml-64">
+        <!-- Header with auth info -->
+        <header class="app-header bg-zinc-900 border-b border-zinc-800 px-4 sm:px-6 py-3 flex gap-3 justify-between items-center">
+          <div class="lg:hidden">
+            <button id="mobile-menu-button" aria-label="Open navigation" aria-controls="mobile-sidebar" aria-expanded="false" class="text-zinc-400 hover:text-white">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+              </svg>
+            </button>
+          </div>
+          <SiteSearch />
+          <div class="flex shrink-0 items-center gap-4 ml-auto">
+            <span class="hidden sm:inline text-sm text-zinc-400">Welcome, <strong class="text-white">{authUsername}</strong></span>
+            <button
+              id="logout-button"
+              class="px-3 py-1 text-sm bg-red-600 hover:bg-red-700 rounded transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+        </header>
+        <div class:list={["app-content mx-auto px-4 sm:px-6", wide ? "max-w-7xl py-6" : "max-w-4xl py-12"]}>
+          {(/^\/2026\/(os-oss|languages|system-design)(\/|$)/.test(Astro.url.pathname)) && <aside class="mb-6 rounded border border-zinc-700 p-4 text-sm text-zinc-400">Archived reference from the earlier curriculum. <a href="/2026/career-study-plan" class="text-blue-400 underline">View the current study plan.</a></aside>}
+          <slot />
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // Mobile menu toggle with backdrop
+      const menuButton = document.getElementById('mobile-menu-button');
+      const mobileSidebar = document.getElementById('mobile-sidebar');
+      const mobileBackdrop = document.getElementById('mobile-backdrop');
+
+      function openMobileMenu() {
+        menuButton?.setAttribute('aria-expanded', 'true');
+        mobileSidebar?.removeAttribute('inert');
+        document.querySelector('main')?.setAttribute('inert', '');
+        mobileSidebar?.classList.remove('-translate-x-full');
+        document.getElementById('mobile-menu-close')?.focus();
+        mobileBackdrop?.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeMobileMenu() {
+        menuButton?.setAttribute('aria-expanded', 'false');
+        mobileSidebar?.classList.add('-translate-x-full');
+        mobileBackdrop?.classList.add('hidden');
+        document.body.style.overflow = '';
+        mobileSidebar?.setAttribute('inert', '');
+        document.querySelector('main')?.removeAttribute('inert');
+        menuButton?.focus();
+      }
+
+      menuButton?.addEventListener('click', () => {
+        if (mobileSidebar?.classList.contains('-translate-x-full')) {
+          openMobileMenu();
+        } else {
+          closeMobileMenu();
+        }
+      });
+
+      document.getElementById('mobile-menu-close')?.addEventListener('click', closeMobileMenu);
+      document.addEventListener('keydown', (event) => {
+        if (menuButton?.getAttribute('aria-expanded') !== 'true') return;
+        if (event.key === 'Escape') closeMobileMenu();
+        if (event.key === 'Tab') {
+          const items = [...mobileSidebar!.querySelectorAll<HTMLElement>('a, button')].filter(el => el.getClientRects().length);
+          const first = items[0], last = items.at(-1);
+          if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+          else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+        }
+      });
+      matchMedia('(min-width: 1024px)').addEventListener('change', event => {
+        if (event.matches && menuButton?.getAttribute('aria-expanded') === 'true') closeMobileMenu();
+      });
+
+      // Close on backdrop click
+      mobileBackdrop?.addEventListener('click', closeMobileMenu);
+
+      // Close on navigation click (mobile) - use event delegation for React component
+      mobileSidebar?.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('a') && !target.closest('[data-has-children]')) {
+          closeMobileMenu();
+        }
+      });
+
+      // Logout functionality
+      const logoutButton = document.getElementById('logout-button');
+      logoutButton?.addEventListener('click', async () => {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_username');
+        await fetch('/api/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).catch(() => undefined);
+        window.location.href = '/login';
+      });
+    </script>
+  </body>
+</html>

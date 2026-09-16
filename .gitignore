@@ -1,0 +1,63 @@
+# build output
+dist/
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# environment variables
+.env
+.env.production
+
+# macOS-specific files
+.DS_Store
+
+# Local Netlify folder
+.netlify
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with "go test -c"
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+tmp/
+
+# IDE specific files
+.vscode
+.idea
+
+# .env file
+.env
+
+# Project build
+main
+*templ.go
+
+# OS X generated file
+.DS_Store
+
+
+# Private migration exports and seeds (never served).
+.migration-private/
+
+/api

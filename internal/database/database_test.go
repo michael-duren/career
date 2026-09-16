@@ -1,0 +1,411 @@
+package database
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/google/uuid"
+	"os"
+	"reflect"
+	"strings"
+	"sync"
+	"testing"
+)
+
+func testStore(t *testing.T) *Store {
+	t.Helper()
+	url := os.Getenv("TEST_DATABASE_URL")
+	if url == "" {
+		t.Skip("set TEST_DATABASE_URL to a disposable PostgreSQL database")
+	}
+	s, err := Open(url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	schema := "test_" + strings.ReplaceAll(uuid.NewString(), "-", "")
+	if _, err = s.DB.Exec("CREATE SCHEMA " + schema); err != nil {
+		t.Fatal(err)
+	}
+	sep := "?"
+	if strings.Contains(url, "?") {
+		sep = "&"
+	}
+	scoped, err := Open(url + sep + "search_path=" + schema)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { scoped.Close(); s.DB.Exec("DROP SCHEMA " + schema + " CASCADE"); s.Close() })
+	if err = scoped.Migrate(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	return scoped
+}
+func fixture(t *testing.T) []byte {
+	t.Helper()
+	b, e := os.ReadFile("../../tests/fixtures/migration/workspace-v2.json")
+	if e != nil {
+		t.Fatal(e)
+	}
+	return b
+}
+func imported(t *testing.T) *Store {
+	t.Helper()
+	s := testStore(t)
+	if _, err := s.Import(context.Background(), bytes.NewReader(fixture(t)), Source{Store: "fixture", Key: "content", Checksum: uuid.NewString(), Archive: "test"}, false); err != nil {
+		t.Fatal(err)
+	}
+	return s
+}
+func TestRoundTrip(t *testing.T) {
+	s := imported(t)
+	ctx := context.Background()
+	var b bytes.Buffer
+	if err := s.Export(ctx, &b); err != nil {
+		t.Fatal(err)
+	}
+	var want, got any
+	json.Unmarshal(fixture(t), &want)
+	json.Unmarshal(b.Bytes(), &got)
+	if !reflect.DeepEqual(want, got) {
+		t.Fatalf("round trip differs\n%s", b.String())
+	}
+	if err := s.Migrate(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.Import(ctx, bytes.NewReader(fixture(t)), Source{}, false); err == nil {
+		t.Fatal("repeat import accepted")
+	}
+	p, err := s.List(ctx, "book", Filter{Limit: 1})
+	if err != nil || len(p.Entries) != 1 || p.NextOffset == nil {
+		t.Fatalf("pagination: %+v %v", p, err)
+	}
+	if _, ok := p.Entries[0].Entry["body"]; ok {
+		t.Fatal("list leaked body")
+	}
+	var total, done int
+	if err = s.DB.QueryRow("SELECT chapter_count,completed_count FROM book_summaries WHERE book_slug='books/test'").Scan(&total, &done); err != nil || total != 2 || done != 1 {
+		t.Fatalf("projection %d %d %v", total, done, err)
+	}
+}
+func TestConcurrentRevisionsAndChildren(t *testing.T) {
+	s := imported(t)
+	ctx := context.Background()
+	n, err := s.Detail(ctx, "note", "systems/nested-note")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var wg sync.WaitGroup
+	results := make(chan error, 2)
+	for i := 0; i < 2; i++ {
+		wg.Add(1)
+		go func() { defer wg.Done(); _, e := s.Save(ctx, "note", n.Entry, &n.Revision); results <- e }()
+	}
+	wg.Wait()
+	close(results)
+	success, conflicts := 0, 0
+	for e := range results {
+		if e == nil {
+			success++
+		} else if errors.Is(e, ErrConflict) {
+			conflicts++
+		} else {
+			t.Fatal(e)
+		}
+	}
+	if success != 1 || conflicts != 1 {
+		t.Fatalf("success=%d conflict=%d", success, conflicts)
+	}
+	n, _ = s.Detail(ctx, "note", "systems/nested-note")
+	g, _ := s.Detail(ctx, "goal", "22222222-2222-4222-8222-222222222222")
+	results = make(chan error, 2)
+	for kind, r := range map[string]Result{"note": n, "goal": g} {
+		wg.Add(1)
+		go func(k string, r Result) { defer wg.Done(); _, e := s.Save(ctx, k, r.Entry, &r.Revision); results <- e }(kind, r)
+	}
+	wg.Wait()
+	close(results)
+	for e := range results {
+		if e != nil {
+			t.Fatal(e)
+		}
+	}
+	c, _ := s.Detail(ctx, "company", "company/nested")
+	if err = s.Delete(ctx, "company", "company/nested", &c.Revision); err != nil {
+		t.Fatal(err)
+	}
+	var count int
+	s.DB.QueryRow("SELECT count(*) FROM company_contacts").Scan(&count)
+	if count != 0 {
+		t.Fatal("children survived delete")
+	}
+	doc, _ := s.Detail(ctx, "document", "index")
+	if !errors.Is(s.Delete(ctx, "document", "index", &doc.Revision), ErrCore) {
+		t.Fatal("core document deleted")
+	}
+	b, _ := s.Detail(ctx, "book", "books/test")
+	if _, err = s.Toggle(ctx, "book", "books/test", b.Revision, 3, true); !errors.Is(err, ErrConflict) {
+		t.Fatalf("non-task toggle: %v", err)
+	}
+	if _, err = s.Toggle(ctx, "book", "books/test", b.Revision, 5, true); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.Toggle(ctx, "book", "books/test", b.Revision, 5, false); !errors.Is(err, ErrConflict) {
+		t.Fatal("stale toggle accepted")
+	}
+}
+func TestImportRollbackAndOptionalPresence(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	source := Source{Store: "fixture", Checksum: "test", Archive: "test"}
+	if _, e := s.Import(ctx, bytes.NewReader(fixture(t)), source, true); e != nil {
+		t.Fatal(e)
+	}
+	var n int
+	s.DB.QueryRow("SELECT count(*) FROM notes").Scan(&n)
+	if n != 0 {
+		t.Fatal("dry run wrote data")
+	}
+	bad := bytes.Replace(fixture(t), []byte(`"endDate": "2026-09-14"`), []byte(`"endDate": "2026-09-13"`), 1)
+	if _, err := s.Import(ctx, bytes.NewReader(bad), source, false); err == nil {
+		t.Fatal("invalid import accepted")
+	}
+	s.DB.QueryRow("SELECT count(*) FROM notes").Scan(&n)
+	if n != 0 {
+		t.Fatal("failed import wrote data")
+	}
+	raw := []byte(`{"version":2,"notes":[],"weeks":[],"books":[],"companies":[],"documents":[]}`)
+	if _, err := s.Import(ctx, bytes.NewReader(raw), source, false); err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := s.Export(ctx, &out); err != nil {
+		t.Fatal(err)
+	}
+	var a, b any
+	json.Unmarshal(raw, &a)
+	json.Unmarshal(out.Bytes(), &b)
+	if !reflect.DeepEqual(a, b) {
+		t.Fatalf("presence mismatch %s", out.String())
+	}
+}
+func TestValidation(t *testing.T) {
+	var w map[string]any
+	json.Unmarshal(fixture(t), &w)
+	for kind, m := range models {
+		for _, e := range w[m.Collection].([]any) {
+			if err := Validate(kind, e.(map[string]any)); err != nil {
+				t.Fatalf("%s: %v", kind, err)
+			}
+		}
+	}
+	n := w["notes"].([]any)[0].(map[string]any)
+	n["unknown"] = true
+	if Validate("note", n) == nil {
+		t.Fatal("unknown field accepted")
+	}
+}
+func TestMissingDatabaseDoesNotExit(t *testing.T) {
+	s, err := Open("postgres://invalid:invalid@127.0.0.1:1/missing?sslmode=disable&connect_timeout=1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	if s.Health()["status"] != "down" {
+		t.Fatal("expected down")
+	}
+}
+func TestParentChildRollback(t *testing.T) {
+	s := imported(t)
+	ctx := context.Background()
+	g, _ := s.Detail(ctx, "goal", "22222222-2222-4222-8222-222222222222")
+	_, err := s.DB.Exec(`CREATE FUNCTION reject_steps() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'test child failure'; END $$; CREATE TRIGGER reject_step BEFORE INSERT ON goal_steps FOR EACH ROW EXECUTE FUNCTION reject_steps()`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	g.Entry["title"] = "Should roll back"
+	if _, err = s.Save(ctx, "goal", g.Entry, &g.Revision); err == nil {
+		t.Fatal("child failure accepted")
+	}
+	after, _ := s.Detail(ctx, "goal", g.Entry["id"].(string))
+	if after.Revision != g.Revision || after.Entry["title"] == g.Entry["title"] {
+		t.Fatal("partial parent write")
+	}
+}
+func ExampleFilter() {
+	fmt.Println(Filter{Limit: 50}.Limit) // Output: 50
+}
+
+func TestExportSnapshotDuringWrite(t *testing.T) {
+	s := imported(t)
+	ctx := context.Background()
+	before, _ := s.Detail(ctx, "note", "systems/nested-note")
+	w := &onFirstWrite{hook: func() {
+		edited := Entity{}
+		for k, v := range before.Entry {
+			edited[k] = v
+		}
+		edited["title"] = "Changed while exporting"
+		if _, err := s.Save(ctx, "note", edited, &before.Revision); err != nil {
+			t.Fatal(err)
+		}
+	}}
+	if err := s.Export(ctx, w); err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Contains(w.Bytes(), []byte("Changed while exporting")) {
+		t.Fatal("export mixed snapshots")
+	}
+	after, _ := s.Detail(ctx, "note", "systems/nested-note")
+	if after.Entry["title"] != "Changed while exporting" {
+		t.Fatal("concurrent write missing")
+	}
+	var schema string
+	if err := s.DB.QueryRow("SHOW search_path").Scan(&schema); err != nil {
+		t.Fatal(err)
+	}
+	s.Close()
+	url := os.Getenv("TEST_DATABASE_URL")
+	sep := "?"
+	if strings.Contains(url, "?") {
+		sep = "&"
+	}
+	reopened, err := Open(url + sep + "search_path=" + schema)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reopened.Close()
+	persisted, err := reopened.Detail(ctx, "note", "systems/nested-note")
+	if err != nil || persisted.Revision != after.Revision {
+		t.Fatalf("restart lost data: %v", err)
+	}
+}
+
+type onFirstWrite struct {
+	bytes.Buffer
+	hook func()
+}
+
+func (w *onFirstWrite) Write(p []byte) (int, error) {
+	if w.hook != nil {
+		f := w.hook
+		w.hook = nil
+		f()
+	}
+	return w.Buffer.Write(p)
+}
+func (w *onFirstWrite) WriteString(p string) (int, error) { return w.Write([]byte(p)) }
+
+func TestQueryPlans(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	_, err := s.DB.Exec(`INSERT INTO notes(id,title,topic,description,tags,body,revision,position) SELECT 'note-'||n,'Title '||n,CASE WHEN n%10=0 THEN 'Systems' ELSE 'General' END,'',ARRAY[]::text[],repeat('body ',2000),'revision-'||n,n FROM generate_series(1,1000) n; ANALYZE notes`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, query := range []string{`SELECT id,title,topic FROM notes WHERE topic='Systems' ORDER BY topic,title,id LIMIT 50`, `SELECT id,title,body,revision FROM notes WHERE id='note-500'`, `UPDATE notes SET title='Edited',revision='new' WHERE id='note-500' AND revision='revision-500'`} {
+		rows, err := s.DB.QueryContext(ctx, "EXPLAIN (ANALYZE, BUFFERS) "+query)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var plan []string
+		for rows.Next() {
+			var line string
+			rows.Scan(&line)
+			plan = append(plan, line)
+		}
+		rows.Close()
+		t.Log(query + "\n" + strings.Join(plan, "\n"))
+		if !strings.Contains(strings.Join(plan, "\n"), "Index") {
+			t.Fatal("expected indexed query path")
+		}
+	}
+}
+
+func TestOptionalEntityPresence(t *testing.T) {
+	s := testStore(t)
+	var workspace Entity
+	json.Unmarshal(fixture(t), &workspace)
+	workspace["weeks"].([]any)[0].(map[string]any)["targets"] = map[string]any{"only-target": float64(0)}
+	company := workspace["companies"].([]any)[0].(map[string]any)
+	company["contacts"] = []any{}
+	workspace["personalJournal"] = []any{}
+	workspace["goals"] = []any{}
+	raw, _ := json.Marshal(workspace)
+	if _, err := s.Import(context.Background(), bytes.NewReader(raw), Source{Store: "fixture", Key: "content", Checksum: "presence", Archive: "test"}, false); err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := s.Export(context.Background(), &out); err != nil {
+		t.Fatal(err)
+	}
+	var got Entity
+	json.Unmarshal(out.Bytes(), &got)
+	if !reflect.DeepEqual(workspace, got) {
+		t.Fatal("optional presence round trip differs")
+	}
+	delete(company, "contacts")
+	if err := Validate("company", company); err != nil {
+		t.Fatal(err)
+	}
+	r, _ := s.Detail(context.Background(), "company", "company/nested")
+	saved, err := s.Save(context.Background(), "company", company, &r.Revision)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := saved.Entry["contacts"]; exists {
+		t.Fatal("absent contacts became empty")
+	}
+}
+
+func TestTypeScriptProjectionParity(t *testing.T) {
+	s := imported(t)
+	ctx := context.Background()
+	raw, err := os.ReadFile("../../tests/fixtures/migration/expected-projections.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var expected Entity
+	json.Unmarshal(raw, &expected)
+	for _, v := range expected["books"].([]any) {
+		b := v.(map[string]any)
+		chapters, err := childJSON(ctx, s.DB, `SELECT json_build_object('index',source_line,'done',checked,'label',label) FROM book_checklist WHERE owner_slug=$1 AND section IN ('chapters','modules','sections') ORDER BY position`, b["slug"])
+		if err != nil || !reflect.DeepEqual(chapters, b["chapters"]) {
+			t.Fatalf("chapters differ: %v", err)
+		}
+		logs, err := childJSON(ctx, s.DB, `SELECT json_build_object('date',log_date,'text',text) FROM book_logs WHERE owner_slug=$1 ORDER BY position`, b["slug"])
+		if err != nil || !reflect.DeepEqual(logs, b["log"]) {
+			t.Fatalf("book logs differ: %v", err)
+		}
+	}
+	for _, v := range expected["companies"].([]any) {
+		c := v.(map[string]any)
+		steps, err := childJSON(ctx, s.DB, `SELECT json_build_object('index',source_line,'completed',checked,'label',label) FROM company_checklist WHERE owner_slug=$1 AND section='steps' ORDER BY position`, c["slug"])
+		if err != nil || !reflect.DeepEqual(steps, c["steps"]) {
+			t.Fatalf("steps differ: %+v %v", steps, err)
+		}
+		var why string
+		s.DB.QueryRow("SELECT why FROM company_summaries WHERE company_slug=$1", c["slug"]).Scan(&why)
+		if why != c["why"] {
+			t.Fatal("why differs")
+		}
+		rows, err := s.DB.Query("SELECT text FROM company_logs WHERE owner_slug=$1 ORDER BY position", c["slug"])
+		if err != nil {
+			t.Fatal(err)
+		}
+		logs := []any{}
+		for rows.Next() {
+			var text string
+			rows.Scan(&text)
+			logs = append(logs, text)
+		}
+		rows.Close()
+		if !reflect.DeepEqual(logs, c["logEntries"]) {
+			t.Fatalf("company logs differ %+v", logs)
+		}
+	}
+	if err = s.Rebuild(ctx); err != nil {
+		t.Fatal(err)
+	}
+}

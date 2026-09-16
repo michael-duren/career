@@ -1,0 +1,8 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { WorkspaceEditor } from '../../components/WorkspaceEditor';
+---
+<DocsLayout title="Pages" description="Edit your study plan and reference pages">
+  <header class="mb-6"><h1 class="text-3xl font-bold">Pages</h1><p class="mt-2 text-zinc-400">Your home page, study plan, and reference material.</p></header>
+  <WorkspaceEditor kind="document" client:load />
+</DocsLayout>

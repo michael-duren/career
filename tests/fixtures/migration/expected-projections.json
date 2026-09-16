@@ -1,0 +1,102 @@
+{
+  "books": [
+    {
+      "slug": "books/test",
+      "chapters": [
+        {
+          "index": 1,
+          "done": true,
+          "label": "One"
+        },
+        {
+          "index": 5,
+          "done": false,
+          "label": "Two"
+        }
+      ],
+      "log": [
+        {
+          "date": "2026-09-14",
+          "text": "Read **one**"
+        }
+      ],
+      "completed": 20,
+      "total": 100,
+      "percent": 20
+    },
+    {
+      "slug": "course",
+      "chapters": [
+        {
+          "index": 1,
+          "done": false,
+          "label": "One"
+        }
+      ],
+      "log": [],
+      "completed": 1,
+      "total": 1,
+      "percent": 100
+    }
+  ],
+  "companies": [
+    {
+      "slug": "company/nested",
+      "why": "Meaningful **work**",
+      "steps": [
+        {
+          "index": 6,
+          "label": "Reach out and start building a relationship",
+          "completed": true
+        },
+        {
+          "index": 5,
+          "label": "Research the role",
+          "completed": false
+        }
+      ],
+      "logEntries": [
+        "2026-09-14: Hello\ncontinuation"
+      ]
+    }
+  ],
+  "checklists": {
+    "books/test": [
+      {
+        "index": 1,
+        "checked": true,
+        "label": "One",
+        "section": "chapters"
+      },
+      {
+        "index": 5,
+        "checked": false,
+        "label": "Two",
+        "section": "chapters"
+      }
+    ],
+    "course": [
+      {
+        "index": 1,
+        "checked": false,
+        "label": "One",
+        "section": "modules"
+      }
+    ],
+    "company/nested": [
+      {
+        "index": 5,
+        "checked": false,
+        "label": "Research the role",
+        "section": "steps"
+      },
+      {
+        "index": 6,
+        "checked": true,
+        "label": "Reach out and start building a relationship",
+        "section": "steps"
+      }
+    ]
+  },
+  "source": "src/lib/books.ts, companies.ts, checklist.ts; synthetic workspace-v2.json"
+}

@@ -1,0 +1,5 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { WorkspaceEditor } from '../../components/WorkspaceEditor';
+---
+<DocsLayout title="Note" description="Read and edit your topic notes"><a class="mb-6 block text-sm text-blue-400 hover:underline" href="/notes">← All notes</a><WorkspaceEditor kind="note" client:load /></DocsLayout>
