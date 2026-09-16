@@ -148,7 +148,7 @@ export async function createCareerOAuth(resource, env = process.env, fetchImpl =
   async function token(rejectedToken) {
     return store.locked(async (data, save) => {
       if (data.issuer && (data.issuer !== metadata.issuer || data.resource !== resource.href)) throw new Error('Stored OAuth issuer/resource mismatch');
-      if (data.tokens && data.expiresAt > Date.now() + 30000 && data.tokens.access_token !== rejectedToken) return data.tokens.access_token;
+      if (data.tokens && data.expiresAt > Date.now() + 80800 && data.tokens.access_token !== rejectedToken) return data.tokens.access_token;
       if (!machine && !data.tokens?.refresh_token) throw new Error('Run career-mcp.mjs login to authorize this client');
       const result = await auth(provider(data, save), { serverUrl: resource, scope: scopes, fetchFn: safeFetch });
       if (result !== 'AUTHORIZED') throw new Error('OAuth login required');
@@ -223,7 +223,7 @@ export async function createCareerOAuth(resource, env = process.env, fetchImpl =
       const send = async value => {
         const copy = request.clone();
         const headers = new Headers(copy.headers); headers.set('Authorization', `Bearer ${value}`);
-        return fetchImpl(new Request(copy, { headers, redirect: 'error', signal: init.signal ?? AbortSignal.timeout(30000) }));
+        return fetchImpl(new Request(copy, { headers, redirect: 'error', signal: init.signal ?? AbortSignal.timeout(80800) }));
       };
       let response = await send(accessToken);
       if (response.status === 401) { await response.body?.cancel(); response = await send(await token(accessToken)); }

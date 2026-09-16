@@ -82,7 +82,7 @@ test('remote JWKS is cached, rotated, and never fetched from token headers', asy
   const fixture = await startOAuthServer();
   try {
     const c = { ...config, issuer: fixture.issuer, resource: fixture.resource, audience: fixture.resource, jwksUri: `${fixture.issuer}/jwks` };
-    const remote = createRemoteJWKSet(new URL(c.jwksUri), { cooldownDuration: 0, cacheMaxAge: 300000 });
+    const remote = createRemoteJWKSet(new URL(c.jwksUri), { cooldownDuration: 0, cacheMaxAge: 808000 });
     await verifyMcpToken(await fixture.mint({}, { header: { jku: 'https://untrusted.example/keys' } }), c, remote);
     await verifyMcpToken(await fixture.mint(), c, remote);
     assert.equal(fixture.counts.jwks, 1);

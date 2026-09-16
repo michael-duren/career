@@ -8,6 +8,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/michael-duren/career-strategy/internal/config"
 	"github.com/michael-duren/career-strategy/internal/database"
+	"github.com/michael-duren/career-strategy/internal/otel"
 	"github.com/michael-duren/career-strategy/internal/server"
 	"golang.org/x/crypto/bcrypt"
 	"io"
@@ -136,6 +137,17 @@ func run() error {
 				return fmt.Errorf("invalid AUTH_PASSWORD_HASH: %w", err)
 			}
 		}
+		shutdownOtel, err := otel.Setup(ctx)
+		if err != nil {
+			return fmt.Errorf("setup opentelemetry: %w", err)
+		}
+		defer func() {
+			flush, stop := context.WithTimeout(context.Background(), 5*time.Second)
+			defer stop()
+			if err := shutdownOtel(flush); err != nil {
+				log.Printf("shutdown opentelemetry: %v", err)
+			}
+		}()
 		srv := server.NewServer(c, db)
 		done := make(chan error, 1)
 		go func() { done <- srv.ListenAndServe() }()

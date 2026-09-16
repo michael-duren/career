@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/michael-duren/career-strategy/internal/database"
+	otelchimetric "github.com/riandyrn/otelchi/metric"
 	"io"
 	"net/http"
 	"strconv"
@@ -57,6 +58,13 @@ func failure(w http.ResponseWriter, err error) {
 }
 func (s *Server) RegisterRoutes() http.Handler {
 	r := chi.NewRouter()
+	metricConfig := otelchimetric.NewBaseConfig("career-strategy")
+	r.Use(
+		otelchimetric.NewServerRequestDuration(metricConfig),
+		otelchimetric.NewServerActiveRequests(metricConfig),
+		otelchimetric.NewServerRequestBodySize(metricConfig),
+		otelchimetric.NewServerResponseBodySize(metricConfig),
+	)
 	r.Use(middleware.Recoverer)
 	r.Use(s.pageAccess)
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) { respond(w, 200, map[string]string{"status": "up"}) })
