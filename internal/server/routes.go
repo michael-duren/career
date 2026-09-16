@@ -58,7 +58,7 @@ func failure(w http.ResponseWriter, err error) {
 }
 func (s *Server) RegisterRoutes() http.Handler {
 	r := chi.NewRouter()
-	metricConfig := otelchimetric.NewBaseConfig("career-strategy")
+	metricConfig := otelchimetric.NewBaseConfig(s.config.OTelServiceName)
 	r.Use(
 		otelchimetric.NewServerRequestDuration(metricConfig),
 		otelchimetric.NewServerActiveRequests(metricConfig),

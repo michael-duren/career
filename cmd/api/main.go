@@ -137,7 +137,7 @@ func run() error {
 				return fmt.Errorf("invalid AUTH_PASSWORD_HASH: %w", err)
 			}
 		}
-		shutdownOtel, err := otel.Setup(ctx)
+		shutdownOtel, err := otel.Setup(ctx, otel.Options{Endpoint: c.OTelEndpoint, ServiceName: c.OTelServiceName, ExportInterval: c.OTelExportInterval})
 		if err != nil {
 			return fmt.Errorf("setup opentelemetry: %w", err)
 		}
