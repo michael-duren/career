@@ -5,12 +5,6 @@ import (
 	"crypto/sha256"
 	"flag"
 	"fmt"
-	_ "github.com/joho/godotenv/autoload"
-	"github.com/michael-duren/career-strategy/internal/config"
-	"github.com/michael-duren/career-strategy/internal/database"
-	"github.com/michael-duren/career-strategy/internal/otel"
-	"github.com/michael-duren/career-strategy/internal/server"
-	"golang.org/x/crypto/bcrypt"
 	"io"
 	"log"
 	"net/http"
@@ -19,6 +13,13 @@ import (
 	"path/filepath"
 	"syscall"
 	"time"
+
+	_ "github.com/joho/godotenv/autoload"
+	"github.com/michael-duren/career-strategy/internal/config"
+	"github.com/michael-duren/career-strategy/internal/database"
+	"github.com/michael-duren/career-strategy/internal/otel"
+	"github.com/michael-duren/career-strategy/internal/server"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func main() {
