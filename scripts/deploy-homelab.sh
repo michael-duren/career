@@ -5,8 +5,13 @@ cd "$(dirname "$0")/.."
 export KUBECONFIG="${KUBECONFIG:-/home/mduren/Code/home-infra/infra/ansible/kubeconfig-homelab}"
 phase="${1:-help}"
 ns=career-strategy
+# Manifests live in home-infra (k8s/apps/career-strategy); this repo owns the
+# build, the image import and the secrets.
+HOME_INFRA="${HOME_INFRA:-$HOME/Code/home-infra}"
+manifests="${CAREER_MANIFESTS:-$HOME_INFRA/k8s/apps/career-strategy}"
 k() { kubectl --context=default --namespace="$ns" --request-timeout=15s "$@"; }
 guard() {
+  [[ -f "$manifests/deployment.yaml" ]] || { echo "Manifests not found in $manifests; set HOME_INFRA or CAREER_MANIFESTS" >&2; exit 1; }
   [[ "$(kubectl config current-context)" == default ]] || { echo "Expected context default" >&2; exit 1; }
   [[ "$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')" == https://192.168.20.3:6443 ]] || { echo "Unexpected API server" >&2; exit 1; }
 }
@@ -29,7 +34,7 @@ nodes() {
       console.log(ip);
     }'
 }
-render() { sed "s|career-strategy:RELEASE|$image|g" "deploy/homelab/$1"; }
+render() { sed "s|career-strategy:RELEASE|$image|g" "$manifests/$1"; }
 import_image() {
   docker image inspect "$1" >/dev/null
   for ip in "${eligible[@]}"; do
@@ -79,7 +84,7 @@ case "$phase" in
     ;;
   secrets)
     guard
-    k apply -f deploy/homelab/namespace.yaml
+    k apply -f "$manifests/namespace.yaml"
     umask 077
     secret_dir="$(mktemp -d)"
     trap 'rm -f "$secret_dir/DATABASE_URL" "$secret_dir/AUTH_USERNAME" "$secret_dir/AUTH_PASSWORD_HASH" "$secret_dir/JWT_SECRET"; rmdir "$secret_dir"' EXIT
@@ -130,7 +135,7 @@ case "$phase" in
       exit 0
     fi
     k get secret career-secrets >/dev/null
-    k apply -f deploy/homelab/configmap.yaml
+    k apply -f "$manifests/configmap.yaml"
     job="$(render migration-job.yaml | k create -f - -o name)"
     if ! k wait --for=condition=complete "$job" --timeout=180s; then
       echo "Migration failed. Deployment unchanged. Inspect $job securely; do not paste secret-bearing logs." >&2
@@ -141,7 +146,7 @@ case "$phase" in
       k annotate deployment career "career-strategy/previous-image=$previous" --overwrite
     fi
     render deployment.yaml | k apply -f -
-    k apply -f deploy/homelab/service.yaml -f deploy/homelab/ingress.yaml
+    k apply -f "$manifests/service.yaml" -f "$manifests/ingress.yaml"
     k rollout restart deployment/career
     k rollout status deployment/career --timeout=180s
     echo "PASS: release=$image previous=${previous:-none}; no public DNS changed"
@@ -168,7 +173,7 @@ case "$phase" in
     unset token
     k create secret generic career-tunnel --from-file="$secret_dir" --dry-run=client -o json |
       k apply --server-side --field-manager=career-secrets -f - >/dev/null
-    sed "s|CLOUDFLARED_IMAGE|$tunnel_image|" deploy/homelab/cloudflared.yaml | k apply -f -
+    sed "s|CLOUDFLARED_IMAGE|$tunnel_image|" "$manifests/cloudflared.yaml" | k apply -f -
     k rollout restart deployment/career-tunnel
     k rollout status deployment/career-tunnel --timeout=180s
     echo "Tunnel deployed; verify provider routes separately before acceptance."

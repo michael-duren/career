@@ -1,0 +1,28 @@
+# Same stack as docker-compose.yml minus Alloy, for running a local Alloy
+# build on the host (see `make alloy-local`).
+# Run from the repo root: docker compose -f compose/docker-compose.local-alloy.yml up -d
+# Shares the project name so the Postgres volume and containers are reused.
+name: migration
+
+services:
+  postgres:
+    extends:
+      file: docker-compose.yml
+      service: postgres
+
+  prometheus:
+    extends:
+      file: docker-compose.yml
+      service: prometheus
+
+  grafana:
+    extends:
+      file: docker-compose.yml
+      service: grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  career_postgres17:
+  prometheus_data:
+  grafana_data:

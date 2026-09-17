@@ -1,0 +1,30 @@
+// OTLP metrics from the Go API -> batch -> Prometheus remote write.
+
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.default.input]
+  }
+}
+
+otelcol.processor.batch "default" {
+  output {
+    metrics = [otelcol.exporter.prometheus.default.input]
+  }
+}
+
+// Converts OTLP metrics to Prometheus format, e.g.
+// http.server.request.duration -> http_server_request_duration_seconds.
+otelcol.exporter.prometheus "default" {
+  forward_to = [prometheus.remote_write.local.receiver]
+}
+
+prometheus.remote_write "local" {
+  endpoint {
+    // Host builds set PROMETHEUS_REMOTE_WRITE_URL to reach the published port.
+    url = coalesce(sys.env("PROMETHEUS_REMOTE_WRITE_URL"), "http://prometheus:9090/api/v1/write")
+  }
+}

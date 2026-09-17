@@ -18,7 +18,19 @@ type Config struct {
 }
 
 func Load() (Config, error) {
-	c := Config{DatabaseURL: os.Getenv("DATABASE_URL"), Username: os.Getenv("AUTH_USERNAME"), PasswordHash: os.Getenv("AUTH_PASSWORD_HASH"), JWTSecret: os.Getenv("JWT_SECRET"), PublicOrigin: os.Getenv("PUBLIC_ORIGIN"), ListenAddr: os.Getenv("LISTEN_ADDR"), StaticDir: os.Getenv("STATIC_DIR"), Production: os.Getenv("APP_ENV") == "production", OTelServiceName: os.Getenv("OTEL_SERVICE_NAME"), OTelExportInterval: 10 * time.Second}
+	c := Config{
+		DatabaseURL:        os.Getenv("DATABASE_URL"),
+		Username:           os.Getenv("AUTH_USERNAME"),
+		PasswordHash:       os.Getenv("AUTH_PASSWORD_HASH"),
+		JWTSecret:          os.Getenv("JWT_SECRET"),
+		PublicOrigin:       os.Getenv("PUBLIC_ORIGIN"),
+		ListenAddr:         os.Getenv("LISTEN_ADDR"),
+		StaticDir:          os.Getenv("STATIC_DIR"),
+		Production:         os.Getenv("APP_ENV") == "production",
+		OTelServiceName:    os.Getenv("OTEL_SERVICE_NAME"),
+		OTelExportInterval: 10 * time.Second,
+	}
+
 	// Signal-specific endpoint wins, matching the OTel SDK. An endpoint set to
 	// empty is honored so local runs can opt out of the collector.
 	endpoint, endpointSet := os.LookupEnv("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT")

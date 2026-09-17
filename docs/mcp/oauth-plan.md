@@ -1,6 +1,6 @@
 # MCP OAuth implementation plan
 
-Status: application implementation and local OAuth integration tests completed; live managed-provider qualification, hosted client testing, and deployment remain pending provider/account and owner configuration. See `MCP.md` for the implemented configuration and validation checklist. This document preserves the original implementation plan.
+Status: application implementation and local OAuth integration tests completed; live managed-provider qualification, hosted client testing, and deployment remain pending provider/account and owner configuration. See `README.md` for the implemented configuration and validation checklist. This document preserves the original implementation plan.
 
 Replace the shared MCP credential with browser authorization and renewable, individually revocable client grants. Keep `https://YOUR-SITE/api/mcp` as the canonical endpoint and retain the existing read-only tools and live workspace behavior.
 
@@ -145,7 +145,7 @@ Extend `tests/mcp.integration.mjs` to exercise real Astro routing against a loca
 
 Run `npm test`, `node tests/mcp.integration.mjs`, `npm run tc`, `npm run build`, and `npm run check:netlify-build` after implementation. Then run the client matrix against a stable HTTPS staging endpoint with synthetic personal data. Record client version/date, registration method, first login, all four tool calls, refresh, reconnect, and revocation result. Test resources/prompts where the client supports them.
 
-Deploy production OAuth configuration after staging passes. Connect clients individually, update `MCP.md` and its README reference with exact provider setup and connection instructions, then remove `CAREER_MCP_TOKEN` and static-token examples. If migration requires legacy access, make it an explicit temporary mode; never silently accept the old token when OAuth verification fails. Rollback should disable MCP or deliberately select the previous secured configuration.
+Deploy production OAuth configuration after staging passes. Connect clients individually, update `README.md` and its README reference with exact provider setup and connection instructions, then remove `CAREER_MCP_TOKEN` and static-token examples. If migration requires legacy access, make it an explicit temporary mode; never silently accept the old token when OAuth verification fails. Rollback should disable MCP or deliberately select the previous secured configuration.
 
 Completion means every target client has a recorded working OAuth path, unattended credentials renew correctly, unrelated identities cannot read the shared workspace, grants can be revoked with a documented access-token expiry bound, and production no longer depends on the shared MCP token.
 
