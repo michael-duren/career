@@ -99,22 +99,13 @@ check-db:
 go-dev: migrate
 	go run ./cmd/api serve
 
-seed-export:
-	node scripts/export-seed.mjs
-
-seed-dry-run:
-	go run ./cmd/api seed --file .migration-private/seed-v2.json --source-store astro-seed --dry-run
-
-seed-import:
-	go run ./cmd/api seed --file .migration-private/seed-v2.json --source-store astro-seed
-
 rebuild-projections:
 	go run ./cmd/api rebuild-projections
 
 test-postgres:
 	TEST_DATABASE_URL='postgres://career_dev:career_dev_local@127.0.0.1:5433/career_dev?sslmode=disable' go test -race ./...
 
-.PHONY: postgres-up postgres-check otel-up otel-up-local alloy-local migrate check-db go-dev seed-export seed-dry-run seed-import rebuild-projections test-postgres
+.PHONY: postgres-up postgres-check otel-up otel-up-local alloy-local migrate check-db go-dev rebuild-projections test-postgres
 
 homelab-check:
 	./scripts/deploy-homelab.sh check
