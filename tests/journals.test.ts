@@ -5,7 +5,7 @@ import { agentContext, contextMarkdown, journalMarkdown } from '../src/lib/agent
 import { shiftGoal, type Goal } from '../src/lib/timeline.ts';
 
 const workspace = (): Workspace => ({ version: 2, notes: [], documents: [], weeks: [], books: [], companies: [] });
-const goal: Goal = { id: 'goal-1', title: 'Build a database', startDate: '2026-09-01', endDate: '2026-12-01', color: '#67e8f9', createdAt: '2026-09-01T00:00:00Z', updatedAt: '2026-09-01T00:00:00Z', steps: [{ id: 'step-1', title: 'Implement Raft', done: false }], notes: [{ id: 'note-1', body: 'Keep scope small', createdAt: '2026-09-01T00:00:00Z' }], metadata: { priority: 'high' } };
+const goal: Goal = { status: 'planned', dependsOn: [], id: 'goal-1', title: 'Build a database', startDate: '2026-09-01', endDate: '2026-12-01', color: '#67e8f9', createdAt: '2026-09-01T00:00:00Z', updatedAt: '2026-09-01T00:00:00Z', steps: [{ id: 'step-1', title: 'Implement Raft', done: false }], notes: [{ id: 'note-1', body: 'Keep scope small', createdAt: '2026-09-01T00:00:00Z' }], metadata: { priority: 'high' } };
 
 test('cleanup removes only untouched scaffolding and preserves content and metrics', () => {
   const empty = newWeek('2026-09-12');

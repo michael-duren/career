@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { dayNumber, monthOffset, shiftGoal, timelineHours, type Goal } from '../src/lib/timeline.ts';
 import { updateWorkspaceEntry, type Workspace } from '../src/lib/workspace.ts';
-const goal: Goal = {
+const goal: Goal = { status: 'planned', dependsOn: [],
   id: '123', title: 'Systems', startDate: '2028-02-01', endDate: '2028-04-30', color: '#67e8f9',
   createdAt: '2026-09-12T00:00:00.000Z', updatedAt: '2026-09-12T00:00:00.000Z',
   notes: [{ id: 'note', body: 'Keep this', createdAt: '2026-09-12T00:00:00.000Z' }],

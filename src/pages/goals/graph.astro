@@ -1,0 +1,8 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { GoalGraph } from '../../components/GoalGraph';
+---
+<DocsLayout title="Goal dependency graph" description="Prerequisites and critical paths for your goals">
+  <h1 class="text-3xl font-bold mb-2">Goal dependency graph</h1>
+  <GoalGraph client:load />
+</DocsLayout>

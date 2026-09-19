@@ -1,5 +1,7 @@
 export interface Goal {
   id: string;
+  status: 'planned' | 'active' | 'done' | 'dropped';
+  dependsOn: string[];
   title: string;
   startDate: string;
   endDate: string;

@@ -156,7 +156,9 @@
       "metadata": {
         "空": "",
         "purpose": "learning"
-      }
+      },
+      "status": "planned",
+      "dependsOn": []
     }
   ]
 }

@@ -35,6 +35,7 @@ export interface Workspace {
   journalsVersion?: 2;
   personalJournal?: PersonalJournalEntry[];
   runningNotes?: RunningNote[];
+  /** Saved status and dependsOn are authoritative; readiness is derived. */
   goals?: import('./timeline').Goal[];
   version: 2;
   catalogVersion?: 1;

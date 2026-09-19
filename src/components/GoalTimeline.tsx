@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type PointerEvent } from 'react';
 import { dayNumber, dayString, monthOffset, shiftGoal, timelineHours, type Goal } from '../lib/timeline';
 import { localDate } from '../lib/workspace';
 import '../styles/timeline.css';
+import { dependencyCycle } from '../lib/goal-dependencies';
+import { GoalDependencies } from './GoalDependencies';
 import { GoalSchedule } from './GoalSchedule';
 
 const ranges = [6, 12, 24, 60, 120];
@@ -32,10 +34,12 @@ export function GoalTimeline() {
   async function load() {
     setBusy(true); setError('');
     try {
-      const response = await fetch(`/api/goals?from=${anchor}&to=${dayString(end - 1)}`, { cache: 'no-store' });
+      const response = await fetch('/api/goals', { cache: 'no-store' });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
       setGoals(result.goals); setRevisions(result.revisions); setLoaded(true); setStatus('All changes saved');
+      const selected = new URLSearchParams(location.search).get('goal');
+      if (selected && !draft) { const goal = result.goals.find((g: Goal) => g.id === selected); if (goal) open(goal); history.replaceState(null, '', location.pathname); }
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not load goals.'); }
     finally { setBusy(false); }
   }
@@ -54,10 +58,11 @@ export function GoalTimeline() {
     const now = new Date().toISOString();
     open({ id: crypto.randomUUID(), title: `Goal ${goals.length + 1}`, startDate: date,
       endDate: monthOffset(date, 3), dailyHours: 1, color: colors[Math.floor(Math.random() * colors.length)],
-      createdAt: now, updatedAt: now, notes: [], metadata: {}, steps: [] }, true);
+      status: 'planned', dependsOn: [], createdAt: now, updatedAt: now, notes: [], metadata: {}, steps: [] }, true);
   }
   async function save(goal: Goal) {
     if (saving.current) return;
+    if (dependencyCycle(goals, goal)) { setError('Dependency cycle: choose different prerequisites.'); return; }
     saving.current = true; setBusy(true); setError(''); setStatus('Saving…');
     try {
       const response = await fetch('/api/goals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goal, revision: revisions[goal.id] ?? null }) });
@@ -70,13 +75,13 @@ export function GoalTimeline() {
     } finally { saving.current = false; setBusy(false); setPreview(null); }
   }
   async function remove(goal: Goal) {
-    if (saving.current || !window.confirm(`Delete ${goal.title} and its notes and substeps?`)) return;
+    if (saving.current || !window.confirm(`Delete ${goal.title} and its notes and substeps?${goals.filter(g => g.dependsOn.includes(goal.id)).length ? " Dependents will lose this prerequisite: " + goals.filter(g => g.dependsOn.includes(goal.id)).map(g => g.title).join(", ") : ""}`)) return;
     saving.current = true; setBusy(true); setError('');
     try {
       const response = await fetch('/api/goals', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: goal.id, revision: revisions[goal.id] }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
-      setGoals(current => current.filter(item => item.id !== goal.id)); setRevisions(current => { const next = { ...current }; delete next[goal.id]; return next; }); setDraft(null); setStatus('Goal deleted');
+      setGoals(current => current.filter(item => item.id !== goal.id)); setRevisions(current => { const next = { ...current }; delete next[goal.id]; return next; }); setDraft(null); setStatus('Goal deleted'); await load();
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not delete goal.'); }
     finally { saving.current = false; setBusy(false); }
   }
@@ -164,7 +169,8 @@ export function GoalTimeline() {
         {creating && <p className="timeline-help">Choose dates and daily hours, then check how this goal fits your schedule.</p>}
         {error && <div role="alert" className="timeline-error">{error}<button type="button" disabled={busy} onClick={() => void load()}>Load latest (keep draft)</button></div>}
         <fieldset disabled={busy}>
-          {!creating && <label>Name<input required maxLength={200} value={draft.title} onChange={e => setDraft({ ...draft, title: e.target.value })} /></label>}
+          <label>Name<input required maxLength={200} value={draft.title} onChange={e => setDraft({ ...draft, title: e.target.value })} /></label>
+          <GoalDependencies draft={draft} goals={goals} onChange={setDraft} />
           <GoalSchedule draft={draft} goals={goals} onChange={setDraft} />
           {!creating && <>
             <h3>Notes</h3>
