@@ -1,9 +1,9 @@
 ---
 import DocsLayout from '../layouts/DocsLayout.astro';
-import { QuickJournal, WorkspaceEditor } from '../components/WorkspaceEditor';
+import { WorkspaceEditor } from '../components/WorkspaceEditor';
 ---
 <DocsLayout title="Work journal" description="Capture work reflections and edit your weekly work journal">
   <header class="mb-6 space-y-2"><h1 class="text-3xl font-bold">Work journal</h1><p class="text-zinc-400">Small steps, written down. Capture today or revisit a week.</p><a href="/logs" class="text-sm text-blue-400 hover:underline">Search all journal entries →</a></header>
   <p class="mb-6 text-sm"><a class="text-blue-400 underline" href="/personal-journal">Personal journal</a> · <a class="text-blue-400 underline" href="/api/agent-context?format=markdown&journal=work">Read work journal as Markdown</a></p>
-  <div class="space-y-8"><QuickJournal client:load /><WorkspaceEditor kind="week" client:load /></div>
+  <WorkspaceEditor kind="week" quickJournal client:load />
 </DocsLayout>

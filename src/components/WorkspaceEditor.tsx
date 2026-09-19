@@ -41,7 +41,12 @@ function draftKey(kind: string) {
 function Preview({ body }: { body: string }) {
   return <MarkdownPreview body={body} />;
 }
-export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialId?: string }) {
+export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kind: EntryKind; initialId?: string; quickJournal?: boolean }) {
+  const listFirst = kind === 'note' || kind === 'week' || kind === 'personal';
+  const openedInitialEntry = useRef(false);
+  const selectionRequest = useRef(0);
+  const backButton = useRef<HTMLButtonElement>(null);
+  const listPosition = useRef<{ scroll: number; focus: HTMLElement | null } | null>(null);
   const recovered = useRef(false);
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const [entry, setEntry] = useState<Entry | null>(null);
@@ -57,11 +62,18 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
 
-  function cancel() {
+  async function cancel() {
     const saved = entry && entries ? entries.find(item => entryId(item) === entryId(entry)) : null;
-    setEntry(saved ?? null); setTagsText(saved?.tags.join(', ') ?? ''); setBaseRevision(null);
-    setEditing(false); setDirty(false); setPreview(false); setError(''); setStatus('Cancelled.');
-    try { localStorage.removeItem(draftKey(kind)); } catch { /* Optional storage. */ }
+    setBusy(true); setError('');
+    try {
+      // List responses are summaries; restore the complete saved body and revision.
+      const detail = saved ? await request(kind, 'GET', undefined, entryId(saved)) as EntryResult : null;
+      setEntry(detail?.entry ?? null); setTagsText(detail?.entry.tags.join(', ') ?? '');
+      setBaseRevision(detail?.revision ?? null);
+      setEditing(false); setDirty(false); setPreview(false); setStatus('Cancelled.');
+      try { localStorage.removeItem(draftKey(kind)); } catch { /* Optional storage. */ }
+    } catch (e) { setError((e as Error).message); }
+    finally { setBusy(false); }
   }
   async function load() {
     setError('');
@@ -74,8 +86,11 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
         if (linkedNote && 'topic' in linkedNote) setSelectedTopics([linkedNote.topic]);
         initializedTopics.current = true;
       }
-      if (requested && !entry && !recovered.current) {
+      if (requested && !openedInitialEntry.current && !recovered.current) {
+        openedInitialEntry.current = true;
+        const selection = ++selectionRequest.current;
         const found = await request(kind, 'GET', undefined, requested).catch(() => null) as EntryResult | null;
+        if (selection !== selectionRequest.current || recovered.current) return;
         if (found) { setEntry(found.entry); setTagsText(found.entry.tags.join(', ')); setBaseRevision(found.revision); }
         else setError('Entry not found. Choose another entry or create a new one.');
       }
@@ -111,13 +126,27 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
 
   function choose(next: Entry, edit = false) {
     if (dirty && !window.confirm('Discard the unsaved draft and open this entry?')) return;
+    if (listFirst && !entry) listPosition.current = { scroll: window.scrollY, focus: document.activeElement instanceof HTMLElement ? document.activeElement : null };
+    const selection = ++selectionRequest.current;
     try { localStorage.removeItem(draftKey(kind)); } catch { /* Storage is optional. */ }
     if (edit && !entries?.some(item => entryId(item) === entryId(next))) {
       setEntry(next); setBaseRevision(null); setTagsText(next.tags.join(', '));
     } else {
-      void request(kind, 'GET', undefined, entryId(next)).then((detail: EntryResult) => { setEntry(detail.entry); setBaseRevision(detail.revision); setTagsText(detail.entry.tags.join(', ')); }).catch(e => setError(e instanceof Error ? e.message : 'Entry could not be loaded.'));
+      void request(kind, 'GET', undefined, entryId(next)).then((detail: EntryResult) => { if (selection !== selectionRequest.current) return; setEntry(detail.entry); setBaseRevision(detail.revision); setTagsText(detail.entry.tags.join(', ')); }).catch(e => setError(e instanceof Error ? e.message : 'Entry could not be loaded.'));
     }
     setEditing(edit); setDirty(false); setPreview(false); setStatus(''); setError('');
+  }
+  function backToList() {
+    if (dirty && !window.confirm('Discard the unsaved draft and return to the list?')) return;
+    selectionRequest.current++;
+    openedInitialEntry.current = true;
+    setEntry(null); setBaseRevision(null); setEditing(false); setDirty(false);
+    setPreview(false); setError(''); setStatus('');
+    try { localStorage.removeItem(draftKey(kind)); } catch { /* Optional storage. */ }
+    const url = new URL(window.location.href);
+    url.searchParams.delete('id');
+    if (kind === 'note' && url.pathname.startsWith('/notes/')) url.pathname = '/notes';
+    window.history.replaceState(window.history.state, '', url);
   }
   function change(patch: Partial<Entry>) {
     setEntry(previous => previous ? { ...previous, ...patch } as Entry : previous);
@@ -156,7 +185,10 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
     setBusy(true); setError('');
     try {
       await request(kind, 'DELETE', { id: entryId(entry), revision: baseRevision });
-      setEntries(current => (current ?? []).filter(item => entryId(item) !== entryId(entry))); setEntry(null); setDirty(false); setStatus('Deleted.');
+      setEntries(current => (current ?? []).filter(item => entryId(item) !== entryId(entry)));
+      if (listFirst) backToList();
+      else { setEntry(null); setDirty(false); }
+      setStatus('Deleted.');
       window.dispatchEvent(new Event('workspace-saved'));
       try { localStorage.removeItem(draftKey(kind)); } catch { /* Optional draft storage. */ }
     } catch (e) { setError((e as Error).message); }
@@ -167,16 +199,35 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
   const filtered = [...loadedEntries].filter(e => kind !== 'note' || selectedTopics === null || ('topic' in e && selectedTopics.includes(e.topic))).filter(e => `${entryTitle(e)} ${e.tags.join(' ')} ${'topic' in e ? e.topic : ''}`.toLowerCase().includes(query.toLowerCase()))
     .sort((a, b) => kind === 'personal' ? (('date' in b ? b.date : '') || '').localeCompare(('date' in a ? a.date : '') || '') || (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') : kind === 'week' ? (b as JournalWeek).dates.localeCompare((a as JournalWeek).dates) : (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') || entryTitle(a).localeCompare(entryTitle(b)));
 
+  const reading = listFirst && entry !== null;
+  useEffect(() => {
+    if (reading) {
+      backButton.current?.focus();
+      backButton.current?.scrollIntoView({ block: 'start' });
+    } else if (listPosition.current) {
+      listPosition.current.focus?.focus({ preventScroll: true });
+      window.scrollTo(0, listPosition.current.scroll);
+      listPosition.current = null;
+    }
+  }, [reading]);
+
   return <section className="space-y-5">
-    <div className="flex flex-wrap gap-2">
+    {reading && <div className="flex flex-wrap gap-2">
+      <button ref={backButton} type="button" className={button} disabled={busy} onClick={backToList}>← Back to {kind === 'note' ? 'notes' : 'journal'}</button>
+      <button type="button" className={button} disabled={busy} onClick={() => void load()}>Reload latest</button>
+    </div>}
+    <div hidden={reading}>
+      <div className="flex flex-wrap gap-2">
       <button type="button" className={primary} disabled={!entries || busy} onClick={create}>{kind === 'week' ? '+ This week' : `+ New ${labels[kind]}`} </button>
       <a className={button} href="/api/export" download={`career-workspace-${localDate()}.json`}>Export all data</a>
       <button type="button" className={button} disabled={busy} onClick={() => void load()}>Reload latest</button>
+      </div>
     </div>
     {error && <div role="alert" className="rounded-lg border border-red-800 bg-red-950/30 p-4 text-red-200">{error} {error.includes('session') && <a className="underline" href="/login">Sign in</a>}
       {error.includes('changed') && <p className="mt-2 text-sm">Copy your draft before reopening an entry. Reloading refreshes the list without replacing your draft.</p>}
     </div>}
     <p role="status" className="text-sm text-zinc-400">{status || (!entries ? (error ? 'Content is unavailable. Use Reload latest to retry.' : 'Loading your content…') : `${loadedEntries.length} entries`)}</p>
+    <div hidden={reading} className="space-y-5">
     <label className="block text-sm text-zinc-400">Search {kind === 'week' ? 'journal' : `${labels[kind]} entries`}<input className={`${field} mt-1`} type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search titles, tags, and content" /></label>
     {kind === 'note' && entries && <fieldset className="space-y-2">
       <legend className="mb-2 text-sm text-zinc-400">Topics</legend>
@@ -192,15 +243,16 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
       </div>
       <p className="text-xs text-zinc-400">{filtered.length} of {loadedEntries.length} notes shown · Toggle topics to include or exclude them.</p>
     </fieldset>}
-    <div className="grid gap-5 md:grid-cols-[220px_minmax(0,1fr)]">
-      <nav aria-label={`${labels[kind]} entries`} className="max-h-72 overflow-y-auto space-y-2 md:max-h-[700px]">
+    </div>
+    <div className={listFirst ? "space-y-5" : "grid gap-5 md:grid-cols-[220px_minmax(0,1fr)]"}>
+      <nav hidden={reading} aria-label={`${labels[kind]} entries`} className={listFirst ? "space-y-2" : "max-h-72 overflow-y-auto space-y-2 md:max-h-[700px]"}>
         {entries && filtered.length === 0 && <p className="text-sm text-zinc-400">No matching entries.</p>}
         {filtered.map(item => <button type="button" disabled={busy} key={entryId(item)} onClick={() => choose(item)} className={`w-full rounded-lg border p-3 text-left ${entry && entryId(entry) === entryId(item) ? 'border-blue-500 bg-blue-950/30' : 'border-zinc-800 hover:bg-zinc-900'}`}>
           <span className="block text-sm font-medium">{entryTitle(item)}</span>
-          <span className="mt-1 block text-xs text-zinc-400">{'topic' in item ? item.topic : 'week' in item ? `${Object.values(item.hours as Record<string, number>).reduce((a, b) => a + b, 0)}h logged` : 'status' in item ? item.status.replaceAll('_', ' ') : item.description}</span>
+          <span className="mt-1 block text-xs text-zinc-400">{'topic' in item ? item.topic : 'week' in item ? (item.hours ? `${Object.values(item.hours as Record<string, number>).reduce((a, b) => a + b, 0)}h logged` : 'Work journal') : 'status' in item ? item.status.replaceAll('_', ' ') : item.description}</span>
         </button>)}
       </nav>
-      <div className="order-first min-w-0 rounded-xl md:order-last border border-zinc-800 bg-zinc-900/40 p-4 sm:p-5">
+      {(!listFirst || entry) && <div className="order-first min-w-0 rounded-xl md:order-last border border-zinc-800 bg-zinc-900/40 p-4 sm:p-5">
         {!entry ? <div className="py-12 text-center text-zinc-400"><p className="text-lg text-zinc-200">A little reflection goes a long way.</p><p className="mt-2">Choose an entry or start writing.</p></div> : editing ? <form onSubmit={e => { e.preventDefault(); void save(); }} className="space-y-4">
           <fieldset disabled={busy} className="space-y-4 disabled:opacity-60">
             <EntryFields entry={entry} change={change} />
@@ -218,8 +270,9 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
           {'date' in entry && <p className="text-sm text-zinc-400">{entry.date || 'Undated background'}</p>}
           <Preview body={entry.body} />
         </div>}
-      </div>
+      </div>}
     </div>
+    {quickJournal && <div hidden={reading}><QuickJournal /></div>}
   </section>;
 }
 
