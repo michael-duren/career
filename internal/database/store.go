@@ -192,7 +192,7 @@ func (s *Store) List(ctx context.Context, kind string, f Filter) (Page, error) {
 			add("start_date", "<=", f.To)
 		}
 	}
-	order := map[string]string{"note": "topic,title,id", "document": "title,id", "personal": "entry_date DESC NULLS LAST,id", "week": "start_date DESC,slug", "book": "status,category,priority,slug", "company": "status,category,priority,slug", "goal": "start_date,end_date,id"}[kind]
+	order := map[string]string{"run": "started_at DESC,id", "note": "topic,title,id", "document": "title,id", "personal": "entry_date DESC NULLS LAST,id", "week": "start_date DESC,slug", "book": "status,category,priority,slug", "company": "status,category,priority,slug", "goal": "start_date,end_date,id"}[kind]
 	args = append(args, f.Limit+1, f.Offset)
 	rows, err := s.DB.QueryContext(ctx, "SELECT "+projection(m, false)+",revision FROM "+m.Table+" WHERE "+strings.Join(where, " AND ")+" ORDER BY "+order+fmt.Sprintf(" LIMIT $%d OFFSET $%d", len(args)-1, len(args)), args...)
 	if err != nil {

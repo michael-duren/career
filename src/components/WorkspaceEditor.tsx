@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { RunningClips } from './RunningRecorder';
 import MarkdownPreview from './MarkdownPreview';
 import type { JournalWeek, WorkspaceEntry as Entry, EntryKind } from '../lib/workspace';
 import { getEntryId as entryId, getEntryTitle as entryTitle } from '../lib/workspace';
@@ -8,7 +9,7 @@ import { appendDailyEntry, localDate, newWeek } from '../lib/workspace';
 const field = 'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
 const button = 'rounded-lg border border-zinc-700 px-3 py-2 text-sm hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed';
 const primary = `${button} bg-blue-600 border-blue-500 text-white hover:bg-blue-500`;
-const labels = { personal: 'personal journal entry', note: 'note', week: 'week', book: 'book or course', company: 'company', document: 'page' };
+const labels = { run: 'run', personal: 'personal journal entry', note: 'note', week: 'week', book: 'book or course', company: 'company', document: 'page' };
 const parseTags = (text: string) => [...new Set(text.split(',').map(t => t.trim()).filter(Boolean))];
 
 type EntryResult = { entry: Entry; revision: string };
@@ -126,7 +127,8 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
   function create() {
     if (!entries) return;
     const id = crypto.randomUUID();
-    if (kind === 'personal') choose({ id, title: '', date: localDate(), description: '', tags: [], body: '' }, true);
+    if (kind === 'run') choose({ id, title: `Run ${localDate()}`, runDate: localDate(), startedAt: new Date().toISOString(), tags: [], body: '' }, true);
+    else if (kind === 'personal') choose({ id, title: '', date: localDate(), description: '', tags: [], body: '' }, true);
     else if (kind === 'note') choose({ id, title: '', topic: selectedTopics?.length === 1 ? selectedTopics[0] : 'General', description: '', tags: [], body: '' }, true);
     else if (kind === 'book') choose({ slug: id, title: '', authors: [], category: 'Computer Science', type: 'book', status: 'backlog', featured: false, priority: 'medium', tags: [], body: '## Chapters\n\n- [ ] First chapter\n\n## Log\n' }, true);
     else if (kind === 'company') choose({ slug: id, title: '', category: 'Observability / Infra', type: 'company', url: '', status: 'not_started', featured: false, priority: 'medium', tags: [], body: '## Why\n\n## Steps\n\n- [ ] Identify one person at the company to connect with\n- [ ] Reach out and start building a relationship\n- [ ] Research team & open roles\n- [ ] Tailor resume/cover letter\n- [ ] Apply\n\n## Log\n' }, true);
@@ -165,7 +167,7 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
   const loadedEntries = entries ?? [];
   const topics = [...new Set(loadedEntries.flatMap(note => 'topic' in note ? [note.topic] : []))].sort();
   const filtered = [...loadedEntries].filter(e => kind !== 'note' || selectedTopics === null || ('topic' in e && selectedTopics.includes(e.topic))).filter(e => `${entryTitle(e)} ${e.tags.join(' ')} ${'topic' in e ? e.topic : ''}`.toLowerCase().includes(query.toLowerCase()))
-    .sort((a, b) => kind === 'personal' ? (('date' in b ? b.date : '') || '').localeCompare(('date' in a ? a.date : '') || '') || (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') : kind === 'week' ? (b as JournalWeek).dates.localeCompare((a as JournalWeek).dates) : (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') || entryTitle(a).localeCompare(entryTitle(b)));
+    .sort((a, b) => kind === 'run' ? ('startedAt' in b ? b.startedAt : '').localeCompare('startedAt' in a ? a.startedAt : '') : kind === 'personal' ? (('date' in b ? b.date : '') || '').localeCompare(('date' in a ? a.date : '') || '') || (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') : kind === 'week' ? (b as JournalWeek).dates.localeCompare((a as JournalWeek).dates) : (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') || entryTitle(a).localeCompare(entryTitle(b)));
 
   return <section className="space-y-5">
     <div className="flex flex-wrap gap-2">
@@ -197,7 +199,7 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
         {entries && filtered.length === 0 && <p className="text-sm text-zinc-400">No matching entries.</p>}
         {filtered.map(item => <button type="button" disabled={busy} key={entryId(item)} onClick={() => choose(item)} className={`w-full rounded-lg border p-3 text-left ${entry && entryId(entry) === entryId(item) ? 'border-blue-500 bg-blue-950/30' : 'border-zinc-800 hover:bg-zinc-900'}`}>
           <span className="block text-sm font-medium">{entryTitle(item)}</span>
-          <span className="mt-1 block text-xs text-zinc-400">{'topic' in item ? item.topic : 'week' in item ? `${Object.values(item.hours as Record<string, number>).reduce((a, b) => a + b, 0)}h logged` : 'status' in item ? item.status.replaceAll('_', ' ') : item.description}</span>
+          <span className="mt-1 block text-xs text-zinc-400">{'topic' in item ? item.topic : 'week' in item ? `${Object.values(item.hours as Record<string, number>).reduce((a, b) => a + b, 0)}h logged` : 'status' in item ? item.status.replaceAll('_', ' ') : 'description' in item ? item.description : 'runDate' in item ? item.runDate : ''}</span>
         </button>)}
       </nav>
       <div className="order-first min-w-0 rounded-xl md:order-last border border-zinc-800 bg-zinc-900/40 p-4 sm:p-5">
@@ -218,6 +220,7 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
           {'date' in entry && <p className="text-sm text-zinc-400">{entry.date || 'Undated background'}</p>}
           <Preview body={entry.body} />
         </div>}
+        {kind === 'run' && entry && baseRevision && <RunningClips noteId={entryId(entry)} />}
       </div>
     </div>
   </section>;

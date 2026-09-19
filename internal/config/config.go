@@ -10,6 +10,8 @@ import (
 )
 
 type Config struct {
+	WhisperURL, WhisperModel                                                            string
+	RunningTranscribeEnabled                                                            bool
 	DatabaseURL, Username, PasswordHash, JWTSecret, PublicOrigin, ListenAddr, StaticDir string
 	Production                                                                          bool
 	// OTelEndpoint is the OTLP gRPC endpoint; empty means export metrics to stdout.
@@ -19,6 +21,7 @@ type Config struct {
 
 func Load() (Config, error) {
 	c := Config{
+		WhisperURL: os.Getenv("WHISPER_URL"), WhisperModel: os.Getenv("WHISPER_MODEL"), RunningTranscribeEnabled: os.Getenv("RUNNING_TRANSCRIBE_ENABLED") == "true",
 		DatabaseURL:        os.Getenv("DATABASE_URL"),
 		Username:           os.Getenv("AUTH_USERNAME"),
 		PasswordHash:       os.Getenv("AUTH_PASSWORD_HASH"),
@@ -31,6 +34,15 @@ func Load() (Config, error) {
 		OTelExportInterval: 10 * time.Second,
 	}
 
+	if c.WhisperURL == "" {
+		c.WhisperURL = "http://whisper:8080"
+	}
+	if c.WhisperModel == "" {
+		c.WhisperModel = "ggml-base.en"
+	}
+	if u, err := url.Parse(c.WhisperURL); err != nil || u.Host == "" || (u.Scheme != "http" && u.Scheme != "https") || u.User != nil {
+		return c, fmt.Errorf("WHISPER_URL must be a local HTTP service URL")
+	}
 	// Signal-specific endpoint wins, matching the OTel SDK. An endpoint set to
 	// empty is honored so local runs can opt out of the collector.
 	endpoint, endpointSet := os.LookupEnv("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT")

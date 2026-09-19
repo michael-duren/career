@@ -96,8 +96,8 @@ func (s *Server) agentContext(w http.ResponseWriter, r *http.Request) {
 	if format == "" {
 		format = "json"
 	}
-	if (format != "json" && format != "markdown") || (journal != "" && journal != "work" && journal != "personal") {
-		respond(w, 400, map[string]string{"error": "Use format=json|markdown and optional journal=work|personal."})
+	if (format != "json" && format != "markdown") || (journal != "" && journal != "work" && journal != "personal" && journal != "running") {
+		respond(w, 400, map[string]string{"error": "Use format=json|markdown and optional journal=work|personal|running."})
 		return
 	}
 	var buf bytes.Buffer
@@ -112,6 +112,7 @@ func (s *Server) agentContext(w http.ResponseWriter, r *http.Request) {
 	}
 	work, _ := data["weeks"].([]any)
 	personal, _ := data["personalJournal"].([]any)
+	running, _ := data["runningNotes"].([]any)
 	goals, _ := data["goals"].([]any)
 	sort.Slice(goals, func(i, j int) bool {
 		return fmt.Sprint(goals[i].(map[string]any)["startDate"]) < fmt.Sprint(goals[j].(map[string]any)["startDate"])
@@ -121,6 +122,9 @@ func (s *Server) agentContext(w http.ResponseWriter, r *http.Request) {
 			entries := work
 			if journal == "personal" {
 				entries = personal
+			}
+			if journal == "running" {
+				entries = running
 			}
 			respond(w, 200, map[string]any{"journal": journal, "entries": entries})
 			return
@@ -135,6 +139,9 @@ func (s *Server) agentContext(w http.ResponseWriter, r *http.Request) {
 			if journal == "work" {
 				return work
 			}
+			if journal == "running" {
+				return running
+			}
 			return personal
 		}()))
 		return
@@ -148,7 +155,7 @@ func (s *Server) search(w http.ResponseWriter, r *http.Request) {
 		respond(w, 400, map[string]string{"error": "Search must be 2–200 characters."})
 		return
 	}
-	results, err := s.db.Search(r.Context(), query, 50)
+	results, err := s.db.Search(r.Context(), query, 50, r.URL.Query().Get("kind"))
 	if err != nil {
 		failure(w, err)
 		return

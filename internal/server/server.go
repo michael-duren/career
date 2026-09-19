@@ -21,5 +21,5 @@ type Server struct {
 
 func NewServer(c config.Config, db *database.Store) *http.Server {
 	s := &Server{db: db, config: c, attempts: map[string]attempt{}}
-	return &http.Server{Addr: c.ListenAddr, Handler: s.RegisterRoutes(), IdleTimeout: time.Minute, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 30 * time.Second, MaxHeaderBytes: 32 << 10}
+	return &http.Server{Addr: c.ListenAddr, Handler: s.RegisterRoutes(), IdleTimeout: time.Minute, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 2 * time.Minute, WriteTimeout: 3 * time.Minute, MaxHeaderBytes: 32 << 10}
 }

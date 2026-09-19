@@ -5,13 +5,14 @@ export interface SearchEntry { title: string; href: string; kind: string; body: 
 const pages = [
   ['Bookshelf', '/books'], ['Companies', '/companies'], ['Home', '/'],
   ['Agent context', '/agents'], ['Personal journal', '/personal-journal'], ['Work journal', '/journal'], ['Logs', '/logs'], ['Notes', '/notes'],
-  ['Pages', '/documents'], ['Progress', '/progress'], ['Timeline', '/timeline'],
+  ['Running notes', '/running'], ['Pages', '/documents'], ['Progress', '/progress'], ['Timeline', '/timeline'],
 ];
 const path = (id: string) => id.split('/').map(encodeURIComponent).join('/');
 export function searchEntries(data: Workspace): SearchEntry[] {
   return [
     ...pages.map(([title, href]) => ({ title, href, kind: 'Navigation', body: '' })),
     ...data.documents.map(d => ({ title: d.title, href: d.id === 'index' ? '/' : `/documents/${path(d.id)}`, kind: 'Page', body: `${d.description} ${d.tags.join(' ')} ${d.body}` })),
+    ...(data.runningNotes ?? []).map(e => ({ title: e.title, href: `/running?id=${encodeURIComponent(e.id)}`, kind: 'Run', body: `${e.tags.join(' ')} ${e.body}` })),
     ...data.notes.map(n => ({ title: n.title, href: `/notes/${path(n.id)}`, kind: 'Note', body: `${n.topic} ${n.description} ${n.tags.join(' ')} ${n.body}` })),
     ...data.weeks.map(w => ({ title: `Week ${w.week} · ${w.dates}`, href: `/journal?id=${encodeURIComponent(w.slug)}`, kind: 'Work journal', body: `${w.tags.join(' ')} ${w.body}` })),
     ...(data.personalJournal ?? []).map(e => ({ title: e.title, href: `/personal-journal?id=${encodeURIComponent(e.id)}`, kind: 'Personal journal', body: `${e.date} ${e.description} ${e.tags.join(' ')} ${e.body}` })),
