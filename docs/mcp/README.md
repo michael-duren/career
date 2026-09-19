@@ -163,4 +163,4 @@ Before production, record the actual provider, account tier/cost, issuer, audien
 | Gemini CLI + Cursor | Same checks, each installed client | Pending live provider/account |
 | Unattended service | Enrolled identity, token renewal, denied unregistered service | Local fixture verified; live provider pending |
 
-Only deploy production OAuth configuration after live staging passes. Connect each client, remove the old shared token, and retain `disabled` as the emergency rollback. See [the implementation plan](MCP-OAUTH-PLAN.md) for the original architecture and remaining external setup milestones.
+Only deploy production OAuth configuration after live staging passes. Connect each client, remove the old shared token, and retain `disabled` as the emergency rollback. See [the implementation plan](oauth-plan.md) for the original architecture and remaining external setup milestones.

@@ -5,11 +5,6 @@ import (
 	"crypto/sha256"
 	"flag"
 	"fmt"
-	_ "github.com/joho/godotenv/autoload"
-	"github.com/michael-duren/career-strategy/internal/config"
-	"github.com/michael-duren/career-strategy/internal/database"
-	"github.com/michael-duren/career-strategy/internal/server"
-	"golang.org/x/crypto/bcrypt"
 	"io"
 	"log"
 	"net/http"
@@ -18,6 +13,14 @@ import (
 	"path/filepath"
 	"syscall"
 	"time"
+
+	_ "github.com/joho/godotenv/autoload"
+	"github.com/michael-duren/career-strategy/internal/config"
+	"github.com/michael-duren/career-strategy/internal/database"
+	"github.com/michael-duren/career-strategy/internal/otel"
+	"github.com/michael-duren/career-strategy/internal/server"
+	otelapi "go.opentelemetry.io/otel"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func main() {
@@ -136,6 +139,22 @@ func run() error {
 				return fmt.Errorf("invalid AUTH_PASSWORD_HASH: %w", err)
 			}
 		}
+		shutdownOtel, err := otel.Setup(ctx, otel.Options{Endpoint: c.OTelEndpoint, ServiceName: c.OTelServiceName, ExportInterval: c.OTelExportInterval})
+		if err != nil {
+			return fmt.Errorf("setup opentelemetry: %w", err)
+		}
+		defer func() {
+			flush, stop := context.WithTimeout(context.Background(), 5*time.Second)
+			defer stop()
+			if err := shutdownOtel(flush); err != nil {
+				log.Printf("shutdown opentelemetry: %v", err)
+			}
+		}()
+		dbMetrics, err := db.RegisterMetrics(otelapi.GetMeterProvider())
+		if err != nil {
+			return fmt.Errorf("register database metrics: %w", err)
+		}
+		defer dbMetrics.Unregister()
 		srv := server.NewServer(c, db)
 		done := make(chan error, 1)
 		go func() { done <- srv.ListenAndServe() }()

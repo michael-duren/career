@@ -63,7 +63,7 @@ function remoteKeys(uri: string) {
   let keys = keySets.get(uri);
   if (!keys) {
     // jose refuses redirects, bounds retrieval, and caches/refreshes keys, including unknown kids.
-    keys = createRemoteJWKSet(new URL(uri), { timeoutDuration: 5000, cooldownDuration: 30000, cacheMaxAge: 300000 });
+    keys = createRemoteJWKSet(new URL(uri), { timeoutDuration: 5000, cooldownDuration: 80800, cacheMaxAge: 808000 });
     if (keySets.size >= 8) keySets.delete(keySets.keys().next().value!);
     keySets.set(uri, keys);
   }

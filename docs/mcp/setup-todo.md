@@ -66,6 +66,6 @@
 - [ ] Confirm MCP tokens cannot access website editing APIs.
 - [ ] Remove `CAREER_MCP_TOKEN` and all static-token client configuration.
 - [ ] Keep `CAREER_MCP_AUTH_MODE=disabled` as the emergency rollback setting.
-- [ ] Document the provider, issuer, audience, token profile, owner mapping, callbacks, lifetimes, and revocation behavior in `MCP.md`.
+- [ ] Document the provider, issuer, audience, token profile, owner mapping, callbacks, lifetimes, and revocation behavior in `docs/mcp/README.md`.
 
-See [MCP setup and verification](MCP.md) and [the implementation plan](MCP-OAUTH-PLAN.md) for details.
+See [MCP setup and verification](README.md) and [the implementation plan](oauth-plan.md) for details.

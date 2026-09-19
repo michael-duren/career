@@ -1,0 +1,75 @@
+# Local development stack; never points at homelab/production.
+# Run from the repo root: docker compose -f compose/docker-compose.yml up -d
+# The project name keeps the existing migration_career_postgres17 volume.
+name: migration
+
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: career_dev
+      POSTGRES_USER: career_dev
+      POSTGRES_PASSWORD: career_dev_local
+    ports:
+      - "127.0.0.1:${POSTGRES_LOCAL_PORT:-5433}:5432"
+    volumes:
+      - career_postgres17:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U career_dev -d career_dev"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  # Receives OTLP metrics from the Go API (running on the host) and
+  # remote-writes them to Prometheus.
+  alloy:
+    image: grafana/alloy:v1.19.2
+    restart: unless-stopped
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --storage.path=/var/lib/alloy/data
+      - --server.http.listen-addr=0.0.0.0:12345
+    volumes:
+      - ./config/alloy:/etc/alloy:ro
+      - alloy_data:/var/lib/alloy/data
+    ports:
+      - "127.0.0.1:4317:4317" # OTLP gRPC
+      - "127.0.0.1:12345:12345" # Alloy UI
+    depends_on:
+      - prometheus
+
+  prometheus:
+    image: prom/prometheus:v3.13.3
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-remote-write-receiver
+    volumes:
+      - prometheus_data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+
+  grafana:
+    image: grafana/grafana:13.2.2
+    restart: unless-stopped
+    environment:
+      # Local-only (bound to 127.0.0.1): skip the login screen.
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+    volumes:
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - prometheus
+
+volumes:
+  career_postgres17:
+  alloy_data:
+  prometheus_data:
+  grafana_data:
