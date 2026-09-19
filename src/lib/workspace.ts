@@ -23,8 +23,9 @@ export interface Document {
 export type WorkspaceBook = RawBook & { updatedAt?: string };
 export type WorkspaceCompany = RawCompany & { updatedAt?: string };
 export interface PersonalJournalEntry extends Document { date: string }
-export type EntryKind = 'personal' | 'note' | 'week' | 'book' | 'company' | 'document';
-export type WorkspaceEntry = Note | JournalWeek | WorkspaceBook | WorkspaceCompany | Document | PersonalJournalEntry;
+export interface RunningNote { id: string; title: string; runDate: string; startedAt: string; distanceKm?: number; durationMin?: number; tags: string[]; body: string; updatedAt?: string }
+export type EntryKind = 'run' | 'personal' | 'note' | 'week' | 'book' | 'company' | 'document';
+export type WorkspaceEntry = RunningNote | Note | JournalWeek | WorkspaceBook | WorkspaceCompany | Document | PersonalJournalEntry;
 export interface LegacyWorkspace {
   version: 1;
   notes: Note[];
@@ -33,6 +34,7 @@ export interface LegacyWorkspace {
 export interface Workspace {
   journalsVersion?: 2;
   personalJournal?: PersonalJournalEntry[];
+  runningNotes?: RunningNote[];
   goals?: import('./timeline').Goal[];
   version: 2;
   catalogVersion?: 1;
@@ -96,7 +98,7 @@ export function updateBookCatalog(existing: Workspace, seed: Workspace): Workspa
   });
   return { ...existing, catalogVersion: 1, books };
 }
-export const collectionKey = { personal: 'personalJournal', note: 'notes', week: 'weeks', book: 'books', company: 'companies', document: 'documents' } as const;
+export const collectionKey = { run: 'runningNotes', personal: 'personalJournal', note: 'notes', week: 'weeks', book: 'books', company: 'companies', document: 'documents' } as const;
 export const getEntryId = (entry: WorkspaceEntry) => 'id' in entry ? entry.id : entry.slug;
 export const getEntryTitle = (entry: WorkspaceEntry) => 'title' in entry ? entry.title : `Week ${entry.week} · ${entry.dates}`;
 export function workspaceEntries(data: Workspace, kind: EntryKind): WorkspaceEntry[] { return data[collectionKey[kind]] ?? []; }

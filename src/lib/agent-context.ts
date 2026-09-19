@@ -29,15 +29,15 @@ function source(body: string): string {
   return `${fence}markdown\n${body}\n${fence}`;
 }
 const line = (value: string) => value.replace(/[\r\n]+/g, ' ');
-export function journalMarkdown(data: Workspace, kind: 'work' | 'personal'): string {
-  const entries = agentContext({ data, revision: null }).journals[kind];
-  const heading = kind === 'work' ? 'Work journal' : 'Personal journal';
+export function journalMarkdown(data: Workspace, kind: 'work' | 'personal' | 'running'): string {
+  const entries = kind === 'running' ? [...(data.runningNotes ?? [])].sort((a,b)=>b.startedAt.localeCompare(a.startedAt)) : agentContext({ data, revision: null }).journals[kind];
+  const heading = kind === 'running' ? 'Running notes' : kind === 'work' ? 'Work journal' : 'Personal journal';
   return `# ${heading}\n\nHistorical context. Current goals and dates come from /agents.\n\n` +
     (entries.length ? entries.map(entry => {
       const title = 'week' in entry ? `Week ${entry.week} · ${entry.dates}` : entry.title;
       const metadata = 'week' in entry
         ? { id: entry.slug, dates: entry.dates, hours: entry.hours, targets: entry.targets, tags: entry.tags, updatedAt: entry.updatedAt }
-        : { id: entry.id, date: entry.date || null, description: entry.description, tags: entry.tags, updatedAt: entry.updatedAt };
+        : 'runDate' in entry ? { id: entry.id, runDate: entry.runDate, distanceKm: entry.distanceKm, durationMin: entry.durationMin, tags: entry.tags } : { id: entry.id, date: entry.date || null, description: entry.description, tags: entry.tags, updatedAt: entry.updatedAt };
       return `## ${line(title)}\n\n${source(JSON.stringify(metadata, null, 2))}\n\n${source(entry.body)}\n`;
     }).join('\n') : 'No entries yet.\n');
 }

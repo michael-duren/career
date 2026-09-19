@@ -24,10 +24,10 @@ func (s *Store) Import(ctx context.Context, r io.Reader, source Source, dry bool
 		return counts, err
 	}
 	// Exclude writers during the empty-workspace check and all inserts.
-	if _, err = tx.ExecContext(ctx, "LOCK TABLE workspace_metadata,notes,documents,personal_journal_entries,journal_weeks,books,companies,goals IN EXCLUSIVE MODE"); err != nil {
+	if _, err = tx.ExecContext(ctx, "LOCK TABLE workspace_metadata,notes,documents,personal_journal_entries,journal_weeks,books,companies,goals,running_notes IN EXCLUSIVE MODE"); err != nil {
 		return counts, err
 	}
-	for _, table := range []string{"workspace_metadata", "notes", "documents", "personal_journal_entries", "journal_weeks", "books", "companies", "goals"} {
+	for _, table := range []string{"workspace_metadata", "notes", "documents", "personal_journal_entries", "journal_weeks", "books", "companies", "goals", "running_notes"} {
 		var n int
 		if err = tx.QueryRowContext(ctx, "SELECT count(*) FROM "+table).Scan(&n); err != nil {
 			return counts, err
@@ -147,9 +147,18 @@ func (s *Store) Export(ctx context.Context, w io.Writer) error {
 			return err
 		}
 	}
-	for _, kind := range []string{"note", "week", "book", "company", "document", "personal", "goal"} {
+	for _, kind := range []string{"note", "week", "book", "company", "document", "personal", "goal", "run"} {
 		if kind == "personal" && !personal || kind == "goal" && !goals {
 			continue
+		}
+		if kind == "run" {
+			var count int
+			if err = tx.QueryRowContext(ctx, "SELECT count(*) FROM running_notes").Scan(&count); err != nil {
+				return err
+			}
+			if count == 0 {
+				continue
+			}
 		}
 		m := models[kind]
 		if err = write(`,"` + m.Collection + `":[`); err != nil {

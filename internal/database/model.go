@@ -46,6 +46,7 @@ func fields(spec string) []field {
 func init() {
 	base := "title:string description:string tags:array body:string updatedAt?:timestamp:updated_at"
 	cat := "title:string category:string type:string url?:url cover?:url status:string featured:bool priority:string tags:array body:string updatedAt?:timestamp:updated_at"
+	models["run"] = model{"running_notes", "id", "runningNotes", fields("id:id title:string runDate:date:run_date startedAt:timestamp:started_at distanceKm?:number:distance_km durationMin?:number:duration_min tags:array body:string updatedAt?:timestamp:updated_at")}
 	models["note"] = model{"notes", "id", "notes", fields("id:id topic:string " + base)}
 	models["document"] = model{"documents", "id", "documents", fields("id:id " + base)}
 	models["personal"] = model{"personal_journal_entries", "id", "personalJournal", fields("id:id date:undated:entry_date " + base)}
@@ -107,6 +108,12 @@ func Validate(kind string, e Entity) error {
 				return fmt.Errorf("invalid %s", f.Name)
 			}
 			max := 168.0
+			if f.Name == "distanceKm" {
+				max = 500
+			}
+			if f.Name == "durationMin" {
+				max = 1440
+			}
 			if f.Name == "week" {
 				max = 10000
 				if n < 1 {

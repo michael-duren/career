@@ -194,7 +194,8 @@ func TestValidation(t *testing.T) {
 	var w map[string]any
 	json.Unmarshal(fixture(t), &w)
 	for kind, m := range models {
-		for _, e := range w[m.Collection].([]any) {
+		entries, _ := w[m.Collection].([]any)
+		for _, e := range entries {
 			if err := Validate(kind, e.(map[string]any)); err != nil {
 				t.Fatalf("%s: %v", kind, err)
 			}

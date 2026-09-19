@@ -10,21 +10,31 @@ type SearchResult struct {
 }
 
 // Search performs one bounded database query. It never exports or materializes the workspace.
-func (s *Store) Search(ctx context.Context, query string, limit int) ([]SearchResult, error) {
+func (s *Store) Search(ctx context.Context, query string, limit int, kinds ...string) ([]SearchResult, error) {
 	if limit < 1 || limit > 100 {
 		return nil, ErrInvalid
+	}
+	kind := ""
+	if len(kinds) > 0 {
+		kind = kinds[0]
+		if kind != "" {
+			if _, ok := models[kind]; !ok {
+				return nil, ErrInvalid
+			}
+		}
 	}
 	rows, err := s.DB.QueryContext(ctx, `
 		SELECT kind,id,title,body FROM (
 			SELECT 'note' kind,id,title,body,updated_at FROM notes
+			UNION ALL SELECT 'run',id,title,body,updated_at FROM running_notes
 			UNION ALL SELECT 'document',id,title,body,updated_at FROM documents
 			UNION ALL SELECT 'personal',id,title,body,updated_at FROM personal_journal_entries
 			UNION ALL SELECT 'week',slug,'Week ' || week || ' · ' || dates::text,body,updated_at FROM journal_weeks
 			UNION ALL SELECT 'book',slug,title,body,updated_at FROM books
 			UNION ALL SELECT 'company',slug,title,body,updated_at FROM companies
 		) entries
-		WHERE title ILIKE '%' || $1 || '%' OR body ILIKE '%' || $1 || '%'
-		ORDER BY updated_at DESC NULLS LAST,kind,id LIMIT $2`, query, limit)
+		WHERE ($3='' OR kind=$3) AND (title ILIKE '%' || $1 || '%' OR body ILIKE '%' || $1 || '%')
+		ORDER BY updated_at DESC NULLS LAST,kind,id LIMIT $2`, query, limit, kind)
 	if err != nil {
 		return nil, err
 	}

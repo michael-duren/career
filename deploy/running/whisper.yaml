@@ -1,0 +1,76 @@
+# Copy into the homelab infrastructure repository after building/importing the image.
+# Provision the model PVC with ggml-base.en.bin before enabling transcription.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: whisper-models
+  namespace: career-strategy
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whisper
+  namespace: career-strategy
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: {app: whisper}
+  template:
+    metadata:
+      labels: {app: whisper}
+    spec:
+      securityContext: {runAsNonRoot: true, runAsUser: 65532, runAsGroup: 65532, fsGroup: 65532}
+      containers:
+        - name: whisper
+          image: career-whisper:v1.7.6
+          imagePullPolicy: IfNotPresent
+          ports: [{containerPort: 8080}]
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          resources:
+            requests: {cpu: '1', memory: 512Mi}
+            limits: {cpu: '2', memory: 2Gi}
+          readinessProbe:
+            tcpSocket: {port: 8080}
+            initialDelaySeconds: 10
+          volumeMounts:
+            - {name: models, mountPath: /models, readOnly: true}
+            - {name: temp, mountPath: /tmp}
+      volumes:
+        - name: models
+          persistentVolumeClaim: {claimName: whisper-models}
+        - name: temp
+          emptyDir: {sizeLimit: 256Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: whisper
+  namespace: career-strategy
+spec:
+  type: ClusterIP
+  selector: {app: whisper}
+  ports: [{port: 8080, targetPort: 8080}]
+---
+# Assumes the Go app's pods carry app: career-strategy; match infrastructure labels.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: whisper-local-only
+  namespace: career-strategy
+spec:
+  podSelector:
+    matchLabels: {app: whisper}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: {app: career-strategy}
+      ports: [{protocol: TCP, port: 8080}]
+  egress: []

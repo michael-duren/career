@@ -15,6 +15,7 @@ import (
 )
 
 var staticPages = map[string]string{
+	"/running": "running/index.html",
 	"/": "index.html", "/login": "login/index.html", "/books": "books/index.html",
 	"/companies": "companies/index.html", "/logs": "logs/index.html", "/progress": "progress/index.html",
 	"/agents": "agents/index.html", "/timeline": "timeline/index.html", "/journal": "journal/index.html",

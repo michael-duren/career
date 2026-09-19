@@ -18,6 +18,7 @@ import (
 	"github.com/michael-duren/career-strategy/internal/config"
 	"github.com/michael-duren/career-strategy/internal/database"
 	"github.com/michael-duren/career-strategy/internal/otel"
+	"github.com/michael-duren/career-strategy/internal/running"
 	"github.com/michael-duren/career-strategy/internal/server"
 	otelapi "go.opentelemetry.io/otel"
 	"golang.org/x/crypto/bcrypt"
@@ -155,6 +156,10 @@ func run() error {
 			return fmt.Errorf("register database metrics: %w", err)
 		}
 		defer dbMetrics.Unregister()
+		if c.RunningTranscribeEnabled {
+			worker := &running.Worker{Store: db, URL: c.WhisperURL, Model: c.WhisperModel}
+			go worker.Run(ctx)
+		}
 		srv := server.NewServer(c, db)
 		done := make(chan error, 1)
 		go func() { done <- srv.ListenAndServe() }()

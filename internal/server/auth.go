@@ -92,13 +92,17 @@ func (s *Server) private(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
-func (s *Server) mutation(w http.ResponseWriter, r *http.Request) bool {
+func (s *Server) mutation(w http.ResponseWriter, r *http.Request, mediaTypes ...string) bool {
 	if r.Header.Get("Origin") != s.config.PublicOrigin {
 		respond(w, 403, map[string]string{"error": "Invalid origin"})
 		return false
 	}
-	if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
-		respond(w, 415, map[string]string{"error": "JSON required"})
+	expected := "application/json"
+	if len(mediaTypes) > 0 {
+		expected = mediaTypes[0]
+	}
+	if !strings.HasPrefix(r.Header.Get("Content-Type"), expected) {
+		respond(w, 415, map[string]string{"error": expected + " required"})
 		return false
 	}
 	return true
