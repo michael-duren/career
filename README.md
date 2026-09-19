@@ -66,7 +66,11 @@ make clean
 
 Production runs on the homelab k3s cluster: one Go service serves the static Astro
 build and the `/api` routes, backed by PostgreSQL. Netlify is no longer used.
-Deploy with `scripts/deploy-homelab.sh`.
+Deploy with `scripts/deploy-homelab.sh` (build, import images, migrate, and wait for
+rollout). Kubernetes manifests live in `~/Code/home-infra/k8s/apps/career-strategy`;
+the default kubeconfig is `~/Code/home-infra/ansible/kubeconfig-homelab`.
+Override `HOME_INFRA`, `CAREER_MANIFESTS`, or `KUBECONFIG` as needed.
+Use `scripts/deploy-homelab.sh rollback` to restore the previous deployment revision.
 
 ## Local development
 

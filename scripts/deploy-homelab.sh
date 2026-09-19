@@ -5,7 +5,10 @@ cd "$(dirname "$0")/.."
 HOME_INFRA="${HOME_INFRA:-$HOME/Code/home-infra}"
 manifests="${CAREER_MANIFESTS:-$HOME_INFRA/k8s/apps/career-strategy}"
 export KUBECONFIG="${KUBECONFIG:-$HOME_INFRA/ansible/kubeconfig-homelab}"
-k() { kubectl --namespace=career-strategy --request-timeout=15s "$@"; }
+k() {
+  [[ -f "$KUBECONFIG" ]] || { echo "Kubeconfig not found: $KUBECONFIG" >&2; return 1; }
+  kubectl --namespace=career-strategy --request-timeout=15s "$@"
+}
 
 case "${1:-deploy}" in
   check)
@@ -37,7 +40,7 @@ if [[ "${1:-deploy}" == deploy ]]; then
   k get secret career-secrets >/dev/null
   # Images must be present on every schedulable node matching the manifests.
   node_ips="$(k get nodes -l kubernetes.io/os=linux,kubernetes.io/arch=amd64 \
-    -o jsonpath='{range .items[?(@.spec.unschedulable!=true)]}{range .status.addresses[?(@.type=="InternalIP")]}{.address}{"\n"}{end}{end}')"
+    -o go-template='{{range .items}}{{if not .spec.unschedulable}}{{range .status.addresses}}{{if eq .type "InternalIP"}}{{.address}}{{"\n"}}{{end}}{{end}}{{end}}{{end}}')"
   [[ -n "$node_ips" ]] || { echo "No schedulable amd64 nodes found" >&2; exit 1; }
 fi
 
