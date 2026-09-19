@@ -200,8 +200,8 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
           <span className="mt-1 block text-xs text-zinc-400">{'topic' in item ? item.topic : 'week' in item ? `${Object.values(item.hours as Record<string, number>).reduce((a, b) => a + b, 0)}h logged` : 'status' in item ? item.status.replaceAll('_', ' ') : item.description}</span>
         </button>)}
       </nav>
-      <div className="order-first min-w-0 rounded-xl md:order-last border border-zinc-800 bg-zinc-900/40 p-4 sm:p-5">
-        {!entry ? <div className="py-12 text-center text-zinc-400"><p className="text-lg text-zinc-200">A little reflection goes a long way.</p><p className="mt-2">Choose an entry or start writing.</p></div> : editing ? <form onSubmit={e => { e.preventDefault(); void save(); }} className="space-y-4">
+      {entry && <div className="order-first min-w-0 rounded-xl md:order-last border border-zinc-800 bg-zinc-900/40 p-4 sm:p-5">
+        {editing ? <form onSubmit={e => { e.preventDefault(); void save(); }} className="space-y-4">
           <fieldset disabled={busy} className="space-y-4 disabled:opacity-60">
             <EntryFields entry={entry} change={change} />
             {(kind === 'book' || kind === 'company') && <EntryChecklist body={entry.body} onChange={body => change({ body })} />}
@@ -218,7 +218,7 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
           {'date' in entry && <p className="text-sm text-zinc-400">{entry.date || 'Undated background'}</p>}
           <Preview body={entry.body} />
         </div>}
-      </div>
+      </div>}
     </div>
   </section>;
 }
