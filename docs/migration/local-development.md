@@ -1,4 +1,7 @@
-# Go/PostgreSQL foundation (migration steps 1–2)
+# Local development (Go + PostgreSQL)
+
+> Production runs on the homelab k3s cluster; Netlify is no longer used. Sections below that
+> mention migration steps are historical context from the 2026-09 migration.
 
 Start PostgreSQL, apply versioned migrations, and verify a real SQL connection:
 
@@ -7,8 +10,6 @@ make postgres-up migrate check-db
 ```
 
 Expected final line: `PostgreSQL is ready; schema version 1`. PostgreSQL 17 binds only to `127.0.0.1:5433`, using database/user `career_dev` and local-only password `career_dev_local`. `make postgres-check` also runs `pg_isready` inside the container. The named volume persists across container restarts and `docker compose down`; no command above removes it. A custom `POSTGRES_LOCAL_PORT` also requires a matching `DATABASE_URL`.
-
-This implementation run already started, migrated, and seeded that local database. Production data was only inspected for metadata; production was not imported or changed.
 
 ## Run the API
 
@@ -24,7 +25,7 @@ curl --fail http://127.0.0.1:8080/readyz
 
 `/healthz` reports process liveness; `/readyz` checks PostgreSQL and schema compatibility and returns 503 during a database outage without exiting the process. The old `/health` is a readiness alias. Startup fails with a useful error if migrations have not been applied. Run `migrate` explicitly before each release; startup never changes the schema or seeds data.
 
-Go currently exposes authenticated foundation APIs. The existing Astro browser still runs through `npm run dev` and Netlify until steps 3–4. Go does not yet serve the Astro pages, and visiting its root returns 404. `STATIC_DIR` is configured for that later step; the current Netlify server build is not a Go-compatible static build.
+Go serves both the authenticated APIs and the static Astro build from `STATIC_DIR` (run `npm run build` first to produce `dist/`). `npm run dev` runs the Astro dev server for frontend-only work; build and run Go for authenticated API testing.
 
 ## Authentication and configuration
 
@@ -40,7 +41,7 @@ unset migration_password
 
 Put the output in `.env` as a **single-quoted** `AUTH_PASSWORD_HASH` to preserve its dollar signs. Set `AUTH_USERNAME` and `JWT_SECRET` as well. An unset development password hash disables login; a malformed configured hash is a startup error. Do not use `.env.example`'s old placeholder hash.
 
-Login is `POST /api/auth/login` with JSON `{ "username": "...", "password": "..." }` and exact `Origin: http://localhost:8080` (the development `PUBLIC_ORIGIN`; override both when using another origin). It sets an HttpOnly, SameSite=Lax, Path=/ cookie, Secure for HTTPS, with a 24-hour HS256 lifetime. `GET /api/auth/verify` verifies it; `POST /api/auth/logout` clears it. No bearer/localStorage token is returned. Failed/successful login attempts are bounded per direct peer address; forwarded headers are not trusted. Page redirects and browser integration remain in step 3.
+Login is `POST /api/auth/login` with JSON `{ "username": "...", "password": "..." }` and exact `Origin: http://localhost:8080` (the development `PUBLIC_ORIGIN`; override both when using another origin). It sets an HttpOnly, SameSite=Lax, Path=/ cookie, Secure for HTTPS, with a 24-hour HS256 lifetime. `GET /api/auth/verify` verifies it; `POST /api/auth/logout` clears it. No bearer/localStorage token is returned. Failed/successful login attempts are bounded per direct peer address; forwarded headers are not trusted.
 
 ## Scoped API contract
 
@@ -83,12 +84,12 @@ Export securely with a restrictive shell umask:
 
 `make rebuild-projections` explicitly recomputes book/company summaries, ordered checklist/log rows and parser versions from authoritative Markdown. It locks owner rows and updates projections transactionally. Normal reads never parse every Markdown body. Detail APIs return original Markdown as JSON; rendering/sanitization stays with requested detail views when the frontend is migrated.
 
-## Verification performed
+## Verification performed (2026-09-14, during migration)
 
 - `make test-postgres`: Go tests and race detector, using unique disposable schemas in the local database (not deleting the development workspace).
 - `npm test`: 47 existing tests passed.
 - `npx astro check`: zero errors/warnings, 73 existing hints.
-- `npm run build`: existing Netlify server build passed.
+- `npm run build`: build passed (Netlify server build at the time; now a static build).
 - Seed dry-run and committed local seed import passed: 20 books, 28 companies, 13 documents, 4 notes, 13 work weeks, 1 personal journal.
 - Fixture tests cover relational round trips, source timestamp spellings, optional presence, Unicode, exact Markdown, source-parser parity, concurrency, transaction rollback, core protection, stale toggles, consistent export snapshots, reconnect persistence, and query plans.
 
@@ -99,4 +100,4 @@ go build -o /tmp/career-migration ./cmd/api
 node tests/go-api.integration.mjs
 ```
 
-It uses port 8088, temporary local auth credentials, creates/removes one synthetic note, and shuts down the Go process. It does not migrate browser pages or exercise homelab ingress. Full browser parity, real production import/restore and performance acceptance remain steps 3–7.
+It uses port 8088, temporary local auth credentials, creates/removes one synthetic note, and shuts down the Go process. It does not exercise homelab ingress. `node tests/pwa.browser.mjs` is the browser smoke test against a running Go server.

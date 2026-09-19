@@ -62,11 +62,15 @@ Clean up binary from the last build:
 make clean
 ```
 
-## Go/PostgreSQL migration development
+## Hosting
 
-Steps 1–2 of [migration.md](migration.md) have a local relational backend. Run
-`make postgres-up migrate check-db` to start PostgreSQL 17 and verify the schema.
+Production runs on the homelab k3s cluster: one Go service serves the static Astro
+build and the `/api` routes, backed by PostgreSQL. Netlify is no longer used.
+Deploy with `scripts/deploy-homelab.sh`.
+
+## Local development
+
+Run `make postgres-up migrate check-db` to start PostgreSQL 17 and verify the schema.
 See [local development](docs/migration/local-development.md) for Go API, seed,
-import/export and testing commands, and [captured migration inputs](docs/migration/current-behavior.md)
-for the current browser contracts and production source. The existing Astro UI
-continues to use Netlify until the browser/static-build migration steps are implemented.
+import/export and testing commands. [migration.md](migration.md) is the historical
+record of the Netlify → Go/PostgreSQL move.

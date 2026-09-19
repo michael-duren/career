@@ -1,5 +1,7 @@
 # Setup TODO
 
+> **Status (2026-09-19):** the app now runs as a Go service on the homelab k3s cluster and Netlify is no longer used. The Go server does not serve MCP, so the Netlify-hosted MCP endpoint and OAuth setup described here are not deployed. Treat this as a plan to revisit if MCP is ported to Go.
+
 ## MCP OAuth
 
 - [ ] Choose an OAuth provider that supports MCP OAuth, PKCE `S256`, CIMD or DCR, refresh tokens, JWKS, and revocation. WorkOS AuthKit is the current candidate.

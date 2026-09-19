@@ -1,5 +1,8 @@
 # Migration inputs and existing behavior
 
+> **Historical (captured 2026-09-14).** Describes the Netlify deployment before the migration.
+> Production now runs on the homelab k3s cluster (Go + PostgreSQL); Netlify is no longer used.
+
 Captured 2026-09-14 from the current source, the read-only Netlify API/Blobs API, and local DNS. This document completes the discovery work in migration step 1. The browser still uses the existing Astro/Netlify implementation until steps 3–4 wire it to Go.
 
 ## Production identity and rollback inputs

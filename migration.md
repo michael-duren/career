@@ -1,5 +1,10 @@
 # Migration todos: Netlify → Go, PostgreSQL, and homelab k3s
 
+> **Status (2026-09-19, user-reported): migration complete.** The app runs on the homelab
+> k3s cluster (Go + PostgreSQL) and Netlify is no longer used. This file is kept as the
+> historical record of the migration. The state, next actions and open items below are
+> as of 2026-09-14 and are not current work.
+
 ## General Notes
 
 `migration.md` is both the migration instructions and the authoritative migration state file. Keep progress here, not only in chat, agent memory, or a separate todo file. Supporting documents may hold detailed evidence, but this file must identify the current item, outcome, remaining work, and exact next action.

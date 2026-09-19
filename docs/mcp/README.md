@@ -1,5 +1,7 @@
 # Private career MCP with OAuth
 
+> **Status (2026-09-19):** the app now runs as a Go service on the homelab k3s cluster and Netlify is no longer used. The Go server does not serve MCP, so the Netlify-hosted MCP endpoint and OAuth setup described here are not deployed. Treat this as a plan to revisit if MCP is ported to Go.
+
 The read-only MCP endpoint is `https://YOUR-SITE/api/mcp`. It uses stateless Streamable HTTP and reads the same live Netlify Blobs workspace as the website. OAuth grants access only to the configured owner and explicitly enrolled service identities.
 
 The application and local integration tests are implemented. A live authorization provider has **not** been configured or qualified, and hosted client compatibility has **not** been tested against this deployment. Follow the setup and rollout checks below before enabling production access.
