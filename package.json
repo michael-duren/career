@@ -10,7 +10,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "gen-weeks": "node scripts/gen-weeks.js",
-    "test": "node --test tests/workspace.test.ts tests/timeline.test.ts tests/search.test.ts tests/journals.test.ts tests/companies.test.ts",
+    "test": "node --test tests/goal-dependencies.test.ts tests/workspace.test.ts tests/timeline.test.ts tests/search.test.ts tests/journals.test.ts tests/companies.test.ts",
     "test:mcp:deferred": "node --test tests/mcp.test.ts tests/mcp-oauth.test.ts tests/mcp-bridge.test.mjs",
     "mcp": "node scripts/career-mcp.mjs",
     "check:mcp-oauth": "node scripts/check-mcp-oauth.mjs"
@@ -19,6 +19,7 @@
     "@astrojs/check": "^0.9.8",
     "@astrojs/mdx": "^5.0.3",
     "@astrojs/react": "^5.0.3",
+    "@dagrejs/dagre": "^3.1.1",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@radix-ui/react-slot": "^1.2.4",
     "@tailwindcss/typography": "^0.5.19",

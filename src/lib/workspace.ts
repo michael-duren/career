@@ -33,6 +33,7 @@ export interface LegacyWorkspace {
 export interface Workspace {
   journalsVersion?: 2;
   personalJournal?: PersonalJournalEntry[];
+  /** Saved status and dependsOn are authoritative; readiness is derived. */
   goals?: import('./timeline').Goal[];
   version: 2;
   catalogVersion?: 1;

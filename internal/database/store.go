@@ -49,6 +49,9 @@ func projection(m model, detail bool) string {
 		}
 		pairs = append(pairs, "'"+f.Name+"',"+col)
 	}
+	if m.Table == "goals" {
+		pairs = append(pairs, "'dependsOn',COALESCE((SELECT json_agg(depends_on_id ORDER BY position) FROM goal_dependencies WHERE goal_id=goals.id),'[]'::json)")
+	}
 	if m.Table == "books" {
 		pairs = append(pairs, "'progress', CASE WHEN progress_unit IS NULL THEN NULL ELSE json_build_object('unit',progress_unit,'total',progress_total,'completed',progress_completed) END")
 	}
@@ -277,6 +280,11 @@ func bump(ctx context.Context, tx *sql.Tx, kind string) error {
 }
 func saveTx(ctx context.Context, tx *sql.Tx, kind string, e Entity, revision *string, importing bool) (Result, error) {
 	m := models[kind]
+	if kind == "goal" {
+		if err := lockGoals(ctx, tx); err != nil {
+			return Result{}, err
+		}
+	}
 	id := e[m.Key].(string)
 	rev := uuid.NewString()
 	cols := []string{}
@@ -377,6 +385,11 @@ func saveTx(ctx context.Context, tx *sql.Tx, kind string, e Entity, revision *st
 			}
 		}
 	}
+	if kind == "goal" && !importing {
+		if err = writeDependencies(ctx, tx, id, e["dependsOn"].([]any)); err != nil {
+			return Result{}, err
+		}
+	}
 	if err = writeChildren(ctx, tx, kind, id, e); err != nil {
 		return Result{}, err
 	}
@@ -403,6 +416,19 @@ func (s *Store) Delete(ctx context.Context, kind, id string, revision *string) e
 		return err
 	}
 	defer tx.Rollback()
+	if kind == "goal" {
+		if err = lockGoals(ctx, tx); err != nil {
+			return err
+		}
+		// Removing incoming edges changes the dependent's revision too.
+		if _, err = tx.ExecContext(ctx, "DELETE FROM source_timestamps WHERE kind='goal' AND field='updatedAt' AND entity_id IN (SELECT goal_id::text FROM goal_dependencies WHERE depends_on_id=$1) AND EXISTS (SELECT 1 FROM goals WHERE id=$1 AND revision=$2)", id, *revision); err != nil {
+			return err
+		}
+
+		if _, err = tx.ExecContext(ctx, "UPDATE goals SET revision=$2,updated_at=now() WHERE id IN (SELECT goal_id FROM goal_dependencies WHERE depends_on_id=$1) AND EXISTS (SELECT 1 FROM goals WHERE id=$1 AND revision=$3)", id, uuid.NewString(), *revision); err != nil {
+			return err
+		}
+	}
 	r, err := tx.ExecContext(ctx, "DELETE FROM "+m.Table+" WHERE "+m.Key+"=$1 AND revision=$2", id, *revision)
 	if err != nil {
 		return err

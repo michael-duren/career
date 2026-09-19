@@ -82,3 +82,6 @@ body:has(.goal-timeline) main > div { max-width: 1500px; }
 }
 
 .timeline-hours { margin-bottom: 16px; }
+
+.goal-timeline [aria-label="Goal dependencies"] select { display: block; width: 100%; background: #09090b; border: 1px solid #52525b; border-radius: 6px; padding: 9px; margin-top: 5px; }
+.goal-timeline [aria-label="Goal dependencies"] option:disabled { color: #71717a; }

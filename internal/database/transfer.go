@@ -15,12 +15,16 @@ type Source struct{ Store, Key, Revision, Checksum, Archive string }
 // Dry runs exercise SQL constraints and projections and always roll back.
 func (s *Store) Import(ctx context.Context, r io.Reader, source Source, dry bool) (map[string]int, error) {
 	counts := map[string]int{}
+	pending := map[string][]any{}
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return counts, err
 	}
 	defer tx.Rollback()
 	if _, err = tx.ExecContext(ctx, "SELECT pg_advisory_xact_lock(724193602)"); err != nil {
+		return counts, err
+	}
+	if err = lockGoals(ctx, tx); err != nil {
 		return counts, err
 	}
 	// Exclude writers during the empty-workspace check and all inserts.
@@ -67,8 +71,13 @@ func (s *Store) Import(ctx context.Context, r io.Reader, source Source, dry bool
 				if err = d.Decode(&e); err != nil {
 					return counts, err
 				}
+				goalDefaults(kind, e)
+
 				if err = Validate(kind, e); err != nil {
 					return counts, fmt.Errorf("%s[%d]: %w", key, counts[key], err)
+				}
+				if kind == "goal" {
+					pending[e["id"].(string)] = e["dependsOn"].([]any)
 				}
 				if _, err = saveTx(ctx, tx, kind, e, nil, true); err != nil {
 					return counts, fmt.Errorf("%s[%d]: %w", key, counts[key], err)
@@ -102,6 +111,11 @@ func (s *Store) Import(ctx context.Context, r io.Reader, source Source, dry bool
 	for _, key := range []string{"version", "notes", "weeks", "books", "companies", "documents"} {
 		if !seen[key] {
 			return counts, fmt.Errorf("missing %s", key)
+		}
+	}
+	for id, deps := range pending {
+		if err = writeDependencies(ctx, tx, id, deps); err != nil {
+			return counts, err
 		}
 	}
 	if _, err = tx.ExecContext(ctx, "INSERT INTO workspace_metadata(id,version,catalog_version,journals_version,personal_journal_present,goals_present,change_sequence) VALUES(1,2,$1,$2,$3,$4,1)", markers["catalogVersion"], markers["journalsVersion"], seen["personalJournal"], seen["goals"]); err != nil {

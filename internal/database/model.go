@@ -52,7 +52,7 @@ func init() {
 	models["week"] = model{"journal_weeks", "slug", "weeks", fields("slug:id week:int year:int dates:range tags:array body:string updatedAt?:timestamp:updated_at")}
 	models["book"] = model{"books", "slug", "books", fields("slug:id " + cat + " edition?:string authors:array isbn?:string started?:date finished?:date rating?:number")}
 	models["company"] = model{"companies", "slug", "companies", fields("slug:id " + strings.Replace(cat, "url?:url", "url:url", 1))}
-	models["goal"] = model{"goals", "id", "goals", fields("id:uuid title:string startDate:date:start_date endDate:date:end_date color:color dailyHours?:number:daily_hours createdAt:timestamp:created_at updatedAt:timestamp:updated_at")}
+	models["goal"] = model{"goals", "id", "goals", fields("id:uuid status:string title:string startDate:date:start_date endDate:date:end_date color:color dailyHours?:number:daily_hours createdAt:timestamp:created_at updatedAt:timestamp:updated_at")}
 }
 
 var idRE = regexp.MustCompile(`^[a-zA-Z0-9_/-]{1,200}$`)
@@ -249,6 +249,22 @@ func Validate(kind string, e Entity) error {
 		}
 	}
 	if kind == "goal" {
+		if !allowed(e["status"].(string), "planned|active|done|dropped") {
+			return fmt.Errorf("invalid goal status")
+		}
+		known["dependsOn"] = true
+		deps, ok := e["dependsOn"].([]any)
+		if !ok {
+			return fmt.Errorf("dependsOn must be an array")
+		}
+		seen := map[string]bool{}
+		for _, v := range deps {
+			id, ok := v.(string)
+			if !ok || !uuidRE.MatchString(id) || seen[id] {
+				return fmt.Errorf("invalid or duplicate prerequisite")
+			}
+			seen[id] = true
+		}
 		if e["startDate"].(string) < "1900-01-01" || e["endDate"].(string) > "2200-12-31" || e["endDate"].(string) < e["startDate"].(string) {
 			return fmt.Errorf("invalid goal range")
 		}
@@ -467,5 +483,19 @@ func PrepareSave(kind string, input Entity) (Entity, error) {
 		}
 	}
 	e := NormalizeForSave(kind, input)
+	goalDefaults(kind, e)
 	return e, Validate(kind, e)
+}
+
+// Older archives and clients have no dependency fields.
+func goalDefaults(kind string, e Entity) {
+	if kind != "goal" || e == nil {
+		return
+	}
+	if _, ok := e["status"]; !ok {
+		e["status"] = "planned"
+	}
+	if _, ok := e["dependsOn"]; !ok {
+		e["dependsOn"] = []any{}
+	}
 }

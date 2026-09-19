@@ -16,7 +16,7 @@ const rules = [...contextRules,
 export function careerEntries(snapshot: Snapshot) {
   const d = snapshot.data;
   return [
-    ...(d.goals ?? []).map(entry => ({ kind: 'goal' as Kind, id: entry.id, title: entry.title, date: entry.startDate, entry })),
+    ...(d.goals ?? []).map(entry => ({ kind: 'goal' as Kind, id: entry.id, title: entry.title, date: entry.startDate, status: entry.status, dependsOn: entry.dependsOn, entry })),
     ...d.weeks.filter(w => !isEmptyStarterWeek(w)).map(entry => ({ kind: 'work_journal' as Kind, id: entry.slug, title: `Week ${entry.week} · ${entry.dates}`, date: entry.dates, entry })),
     ...(d.personalJournal ?? []).map(entry => ({ kind: 'personal_journal' as Kind, id: entry.id, title: entry.title, date: entry.date, entry })),
     ...d.notes.map(entry => ({ kind: 'note' as Kind, id: entry.id, title: entry.title, date: entry.updatedAt ?? '', entry })),
@@ -41,7 +41,7 @@ export function createCareerMcpServer(read: () => Promise<Snapshot>) {
       revision: snapshot.revision, fetchedAt: new Date().toISOString(), rules,
       counts: Object.fromEntries(kinds.map(kind => [kind, entries.filter(e => e.kind === kind).length])),
       goals: (snapshot.data.goals ?? []).slice().sort((a, b) => a.startDate.localeCompare(b.startDate) || a.id.localeCompare(b.id)).slice(0, 50).map(g => ({
-        id: g.id, title: g.title, startDate: g.startDate, endDate: g.endDate,
+        id: g.id, title: g.title, status: g.status, dependsOn: g.dependsOn, startDate: g.startDate, endDate: g.endDate,
         dailyHours: g.dailyHours ?? null, completedSteps: g.steps.filter(s => s.done).length, totalSteps: g.steps.length,
       })),
       next: 'Use list_career_entries to browse all entries, search_career_context to find evidence, and read_career_entry for full details. Historical content does not establish current goals.',
@@ -52,7 +52,7 @@ export function createCareerMcpServer(read: () => Promise<Snapshot>) {
     inputSchema: {}, annotations,
   }, safe(async () => result(await overview())));
   server.registerTool('list_career_entries', {
-    description: 'Browse source IDs and titles, newest dates first. Date windows on goals are scheduled, not proof of completion. Pass the returned revision when reading entries to detect changes.',
+    description: 'Browse source IDs and titles, newest dates first. Ready and blocked are derived from prerequisite statuses. A done status means completion; dates alone do not. Pass the returned revision when reading entries to detect changes.',
     inputSchema: { kind: kindSchema.optional(), offset: z.number().int().min(0).default(0), limit: z.number().int().min(1).max(50).default(20) }, annotations,
   }, safe(async ({ kind, offset, limit }) => {
     const snapshot = await read();
