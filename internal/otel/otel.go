@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	otelapi "go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
@@ -47,6 +48,12 @@ func Setup(ctx context.Context, opts Options) (func(context.Context) error, erro
 	shutdownFuncs = append(shutdownFuncs, meterProvider.Shutdown)
 	otelapi.SetMeterProvider(meterProvider)
 
+	// Go runtime metrics (memory, GC, goroutines); scheduling latency comes
+	// from the producer attached to the reader.
+	if err := runtime.Start(runtime.WithMeterProvider(meterProvider)); err != nil {
+		return shutdown, errors.Join(err, shutdown(ctx))
+	}
+
 	return shutdown, nil
 }
 
@@ -73,6 +80,9 @@ func newMeterProvider(ctx context.Context, opts Options) (*metric.MeterProvider,
 	}
 	return metric.NewMeterProvider(
 		metric.WithResource(res),
-		metric.WithReader(metric.NewPeriodicReader(exporter, metric.WithInterval(opts.ExportInterval))),
+		metric.WithReader(metric.NewPeriodicReader(exporter,
+			metric.WithInterval(opts.ExportInterval),
+			metric.WithProducer(runtime.NewProducer()),
+		)),
 	), nil
 }

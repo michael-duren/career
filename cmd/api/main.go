@@ -19,6 +19,7 @@ import (
 	"github.com/michael-duren/career-strategy/internal/database"
 	"github.com/michael-duren/career-strategy/internal/otel"
 	"github.com/michael-duren/career-strategy/internal/server"
+	otelapi "go.opentelemetry.io/otel"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -149,6 +150,11 @@ func run() error {
 				log.Printf("shutdown opentelemetry: %v", err)
 			}
 		}()
+		dbMetrics, err := db.RegisterMetrics(otelapi.GetMeterProvider())
+		if err != nil {
+			return fmt.Errorf("register database metrics: %w", err)
+		}
+		defer dbMetrics.Unregister()
 		srv := server.NewServer(c, db)
 		done := make(chan error, 1)
 		go func() { done <- srv.ListenAndServe() }()

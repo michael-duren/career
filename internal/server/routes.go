@@ -58,8 +58,9 @@ func failure(w http.ResponseWriter, err error) {
 }
 func (s *Server) RegisterRoutes() http.Handler {
 	r := chi.NewRouter()
-	metricConfig := otelchimetric.NewBaseConfig(s.config.OTelServiceName)
+	metricConfig := otelchimetric.NewBaseConfig(s.config.OTelServiceName, otelchimetric.WithAttributesFunc(httpAttributes))
 	r.Use(
+		captureStatus,
 		otelchimetric.NewServerRequestDuration(metricConfig),
 		otelchimetric.NewServerActiveRequests(metricConfig),
 		otelchimetric.NewServerRequestBodySize(metricConfig),
