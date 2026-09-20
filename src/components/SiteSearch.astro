@@ -1,14 +1,46 @@
-<div class="site-search relative min-w-0 flex-1 max-w-xl" role="search" aria-label="Site search">
-  <label for="site-search" class="sr-only">Search the whole site</label>
-  <input id="site-search" type="search" placeholder="Search the whole site…" autocomplete="off"
-    class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-    aria-controls="search-results" aria-describedby="search-status" />
-  <select id="search-kind" aria-label="Search collection" class="bg-zinc-950 text-sm"><option value="">All collections</option><option value="run">Run</option><option value="note">Notes</option></select>
-  <div id="search-panel" hidden class="absolute left-0 top-full z-50 mt-2 w-full min-w-64 rounded-lg border border-zinc-700 bg-zinc-900 shadow-xl">
-    <p id="search-status" role="status" class="px-4 py-3 text-sm text-zinc-400"></p>
-    <ul id="search-results" class="max-h-[60vh] overflow-y-auto"></ul>
+<div class="site-search" role="search" aria-label="Site search">
+  <div class="search-field">
+    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+    <label for="site-search" class="sr-only">Search the whole site</label>
+    <input id="site-search" type="search" placeholder="Search anything…" autocomplete="off"
+      aria-controls="search-panel" aria-expanded="false" aria-describedby="search-status" />
+    <button id="search-clear" type="button" aria-label="Clear search" hidden>×</button>
+    <kbd class="search-shortcut" aria-hidden="true">⌘ / Ctrl K</kbd>
+  </div>
+  <div id="search-panel" hidden>
+    <div class="search-panel-top"><span>YOUR WORKSPACE</span>
+      <select id="search-kind" aria-label="Search collection"><option value="">All collections</option><option value="note">Notes</option><option value="document">Documents</option><option value="book">Books</option><option value="company">Companies</option><option value="week">Work journal</option><option value="personal">Personal journal</option><option value="run">Running</option></select>
+    </div>
+    <p id="search-status" role="status"></p>
+    <ul id="search-results" aria-label="Search results"></ul>
+    <div class="search-panel-footer"><span><kbd>↑</kbd><kbd>↓</kbd> navigate <kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></div>
   </div>
 </div>
+<style is:global>
+  .site-search { position: relative; flex: 1; min-width: 0; max-width: 600px; }
+  .search-field { display: flex; align-items: center; gap: 10px; height: 42px; border: 1px solid #3f3f46; border-radius: 10px; background: #202024; padding: 0 12px; transition: border-color .15s, box-shadow .15s; }
+  .search-field:focus-within { border-color: #a78bfa; box-shadow: 0 0 0 3px #a78bfa18; background: #18181b; }
+  .search-icon { flex-shrink: 0; color: #a1a1aa; }
+  #site-search { width: 100%; min-width: 0; padding: 0; background: transparent; color: #fafafa; font-size: 13px; border: 0; outline: none; height: 100%; }
+  #site-search::placeholder { color: #93939f; } #site-search::-webkit-search-cancel-button { display: none; }
+  .search-shortcut { white-space: nowrap; font-size: 10px; font-family: inherit; color: #92929d; border: 1px solid #414149; border-radius: 4px; padding: 2px 5px; }
+  #search-clear { color: #a1a1aa; font-size: 20px; cursor: pointer; padding: 0 4px; }
+  #search-panel { position: absolute; top: calc(100% + 10px); left: 0; width: max(100%, 360px); max-width: calc(100vw - 32px); z-index: 50; border: 1px solid #414149; border-radius: 14px; background: #1b1b1f; box-shadow: 0 20px 60px #0008; overflow: hidden; }
+  .search-panel-top { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; gap: 12px; border-bottom: 1px solid #303036; }
+  .search-panel-top > span { font-size: 10px; color: #92929f; font-weight: 600; letter-spacing: .12em; }
+  #search-kind { background: #27272d; border: 1px solid #414149; color: #d4d4d8; font-size: 12px; padding: 5px 8px; border-radius: 6px; min-width: 0; }
+  #search-status { color: #a1a1aa; font-size: 12px; padding: 14px 16px 10px; }
+  #search-results { max-height: min(55vh, 480px); overflow-y: auto; padding: 0 6px; margin: 0; list-style: none; }
+  .search-result { display: block; padding: 12px 10px; border-radius: 8px; margin-bottom: 4px; text-decoration: none; }
+  .search-result:hover, .search-result:focus-visible { background: #2c2936; outline: 1px solid #a78bfa55; }
+  .search-result-heading { display: flex; align-items: baseline; gap: 10px; justify-content: space-between; }
+  .search-result-title { font-size: 13px; font-weight: 600; color: #f4f4f5; overflow-wrap: anywhere; }
+  .search-result-kind { flex-shrink: 0; font-size: 10px; color: #c4b5fd; background: #a78bfa12; padding: 2px 6px; border-radius: 4px; }
+  .search-result-snippet { color: #a1a1aa; font-size: 12px; line-height: 1.6; margin-top: 5px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .search-panel-footer { display: flex; justify-content: space-between; padding: 10px 16px; border-top: 1px solid #303036; color: #92929f; font-size: 10px; }
+  .search-panel-footer kbd { margin-right: 4px; font-family: inherit; color: #d4d4d8; }
+  @media (max-width: 640px) { .search-shortcut { display: none; } .site-search { position: static; } #search-panel { top: calc(100% - 2px); left: 12px; right: 12px; width: auto; max-width: none; } .search-field { padding: 0 10px; gap: 8px; } .search-panel-top > span { letter-spacing: .05em; } }
+</style>
 <script>
   const root = document.querySelector<HTMLElement>('.site-search')!;
   const input = document.querySelector<HTMLInputElement>('#site-search')!;
@@ -18,51 +50,72 @@
   const kind = document.querySelector<HTMLSelectElement>('#search-kind')!;
   kind.addEventListener('change', render);
   let timer: ReturnType<typeof setTimeout>;
+  let request: AbortController | undefined;
+  let version = 0;
+  const clear = document.querySelector<HTMLButtonElement>('#search-clear')!;
+  const labels: Record<string, string> = { run: 'Running', note: 'Notes', document: 'Documents', company: 'Companies', book: 'Books', personal: 'Personal journal', week: 'Work journal' };
+  function close() { panel.hidden = true; input.setAttribute('aria-expanded', 'false'); request?.abort(); clearTimeout(timer); }
+  clear.addEventListener('click', () => { input.value = ''; clear.hidden = true; input.focus(); void render(); });
+  document.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); input.focus(); input.select(); if (panel.hidden) void render(); }
+  });
 
   async function render() {
+    request?.abort();
+    const current = ++version;
     const query = input.value.trim();
+    clear.hidden = !input.value;
+    input.setAttribute('aria-expanded', 'true');
     results.replaceChildren();
     panel.hidden = false;
-    if (!query) { status.textContent = 'Search titles and content. Typos are OK.'; return; }
+    if (!query) { status.textContent = 'Find a note, book, company, or journal entry.'; return; }
     status.textContent = 'Searching…';
+    request = new AbortController();
     let matches: Array<{ kind: string; id: string; title: string; body: string }>;
     try {
-      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&kind=${encodeURIComponent(kind.value)}`, { cache: 'no-store' });
+      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&kind=${encodeURIComponent(kind.value)}`, { cache: 'no-store', signal: request.signal });
       if (!response.ok) throw new Error(response.status === 401 ? 'Sign in again to search.' : 'Search could not load. Type again to retry.');
       matches = (await response.json()).results;
-    } catch (error) { status.textContent = error instanceof Error ? error.message : 'Search could not load. Try again.'; return; }
-    if (query !== input.value.trim() || !root.contains(document.activeElement) || panel.hidden) return;
+    } catch (error) { if (current !== version || request?.signal.aborted) return; status.textContent = error instanceof Error ? error.message : 'Search could not load. Try again.'; return; }
+    if (current !== version || query !== input.value.trim() || !root.contains(document.activeElement) || panel.hidden) return;
     results.replaceChildren();
-    status.textContent = matches.length ? `${matches.length} results${matches.length === 50 ? ' (top matches)' : ''}` : 'No results. Try a different word.';
+    status.textContent = matches.length ? `${matches.length} ${matches.length === 1 ? 'result' : 'results'}${matches.length === 50 ? ' (top matches)' : ''}` : 'No results. Try a different word.';
     for (const item of matches) {
       const li = document.createElement('li');
       const link = document.createElement('a');
       const encoded = item.id.split('/').map(encodeURIComponent).join('/');
       link.href = item.kind === 'run' ? `/running?id=${encodeURIComponent(item.id)}` : item.kind === 'note' ? `/notes/${encoded}` : item.kind === 'document' ? (item.id === 'index' ? '/' : `/documents/${encoded}`) : item.kind === 'company' ? `/companies/${encoded}` : item.kind === 'book' ? `/books?id=${encodeURIComponent(item.id)}` : item.kind === 'personal' ? `/personal-journal?id=${encodeURIComponent(item.id)}` : `/journal?id=${encodeURIComponent(item.id)}`;
-      link.className = 'block border-t border-zinc-800 px-4 py-3 hover:bg-zinc-800 focus:bg-zinc-800 focus:outline-none';
+      link.className = 'search-result';
       const title = document.createElement('div');
-      title.className = 'text-sm font-medium text-white';
-      title.textContent = `${item.title} · ${item.kind === 'run' ? 'Run' : item.kind}`;
+      title.className = 'search-result-title';
+      title.textContent = item.title;
+      const badge = document.createElement('span');
+      badge.className = 'search-result-kind';
+      badge.textContent = labels[item.kind] || item.kind;
+      const heading = document.createElement('div');
+      heading.className = 'search-result-heading';
+      heading.append(title, badge);
       const snippet = document.createElement('p');
-      snippet.className = 'mt-1 text-xs text-zinc-400 break-words';
+      snippet.className = 'search-result-snippet';
       const start = Math.max(0, item.body.toLowerCase().indexOf(query.toLowerCase()) - 40);
       snippet.textContent = (start ? '…' : '') + item.body.slice(start, start + 160).replace(/[#*`\n]/g, ' ') + (item.body.length > start + 160 ? '…' : '');
-      link.append(title, snippet);
+      link.append(heading, snippet);
       li.append(link);
       results.append(li);
     }
   }
-  input.addEventListener('input', () => { clearTimeout(timer); results.replaceChildren(); timer = setTimeout(render, 150); });
-  input.addEventListener('focus', render);
+  input.addEventListener('input', () => { clearTimeout(timer); request?.abort(); ++version; clear.hidden = !input.value; results.replaceChildren(); status.textContent = input.value.trim() ? 'Searching…' : 'Find a note, book, company, or journal entry.'; panel.hidden = false; input.setAttribute('aria-expanded', 'true'); timer = setTimeout(render, 180); });
+  input.addEventListener('focus', () => { if (panel.hidden) void render(); });
+  input.addEventListener('click', () => { if (panel.hidden) void render(); });
   root.addEventListener('keydown', (event) => {
     const e = event as KeyboardEvent;
-    if (e.key === 'Escape') { input.focus(); panel.hidden = true; }
+    if (e.key === 'Escape') { e.preventDefault(); input.focus(); close(); }
     const links = [...results.querySelectorAll('a')];
     const index = links.indexOf(document.activeElement as HTMLAnchorElement);
     if (e.key === 'ArrowDown') { e.preventDefault(); links[Math.min(index + 1, links.length - 1)]?.focus(); }
     if (e.key === 'ArrowUp') { e.preventDefault(); if (index <= 0) input.focus(); else links[index - 1].focus(); }
     if (e.key === 'Enter' && document.activeElement === input) { e.preventDefault(); links[0]?.click(); }
   });
-  document.addEventListener('pointerdown', e => { if (!root.contains(e.target as Node)) panel.hidden = true; });
-  root.addEventListener('focusout', e => { if (!root.contains(e.relatedTarget as Node)) panel.hidden = true; });
+  document.addEventListener('pointerdown', e => { if (!root.contains(e.target as Node)) close(); });
+  root.addEventListener('focusout', e => { if (!root.contains(e.relatedTarget as Node)) close(); });
 </script>

@@ -29,6 +29,13 @@ Go serves both the authenticated APIs and the static Astro build from `STATIC_DI
 
 ## Authentication and configuration
 
+Run `npm ci` and `npm run setup` to create `.env`. Press Enter to use the local
+login `admin` / `password123`, or answer `n` to choose a username and password.
+The script hashes the password, generates a random JWT secret, and uses the local
+Docker Compose database credentials automatically. Existing `.env` files are kept.
+For no prompts, use `npm run setup -- --defaults`. Copying `.env.example` also
+works for local development with the same login and a fixed development JWT secret.
+
 The Go executable reads `.env` without overwriting process environment. Supported configuration: `APP_ENV`, `DATABASE_URL`, `AUTH_USERNAME`, `AUTH_PASSWORD_HASH`, `JWT_SECRET`, `PUBLIC_ORIGIN`, `LISTEN_ADDR`, `STATIC_DIR`. Development defaults are explicitly loopback-only. Production must supply database URL, listen address, username, public origin, bcrypt password hash and a non-placeholder JWT secret of at least 32 characters. Use a credential-appropriate PostgreSQL URL and explicit TLS mode for the homelab later.
 
 To generate a bcrypt hash locally without putting a password in shell history:
@@ -39,7 +46,7 @@ printf '%s' "$migration_password" | go run ./cmd/api hash-password
 unset migration_password
 ```
 
-Put the output in `.env` as a **single-quoted** `AUTH_PASSWORD_HASH` to preserve its dollar signs. Set `AUTH_USERNAME` and `JWT_SECRET` as well. An unset development password hash disables login; a malformed configured hash is a startup error. Do not use `.env.example`'s old placeholder hash.
+Put the output in `.env` as a **single-quoted** `AUTH_PASSWORD_HASH` to preserve its dollar signs. Setup handles this quoting automatically. An unset development password hash disables login; a malformed configured hash is a startup error.
 
 Login is `POST /api/auth/login` with JSON `{ "username": "...", "password": "..." }` and exact `Origin: http://localhost:8080` (the development `PUBLIC_ORIGIN`; override both when using another origin). It sets an HttpOnly, SameSite=Lax, Path=/ cookie, Secure for HTTPS, with a 24-hour HS256 lifetime. `GET /api/auth/verify` verifies it; `POST /api/auth/logout` clears it. No bearer/localStorage token is returned. Failed/successful login attempts are bounded per direct peer address; forwarded headers are not trusted.
 

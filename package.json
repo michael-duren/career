@@ -3,6 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
+    "setup": "bash scripts/setup-env.sh",
     "dev": "node scripts/dev.mjs",
     "tc": "tsc",
     "start": "node scripts/dev.mjs",

@@ -2,7 +2,12 @@
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import { GoalGraph } from '../../components/GoalGraph';
 ---
-<DocsLayout title="Goal dependency graph" description="Prerequisites and critical paths for your goals">
-  <h1 class="text-3xl font-bold mb-2">Goal dependency graph</h1>
+<DocsLayout wide title="Goal dependency graph" description="Prerequisites and critical paths for your goals">
+  <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div><p class="mb-2 text-xs font-medium uppercase tracking-widest text-violet-300">Plan the path ahead</p>
+    <h1 class="text-3xl font-bold tracking-tight">Goal graph</h1>
+    <p class="mt-2 text-sm text-zinc-400">Connect your goals. See what comes first and what’s ready to move.</p></div>
+    <a href="/timeline" class="rounded-lg border border-zinc-700 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800">Open timeline ↗︎</a>
+  </div>
   <GoalGraph client:load />
 </DocsLayout>

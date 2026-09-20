@@ -6,61 +6,21 @@ Career website for users to track goals, books, companies, etc.
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
-## MakeFile
-
-Run build make command with tests
+With Node.js, Go, and Docker installed:
 
 ```bash
-make all
+make dev
 ```
 
-Build the application
+`make dev` installs dependencies, sets up `.env`, starts PostgreSQL, builds the
+frontend, applies migrations, and starts the Go server.
 
-```bash
-make build
-```
+Open http://localhost:8080 and log in with `admin` / `password123` if you accepted
+the local defaults. Setup generates a JWT secret and keeps existing `.env` files.
+Use `npm run setup -- --defaults` to skip prompts, or answer `n` to choose login
+credentials. The database defaults match the local Docker Compose stack.
 
-Run the application
-
-```bash
-make run
-```
-
-Create DB container
-
-```bash
-make docker-run
-```
-
-Shutdown DB Container
-
-```bash
-make docker-down
-```
-
-DB Integrations Test:
-
-```bash
-make itest
-```
-
-Live reload the application:
-
-```bash
-make watch
-```
-
-Run the test suite:
-
-```bash
-make test
-```
-
-Clean up binary from the last build:
-
-```bash
-make clean
-```
+Run `make help` to see all available commands.
 
 ## Hosting
 

@@ -98,11 +98,11 @@ try {
   await navigate('Page.navigate', { url: base + '/goals/graph' });
   await wait(`document.querySelectorAll('[data-goal-node]').length===2`);
   assert.match(await evaluate(`document.querySelector('[aria-label="Goal graph"]').textContent`), /Blocked by: Prerequisite A/);
-  assert.ok(await evaluate(`Array.from(document.querySelectorAll('polyline')).some(e=>e.getAttribute('stroke-dasharray'))`), 'conflict edge dashed');
-  await evaluate(`(() => {const el=document.querySelector('select');el.value=Array.from(el.options).find(o=>o.textContent==='Dependent B').value;el.dispatchEvent(new Event('change',{bubbles:true}));})()`);
+  assert.ok(await evaluate(`Array.from(document.querySelectorAll('.graph-edge path')).some(e=>e.getAttribute('stroke-dasharray'))`), 'conflict edge dashed');
+  await evaluate(`(() => {const el=document.querySelector('[aria-label="Critical path target"]');el.value=Array.from(el.options).find(o=>o.textContent==='Dependent B').value;el.dispatchEvent(new Event('change',{bubbles:true}));})()`);
   await wait(`document.body.textContent.includes('Critical path:')`);
   assert.match(await evaluate(`document.body.textContent`), /Prerequisite A → Dependent B/);
-  await evaluate(`Array.from(document.querySelectorAll('[data-goal-node]')).find(e=>e.querySelector('strong').textContent==='Prerequisite A').click()`);
+  await evaluate(`Array.from(document.querySelectorAll('[data-goal-node]')).find(e=>e.querySelector('strong').textContent==='Prerequisite A').querySelector('a').click()`);
   await wait(`document.querySelector('dialog[open]')`);
   await evaluate(`(() => {const el=document.querySelector('dialog select:not([multiple])');el.value='dropped';el.dispatchEvent(new Event('change',{bubbles:true}));})()`);
   await click('Save goal'); await wait(`!document.querySelector('dialog[open]')`);
@@ -112,7 +112,7 @@ try {
   assert.match(await evaluate(`document.querySelector('[data-goal-node]').textContent`), /Dropped prerequisite: Prerequisite A/);
   await evaluate(`document.querySelector('input[type="checkbox"]').click()`);
   await wait(`document.querySelectorAll('[data-goal-node]').length===2`);
-  await evaluate(`Array.from(document.querySelectorAll('[data-goal-node]')).find(e=>e.querySelector('strong').textContent==='Prerequisite A').click()`);
+  await evaluate(`Array.from(document.querySelectorAll('[data-goal-node]')).find(e=>e.querySelector('strong').textContent==='Prerequisite A').querySelector('a').click()`);
   await wait(`document.querySelector('dialog[open]')`);
   // Capture the confirmation text while accepting through CDP.
   let confirmation = '';
