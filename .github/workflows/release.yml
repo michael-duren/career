@@ -1,0 +1,105 @@
+name: Release Career
+on:
+  push:
+    tags: ['v*']
+  release:
+    types: [published]
+permissions:
+  contents: read
+  packages: write
+# Both tag and release events share the same lock. Never overwrite a SHA image.
+concurrency:
+  group: career-release-publisher
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.event_name == 'push' || (!github.event.release.prerelease && !github.event.release.draft)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: career_dev
+          POSTGRES_PASSWORD: career_dev_local
+          POSTGRES_DB: career_dev
+        ports: ['5433:5432']
+        options: >-
+          --health-cmd "pg_isready -U career_dev -d career_dev"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify stable tag, exact event commit and main ancestry
+        id: source
+        run: python3 scripts/release.py gate
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Test release tooling and actual tagged application
+        env:
+          DATABASE_URL: postgres://career_dev:career_dev_local@127.0.0.1:5433/career_dev?sslmode=disable
+          TEST_DATABASE_URL: postgres://career_dev:career_dev_local@127.0.0.1:5433/career_dev?sslmode=disable
+        run: |
+          python3 -m unittest discover -s tests -p 'test_release.py' -v
+          npm ci
+          npm test
+          npm run build
+          go test -race ./...
+          go build -o /tmp/career-migration ./cmd/api
+          /tmp/career-migration migrate
+          node tests/go-api.integration.mjs
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Reuse verified canonical image when already published
+        id: existing
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: python3 scripts/release.py lookup "$SOURCE_SHA"
+      - name: Publish canonical commit image
+        if: steps.existing.outputs.exists == 'false'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/michael-duren/career:sha-${{ steps.source.outputs.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/michael-duren/career
+            org.opencontainers.image.revision=${{ steps.source.outputs.sha }}
+      - name: Resolve and verify published digest
+        id: canonical
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: python3 scripts/release.py lookup "$SOURCE_SHA"
+      - name: Dispatch immutable image to home-infra
+        env:
+          GH_TOKEN: ${{ secrets.HOME_INFRA_DISPATCH_TOKEN }}
+          SOURCE_TAG: ${{ steps.source.outputs.tag }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          IMAGE_DIGEST: ${{ steps.canonical.outputs.digest }}
+          PREVIOUS_DIGEST: ${{ steps.existing.outputs.digest }}
+        run: |
+          test -n "$GH_TOKEN"
+          if [[ -n "$PREVIOUS_DIGEST" && "$PREVIOUS_DIGEST" != "$IMAGE_DIGEST" ]]; then
+            echo 'Canonical digest changed during release; refusing promotion' >&2
+            exit 1
+          fi
+          python3 scripts/release.py payload "$SOURCE_TAG" "$SOURCE_SHA" "$IMAGE_DIGEST" > "$RUNNER_TEMP/promotion.json"
+          gh api --method POST repos/michael-duren/home-infra/actions/workflows/gitops-promote.yml/dispatches --input "$RUNNER_TEMP/promotion.json"
+          echo 'Dispatch accepted. Check home-infra promotion run and gitops ledger for completion.' >> "$GITHUB_STEP_SUMMARY"
