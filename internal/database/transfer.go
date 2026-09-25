@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"io"
+	"strings"
 )
 
 type Source struct{ Store, Key, Revision, Checksum, Archive string }
@@ -28,10 +29,10 @@ func (s *Store) Import(ctx context.Context, r io.Reader, source Source, dry bool
 		return counts, err
 	}
 	// Exclude writers during the empty-workspace check and all inserts.
-	if _, err = tx.ExecContext(ctx, "LOCK TABLE workspace_metadata,notes,documents,personal_journal_entries,journal_weeks,books,companies,goals,running_notes IN EXCLUSIVE MODE"); err != nil {
+	if _, err = tx.ExecContext(ctx, "LOCK TABLE workspace_metadata,notes,documents,personal_journal_entries,journal_weeks,books,companies,goals,running_notes,connections IN EXCLUSIVE MODE"); err != nil {
 		return counts, err
 	}
-	for _, table := range []string{"workspace_metadata", "notes", "documents", "personal_journal_entries", "journal_weeks", "books", "companies", "goals", "running_notes"} {
+	for _, table := range []string{"workspace_metadata", "notes", "documents", "personal_journal_entries", "journal_weeks", "books", "companies", "goals", "running_notes", "connections"} {
 		var n int
 		if err = tx.QueryRowContext(ctx, "SELECT count(*) FROM "+table).Scan(&n); err != nil {
 			return counts, err
@@ -46,6 +47,7 @@ func (s *Store) Import(ctx context.Context, r io.Reader, source Source, dry bool
 		return counts, fmt.Errorf("workspace object required")
 	}
 	seen := map[string]bool{}
+	legacy := legacyContacts{urls: map[string]bool{}, ids: map[string]bool{}}
 	markers := map[string]any{}
 	byCollection := map[string]string{}
 	for k, m := range models {
@@ -79,8 +81,16 @@ func (s *Store) Import(ctx context.Context, r io.Reader, source Source, dry bool
 				if kind == "goal" {
 					pending[e["id"].(string)] = e["dependsOn"].([]any)
 				}
+				contacts, _ := e["contacts"].([]any)
+				delete(e, "contacts")
 				if _, err = saveTx(ctx, tx, kind, e, nil, true); err != nil {
 					return counts, fmt.Errorf("%s[%d]: %w", key, counts[key], err)
+				}
+				for _, v := range contacts {
+					if err = legacy.save(ctx, tx, e, v.(map[string]any)); err != nil {
+						return counts, fmt.Errorf("%s[%d] contact: %w", key, counts[key], err)
+					}
+					counts["connections"]++
 				}
 				counts[key]++
 			}
@@ -161,13 +171,13 @@ func (s *Store) Export(ctx context.Context, w io.Writer) error {
 			return err
 		}
 	}
-	for _, kind := range []string{"note", "week", "book", "company", "document", "personal", "goal", "run"} {
+	for _, kind := range []string{"note", "week", "book", "company", "document", "personal", "goal", "run", "connection"} {
 		if kind == "personal" && !personal || kind == "goal" && !goals {
 			continue
 		}
-		if kind == "run" {
+		if kind == "run" || kind == "connection" {
 			var count int
-			if err = tx.QueryRowContext(ctx, "SELECT count(*) FROM running_notes").Scan(&count); err != nil {
+			if err = tx.QueryRowContext(ctx, "SELECT count(*) FROM "+models[kind].Table).Scan(&count); err != nil {
 				return err
 			}
 			if count == 0 {
@@ -207,6 +217,8 @@ func (s *Store) Export(ctx context.Context, w io.Writer) error {
 				if err != nil {
 					return err
 				}
+				// Photo bytes are not exported, so a revision would dangle on import.
+				delete(r.Entry, "photo")
 				if !first {
 					if err = write(","); err != nil {
 						return err
@@ -227,4 +239,28 @@ func (s *Store) Export(ctx context.Context, w io.Writer) error {
 		return err
 	}
 	return tx.Commit()
+}
+
+// legacyContacts converts company contacts from old archives into linked
+// connections. Contacts were already URL- and email-validated, so only the
+// migration 004 duplicate repairs apply: a repeated profile URL stays on its
+// first row, and a UUID reused across companies gets a new id.
+type legacyContacts struct{ urls, ids map[string]bool }
+
+func (l legacyContacts) save(ctx context.Context, tx *sql.Tx, company Entity, contact map[string]any) error {
+	id, url := strings.ToLower(contact["id"].(string)), strings.ToLower(contact["url"].(string))
+	e := Entity{"id": contact["id"], "name": contact["name"], "role": contact["role"], "companyName": company["title"], "companySlug": company["slug"], "email": contact["email"], "queued": false, "notes": contact["notes"], "tags": []any{}}
+	if l.ids[id] {
+		e["id"] = uuid.NewString()
+	}
+	l.ids[id] = true
+	if url != "" && !l.urls[url] {
+		l.urls[url] = true
+		e["url"] = contact["url"]
+	}
+	if err := Validate("connection", e); err != nil {
+		return err
+	}
+	_, err := saveTx(ctx, tx, "connection", e, nil, true)
+	return err
 }

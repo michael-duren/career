@@ -59,3 +59,8 @@ main
 .migration-private/
 
 /api
+
+# LinkedIn data exports contain personal data
+Basic_LinkedInDataExport*
+Complete_LinkedInDataExport*
+/*.csv

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { buildBoard, appendCompanyNote, type CompanyContact, type RawCompany, type Company, type CompanyStatus } from "../lib/companies";
+import { buildBoard, appendCompanyNote, type RawCompany, type Company, type CompanyStatus } from "../lib/companies";
+import { relativeDays, type Connection } from '../lib/connections';
+import { ConnectionAvatar } from './ConnectionAvatar';
 
 import { toggleTask } from '../lib/checklist';
 import { localDate } from '../lib/workspace';
@@ -35,7 +37,7 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
   const [revision, setRevision] = useState(initialRevision);
   const [revisions, setRevisions] = useState<Record<string, string>>(initialRevisions);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
-  const [contactDrafts, setContactDrafts] = useState<Record<string, CompanyContact | undefined>>({});
+  const [connections, setConnections] = useState<Connection[]>();
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
   const [error, setError] = useState('');
@@ -44,12 +46,21 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
   const Details = detailSlug ? 'section' : 'details';
   const Heading = detailSlug ? 'h1' : 'h2';
   useEffect(() => {
-    const warn = (event: BeforeUnloadEvent) => { if (lock.current || Object.values(drafts).some(note => note.trim()) || Object.values(contactDrafts).some(Boolean)) event.preventDefault(); };
+    const warn = (event: BeforeUnloadEvent) => { if (lock.current || Object.values(drafts).some(note => note.trim())) event.preventDefault(); };
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
-  }, [drafts, contactDrafts]);
+  }, [drafts]);
   useEffect(() => { if (!skipInitialReload) void reload(); }, []);
-  async function persist(slug: string, change: (company: RawCompany) => RawCompany, action: 'step' | 'note' | 'contact' | 'remove-contact' = 'step') {
+  useEffect(() => {
+    const url = detailSlug ? `/api/connections?company=${encodeURIComponent(detailSlug)}` : '/api/connections?linked=1';
+    void fetch(url, { cache: 'no-store' }).then(response => response.ok ? response.json() : undefined)
+      .then(result => { if (result) setConnections(result.connections); }).catch(() => undefined);
+  }, [detailSlug]);
+  const connectionsBySlug = new Map<string, Connection[]>();
+  for (const connection of connections ?? []) {
+    if (connection.companySlug) connectionsBySlug.set(connection.companySlug, [...(connectionsBySlug.get(connection.companySlug) ?? []), connection]);
+  }
+  async function persist(slug: string, change: (company: RawCompany) => RawCompany, action: 'step' | 'note' = 'step') {
     if (lock.current) return;
     lock.current = true; setBusy(true); setError(''); setStatus('Saving…');
     try {
@@ -61,8 +72,7 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
       const savedCompany = result.entry as RawCompany;
       setCompanies(current => current.map(item => item.slug === slug ? savedCompany : item)); setRevision(result.revision); setRevisions(current => ({ ...current, [slug]: result.revision }));
       if (action === 'note') setDrafts(previous => ({ ...previous, [slug]: '' }));
-      if (action === 'contact') setContactDrafts(previous => ({ ...previous, [slug]: undefined }));
-      setStatus(`${company.title}: ${action === 'note' ? 'note added' : action === 'step' ? 'step saved' : action === 'contact' ? 'contact saved' : 'contact removed'}.`);
+      setStatus(`${company.title}: ${action === 'note' ? 'note added' : 'step saved'}.`);
       window.dispatchEvent(new Event('workspace-saved'));
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not save. Please retry.'); setStatus('Change not saved. Your drafts are kept.'); }
     finally { lock.current = false; setBusy(false); }
@@ -147,12 +157,12 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
             <div className="mt-3">
               <div className="flex justify-between gap-2 text-[10px] text-zinc-500">
                 <label htmlFor={`progress-${company.slug}`}>{company.completed}/{company.steps.length} steps</label>
-                <span>{company.priority} priority</span>
+                <span>{(count => count ? `${count} connection${count === 1 ? '' : 's'} · ` : '')(connectionsBySlug.get(company.slug)?.length ?? 0)}{company.priority} priority</span>
               </div>
               <progress id={`progress-${company.slug}`} className="mt-1 block h-1 w-full overflow-hidden rounded accent-blue-500" value={company.completed} max={company.steps.length || 1} />
             </div>
             <Details className={`mt-2 ${detailSlug ? 'text-sm' : 'text-xs'} text-zinc-400`}>
-              {!detailSlug && <summary className="cursor-pointer py-1 hover:text-zinc-100">Details, notes & contacts</summary>}
+              {!detailSlug && <summary className="cursor-pointer py-1 hover:text-zinc-100">Details, notes & connections</summary>}
               <div className="mt-2 space-y-3 border-t border-zinc-800 pt-3">
                 <div className="flex flex-wrap gap-3 text-blue-400">
                   {!detailSlug && <a href={`/companies/${company.slug.split('/').map(encodeURIComponent).join('/')}`} className="hover:underline">Open company →</a>}
@@ -167,33 +177,7 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
                   <label className="block text-zinc-200">Add a note for {company.title}<textarea aria-label={`Add a note for ${company.title}`} required maxLength={5000} disabled={busy} className="mt-1 min-h-20 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="A contact, an impression, or a reminder…" value={drafts[company.slug] ?? ''} onChange={event => setDrafts(previous => ({ ...previous, [company.slug]: event.target.value }))} /></label>
                   <button type="submit" disabled={busy || !drafts[company.slug]?.trim()} className="rounded-lg bg-blue-600 px-3 py-2 text-white hover:bg-blue-500 disabled:opacity-50">Add note</button>
                 </form>
-                <section aria-label={`Contacts for ${company.title}`} className="space-y-2 border-t border-zinc-800 pt-3">
-                  <h3 className="font-medium text-zinc-200">Contacts</h3>
-                  {!company.contacts?.length && <p>No contacts yet.</p>}
-                  {(company.contacts ?? []).map(contact => <div key={contact.id} className="space-y-1 rounded-lg border border-zinc-700 p-2 break-words">
-                    <p className="font-medium text-zinc-100">{contact.name}</p>
-                    {contact.role && <p>{contact.role}</p>}
-                    {contact.email && <a className="block text-blue-400 hover:underline" href={`mailto:${contact.email}`}>{contact.email}</a>}
-                    {contact.url && /^https?:\/\//i.test(contact.url) && <a className="block text-blue-400 hover:underline" href={contact.url} target="_blank" rel="noreferrer">Profile ↗</a>}
-                    {contact.notes && <p className="whitespace-pre-wrap">{contact.notes}</p>}
-                    <div className="flex gap-3"><button type="button" disabled={busy} className="text-blue-400 hover:underline" onClick={() => { if (!contactDrafts[company.slug] || window.confirm('Discard the current contact draft?')) setContactDrafts(previous => ({ ...previous, [company.slug]: { ...contact } })); }}>Edit contact</button>
-                    <button type="button" disabled={busy} className="text-red-300 hover:underline" onClick={() => { if (window.confirm(`Remove ${contact.name} from ${company.title}?`)) void persist(company.slug, saved => ({ ...saved, contacts: (saved.contacts ?? []).filter(item => item.id !== contact.id) }), 'remove-contact'); }}>Remove contact</button></div>
-                  </div>)}
-                  {contactDrafts[company.slug] ? <form className="space-y-2" onSubmit={event => {
-                    event.preventDefault(); const contact = contactDrafts[company.slug]!;
-                    void persist(company.slug, saved => ({ ...saved, contacts: [...(saved.contacts ?? []).filter(item => item.id !== contact.id), contact] }), 'contact');
-                  }}>
-                    <fieldset disabled={busy} className="space-y-2">
-                      {(['name', 'role', 'email', 'url', 'notes'] as const).map(key => {
-                        const contact = contactDrafts[company.slug]!;
-                        const label = { name: 'Contact name', role: 'Role', email: 'Email', url: 'Profile URL', notes: 'Contact notes' }[key];
-                        const props = { 'aria-label': label, className: 'mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500', value: contact[key], maxLength: key === 'notes' ? 5000 : key === 'email' ? 254 : key === 'url' ? 2000 : 200, onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setContactDrafts(previous => ({ ...previous, [company.slug]: { ...contact, [key]: event.target.value } })) };
-                        return <label className="block" key={key}>{label}{key === 'notes' ? <textarea {...props} /> : <input {...props} type={key === 'email' ? 'email' : key === 'url' ? 'url' : 'text'} required={key === 'name'} />}</label>;
-                      })}
-                      <div className="flex gap-3"><button type="submit" className="rounded-lg bg-blue-600 px-3 py-2 text-white">Save contact</button><button type="button" onClick={() => setContactDrafts(previous => ({ ...previous, [company.slug]: undefined }))}>Cancel contact</button></div>
-                    </fieldset>
-                  </form> : <button type="button" disabled={busy} className="text-blue-400 hover:underline" onClick={() => setContactDrafts(previous => ({ ...previous, [company.slug]: { id: crypto.randomUUID(), name: '', role: '', email: '', url: '', notes: '' } }))}>+ Add contact</button>}
-                </section>
+                <CompanyConnections company={company} connections={connectionsBySlug.get(company.slug)} />
               </div>
             </Details>
           </article>
@@ -201,6 +185,32 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
       </div>
     </div>
   );
+}
+
+function CompanyConnections({ company, connections = [] }: { company: Company; connections?: Connection[] }) {
+  const today = localDate();
+  const people = [...connections].sort((a, b) => (b.lastContactedOn ?? '').localeCompare(a.lastContactedOn ?? '') || a.name.localeCompare(b.name));
+  const slug = encodeURIComponent(company.slug);
+  return <section aria-label={`Connections at ${company.title}`} className="space-y-2 border-t border-zinc-800 pt-3">
+    <h3 className="font-medium text-zinc-200">Connections{people.length > 0 && ` (${people.length})`}</h3>
+    {people.length === 0 && <p>No connections here yet.</p>}
+    <ul className="space-y-1">
+      {people.slice(0, 8).map(person => <li key={person.id}>
+        <a href={`/connections?id=${encodeURIComponent(person.id)}`} className="flex items-center gap-2 rounded-lg p-1 hover:bg-zinc-800">
+          <ConnectionAvatar connection={person} size={28} />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-zinc-100">{person.name}</span>
+            {person.role && <span className="block truncate">{person.role}</span>}
+          </span>
+          <span className="shrink-0" title="Last conversation">{relativeDays(person.lastContactedOn, today)}</span>
+        </a>
+      </li>)}
+    </ul>
+    <div className="flex flex-wrap gap-3">
+      {people.length > 8 && <a className="text-blue-400 hover:underline" href={`/connections?company=${slug}`}>All {people.length} connections →</a>}
+      <a className="text-blue-400 hover:underline" href={`/connections?new=1&company=${slug}`}>+ Add connection</a>
+    </div>
+  </section>;
 }
 
 // Bundled brand icons work for existing saved companies without a data migration.
