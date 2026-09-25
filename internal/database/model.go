@@ -53,6 +53,7 @@ func init() {
 	models["week"] = model{"journal_weeks", "slug", "weeks", fields("slug:id week:int year:int dates:range tags:array body:string updatedAt?:timestamp:updated_at")}
 	models["book"] = model{"books", "slug", "books", fields("slug:id " + cat + " edition?:string authors:array isbn?:string started?:date finished?:date rating?:number")}
 	models["company"] = model{"companies", "slug", "companies", fields("slug:id " + strings.Replace(cat, "url?:url", "url:url", 1))}
+	models["connection"] = model{"connections", "id", "connections", fields("id:uuid name:string role:string companyName:string:company_name companySlug?:id:company_slug email:string url?:url connectedOn?:date:connected_on lastContactedOn?:date:last_contacted_on cadenceDays?:int:cadence_days queued:bool notes:string tags:array updatedAt?:timestamp:updated_at")}
 	models["goal"] = model{"goals", "id", "goals", fields("id:uuid status:string title:string startDate:date:start_date endDate:date:end_date color:color dailyHours?:number:daily_hours createdAt:timestamp:created_at updatedAt:timestamp:updated_at")}
 }
 
@@ -132,6 +133,12 @@ func Validate(kind string, e Entity) error {
 			if f.Name == "dailyHours" {
 				max = 24
 			}
+			if f.Name == "cadenceDays" {
+				max = 3650
+				if n < 1 {
+					return fmt.Errorf("cadenceDays must be positive")
+				}
+			}
 			if n > max {
 				return fmt.Errorf("%s exceeds %v", f.Name, max)
 			}
@@ -187,8 +194,12 @@ func Validate(kind string, e Entity) error {
 			case "string":
 				max := 1000
 				switch f.Name {
-				case "title", "category":
+				case "title", "category", "name", "role", "companyName":
 					max = 200
+				case "email":
+					max = 254
+				case "notes":
+					max = 5000
 				case "topic":
 					max = 100
 				case "body":
@@ -197,7 +208,7 @@ func Validate(kind string, e Entity) error {
 				if size(str) > max {
 					return fmt.Errorf("%s too long", f.Name)
 				}
-				if allowed(f.Name, "title|topic|category") && strings.TrimSpace(str) == "" {
+				if allowed(f.Name, "title|topic|category|name") && strings.TrimSpace(str) == "" {
 					return fmt.Errorf("%s is empty", f.Name)
 				}
 			}
@@ -228,11 +239,21 @@ func Validate(kind string, e Entity) error {
 			if e["type"] != "company" || !allowed(e["status"].(string), "not_started|applied|interviewing|offer|rejected|passed") {
 				return fmt.Errorf("invalid company enum")
 			}
+			// Legacy archives embed contacts; Import converts them to connections.
 			known["contacts"] = true
 			if v, exists := e["contacts"]; exists {
 				if err := validateChildren("contacts", v, 200); err != nil {
 					return err
 				}
+			}
+		}
+	}
+	if kind == "connection" {
+		// photo is a read-only projection of connection_photos.
+		known["photo"] = true
+		if s := e["email"].(string); s != "" {
+			if a, err := mail.ParseAddress(s); err != nil || a.Address != s {
+				return fmt.Errorf("invalid connection email")
 			}
 		}
 	}
@@ -424,10 +445,20 @@ func NormalizeForSave(kind string, input Entity) Entity {
 	if kind == "company" && e["cover"] == "" {
 		delete(e, "cover")
 	}
-	children := map[string][]string{}
-	if kind == "company" {
-		children["contacts"] = []string{"name", "role"}
+	if kind == "connection" {
+		for _, key := range []string{"name", "role", "companyName", "email"} {
+			if s, ok := e[key].(string); ok {
+				e[key] = strings.TrimSpace(s)
+			}
+		}
+		for _, key := range []string{"url", "companySlug", "connectedOn", "lastContactedOn"} {
+			if e[key] == "" {
+				delete(e, key)
+			}
+		}
+		delete(e, "photo")
 	}
+	children := map[string][]string{}
 	if kind == "goal" {
 		children["notes"] = []string{"body"}
 		children["steps"] = []string{"title"}
@@ -470,13 +501,16 @@ func ValidID(kind, id string) bool {
 	if _, ok := models[kind]; !ok {
 		return false
 	}
-	if kind == "goal" {
+	if kind == "goal" || kind == "connection" {
 		return uuidRE.MatchString(id)
 	}
 	return idRE.MatchString(id)
 }
 
 func PrepareSave(kind string, input Entity) (Entity, error) {
+	if _, exists := input["contacts"]; exists && kind == "company" {
+		return nil, fmt.Errorf("contacts moved to connections; reload before saving")
+	}
 	if kind == "book" {
 		if authors, ok := input["authors"].([]any); ok {
 			if len(authors) > 30 {

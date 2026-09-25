@@ -1,0 +1,15 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import { ConnectionsBoard } from '../components/ConnectionsBoard';
+---
+
+<DocsLayout wide title="Connections" description="People in your network, linked to target companies, with a catch-up queue">
+  <div class="space-y-2 mb-6">
+    <h1 class="text-3xl font-bold">Connections</h1>
+    <p class="text-zinc-400 text-sm">
+      Import your LinkedIn connections, see who works at your target companies, and keep a
+      queue of people to catch up with.
+    </p>
+  </div>
+  <ConnectionsBoard client:only="react" />
+</DocsLayout>

@@ -28,17 +28,6 @@ func writeChildren(ctx context.Context, tx *sql.Tx, kind, id string, e Entity) e
 				return err
 			}
 		}
-	case "company":
-		if err := exec("DELETE FROM company_contacts WHERE company_slug=$1", id); err != nil {
-			return err
-		}
-		a, _ := e["contacts"].([]any)
-		for i, v := range a {
-			o := v.(map[string]any)
-			if err := exec("INSERT INTO company_contacts(company_slug,id,position,name,role,email,url,notes) VALUES($1,$2,$3,$4,$5,$6,$7,$8)", id, o["id"], i, o["name"], o["role"], o["email"], o["url"], o["notes"]); err != nil {
-				return err
-			}
-		}
 	case "goal":
 		for _, t := range []string{"goal_notes", "goal_steps", "goal_metadata"} {
 			if err := exec("DELETE FROM "+t+" WHERE goal_id=$1", id); err != nil {
@@ -93,15 +82,6 @@ func readChildren(ctx context.Context, q queryer, kind string, e Entity) error {
 			}
 		}
 		return rows.Err()
-	case "company":
-		present := e["_contactsPresent"] == true
-		delete(e, "_contactsPresent")
-		if !present {
-			return nil
-		}
-		a, err := childJSON(ctx, q, "SELECT json_build_object('id',id,'name',name,'role',role,'email',email,'url',url,'notes',notes) FROM company_contacts WHERE company_slug=$1 ORDER BY position", id)
-		e["contacts"] = a
-		return err
 	case "goal":
 		for key, query := range map[string]string{"notes": "SELECT json_build_object('id',id,'body',body,'createdAt',to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"')) FROM goal_notes WHERE goal_id=$1 ORDER BY position", "steps": "SELECT json_build_object('id',id,'title',title,'done',done) FROM goal_steps WHERE goal_id=$1 ORDER BY position"} {
 			a, err := childJSON(ctx, q, query, id)

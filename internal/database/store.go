@@ -32,6 +32,9 @@ type Page struct {
 type Filter struct {
 	Limit, Offset                               int
 	Topic, Status, Category, Priority, From, To string
+	// Company and Linked narrow connections to one company or to any company.
+	Company string
+	Linked  bool
 }
 
 func projection(m model, detail bool) string {
@@ -55,8 +58,8 @@ func projection(m model, detail bool) string {
 	if m.Table == "books" {
 		pairs = append(pairs, "'progress', CASE WHEN progress_unit IS NULL THEN NULL ELSE json_build_object('unit',progress_unit,'total',progress_total,'completed',progress_completed) END")
 	}
-	if m.Table == "companies" {
-		pairs = append(pairs, "'_contactsPresent',contacts_present")
+	if m.Table == "connections" {
+		pairs = append(pairs, "'photo',(SELECT revision FROM connection_photos WHERE connection_id=connections.id)")
 	}
 	if !detail && m.Table == "books" {
 		pairs = append(pairs, "'summary',(SELECT json_build_object('chapterCount',chapter_count,'completedCount',completed_count,'excerpt',excerpt,'sourceRevision',source_revision,'parserVersion',parser_version) FROM book_summaries WHERE book_slug=books.slug)")
@@ -178,6 +181,16 @@ func (s *Store) List(ctx context.Context, kind string, f Filter) (Page, error) {
 			add(x.col, "=", x.v)
 		}
 	}
+	if f.Company != "" || f.Linked {
+		if kind != "connection" {
+			return Page{}, fmt.Errorf("%w: company filters require connections", ErrInvalid)
+		}
+		if f.Company != "" {
+			add("company_slug", "=", f.Company)
+		} else {
+			where = append(where, "company_slug IS NOT NULL")
+		}
+	}
 	if f.From != "" || f.To != "" {
 		if kind != "goal" {
 			return Page{}, fmt.Errorf("%w: date filters require goals", ErrInvalid)
@@ -195,7 +208,7 @@ func (s *Store) List(ctx context.Context, kind string, f Filter) (Page, error) {
 			add("start_date", "<=", f.To)
 		}
 	}
-	order := map[string]string{"run": "started_at DESC,id", "note": "topic,title,id", "document": "title,id", "personal": "entry_date DESC NULLS LAST,id", "week": "start_date DESC,slug", "book": "status,category,priority,slug", "company": "status,category,priority,slug", "goal": "start_date,end_date,id"}[kind]
+	order := map[string]string{"run": "started_at DESC,id", "note": "topic,title,id", "document": "title,id", "personal": "entry_date DESC NULLS LAST,id", "week": "start_date DESC,slug", "book": "status,category,priority,slug", "company": "status,category,priority,slug", "goal": "start_date,end_date,id", "connection": "name,id"}[kind]
 	args = append(args, f.Limit+1, f.Offset)
 	rows, err := s.DB.QueryContext(ctx, "SELECT "+projection(m, false)+",revision FROM "+m.Table+" WHERE "+strings.Join(where, " AND ")+" ORDER BY "+order+fmt.Sprintf(" LIMIT $%d OFFSET $%d", len(args)-1, len(args)), args...)
 	if err != nil {
@@ -213,7 +226,6 @@ func (s *Store) List(ctx context.Context, kind string, f Filter) (Page, error) {
 		if err != nil {
 			return p, err
 		}
-		delete(r.Entry, "_contactsPresent")
 		delete(r.Entry, "_targetsPresent")
 		p.Entries = append(p.Entries, r)
 	}
@@ -250,6 +262,9 @@ func dbError(err error) error {
 	var pg *pgconn.PgError
 	if errors.As(err, &pg) && pg.Code == "23505" {
 		return ErrConflict
+	}
+	if errors.As(err, &pg) && pg.Code == "23503" {
+		return fmt.Errorf("%w: linked company does not exist", ErrInvalid)
 	}
 	return err
 }
@@ -328,10 +343,6 @@ func saveTx(ctx context.Context, tx *sql.Tx, kind string, e Entity, revision *st
 		add("end_date", p[1], "")
 		_, present := e["targets"]
 		add("targets_present", present, "")
-	}
-	if kind == "company" {
-		_, present := e["contacts"]
-		add("contacts_present", present, "")
 	}
 	if kind == "book" {
 		p, _ := e["progress"].(map[string]any)

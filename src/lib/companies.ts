@@ -2,8 +2,7 @@ import { checklist } from './checklist.ts';
 import type { CollectionEntry } from 'astro:content';
 
 export type CompanyStatus = CollectionEntry<'companies'>['data']['status'];
-export interface CompanyContact { id: string; name: string; role: string; email: string; url: string; notes: string }
-export type RawCompany = CollectionEntry<'companies'>['data'] & { slug: string; body: string; contacts?: CompanyContact[] };
+export type RawCompany = CollectionEntry<'companies'>['data'] & { slug: string; body: string };
 export type Company = Omit<RawCompany, 'body'> & {
   why: string;
   steps: { index: number; label: string; completed: boolean }[];

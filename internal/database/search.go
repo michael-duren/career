@@ -32,6 +32,7 @@ func (s *Store) Search(ctx context.Context, query string, limit int, kinds ...st
 			UNION ALL SELECT 'week',slug,'Week ' || week || ' · ' || dates::text,body,updated_at FROM journal_weeks
 			UNION ALL SELECT 'book',slug,title,body,updated_at FROM books
 			UNION ALL SELECT 'company',slug,title,body,updated_at FROM companies
+			UNION ALL SELECT 'connection',id::text,name,concat_ws(E'\n',role,company_name,notes),updated_at FROM connections
 		) entries
 		WHERE ($3='' OR kind=$3) AND (title ILIKE '%' || $1 || '%' OR body ILIKE '%' || $1 || '%')
 		ORDER BY updated_at DESC NULLS LAST,kind,id LIMIT $2`, query, limit, kind)

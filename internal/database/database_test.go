@@ -136,9 +136,9 @@ func TestConcurrentRevisionsAndChildren(t *testing.T) {
 		t.Fatal(err)
 	}
 	var count int
-	s.DB.QueryRow("SELECT count(*) FROM company_contacts").Scan(&count)
-	if count != 0 {
-		t.Fatal("children survived delete")
+	s.DB.QueryRow("SELECT count(*) FROM connections WHERE company_slug IS NULL AND company_name='Example'").Scan(&count)
+	if count != 1 {
+		t.Fatal("company delete should unlink, not remove, its connections")
 	}
 	doc, _ := s.Detail(ctx, "document", "index")
 	if !errors.Is(s.Delete(ctx, "document", "index", &doc.Revision), ErrCore) {
@@ -329,8 +329,6 @@ func TestOptionalEntityPresence(t *testing.T) {
 	var workspace Entity
 	json.Unmarshal(fixture(t), &workspace)
 	workspace["weeks"].([]any)[0].(map[string]any)["targets"] = map[string]any{"only-target": float64(0)}
-	company := workspace["companies"].([]any)[0].(map[string]any)
-	company["contacts"] = []any{}
 	workspace["personalJournal"] = []any{}
 	workspace["goals"] = []any{}
 	raw, _ := json.Marshal(workspace)
@@ -345,18 +343,6 @@ func TestOptionalEntityPresence(t *testing.T) {
 	json.Unmarshal(out.Bytes(), &got)
 	if !reflect.DeepEqual(workspace, got) {
 		t.Fatal("optional presence round trip differs")
-	}
-	delete(company, "contacts")
-	if err := Validate("company", company); err != nil {
-		t.Fatal(err)
-	}
-	r, _ := s.Detail(context.Background(), "company", "company/nested")
-	saved, err := s.Save(context.Background(), "company", company, &r.Revision)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, exists := saved.Entry["contacts"]; exists {
-		t.Fatal("absent contacts became empty")
 	}
 }
 
