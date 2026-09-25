@@ -16,6 +16,16 @@ import (
 
 func testStore(t *testing.T) *Store {
 	t.Helper()
+	s := emptyStore(t)
+	if err := s.Migrate(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	return s
+}
+
+// emptyStore returns a disposable schema with no migrations applied.
+func emptyStore(t *testing.T) *Store {
+	t.Helper()
 	url := os.Getenv("TEST_DATABASE_URL")
 	if url == "" {
 		t.Skip("set TEST_DATABASE_URL to a disposable PostgreSQL database")
@@ -37,9 +47,6 @@ func testStore(t *testing.T) *Store {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { scoped.Close(); s.DB.Exec("DROP SCHEMA " + schema + " CASCADE"); s.Close() })
-	if err = scoped.Migrate(context.Background()); err != nil {
-		t.Fatal(err)
-	}
 	return scoped
 }
 func fixture(t *testing.T) []byte {

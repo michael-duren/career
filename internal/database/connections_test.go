@@ -3,10 +3,14 @@ package database
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/michael-duren/career-strategy/internal/linkedin"
@@ -170,5 +174,143 @@ func TestImportConnections(t *testing.T) {
 	}
 	if all["Ada"]["companySlug"] != nil || all["Ada"]["lastContactedOn"] != "2026-05-01" {
 		t.Fatalf("ada after reimport %v", all["Ada"])
+	}
+}
+
+func TestMigration004RepairsLegacyContacts(t *testing.T) {
+	s := emptyStore(t)
+	ctx := context.Background()
+	// Apply 001-003 by hand so 004 runs against populated company_contacts.
+	if _, err := s.DB.Exec("CREATE TABLE schema_migrations(version INTEGER PRIMARY KEY, checksum TEXT NOT NULL, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())"); err != nil {
+		t.Fatal(err)
+	}
+	for i, name := range []string{"001_workspace.sql", "002_running_notes.sql", "003_goal_dependencies.sql"} {
+		version := i + 1
+		b, _ := migrations.ReadFile("migrations/" + name)
+		if _, err := s.DB.Exec(string(b)); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := s.DB.Exec("INSERT INTO schema_migrations(version,checksum) VALUES($1,$2)", version, fmt.Sprintf("%x", sha256.Sum256(b))); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := s.DB.Exec(`INSERT INTO companies(slug,title,category,type,url,status,featured,priority,tags,body,revision,position,contacts_present) VALUES
+		('a','Acme','X','company','https://a.co','applied',false,'high','{}','','r1',1,true),('b','Beta','X','company','https://b.co','applied',false,'high','{}','','r2',2,true)`); err != nil {
+		t.Fatal(err)
+	}
+	shared := "11111111-1111-4111-8111-111111111111"
+	if _, err := s.DB.Exec(`INSERT INTO company_contacts VALUES
+		('a',$1,0,'Sam','Eng','sam@a.co','https://www.linkedin.com/in/sam','hi'),
+		('b',$1,0,'Sam again','','','https://WWW.linkedin.com/in/sam','second job'),
+		('a','21111111-1111-4111-8111-111111111111',1,'Bad','','not an email','linkedin.com/in/bad','')`, shared); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Migrate(ctx); err != nil {
+		t.Fatal(err)
+	}
+	page, err := s.List(ctx, "connection", Filter{Limit: 100})
+	if err != nil || len(page.Entries) != 3 {
+		t.Fatalf("migrated %v %v", page, err)
+	}
+	byName := map[string]Result{}
+	for _, r := range page.Entries {
+		byName[r.Entry["name"].(string)] = r
+	}
+	if byName["Sam"].Entry["id"] != shared || byName["Sam"].Entry["url"] != "https://www.linkedin.com/in/sam" {
+		t.Fatalf("first Sam %v", byName["Sam"].Entry)
+	}
+	again := byName["Sam again"].Entry
+	if again["id"] == shared || again["url"] != nil || again["notes"] != "second job" || again["companySlug"] != "b" {
+		t.Fatalf("second Sam %v", again)
+	}
+	bad := byName["Bad"]
+	if bad.Entry["url"] != nil || bad.Entry["email"] != "" || bad.Entry["notes"] != "Profile: linkedin.com/in/bad\nEmail: not an email" {
+		t.Fatalf("bad %v", bad.Entry)
+	}
+	// Repaired rows stay editable through the normal save path.
+	bad.Entry["queued"] = true
+	if _, err = s.Save(ctx, "connection", bad.Entry, &bad.Revision); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// Contacts were URL- and email-validated on save, so archives only need the
+// duplicate URL and reused-id repairs.
+func TestLegacyArchiveRepairsContacts(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	var workspace Entity
+	json.Unmarshal(fixture(t), &workspace)
+	delete(workspace, "connections")
+	company := workspace["companies"].([]any)[0].(map[string]any)
+	other := map[string]any{}
+	for k, v := range company {
+		other[k] = v
+	}
+	other["slug"] = "company/other"
+	shared := "11111111-1111-4111-8111-111111111111"
+	contact := func(name, email, url string) map[string]any {
+		return map[string]any{"id": shared, "name": name, "role": "", "email": email, "url": url, "notes": ""}
+	}
+	company["contacts"] = []any{contact("Zoë", "", "https://www.linkedin.com/in/zoe")}
+	other["contacts"] = []any{contact("Zoë elsewhere", "", "https://www.linkedin.com/in/ZOE")}
+	workspace["companies"] = []any{company, other}
+	raw, _ := json.Marshal(workspace)
+	counts, err := s.Import(ctx, bytes.NewReader(raw), Source{Store: "fixture", Key: "legacy-dirty", Checksum: uuid.NewString(), Archive: "test"}, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if counts["connections"] != 2 {
+		t.Fatalf("counts %v", counts)
+	}
+	page, _ := s.List(ctx, "connection", Filter{Limit: 100})
+	for _, r := range page.Entries {
+		e := r.Entry
+		if e["name"] == "Zoë elsewhere" && (e["id"] == shared || e["url"] != nil) {
+			t.Fatalf("duplicate not repaired %v", e)
+		}
+	}
+}
+
+func TestImportRespectsUnlinkAndAdoptsURLlessRows(t *testing.T) {
+	s := imported(t)
+	ctx := context.Background()
+	// The fixture's migrated contact "Zoë" at Example has no URL.
+	rows := []linkedin.Connection{{Name: "Zoë", Company: "Example", URL: "https://www.linkedin.com/in/zoe"}, {Name: "Ada", Company: "Example", URL: "https://www.linkedin.com/in/ada"}}
+	got, err := s.ImportConnections(ctx, rows, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Created != 1 || got.Updated != 1 {
+		t.Fatalf("summary %+v", got)
+	}
+	zoe, _ := s.Detail(ctx, "connection", "11111111-1111-4111-8111-111111111111")
+	if zoe.Entry["url"] != "https://www.linkedin.com/in/zoe" || zoe.Entry["notes"] != "Markdown **ok**" {
+		t.Fatalf("zoe not adopted %v", zoe.Entry)
+	}
+	delete(zoe.Entry, "companySlug")
+	if _, err = s.Save(ctx, "connection", zoe.Entry, &zoe.Revision); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.ImportConnections(ctx, rows, nil); err != nil {
+		t.Fatal(err)
+	}
+	zoe, _ = s.Detail(ctx, "connection", "11111111-1111-4111-8111-111111111111")
+	if zoe.Entry["companySlug"] != nil {
+		t.Fatal("deliberate unlink was re-linked")
+	}
+}
+
+func TestClipIsLinear(t *testing.T) {
+	if got := clip(" "+strings.Repeat("é", 300)+"😀", 201); size(got) > 201 || !strings.HasPrefix(got, "é") {
+		t.Fatalf("clip %q", got)
+	}
+	if got := clip("ab😀", 3); got != "ab" {
+		t.Fatalf("clip splits surrogate pair: %q", got)
+	}
+	start := time.Now()
+	clip(strings.Repeat("x", 5<<20), 200)
+	if time.Since(start) > time.Second {
+		t.Fatal("clip is not linear")
 	}
 }

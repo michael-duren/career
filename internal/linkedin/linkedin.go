@@ -4,6 +4,7 @@ package linkedin
 import (
 	"encoding/csv"
 	"errors"
+	"fmt"
 	"io"
 	"net/url"
 	"regexp"
@@ -53,6 +54,23 @@ func reader(r io.Reader) *csv.Reader {
 	return c
 }
 
+// LazyQuotes tolerates LinkedIn's stray quotes, but an unclosed quote swallows
+// the rest of the file into one field. Oversized fields are reported instead.
+const (
+	maxConnectionField = 10 << 10
+	maxMessageField    = 256 << 10
+)
+
+func checkRow(c *csv.Reader, row []string, max int) error {
+	for i, field := range row {
+		if len(field) > max {
+			line, _ := c.FieldPos(i)
+			return fmt.Errorf("line %d: field longer than %d bytes; check for an unbalanced quote", line, max)
+		}
+	}
+	return nil
+}
+
 func cell(row []string, cols map[string]int, name string) string {
 	i, ok := cols[name]
 	if !ok || i >= len(row) {
@@ -73,6 +91,9 @@ func ParseConnections(r io.Reader) ([]Connection, error) {
 		row, err := c.Read()
 		if err == io.EOF {
 			return out, nil
+		}
+		if err == nil {
+			err = checkRow(c, row, maxConnectionField)
 		}
 		if err != nil {
 			return nil, err
@@ -107,6 +128,9 @@ func ParseLastMessages(r io.Reader) (map[string]string, error) {
 		row, err := c.Read()
 		if err == io.EOF {
 			return last, nil
+		}
+		if err == nil {
+			err = checkRow(c, row, maxMessageField)
 		}
 		if err != nil {
 			return nil, err

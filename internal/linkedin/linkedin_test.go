@@ -28,6 +28,11 @@ func TestParseConnections(t *testing.T) {
 	if _, err := ParseConnections(strings.NewReader("a,b\n1,2\n")); err != ErrNoHeader {
 		t.Fatalf("want ErrNoHeader, got %v", err)
 	}
+	unbalanced := "First Name,Last Name,URL,Email Address,Company,Position,Connected On\n" +
+		"Ada,L,https://www.linkedin.com/in/ada,,Acme,\"CEO,01 Jan 2026\n" + strings.Repeat("Grace,H,https://www.linkedin.com/in/grace,,Acme,Eng,01 Jan 2026\n", 200)
+	if _, err := ParseConnections(strings.NewReader(unbalanced)); err == nil || !strings.Contains(err.Error(), "unbalanced quote") {
+		t.Fatalf("unbalanced quote: %v", err)
+	}
 }
 
 func TestParseLastMessages(t *testing.T) {

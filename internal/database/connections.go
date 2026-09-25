@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/mail"
 	"strings"
+	"unicode/utf16"
 
 	"github.com/google/uuid"
 	"github.com/michael-duren/career-strategy/internal/linkedin"
@@ -24,22 +25,25 @@ type ConnectionImport struct {
 // clip truncates s to max UTF-16 code units, matching Validate's length rules.
 func clip(s string, max int) string {
 	s = strings.TrimSpace(s)
-	for size(s) > max {
-		r := []rune(s)
-		s = string(r[:len(r)-1])
+	units := 0
+	for i, r := range s {
+		if units += utf16.RuneLen(r); units > max {
+			return s[:i]
+		}
 	}
 	return s
 }
 
 type existingConnection struct {
-	id, name, role, companyName, email      string
-	companySlug, connectedOn, lastContacted sql.NullString
+	id, name, role, companyName, email           string
+	url, companySlug, connectedOn, lastContacted sql.NullString
 }
 
 // ImportConnections upserts LinkedIn connections by profile URL. LinkedIn owns
 // name, role, company, email and connection date; notes, tags, cadence and the
-// queue flag stay as the user left them. A company link is kept while the
-// LinkedIn company name is unchanged, so manual links survive re-imports.
+// queue flag stay as the user left them. The company link is only recomputed
+// when the LinkedIn company name changes, so manual links and deliberate
+// unlinks survive re-imports.
 func (s *Store) ImportConnections(ctx context.Context, rows []linkedin.Connection, lastMessages map[string]string) (ConnectionImport, error) {
 	summary := ConnectionImport{Parsed: len(rows)}
 	tx, err := s.DB.BeginTx(ctx, nil)
@@ -49,6 +53,10 @@ func (s *Store) ImportConnections(ctx context.Context, rows []linkedin.Connectio
 	defer tx.Rollback()
 	// Serialize imports so concurrent uploads cannot race on the URL index.
 	if _, err = tx.ExecContext(ctx, "SELECT pg_advisory_xact_lock(724193603)"); err != nil {
+		return summary, err
+	}
+	// Hold off interactive saves until commit; updates below are based on this snapshot.
+	if _, err = tx.ExecContext(ctx, "LOCK TABLE connections IN SHARE ROW EXCLUSIVE MODE"); err != nil {
 		return summary, err
 	}
 	companies := []linkedin.Company{}
@@ -71,19 +79,26 @@ func (s *Store) ImportConnections(ctx context.Context, rows []linkedin.Connectio
 	matcher := linkedin.NewMatcher(companies)
 
 	existing := map[string]*existingConnection{}
-	existingRows, err := tx.QueryContext(ctx, "SELECT id::text,url,name,role,company_name,email,company_slug,to_char(connected_on,'YYYY-MM-DD'),to_char(last_contacted_on,'YYYY-MM-DD') FROM connections WHERE url IS NOT NULL")
+	// People added by hand or migrated from company contacts may lack a URL;
+	// they are matched by name so an import does not duplicate them.
+	withoutURL := map[string][]*existingConnection{}
+	existingRows, err := tx.QueryContext(ctx, "SELECT id::text,url,name,role,company_name,email,company_slug,to_char(connected_on,'YYYY-MM-DD'),to_char(last_contacted_on,'YYYY-MM-DD') FROM connections")
 	if err != nil {
 		return summary, err
 	}
 	for existingRows.Next() {
-		var url string
 		c := &existingConnection{}
-		if err = existingRows.Scan(&c.id, &url, &c.name, &c.role, &c.companyName, &c.email, &c.companySlug, &c.connectedOn, &c.lastContacted); err != nil {
+		if err = existingRows.Scan(&c.id, &c.url, &c.name, &c.role, &c.companyName, &c.email, &c.companySlug, &c.connectedOn, &c.lastContacted); err != nil {
 			existingRows.Close()
 			return summary, err
 		}
-		// Manually entered URLs may use another LinkedIn spelling.
-		existing[strings.ToLower(linkedin.CanonicalURL(url))] = c
+		if c.url.Valid {
+			// Manually entered URLs may use another LinkedIn spelling.
+			existing[strings.ToLower(linkedin.CanonicalURL(c.url.String))] = c
+		} else {
+			key := strings.ToLower(c.name)
+			withoutURL[key] = append(withoutURL[key], c)
+		}
 	}
 	existingRows.Close()
 	if err = existingRows.Err(); err != nil {
@@ -110,9 +125,13 @@ func (s *Store) ImportConnections(ctx context.Context, rows []linkedin.Connectio
 			summary.MessagesMatched++
 		}
 		lastContacted := sql.NullString{String: message, Valid: hasMessage && validDate(message)}
+		match := matcher.Match(company)
 		old := existing[key]
 		if old == nil {
-			slug := sql.NullString{String: matcher.Match(company)}
+			old = adoptWithoutURL(withoutURL, name, company, match)
+		}
+		if old == nil {
+			slug := sql.NullString{String: match}
 			slug.Valid = slug.String != ""
 			if slug.Valid {
 				summary.Linked++
@@ -127,13 +146,12 @@ func (s *Store) ImportConnections(ctx context.Context, rows []linkedin.Connectio
 		}
 		next := *old
 		next.name, next.role = name, role
+		if !old.url.Valid {
+			next.url = sql.NullString{String: url, Valid: true}
+		}
 		if company != old.companyName {
 			next.companyName = company
-			next.companySlug = sql.NullString{String: matcher.Match(company)}
-			next.companySlug.Valid = next.companySlug.String != ""
-		} else if !old.companySlug.Valid {
-			next.companySlug = sql.NullString{String: matcher.Match(company)}
-			next.companySlug.Valid = next.companySlug.String != ""
+			next.companySlug = sql.NullString{String: match, Valid: match != ""}
 		}
 		if email != "" {
 			next.email = email
@@ -179,9 +197,30 @@ func (s *Store) ImportConnections(ctx context.Context, rows []linkedin.Connectio
 	return summary, tx.Commit()
 }
 
+// adoptWithoutURL returns the single URL-less connection with this name at the
+// same company, removing it so no other row adopts it.
+func adoptWithoutURL(withoutURL map[string][]*existingConnection, name, company, match string) *existingConnection {
+	key := strings.ToLower(name)
+	found := -1
+	for i, c := range withoutURL[key] {
+		if strings.EqualFold(c.companyName, company) || (match != "" && c.companySlug.String == match) {
+			if found >= 0 {
+				return nil
+			}
+			found = i
+		}
+	}
+	if found < 0 {
+		return nil
+	}
+	c := withoutURL[key][found]
+	withoutURL[key] = append(withoutURL[key][:found], withoutURL[key][found+1:]...)
+	return c
+}
+
 func updateImported(ctx context.Context, tx *sql.Tx, c *existingConnection) error {
-	_, err := tx.ExecContext(ctx, `UPDATE connections SET name=$2,role=$3,company_name=$4,company_slug=$5,email=$6,connected_on=$7,last_contacted_on=$8,revision=$9,updated_at=now() WHERE id=$1`,
-		c.id, c.name, c.role, c.companyName, c.companySlug, c.email, c.connectedOn, c.lastContacted, uuid.NewString())
+	_, err := tx.ExecContext(ctx, `UPDATE connections SET name=$2,role=$3,company_name=$4,company_slug=$5,email=$6,connected_on=$7,last_contacted_on=$8,url=$9,revision=$10,updated_at=now() WHERE id=$1`,
+		c.id, c.name, c.role, c.companyName, c.companySlug, c.email, c.connectedOn, c.lastContacted, c.url, uuid.NewString())
 	return err
 }
 

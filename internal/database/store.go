@@ -263,7 +263,7 @@ func dbError(err error) error {
 	if errors.As(err, &pg) && pg.Code == "23505" {
 		return ErrConflict
 	}
-	if errors.As(err, &pg) && pg.Code == "23503" {
+	if errors.As(err, &pg) && pg.Code == "23503" && pg.ConstraintName == "connections_company_slug_fkey" {
 		return fmt.Errorf("%w: linked company does not exist", ErrInvalid)
 	}
 	return err

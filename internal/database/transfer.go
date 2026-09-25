@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"io"
+	"strings"
 )
 
 type Source struct{ Store, Key, Revision, Checksum, Archive string }
@@ -46,6 +47,7 @@ func (s *Store) Import(ctx context.Context, r io.Reader, source Source, dry bool
 		return counts, fmt.Errorf("workspace object required")
 	}
 	seen := map[string]bool{}
+	legacy := legacyContacts{urls: map[string]bool{}, ids: map[string]bool{}}
 	markers := map[string]any{}
 	byCollection := map[string]string{}
 	for k, m := range models {
@@ -85,7 +87,7 @@ func (s *Store) Import(ctx context.Context, r io.Reader, source Source, dry bool
 					return counts, fmt.Errorf("%s[%d]: %w", key, counts[key], err)
 				}
 				for _, v := range contacts {
-					if err = importContact(ctx, tx, e, v.(map[string]any)); err != nil {
+					if err = legacy.save(ctx, tx, e, v.(map[string]any)); err != nil {
 						return counts, fmt.Errorf("%s[%d] contact: %w", key, counts[key], err)
 					}
 					counts["connections"]++
@@ -215,6 +217,8 @@ func (s *Store) Export(ctx context.Context, w io.Writer) error {
 				if err != nil {
 					return err
 				}
+				// Photo bytes are not exported, so a revision would dangle on import.
+				delete(r.Entry, "photo")
 				if !first {
 					if err = write(","); err != nil {
 						return err
@@ -237,10 +241,21 @@ func (s *Store) Export(ctx context.Context, w io.Writer) error {
 	return tx.Commit()
 }
 
-// importContact converts a legacy company contact into a linked connection.
-func importContact(ctx context.Context, tx *sql.Tx, company Entity, contact map[string]any) error {
+// legacyContacts converts company contacts from old archives into linked
+// connections. Contacts were already URL- and email-validated, so only the
+// migration 004 duplicate repairs apply: a repeated profile URL stays on its
+// first row, and a UUID reused across companies gets a new id.
+type legacyContacts struct{ urls, ids map[string]bool }
+
+func (l legacyContacts) save(ctx context.Context, tx *sql.Tx, company Entity, contact map[string]any) error {
+	id, url := strings.ToLower(contact["id"].(string)), strings.ToLower(contact["url"].(string))
 	e := Entity{"id": contact["id"], "name": contact["name"], "role": contact["role"], "companyName": company["title"], "companySlug": company["slug"], "email": contact["email"], "queued": false, "notes": contact["notes"], "tags": []any{}}
-	if contact["url"] != "" {
+	if l.ids[id] {
+		e["id"] = uuid.NewString()
+	}
+	l.ids[id] = true
+	if url != "" && !l.urls[url] {
+		l.urls[url] = true
 		e["url"] = contact["url"]
 	}
 	if err := Validate("connection", e); err != nil {

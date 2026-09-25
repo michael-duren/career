@@ -184,7 +184,7 @@ export function ConnectionsBoard() {
       <details className="rounded-lg border border-zinc-800 bg-zinc-900 p-4 text-sm" open={connections.length === 0}>
         <summary className="cursor-pointer font-medium text-zinc-200">Import from LinkedIn</summary>
         <div className="mt-3 space-y-3 text-zinc-400">
-          <p>On LinkedIn open <em>Settings → Data privacy → Get a copy of your data</em>, pick <em>Connections</em> and <em>Messages</em>, then unzip the export. Re-importing updates names, roles and companies but keeps your notes, cadences and manual company links.</p>
+          <p>On LinkedIn open <em>Settings → Data privacy → Get a copy of your data</em>, pick <em>Connections</em> and <em>Messages</em>, then unzip the export. Re-importing updates names, roles and companies but keeps your notes and cadences. A company link, or a deliberate unlink, only changes when that person's LinkedIn company changes.</p>
           <form className="flex flex-wrap items-end gap-4" onSubmit={event => { event.preventDefault(); void importFiles(event.currentTarget); }}>
             <fieldset disabled={busy} className="contents">
               <label className="block text-zinc-200">Connections.csv <span className="text-zinc-500">(required)</span><input name="connections" type="file" accept=".csv,text/csv" required className="mt-1 block text-sm text-zinc-400 file:mr-3 file:rounded file:border-0 file:bg-zinc-700 file:px-3 file:py-1.5 file:text-zinc-100" /></label>
@@ -242,7 +242,7 @@ export function ConnectionsBoard() {
               <ConnectionAvatar connection={c} />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-zinc-100">
-                  {c.url ? <a href={c.url} target="_blank" rel="noreferrer" className="hover:underline">{c.name}</a> : c.name}
+                  {c.url && /^https?:\/\//i.test(c.url) ? <a href={c.url} target="_blank" rel="noreferrer" className="hover:underline">{c.name}</a> : c.name}
                   {c.queued && <span className="ml-2 rounded bg-amber-500/20 px-1.5 py-0.5 text-xs text-amber-300">queued</span>}
                 </p>
                 <p className="truncate text-zinc-400">
