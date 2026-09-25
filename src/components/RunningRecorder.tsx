@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import { Download, RefreshCw, Upload } from 'lucide-react';
 import { enqueueClip, queuedClips, syncClips, type QueuedClip } from '../lib/running-queue';
 const button = 'min-h-12 rounded-lg border border-zinc-600 px-4 py-3 disabled:opacity-50';
+const dockButton = 'flex size-14 flex-col items-center justify-center gap-1 rounded-full bg-zinc-800 text-zinc-200 hover:bg-zinc-700 disabled:opacity-40 lg:size-16';
+const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 export default function RunningRecorder() {
   const [recording, setRecording] = useState(false), [starting, setStarting] = useState(false);
-  const [seconds, setSeconds] = useState(0), [level, setLevel] = useState(0), [waiting, setWaiting] = useState(0);
+  const [seconds, setSeconds] = useState(0), [levels, setLevels] = useState<number[]>([]), [waiting, setWaiting] = useState(0);
   const [error, setError] = useState(''), [message, setMessage] = useState(''), [rescue, setRescue] = useState('');
   const recorder = useRef<MediaRecorder | null>(null), wake = useRef<WakeLockSentinel | null>(null);
   const audioContext = useRef<AudioContext | null>(null), timer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
@@ -30,17 +33,17 @@ export default function RunningRecorder() {
       next.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
       next.onerror = () => { setError('Recording was interrupted. Check the saved audio; import a native voice memo if needed.'); if (next.state !== 'inactive') next.stop(); };
       next.onstop = () => {
-        stream?.getTracks().forEach(track => track.stop()); release(); setRecording(false); setLevel(0);
+        stream?.getTracks().forEach(track => track.stop()); release(); setRecording(false);
         const audio = new Blob(chunks, { type: next.mimeType || mimeType || 'audio/webm' });
         if (audio.size) void save({ clientId, recordedAt, durationMs: Math.min(1800000, Date.now() - started.current), audio });
         else setError('No audio was captured. Try importing a native voice memo.');
       };
-      next.start(1000); setRecording(true); setSeconds(0); navigator.vibrate?.(50); await holdScreen();
+      next.start(1000); setRecording(true); setSeconds(0); setLevels([]); navigator.vibrate?.(50); await holdScreen();
       let analyser: AnalyserNode | undefined;
       try { const ctx = new AudioContext(); audioContext.current = ctx; analyser = ctx.createAnalyser(); ctx.createMediaStreamSource(stream).connect(analyser); } catch { /* Recording still works without the meter. */ }
       timer.current = setInterval(() => {
         const elapsed = Date.now() - started.current; setSeconds(Math.floor(elapsed / 1000));
-        if (analyser) { const samples = new Uint8Array(analyser.fftSize); analyser.getByteTimeDomainData(samples); setLevel(Math.min(1, Math.sqrt(samples.reduce((sum, v) => sum + ((v - 128) / 128) ** 2, 0) / samples.length) * 4)); }
+        if (analyser) { const samples = new Uint8Array(analyser.fftSize); analyser.getByteTimeDomainData(samples); const level = Math.min(1, Math.sqrt(samples.reduce((sum, v) => sum + ((v - 128) / 128) ** 2, 0) / samples.length) * 4); setLevels(current => [...current.slice(-47), level]); }
         if (elapsed >= 1800000 || chunks.reduce((sum, c) => sum + c.size, 0) > 14 * 1024 * 1024) { if (next.state !== 'inactive') next.stop(); }
       }, 250);
     } catch (e) { stream?.getTracks().forEach(track => track.stop()); release(); setError((e as Error).message); }
@@ -65,15 +68,35 @@ export default function RunningRecorder() {
       await save({ clientId: crypto.randomUUID(), audio: new Blob([file], { type: mime }), recordedAt: new Date(file.lastModified || Date.now()).toISOString(), durationMs: Math.round(duration * 1000) });
     } catch (e) { setError((e as Error).message); } finally { URL.revokeObjectURL(url); }
   }
-  return <section className="mb-8 space-y-4 rounded-xl border border-zinc-700 p-4">
-    <button className={`w-full min-h-28 rounded-xl text-3xl font-bold ${recording ? 'bg-red-700' : 'bg-blue-700'}`} disabled={starting || !!rescue} onClick={() => recording ? recorder.current?.stop() : void start()}>{starting ? 'Opening microphone…' : recording ? 'Stop' : 'Record'}</button>
-    {recording && <div role="status">{Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, '0')} <meter aria-label="Microphone level" min={0} max={1} value={level} /></div>}
-    <p className="text-sm text-zinc-400">Keep the screen on and stop before pocketing your phone. Screen lock can interrupt recording. Clips join the nearest run within 90 minutes.</p>
-    <p role="status">{waiting} clips waiting to upload · {message}</p>
-    {error && <p role="alert" className="text-red-300">{error}</p>}
-    {rescue && <div className="flex gap-3"><a className={button} href={rescue} download="running-recording">Download unsaved audio</a><button className={button} onClick={() => pending.current && void save(pending.current)}>Retry local save</button></div>}
-    <button className={button} onClick={sync}>Retry uploads</button>{' '}
-    <label className={`${button} inline-block`}>Import voice memo<input className="block max-w-full mt-2" type="file" accept="audio/*,.m4a,.webm,.wav,.mp3,.ogg,.flac" disabled={recording || !!rescue} onChange={e => { const f = e.target.files?.[0]; if (f) void importFile(f); e.target.value = ''; }} /></label>
+  const bars = [...Array(Math.max(0, 48 - levels.length)).fill(0), ...levels];
+  return <section className="mb-8 lg:grid lg:grid-cols-[1fr_16rem] lg:overflow-hidden lg:rounded-2xl lg:border lg:border-zinc-800 lg:bg-zinc-900/60">
+    <div className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-8">
+      <div className="flex items-center justify-between text-sm">
+        <span className={`flex items-center gap-2 font-medium ${recording ? 'text-red-400' : 'text-zinc-400'}`}><span className={`size-2 rounded-full ${recording ? 'animate-pulse bg-red-500' : 'bg-zinc-600'}`} />{starting ? 'Opening microphone…' : recording ? 'Recording' : 'Ready'}</span>
+        <span className="text-zinc-400" role="status">{waiting ? `${waiting} waiting to upload` : 'All clips uploaded'}</span>
+      </div>
+      <p className={`text-center font-mono text-6xl font-light tabular-nums tracking-tight lg:text-7xl ${recording ? 'text-zinc-50' : 'text-zinc-500'}`} role="timer" aria-live="off">{clock(seconds)}</p>
+      <div className="flex h-16 items-center justify-center gap-[3px]" role="meter" aria-label="Microphone level" aria-valuemin={0} aria-valuemax={1} aria-valuenow={levels.at(-1) ?? 0}>
+        {bars.map((v, i) => <span key={i} className={`w-1 rounded-full transition-[height] duration-200 ${recording ? 'bg-red-400' : 'bg-zinc-700'}`} style={{ height: `${Math.max(4, v * 64)}px` }} />)}
+      </div>
+      {message && <p role="status" className="text-center text-sm text-zinc-300">{message}</p>}
+      {error && <p role="alert" className="rounded-lg bg-red-950/60 px-3 py-2 text-sm text-red-300">{error}</p>}
+      {rescue && <div className="flex flex-wrap gap-3"><a className={`${button} inline-flex items-center gap-2`} href={rescue} download="running-recording"><Download className="size-4" />Download unsaved audio</a><button className={button} onClick={() => pending.current && void save(pending.current)}>Retry local save</button></div>}
+      <p className="text-xs leading-relaxed text-zinc-500">Keep the screen on and stop before pocketing your phone; screen lock can interrupt recording. Clips join the nearest run within 90 minutes.</p>
+    </div>
+    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-zinc-800 bg-zinc-950/95 px-8 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur lg:static lg:z-auto lg:flex lg:flex-col lg:items-center lg:justify-center lg:gap-6 lg:border-t-0 lg:border-l lg:bg-zinc-900 lg:p-8">
+      <div className="mx-auto flex max-w-sm items-center justify-between lg:contents">
+        <label className={`${dockButton} cursor-pointer lg:order-2 ${recording || rescue ? 'pointer-events-none opacity-40' : ''}`} title="Import voice memo">
+          <Upload className="size-5" /><span className="text-[10px]">Import</span>
+          <input className="sr-only" type="file" accept="audio/*,.m4a,.webm,.wav,.mp3,.ogg,.flac" disabled={recording || !!rescue} onChange={e => { const f = e.target.files?.[0]; if (f) void importFile(f); e.target.value = ''; }} />
+        </label>
+        <button className="group flex size-20 items-center justify-center rounded-full border-4 border-zinc-200 disabled:opacity-50 lg:order-1 lg:size-28" aria-label={recording ? 'Stop recording' : 'Start recording'} disabled={starting || !!rescue} onClick={() => recording ? recorder.current?.stop() : void start()}>
+          <span className={`bg-red-600 transition-all duration-200 group-hover:bg-red-500 ${recording ? 'size-8 rounded-md lg:size-10' : 'size-16 rounded-full lg:size-24'} ${starting ? 'animate-pulse' : ''}`} />
+        </button>
+        <button className={`${dockButton} lg:order-3`} onClick={sync} title="Retry uploads"><RefreshCw className="size-5" /><span className="text-[10px]">Sync</span></button>
+      </div>
+    </div>
+    <div className="h-32 lg:hidden" aria-hidden />
   </section>;
 }
 export function RunningClips({ noteId }: { noteId: string }) {

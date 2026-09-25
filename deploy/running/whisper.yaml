@@ -1,23 +1,18 @@
-# Copy into the homelab infrastructure repository after building/importing the image.
-# Provision the model PVC with ggml-base.en.bin before enabling transcription.
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: whisper-models
-  namespace: career-strategy
-spec:
-  accessModes: [ReadWriteOnce]
-  resources:
-    requests:
-      storage: 2Gi
----
+# Reference copy; the deployed manifest lives in home-infra k8s/apps/career-strategy/whisper.yaml.
+# The image bundles whisper.cpp v1.7.6 and ggml-base.en.bin. It is built locally and
+# imported into containerd on every node (not published to a registry), so the pull
+# policy is Never. CRI cannot resolve @sha256 refs for imported images, so the tag
+# carries the manifest digest prefix (sha256:94e9d9829b78...) to keep it immutable.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
   name: whisper
   namespace: career-strategy
 spec:
   replicas: 1
+  revisionHistoryLimit: 3
   strategy:
     type: Recreate
   selector:
@@ -26,25 +21,40 @@ spec:
     metadata:
       labels: {app: whisper}
     spec:
-      securityContext: {runAsNonRoot: true, runAsUser: 65532, runAsGroup: 65532, fsGroup: 65532}
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      nodeSelector:
+        kubernetes.io/os: linux
+        kubernetes.io/arch: amd64
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile: {type: RuntimeDefault}
       containers:
         - name: whisper
-          image: career-whisper:v1.7.6
-          imagePullPolicy: IfNotPresent
-          ports: [{containerPort: 8080}]
-          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          image: docker.io/library/career-whisper:v1.7.6-94e9d9829b78
+          imagePullPolicy: Never
+          ports:
+            - {name: http, containerPort: 8080}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
           resources:
-            requests: {cpu: '1', memory: 512Mi}
-            limits: {cpu: '2', memory: 2Gi}
+            requests: {cpu: "1", memory: 512Mi}
+            limits: {cpu: "2", memory: 2Gi}
           readinessProbe:
-            tcpSocket: {port: 8080}
-            initialDelaySeconds: 10
+            tcpSocket: {port: http}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: {port: http}
+            initialDelaySeconds: 30
+            periodSeconds: 20
           volumeMounts:
-            - {name: models, mountPath: /models, readOnly: true}
             - {name: temp, mountPath: /tmp}
       volumes:
-        - name: models
-          persistentVolumeClaim: {claimName: whisper-models}
         - name: temp
           emptyDir: {sizeLimit: 256Mi}
 ---
@@ -56,9 +66,10 @@ metadata:
 spec:
   type: ClusterIP
   selector: {app: whisper}
-  ports: [{port: 8080, targetPort: 8080}]
+  ports:
+    - {name: http, port: 8080, targetPort: http}
 ---
-# Assumes the Go app's pods carry app: career-strategy; match infrastructure labels.
+# Only Career app pods may reach whisper; whisper itself has no egress (audio stays local).
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -71,6 +82,7 @@ spec:
   ingress:
     - from:
         - podSelector:
-            matchLabels: {app: career-strategy}
-      ports: [{protocol: TCP, port: 8080}]
+            matchLabels: {app: career}
+      ports:
+        - {protocol: TCP, port: 8080}
   egress: []
