@@ -141,7 +141,7 @@ func writeSchema[T any]() any {
 var createAnnotations = &mcp.ToolAnnotations{Title: "Create career entry", DestructiveHint: new(bool), OpenWorldHint: new(bool)}
 var updateAnnotations = &mcp.ToolAnnotations{Title: "Update career entry", OpenWorldHint: new(bool)}
 
-const fieldGuide = "Fields — goal: title, status (planned|active|done|dropped), startDate, endDate (YYYY-MM-DD), color (#rrggbb), dailyHours, dependsOn (goal IDs), steps [{title, done}], notes [{body}], metadata {string: string}. " +
+const fieldGuide = "Fields — goal: title, status (planned|active|done|dropped), startDate, endDate (YYYY-MM-DD), color (#rrggbb), dailyHours, dependsOn (goal IDs), steps [{title, done}] (mini goals: ordered, dateless sub-goals), notes [{body}], metadata {string: string}. " +
 	"company: title, category, url, status (not_started|applied|interviewing|offer|rejected|passed), priority (high|medium|low), featured, tags, body (markdown). " +
 	"note: title, topic, description, tags, body (markdown), todos [{title, done}]."
 

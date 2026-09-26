@@ -85,6 +85,30 @@ func (s *Server) deleteGoal(w http.ResponseWriter, r *http.Request) {
 	respond(w, 200, map[string]bool{"deleted": true})
 }
 
+// moveGoalStep reorders a mini goal (goal step) or moves it to another goal
+// atomically; the response carries every changed goal and its new revision.
+func (s *Server) moveGoalStep(w http.ResponseWriter, r *http.Request) {
+	if !s.mutation(w, r) {
+		return
+	}
+	var input database.StepMove
+	if !decode(w, r, 2000, &input) {
+		return
+	}
+	saved, err := s.db.MoveGoalStep(r.Context(), input)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	goals := []database.Entity{}
+	revisions := map[string]string{}
+	for _, g := range saved {
+		goals = append(goals, g.Entry)
+		revisions[g.Entry["id"].(string)] = g.Revision
+	}
+	respond(w, 200, map[string]any{"goals": goals, "revisions": revisions})
+}
+
 var contextRules = []string{
 	"Goal status and dependsOn describe prerequisites. Ready and blocked are derived. Done means completion; dates alone do not.",
 	"The saved timeline is the source of truth for goals, dates, steps, and goal metadata.",
