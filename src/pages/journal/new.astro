@@ -1,0 +1,8 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { QuickJournal } from '../../components/WorkspaceEditor';
+---
+<DocsLayout title="New journal entry" description="Add a dated reflection to your work journal">
+  <header class="mb-6 space-y-2"><h1 class="text-3xl font-bold">New journal entry</h1><p class="text-zinc-400">Write it down while it is fresh. Saving adds it to that week's journal.</p></header>
+  <QuickJournal returnTo="/journal" client:load />
+</DocsLayout>

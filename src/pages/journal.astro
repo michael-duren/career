@@ -3,7 +3,7 @@ import DocsLayout from '../layouts/DocsLayout.astro';
 import { WorkspaceEditor } from '../components/WorkspaceEditor';
 ---
 <DocsLayout title="Work journal" description="Capture work reflections and edit your weekly work journal">
-  <header class="mb-6 space-y-2"><h1 class="text-3xl font-bold">Work journal</h1><p class="text-zinc-400">Small steps, written down. Capture today or revisit a week.</p><a href="/logs" class="text-sm text-blue-400 hover:underline">Search all journal entries →</a></header>
+  <header class="mb-6 space-y-2"><div class="flex flex-wrap items-center justify-between gap-3"><h1 class="text-3xl font-bold">Work journal</h1><a href="/journal/new" class="rounded-lg border border-blue-500 bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">+ Add entry</a></div><p class="text-zinc-400">Small steps, written down. Capture today or revisit a week.</p><a href="/logs" class="text-sm text-blue-400 hover:underline">Search all journal entries →</a></header>
   <p class="mb-6 text-sm"><a class="text-blue-400 underline" href="/personal-journal">Personal journal</a> · <a class="text-blue-400 underline" href="/api/agent-context?format=markdown&journal=work">Read work journal as Markdown</a></p>
-  <WorkspaceEditor kind="week" quickJournal client:load />
+  <WorkspaceEditor kind="week" client:load />
 </DocsLayout>
