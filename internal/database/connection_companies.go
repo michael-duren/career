@@ -46,36 +46,84 @@ type ConnectionCompanyPage struct {
 	NextOffset *int                `json:"nextOffset"`
 }
 
-// companyKey is the case-insensitive identity used to group and deduplicate
-// company names; punctuation-only names fall back to their lowercase text.
-func companyKey(name string) string {
-	if key := linkedin.NormalizeCompany(name); key != "" {
-		return key
-	}
-	return strings.ToLower(strings.TrimSpace(name))
+// ValidCompanyName reports whether a name has letters or digits left after
+// normalization, so it can be grouped and deduplicated.
+func ValidCompanyName(name string) bool { return linkedin.NormalizeCompany(name) != "" }
+
+// companyTracker decides whether an employer is already on the companies
+// board. Listing and adding share it so a company listed as tracked is never
+// added again: an employer whose connections are linked to a company maps to
+// that company, otherwise the import matcher compares titles and slugs.
+type companyTracker struct {
+	companies []linkedin.Company
+	titles    map[string]string
+	linked    map[string]string // normalized employer name -> most linked slug
+	matcher   *linkedin.Matcher
 }
 
-func trackedCompanies(ctx context.Context, q queryer) ([]linkedin.Company, error) {
+func loadTracker(ctx context.Context, q queryer) (*companyTracker, error) {
+	t := &companyTracker{titles: map[string]string{}, linked: map[string]string{}}
 	rows, err := q.QueryContext(ctx, "SELECT slug,title FROM companies ORDER BY position")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	companies := []linkedin.Company{}
 	for rows.Next() {
 		var c linkedin.Company
 		if err = rows.Scan(&c.Slug, &c.Title); err != nil {
 			return nil, err
 		}
-		companies = append(companies, c)
+		t.companies = append(t.companies, c)
+		t.titles[c.Slug] = c.Title
 	}
-	return companies, rows.Err()
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	t.matcher = linkedin.NewMatcher(t.companies)
+	links, err := q.QueryContext(ctx, "SELECT company_name,company_slug,count(*) FROM connections WHERE company_slug IS NOT NULL GROUP BY 1,2")
+	if err != nil {
+		return nil, err
+	}
+	defer links.Close()
+	counts := map[string]map[string]int{}
+	for links.Next() {
+		var name, slug string
+		var n int
+		if err = links.Scan(&name, &slug, &n); err != nil {
+			return nil, err
+		}
+		key := linkedin.NormalizeCompany(name)
+		if key == "" {
+			continue
+		}
+		if counts[key] == nil {
+			counts[key] = map[string]int{}
+		}
+		counts[key][slug] += n
+	}
+	for key, slugs := range counts {
+		t.linked[key] = mostCommon(slugs)
+	}
+	return t, links.Err()
+}
+
+// Match returns the tracked slug for an employer name, or "".
+func (t *companyTracker) Match(name string) string {
+	if slug := t.linked[linkedin.NormalizeCompany(name)]; slug != "" {
+		return slug
+	}
+	return t.matcher.Match(name)
+}
+
+func (t *companyTracker) add(c linkedin.Company) {
+	t.companies = append(t.companies, c)
+	t.titles[c.Slug] = c.Title
+	t.matcher = linkedin.NewMatcher(t.companies)
 }
 
 type companyGroup struct {
 	ConnectionCompany
 	spellings map[string]int
-	slugs     map[string]int
 	people    []ConnectionSample
 }
 
@@ -86,16 +134,11 @@ func (s *Store) ConnectionCompanies(ctx context.Context, f ConnectionCompanyFilt
 	if f.Limit < 1 || f.Limit > 100 || f.Offset < 0 || f.People < 0 || f.People > 20 || !allowed(cmp.Or(f.Sort, "connections"), "connections|name|recent") {
 		return page, ErrInvalid
 	}
-	companies, err := trackedCompanies(ctx, s.DB)
+	tracker, err := loadTracker(ctx, s.DB)
 	if err != nil {
 		return page, err
 	}
-	titles := map[string]string{}
-	for _, c := range companies {
-		titles[c.Slug] = c.Title
-	}
-	matcher := linkedin.NewMatcher(companies)
-	rows, err := s.DB.QueryContext(ctx, "SELECT id::text,name,role,company_name,company_slug,to_char(last_contacted_on,'YYYY-MM-DD') FROM connections WHERE company_name<>''")
+	rows, err := s.DB.QueryContext(ctx, "SELECT id::text,name,role,company_name,to_char(last_contacted_on,'YYYY-MM-DD') FROM connections WHERE company_name<>''")
 	if err != nil {
 		return page, err
 	}
@@ -105,25 +148,25 @@ func (s *Store) ConnectionCompanies(ctx context.Context, f ConnectionCompanyFilt
 	for rows.Next() {
 		var p ConnectionSample
 		var company string
-		var slug, last sql.NullString
-		if err = rows.Scan(&p.ID, &p.Name, &p.Role, &company, &slug, &last); err != nil {
+		var last sql.NullString
+		if err = rows.Scan(&p.ID, &p.Name, &p.Role, &company, &last); err != nil {
 			return page, err
 		}
 		if role != "" && !strings.Contains(strings.ToLower(p.Role), role) {
 			continue
 		}
 		p.LastContactedOn = last.String
-		key := companyKey(company)
+		key := linkedin.NormalizeCompany(company)
+		if key == "" {
+			continue // punctuation-only employer names cannot be matched
+		}
 		g := groups[key]
 		if g == nil {
-			g = &companyGroup{spellings: map[string]int{}, slugs: map[string]int{}}
+			g = &companyGroup{spellings: map[string]int{}}
 			groups[key] = g
 		}
 		g.Connections++
 		g.spellings[company]++
-		if slug.Valid {
-			g.slugs[slug.String]++
-		}
 		g.LastContactedOn = max(g.LastContactedOn, p.LastContactedOn)
 		g.people = append(g.people, p)
 	}
@@ -140,11 +183,8 @@ func (s *Store) ConnectionCompanies(ctx context.Context, f ConnectionCompanyFilt
 		if g.Connections < f.MinConnections {
 			continue
 		}
-		g.TrackedSlug = mostCommon(g.slugs)
-		if g.TrackedSlug == "" {
-			g.TrackedSlug = matcher.Match(g.Name)
-		}
-		g.TrackedTitle = titles[g.TrackedSlug]
+		g.TrackedSlug = tracker.Match(g.Name)
+		g.TrackedTitle = tracker.titles[g.TrackedSlug]
 		if f.Untracked && g.TrackedSlug != "" {
 			continue
 		}
@@ -196,15 +236,19 @@ type AddedCompany struct {
 	Linked int `json:"linkedConnections"`
 }
 
-// AddCompanies creates companies unless one with the same normalized title
-// (case-insensitive, ignoring legal suffixes) already exists, then links
-// unlinked connections whose employer matches a new company. It never
+// AddCompanies creates companies unless list_connection_companies would call
+// the name tracked (see companyTracker), then links unlinked connections whose
+// employer best matches a new company. Skipped companies report the stored
+// title and slug. It never
 // changes existing companies or connection contact dates. Invalid input
 // saves nothing.
 func (s *Store) AddCompanies(ctx context.Context, entries []Entity) ([]AddedCompany, error) {
 	prepared := make([]Entity, len(entries))
 	for i, e := range entries {
 		p, err := PrepareSave("company", e)
+		if err == nil && !ValidCompanyName(fmt.Sprint(p["title"])) {
+			err = fmt.Errorf("title needs letters or digits")
+		}
 		if err != nil {
 			return nil, fmt.Errorf("%w: company %d: %v", ErrInvalid, i+1, err)
 		}
@@ -219,22 +263,16 @@ func (s *Store) AddCompanies(ctx context.Context, entries []Entity) ([]AddedComp
 	if _, err = tx.ExecContext(ctx, "LOCK TABLE companies IN SHARE ROW EXCLUSIVE MODE"); err != nil {
 		return nil, err
 	}
-	existing, err := trackedCompanies(ctx, tx)
+	tracker, err := loadTracker(ctx, tx)
 	if err != nil {
 		return nil, err
 	}
-	slugByKey := map[string]string{}
-	for _, c := range existing {
-		slugByKey[companyKey(c.Title)] = c.Slug
-	}
 	results := make([]AddedCompany, len(prepared))
-	created := []linkedin.Company{}
 	index := map[string]int{}
 	for i, e := range prepared {
 		title, _ := e["title"].(string)
-		key := companyKey(title)
-		if slug, ok := slugByKey[key]; ok {
-			results[i] = AddedCompany{Title: title, Slug: slug}
+		if slug := tracker.Match(title); slug != "" {
+			results[i] = AddedCompany{Title: tracker.titles[slug], Slug: slug}
 			continue
 		}
 		saved, err := saveTx(ctx, tx, "company", e, nil, false)
@@ -242,15 +280,14 @@ func (s *Store) AddCompanies(ctx context.Context, entries []Entity) ([]AddedComp
 			return nil, dbError(err)
 		}
 		slug, _ := saved.Entry["slug"].(string)
-		slugByKey[key] = slug
 		index[slug] = i
-		created = append(created, linkedin.Company{Slug: slug, Title: title})
+		tracker.add(linkedin.Company{Slug: slug, Title: title})
 		results[i] = AddedCompany{Title: title, Slug: slug, Revision: saved.Revision, Created: true}
 	}
-	if len(created) == 0 {
+	if len(index) == 0 {
 		return results, nil
 	}
-	linked, err := linkNewCompanies(ctx, tx, created)
+	linked, err := linkNewCompanies(ctx, tx, tracker.companies, index)
 	if err != nil {
 		return nil, err
 	}
@@ -263,10 +300,11 @@ func (s *Store) AddCompanies(ctx context.Context, entries []Entity) ([]AddedComp
 	return results, tx.Commit()
 }
 
-// linkNewCompanies attaches unlinked connections to newly created companies
-// using the import matcher, so the companies board shows who works there.
-func linkNewCompanies(ctx context.Context, tx *sql.Tx, companies []linkedin.Company) (map[string]int, error) {
-	matcher := linkedin.NewMatcher(companies)
+// linkNewCompanies attaches unlinked connections whose employer best matches
+// one of the created companies among all companies, so a shorter new name
+// never takes people from an existing company.
+func linkNewCompanies(ctx context.Context, tx *sql.Tx, all []linkedin.Company, created map[string]int) (map[string]int, error) {
+	matcher := linkedin.NewMatcher(all)
 	rows, err := tx.QueryContext(ctx, "SELECT id::text,company_name FROM connections WHERE company_slug IS NULL AND company_name<>''")
 	if err != nil {
 		return nil, err
@@ -278,7 +316,8 @@ func linkNewCompanies(ctx context.Context, tx *sql.Tx, companies []linkedin.Comp
 			rows.Close()
 			return nil, err
 		}
-		if slug := matcher.Match(company); slug != "" {
+		slug := matcher.Match(company)
+		if _, isNew := created[slug]; isNew {
 			matches[id] = slug
 		}
 	}

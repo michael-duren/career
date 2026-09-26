@@ -42,16 +42,25 @@ const defaultQueueCategory = "From connections"
 const companySteps = "## Steps\n\n- [ ] Identify one person at the company to connect with\n- [ ] Reach out and start building a relationship\n- [ ] Research team & open roles\n- [ ] Tailor resume/cover letter\n- [ ] Apply\n\n## Log\n"
 
 var headingLine = regexp.MustCompile(`(?m)^[ \t]{0,3}#{1,2}[ \t]`)
+var fenceLine = regexp.MustCompile("(?m)^[ \t]{0,3}(```|~~~)")
+
+// lineBreaks are every line terminator the website's JavaScript section
+// parser recognizes, so the heading check sees the same lines it does.
+var lineBreaks = strings.NewReplacer("\r\n", "\n", "\r", "\n", " ", "\n", " ", "\n")
 
 // queuedCompany builds a not-started company entry with an empty Log.
 func queuedCompany(c queueCompany) (database.Entity, error) {
 	title := strings.TrimSpace(c.Title)
-	if title == "" {
-		return nil, invalidInput("every company needs a title")
+	if !database.ValidCompanyName(title) {
+		return nil, invalidInput("company title %q needs letters or digits", title)
 	}
-	why := strings.TrimSpace(c.Why)
+	why := strings.TrimSpace(lineBreaks.Replace(c.Why))
 	if headingLine.MatchString(why) {
 		return nil, invalidInput("%s: why cannot contain # or ## headings", title)
+	}
+	// An open fence would swallow the Steps and Log headings that follow.
+	if len(fenceLine.FindAllString(why, -1))%2 != 0 {
+		return nil, invalidInput("%s: why has an unclosed code fence", title)
 	}
 	link := strings.TrimSpace(c.URL)
 	if link == "" {
@@ -110,7 +119,7 @@ func (s *Server) addConnectionTools(server *mcp.Server) {
 	mcp.AddTool(server, &mcp.Tool{
 		Name: "add_companies_to_queue",
 		Description: "Add companies to the companies board as not started, with the website's outreach checklist and an empty Log, so no reach-out date is recorded. Confirm the list with the user first. " +
-			"Companies whose name already exists (case-insensitive, ignoring legal suffixes like Inc) are skipped and returned with created=false, so retries are safe. " +
+			"Names list_connection_companies reports as tracked (case and legal suffixes like Inc ignored) are skipped and returned with created=false and the stored title and slug, so retries are safe. " +
 			"New companies are linked to unlinked connections who work there; their last-talked dates are unchanged. Returns each company's slug and revision.",
 		InputSchema: inputSchema[queueCompaniesInput](),
 		Annotations: queueAnnotations,
