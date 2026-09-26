@@ -68,3 +68,27 @@ test('service worker caches only data-free audio thoughts shell and public asset
   offline = true; assert.equal(await (await fetchEvent('/audio-thoughts'))!.clone().text(), 'data-free shell');
   assert.equal(await (await fetchEvent('/running'))!.text(), 'data-free shell');
 });
+
+test('service worker upgrade carries the pre-rename recorder shell and its assets into the new cache', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const { runInNewContext } = await import('node:vm');
+  const origin = 'https://career.example', stores = new Map<string, Map<string, string>>(), listeners: Record<string, (event: any) => void> = {};
+  const key = (request: string | { url: string }) => new URL(typeof request === 'string' ? request : request.url, origin).pathname;
+  const open = async (name: string) => {
+    if (!stores.has(name)) stores.set(name, new Map());
+    const entries = stores.get(name)!;
+    return { put: async (request: any, value: string) => void entries.set(key(request), value), match: async (request: any) => entries.get(key(request)), keys: async () => [...entries.keys()].map(path => ({ url: origin + path })) };
+  };
+  runInNewContext(await readFile(new URL('../public/sw.js', import.meta.url), 'utf8'), {
+    URL,
+    self: { location: { origin }, clients: { claim: async () => {} }, addEventListener: (name: string, fn: (event: any) => void) => { listeners[name] = fn; } },
+    caches: { open, keys: async () => [...stores.keys()], delete: async (name: string) => stores.delete(name) },
+  });
+  const old = await open('career-public-v2');
+  await old.put('/running', 'old shell'); await old.put('/_astro/recorder.abc.js', 'old js'); await old.put('/offline.html', 'offline');
+  let done: Promise<void> | undefined;
+  listeners.activate({ waitUntil: (promise: Promise<void>) => { done = promise; } });
+  await done;
+  assert.deepEqual([...stores.keys()], ['career-public-v3']);
+  assert.deepEqual(Object.fromEntries(stores.get('career-public-v3')!), { '/audio-thoughts': 'old shell', '/_astro/recorder.abc.js': 'old js' });
+});

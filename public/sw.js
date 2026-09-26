@@ -16,7 +16,7 @@ self.addEventListener('activate', event => {
       const legacy = await old.match('/running');
       if (legacy && !await next.match(SHELL)) {
         await next.put(SHELL, legacy);
-        for (const request of await old.keys()) if (new URL(request.url).pathname.startsWith('/_astro/') && !await next.match(request)) await next.put(request, await old.match(request));
+        for (const request of await old.keys()) if (new URL(request.url).pathname.startsWith('/_astro/') && !await next.match(request)) { const asset = await old.match(request); if (asset) await next.put(request, asset); }
       }
       await caches.delete(name);
     }
