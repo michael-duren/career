@@ -217,7 +217,8 @@ function ConnectionStack({ company, connections = [] }: { company: Company; conn
   if (connections.length === 0) return null;
   const { shown, overflow } = avatarStack(connections, 4);
   const names = connections.map(person => person.name).join(', ');
-  const label = `${connections.length} connection${connections.length === 1 ? '' : 's'} at ${company.title}: ${names}`;
+  const spoken = connections.slice(0, 5).map(person => person.name).join(', ') + (connections.length > 5 ? `, and ${connections.length - 5} more` : '');
+  const label = `${connections.length} connection${connections.length === 1 ? '' : 's'} at ${company.title}: ${spoken}`;
   return <a href={`/connections?company=${encodeURIComponent(company.slug)}`} aria-label={label} title={names}
     className="flex shrink-0 self-start -space-x-1.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
     {shown.map(person => <ConnectionAvatar key={person.id} connection={person} size={22} ring="ring-2 ring-zinc-900" />)}

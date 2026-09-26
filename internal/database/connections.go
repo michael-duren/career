@@ -223,16 +223,27 @@ func companyMatcher(ctx context.Context, tx *sql.Tx) (*linkedin.Matcher, error) 
 	return linkedin.NewMatcher(companies), rows.Err()
 }
 
-// linkUnlinkedConnections links unlinked connections whose company name best matches
-// the given company. It runs in the company's save transaction: one read of
-// companies, one of unlinked connections, and a single update.
-func linkUnlinkedConnections(ctx context.Context, tx *sql.Tx, slug string) (int64, error) {
+// linkUnlinkedConnections links unlinked connections to whichever of the given
+// companies their company name best matches, and returns how many it linked.
+// Call it in the transaction that creates or renames those companies. It makes
+// one read of companies, one plain read of unlinked connections and one batched
+// update. The update only touches rows that are still unlinked and still have
+// the name that was read, so it takes no row locks up front and cannot deadlock
+// with ImportConnections' table lock.
+func linkUnlinkedConnections(ctx context.Context, tx *sql.Tx, slugs []string) (int64, error) {
+	if len(slugs) == 0 {
+		return 0, nil
+	}
 	matcher, err := companyMatcher(ctx, tx)
 	if err != nil {
 		return 0, err
 	}
-	ids := []string{}
-	rows, err := tx.QueryContext(ctx, "SELECT id::text,company_name FROM connections WHERE company_slug IS NULL AND company_name<>'' FOR UPDATE")
+	targets := map[string]bool{}
+	for _, slug := range slugs {
+		targets[slug] = true
+	}
+	var ids, names, matches []string
+	rows, err := tx.QueryContext(ctx, "SELECT id::text,company_name FROM connections WHERE company_slug IS NULL AND company_name<>''")
 	if err != nil {
 		return 0, err
 	}
@@ -244,15 +255,17 @@ func linkUnlinkedConnections(ctx context.Context, tx *sql.Tx, slug string) (int6
 		}
 		// Use the best match across all companies so a more specific tracked
 		// company keeps its people.
-		if matcher.Match(name) == slug {
-			ids = append(ids, id)
+		if match := matcher.Match(name); targets[match] {
+			ids, names, matches = append(ids, id), append(names, name), append(matches, match)
 		}
 	}
 	rows.Close()
 	if err = rows.Err(); err != nil || len(ids) == 0 {
 		return 0, err
 	}
-	r, err := tx.ExecContext(ctx, "UPDATE connections SET company_slug=$1,revision=gen_random_uuid()::text,updated_at=now() WHERE id::text=ANY($2::text[]) AND company_slug IS NULL", slug, ids)
+	r, err := tx.ExecContext(ctx, `UPDATE connections c SET company_slug=v.slug,revision=gen_random_uuid()::text,updated_at=now()
+		FROM unnest($1::uuid[],$2::text[],$3::text[]) AS v(id,name,slug)
+		WHERE c.id=v.id AND c.company_name=v.name AND c.company_slug IS NULL`, ids, names, matches)
 	if err != nil {
 		return 0, err
 	}

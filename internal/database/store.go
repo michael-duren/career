@@ -306,8 +306,10 @@ func (s *Store) Save(ctx context.Context, kind string, e Entity, revision *strin
 	}
 	// A new or renamed company picks up people imported before it was tracked.
 	// Cosmetic renames ("Acme" to "Acme, Inc.") skip this so deliberate unlinks stay.
-	if kind == "company" && (revision == nil || linkedin.NormalizeCompany(oldTitle) != linkedin.NormalizeCompany(e["title"].(string))) {
-		linked, err := linkUnlinkedConnections(ctx, tx, e["slug"].(string))
+	slug, _ := e["slug"].(string)
+	title, _ := e["title"].(string)
+	if kind == "company" && (revision == nil || linkedin.NormalizeCompany(oldTitle) != linkedin.NormalizeCompany(title)) {
+		linked, err := linkUnlinkedConnections(ctx, tx, []string{slug})
 		if err != nil {
 			return r, err
 		}

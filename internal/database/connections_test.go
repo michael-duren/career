@@ -189,6 +189,7 @@ func TestCompanySaveLinksUnlinkedConnections(t *testing.T) {
 	if got, err := s.ImportConnections(ctx, rows, nil); err != nil || got.Linked != 0 {
 		t.Fatalf("import %+v %v", got, err)
 	}
+	revisions := map[string]string{}
 	slugs := func() map[string]any {
 		page, err := s.List(ctx, "connection", Filter{Limit: 100})
 		if err != nil {
@@ -197,8 +198,15 @@ func TestCompanySaveLinksUnlinkedConnections(t *testing.T) {
 		out := map[string]any{}
 		for _, r := range page.Entries {
 			out[r.Entry["name"].(string)] = r.Entry["companySlug"]
+			revisions[r.Entry["name"].(string)] = r.Revision
 		}
 		return out
+	}
+	sequence := func() (n int) {
+		if err := s.DB.QueryRow("SELECT change_sequence FROM workspace_metadata WHERE id=1").Scan(&n); err != nil {
+			t.Fatal(err)
+		}
+		return n
 	}
 	company, _ := s.Detail(ctx, "company", "company/nested")
 	create := func(slug, title string) {
@@ -211,12 +219,26 @@ func TestCompanySaveLinksUnlinkedConnections(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	slugs()
+	before, niaRevision, outRevision := sequence(), revisions["Nia"], revisions["Out"]
 	// "Newco Labs" goes to the more specific company, not "Newco".
 	create("newco-labs", "Newco Labs")
 	create("newco", "Newco")
 	got := slugs()
 	if got["Nia"] != "newco" || got["Sub"] != "newco-labs" || got["Pat"] != nil || got["Out"] != nil || got["Zoë"] != "company/nested" {
 		t.Fatalf("after create %v", got)
+	}
+	// Linked rows get a new revision so stale edits conflict; each company save
+	// that linked someone also bumps the change counter for connections.
+	if revisions["Nia"] == niaRevision || revisions["Out"] != outRevision {
+		t.Fatalf("revisions %v (nia was %s, out was %s)", revisions, niaRevision, outRevision)
+	}
+	if after := sequence(); after != before+4 {
+		t.Fatalf("change sequence %d -> %d, want +4", before, after)
+	}
+	create("nobody", "Nobody Here")
+	if after := sequence(); after != before+5 {
+		t.Fatalf("change sequence bumped for a company that linked no one: %d -> %d", before, after)
 	}
 
 	// Saving without a rename leaves unlinked people alone; a rename links them.
@@ -253,6 +275,56 @@ func TestCompanySaveLinksUnlinkedConnections(t *testing.T) {
 	}
 	if got = slugs(); got["Pat"] != nil {
 		t.Fatalf("cosmetic rename re-linked %v", got)
+	}
+}
+
+func TestLinkUnlinkedConnectionsBatch(t *testing.T) {
+	s := imported(t)
+	ctx := context.Background()
+	company, _ := s.Detail(ctx, "company", "company/nested")
+	for slug, title := range map[string]string{"alpha": "Alpha", "beta": "Beta", "gamma": "Gamma"} {
+		e := Entity{}
+		for k, v := range company.Entry {
+			e[k] = v
+		}
+		e["slug"], e["title"] = slug, title
+		if _, err := s.Save(ctx, "company", e, nil); err != nil {
+			t.Fatal(err)
+		}
+	}
+	rows := []linkedin.Connection{
+		{Name: "A", Company: "Alpha", URL: "https://www.linkedin.com/in/a"},
+		{Name: "B", Company: "Beta LLC", URL: "https://www.linkedin.com/in/b"},
+		{Name: "G", Company: "Gamma", URL: "https://www.linkedin.com/in/g"},
+	}
+	if _, err := s.ImportConnections(ctx, rows, nil); err != nil {
+		t.Fatal(err)
+	}
+	// Simulate people imported before these companies were tracked.
+	if _, err := s.DB.Exec("UPDATE connections SET company_slug=NULL WHERE name IN ('A','B','G')"); err != nil {
+		t.Fatal(err)
+	}
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+	if n, err := linkUnlinkedConnections(ctx, tx, nil); err != nil || n != 0 {
+		t.Fatalf("empty batch %d %v", n, err)
+	}
+	n, err := linkUnlinkedConnections(ctx, tx, []string{"alpha", "beta"})
+	if err != nil || n != 2 {
+		t.Fatalf("batch linked %d %v", n, err)
+	}
+	if err = tx.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	page, _ := s.List(ctx, "connection", Filter{Limit: 100})
+	for _, r := range page.Entries {
+		want := map[string]any{"A": "alpha", "B": "beta", "G": nil}[r.Entry["name"].(string)]
+		if name := r.Entry["name"].(string); (name == "A" || name == "B" || name == "G") && r.Entry["companySlug"] != want {
+			t.Fatalf("%s linked to %v, want %v", name, r.Entry["companySlug"], want)
+		}
 	}
 }
 
