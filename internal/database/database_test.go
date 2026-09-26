@@ -444,3 +444,58 @@ func TestNoteTodos(t *testing.T) {
 		}
 	}
 }
+func TestNoteCardSummary(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	todo := func(done bool) any { return map[string]any{"id": uuid.NewString(), "title": "step", "done": done} }
+	note := Entity{"id": "card-note", "title": "Card", "topic": "General", "description": "", "tags": []any{"go"}, "body": "  one two\n\nthree  ", "createdAt": "2000-01-01T00:00:00Z", "todos": []any{todo(true), todo(false), todo(true)}}
+	e, err := PrepareSave("note", note)
+	if err != nil {
+		t.Fatal(err)
+	}
+	saved, err := s.Save(ctx, "note", e, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	created, _ := saved.Entry["createdAt"].(string)
+	if created == "" || strings.HasPrefix(created, "2000") {
+		t.Fatalf("createdAt should be set by the server: %q", created)
+	}
+	e["body"] = ""
+	delete(e, "createdAt")
+	if saved, err = s.Save(ctx, "note", e, &saved.Revision); err != nil {
+		t.Fatal(err)
+	}
+	if saved.Entry["createdAt"] != created {
+		t.Fatalf("createdAt changed on edit: %v != %v", saved.Entry["createdAt"], created)
+	}
+	page, err := s.List(ctx, "note", Filter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, r := range page.Entries {
+		if r.Entry["id"] != "card-note" {
+			continue
+		}
+		summary, _ := r.Entry["summary"].(map[string]any)
+		if summary["wordCount"] != float64(0) || summary["todoCount"] != float64(3) || summary["todoDone"] != float64(2) || r.Entry["body"] != nil {
+			t.Fatalf("unexpected list summary: %+v", r.Entry)
+		}
+	}
+	e["body"] = "  one two\n\nthree  "
+	if _, err = s.Save(ctx, "note", e, &saved.Revision); err != nil {
+		t.Fatal(err)
+	}
+	if page, err = s.List(ctx, "note", Filter{}); err != nil {
+		t.Fatal(err)
+	}
+	for _, r := range page.Entries {
+		if r.Entry["id"] == "card-note" {
+			if r.Entry["summary"].(map[string]any)["wordCount"] != float64(3) {
+				t.Fatalf("unexpected word count: %+v", r.Entry["summary"])
+			}
+			return
+		}
+	}
+	t.Fatal("note missing from list")
+}

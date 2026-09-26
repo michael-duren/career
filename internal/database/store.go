@@ -67,6 +67,10 @@ func projection(m model, detail bool) string {
 	if !detail && m.Table == "companies" {
 		pairs = append(pairs, "'summary',(SELECT json_build_object('why',why,'stepCount',step_count,'completedCount',completed_count,'sourceRevision',source_revision,'parserVersion',parser_version) FROM company_summaries WHERE company_slug=companies.slug)")
 	}
+	if !detail && m.Table == "notes" {
+		// Cards show length and todo progress without shipping every body.
+		pairs = append(pairs, `'summary',json_build_object('wordCount',COALESCE(array_length(regexp_split_to_array(NULLIF(regexp_replace(body,'^\s+|\s+$','','g'),''),'\s+'),1),0),'todoCount',(SELECT count(*) FROM note_todos WHERE note_id=notes.id),'todoDone',(SELECT count(*) FROM note_todos WHERE note_id=notes.id AND done))`)
+	}
 
 	if !detail && m.Table == "running_notes" {
 		// Cards show the opening of the transcript instead of the whole body.
@@ -320,7 +324,7 @@ func saveTx(ctx context.Context, tx *sql.Tx, kind string, e Entity, revision *st
 		if !importing && f.Name == "updatedAt" {
 			v = now
 		}
-		if !importing && kind == "goal" && f.Name == "createdAt" {
+		if !importing && f.Name == "createdAt" {
 			v = now
 		}
 		cast := ""
@@ -364,7 +368,7 @@ func saveTx(ctx context.Context, tx *sql.Tx, kind string, e Entity, revision *st
 	} else {
 		sets := []string{"position=nextval('entity_position')"}
 		for i, c := range cols {
-			if kind == "goal" && c == "created_at" {
+			if c == "created_at" {
 				sets = append(sets, c+"=COALESCE(created_at,"+vals[i]+"::timestamptz)")
 				continue
 			}
