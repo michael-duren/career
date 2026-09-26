@@ -90,10 +90,11 @@ Write tools (need **Allow read and edit**):
   company, or the name equals a company's title or slug or starts with it as whole words,
   ignoring case and legal suffixes: with "Google" tracked, "Google DeepMind" is skipped.
   Use `create_career_entry` to add such a company deliberately. Within one batch only
-  exact name repeats are skipped, so `["Acme", "Acme Robotics"]` creates both. Like a company created on the website, new companies pick up unlinked
-  connections whose employer best matches them among all companies; the total is returned
-  as `linkedConnections` and last-talked dates are not changed. The batch is all or
-  nothing if any company fails validation.
+  exact name repeats are skipped, so `["Acme", "Acme Robotics"]` creates both. Like a
+  company created on the website, new companies pick up unlinked connections whose
+  employer best matches them among all companies; the total is returned as
+  `linkedConnections` and last-talked dates are not changed. The batch is all or nothing
+  if any company fails validation.
 
 Saves use the website's validation. There is no delete tool. Claude clients ask before
 running write tools unless you allow them permanently. Request

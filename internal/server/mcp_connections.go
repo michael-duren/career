@@ -42,7 +42,9 @@ const defaultQueueCategory = "From connections"
 const companySteps = "## Steps\n\n- [ ] Identify one person at the company to connect with\n- [ ] Reach out and start building a relationship\n- [ ] Research team & open roles\n- [ ] Tailor resume/cover letter\n- [ ] Apply\n\n## Log\n"
 
 var headingLine = regexp.MustCompile(`(?m)^[ \t]{0,3}#{1,2}[ \t]`)
-var fenceMarker = regexp.MustCompile("^\\s{0,3}(`{3,}|~{3,})")
+// fenceMarker mirrors checklist.ts, whose JavaScript \s also matches \v,
+// Unicode space separators such as NBSP, and U+FEFF.
+var fenceMarker = regexp.MustCompile("^[\\s\\v\\p{Zs}\\x{FEFF}]{0,3}(`{3,}|~{3,})")
 
 // lineBreaks are every line terminator the website's JavaScript section
 // parser recognizes, so the heading check sees the same lines it does.

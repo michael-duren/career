@@ -569,14 +569,16 @@ func TestMCPConnectionCompanies(t *testing.T) {
 // character that is at least as long closes a fence.
 func TestUnclosedFence(t *testing.T) {
 	for text, want := range map[string]bool{
-		"plain":                     false,
-		"```\ncode\n```":            false,
-		"```\ncode\n~~~":            true,
-		"````\ncode\n```":           true,
-		"````\ncode\n`````":         false,
-		"~~~\n```\nstill code\n~~~": false,
-		"   ```\nindented":          true,
-		"    ```\nnot a fence":      false,
+		"plain":                      false,
+		"```\ncode\n```":             false,
+		"```\ncode\n~~~":             true,
+		"````\ncode\n```":            true,
+		"````\ncode\n`````":          false,
+		"~~~\n```\nstill code\n~~~":  false,
+		"   ```\nindented":           true,
+		"    ```\nnot a fence":       false,
+		"\u00a0```\nnbsp indent":     true,
+		"\u3000\ufeff```\ncode\n```": false,
 	} {
 		if got := unclosedFence(text); got != want {
 			t.Errorf("unclosedFence(%q) = %v, want %v", text, got, want)
