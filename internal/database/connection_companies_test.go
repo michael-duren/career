@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -169,6 +170,18 @@ func TestAddCompaniesAgreesWithTracked(t *testing.T) {
 	var fin *string
 	if err = s.DB.QueryRowContext(ctx, "SELECT company_slug FROM connections WHERE name='Fin'").Scan(&fin); err != nil || fin != nil {
 		t.Fatalf("Newco took a Newco Labs connection: %v %v", fin, err)
+	}
+	// Leading words of a tracked company count as tracked, like list_connection_companies.
+	added, err = s.AddCompanies(ctx, []Entity{newCompany("Datadog Synthetics")})
+	if err != nil || added.Companies[0].Created || added.Companies[0].Slug != "datadog" {
+		t.Fatal(added, err)
+	}
+	// Within one batch, only exact names are duplicates, whatever the order.
+	for _, batch := range [][]string{{"Hooli", "Hooli Robotics"}, {"Initech Robotics", "Initech"}} {
+		added, err = s.AddCompanies(ctx, []Entity{newCompany(batch[0]), newCompany(batch[1]), newCompany(strings.ToUpper(batch[0]))})
+		if err != nil || !added.Companies[0].Created || !added.Companies[1].Created || added.Companies[2].Created || added.Companies[2].Slug != added.Companies[0].Slug {
+			t.Fatalf("batch %v: %+v %v", batch, added, err)
+		}
 	}
 	if _, err = s.AddCompanies(ctx, []Entity{newCompany("!!!")}); !errors.Is(err, ErrInvalid) {
 		t.Fatal("punctuation-only title accepted", err)

@@ -53,23 +53,25 @@ func ValidCompanyName(name string) bool { return linkedin.NormalizeCompany(name)
 // board. Listing and adding share it so a company listed as tracked is never
 // added again: an employer whose connections are linked to a company maps to
 // that company, otherwise the same matcher that links connections compares
-// titles and slugs.
+// titles and slugs, so a name whose leading words are a tracked company
+// ("Google DeepMind" when "Google" is tracked) counts as tracked.
 type companyTracker struct {
-	companies []linkedin.Company
-	titles    map[string]string
-	linked    map[string]string // normalized employer name -> most linked slug
-	matcher   *linkedin.Matcher
+	titles  map[string]string
+	linked  map[string]string // normalized employer name -> most linked slug
+	matcher *linkedin.Matcher
+	created map[string]string // normalized title -> slug, for this batch
 }
 
 func loadTracker(ctx context.Context, q queryer) (*companyTracker, error) {
-	t := &companyTracker{titles: map[string]string{}, linked: map[string]string{}}
+	t := &companyTracker{titles: map[string]string{}, linked: map[string]string{}, created: map[string]string{}}
 	companies, err := trackedCompanies(ctx, q)
 	if err != nil {
 		return nil, err
 	}
 	for _, c := range companies {
-		t.add(c)
+		t.titles[c.Slug] = c.Title
 	}
+	t.matcher = linkedin.NewMatcher(companies)
 	links, err := q.QueryContext(ctx, "SELECT company_name,company_slug,count(*) FROM connections WHERE company_slug IS NOT NULL GROUP BY 1,2")
 	if err != nil {
 		return nil, err
@@ -99,17 +101,18 @@ func loadTracker(ctx context.Context, q queryer) (*companyTracker, error) {
 
 // Match returns the tracked slug for an employer name, or "".
 func (t *companyTracker) Match(name string) string {
-	if slug := t.linked[linkedin.NormalizeCompany(name)]; slug != "" {
+	key := linkedin.NormalizeCompany(name)
+	if slug := cmp.Or(t.linked[key], t.created[key]); slug != "" {
 		return slug
 	}
 	return t.matcher.Match(name)
 }
 
-// add tracks a company created in this transaction.
+// add tracks a company created in this batch. Later names in the batch match
+// it only exactly, so ["Acme", "Acme Robotics"] creates both in either order.
 func (t *companyTracker) add(c linkedin.Company) {
-	t.companies = append(t.companies, c)
 	t.titles[c.Slug] = c.Title
-	t.matcher = linkedin.NewMatcher(t.companies)
+	t.created[linkedin.NormalizeCompany(c.Title)] = c.Slug
 }
 
 type companyGroup struct {

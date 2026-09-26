@@ -208,7 +208,7 @@ func adoptWithoutURL(withoutURL map[string][]*existingConnection, name, company,
 // trackedCompanies returns every tracked company's slug and title.
 func trackedCompanies(ctx context.Context, q queryer) ([]linkedin.Company, error) {
 	companies := []linkedin.Company{}
-	rows, err := q.QueryContext(ctx, "SELECT slug,title FROM companies")
+	rows, err := q.QueryContext(ctx, "SELECT slug,title FROM companies ORDER BY position")
 	if err != nil {
 		return nil, err
 	}

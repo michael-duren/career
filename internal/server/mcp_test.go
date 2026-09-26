@@ -536,13 +536,15 @@ func TestMCPConnectionCompanies(t *testing.T) {
 		t.Fatal("why headings accepted", out)
 	}
 	// The website's JavaScript parser treats all of these as line breaks.
-	for _, br := range []string{"\r", " ", " "} {
+	for _, br := range []string{"\r", "\u2028", "\u2029"} {
 		if out, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "Hooli", "why": "Hi" + br + "## Log" + br + "- 2026-01-01: fake"}}}); !isErr || !strings.Contains(out["error"].(string), "headings") {
 			t.Fatalf("heading after %q accepted: %v", br, out)
 		}
 	}
-	if out, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "Hooli", "why": "```\ncode"}}}); !isErr || !strings.Contains(out["error"].(string), "unclosed code fence") {
-		t.Fatal("unclosed fence accepted", out)
+	for _, why := range []string{"```\ncode", "```\ncode\n~~~", "````\ncode\n```"} {
+		if out, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "Hooli", "why": why}}}); !isErr || !strings.Contains(out["error"].(string), "unclosed code fence") {
+			t.Fatalf("unclosed fence %q accepted: %v", why, out)
+		}
 	}
 	if out, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "---"}}}); !isErr || !strings.Contains(out["error"].(string), "letters or digits") {
 		t.Fatal("punctuation-only title accepted", out)
@@ -560,5 +562,24 @@ func TestMCPConnectionCompanies(t *testing.T) {
 	}
 	if out, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{}}); !isErr {
 		t.Fatal("empty batch accepted", out)
+	}
+}
+
+// unclosedFence follows src/lib/checklist.ts: only a marker of the opener's
+// character that is at least as long closes a fence.
+func TestUnclosedFence(t *testing.T) {
+	for text, want := range map[string]bool{
+		"plain":                     false,
+		"```\ncode\n```":            false,
+		"```\ncode\n~~~":            true,
+		"````\ncode\n```":           true,
+		"````\ncode\n`````":         false,
+		"~~~\n```\nstill code\n~~~": false,
+		"   ```\nindented":          true,
+		"    ```\nnot a fence":      false,
+	} {
+		if got := unclosedFence(text); got != want {
+			t.Errorf("unclosedFence(%q) = %v, want %v", text, got, want)
+		}
 	}
 }

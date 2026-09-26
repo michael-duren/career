@@ -85,9 +85,12 @@ Write tools (need **Allow read and edit**):
   `url` to a LinkedIn company search link, `priority` to medium, and `why` fills the Why
   section (no `#`/`##` headings or unclosed code fences; `\r`, U+2028 and U+2029 count as
   line breaks). Titles need letters or digits. A name that `list_connection_companies`
-  would report as tracked (linked connections, or a title/slug match ignoring case and
-  legal suffixes) is skipped with `created: false` and the stored title and slug, so
-  retries are safe. Like a company created on the website, new companies pick up unlinked
+  would report as tracked is skipped with `created: false` and the stored title and slug,
+  so retries are safe. Tracked means connections at that employer are linked to a
+  company, or the name equals a company's title or slug or starts with it as whole words,
+  ignoring case and legal suffixes: with "Google" tracked, "Google DeepMind" is skipped.
+  Use `create_career_entry` to add such a company deliberately. Within one batch only
+  exact name repeats are skipped, so `["Acme", "Acme Robotics"]` creates both. Like a company created on the website, new companies pick up unlinked
   connections whose employer best matches them among all companies; the total is returned
   as `linkedConnections` and last-talked dates are not changed. The batch is all or
   nothing if any company fails validation.

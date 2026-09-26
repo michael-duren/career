@@ -42,11 +42,30 @@ const defaultQueueCategory = "From connections"
 const companySteps = "## Steps\n\n- [ ] Identify one person at the company to connect with\n- [ ] Reach out and start building a relationship\n- [ ] Research team & open roles\n- [ ] Tailor resume/cover letter\n- [ ] Apply\n\n## Log\n"
 
 var headingLine = regexp.MustCompile(`(?m)^[ \t]{0,3}#{1,2}[ \t]`)
-var fenceLine = regexp.MustCompile("(?m)^[ \t]{0,3}(```|~~~)")
+var fenceMarker = regexp.MustCompile("^\\s{0,3}(`{3,}|~{3,})")
 
 // lineBreaks are every line terminator the website's JavaScript section
 // parser recognizes, so the heading check sees the same lines it does.
-var lineBreaks = strings.NewReplacer("\r\n", "\n", "\r", "\n", " ", "\n", " ", "\n")
+var lineBreaks = strings.NewReplacer("\r\n", "\n", "\r", "\n", "\u2028", "\n", "\u2029", "\n")
+
+// unclosedFence reports whether text ends inside a code fence, using the rule
+// in src/lib/checklist.ts: a fence closes only on a marker of the same
+// character that is at least as long as the opener.
+func unclosedFence(text string) bool {
+	open := ""
+	for _, line := range strings.Split(text, "\n") {
+		m := fenceMarker.FindStringSubmatch(line)
+		if m == nil {
+			continue
+		}
+		if open == "" {
+			open = m[1]
+		} else if m[1][0] == open[0] && len(m[1]) >= len(open) {
+			open = ""
+		}
+	}
+	return open != ""
+}
 
 // queuedCompany builds a not-started company entry with an empty Log.
 func queuedCompany(c queueCompany) (database.Entity, error) {
@@ -59,7 +78,7 @@ func queuedCompany(c queueCompany) (database.Entity, error) {
 		return nil, invalidInput("%s: why cannot contain # or ## headings", title)
 	}
 	// An open fence would swallow the Steps and Log headings that follow.
-	if len(fenceLine.FindAllString(why, -1))%2 != 0 {
+	if unclosedFence(why) {
 		return nil, invalidInput("%s: why has an unclosed code fence", title)
 	}
 	link := strings.TrimSpace(c.URL)
@@ -120,6 +139,7 @@ func (s *Server) addConnectionTools(server *mcp.Server) {
 		Name: "add_companies_to_queue",
 		Description: "Add companies to the companies board as not started, with the website's outreach checklist and an empty Log, so no reach-out date is recorded. Confirm the list with the user first. " +
 			"Names list_connection_companies reports as tracked (case and legal suffixes like Inc ignored) are skipped and returned with created=false and the stored title and slug, so retries are safe. " +
+			"That includes names starting with a tracked company's name: with Google tracked, Google DeepMind is skipped; use create_career_entry to add it deliberately. Within one batch only exact repeats are skipped. " +
 			"As on the website, new companies pick up unlinked connections who work there (linkedConnections); their last-talked dates are unchanged. Returns each company's slug and revision.",
 		InputSchema: inputSchema[queueCompaniesInput](),
 		Annotations: queueAnnotations,
