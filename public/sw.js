@@ -7,7 +7,16 @@ const SHELL = '/audio-thoughts';
 const ASSETS = ['/offline.html', '/manifest.webmanifest', '/apple-touch-icon.png', '/icons/icon-192.png', '/icons/icon-512.png'];
 self.addEventListener('install', event => { event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS))); });
 self.addEventListener('activate', event => {
-  event.waitUntil((async () => { for (const name of await caches.keys()) if (name.startsWith('career-public-') && name !== CACHE) await caches.delete(name); await self.clients.claim(); })());
+  event.waitUntil((async () => {
+    for (const name of await caches.keys()) {
+      if (!name.startsWith('career-public-') || name === CACHE) continue;
+      // Carry the pre-rename /running shell over so the recorder still opens offline after upgrading.
+      const legacy = await (await caches.open(name)).match('/running');
+      if (legacy && !await caches.match(SHELL)) await (await caches.open(CACHE)).put(SHELL, legacy);
+      await caches.delete(name);
+    }
+    await self.clients.claim();
+  })());
 });
 self.addEventListener('fetch', event => {
   const { request } = event; const url = new URL(request.url);

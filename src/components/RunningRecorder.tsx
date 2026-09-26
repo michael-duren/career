@@ -2,7 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { CloudUpload, Download, Mic, RefreshCw, Square, Upload } from 'lucide-react';
 import { enqueueClip, queuedClips, syncClips, type QueuedClip } from '../lib/running-queue';
 // Hardware-style transport key shared by the dock and the clip list.
-const key = 'inline-flex items-center justify-center gap-1.5 rounded-md border border-black/70 bg-linear-to-b from-zinc-700 to-zinc-800 px-3 text-xs font-medium text-zinc-200 shadow-[inset_0_1px_0_rgb(255_255_255/0.08),0_1px_2px_rgb(0_0_0/0.6)] hover:from-zinc-600 hover:to-zinc-700 active:translate-y-px disabled:pointer-events-none disabled:opacity-40';
+// Shape, padding and face stay out of the base so per-use overrides never fight Tailwind's CSS order.
+const keyBase = 'inline-flex items-center justify-center border border-black/70 text-xs font-medium text-zinc-200 shadow-[inset_0_1px_0_rgb(255_255_255/0.08),0_1px_2px_rgb(0_0_0/0.6)] active:translate-y-px disabled:pointer-events-none disabled:opacity-40';
+const keyFace = 'bg-linear-to-b from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700';
+const key = `${keyBase} ${keyFace} gap-1.5 rounded-md px-3`;
+const dockKey = `${keyBase} ${keyFace} h-12 min-w-16 flex-col gap-0.5 rounded-md px-3 lg:h-11 lg:min-w-0 lg:flex-row lg:gap-1.5`;
 const MAX_MS = 1800000, TICK_MS = 100, FLOOR_DB = -60;
 const clock = (ms: number) => { const t = Math.floor(ms / 100); return `${String(Math.floor(t / 600)).padStart(2, '0')}:${String(Math.floor(t / 10) % 60).padStart(2, '0')}.${t % 10}`; };
 const short = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -112,6 +116,8 @@ export default function RunningRecorder() {
         else setError('No audio was captured. Try importing a native voice memo.');
       };
       next.start(1000); setRecording(true); setElapsed(0); history.current = []; setFormat(codec(next.mimeType || mimeType || '')); navigator.vibrate?.(50); await holdScreen();
+      // Stop can land while the wake lock request is pending; don't start metering a finished take.
+      if (next.state === 'inactive') { release(); return; }
       let analyser: AnalyserNode | undefined;
       try { const ctx = new AudioContext(); audioContext.current = ctx; analyser = ctx.createAnalyser(); ctx.createMediaStreamSource(stream).connect(analyser); } catch { /* Recording still works without the meter. */ }
       const samples = analyser && new Float32Array(analyser.fftSize); held.current = { value: 0, at: 0 };
@@ -152,16 +158,16 @@ export default function RunningRecorder() {
     <div className="flex flex-wrap items-stretch gap-3 border-b border-black bg-linear-to-b from-zinc-800 to-zinc-900 p-3 lg:flex-nowrap">
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-black bg-zinc-900/95 px-6 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur lg:static lg:z-auto lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
         <div className="mx-auto flex max-w-sm items-center justify-between gap-2 lg:max-w-none lg:justify-start">
-          <label className={`${key} h-12 min-w-16 cursor-pointer flex-col gap-0.5 lg:h-11 lg:min-w-0 lg:flex-row ${busy ? 'pointer-events-none opacity-40' : ''}`} title="Import voice memo">
+          <label className={`${dockKey} cursor-pointer ${busy ? 'pointer-events-none opacity-40' : ''}`} title="Import voice memo">
             <Upload className="size-4" /><span className="text-[10px] lg:text-xs">Import</span>
             <input className="sr-only" type="file" accept="audio/*,.m4a,.webm,.wav,.mp3,.ogg,.flac" disabled={busy} onChange={e => { const f = e.target.files?.[0]; if (f) void importFile(f); e.target.value = ''; }} />
           </label>
-          <button className={`${key} size-11 px-0 max-lg:hidden`} aria-label="Stop recording" title="Stop" disabled={!recording} onClick={() => recorder.current?.stop()}><Square className="size-4 fill-current" /></button>
-          <button className={`${key} size-16 rounded-full px-0 lg:size-11 lg:rounded-md ${recording ? 'from-red-900 to-red-950 ring-2 ring-red-500/70' : ''}`} aria-label={recording ? 'Stop recording' : 'Start recording'} aria-pressed={recording} title={recording ? 'Stop' : 'Record'} disabled={starting || !!rescue} onClick={() => recording ? recorder.current?.stop() : void start()}>
+          <button className={`${keyBase} ${keyFace} size-11 rounded-md max-lg:hidden`} aria-label="Stop recording" title="Stop" disabled={!recording || starting} onClick={() => recorder.current?.stop()}><Square className="size-4 fill-current" /></button>
+          <button className={`${keyBase} size-16 rounded-full lg:size-11 lg:rounded-md ${recording ? 'bg-linear-to-b from-red-900 to-red-950 ring-2 ring-red-500/70' : keyFace}`} aria-label="Record" aria-pressed={recording} title={recording ? 'Stop' : 'Record'} disabled={starting || !!rescue} onClick={() => recording ? recorder.current?.stop() : void start()}>
             {recording ? <Square className="size-6 fill-red-500 text-red-500 lg:hidden" /> : null}
             <span className={`rounded-full bg-red-600 ${recording ? 'hidden animate-pulse shadow-[0_0_12px_rgb(239_68_68)] lg:block lg:size-4' : 'size-8 lg:size-4'} ${starting ? 'animate-pulse' : ''}`} />
           </button>
-          <button className={`${key} h-12 min-w-16 flex-col gap-0.5 lg:h-11 lg:min-w-0 lg:flex-row`} onClick={sync} title="Retry uploads"><RefreshCw className={`size-4 ${syncing ? 'animate-spin' : ''}`} /><span className="text-[10px] lg:text-xs">Sync</span></button>
+          <button className={dockKey} onClick={sync} title="Retry uploads"><RefreshCw className={`size-4 ${syncing ? 'animate-spin' : ''}`} /><span className="text-[10px] lg:text-xs">Sync</span></button>
         </div>
       </div>
       <div className="flex min-w-0 flex-1 items-center justify-between gap-4 rounded-md border border-black bg-[#07100e] px-4 py-2 shadow-[inset_0_2px_8px_rgb(0_0_0/0.8)]">
