@@ -122,4 +122,44 @@ func TestRunningAPI(t *testing.T) {
 			t.Fatal("running context privacy", w.Body.String())
 		}
 	}
+	// Deleting a thought from its card removes the note and its recordings.
+	get := func(path string) *httptest.ResponseRecorder {
+		r := httptest.NewRequest("GET", path, nil)
+		r.AddCookie(cookie)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, r)
+		return w
+	}
+	del := func(revision string) *httptest.ResponseRecorder {
+		body, _ := json.Marshal(map[string]string{"id": clip.NoteID, "revision": revision})
+		r := httptest.NewRequest("DELETE", "/api/entries/run", bytes.NewReader(body))
+		r.Header.Set("Content-Type", "application/json")
+		r.Header.Set("Origin", "https://example.com")
+		r.AddCookie(cookie)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, r)
+		return w
+	}
+	w = get("/api/entries/run?id=" + clip.NoteID)
+	var detail struct {
+		Revision string `json:"revision"`
+	}
+	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &detail) != nil || detail.Revision == "" {
+		t.Fatal(w.Code, w.Body.String())
+	}
+	if w = del("stale"); w.Code != 409 {
+		t.Fatal("stale revision deleted thought", w.Code, w.Body.String())
+	}
+	if w = del(detail.Revision); w.Code != 200 {
+		t.Fatal(w.Code, w.Body.String())
+	}
+	if w = get("/api/entries/run?id=" + clip.NoteID); w.Code != 404 {
+		t.Fatal("deleted thought still readable", w.Code)
+	}
+	if w = get("/api/running/clips/" + clip.NoteID + "/" + clip.ID + "/audio"); w.Code != 404 {
+		t.Fatal("deleted thought audio still served", w.Code)
+	}
+	if clips, err := db.RunningClips(context.Background(), clip.NoteID); err != nil || len(clips) != 0 {
+		t.Fatal("deleted thought kept clips", clips, err)
+	}
 }

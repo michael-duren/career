@@ -8,7 +8,7 @@ import { NoteTodos, TagInput } from './NoteInputs';
 import { appendDailyEntry, localDate, newWeek } from '../lib/workspace';
 import type { Note, RunningNote } from '../lib/workspace';
 import { THOUGHT_PLACEHOLDER, isAutoTitle, thoughtDate, thoughtExcerpt, thoughtTitle } from '../lib/audio-thoughts';
-import { AudioLines, CalendarPlus, Clock, ListChecks, PencilLine } from 'lucide-react';
+import { AudioLines, CalendarPlus, Clock, ListChecks, PencilLine, Trash2 } from 'lucide-react';
 import { entryTone, tagChipClass } from '../lib/tag-colors';
 import { noteDate, noteStats } from '../lib/note-card';
 
@@ -50,13 +50,18 @@ function Preview({ body }: { body: string }) {
 function Transcribing({ label }: { label: string }) {
   return <span className="inline-flex items-center gap-2 text-sm text-zinc-500"><span className="size-1.5 animate-pulse rounded-full bg-amber-400" />{label}</span>;
 }
-function ThoughtCard({ thought, selected, disabled, onOpen }: { thought: RunningNote; selected: boolean; disabled: boolean; onOpen: () => void }) {
-  const excerpt = thoughtExcerpt(thought), untitled = isAutoTitle(thought.title);
-  return <button type="button" disabled={disabled} onClick={onOpen} className={`group flex w-full flex-col gap-2 rounded-xl border p-4 text-left transition-colors ${selected ? 'border-sky-500 bg-sky-950/30' : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-600 hover:bg-zinc-900'}`}>
-    <span className={`block font-medium ${untitled ? 'text-zinc-400 italic' : 'text-zinc-100'}`}>{untitled ? 'Untitled thought' : thought.title}</span>
-    {excerpt ? <span className="line-clamp-2 text-sm leading-relaxed text-zinc-400">{excerpt}</span> : <Transcribing label="Waiting for transcription…" />}
-    <span className="mt-auto flex flex-wrap items-center gap-2 pt-1 text-xs text-zinc-500">{thoughtDate(thought.startedAt)}{thought.tags.map(tag => <span key={tag} className={`${tagChipClass(tag)} px-2 py-0.5`}>{tag}</span>)}</span>
-  </button>;
+function ThoughtCard({ thought, selected, disabled, onOpen, onDelete }: { thought: RunningNote; selected: boolean; disabled: boolean; onOpen: () => void; onDelete: () => void }) {
+  const excerpt = thoughtExcerpt(thought), untitled = isAutoTitle(thought.title), name = untitled ? 'Untitled thought' : thought.title;
+  return <div className="relative">
+    <button type="button" disabled={disabled} onClick={onOpen} className={`group flex h-full w-full flex-col gap-2 rounded-xl border p-4 text-left transition-colors ${selected ? 'border-sky-500 bg-sky-950/30' : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-600 hover:bg-zinc-900'}`}>
+      <span className={`block pr-8 font-medium ${untitled ? 'text-zinc-400 italic' : 'text-zinc-100'}`}>{name}</span>
+      {excerpt ? <span className="line-clamp-2 text-sm leading-relaxed text-zinc-400">{excerpt}</span> : <Transcribing label="Waiting for transcription…" />}
+      <span className="mt-auto flex flex-wrap items-center gap-2 pt-1 text-xs text-zinc-500">{thoughtDate(thought.startedAt)}{thought.tags.map(tag => <span key={tag} className={`${tagChipClass(tag)} px-2 py-0.5`}>{tag}</span>)}</span>
+    </button>
+    <button type="button" disabled={disabled} onClick={onDelete} aria-label={`Delete ${name}`} title="Delete thought" className="absolute right-2 top-2 rounded-lg p-2 text-zinc-500 hover:bg-red-950/40 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 disabled:cursor-not-allowed disabled:opacity-50">
+      <Trash2 className="size-4" aria-hidden />
+    </button>
+  </div>;
 }
 function NoteCard({ note, selected, disabled, onOpen }: { note: Note; selected: boolean; disabled: boolean; onOpen: () => void }) {
   const tone = entryTone(note.tags), stats = noteStats(note);
@@ -273,6 +278,22 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
   }
+  /** Deletes a thought straight from its card, without opening it first. */
+  async function removeThought(thought: RunningNote) {
+    const name = isAutoTitle(thought.title) ? 'this untitled thought' : `"${thought.title}"`;
+    if (!window.confirm(`Delete ${name} and its recordings? This cannot be undone.`)) return;
+    setBusy(true); setError(''); setStatus('');
+    try {
+      // Cards hold list summaries and transcription can change the revision after
+      // the list loaded, so delete against the latest saved revision.
+      const detail = await request(kind, 'GET', undefined, thought.id) as EntryResult;
+      await request(kind, 'DELETE', { id: thought.id, revision: detail.revision });
+      setEntries(current => (current ?? []).filter(item => entryId(item) !== thought.id));
+      setStatus('Deleted.');
+      window.dispatchEvent(new Event('workspace-saved'));
+    } catch (e) { setError((e as Error).message); }
+    finally { setBusy(false); }
+  }
   const loadedEntries = entries ?? [];
   const topicCounts = loadedEntries.reduce((counts, note) => 'topic' in note ? counts.set(note.topic, (counts.get(note.topic) ?? 0) + 1) : counts, new Map<string, number>());
   const topics = [...topicCounts.keys()].sort((a, b) => a.localeCompare(b));
@@ -335,7 +356,7 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
           <p className="max-w-sm text-sm text-zinc-500">{loadedEntries.length ? 'Try fewer words, or clear the search to see everything.' : 'Record a take above. It shows up here and is named after its first few words once it is transcribed.'}</p>
         </div>}
         {kind !== 'run' && entries && filtered.length === 0 && <p className="text-sm text-zinc-400">No matching entries.</p>}
-        {kind === 'run' && filtered.map(item => <ThoughtCard key={entryId(item)} thought={item as RunningNote} selected={!!entry && entryId(entry) === entryId(item)} disabled={busy} onOpen={() => choose(item)} />)}
+        {kind === 'run' && filtered.map(item => <ThoughtCard key={entryId(item)} thought={item as RunningNote} selected={!!entry && entryId(entry) === entryId(item)} disabled={busy} onOpen={() => choose(item)} onDelete={() => void removeThought(item as RunningNote)} />)}
         {kind === 'note' && filtered.map(item => <NoteCard key={entryId(item)} note={item as Note} selected={!!entry && entryId(entry) === entryId(item)} disabled={busy} onOpen={() => choose(item)} />)}
         {kind !== 'run' && kind !== 'note' && filtered.map(item => <button type="button" disabled={busy} key={entryId(item)} onClick={() => choose(item)} className={`w-full rounded-lg border p-3 text-left ${entry && entryId(entry) === entryId(item) ? 'border-blue-500 bg-blue-950/30' : 'border-zinc-800 hover:bg-zinc-900'}`}>
           <span className="block text-sm font-medium">{entryTitle(item)}</span>
