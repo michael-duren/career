@@ -47,8 +47,8 @@ export function contextMarkdown(snapshot: Snapshot): string {
   const context = agentContext(snapshot);
   const goals = context.goals.map(goal => `## ${line(goal.title)}\n\n` +
     `- ID: ${goal.id}\n- Status: ${goal.status}\n- Depends on: ${(goal.dependsOn ?? []).join(', ') || 'None'}\n- Scheduled: ${goal.startDate} → ${goal.endDate}\n- Updated: ${goal.updatedAt}\n` +
-    `- Substeps complete: ${goal.steps.filter(s => s.done).length}/${goal.steps.length}\n\n` +
-    `### Substeps\n\n${goal.steps.map(s => `- [${s.done ? 'x' : ' '}] ${line(s.title)}`).join('\n') || 'No substeps.'}\n\n` +
+    `- Mini goals complete: ${goal.steps.filter(s => s.done).length}/${goal.steps.length}\n\n` +
+    `### Mini goals\n\n${goal.steps.map(s => `- [${s.done ? 'x' : ' '}] ${line(s.title)}`).join('\n') || 'No mini goals.'}\n\n` +
     `### Metadata\n\n${source(JSON.stringify(goal.metadata, null, 2))}\n\n` +
     `### Goal notes\n\n${goal.notes.map(n => `Recorded: ${n.createdAt}\n\n${source(n.body)}`).join('\n\n') || 'No notes.'}\n`).join('\n');
   const references = Object.entries(context.references).map(([kind, entries]) =>
