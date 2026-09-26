@@ -3,6 +3,7 @@ import type { WorkspaceEntry } from '../lib/workspace';
 import { BOOK_CATEGORIES } from '../lib/books';
 import { TRACK_META } from '../lib/progress';
 import { Combobox } from './NoteInputs';
+import { isAutoTitle } from '../lib/audio-thoughts';
 
 const field = 'mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
 function Text({ label, value, onChange, required = false, type = 'text' }: { label: string; value?: string; onChange: (value: string) => void; required?: boolean; type?: string }) {
@@ -17,8 +18,10 @@ export default function EntryFields({ entry, change, topics = [] }: { entry: Wor
     <div className="grid grid-cols-2 gap-3">{[...new Set(['ostep', 'ebpf', 'database', 'systemDesign', ...Object.keys(entry.hours)])].map(key => <label className="block text-xs text-zinc-400" key={key}>{TRACK_META[key]?.name ?? key} hours<input className={field} type="number" min="0" max="168" step="0.25" value={entry.hours[key] ?? 0} onChange={e => change({ hours: { ...entry.hours, [key]: Number(e.target.value) } })} /></label>)}</div>
   </>;
   return <>
-    <label className="block text-sm">Title<input className={field} value={entry.title} autoFocus required maxLength={200} onChange={e => change({ title: e.target.value })} /></label>
-    {'runDate' in entry && <><Text label="Date" type="date" value={entry.runDate} onChange={runDate => change({ runDate })} />{(['distanceKm', 'durationMin'] as const).map(key => <label key={key} className="block text-sm">{key === 'distanceKm' ? 'Distance (km)' : 'Duration (minutes)'}<input className={field} type="number" min="0" max={key === 'distanceKm' ? 500 : 1440} step="any" value={entry[key] ?? ''} onChange={e => change({ [key]: e.target.value === '' ? undefined : Number(e.target.value) })} /></label>)}</>}
+    {'runDate' in entry
+      ? <label className="block text-sm">Title<input className={field} value={isAutoTitle(entry.title) ? '' : entry.title} autoFocus maxLength={200} placeholder="Leave blank to name it after the first few words" onChange={e => change({ title: e.target.value })} /></label>
+      : <label className="block text-sm">Title<input className={field} value={entry.title} autoFocus required maxLength={200} onChange={e => change({ title: e.target.value })} /></label>}
+    {'runDate' in entry && <><Text label="Date" type="date" value={entry.runDate} onChange={runDate => change({ runDate })} /><label className="block text-sm">Duration (minutes)<input className={field} type="number" min="0" max={1440} step="any" value={entry.durationMin ?? ''} onChange={e => change({ durationMin: e.target.value === '' ? undefined : Number(e.target.value) })} /></label></>}
     {'date' in entry && <Text label="Entry date (optional for background)" type="date" value={entry.date} onChange={date => change({ date })} />}
     {'topic' in entry && <Combobox label="Topic" value={entry.topic} options={topics} required maxLength={100} onChange={topic => change({ topic })} />}
     {'description' in entry && <Text label="Summary" value={entry.description} onChange={description => change({ description })} />}

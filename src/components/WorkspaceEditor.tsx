@@ -6,6 +6,9 @@ import { getEntryId as entryId, getEntryTitle as entryTitle } from '../lib/works
 import EntryFields, { EntryChecklist } from './EntryFields';
 import { NoteTodos, TagInput } from './NoteInputs';
 import { appendDailyEntry, localDate, newWeek } from '../lib/workspace';
+import type { RunningNote } from '../lib/workspace';
+import { THOUGHT_PLACEHOLDER, isAutoTitle, thoughtDate, thoughtExcerpt, thoughtTitle } from '../lib/audio-thoughts';
+import { AudioLines } from 'lucide-react';
 
 const field = 'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
 const button = 'rounded-lg border border-zinc-700 px-3 py-2 text-sm hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed';
@@ -42,8 +45,19 @@ function draftKey(kind: string) {
 function Preview({ body }: { body: string }) {
   return <MarkdownPreview body={body} />;
 }
+function Transcribing({ label }: { label: string }) {
+  return <span className="inline-flex items-center gap-2 text-sm text-zinc-500"><span className="size-1.5 animate-pulse rounded-full bg-amber-400" />{label}</span>;
+}
+function ThoughtCard({ thought, selected, disabled, onOpen }: { thought: RunningNote; selected: boolean; disabled: boolean; onOpen: () => void }) {
+  const excerpt = thoughtExcerpt(thought), untitled = isAutoTitle(thought.title);
+  return <button type="button" disabled={disabled} onClick={onOpen} className={`group flex w-full flex-col gap-2 rounded-xl border p-4 text-left transition-colors ${selected ? 'border-sky-500 bg-sky-950/30' : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-600 hover:bg-zinc-900'}`}>
+    <span className={`block font-medium ${untitled ? 'text-zinc-400 italic' : 'text-zinc-100'}`}>{untitled ? 'Untitled thought' : thought.title}</span>
+    {excerpt ? <span className="line-clamp-2 text-sm leading-relaxed text-zinc-400">{excerpt}</span> : <Transcribing label="Waiting for transcription…" />}
+    <span className="mt-auto flex flex-wrap items-center gap-2 pt-1 text-xs text-zinc-500">{thoughtDate(thought.startedAt)}{thought.tags.map(tag => <span key={tag} className="rounded-full bg-zinc-800 px-2 py-0.5 text-zinc-300">{tag}</span>)}</span>
+  </button>;
+}
 export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kind: EntryKind; initialId?: string; quickJournal?: boolean }) {
-  const listFirst = kind === 'note' || kind === 'week' || kind === 'personal';
+  const listFirst = kind === 'note' || kind === 'week' || kind === 'personal' || kind === 'run';
   const openedInitialEntry = useRef(false);
   const selectionRequest = useRef(0);
   const todoQueue = useRef<{ running: boolean; pending: NoteTodo[] | null; waiters: ((ok: boolean) => void)[] }>({ running: false, pending: null, waiters: [] });
@@ -156,7 +170,7 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
   function create() {
     if (!entries) return;
     const id = crypto.randomUUID();
-    if (kind === 'run') choose({ id, title: `Audio thought ${localDate()}`, runDate: localDate(), startedAt: new Date().toISOString(), tags: [], body: '' }, true);
+    if (kind === 'run') choose({ id, title: THOUGHT_PLACEHOLDER, runDate: localDate(), startedAt: new Date().toISOString(), tags: [], body: '' }, true);
     else if (kind === 'personal') choose({ id, title: '', date: localDate(), description: '', tags: [], body: '' }, true);
     else if (kind === 'note') choose({ id, title: '', topic: selectedTopics?.length === 1 ? selectedTopics[0] : 'General', description: '', tags: [], body: '' }, true);
     else if (kind === 'book') choose({ slug: id, title: '', authors: [], category: 'Computer Science', type: 'book', status: 'backlog', featured: false, priority: 'medium', tags: [], body: '## Chapters\n\n- [ ] First chapter\n\n## Log\n' }, true);
@@ -172,7 +186,9 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
     if (!entry) return;
     setBusy(true); setError('');
     try {
-      const next = await request(kind, 'POST', { entry, revision: baseRevision }) as EntryResult;
+      // A thought left untitled is named after its opening words, like transcribed ones.
+      const input = 'runDate' in entry && (!entry.title.trim() || isAutoTitle(entry.title)) ? { ...entry, title: thoughtTitle(entry.body) || THOUGHT_PLACEHOLDER } : entry;
+      const next = await request(kind, 'POST', { entry: input, revision: baseRevision }) as EntryResult;
       const savedEntry = next.entry as Entry;
       setEntries((current: Entry[] | null) => [...(current ?? []).filter(n => entryId(n) !== entryId(entry)), savedEntry]); setBaseRevision(next.revision); setDirty(false); setEditing(false);
       setEntry(savedEntry);
@@ -256,9 +272,9 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
     }
   }, [reading]);
 
-  return <section className="space-y-5">
+  return <section className="space-y-5" data-thought-reading={kind === 'run' && reading ? '' : undefined}>
     {reading && <div className="flex flex-wrap gap-2">
-      <button ref={backButton} type="button" className={button} disabled={busy} onClick={backToList}>← Back to {kind === 'note' ? 'notes' : 'journal'}</button>
+      <button ref={backButton} type="button" className={button} disabled={busy} onClick={backToList}>← Back to {kind === 'note' ? 'notes' : kind === 'run' ? 'audio thoughts' : 'journal'}</button>
       <button type="button" className={button} disabled={busy} onClick={() => void load()}>Reload latest</button>
     </div>}
     <div hidden={reading}>
@@ -292,9 +308,15 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
     </fieldset>}
     </div>
     <div className={listFirst ? "space-y-5" : "grid gap-5 md:grid-cols-[220px_minmax(0,1fr)]"}>
-      <nav hidden={reading} aria-label={`${labels[kind]} entries`} className={listFirst ? "space-y-2" : "max-h-72 overflow-y-auto space-y-2 md:max-h-[700px]"}>
-        {entries && filtered.length === 0 && <p className="text-sm text-zinc-400">No matching entries.</p>}
-        {filtered.map(item => <button type="button" disabled={busy} key={entryId(item)} onClick={() => choose(item)} className={`w-full rounded-lg border p-3 text-left ${entry && entryId(entry) === entryId(item) ? 'border-blue-500 bg-blue-950/30' : 'border-zinc-800 hover:bg-zinc-900'}`}>
+      <nav hidden={reading} aria-label={`${labels[kind]} entries`} className={kind === 'run' ? 'grid gap-3 sm:grid-cols-2' : listFirst ? "space-y-2" : "max-h-72 overflow-y-auto space-y-2 md:max-h-[700px]"}>
+        {kind === 'run' && entries && filtered.length === 0 && <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-700 px-6 py-10 text-center sm:col-span-2">
+          <AudioLines className="size-8 text-zinc-600" aria-hidden />
+          <p className="font-medium text-zinc-300">{loadedEntries.length ? 'No thoughts match your search' : 'No audio thoughts yet'}</p>
+          <p className="max-w-sm text-sm text-zinc-500">{loadedEntries.length ? 'Try fewer words, or clear the search to see everything.' : 'Record a take above. It shows up here and is named after its first few words once it is transcribed.'}</p>
+        </div>}
+        {kind !== 'run' && entries && filtered.length === 0 && <p className="text-sm text-zinc-400">No matching entries.</p>}
+        {kind === 'run' && filtered.map(item => <ThoughtCard key={entryId(item)} thought={item as RunningNote} selected={!!entry && entryId(entry) === entryId(item)} disabled={busy} onOpen={() => choose(item)} />)}
+        {kind !== 'run' && filtered.map(item => <button type="button" disabled={busy} key={entryId(item)} onClick={() => choose(item)} className={`w-full rounded-lg border p-3 text-left ${entry && entryId(entry) === entryId(item) ? 'border-blue-500 bg-blue-950/30' : 'border-zinc-800 hover:bg-zinc-900'}`}>
           <span className="block text-sm font-medium">{entryTitle(item)}</span>
           <span className="mt-1 block text-xs text-zinc-400">{'topic' in item ? item.topic : 'week' in item ? (item.hours ? `${Object.values(item.hours as Record<string, number>).reduce((a, b) => a + b, 0)}h logged` : 'Work journal') : 'status' in item ? item.status.replaceAll('_', ' ') : 'description' in item ? item.description : 'runDate' in item ? item.runDate : ''}</span>
         </button>)}
@@ -307,17 +329,20 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
             <TagInput value={entry.tags} options={tagOptions} onChange={tags => change({ tags })} />
             {'topic' in entry && <NoteTodos todos={entry.todos ?? []} onChange={todos => change({ todos })} />}
             <div className="flex gap-2"><button type="button" className={button} aria-pressed={!preview} onClick={() => setPreview(false)}>Write</button><button type="button" className={button} aria-pressed={preview} onClick={() => setPreview(true)}>Preview</button></div>
-            {preview ? <div className="min-h-72 rounded-lg bg-zinc-950 p-4"><Preview body={entry.body} /></div> : <label className="block text-sm">Markdown<textarea className={`${field} mt-1 min-h-80 font-mono text-sm`} maxLength={100000} value={entry.body} onChange={e => change({ body: e.target.value })} placeholder="Write your thoughts. Markdown, lists, links, and code blocks are welcome." /></label>}
+            {preview ? <div className="min-h-72 rounded-lg bg-zinc-950 p-4"><Preview body={entry.body} /></div> : <label className="block text-sm">Markdown<textarea className={`${field} mt-1 min-h-80 font-mono text-sm`} maxLength={100000} value={entry.body} onChange={e => change({ body: e.target.value })} placeholder={kind === 'run' ? 'Transcripts land here as each take is processed. Add your own notes around them.' : 'Write your thoughts. Markdown, lists, links, and code blocks are welcome.'} /></label>}
             <button className={primary} type="submit">{busy ? 'Saving…' : 'Save'}</button> <button className={button} type="button" onClick={cancel}>Cancel</button>
           </fieldset>
         </form> : <div className="space-y-4">
-          <div className="flex flex-wrap items-start justify-between gap-3"><h2 className="text-xl font-semibold">{entryTitle(entry)}</h2><div className="flex gap-2"><button type="button" className={button} disabled={busy} onClick={() => setEditing(true)}>Edit</button>{!(kind === 'document' && ['index', '2026/career-study-plan'].includes(entryId(entry))) && <button type="button" className={`${button} text-red-300`} disabled={busy} onClick={() => void remove()}>Delete</button>}</div></div>
+          <div className="flex flex-wrap items-start justify-between gap-3"><h2 className={`text-xl font-semibold ${'runDate' in entry && isAutoTitle(entry.title) ? 'text-zinc-400 italic' : ''}`}>{'runDate' in entry && isAutoTitle(entry.title) ? 'Untitled thought' : entryTitle(entry)}</h2><div className="flex gap-2"><button type="button" className={button} disabled={busy} onClick={() => setEditing(true)}>Edit</button>{!(kind === 'document' && ['index', '2026/career-study-plan'].includes(entryId(entry))) && <button type="button" className={`${button} text-red-300`} disabled={busy} onClick={() => void remove()}>Delete</button>}</div></div>
           {kind === 'document' && <a className="inline-block text-sm text-blue-400 hover:underline" href={entryId(entry) === 'index' ? '/' : `/documents/${entryId(entry).split('/').map(encodeURIComponent).join('/')}`}>Open page →</a>}
           <div className="flex flex-wrap gap-2">{entry.tags.map(tag => <span key={tag} className="rounded-full bg-zinc-800 px-2 py-1 text-xs text-zinc-300">{tag}</span>)}</div>
           {'topic' in entry && <NoteTodos todos={entry.todos ?? []} onChange={saveTodos} />}
           {'status' in entry && <p className="text-sm text-zinc-400">{entry.status.replaceAll('_', ' ')} · {entry.priority} priority</p>}
           {'date' in entry && <p className="text-sm text-zinc-400">{entry.date || 'Undated background'}</p>}
-          <Preview body={entry.body} />
+          {'startedAt' in entry && <p className="text-sm text-zinc-500">{thoughtDate(entry.startedAt)}</p>}
+          {'runDate' in entry && !entry.body.trim()
+            ? <div className="rounded-xl border border-dashed border-zinc-700 px-6 py-8 text-center"><Transcribing label="The transcript appears here once your homelab finishes the take." /></div>
+            : <Preview body={entry.body} />}
         </div>}
         {kind === 'run' && entry && baseRevision && <RunningClips noteId={entryId(entry)} />}
       </div>}
