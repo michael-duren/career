@@ -10,7 +10,7 @@ import { appendDailyEntry, localDate, newWeek } from '../lib/workspace';
 const field = 'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
 const button = 'rounded-lg border border-zinc-700 px-3 py-2 text-sm hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed';
 const primary = `${button} bg-blue-600 border-blue-500 text-white hover:bg-blue-500`;
-const labels = { run: 'run', personal: 'personal journal entry', note: 'note', week: 'week', book: 'book or course', company: 'company', document: 'page' };
+const labels = { run: 'audio thought', personal: 'personal journal entry', note: 'note', week: 'week', book: 'book or course', company: 'company', document: 'page' };
 
 type EntryResult = { entry: Entry; revision: string };
 async function request(kind: EntryKind, method = 'GET', input?: unknown, id?: string): Promise<any> {
@@ -156,7 +156,7 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
   function create() {
     if (!entries) return;
     const id = crypto.randomUUID();
-    if (kind === 'run') choose({ id, title: `Run ${localDate()}`, runDate: localDate(), startedAt: new Date().toISOString(), tags: [], body: '' }, true);
+    if (kind === 'run') choose({ id, title: `Audio thought ${localDate()}`, runDate: localDate(), startedAt: new Date().toISOString(), tags: [], body: '' }, true);
     else if (kind === 'personal') choose({ id, title: '', date: localDate(), description: '', tags: [], body: '' }, true);
     else if (kind === 'note') choose({ id, title: '', topic: selectedTopics?.length === 1 ? selectedTopics[0] : 'General', description: '', tags: [], body: '' }, true);
     else if (kind === 'book') choose({ slug: id, title: '', authors: [], category: 'Computer Science', type: 'book', status: 'backlog', featured: false, priority: 'medium', tags: [], body: '## Chapters\n\n- [ ] First chapter\n\n## Log\n' }, true);
