@@ -25,7 +25,7 @@ try {
   socket = new WebSocket(tabs.find(t => t.type === 'page').webSocketDebuggerUrl);
   await new Promise(resolve => socket.addEventListener('open', resolve, { once: true }));
   let id = 0;
-  let onLoad;
+  let onLoad, onDrag;
   const pending = new Map();
   function send(method, params = {}) {
     return new Promise((resolve, reject) => {
@@ -37,6 +37,7 @@ try {
     const message = JSON.parse(event.data);
     if (message.id) { const task = pending.get(message.id); pending.delete(message.id); if (message.error) task?.reject(message.error); else task?.resolve(message.result); }
     if (message.method === 'Page.loadEventFired') onLoad?.();
+    if (message.method === 'Input.dragIntercepted') onDrag?.(message.params.data);
     if (message.method === 'Page.javascriptDialogOpening') void send('Page.handleJavaScriptDialog', { accept: true });
     if (message.method === 'Runtime.exceptionThrown') console.error(JSON.stringify(message.params));
   });
@@ -59,10 +60,31 @@ try {
   };
   const saved = message => wait(`document.querySelector('.graph-save').textContent === ${JSON.stringify(message)}`);
   const card = title => `Array.from(document.querySelectorAll('[data-goal-node]')).find(e => e.querySelector('strong').textContent === ${JSON.stringify(title)})`;
-  const minis = title => evaluate(`Array.from(${card(title)}.querySelectorAll('.graph-minis li span')).map(s => s.textContent)`);
+  const minis = title => evaluate(`Array.from(${card(title)}.querySelectorAll('.graph-minis li > span:not(.graph-mini-handle)')).map(s => s.textContent)`);
+  const row = (title, text) => `Array.from(${card(title)}.querySelectorAll('.graph-minis li')).find(li => li.textContent.includes(${JSON.stringify(text)}))`;
+  const handle = (title, text) => `${row(title, text)}.querySelector('.graph-mini-handle')`;
+  const zoom = () => evaluate(`document.querySelector('.graph-navigation span').textContent`);
+  // A real browser drag: mouse down on the handle, then CDP-dispatched drag events at the target's viewport position.
+  async function realDrag(from, to, half) {
+    const at = async (expr, where) => evaluate(`(() => { const b = (${expr}).getBoundingClientRect(), c = document.querySelector('.graph-canvas').getBoundingClientRect();
+      if (b.top < c.top || b.bottom > c.bottom || b.left < c.left || b.right > c.right) throw new Error('Element outside the canvas at this zoom');
+      return { x: b.left + b.width / 2, y: ${JSON.stringify(where)} === 'top' ? b.top + 4 : ${JSON.stringify(where)} === 'bottom' ? b.bottom - 4 : b.top + b.height / 2 }; })()`, where);
+    const a = await at(from, 'middle'), b = await at(to, half);
+    const intercepted = new Promise(resolve => { onDrag = resolve; });
+    await send('Input.setInterceptDrags', { enabled: true });
+    await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: a.x, y: a.y, button: 'left', clickCount: 1 });
+    await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: a.x + 6, y: a.y + 6, button: 'left' });
+    await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: b.x, y: b.y, button: 'left' });
+    const data = await intercepted;
+    for (const type of ['dragEnter', 'dragOver', 'drop']) await send('Input.dispatchDragEvent', { type, x: b.x, y: b.y, data });
+    await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: b.x, y: b.y, button: 'left', clickCount: 1 });
+    await send('Input.setInterceptDrags', { enabled: false });
+  }
+  const clickZoom = async (label, times) => { for (let i = 0; i < times; i++) { await evaluate(`document.querySelector('[aria-label="${label}"]').click()`); await pause(50); } };
   const stored = async title => (await evaluate(`fetch('/api/goals').then(r => r.json())`)).goals.find(g => g.title === title).steps;
   await send('Runtime.enable');
   await send('Page.enable');
+  await send('Emulation.setDeviceMetricsOverride', { width: 1400, height: 1100, deviceScaleFactor: 1, mobile: false });
   await send('Network.setCookie', { name: 'session', value: session, url: base, httpOnly: true, sameSite: 'Lax' });
 
   await navigate(base + '/goals/graph');
@@ -87,6 +109,8 @@ try {
   };
   for (const text of ['one', 'two', 'three']) await add('Parent A', text);
   await add('Parent B', 'bee');
+  // Cards that were not dragged by hand re-layout around their taller heights.
+  assert.equal(await evaluate(`(() => { const [a, b] = Array.from(document.querySelectorAll('[data-goal-node]')).map(e => e.getBoundingClientRect()).sort((x, y) => x.top - y.top); return a.bottom <= b.top || a.right <= b.left; })()`), true, 'cards do not overlap');
   assert.deepEqual((await stored('Parent A')).map(s => s.title), ['one', 'two', 'three']);
 
   // Toggle done.
@@ -102,46 +126,86 @@ try {
   await saved('Mini goal renamed');
   assert.deepEqual(await minis('Parent A'), ['one', 'two renamed', 'three']);
 
-  // Reorder with the keyboard: move "three" up.
-  await evaluate(`${card('Parent A')}.querySelector('[aria-label^="Reorder three"]').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))`);
+  // Reorder with the keyboard; focus stays on the moved mini goal's handle.
+  await evaluate(`${handle('Parent A', 'three')}.focus()`);
+  await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'ArrowUp', code: 'ArrowUp', windowsVirtualKeyCode: 38 });
   await saved('Mini goal reordered');
   assert.deepEqual(await minis('Parent A'), ['one', 'three', 'two renamed']);
+  await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'ArrowDown', code: 'ArrowDown', windowsVirtualKeyCode: 40 });
+  await saved('Mini goal reordered');
+  assert.deepEqual(await minis('Parent A'), ['one', 'two renamed', 'three']);
+  await wait(`document.activeElement === ${handle('Parent A', 'three')}`);
 
-  // Native drag and drop: drop "one" onto the lower half of Parent B's "bee".
-  await evaluate(`(() => {
-    const data = new DataTransfer();
-    const row = Array.from(${card('Parent A')}.querySelectorAll('.graph-minis li')).find(li => li.textContent.includes('one'));
-    const target = ${card('Parent B')}.querySelector('.graph-minis li');
-    const box = target.getBoundingClientRect();
-    const at = { bubbles: true, cancelable: true, dataTransfer: data, clientX: box.left + 20, clientY: box.bottom - 2 };
-    row.dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: data }));
-    return new Promise(resolve => setTimeout(() => {
-      target.dispatchEvent(new DragEvent('dragover', at));
-      setTimeout(() => { target.dispatchEvent(new DragEvent('drop', at)); row.dispatchEvent(new DragEvent('dragend', { bubbles: true })); resolve(); }, 50);
-    }, 50));
-  })()`);
+  // Touch-friendly reorder: Up / Down buttons in the edit form.
+  await evaluate(`${card('Parent A')}.querySelector('[aria-label="Edit three"]').click()`);
+  await evaluate(`${card('Parent A')}.querySelector('[aria-label="Move three up"]').click()`);
+  await saved('Mini goal reordered');
+  assert.deepEqual((await stored('Parent A')).map(s => s.title), ['one', 'three', 'two renamed']);
+  await wait(`document.activeElement === ${card('Parent A')}.querySelector('[aria-label="Move three up"]')`);
+  await evaluate(`Array.from(${card('Parent A')}.querySelectorAll('li.is-editing button')).find(b => b.textContent === 'Cancel').click()`);
+
+  // Real drag from the handle at a zoomed-out view: drop "one" on the lower half of Parent B's "bee".
+  await evaluate(`Array.from(document.querySelectorAll('.graph-navigation button')).find(b => b.textContent === 'Fit view').click()`);
+  await clickZoom('Zoom out', 2);
+  const zoomedOut = await zoom();
+  await realDrag(handle('Parent A', 'one'), row('Parent B', 'bee'), 'bottom');
   await saved('Mini goal moved to “Parent B”');
   assert.deepEqual(await minis('Parent A'), ['three', 'two renamed']);
   assert.deepEqual(await minis('Parent B'), ['bee', 'one']);
   const moved = (await stored('Parent B'))[1];
   assert.equal(moved.title, 'one'); assert.equal(moved.done, true, 'moved mini goals keep their state');
 
-  // Move back through the edit form's goal picker (keyboard/touch alternative to dragging).
-  await evaluate(`${card('Parent B')}.querySelector('[aria-label="Edit one"]').click()`);
-  await evaluate(`(() => { const select = ${card('Parent B')}.querySelector('li.is-editing select'); select.value = Array.from(select.options).find(o => o.textContent === 'Parent A').value; select.dispatchEvent(new Event('change', { bubbles: true })); })()`);
+  // And again zoomed in: drop "one" on the upper half of Parent A's first row.
+  await evaluate(`Array.from(document.querySelectorAll('.graph-navigation button')).find(b => b.textContent === 'Fit view').click()`);
+  await clickZoom('Zoom in', 1);
+  const zoomedIn = await zoom();
+  await realDrag(handle('Parent B', 'one'), row('Parent A', 'three'), 'top');
   await saved('Mini goal moved to “Parent A”');
-  assert.deepEqual(await minis('Parent A'), ['three', 'two renamed', 'one']);
+  assert.deepEqual(await minis('Parent A'), ['one', 'three', 'two renamed']);
+  assert.deepEqual(await minis('Parent B'), ['bee']);
+  // Dragging the title text (not the handle) does not start a move.
+  assert.equal(await evaluate(`${row('Parent A', 'one')}.draggable`), false);
+
+  // Move through the goal picker: choosing a goal does nothing until Move is pressed.
+  await evaluate(`${card('Parent A')}.querySelector('[aria-label="Edit one"]').click()`);
+  await evaluate(`(() => { const select = ${card('Parent A')}.querySelector('li.is-editing select'); select.value = Array.from(select.options).find(o => o.textContent === 'Parent B').value; select.dispatchEvent(new Event('change', { bubbles: true })); })()`);
+  await pause(300);
+  assert.deepEqual(await minis('Parent B'), ['bee'], 'picker change alone does not move');
+  await evaluate(`Array.from(${card('Parent A')}.querySelectorAll('li.is-editing button')).find(b => b.textContent === 'Move').click()`);
+  await saved('Mini goal moved to “Parent B”');
+  assert.deepEqual(await minis('Parent B'), ['bee', 'one']);
+  assert.deepEqual(await minis('Parent A'), ['three', 'two renamed']);
 
   // Delete (confirmation is accepted through CDP).
   await evaluate(`${card('Parent B')}.querySelector('[aria-label="Delete bee"]').click()`);
   await saved('Mini goal deleted');
-  assert.deepEqual(await stored('Parent B'), []);
+  assert.deepEqual((await stored('Parent B')).map(s => s.title), ['one']);
 
-  // Mini goals survive a reload and can be hidden.
+  // A failed move is shown immediately, then reverted: change Parent A behind the page's back.
+  await evaluate(`(async () => {
+    const data = await fetch('/api/goals').then(r => r.json());
+    const goal = data.goals.find(g => g.title === 'Parent A');
+    await fetch('/api/goals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goal: { ...goal, metadata: { edited: 'elsewhere' } }, revision: data.revisions[goal.id] }) });
+  })()`);
+  await evaluate(`${handle('Parent A', 'three')}.focus()`);
+  await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'ArrowDown', code: 'ArrowDown', windowsVirtualKeyCode: 40 });
+  await saved('Changes were not saved');
+  assert.match(await evaluate(`document.querySelector('.graph-error').textContent`), /changed elsewhere/);
+  assert.deepEqual(await minis('Parent A'), ['three', 'two renamed'], 'optimistic reorder reverted');
+
+  // Mini goals survive a reload; hiding them is remembered.
   await navigate(base + '/goals/graph');
   await wait(`document.querySelectorAll('.graph-minis').length === 2`);
-  assert.deepEqual(await minis('Parent A'), ['three', 'two renamed', 'one']);
-  await evaluate(`Array.from(document.querySelectorAll('.graph-toggle')).find(l => l.textContent.includes('Show mini goals')).querySelector('input').click()`);
+  assert.deepEqual(await minis('Parent A'), ['three', 'two renamed']);
+  assert.equal(await evaluate(`${card('Parent A')}.querySelector('.graph-card-detail').textContent`), '', 'no duplicate progress line while mini goals show');
+  const toggle = `Array.from(document.querySelectorAll('.graph-toggle')).find(l => l.textContent.includes('Show mini goals')).querySelector('input')`;
+  await evaluate(`${toggle}.click()`);
   await wait(`!document.querySelector('.graph-minis')`);
-  console.log('Mini goal browser acceptance passed: create, toggle, rename, keyboard reorder, drag between goals, move via picker, delete, reload and hide.');
+  await navigate(base + '/goals/graph');
+  await wait(`document.querySelectorAll('[data-goal-node]').length === 2`);
+  await wait(`!document.querySelector('.graph-minis') && !${toggle}.checked`);
+  assert.match(await evaluate(`${card('Parent A')}.querySelector('.graph-card-detail').textContent`), /0 \/ 2 mini goals complete/);
+  await evaluate(`${toggle}.click()`);
+  await wait(`document.querySelectorAll('.graph-minis').length === 2`);
+  console.log(`Mini goal browser acceptance passed: create, toggle, rename, keyboard reorder with focus, Up/Down buttons, real handle drags at ${zoomedOut} and ${zoomedIn}, explicit picker move, delete, optimistic revert, reload and remembered hide.`);
 } finally { socket?.close(); browser.kill(); }

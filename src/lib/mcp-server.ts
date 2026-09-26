@@ -51,7 +51,7 @@ export function createCareerMcpServer(read: () => Promise<Snapshot>) {
     };
   }
   server.registerTool('get_career_overview', {
-    description: 'Start a career conversation with live timeline goals, context rules, and collection counts. Returns at most 50 saved goals; browse goal entries for the remainder.',
+    description: 'Start a career conversation with live timeline goals and their mini goals (steps), context rules, and collection counts. Returns at most 50 saved goals; browse goal entries for the remainder.',
     inputSchema: {}, annotations,
   }, safe(async () => result(await overview())));
   server.registerTool('list_career_entries', {
