@@ -17,6 +17,11 @@ test('case and surrounding space do not change a color', () => {
   assert.equal(tagHash('Distributed Systems'), tagHash('distributed systems'));
 });
 
+test('composed and decomposed spellings share a color', () => {
+  assert.equal(tagHash('caf\u00e9'), tagHash('cafe\u0301'));
+  assert.equal(tagTone('Caf\u00e9'), tagTone('cafe\u0301'));
+});
+
 test('tags spread across the palette', () => {
   const tags = ['go', 'rust', 'systems', 'career', 'networking', 'os', 'interview', 'databases', 'ebpf', 'kubernetes', 'linux', 'reading', 'ideas', 'questions', 'observability', 'typescript'];
   const used = new Set(tags.map(tag => tagTone(tag).name));

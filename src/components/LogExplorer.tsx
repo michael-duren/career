@@ -13,7 +13,7 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { cn } from '../lib/utils';
-import { tagTone } from '../lib/tag-colors';
+import { tagChipClass } from '../lib/tag-colors';
 import {
   allHourKeys,
   shortDate,
@@ -593,7 +593,7 @@ function DocRow({
               {SECTION_LABEL[doc.section] ?? doc.section}
             </span>
             {doc.tags.map((t) => (
-              <span key={t} className={cn('text-[10px] uppercase px-1.5 py-0.5 rounded ring-1 ring-inset', tagTone(t).chip)}>
+              <span key={t} className={cn(tagChipClass(t), 'text-[10px] uppercase px-1.5 py-0.5 rounded')}>
                 {t}
               </span>
             ))}

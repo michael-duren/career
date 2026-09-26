@@ -69,7 +69,9 @@ func projection(m model, detail bool) string {
 	}
 	if !detail && m.Table == "notes" {
 		// Cards show length and todo progress without shipping every body.
-		pairs = append(pairs, `'summary',json_build_object('wordCount',COALESCE(array_length(regexp_split_to_array(NULLIF(regexp_replace(body,'^\s+|\s+$','','g'),''),'\s+'),1),0),'todoCount',(SELECT count(*) FROM note_todos WHERE note_id=notes.id),'todoDone',(SELECT count(*) FROM note_todos WHERE note_id=notes.id AND done))`)
+		// Postgres \s is the locale's [[:space:]] while JS \s is a fixed Unicode
+		// set, so countWords in src/lib/note-card.ts may differ on unusual whitespace.
+		pairs = append(pairs, `'summary',(SELECT json_build_object('wordCount',COALESCE(array_length(regexp_split_to_array(NULLIF(regexp_replace(body,'^\s+|\s+$','','g'),''),'\s+'),1),0),'todoCount',count(*),'todoDone',count(*) FILTER (WHERE done)) FROM note_todos WHERE note_id=notes.id)`)
 	}
 
 	if !detail && m.Table == "running_notes" {
@@ -317,6 +319,11 @@ func saveTx(ctx context.Context, tx *sql.Tx, kind string, e Entity, revision *st
 		cols = append(cols, col)
 		args = append(args, v)
 		vals = append(vals, fmt.Sprintf("$%d%s", len(args), cast))
+	}
+	if _, ok := e["createdAt"]; importing && kind == "note" && !ok && e["updatedAt"] != nil {
+		// Archives from before notes tracked creation use their last edit,
+		// matching migration 008, so a later edit keeps a real date.
+		e["createdAt"] = e["updatedAt"]
 	}
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 	for _, f := range m.Fields {

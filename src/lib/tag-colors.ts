@@ -29,9 +29,9 @@ export const TAG_PALETTE: readonly TagTone[] = [
 
 export const NEUTRAL_TONE: TagTone = { name: 'neutral', card: 'border-l-zinc-700 bg-zinc-900/40 hover:bg-zinc-900', chip: 'bg-zinc-800 text-zinc-300 ring-zinc-700', dot: 'bg-zinc-500' };
 
-/** Case and surrounding space do not change a tag's color. */
+/** Case, surrounding space, and Unicode composition do not change a tag's color. */
 export function normalizeTag(tag: string): string {
-  return tag.trim().toLowerCase();
+  return tag.normalize('NFC').trim().toLowerCase();
 }
 
 /** 32-bit FNV-1a over UTF-16 code units: small, fast, and stable across runs. */
