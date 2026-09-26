@@ -28,6 +28,7 @@ cannot authenticate MCP, and MCP tokens cannot call website APIs.
 **Revoke everything:** rotate `JWT_SECRET` and restart. This signs out the website too and
 invalidates every MCP client registration and token; reconnect clients afterwards.
 Individual grants cannot be revoked; an issued access token stays valid for up to one hour.
+Refresh tokens are single use: if a client loses a refresh response, it must reconnect.
 
 ## Connect clients
 

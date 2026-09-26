@@ -17,6 +17,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/modelcontextprotocol/go-sdk/auth"
 	"github.com/modelcontextprotocol/go-sdk/oauthex"
@@ -112,9 +113,12 @@ type oauthClient struct {
 type authorizeRequest struct {
 	ClientID    string `json:"c"`
 	RedirectURI string `json:"u"`
-	State       string `json:"s,omitempty"`
-	Challenge   string `json:"p"`
-	Exp         int64  `json:"exp"`
+	// Explicit records whether the client sent redirect_uri; only then must
+	// the token request repeat it (RFC 6749 §4.1.3).
+	Explicit  bool   `json:"x,omitempty"`
+	State     string `json:"s,omitempty"`
+	Challenge string `json:"p"`
+	Exp       int64  `json:"exp"`
 }
 
 type grantClaims struct {
@@ -222,10 +226,7 @@ func (s *Server) registerClient(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	name := strings.TrimSpace(input.ClientName)
-	if len([]rune(name)) > 100 {
-		name = string([]rune(name)[:100])
-	}
+	name := cleanClientName(input.ClientName)
 	clientID := s.seal("client", oauthClient{ID: newJTI(), Name: name, RedirectURIs: input.RedirectURIs})
 	respond(w, 201, map[string]any{
 		"client_id":                  clientID,
@@ -237,6 +238,19 @@ func (s *Server) registerClient(w http.ResponseWriter, r *http.Request) {
 		"token_endpoint_auth_method": "none",
 		"scope":                      mcpScope,
 	})
+}
+
+// cleanClientName strips control and bidirectional-override characters so a
+// self-reported name cannot disguise itself on the consent page.
+func cleanClientName(raw string) string {
+	name := strings.Map(func(r rune) rune {
+		if unicode.IsControl(r) || unicode.Is(unicode.Bidi_Control, r) {
+			return -1
+		}
+		return r
+	}, raw)
+	runes := []rune(strings.TrimSpace(name))
+	return string(runes[:min(len(runes), 100)])
 }
 
 func (s *Server) client(clientID string) (oauthClient, bool) {
@@ -263,9 +277,10 @@ func (s *Server) authorize(w http.ResponseWriter, r *http.Request) {
 		authorizePage(w, 400, consentView{Error: "The redirect URI does not match this application's registration."})
 		return
 	}
-	// From here on, errors go back to the verified client callback.
-	fail := func(code, description string) {
-		s.redirectResult(w, r, redirectURI, url.Values{"error": {code}, "error_description": {description}, "state": {q.Get("state")}})
+	// Anyone can register a client, so errors before consent stay on this site
+	// rather than bouncing the owner to an arbitrary callback (RFC 9700 §4.11.2).
+	fail := func(_, description string) {
+		authorizePage(w, 400, consentView{Error: description})
 	}
 	switch {
 	case q.Get("response_type") != "code":
@@ -279,7 +294,7 @@ func (s *Server) authorize(w http.ResponseWriter, r *http.Request) {
 		// consent can never be rendered without the owner's session.
 		http.Redirect(w, r, "/login?redirect="+url.QueryEscape(r.URL.RequestURI()), http.StatusSeeOther)
 	default:
-		request := s.seal("consent", authorizeRequest{ClientID: q.Get("client_id"), RedirectURI: redirectURI, State: q.Get("state"), Challenge: q.Get("code_challenge"), Exp: time.Now().Add(consentTTL).Unix()})
+		request := s.seal("consent", authorizeRequest{ClientID: q.Get("client_id"), RedirectURI: redirectURI, Explicit: q.Get("redirect_uri") != "", State: q.Get("state"), Challenge: q.Get("code_challenge"), Exp: time.Now().Add(consentTTL).Unix()})
 		host := redirectURI
 		if u, err := url.Parse(redirectURI); err == nil {
 			host = u.Host
@@ -304,7 +319,11 @@ func (s *Server) approve(w http.ResponseWriter, r *http.Request) {
 		s.redirectResult(w, r, req.RedirectURI, url.Values{"error": {"access_denied"}, "state": {req.State}})
 		return
 	}
-	code := s.seal("code", grantClaims{JTI: newJTI(), Client: clientHash(req.ClientID), RedirectURI: req.RedirectURI, Challenge: req.Challenge, Scope: mcpScope, Audience: s.mcpResource(), Exp: time.Now().Add(codeTTL).Unix()})
+	bound := ""
+	if req.Explicit {
+		bound = req.RedirectURI
+	}
+	code := s.seal("code", grantClaims{JTI: newJTI(), Client: clientHash(req.ClientID), RedirectURI: bound, Challenge: req.Challenge, Scope: mcpScope, Audience: s.mcpResource(), Exp: time.Now().Add(codeTTL).Unix()})
 	s.redirectResult(w, r, req.RedirectURI, url.Values{"code": {code}, "state": {req.State}})
 }
 
@@ -341,7 +360,7 @@ func (s *Server) tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	var grant grantClaims
 	switch r.PostForm.Get("grant_type") {
 	case "authorization_code":
-		if s.open("code", r.PostForm.Get("code"), &grant) != nil || grant.Client != clientHash(clientID) || grant.RedirectURI != r.PostForm.Get("redirect_uri") {
+		if s.open("code", r.PostForm.Get("code"), &grant) != nil || grant.Client != clientHash(clientID) || (grant.RedirectURI != "" && grant.RedirectURI != r.PostForm.Get("redirect_uri")) {
 			oauthError(w, 400, "invalid_grant", "Authorization code is invalid, expired, or issued to another client.")
 			return
 		}
@@ -405,9 +424,10 @@ h1{font-size:1.25rem;margin-top:0}code{background:#0f172a;padding:2px 6px;border
 .approve{background:#38bdf8;color:#0f172a;font-weight:600}.deny{background:#334155;color:#e2e8f0}
 </style></head><body><main>
 {{if .Error}}<h1>Cannot connect</h1><p>{{.Error}}</p>{{else}}
-<h1>Allow {{if .Client}}{{.Client}}{{else}}this application{{end}} to read your career workspace?</h1>
+<h1>Allow this application to read your career workspace?</h1>
+{{if .Client}}<p>It calls itself <strong>{{.Client}}</strong>. Names are self-reported; check where you return below.</p>{{end}}
 <p>It will be able to read your goals, work and personal journals, notes, pages, books, companies, and connections. It cannot change anything.</p>
-<p>After approval you return to <code>{{.Host}}</code>.</p>
+<p>After approval you return to <code>{{.Host}}</code>. Only allow it if you started this connection there.</p>
 <form method="post" action="/oauth/authorize"><input type="hidden" name="request" value="{{.Request}}">
 <div class="actions"><button class="deny" name="decision" value="deny">Deny</button><button class="approve" name="decision" value="approve">Allow</button></div>
 </form>{{end}}
