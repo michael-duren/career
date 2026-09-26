@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 func testStore(t *testing.T) *Store {
@@ -65,6 +66,18 @@ func imported(t *testing.T) *Store {
 	}
 	return s
 }
+
+// withNoteCreatedAt is what an archive exports after import: notes that
+// predate createdAt take their updatedAt.
+func withNoteCreatedAt(workspace any) any {
+	for _, v := range workspace.(map[string]any)["notes"].([]any) {
+		n := v.(map[string]any)
+		if _, ok := n["createdAt"]; !ok && n["updatedAt"] != nil {
+			n["createdAt"] = n["updatedAt"]
+		}
+	}
+	return workspace
+}
 func TestRoundTrip(t *testing.T) {
 	s := imported(t)
 	ctx := context.Background()
@@ -75,7 +88,7 @@ func TestRoundTrip(t *testing.T) {
 	var want, got any
 	json.Unmarshal(fixture(t), &want)
 	json.Unmarshal(b.Bytes(), &got)
-	if !reflect.DeepEqual(want, got) {
+	if !reflect.DeepEqual(withNoteCreatedAt(want), got) {
 		t.Fatalf("round trip differs\n%s", b.String())
 	}
 	if err := s.Migrate(ctx); err != nil {
@@ -348,7 +361,7 @@ func TestOptionalEntityPresence(t *testing.T) {
 	}
 	var got Entity
 	json.Unmarshal(out.Bytes(), &got)
-	if !reflect.DeepEqual(workspace, got) {
+	if !reflect.DeepEqual(withNoteCreatedAt(any(workspace)), any(got)) {
 		t.Fatal("optional presence round trip differs")
 	}
 }
@@ -442,5 +455,77 @@ func TestNoteTodos(t *testing.T) {
 		if _, err := PrepareSave("note", note); err == nil {
 			t.Fatalf("invalid todos accepted: %+v", bad)
 		}
+	}
+}
+
+func TestNoteCardSummary(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	todo := func(done bool) any { return map[string]any{"id": uuid.NewString(), "title": "step", "done": done} }
+	note := Entity{"id": "card-note", "title": "Card", "topic": "General", "description": "", "tags": []any{"go"}, "body": "", "createdAt": "2000-01-01T00:00:00Z", "todos": []any{todo(true), todo(false), todo(true)}}
+	e, err := PrepareSave("note", note)
+	if err != nil {
+		t.Fatal(err)
+	}
+	saved, err := s.Save(ctx, "note", e, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	created, _ := saved.Entry["createdAt"].(string)
+	if created == "" || strings.HasPrefix(created, "2000") {
+		t.Fatalf("createdAt should be set by the server: %q", created)
+	}
+	summary := func() map[string]any {
+		t.Helper()
+		page, err := s.List(ctx, "note", Filter{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, r := range page.Entries {
+			if r.Entry["id"] == "card-note" {
+				if r.Entry["body"] != nil {
+					t.Fatalf("list result should omit the body: %+v", r.Entry)
+				}
+				out, _ := r.Entry["summary"].(map[string]any)
+				return out
+			}
+		}
+		t.Fatal("note missing from list")
+		return nil
+	}
+	if got := summary(); got["wordCount"] != float64(0) || got["todoCount"] != float64(3) || got["todoDone"] != float64(2) {
+		t.Fatalf("unexpected list summary: %+v", got)
+	}
+	e["body"] = "  one two\n\nthree  "
+	delete(e, "createdAt")
+	if saved, err = s.Save(ctx, "note", e, &saved.Revision); err != nil {
+		t.Fatal(err)
+	}
+	if saved.Entry["createdAt"] != created {
+		t.Fatalf("createdAt changed on edit: %v != %v", saved.Entry["createdAt"], created)
+	}
+	if got := summary(); got["wordCount"] != float64(3) {
+		t.Fatalf("unexpected word count: %+v", got)
+	}
+}
+func TestImportedNoteCreatedAt(t *testing.T) {
+	s := imported(t)
+	ctx := context.Background()
+	n, err := s.Detail(ctx, "note", "systems/nested-note")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n.Entry["createdAt"] == nil || n.Entry["createdAt"] != n.Entry["updatedAt"] {
+		t.Fatalf("imported note without createdAt should take updatedAt: %+v", n.Entry)
+	}
+	saved, err := s.Save(ctx, "note", n.Entry, &n.Revision)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Edits drop the archive's exact spelling, so compare instants.
+	before, _ := time.Parse(time.RFC3339Nano, n.Entry["createdAt"].(string))
+	after, _ := time.Parse(time.RFC3339Nano, saved.Entry["createdAt"].(string))
+	if !after.Equal(before) {
+		t.Fatalf("edit replaced imported createdAt: %v != %v", after, before)
 	}
 }
