@@ -154,7 +154,7 @@ export default function RunningRecorder() {
     } catch (e) { setError((e as Error).message); } finally { URL.revokeObjectURL(url); }
   }
   const busy = recording || !!rescue, db = level > 0 ? Math.round(FLOOR_DB + level * -FLOOR_DB) : null;
-  return <><section aria-label="Audio thoughts recorder" className="mb-8 overflow-hidden rounded-xl border border-black bg-zinc-900 shadow-[0_12px_40px_rgb(0_0_0/0.5),inset_0_1px_0_rgb(255_255_255/0.05)]">
+  return <div data-recorder data-recording={recording || undefined}><section aria-label="Audio thoughts recorder" className="mb-8 overflow-hidden rounded-xl border border-black bg-zinc-900 shadow-[0_12px_40px_rgb(0_0_0/0.5),inset_0_1px_0_rgb(255_255_255/0.05)]">
     <div className="flex flex-wrap items-stretch gap-3 border-b border-black bg-linear-to-b from-zinc-800 to-zinc-900 p-3 lg:flex-nowrap">
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-black bg-zinc-900/95 px-6 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur lg:static lg:z-auto lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
         <div className="mx-auto flex max-w-sm items-center justify-between gap-2 lg:max-w-none lg:justify-start">
@@ -212,7 +212,7 @@ export default function RunningRecorder() {
       {rescue && <div className="flex flex-wrap gap-2"><a className={`${key} h-9`} href={rescue} download="audio-thought"><Download className="size-4" />Download unsaved audio</a><button className={`${key} h-9`} onClick={() => pending.current && void save(pending.current)}>Retry local save</button></div>}
       <p className="leading-relaxed text-zinc-500">Keep the screen on while recording; screen lock can interrupt capture. Takes within 90 minutes of each other join the same thought.</p>
     </div>
-  </section><div className="h-28 lg:hidden" aria-hidden /></>;
+  </section><div className="h-28 lg:hidden" aria-hidden /></div>;
 }
 const status: Record<string, string> = { done: 'bg-emerald-400', pending: 'bg-amber-400', transcribing: 'bg-sky-400 animate-pulse', failed: 'bg-red-500' };
 export function RunningClips({ noteId }: { noteId: string }) {
@@ -222,6 +222,8 @@ export function RunningClips({ noteId }: { noteId: string }) {
     const load = async () => { try { const response = await fetch(`/api/running/${encodeURIComponent(noteId)}/status`, { cache: 'no-store' }); if (!response.ok) throw new Error('Clip statuses unavailable.'); const data = await response.json(); if (live) { setClips(data.clips); setError(''); } } catch (e) { if (live) setError((e as Error).message); } };
     void load(); const timer = setInterval(load, 5000); return () => { live = false; clearInterval(timer); };
   }, [noteId]);
+  // Thoughts typed in the editor have no takes; skip the empty panel.
+  if (!clips.length && !error) return null;
   return <section className="mt-6 overflow-hidden rounded-xl border border-black bg-zinc-900" aria-label="Audio takes">
     <h3 className="flex items-center justify-between border-b border-black bg-linear-to-b from-zinc-800 to-zinc-900 px-4 py-2 font-mono text-[11px] tracking-widest text-zinc-400 uppercase"><span>Takes</span><span>{clips.length} {clips.length === 1 ? 'take' : 'takes'}</span></h3>
     {error && <p role="alert" className="border-b border-red-900 bg-red-950/60 px-4 py-2 text-sm text-red-300">{error}</p>}
@@ -235,7 +237,7 @@ export function RunningClips({ noteId }: { noteId: string }) {
         <audio className="h-9 w-full" controls preload="none" src={`/api/running/clips/${encodeURIComponent(noteId)}/${clip.clipId}/audio`} />
         {clip.error && <p className="text-xs text-red-300">{clip.error}</p>}
         <div className="flex flex-wrap items-start justify-between gap-2">
-          <details className="min-w-0 flex-1 text-sm"><summary className="cursor-pointer text-xs text-zinc-400">Original transcript</summary><p className="mt-2 whitespace-pre-wrap text-zinc-300">{clip.transcript || 'Waiting for local transcription.'}</p></details>
+          <details className="min-w-0 flex-1 text-sm"><summary className="cursor-pointer text-xs text-zinc-400">Original transcript</summary><p className="mt-2 whitespace-pre-wrap text-zinc-300">{clip.transcript || <span className="text-zinc-500 italic">Not transcribed yet.</span>}</p></details>
           <button className={`${key} h-8`} disabled={clip.status === 'transcribing'} onClick={async () => { try { const r = await fetch(`/api/running/clips/${encodeURIComponent(noteId)}/${clip.clipId}/retranscribe`, { method: 'POST', headers: { 'Content-Type': 'application/json' } }); if (!r.ok) throw new Error('Could not queue transcription.'); setClips(current => current.map(c => c.clipId === clip.clipId ? { ...c, status: 'pending' } : c)); } catch (e) { setError((e as Error).message); } }}><RefreshCw className="size-3.5" />Retranscribe</button>
         </div>
       </div>

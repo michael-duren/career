@@ -112,6 +112,16 @@ func TestRunningIdempotencyGroupingEditsAndClaims(t *testing.T) {
 	if !strings.Contains(body, "My edited text") || !strings.Contains(body, "first words") || !strings.Contains(body, "second words") || strings.Contains(body, "replacement") {
 		t.Fatal(body)
 	}
+	if body != "My edited text\n\nfirst words\n\nsecond words" {
+		t.Fatalf("transcripts must append without timestamp headings: %q", body)
+	}
+	if final.Entry["title"] != "My edited text first words" {
+		t.Fatal("placeholder title not replaced by opening words", final.Entry["title"])
+	}
+	listed, _ := s.List(ctx, "run", Filter{})
+	if len(listed.Entries) != 1 || listed.Entries[0].Entry["excerpt"] != "My edited text first words second words" || listed.Entries[0].Entry["body"] != nil {
+		t.Fatal("list must carry a whitespace-collapsed excerpt instead of the body", listed.Entries)
+	}
 	notes, _ := s.List(ctx, "note", Filter{})
 	personal, _ := s.List(ctx, "personal", Filter{})
 	if len(notes.Entries) != 0 || len(personal.Entries) != 0 {
@@ -174,5 +184,83 @@ func TestRunningRetryAndStuckReset(t *testing.T) {
 	clips, _ = s.RunningClips(ctx, c.NoteID)
 	if clips[0].Status != "pending" {
 		t.Fatal(clips)
+	}
+}
+
+func TestThoughtTitle(t *testing.T) {
+	for body, want := range map[string]string{
+		"":                                   "",
+		"  short idea  ":                     "short idea",
+		"one two three four five six":        "one two three four five six",
+		"one two three four five six, seven": "one two three four five six...",
+		"\n\nso I was thinking about\nthe queue design today": "so I was thinking about the...",
+		strings.Repeat("x", 80):                               strings.Repeat("x", 60) + "...",
+	} {
+		if got := ThoughtTitle(body); got != want {
+			t.Errorf("ThoughtTitle(%q) = %q, want %q", body, got, want)
+		}
+	}
+}
+func TestTranscriptKeepsUserTitle(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	c, err := s.AddRunningClip(ctx, clipFixture())
+	if err != nil {
+		t.Fatal(err)
+	}
+	detail, _ := s.Detail(ctx, "run", c.NoteID)
+	if detail.Entry["title"] != ThoughtPlaceholder {
+		t.Fatal("new thoughts start with the placeholder title", detail.Entry["title"])
+	}
+	detail.Entry["title"] = "Queue design"
+	if _, err = s.Save(ctx, "run", detail.Entry, &detail.Revision); err != nil {
+		t.Fatal(err)
+	}
+	claimed, err := s.ClaimRunningClip(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = s.FinishRunningClip(ctx, claimed, "a long transcript about many things", "base"); err != nil {
+		t.Fatal(err)
+	}
+	final, _ := s.Detail(ctx, "run", c.NoteID)
+	if final.Entry["title"] != "Queue design" {
+		t.Fatal("user title overwritten", final.Entry["title"])
+	}
+}
+func TestAudioThoughtMigrationCleansLegacyNotes(t *testing.T) {
+	s := testStore(t)
+	_, err := s.DB.Exec(`INSERT INTO running_notes(id,title,run_date,started_at,tags,body,revision,position) VALUES
+		('legacy','Run 2026-09-20 07:15','2026-09-20',now(),'{}',E'\n\n### 07:15\nfirst take words here and some more after\n\n### 07:40\nsecond take','r1',1),
+		('empty','Run 2026-09-21 07:15','2026-09-21',now(),'{}','','r2',2),
+		('named','Tempo notes','2026-09-22',now(),'{}',E'### 08:00\nkept title','r3',3),
+		('dated','Audio thought 2026-09-23','2026-09-23',now(),'{}','short one','r4',4)`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	migration, err := migrations.ReadFile("migrations/006_audio_thought_titles.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.DB.Exec(string(migration)); err != nil {
+		t.Fatal(err)
+	}
+	want := map[string][2]string{
+		"legacy": {"first take words here and some...", "first take words here and some more after\n\nsecond take"},
+		"empty":  {ThoughtPlaceholder, ""},
+		"named":  {"Tempo notes", "kept title"},
+		"dated":  {"short one", "short one"},
+	}
+	for id, w := range want {
+		var title, body, revision string
+		if err = s.DB.QueryRow("SELECT title,body,revision FROM running_notes WHERE id=$1", id).Scan(&title, &body, &revision); err != nil {
+			t.Fatal(err)
+		}
+		if title != w[0] || body != w[1] {
+			t.Errorf("%s: got %q / %q", id, title, body)
+		}
+		if strings.HasPrefix(revision, "r") && len(revision) == 2 {
+			t.Errorf("%s: revision not bumped", id)
+		}
 	}
 }

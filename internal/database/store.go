@@ -68,6 +68,10 @@ func projection(m model, detail bool) string {
 		pairs = append(pairs, "'summary',(SELECT json_build_object('why',why,'stepCount',step_count,'completedCount',completed_count,'sourceRevision',source_revision,'parserVersion',parser_version) FROM company_summaries WHERE company_slug=companies.slug)")
 	}
 
+	if !detail && m.Table == "running_notes" {
+		// Cards show the opening of the transcript instead of the whole body.
+		pairs = append(pairs, `'excerpt',left(btrim(regexp_replace(body,'\s+',' ','g')),240)`)
+	}
 	if m.Table == "journal_weeks" {
 		pairs = append(pairs, "'_targetsPresent',targets_present")
 	}

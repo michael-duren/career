@@ -8,3 +8,7 @@ import { WorkspaceEditor } from '../components/WorkspaceEditor';
   <RunningRecorder client:load />
   <WorkspaceEditor kind="run" client:load />
 </DocsLayout>
+<style is:global>
+  /* Reading a thought shows just the note, unless a take is still recording. */
+  body:has([data-thought-reading]) [data-recorder]:not([data-recording]) { display: none; }
+</style>

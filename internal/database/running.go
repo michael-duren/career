@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -23,6 +24,30 @@ type RunningClip struct {
 	Model      string    `json:"model"`
 	Attempts   int       `json:"attempts"`
 	Audio      []byte    `json:"-"`
+}
+
+// ThoughtPlaceholder names a thought until its first transcript arrives.
+const ThoughtPlaceholder = "New audio thought"
+
+// autoTitle matches generated titles, including the timestamped ones used before
+// audio thoughts, so transcripts only ever replace a title the user did not write.
+var autoTitle = regexp.MustCompile(`^(New audio thought|Run \d{4}-\d{2}-\d{2} \d{2}:\d{2}|Audio thought \d{4}-\d{2}-\d{2})$`)
+
+// ThoughtTitle is the first six words of a transcript, ending in "..." when cut short.
+func ThoughtTitle(body string) string {
+	words := strings.Fields(body)
+	if len(words) == 0 {
+		return ""
+	}
+	title := strings.Join(words[:min(6, len(words))], " ")
+	cut := len(words) > 6
+	if runes := []rune(title); len(runes) > 60 {
+		title, cut = string(runes[:60]), true
+	}
+	if !cut {
+		return title
+	}
+	return strings.TrimRight(title, " .,;:!?-") + "..."
 }
 
 func (s *Store) AddRunningClip(ctx context.Context, c RunningClip) (RunningClip, error) {
@@ -54,7 +79,7 @@ func (s *Store) AddRunningClip(ctx context.Context, c RunningClip) (RunningClip,
 		}
 		if c.NoteID == "" {
 			c.NoteID = uuid.NewString()
-			_, err = saveTx(ctx, tx, "run", Entity{"id": c.NoteID, "title": "Run " + c.RecordedAt.Format("2006-01-02 15:04"), "runDate": c.RecordedAt.Format("2006-01-02"), "startedAt": c.RecordedAt.Format(time.RFC3339Nano), "tags": []any{}, "body": ""}, nil, false)
+			_, err = saveTx(ctx, tx, "run", Entity{"id": c.NoteID, "title": ThoughtPlaceholder, "runDate": c.RecordedAt.Format("2006-01-02"), "startedAt": c.RecordedAt.Format(time.RFC3339Nano), "tags": []any{}, "body": ""}, nil, false)
 			if err != nil {
 				return c, err
 			}
@@ -131,8 +156,8 @@ func (s *Store) FinishRunningClip(ctx context.Context, c RunningClip, transcript
 	defer tx.Rollback()
 	// Lock the note first, matching saves and deletes. Append against the latest body;
 	// retries/retranscriptions never overwrite user text or append a second copy.
-	var body string
-	if err = tx.QueryRowContext(ctx, "SELECT body FROM running_notes WHERE id=$1 FOR UPDATE", c.NoteID).Scan(&body); err != nil {
+	var body, title string
+	if err = tx.QueryRowContext(ctx, "SELECT body,title FROM running_notes WHERE id=$1 FOR UPDATE", c.NoteID).Scan(&body, &title); err != nil {
 		return err
 	}
 	var merged bool
@@ -140,11 +165,20 @@ func (s *Store) FinishRunningClip(ctx context.Context, c RunningClip, transcript
 		return err
 	}
 	if !merged {
-		body = strings.TrimRight(body, "\n") + "\n\n### " + c.RecordedAt.Format("15:04") + "\n" + transcript
+		if body = strings.TrimSpace(body); body != "" {
+			body += "\n\n"
+		}
+		body += strings.TrimSpace(transcript)
+		// Name the thought after its opening words until the user picks a title.
+		if autoTitle.MatchString(title) {
+			if derived := ThoughtTitle(body); derived != "" {
+				title = derived
+			}
+		}
 		if size(body) > 100000 {
 			return fmt.Errorf("run body full; clip transcript cannot be appended")
 		}
-		if _, err = tx.ExecContext(ctx, "UPDATE running_notes SET body=$2,revision=$3,updated_at=now(),position=nextval('entity_position') WHERE id=$1", c.NoteID, body, uuid.NewString()); err != nil {
+		if _, err = tx.ExecContext(ctx, "UPDATE running_notes SET body=$2,title=$3,revision=$4,updated_at=now(),position=nextval('entity_position') WHERE id=$1", c.NoteID, body, title, uuid.NewString()); err != nil {
 			return err
 		}
 	}

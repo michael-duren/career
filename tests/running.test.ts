@@ -92,3 +92,20 @@ test('service worker upgrade carries the pre-rename recorder shell and its asset
   assert.deepEqual([...stores.keys()], ['career-public-v3']);
   assert.deepEqual(Object.fromEntries(stores.get('career-public-v3')!), { '/audio-thoughts': 'old shell', '/_astro/recorder.abc.js': 'old js' });
 });
+
+test('audio thought titles match the server: first six words, "..." when cut, generated titles replaceable', async () => {
+  const { thoughtTitle, isAutoTitle, thoughtExcerpt } = await import('../src/lib/audio-thoughts.ts');
+  const cases: Record<string, string> = {
+    '': '',
+    '  short idea  ': 'short idea',
+    'one two three four five six': 'one two three four five six',
+    'one two three four five six, seven': 'one two three four five six...',
+    '\n\nso I was thinking about\nthe queue design today': 'so I was thinking about the...',
+    ['x'.repeat(80)]: `${'x'.repeat(60)}...`,
+  };
+  for (const [body, want] of Object.entries(cases)) assert.equal(thoughtTitle(body), want);
+  for (const title of ['New audio thought', 'Run 2026-09-20 07:15', 'Audio thought 2026-09-23']) assert.equal(isAutoTitle(title), true);
+  assert.equal(isAutoTitle('Tempo notes'), false);
+  assert.equal(thoughtExcerpt({ excerpt: 'from list' }), 'from list');
+  assert.equal(thoughtExcerpt({ body: 'full\n\nbody  text' }), 'full body text');
+});
