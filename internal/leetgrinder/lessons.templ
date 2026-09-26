@@ -1,0 +1,1268 @@
+package leetgrinder
+
+templ Lesson(key string) {
+	switch key {
+		case "day-01":
+			@lessonDay01()
+		case "day-02":
+			@lessonDay02()
+		case "day-03":
+			@lessonDay03()
+		case "day-04":
+			@lessonDay04()
+		case "day-05":
+			@lessonDay05()
+		case "day-06":
+			@lessonDay06()
+		case "day-07":
+			@lessonDay07()
+		case "day-08":
+			@lessonDay08()
+		case "day-09":
+			@lessonDay09()
+		case "day-10":
+			@lessonDay10()
+		case "day-11":
+			@lessonDay11()
+		case "day-12":
+			@lessonDay12()
+		case "day-13":
+			@lessonDay13()
+		case "day-14":
+			@lessonDay14()
+		case "day-15":
+			@lessonDay15()
+		case "day-16":
+			@lessonDay16()
+		case "day-17":
+			@lessonDay17()
+		case "day-18":
+			@lessonDay18()
+		case "day-19":
+			@lessonDay19()
+		case "day-20":
+			@lessonDay20()
+		case "day-21":
+			@lessonDay21()
+		case "day-22":
+			@lessonDay22()
+		case "day-23":
+			@lessonDay23()
+		case "day-24":
+			@lessonDay24()
+		case "day-25":
+			@lessonDay25()
+		case "day-26":
+			@lessonDay26()
+		case "day-27":
+			@lessonDay27()
+		case "day-28":
+			@lessonDay28()
+		case "day-29":
+			@lessonDay29()
+		case "day-30":
+			@lessonDay30()
+		case "day-31":
+			@lessonDay31()
+		case "day-32":
+			@lessonDay32()
+		case "day-33":
+			@lessonDay33()
+		case "day-34":
+			@lessonDay34()
+		case "day-35":
+			@lessonDay35()
+		case "day-36":
+			@lessonDay36()
+		case "day-37":
+			@lessonDay37()
+		case "day-38":
+			@lessonDay38()
+		case "day-39":
+			@lessonDay39()
+		case "day-40":
+			@lessonDay40()
+		case "day-41":
+			@lessonDay41()
+		case "day-42":
+			@lessonDay42()
+		case "day-43":
+			@lessonDay43()
+		case "day-44":
+			@lessonDay44()
+		case "day-45":
+			@lessonDay45()
+		case "day-46":
+			@lessonDay46()
+		case "day-47":
+			@lessonDay47()
+		case "day-48":
+			@lessonDay48()
+		case "day-49":
+			@lessonDay49()
+		case "day-50":
+			@lessonDay50()
+		case "day-51":
+			@lessonDay51()
+		case "day-52":
+			@lessonDay52()
+		case "day-53":
+			@lessonDay53()
+		case "day-54":
+			@lessonDay54()
+		case "day-55":
+			@lessonDay55()
+		case "day-56":
+			@lessonDay56()
+		case "day-57":
+			@lessonDay57()
+		case "day-58":
+			@lessonDay58()
+		case "day-59":
+			@lessonDay59()
+		case "day-60":
+			@lessonDay60()
+		case "day-61":
+			@lessonDay61()
+		case "day-62":
+			@lessonDay62()
+		case "day-63":
+			@lessonDay63()
+		case "day-64":
+			@lessonDay64()
+		case "day-65":
+			@lessonDay65()
+		case "day-66":
+			@lessonDay66()
+		case "day-67":
+			@lessonDay67()
+		case "day-68":
+			@lessonDay68()
+		case "day-69":
+			@lessonDay69()
+		case "day-70":
+			@lessonDay70()
+		case "day-71":
+			@lessonDay71()
+		case "day-72":
+			@lessonDay72()
+		case "day-73":
+			@lessonDay73()
+		case "day-74":
+			@lessonDay74()
+		case "day-75":
+			@lessonDay75()
+		case "day-76":
+			@lessonDay76()
+		case "day-77":
+			@lessonDay77()
+		case "day-78":
+			@lessonDay78()
+		case "day-79":
+			@lessonDay79()
+		case "day-80":
+			@lessonDay80()
+		case "day-81":
+			@lessonDay81()
+		case "day-82":
+			@lessonDay82()
+		case "day-83":
+			@lessonDay83()
+		case "day-84":
+			@lessonDay84()
+		default:
+			<p>This lesson is not available.</p>
+	}
+}
+
+templ lessonDay01() {
+	<article class="leetgrinder-lesson">
+		<h2>Hash lookup and honest baselines</h2>
+		<p>Start with a correct exhaustive search, then identify repeated work. A map can remember a value or its frequency so that a later element can answer a question about earlier elements. State exactly what each entry means. For pair problems, look up the needed partner before inserting the current element; that order prevents using one array position twice.</p>
+		<h3>Worked example</h3>
+		<p>For values [8, 3, 6] and target 9, record 8, then 3. At 6, the required value is 3, which already has an earlier index. A set detects membership; a frequency map distinguishes one occurrence from two.</p>
+		<h3>Complexity and cautions</h3>
+		<p>A scan with expected constant-time hashing takes expected O(n) time and O(n) space. A double loop takes O(n²) time but little extra memory. Hashing is not a worst-case constant-time promise.</p>
+		<h3>Before you finish</h3>
+		<p>Explain why the lookup happens before insertion. Test a single element and two equal values.</p>
+	</article>
+}
+
+templ lessonDay02() {
+	<article class="leetgrinder-lesson">
+		<h2>Counting as state</h2>
+		<p>A count is often the smallest sufficient summary of a prefix. Choose whether the task needs presence, multiplicity, or the first occurrence. For characters, a fixed array works only when the alphabet is bounded by the contract. When finding a majority, cancellation removes unequal pairs, but a final verification is necessary unless existence is guaranteed.</p>
+		<h3>Worked example</h3>
+		<p>The letters in &quot;cacao&quot; have counts c=2, a=2, o=1. Removing the letters in &quot;cocoa&quot; would require two o characters, so the count becomes negative and exposes the shortage.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Counting costs O(n+alphabet size) time with an array, or expected O(n) with a map. Do not treat bytes as characters when the problem permits general Unicode.</p>
+		<h3>Before you finish</h3>
+		<p>Write the invariant for each counter. Explain what changes when the input guarantees a majority.</p>
+	</article>
+}
+
+templ lessonDay03() {
+	<article class="leetgrinder-lesson">
+		<h2>Canonical forms and bijections</h2>
+		<p>Grouping requires a key that is identical exactly when two items belong together. Sorting letters is one possible canonical form; a count vector is another. Matching two symbolic sequences needs a bijection: each symbol maps consistently forward and backward. One directional map alone can incorrectly merge distinct symbols.</p>
+		<h3>Worked example</h3>
+		<p>&quot;stone&quot; and &quot;tones&quot; share the sorted key &quot;enost&quot;. For pattern &quot;aba&quot; and words &quot;red blue red&quot;, both directions agree. &quot;red red red&quot; violates the reverse map because two pattern symbols would share one word.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Sorting each word of length k costs O(k log k); fixed-alphabet counts cost O(k). Group storage includes all output references. Serialize count vectors without ambiguous digit concatenation.</p>
+		<h3>Before you finish</h3>
+		<p>Invent a collision for a badly designed key and a case that defeats a one-way mapping.</p>
+	</article>
+}
+
+templ lessonDay04() {
+	<article class="leetgrinder-lesson">
+		<h2>Sets, multisets, and repeated states</h2>
+		<p>A set answers whether a value exists. A multiset also tracks how many copies remain. In a simulation, recording each full state can detect a cycle: once a deterministic process repeats a state, its future repeats too. A termination claim must account for either reaching the goal or revisiting a previous state.</p>
+		<h3>Worked example</h3>
+		<p>Intersect [4,4,7] with [4,4,4,9]. Set intersection contains one 4; multiset intersection contains two. For the transition 1→4→2→1, the second visit to 1 proves repetition without predicting how many steps remain.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Hash-based intersection is expected O(n+m) time. A visited-state simulation costs O(s) space for s distinct states. Never store only part of a state if omitted information affects the next step.</p>
+		<h3>Before you finish</h3>
+		<p>Describe when a boolean membership record loses information. Write the stopping condition before coding the simulation.</p>
+	</article>
+}
+
+templ lessonDay05() {
+	<article class="leetgrinder-lesson">
+		<h2>Sorting and loop invariants</h2>
+		<p>Sorting exposes order that later scans can exploit. Learn one comparison sort well enough to explain its invariant and cost. Merge sort combines already sorted runs; a merge pointer always selects the smallest remaining front. For in-place partitioning, separate the processed regions from the unknown region and move only boundaries whose meaning stays true.</p>
+		<h3>Worked example</h3>
+		<p>Merge [2,9] and [1,5,8] by taking 1,2,5,8,9. When filling an array from the back, taking the larger remaining value protects unread input near the front.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Merge sort takes O(n log n) time and typically O(n) auxiliary space. An in-place three-category partition takes O(n) time. A comparator must define a consistent ordering, including ties.</p>
+		<h3>Before you finish</h3>
+		<p>Draw each region after a swap. Explain why moving a scan pointer after every swap can skip an unclassified value.</p>
+	</article>
+}
+
+templ lessonDay06() {
+	<article class="leetgrinder-lesson">
+		<h2>Array transformations and carries</h2>
+		<p>Separate what the output should contain from how the loop constructs it. A running total summarizes everything already read. A digit carry moves in the opposite direction because each position depends on the less significant one. Before mutating an array, decide whether unread values will still be needed.</p>
+		<h3>Worked example</h3>
+		<p>For [3,1,4], running totals are [3,4,8]. Adding one to [2,9,9] produces a carry through both trailing nines and stops at the leading 2, giving [3,0,0]. An all-nine input needs an extra position.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Simple scans are O(n) time. Returning a new array costs O(n) output space even if the working state is constant. Check empty-input rules and whether arithmetic can overflow the chosen integer type.</p>
+		<h3>Before you finish</h3>
+		<p>State the processed-prefix invariant for the running total and the processed-suffix invariant for the carry.</p>
+	</article>
+}
+
+templ lessonDay07() {
+	<article class="leetgrinder-lesson">
+		<h2>Matrix coordinates and mutation</h2>
+		<p>Treat matrix operations as coordinate transformations. Write row and column bounds before walking a border. For rotation, derive where an original coordinate belongs; for zeroing, preserve the evidence about original zeros before overwriting cells. A square matrix assumption must come from the problem, not from a convenient loop.</p>
+		<h3>Worked example</h3>
+		<p>In a 3 by 3 clockwise rotation, coordinate (0,1) moves to (1,2). For a two-row rectangle, a spiral visits the top row, then the right edge, then the bottom row in reverse, with no remaining left edge.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Most full-matrix transformations cost O(rows×columns). Marker arrays use O(rows+columns) space; first-row and first-column markers need separate flags for those boundaries. Thin matrices expose duplicate visits.</p>
+		<h3>Before you finish</h3>
+		<p>Trace a single row and a single column. Explain how your algorithm distinguishes original zeros from newly written zeros.</p>
+	</article>
+}
+
+templ lessonDay08() {
+	<article class="leetgrinder-lesson">
+		<h2>Binary search intervals</h2>
+		<p>Binary search keeps a range that still contains every possible answer. With a half-open range [lo,hi), the midpoint is inside the range whenever lo is smaller than hi. Each branch must discard the midpoint or move the upper bound to it, so the range shrinks. First decide whether you need equality or an insertion boundary.</p>
+		<h3>Worked example</h3>
+		<p>Search [2,6,11,15] for 11. The initial midpoint at index 2 matches. For insertion of 8, the boundary ends at index 2 even though no equal value exists.</p>
+		<h3>Complexity and cautions</h3>
+		<p>There are O(log n) probes and O(1) auxiliary space for an iterative search. Use lo+(hi-lo)/2. Mixing inclusive and exclusive formulas causes missed elements or nontermination.</p>
+		<h3>Before you finish</h3>
+		<p>Write what is known about indices before lo and at or after hi. Trace an absent value smaller than every element.</p>
+	</article>
+}
+
+templ lessonDay09() {
+	<article class="leetgrinder-lesson">
+		<h2>Monotone predicates on integers</h2>
+		<p>A boundary search needs a predicate whose truth changes in one direction. Identify the first true value and prove why later candidates stay true. Integer square-root questions can compare a candidate against a division instead of forming a potentially overflowing square. A bounded search must specify whether the upper endpoint is feasible or merely exclusive.</p>
+		<h3>Worked example</h3>
+		<p>For the predicate x²≥30 on nonnegative integers, 5 is false and 6 is true. The first true candidate is 6; the integer floor square root is therefore 5 because 30 is not a square.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Boundary search uses O(log R) predicate evaluations over a range of size R. Special-case zero before dividing by a candidate. Avoid floating-point rounding as a substitute for an integer proof.</p>
+		<h3>Before you finish</h3>
+		<p>List the false and true regions for each assignment. Check the smallest allowed input and an exact square.</p>
+	</article>
+}
+
+templ lessonDay10() {
+	<article class="leetgrinder-lesson">
+		<h2>Lower and upper boundaries</h2>
+		<p>Duplicates turn equality search into a range problem. The first value at least target and the first value greater than target define the equal run. The same idea finds a successor; if none exists, apply the problem&#x27;s wraparound rule explicitly. In a sorted grid, order can also eliminate a whole row or column at once.</p>
+		<h3>Worked example</h3>
+		<p>In [1,3,3,3,8], lower_bound(3)=1 and upper_bound(3)=4, so there are three copies. A missing target such as 4 has equal boundaries at index 4.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Two searches still cost O(log n). A monotone matrix boundary walk costs O(rows+columns). Verify sort direction before choosing which side to discard; negative-count tasks may reverse the usual orientation.</p>
+		<h3>Before you finish</h3>
+		<p>Explain why an equality hit alone cannot give the first position. Test an array containing only the target.</p>
+	</article>
+}
+
+templ lessonDay11() {
+	<article class="leetgrinder-lesson">
+		<h2>Search structured matrices and rotations</h2>
+		<p>Do not flatten a matrix unless the last value of one row precedes the first of the next. Independent row and column order supports a different elimination argument. In a rotated sorted array with distinct values, comparing the midpoint to the right endpoint reveals which side contains the rotation minimum.</p>
+		<h3>Worked example</h3>
+		<p>Rows [1,4] and [2,7] are sorted by row and column, but their flattened sequence is not sorted. For rotated [10,14,2,5,8], midpoint 2 is no larger than the final 8, so the minimum remains at or left of the midpoint.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Flattened binary search costs O(log(rows×columns)); a corner walk costs O(rows+columns). Rotation-minimum search costs O(log n) with distinct keys. Never discard the midpoint when it might itself be the minimum.</p>
+		<h3>Before you finish</h3>
+		<p>Give one matrix where flattened search is valid and another where it is not. State the rotation-search invariant.</p>
+	</article>
+}
+
+templ lessonDay12() {
+	<article class="leetgrinder-lesson">
+		<h2>Rotated search and local peaks</h2>
+		<p>A rotated array has a sorted side around most midpoints. Check whether the target lies in that side&#x27;s value range before discarding it. Equal endpoints can hide which side is sorted, so removing one equal boundary may be the only safe progress. Peak search instead uses the slope between adjacent elements to retain a side containing some peak.</p>
+		<h3>Worked example</h3>
+		<p>In [12,16,3,5,9], the right half beginning at 3 is sorted. A target of 16 forces the other side. In [2,6,4], the slope rises then falls, so 6 is a peak even without global sorting.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Distinct rotated search and strict peak search are O(log n). Duplicates can force O(n) behavior. Be explicit about whether the goal is any peak, the global maximum, or the rotation point.</p>
+		<h3>Before you finish</h3>
+		<p>Construct a duplicate-heavy array that defeats the sorted-side test. Explain why a local slope is enough to preserve a peak.</p>
+	</article>
+}
+
+templ lessonDay13() {
+	<article class="leetgrinder-lesson">
+		<h2>Search the answer with feasibility</h2>
+		<p>Sometimes the data is unsorted but the answer space is monotone. Write a decision procedure first: can this capacity, speed, or divisor satisfy the limit? Then search for the smallest feasible value. The decision procedure must match the original rules, such as preserving package order or rounding each pile separately.</p>
+		<h3>Worked example</h3>
+		<p>For piles [5,8] and five hours, speed 3 takes two plus three hours and is feasible. Speed 2 takes three plus four hours and fails. Faster speeds cannot require more time, which supplies the monotonicity proof.</p>
+		<h3>Complexity and cautions</h3>
+		<p>If a check scans n items and the search range has size R, total time is O(n log R). Use integer ceiling division carefully and accumulate totals in a sufficiently wide type.</p>
+		<h3>Before you finish</h3>
+		<p>Write feasible(candidate) separately. Derive a lower and upper bound and test whether the upper bound really permits a solution.</p>
+	</article>
+}
+
+templ lessonDay14() {
+	<article class="leetgrinder-lesson">
+		<h2>Binary search review and pair counts</h2>
+		<p>Choose a search only after naming its ordered quantity. A bouquet threshold orders days, a sorted pair query orders products, and a distance problem may exploit two sorted sequences. Some tasks admit either binary search per item or a linear pair of pointers; compare their invariants and preprocessing costs.</p>
+		<h3>Worked example</h3>
+		<p>For sorted potions [2,5,9] and spell 4, a success threshold of 20 first holds at potion 5. Every potion after that also succeeds, so the answer is the suffix length two.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Sorting m values costs O(m log m), then n boundary queries cost O(n log m). Positive multipliers preserve product order; zeros and negative multipliers need different reasoning. Guard impossible bouquet counts before searching.</p>
+		<h3>Before you finish</h3>
+		<p>For each problem, write the predicate and the reason it changes only once. Compare the search solution to a direct scan.</p>
+	</article>
+}
+
+templ lessonDay15() {
+	<article class="leetgrinder-lesson">
+		<h2>Opposing pointers</h2>
+		<p>Two pointers are useful when moving one endpoint has a justified effect. For a palindrome, matched outer characters can be forgotten. For a sorted pair sum, a sum that is too small proves that the left value cannot work with any smaller right value. Normalization rules belong in the invariant, not in ad hoc postprocessing.</p>
+		<h3>Worked example</h3>
+		<p>For sorted [1,4,6,10] and target 10, endpoints sum to 11, so move the right pointer. Now 1+6=7, so move the left pointer; 4+6=10 succeeds.</p>
+		<h3>Complexity and cautions</h3>
+		<p>A monotone inward scan is O(n) time and O(1) working space. Filtering a string into a second buffer changes the space bound. Beware character classification and case rules specified by the problem.</p>
+		<h3>Before you finish</h3>
+		<p>Explain why each discarded endpoint cannot participate in an answer. Trace a palindrome consisting entirely of ignored characters.</p>
+	</article>
+}
+
+templ lessonDay16() {
+	<article class="leetgrinder-lesson">
+		<h2>Read and write pointers</h2>
+		<p>Compaction separates the position being inspected from the next output position. Everything before the write pointer already satisfies the output contract; unread input must remain available. Stable compaction preserves relative order. An overwrite is safe when the write pointer never outruns the read pointer.</p>
+		<h3>Worked example</h3>
+		<p>Removing 5 from [5,2,5,7] writes 2 into index 0 and 7 into index 1, producing the valid prefix [2,7]. The rest of the backing array is irrelevant unless the task requires filling it.</p>
+		<h3>Complexity and cautions</h3>
+		<p>One pass costs O(n) time and O(1) extra space. Returning a length is different from physically shortening an array. Moving zeros requires preserving nonzero order and then filling the remaining suffix.</p>
+		<h3>Before you finish</h3>
+		<p>State exactly which array prefix is valid after each iteration. Test all-kept, all-removed, and alternating inputs.</p>
+	</article>
+}
+
+templ lessonDay17() {
+	<article class="leetgrinder-lesson">
+		<h2>Eliminate pairs without skipping answers</h2>
+		<p>Sorting can reduce a three-value search to a sequence of two-value searches. Freeze one index, then use opposing pointers on the remainder. Duplicate skipping belongs at the same decision depth. For a container, moving the taller boundary cannot improve the limiting height while width decreases, so only the shorter side can help.</p>
+		<h3>Worked example</h3>
+		<p>With sorted [-3,-1,2,4,6], freezing -3 and targeting a total of 3 leaves a pair target of 6. The pair 2 and 4 works. For heights 4 and 9 at distance 5, the area is 20 and the height-4 side limits it.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Sorting plus a two-pointer scan per anchor costs O(n²); a container scan costs O(n). Include sorting space in your bound. Closest-sum problems must update the best candidate before moving pointers.</p>
+		<h3>Before you finish</h3>
+		<p>Explain the safe elimination in words. Distinguish duplicate values from reusing the same index.</p>
+	</article>
+}
+
+templ lessonDay18() {
+	<article class="leetgrinder-lesson">
+		<h2>Fixed-size windows</h2>
+		<p>A fixed window changes by one entering element and one leaving element. Maintain only the statistic needed by the question, such as a sum or a vowel count. Initialize one complete window, record its result, then slide. This avoids mixing partial windows with valid candidates.</p>
+		<h3>Worked example</h3>
+		<p>For [6,1,5,2] and width 2, sums are 7,6,7. Moving from the first window to the second subtracts 6 and adds 5. To compare an average with 3, compare the sum with 2×3 instead of dividing.</p>
+		<h3>Complexity and cautions</h3>
+		<p>The sliding update makes O(n) time and usually O(1) auxiliary space. A count table depends on alphabet size. Width zero or greater than input length requires checking the stated constraints.</p>
+		<h3>Before you finish</h3>
+		<p>Derive the update equation and trace the very first and last valid windows. Explain why the result must be recorded before leaving the first window.</p>
+	</article>
+}
+
+templ lessonDay19() {
+	<article class="leetgrinder-lesson">
+		<h2>Variable windows and validity</h2>
+		<p>A variable window needs a condition that can be restored by moving its left edge forward. Expand right, update state, then shrink until valid for longest-window tasks. For shortest valid windows, shrink while valid and record candidates before destroying validity. Positivity is what makes sum windows monotone; negative values can break this reasoning.</p>
+		<h3>Worked example</h3>
+		<p>For positive [2,1,4,2] and target 6, the window [2,1,4] is valid. Removing 2 makes it invalid, but after adding the last 2 the window [4,2] reaches the target with length two.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Each pointer advances at most n times, giving O(n) time despite a nested loop. Character frequencies need map or alphabet storage. A single shrink is insufficient when several violations remain.</p>
+		<h3>Before you finish</h3>
+		<p>Explain whether you shrink while valid or while invalid. Give a negative-number example where the positive-sum method fails.</p>
+	</article>
+}
+
+templ lessonDay20() {
+	<article class="leetgrinder-lesson">
+		<h2>Prefix sums and frequency maps</h2>
+		<p>Define prefix[0]=0 and prefix[i+1] as the sum through index i. Then any half-open range [l,r) sums to prefix[r]-prefix[l]. To count ranges with target sum, each current prefix needs the number of earlier prefixes equal to current-target. Count matches before inserting the current prefix.</p>
+		<h3>Worked example</h3>
+		<p>For [3,-2,4], prefixes are [0,3,1,5]. The last two entries sum to 5-3=2. If the target is zero, a repeated prefix indicates a zero-sum range between its occurrences.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Prefix construction is O(n), range queries O(1), and hash-based target counting expected O(n). Store prefix frequencies rather than one index when counting all ranges. Seed the empty prefix once.</p>
+		<h3>Before you finish</h3>
+		<p>Explain why the empty prefix matters. Trace target zero without accidentally counting an empty subarray at every position.</p>
+	</article>
+}
+
+templ lessonDay21() {
+	<article class="leetgrinder-lesson">
+		<h2>Prefix products and modular state</h2>
+		<p>The prefix idea works with more than addition, but subtraction and division have different limits. Product-except-self can combine a left product with a right product without division, so zeros need no special formula. Divisibility questions group prefix sums by normalized remainder; equal remainders imply a divisible difference.</p>
+		<h3>Worked example</h3>
+		<p>For [2,0,5], left products before each index are [1,2,0] and right products after each index are [0,5,1]. Their pairwise products are [0,10,0]. Modulo 4, prefixes 3 and 11 share a remainder, so their difference is divisible by 4.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Product passes are O(n) with constant working state beyond output. Remainder maps need up to O(min(n,k)) entries. Normalize negative remainders and distinguish storing earliest indices from storing counts.</p>
+		<h3>Before you finish</h3>
+		<p>Explain why division fails with zeros. State whether today&#x27;s remainder map needs frequency or earliest position and why.</p>
+	</article>
+}
+
+templ lessonDay22() {
+	<article class="leetgrinder-lesson">
+		<h2>Linked nodes and local rewiring</h2>
+		<p>A linked list stores order through references rather than consecutive addresses. Before changing a next link, save the reference needed to continue. Reversal maintains a completed reversed prefix and an untouched suffix. Merging chooses the smaller head from two sorted lists and appends it to an output tail.</p>
+		<h3>Worked example</h3>
+		<p>For a→b→c, save b, set a.next to nil, then advance. On the next step save c and set b.next to a. Losing b before saving it would make the suffix unreachable.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Reversal and merging take O(n) or O(n+m) time with O(1) auxiliary space when reusing nodes. Recursive versions consume stack space. Distinguish node identity from equal stored values.</p>
+		<h3>Before you finish</h3>
+		<p>Draw references before and after each assignment. Test nil, one node, and equal values in distinct nodes.</p>
+	</article>
+}
+
+templ lessonDay23() {
+	<article class="leetgrinder-lesson">
+		<h2>Fast and slow references</h2>
+		<p>Different pointer speeds can reveal structure without a visited set. In an acyclic list, a fast pointer that advances twice as far lets a slow pointer locate the middle. In a cycle, relative motion eventually brings the pointers together. Intersection asks about shared node identity, not matching values.</p>
+		<h3>Worked example</h3>
+		<p>A five-node list puts the slow pointer at the third node when the fast pointer reaches the end. Two lists containing separate nodes with value 7 do not intersect; sharing the exact tail node does.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Middle and cycle detection take O(n) time and O(1) space. Test fast and fast.next before advancing two links. For intersection, align lengths or switch heads so both pointers cover the same total distance.</p>
+		<h3>Before you finish</h3>
+		<p>Specify which middle is required for even lengths. Explain why equal values do not prove either a cycle or an intersection.</p>
+	</article>
+}
+
+templ lessonDay24() {
+	<article class="leetgrinder-lesson">
+		<h2>Gaps, cycles, and half-list comparisons</h2>
+		<p>A fixed gap between two pointers finds a position relative to the end. A sentinel simplifies deletion of the head. After cycle pointers meet, resetting one to the head and advancing both one step finds the entry. Palindrome checking compares corresponding halves after reversing one half, with a clear policy for restoring mutations.</p>
+		<h3>Worked example</h3>
+		<p>To remove the second node from the end of a→b→c→d, keep a two-node gap until the leading pointer reaches the end. The trailing position identifies c; a predecessor reference lets the link bypass it.</p>
+		<h3>Complexity and cautions</h3>
+		<p>These methods are O(n) time and O(1) space. Count whether the gap measures nodes or edges. Reversal changes the caller&#x27;s list unless restored; recursion is not constant-space.</p>
+		<h3>Before you finish</h3>
+		<p>Draw a cycle with a nonempty stem. Derive the meeting-to-entry reasoning rather than memorizing pointer resets.</p>
+	</article>
+}
+
+templ lessonDay25() {
+	<article class="leetgrinder-lesson">
+		<h2>Sentinels and stable list partitions</h2>
+		<p>A sentinel is a temporary predecessor that makes head operations look like interior operations. When grouping nodes, keep separate tails and connect the groups only after the scan. Pair swapping changes links among a predecessor and two nodes; save the continuation first and advance to the correct new predecessor.</p>
+		<h3>Worked example</h3>
+		<p>For a→b→c→d, swapping the first pair produces b→a→c→d. The predecessor for the next pair is a, not b. Separating odd and even positions yields a→c and b→d before joining them.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Each node is visited a constant number of times, so time is O(n) and extra references O(1). Terminate detached tails to avoid accidental cycles. Position parity is not the parity of node values.</p>
+		<h3>Before you finish</h3>
+		<p>Draw the sentinel and all affected links. Test deletion of every node and a final unpaired node.</p>
+	</article>
+}
+
+templ lessonDay26() {
+	<article class="leetgrinder-lesson">
+		<h2>Stacks as unfinished work</h2>
+		<p>A stack keeps the most recently opened task available first. Delimiters push expected closing symbols; an unexpected close fails immediately. Expression evaluation pushes values and combines the top operands when an operator appears. A minimum stack must retain enough history to restore an earlier minimum after a pop.</p>
+		<h3>Worked example</h3>
+		<p>For postfix &quot;7 2 - 3 *&quot;, pop 2 then 7, compute 7-2=5, then multiply 5 by 3. Reversing the operand order would silently break subtraction and division.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Each token is handled once, so evaluation is O(n) time and O(n) space in the worst case. Check underflow and leftover operands. Duplicate minimum values must survive one of their copies being removed.</p>
+		<h3>Before you finish</h3>
+		<p>Explain why nesting requires last-in-first-out order. Trace two equal minima followed by two pops.</p>
+	</article>
+}
+
+templ lessonDay27() {
+	<article class="leetgrinder-lesson">
+		<h2>Implement one interface with another</h2>
+		<p>An abstract data structure specifies behavior; its implementation may combine simpler containers. Two stacks can implement a queue by reversing a batch only when the output stack is empty. Count total element moves across a sequence of operations instead of demanding that every operation have the same cost.</p>
+		<h3>Worked example</h3>
+		<p>Enqueue a,b,c into an input stack. Transferring all three gives an output stack whose top is a. After dequeuing a, enqueue d into the input stack; b and c still leave before d.</p>
+		<h3>Complexity and cautions</h3>
+		<p>A single dequeue can cost O(n), but each element moves between stacks once, giving amortized O(1) queue operations. A queue-based stack can instead make push or pop expensive. State which operation bears the cost.</p>
+		<h3>Before you finish</h3>
+		<p>Simulate interleaved inserts and removals. Explain amortized cost using the lifetime of one element.</p>
+	</article>
+}
+
+templ lessonDay28() {
+	<article class="leetgrinder-lesson">
+		<h2>Recursion and smaller subproblems</h2>
+		<p>A recursive function needs a contract, a base case, and a measure that decreases. Binary exponentiation reduces the exponent by half, then squares the partial result. Some recursive definitions produce huge repeated call trees; use them to understand the recurrence, then discuss memoization before accepting the cost.</p>
+		<h3>Worked example</h3>
+		<p>To compute 3⁵, compute 3²=9 from a smaller exponent, square to 81, and multiply by 3 to get 243. For an even exponent, no extra factor is needed. The exponent reaches zero, where the answer is one.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Exponentiation uses O(log n) multiplications and O(log n) recursive space, or constant iterative space. Naive Fibonacci is exponential. Handle negative exponents and the minimum signed integer without overflowing its negation.</p>
+		<h3>Before you finish</h3>
+		<p>Write a decreasing measure for each recursion. Distinguish recursion depth from the total number of calls.</p>
+	</article>
+}
+
+templ lessonDay29() {
+	<article class="leetgrinder-lesson">
+		<h2>Tree recursion contracts</h2>
+		<p>A tree call should return one precise fact about the subtree rooted at its argument. Height combines child heights; minimum depth treats a missing child differently from a leaf. A structural transformation such as inversion applies the same rule recursively to both subtrees. Empty trees need explicit return values.</p>
+		<h3>Worked example</h3>
+		<p>A root with only a left child has minimum depth two, not one. Taking the minimum of zero for the missing right child and one for the left child would give the wrong answer.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Traversals cost O(n) time and O(h) call-stack space for height h. A skewed tree can have h=n. Count nodes or edges consistently and follow the problem&#x27;s depth convention.</p>
+		<h3>Before you finish</h3>
+		<p>State each function&#x27;s return contract. Test an empty tree, a leaf, and a chain with one missing child at every level.</p>
+	</article>
+}
+
+templ lessonDay30() {
+	<article class="leetgrinder-lesson">
+		<h2>Compare tree structure</h2>
+		<p>Tree equality compares both shape and values. Symmetry compares opposite child positions. Subtree matching needs an equality check at each plausible root, or an encoding that preserves null positions. Comparing only traversal values can confuse different shapes.</p>
+		<h3>Worked example</h3>
+		<p>A root 4 with left child 2 differs from a root 4 with right child 2, even though both contain the same values. A mirror comparison pairs the first tree&#x27;s left child with the second tree&#x27;s right child.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Equality and symmetry are O(n). Trying a full subtree match at every node can cost O(nm). A serialized form must mark missing children and delimit values to avoid ambiguous encodings.</p>
+		<h3>Before you finish</h3>
+		<p>Draw two trees with identical preorder values but different null positions. Explain the base case when only one argument is nil.</p>
+	</article>
+}
+
+templ lessonDay31() {
+	<article class="leetgrinder-lesson">
+		<h2>Paths and branch-local state</h2>
+		<p>A root-to-leaf path is a sequence of choices, not just an accumulated sum. Carry the remaining target or running sum down the recursion. When collecting paths, append the current node, explore children, and restore the path length before returning. Copy successful paths so later changes do not alter saved answers.</p>
+		<h3>Worked example</h3>
+		<p>For root 6 with a left path 2→5, the root-to-leaf sum is 13. Reaching node 2 with remaining target 5 is not success because node 2 is not a leaf.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Traversal work is O(n), plus the total size of copied output paths. Auxiliary stack and current path use O(h). Negative values prevent pruning merely because a partial sum already exceeds a target.</p>
+		<h3>Before you finish</h3>
+		<p>Explain the difference between any prefix and a root-to-leaf path. Demonstrate why storing one mutable path buffer repeatedly is unsafe.</p>
+	</article>
+}
+
+templ lessonDay32() {
+	<article class="leetgrinder-lesson">
+		<h2>Tree breadth-first search</h2>
+		<p>A queue processes nodes by distance from the root. Capture the current queue length before a level so that newly enqueued children belong to the next level. Different views can reuse this traversal, but define which position at each level contributes to the result.</p>
+		<h3>Worked example</h3>
+		<p>A root with children 3 and 8 and grandchildren 1 and 5 has levels [root], [3,8], [1,5]. The rightmost visible value of a level is the last node processed when children are enqueued left before right.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Time is O(n); queue space is O(w) for maximum width. A wide tree can require linear memory. Removing the first array element repeatedly may make a nominal queue quadratic.</p>
+		<h3>Before you finish</h3>
+		<p>Trace a level containing missing children. Explain why processing until the queue is empty does not isolate one level.</p>
+	</article>
+}
+
+templ lessonDay33() {
+	<article class="leetgrinder-lesson">
+		<h2>Binary search tree bounds</h2>
+		<p>A search tree&#x27;s ordering applies to entire subtrees, not only immediate children. Validation therefore carries lower and upper bounds down each path. Search and insertion follow one branch based on a comparison. The duplicate policy determines whether the bounds are strict.</p>
+		<h3>Worked example</h3>
+		<p>A root 10 with left child 5 and that child&#x27;s right child 12 violates the root&#x27;s upper bound, even though 12 is greater than its parent 5. A local parent-child check misses this error.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Search and insertion are O(h), which is O(log n) only for balanced trees. Validation is O(n). Avoid fake infinite sentinels that exclude valid extreme values.</p>
+		<h3>Before you finish</h3>
+		<p>Write the allowed interval for every node in a small tree. Explain how the interval changes when traversing left or right.</p>
+	</article>
+}
+
+templ lessonDay34() {
+	<article class="leetgrinder-lesson">
+		<h2>Ancestors and ordered traversal</h2>
+		<p>A lowest common ancestor is the deepest node whose subtree contains both targets. A general binary tree may need results from both children; a search tree can use value ordering. Inorder traversal lists search-tree keys in order, enabling rank selection with a counter.</p>
+		<h3>Worked example</h3>
+		<p>If one target is in the left subtree and the other is in the right, the current node is their lowest common ancestor. If the current node is itself a target, it can also be the ancestor of the other.</p>
+		<h3>Complexity and cautions</h3>
+		<p>General ancestor search is O(n) time and O(h) stack space. Search-tree ancestor lookup takes O(h). A kth-element traversal may stop early but can still visit O(n) nodes. Clarify whether both targets are guaranteed present.</p>
+		<h3>Before you finish</h3>
+		<p>Explain what each recursive ancestor result means. Test a target that is an ancestor of the other target.</p>
+	</article>
+}
+
+templ lessonDay35() {
+	<article class="leetgrinder-lesson">
+		<h2>Return local facts, update global answers</h2>
+		<p>Some tree questions need two related results. A diameter uses the longest downward path from each child but records a path that may pass through the current node. Balance checking needs heights plus failure information. Keep the value returned to a parent distinct from the best complete answer seen anywhere.</p>
+		<h3>Worked example</h3>
+		<p>If a node&#x27;s left and right subtree heights are 3 and 2, a path through it spans five edges. The parent can extend only one side, so this node returns height four, not the full diameter.</p>
+		<h3>Complexity and cautions</h3>
+		<p>One postorder traversal computes these facts in O(n) time and O(h) space. For optional reconstruction, preorder selects a root and inorder divides its left and right subtrees; postorder places the root last. Serialization needs explicit null markers. Recomputing height from scratch at every node can degrade to O(n²). Keep edge and node counts separate.</p>
+		<h3>Before you finish</h3>
+		<p>Write the return value and the global update as separate equations. Test a longest path that never passes through the root.</p>
+	</article>
+}
+
+templ lessonDay36() {
+	<article class="leetgrinder-lesson">
+		<h2>Decision trees and reversible choices</h2>
+		<p>Backtracking explores a tree of partial decisions. Identify the next choice, the legal options, and when an answer is complete. Mutation must be undone before trying a sibling. Binary choices can sometimes be represented by a bitmask, but the meaning of each bit should be explicit.</p>
+		<h3>Worked example</h3>
+		<p>For two letters &quot;aB&quot;, choose each letter&#x27;s lower or upper case independently, giving four leaves. For a subset mask 101 over [2,5,9], the selected values are 2 and 9; its XOR is 11.</p>
+		<h3>Complexity and cautions</h3>
+		<p>With b independent binary choices, enumeration has 2^b leaves. Output construction adds its own cost. Digits do not create case branches, and a clock mask must still satisfy hour and minute bounds.</p>
+		<h3>Before you finish</h3>
+		<p>Draw the first two levels of the decision tree. Explain which choices change state and how each change is undone.</p>
+	</article>
+}
+
+templ lessonDay37() {
+	<article class="leetgrinder-lesson">
+		<h2>Subsets, combinations, and permutations</h2>
+		<p>These output families differ in whether order matters and whether an item can be chosen again. A subset or combination uses a start index to avoid generating the same selection in multiple orders. A permutation chooses among all unused positions at each depth. Copy a completed answer before restoring the working buffer.</p>
+		<h3>Worked example</h3>
+		<p>For [2,5,8], combination size two has [2,5], [2,8], [5,8]. Permutations include both [2,5,8] and [5,2,8], because order is part of the answer.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Subsets have 2^n outputs, permutations n!, and size-k combinations C(n,k). Multiplying by output length gives a realistic time bound. Prune a combination when too few remaining elements can fill it.</p>
+		<h3>Before you finish</h3>
+		<p>Explain the role of start versus used. Predict the number of outputs for three distinct elements before running the code.</p>
+	</article>
+}
+
+templ lessonDay38() {
+	<article class="leetgrinder-lesson">
+		<h2>Duplicate-aware enumeration</h2>
+		<p>Equal values can create equivalent branches at the same depth. After sorting, skip a duplicate choice when the previous equal value has not been chosen for the current branch. This is different from banning equal values entirely. Subsequences preserve original position order, so sorting would change their meaning.</p>
+		<h3>Worked example</h3>
+		<p>From [1,1,3], unique subsets include [1,1] but contain [1,3] only once. At the root, choosing either copy of 1 starts an equivalent branch; deeper in the branch, choosing the second 1 is legitimate.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Worst-case output remains exponential or factorial. Sorting costs O(n log n) and may mutate input. For increasing subsequences, use a per-depth value set while leaving input order intact.</p>
+		<h3>Before you finish</h3>
+		<p>Draw which duplicate branch you skip and which you retain. Explain why sorting is allowed for subsets but not for subsequences.</p>
+	</article>
+}
+
+templ lessonDay39() {
+	<article class="leetgrinder-lesson">
+		<h2>Combination sums and pruning</h2>
+		<p>Model a sum search with a remaining target and a start index. Whether the recursive call reuses the same index or advances it encodes the reuse rule. Positive sorted candidates allow pruning once a candidate exceeds the remaining target. Fixed-count combinations also track how many slots remain.</p>
+		<h3>Worked example</h3>
+		<p>Using [2,5] to make 9 with unlimited reuse permits [2,2,5]. If each candidate can be used once, that branch is illegal. With exactly two slots remaining, a branch that already uses too much sum cannot recover using positive values.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Search is exponential in the worst case. A bound in terms of target depends on the smallest positive candidate. Zero or negative reusable values can destroy termination, so rely only on explicit constraints.</p>
+		<h3>Before you finish</h3>
+		<p>Write the recursive state for reuse and no-reuse variants. Justify every pruning condition rather than treating it as a heuristic.</p>
+	</article>
+}
+
+templ lessonDay40() {
+	<article class="leetgrinder-lesson">
+		<h2>Partition strings into valid pieces</h2>
+		<p>String backtracking chooses the next segment boundary. Validate a segment before recursing on the suffix, and accept only when the entire input is consumed with the required number of pieces. Precomputing reusable validity information can reduce repeated work, but begin with a correct direct check.</p>
+		<h3>Worked example</h3>
+		<p>Splitting &quot;1221&quot; into palindromes permits [&quot;1&quot;,&quot;22&quot;,&quot;1&quot;] and [&quot;1221&quot;]. A numeric segment &quot;07&quot; may be invalid because of a leading-zero rule even though its numeric value fits the range.</p>
+		<h3>Complexity and cautions</h3>
+		<p>There can be O(2^n) boundary choices. Checking every substring directly adds a length factor. IP addresses limit both segment count and length; use these constraints to prune impossible remaining suffixes.</p>
+		<h3>Before you finish</h3>
+		<p>Explain why a valid next piece does not guarantee a valid complete partition. Test leading zeros and a suffix left over after all required pieces.</p>
+	</article>
+}
+
+templ lessonDay41() {
+	<article class="leetgrinder-lesson">
+		<h2>Backtracking with coupled constraints</h2>
+		<p>Some searches constrain later choices through the path already taken. A grid word search marks cells only for the current path and restores them afterward. Additive sequences choose initial numbers, then force every later number. Resource collection on a grid similarly forbids reusing a cell within one route.</p>
+		<h3>Worked example</h3>
+		<p>On a row [A,B,A], the word ABA can use all three positions once. The word ABAB cannot reuse the middle B. For initial numbers 3 and 4, an additive continuation must begin with 7, then 11.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Grid path search is exponential in path length, with depth bounded by available cells. Additive parsing must account for integer size or compare decimal strings. Shared global visited marks would incorrectly forbid independent starting paths.</p>
+		<h3>Before you finish</h3>
+		<p>Identify which decisions branch and which become forced. Trace how the visited state is restored after a failed route.</p>
+	</article>
+}
+
+templ lessonDay42() {
+	<article class="leetgrinder-lesson">
+		<h2>Symmetry and constraint-first search</h2>
+		<p>Equivalent containers can cause repeated search. Try harder-to-place items first, and skip assignments to containers with identical current loads. A state should include every fact that changes future options. Bitmasks compact sets of used items or letters when the universe is small.</p>
+		<h3>Worked example</h3>
+		<p>To distribute sticks [6,6,3,3,3,3] among four equal sides of length 6, placing a 6 in one empty side is equivalent to placing it in any other empty side. Try one representative before exploring distinct loads.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Worst-case search is exponential. Sorting and symmetry pruning improve many instances but do not change that guarantee. A letter mask must reject words that repeat a letter internally before combining masks.</p>
+		<h3>Before you finish</h3>
+		<p>Explain why two branches are equivalent under a relabeling of containers. Record an impossible instance and show where your pruning detects it.</p>
+	</article>
+}
+
+templ lessonDay43() {
+	<article class="leetgrinder-lesson">
+		<h2>Graphs hidden in grids</h2>
+		<p>A grid becomes a graph when each cell is a vertex and allowed moves are edges. Define connectivity before implementing traversal. Mark a cell when discovering it so multiple neighbors do not schedule it repeatedly. A connected component is everything reachable from one starting cell under that move rule.</p>
+		<h3>Worked example</h3>
+		<p>In [[1,0],[0,1]], four-direction adjacency gives two components; allowing diagonals gives one. Flood fill changes only the component whose cells match the starting color, not every cell with that color.</p>
+		<h3>Complexity and cautions</h3>
+		<p>DFS or BFS visits O(rows×columns) cells with O(rows×columns) worst-case storage. Recursive DFS can overflow a limited call stack. If the replacement color equals the original, avoid revisiting unchanged cells forever.</p>
+		<h3>Before you finish</h3>
+		<p>Write the neighbor rule and visited rule. Compare component count, largest component size, and recoloring as different aggregations over the same traversal.</p>
+	</article>
+}
+
+templ lessonDay44() {
+	<article class="leetgrinder-lesson">
+		<h2>Components and boundary reachability</h2>
+		<p>Many grid questions are easier from the outside. Mark every region connected to a boundary, then classify the remaining cells. Perimeter counts exposed edges rather than cells. In an adjacency matrix, scan neighbors by row; the representation changes traversal cost even when the graph is sparse.</p>
+		<h3>Worked example</h3>
+		<p>A land cell contributes four candidate edges. Each adjacent land neighbor removes one exposed edge from that cell&#x27;s contribution. A surrounded open region is one that no boundary-started search can reach.</p>
+		<h3>Complexity and cautions</h3>
+		<p>A grid traversal is O(rows×columns). Traversing an adjacency matrix costs O(V²), while adjacency lists cost O(V+E). Do not confuse a matrix diagonal entry with a separate component.</p>
+		<h3>Before you finish</h3>
+		<p>Explain why starting from every boundary cell does not need a separate full traversal each time. Trace a narrow passage to the border.</p>
+	</article>
+}
+
+templ lessonDay45() {
+	<article class="leetgrinder-lesson">
+		<h2>Breadth-first distances and multiple sources</h2>
+		<p>BFS gives shortest path lengths when every edge has equal cost. Initialize all simultaneous sources at distance zero instead of running a search for each one. Mark on enqueue to guarantee that the first recorded distance is minimal. Layer counts and path lengths can differ by one depending on whether endpoints count.</p>
+		<h3>Worked example</h3>
+		<p>On a line of five cells with sources at positions 0 and 4, the distances are [0,1,2,1,0]. A queue seeded with both endpoints discovers the middle once at distance two.</p>
+		<h3>Complexity and cautions</h3>
+		<p>BFS costs O(V+E) time and O(V) memory. Obstacles remove edges or vertices. Unreachable cells must retain a distinct sentinel; zero already means a valid source distance.</p>
+		<h3>Before you finish</h3>
+		<p>Explain why FIFO order proves minimal distance. Check the conventions for a one-cell path and for an unreachable destination.</p>
+	</article>
+}
+
+templ lessonDay46() {
+	<article class="leetgrinder-lesson">
+		<h2>Explicit and implicit adjacency</h2>
+		<p>A graph need not be stored as a list of edges. Keys in rooms, grid moves, and generated states all define adjacency. Choose whether visited state prevents repeated work globally or only cycles on the current path. Enumerating all paths in a DAG differs from asking whether any route exists.</p>
+		<h3>Worked example</h3>
+		<p>If room 0 has keys [1,2] and room 1 has key [2], room 2 should be processed once for reachability. When listing paths 0→2 and 0→1→2, both routes are distinct outputs and must be retained.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Reachability is O(V+E). Enumerating paths may take exponential time even in a DAG because output can be exponential. A global visited set would incorrectly suppress valid path alternatives.</p>
+		<h3>Before you finish</h3>
+		<p>State whether your output is a boolean, a set of reachable nodes, or all paths. Explain how that choice changes visited-state lifetime.</p>
+	</article>
+}
+
+templ lessonDay47() {
+	<article class="leetgrinder-lesson">
+		<h2>Directed dependencies and topological order</h2>
+		<p>A prerequisite edge specifies which event must happen first. Kahn&#x27;s algorithm removes zero-indegree vertices and decrements their dependents. If fewer than all vertices can be removed, a directed cycle remains. DFS can also distinguish unseen, active, and finished nodes; only an edge to an active node proves a cycle.</p>
+		<h3>Worked example</h3>
+		<p>For dependencies A→C and B→C, either A or B may appear first, but C waits for both. Adding C→A creates a cycle involving A and C, so no complete ordering exists.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Topological processing costs O(V+E). An ordinary visited boolean cannot distinguish a back edge from an edge to a completed subtree. Eventual safety asks which nodes cannot reach any cycle, which can be solved by reversing edges.</p>
+		<h3>Before you finish</h3>
+		<p>Trace indegree changes rather than merely memorizing an ordering. Give a graph with several valid topological orders.</p>
+	</article>
+}
+
+templ lessonDay48() {
+	<article class="leetgrinder-lesson">
+		<h2>Disjoint sets and equivalence</h2>
+		<p>Disjoint-set union tracks a partition into components. Find returns a representative; union merges representatives. Path compression and union by size keep operations nearly constant amortized time. Use the structure when connectivity accumulates, not when you need to enumerate a path or support arbitrary deletions.</p>
+		<h3>Worked example</h3>
+		<p>After unions (a,b) and (c,d), there are two components. Union (b,c) joins all four. An extra edge (a,d) connects vertices already sharing a representative, so it closes a cycle in an undirected graph.</p>
+		<h3>Complexity and cautions</h3>
+		<p>With compression and balancing, operations cost amortized O(α(n)); storage is O(n). Equations with equality and inequality require applying all equalities before checking inequalities. Root labels are implementation details, not semantic identities.</p>
+		<h3>Before you finish</h3>
+		<p>Explain why a representative may change after union. Contrast undirected cycle detection with the directed active-stack rule.</p>
+	</article>
+}
+
+templ lessonDay49() {
+	<article class="leetgrinder-lesson">
+		<h2>Weighted paths and state dimensions</h2>
+		<p>BFS is insufficient when edge costs differ. Dijkstra repeatedly finalizes the smallest tentative distance when weights are nonnegative, using a priority queue that returns the smallest key. You can first practice a scan-based version if heaps are new. A stop limit changes the state: reaching the same city with different remaining budgets can matter.</p>
+		<h3>Worked example</h3>
+		<p>Edges A→B cost 8, A→C cost 2, and C→B cost 3. The two-edge route costs 5 and beats the direct edge. For a minimax route, combine a path with an edge using max instead of addition.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Heap Dijkstra costs O((V+E) log V) in a standard adjacency-list implementation; a scan-based version costs O(V²+E). Skip stale heap entries. A bounded-edge relaxation must use the previous round&#x27;s distances to avoid exceeding the stop budget.</p>
+		<h3>Before you finish</h3>
+		<p>Write the path-combination operation for each task. Give a reason ordinary BFS would choose the wrong weighted route.</p>
+	</article>
+}
+
+templ lessonDay50() {
+	<article class="leetgrinder-lesson">
+		<h2>Heaps and top-k streams</h2>
+		<p>A binary heap preserves only the parent-child order needed to expose the smallest or largest element. It is not a fully sorted array. To retain the k largest stream values, keep a min-heap of size k; its root is the weakest retained candidate. Replace it only when a new value belongs in the retained set.</p>
+		<h3>Worked example</h3>
+		<p>For k=2 and stream [7,2,9,4], retain [2,7], replace 2 with 9, and reject 4. The final retained values are 7 and 9, so the second largest is 7.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Streaming top-k costs O(n log k) time and O(k) space. Building a heap from an array can be O(n). Repeatedly removing the largest stone needs a max-heap or a reversed comparator.</p>
+		<h3>Before you finish</h3>
+		<p>Explain the difference between the heap root and a sorted rank. Test k=1 and k equal to the number of values.</p>
+	</article>
+}
+
+templ lessonDay51() {
+	<article class="leetgrinder-lesson">
+		<h2>Ranking by derived keys</h2>
+		<p>Heap priorities can be computed from counts or distances rather than raw values. Define a total ordering, including tie breakers, before selecting top-k items. A bounded heap must expose the worst retained item so it can be replaced. Squared distance preserves nonnegative Euclidean distance order without a square root.</p>
+		<h3>Worked example</h3>
+		<p>Counts apple=4, pear=2, plum=2 rank apple first. If alphabetical order breaks equal counts, pear precedes plum. A heap that discards the least desirable item must reverse both frequency and tie directions consistently.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Counting is expected O(n); retaining k of u distinct keys costs O(u log k). Squared coordinates can overflow narrow integers. Returning heap storage directly does not produce sorted output.</p>
+		<h3>Before you finish</h3>
+		<p>Write the comparator in plain words before coding. Create equal-priority examples that expose a reversed tie breaker.</p>
+	</article>
+}
+
+templ lessonDay52() {
+	<article class="leetgrinder-lesson">
+		<h2>Frequency ordering and greedy removal</h2>
+		<p>A frequency map converts repeated values into weighted groups. Once groups are counted, sorting or a heap can answer ranking questions. Removing the largest groups first minimizes how many groups are needed to remove a required number of elements because swapping a smaller chosen group for a larger one never hurts.</p>
+		<h3>Worked example</h3>
+		<p>For group sizes [5,3,2], removing at least half of ten items needs only the size-five group. Sorting values by frequency may use a different tie rule, so separate the count key from the value tie breaker.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Counting is expected O(n), then sorting u distinct values costs O(u log u). A bucket approach can use O(n) additional space. Keep the original problem&#x27;s tie direction visible in the comparator.</p>
+		<h3>Before you finish</h3>
+		<p>Give an exchange argument for largest-group-first removal. Explain why a frequency sort cannot reuse every top-k comparator unchanged.</p>
+	</article>
+}
+
+templ lessonDay53() {
+	<article class="leetgrinder-lesson">
+		<h2>Merge sorted streams with a heap</h2>
+		<p>When several sequences are individually sorted, keep only the next candidate from each active sequence in a min-heap. Removing the smallest candidate advances exactly its source. For sorted pair combinations, choose a frontier that avoids generating the same pair through multiple routes.</p>
+		<h3>Worked example</h3>
+		<p>Merge streams [1,8], [3,6], and [2,9]. Start with 1,3,2; after taking 1, insert 8 from its stream. The heap then exposes 2. The source index tells you which successor to insert.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Producing k values from r streams takes O(k log r) time with O(r) heap space, plus initialization. Pair or fraction comparisons should avoid floating-point tie errors where exact products are practical.</p>
+		<h3>Before you finish</h3>
+		<p>State why no unseen value can be smaller than every frontier candidate. Explain how duplicate pairs are prevented.</p>
+	</article>
+}
+
+templ lessonDay54() {
+	<article class="leetgrinder-lesson">
+		<h2>Tries and prefix state</h2>
+		<p>A trie stores a character transition per edge and a terminal marker for complete words. Sharing a prefix saves repeated comparison work during prefix queries. Exact search, prefix existence, and wildcard search have different stopping rules. A stored value at a word requires update semantics when the same key is inserted again.</p>
+		<h3>Worked example</h3>
+		<p>Insert &quot;car&quot; and &quot;cart&quot;. The node after r is terminal and still has a child t. Searching &quot;ca&quot; fails as an exact word but succeeds as a prefix. A wildcard at the last position branches across matching children.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Insert and exact lookup take O(L) time for word length L. Wildcards can visit many trie nodes. Space is proportional to stored prefix nodes and their child representation, not merely the number of words.</p>
+		<h3>Before you finish</h3>
+		<p>Explain why leaf status cannot replace a terminal marker. Trace an update to an existing key without double-counting its previous value.</p>
+	</article>
+}
+
+templ lessonDay55() {
+	<article class="leetgrinder-lesson">
+		<h2>Prefix choices and lexicographic order</h2>
+		<p>A trie can stop at the earliest terminal prefix, enumerate descendants in character order, or require every prefix to be a complete word. These are distinct policies on the same structure. A sorted array with binary-search boundaries is often a simpler alternative for static prefix suggestions.</p>
+		<h3>Worked example</h3>
+		<p>With roots &quot;be&quot; and &quot;bell&quot;, replacing &quot;belly&quot; stops at &quot;be&quot; because the shortest matching root wins. For suggestions after prefix &quot;ca&quot;, explore child letters in sorted order and stop after the requested number of results.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Building a trie costs O(total characters). A suggestion query costs prefix traversal plus visited output paths. Sorting words costs O(n log n) comparisons, each potentially comparing multiple characters. Avoid assuming map iteration is alphabetical.</p>
+		<h3>Before you finish</h3>
+		<p>Compare the trie and sorted-array approaches for a dictionary that never changes. State the exact stopping condition for each assignment.</p>
+	</article>
+}
+
+templ lessonDay56() {
+	<article class="leetgrinder-lesson">
+		<h2>Scheduling with available choices</h2>
+		<p>Scheduling often separates events that become available from choices among available work. Sort by release time, then use a heap for the selection rule. If nothing is ready, advance time to the next release. Cooldowns add a second eligibility condition, so a task may be desirable but temporarily unavailable.</p>
+		<h3>Worked example</h3>
+		<p>Jobs released at times 0 and 4 with durations 2 and 1 leave an idle gap from 2 to 4. A scheduler must jump to 4 instead of repeatedly checking an empty heap. Equal durations may require an index tie breaker.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Sorting and heap operations usually cost O(n log n). Cooldown construction may use a queue of future availability times. The optional median stream uses a max-heap for the lower half and a min-heap for the upper half; rebalance so their sizes differ by at most one. A frequency formula needs a proof that both the most frequent group and total task count constrain the schedule.</p>
+		<h3>Before you finish</h3>
+		<p>List availability separately from priority. Trace a tie and an idle interval before coding.</p>
+	</article>
+}
+
+templ lessonDay57() {
+	<article class="leetgrinder-lesson">
+		<h2>Dynamic programming as cached contracts</h2>
+		<p>Dynamic programming stores answers to precisely defined subproblems. Start from a recurrence whose dependencies are smaller, then choose an evaluation order. For a one-dimensional sequence, the state may be an index; base cases specify the smallest valid inputs. Rolling variables save space only after the full dependency pattern is understood.</p>
+		<h3>Worked example</h3>
+		<p>If ways(n)=ways(n-1)+ways(n-2) with ways(0)=1 and ways(1)=1, the values through n=4 are 1,1,2,3,5. The empty construction counts once because it is the neutral starting choice.</p>
+		<h3>Complexity and cautions</h3>
+		<p>A constant number of transitions per index gives O(n) time. A full table uses O(n) space; keeping only the needed prior states uses O(1). Naive recursive evaluation repeats subproblems exponentially.</p>
+		<h3>Before you finish</h3>
+		<p>Write the meaning of dp[i] as a sentence. Derive base cases without relying on a table copied from memory.</p>
+	</article>
+}
+
+templ lessonDay58() {
+	<article class="leetgrinder-lesson">
+		<h2>Choose or skip with adjacency constraints</h2>
+		<p>When choosing an item forbids its neighbor, compare skipping the current item with taking it plus the best compatible prefix. Circular arrangements need separate cases that break the wraparound dependency. Some value-based problems become the same recurrence after aggregating equal values.</p>
+		<h3>Worked example</h3>
+		<p>For rewards [4,7,3,8], the best prefix values are 4,7,7,15. Taking the last reward combines 8 with the best prefix ending before its neighbor, which is 7.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Linear choice-or-skip DP costs O(n) time and can use O(1) space. A circle requires excluding one endpoint in each of two cases. Grouping by value may require sorting or a bounded-value array.</p>
+		<h3>Before you finish</h3>
+		<p>Explain why greedily taking the larger adjacent reward can fail. Test a circle with only one item before splitting into ranges.</p>
+	</article>
+}
+
+templ lessonDay59() {
+	<article class="leetgrinder-lesson">
+		<h2>Unbounded choices and decoding</h2>
+		<p>A state can represent the remaining amount or the length of a processed prefix. For minimum coin count, every allowed final coin points to a smaller amount. For decoding, one-character and two-character endings contribute only when valid. Impossible states need a sentinel distinct from a real zero cost.</p>
+		<h3>Worked example</h3>
+		<p>With coins [3,5], amount 8 takes two coins through 3+5. Amount 4 is unreachable. For digits &quot;101&quot;, the valid split is 10,1; the zero cannot stand alone.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Coin DP costs O(amount×number of coins). Decoding uses O(n) time with constant prior-state storage. Greedy coin selection is not valid for arbitrary denominations. Guard impossible-state arithmetic before adding one.</p>
+		<h3>Before you finish</h3>
+		<p>Write the transition and impossible sentinel separately. Explain why a zero digit changes which transitions exist.</p>
+	</article>
+}
+
+templ lessonDay60() {
+	<article class="leetgrinder-lesson">
+		<h2>State machines and suffix feasibility</h2>
+		<p>The state must retain every fact that changes future choices. Word segmentation needs a position and a way to test candidate words. Stock problems distinguish holding, free-to-buy, and possibly cooldown states. A fee changes transition value; a cooldown changes which transitions are legal.</p>
+		<h3>Worked example</h3>
+		<p>With a one-day cooldown, selling on day 2 cannot transition directly into buying on day 3. Model sold-today separately from resting. For text &quot;rainbow&quot;, a valid split after &quot;rain&quot; depends on whether the remaining suffix can also be segmented.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Word-break DP can take O(n²) candidate checks, with substring comparison costs depending on implementation. A constant-state stock recurrence is O(n) time. Update from previous-day values so one transition does not accidentally chain within a day.</p>
+		<h3>Before you finish</h3>
+		<p>Draw legal state transitions. Explain the difference between charging a fee and forbidding the next purchase.</p>
+	</article>
+}
+
+templ lessonDay61() {
+	<article class="leetgrinder-lesson">
+		<h2>Sequences with predecessor choices</h2>
+		<p>An increasing-subsequence state can mean the best sequence ending exactly at index i. Try every earlier compatible predecessor. Counting optimal sequences adds a second table: replace the count when finding a better length, and add counts when finding an equal best length. A chain problem may also admit a later greedy solution.</p>
+		<h3>Worked example</h3>
+		<p>For [2,5,3,7], the best lengths ending at each position are [1,2,2,3]. The final 7 extends either 2,5 or 2,3, so there are two longest increasing subsequences.</p>
+		<h3>Complexity and cautions</h3>
+		<p>The direct DP is O(n²) time and O(n) space. A tails-based length algorithm can reach O(n log n), but its entries are not necessarily one actual subsequence and do not directly count answers.</p>
+		<h3>Before you finish</h3>
+		<p>Explain why the state ends exactly at i rather than somewhere before i. Compare length optimization with counting optimal paths.</p>
+	</article>
+}
+
+templ lessonDay62() {
+	<article class="leetgrinder-lesson">
+		<h2>Subset sums and loop direction</h2>
+		<p>A zero-or-one knapsack state records which totals are reachable after considering a prefix of items. When compressing to one dimension, update totals downward so the current item cannot be reused. Sign assignments and balanced partitioning can reduce to subset sums after algebra, but parity and range checks come first.</p>
+		<h3>Worked example</h3>
+		<p>With one item of weight 3 and capacity 6, an upward scan would mark 3 and then incorrectly use that new state to mark 6. A downward scan leaves only totals 0 and 3 reachable.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Subset-sum DP costs O(nS) time and O(S) space for target S. This is pseudopolynomial in numeric magnitude. Counting assignments must preserve multiplicity, especially when an item is zero.</p>
+		<h3>Before you finish</h3>
+		<p>Explain the direction of the capacity loop with a one-item counterexample. Derive the target transformation before coding it.</p>
+	</article>
+}
+
+templ lessonDay63() {
+	<article class="leetgrinder-lesson">
+		<h2>Local ending states and global optima</h2>
+		<p>For a maximum subarray, track the best sum ending at the current position, then update the best overall answer. Products require both maximum and minimum ending products because a negative factor reverses order. A single stock transaction instead pairs the current price with the smallest earlier price.</p>
+		<h3>Worked example</h3>
+		<p>For products [2,-3,-4], after -3 the smallest ending product is -6. Multiplying that by -4 creates 24, the new largest ending product. Keeping only the previous maximum would miss it.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Each recurrence is O(n) time and O(1) working space. Initialize from an actual element when a nonempty answer is required. Compute new minimum and maximum from the old values, not partially updated ones.</p>
+		<h3>Before you finish</h3>
+		<p>Name the local state and the global answer separately. Test all-negative sums, a zero in a product chain, and decreasing stock prices.</p>
+	</article>
+}
+
+templ lessonDay64() {
+	<article class="leetgrinder-lesson">
+		<h2>Grid DP and blocked states</h2>
+		<p>A grid with right and down moves is an acyclic dependency graph. A cell&#x27;s state combines the permitted predecessor cells. Counting paths uses addition; minimizing cost uses minimum plus the current cost. Obstacles contribute no valid path and must reset compressed state rather than leave an old value behind.</p>
+		<h3>Worked example</h3>
+		<p>In a 2 by 3 empty grid, path counts by row are [1,1,1] and [1,2,3]. Blocking the middle cell of the second row changes that row to [1,0,1].</p>
+		<h3>Complexity and cautions</h3>
+		<p>The table costs O(rows×columns) time and space; row compression reduces space to O(columns). The first row and column need consistent initialization. An unreachable cost is not the same as zero cost.</p>
+		<h3>Before you finish</h3>
+		<p>Derive boundary values using the same recurrence where possible. Trace an obstacle at the start and one in the first row.</p>
+	</article>
+}
+
+templ lessonDay65() {
+	<article class="leetgrinder-lesson">
+		<h2>Local geometry in grid states</h2>
+		<p>The shape of a valid predecessor set comes from allowed moves. Triangle paths use two parents; falling paths use up to three. A largest square ending at a cell depends on three neighboring square sizes because every side must be supported. A one in the current cell alone does not prove a large square.</p>
+		<h3>Worked example</h3>
+		<p>If the upper, left, and upper-left square sizes are 3,1,2, a current one supports a square of side 2, using one plus their minimum. Using their maximum would extend through unsupported cells.</p>
+		<h3>Complexity and cautions</h3>
+		<p>These local recurrences cost O(rows×columns) time. Rolling rows use O(columns) space, but a diagonal old value may need a saved variable. Square area is side length squared, not the stored side length.</p>
+		<h3>Before you finish</h3>
+		<p>Draw the three supporting squares. Explain why taking the minimum is necessary, and distinguish an in-place update from a fresh row.</p>
+	</article>
+}
+
+templ lessonDay66() {
+	<article class="leetgrinder-lesson">
+		<h2>Two-sequence alignment</h2>
+		<p>A two-dimensional state often describes prefixes of two sequences. For a common subsequence, matching final symbols allow a diagonal extension; otherwise skip one side and take the better answer. A subsequence preserves order but can omit elements. The same matching structure can describe uncrossed lines or deletion costs.</p>
+		<h3>Worked example</h3>
+		<p>For &quot;cab&quot; and &quot;acb&quot;, a common subsequence of length two is &quot;ab&quot; or &quot;cb&quot;. Matching equal b characters extends the best answer for the two shorter prefixes; unmatched final symbols require choosing a skip.</p>
+		<h3>Complexity and cautions</h3>
+		<p>The standard DP costs O(nm) time and space, with O(min(n,m)) space for length only. Reconstructing a sequence needs stored decisions or more work. Subsequence and substring recurrences are not interchangeable.</p>
+		<h3>Before you finish</h3>
+		<p>Write what dp[i][j] means and why the empty row is zero. Draw a case where a common substring is shorter than a common subsequence.</p>
+	</article>
+}
+
+templ lessonDay67() {
+	<article class="leetgrinder-lesson">
+		<h2>Edit choices and palindrome intervals</h2>
+		<p>Edit distance compares insertion, deletion, and replacement at a pair of prefix boundaries. Palindrome problems instead often use an interval with matching endpoints. The evaluation order must compute shorter prefixes or shorter intervals first. Counting palindromic substrings can use expansion around every center as a separate approach.</p>
+		<h3>Worked example</h3>
+		<p>Changing &quot;cat&quot; to &quot;cut&quot; uses one replacement. For interval &quot;abca&quot;, equal outer a characters let a palindrome subsequence problem consult &quot;bc&quot;; a palindrome substring check still requires the entire interior to be palindromic.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Edit distance and interval DP are O(nm) or O(n²) time. Center expansion is O(n²) time and O(1) auxiliary space. Distinguish substring contiguity from subsequence deletion freedom.</p>
+		<h3>Before you finish</h3>
+		<p>Draw the three edit transitions with their index changes. Explain why equal endpoints alone do not make a whole interval a palindrome.</p>
+	</article>
+}
+
+templ lessonDay68() {
+	<article class="leetgrinder-lesson">
+		<h2>Counting matches and interleaving</h2>
+		<p>Similar-looking tables can combine predecessors differently. Counting subsequences adds alternatives, repeated subarrays reset on mismatch, and interleaving tracks whether the next symbol can come from either source. A state definition prevents borrowing the wrong recurrence from another string problem.</p>
+		<h3>Worked example</h3>
+		<p>For source &quot;aab&quot; and target &quot;ab&quot;, there are two index-distinct subsequences. For repeated contiguous matches, a mismatch makes the current matching suffix length zero. Interleaving &quot;ab&quot; and &quot;xy&quot; can produce &quot;axby&quot; while preserving each source&#x27;s order.</p>
+		<h3>Complexity and cautions</h3>
+		<p>All three standard tables cost O(nm) time. Counts may require a wide integer or a specified modulus. In compressed subsequence counting, descending target indices prevent reusing a source character in the same step.</p>
+		<h3>Before you finish</h3>
+		<p>Write a tiny example where addition is correct and max is wrong. Check the empty-target count separately from the empty-source case.</p>
+	</article>
+}
+
+templ lessonDay69() {
+	<article class="leetgrinder-lesson">
+		<h2>More than one resource</h2>
+		<p>A state may track multiple constrained quantities: zeros and ones, members and profit, or dice count and total. Keep only dimensions that affect future feasibility. A saturated dimension can cap values once exceeding a threshold no longer changes the outcome, such as profit above a required minimum.</p>
+		<h3>Worked example</h3>
+		<p>If a plan needs at least 5 profit, states with profit 5 and 8 can share a capped profit value 5 when only threshold attainment matters. They cannot be merged if the exact final profit is part of the objective.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Cost is the number of reachable table states times transitions per state. Two-resource zero-or-one knapsack updates both capacities downward. Counting problems must apply the required modulus after additions.</p>
+		<h3>Before you finish</h3>
+		<p>Explain what information capping discards and why it is safe. Trace one item to prove it cannot be selected twice.</p>
+	</article>
+}
+
+templ lessonDay70() {
+	<article class="leetgrinder-lesson">
+		<h2>Interval games and last actions</h2>
+		<p>An interval DP solves contiguous ranges from smaller ranges. In a two-player game, store the best score difference the current player can force; choosing an endpoint subtracts the opponent&#x27;s resulting advantage. For burst-style interval problems, choosing the last action can make the surrounding boundary values fixed.</p>
+		<h3>Worked example</h3>
+		<p>For a game [4,9,2], taking 4 leaves an opponent who can take 9, so immediate reward alone is misleading. A difference recurrence compares left_value minus the remaining interval&#x27;s advantage with the analogous right choice.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Endpoint games take O(n²) states and O(1) transitions each. Trying every last action in every interval takes O(n³) time. Padding interval boundaries can simplify formulas but must preserve their intended meaning.</p>
+		<h3>Before you finish</h3>
+		<p>Explain whose turn the stored difference represents. For the burst problem, explain why choosing the last action removes a dependency that choosing first does not.</p>
+	</article>
+}
+
+templ lessonDay71() {
+	<article class="leetgrinder-lesson">
+		<h2>Greedy choices need exchange arguments</h2>
+		<p>A greedy rule must preserve the possibility of an optimal completion. Match the smallest adequate resource to the smallest unmet demand to avoid wasting a larger resource. For bounded unit values, taking the highest-value units first is safe because swapping one for a lower-value unit cannot improve the total.</p>
+		<h3>Worked example</h3>
+		<p>Demands [2,4] and resources [3,5] can both be satisfied by pairing 2 with 3 and 4 with 5. Giving 5 to demand 2 first leaves no adequate resource for 4.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Sorting often dominates at O(n log n). Change-making with fixed bill denominations can have a problem-specific greedy proof; arbitrary coin systems do not. Check feasibility after every transaction, not merely at the end.</p>
+		<h3>Before you finish</h3>
+		<p>Write the swap that replaces a different first choice with the greedy choice. Identify which input constraint makes the argument valid.</p>
+	</article>
+}
+
+templ lessonDay72() {
+	<article class="leetgrinder-lesson">
+		<h2>Pairing and assignment by sorted order</h2>
+		<p>Some pairing goals reward extreme matches, while others reward keeping valuable minima. Derive the effect of exchanging partners instead of memorizing a sorting direction. Two-city assignment can rank the difference between each person&#x27;s two costs, because everyone must be assigned somewhere regardless.</p>
+		<h3>Worked example</h3>
+		<p>For travel costs (A=20,B=70) and (A=60,B=30), assigning the first person to A and the second to B costs 50. The differences -50 and 30 measure how much assigning A changes the total relative to assigning everyone B.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Sorting costs O(n log n), followed by a linear scan. Boat pairing relies on at most two passengers per boat; more passengers would change the problem. Stable sorting is unnecessary unless identity ties matter.</p>
+		<h3>Before you finish</h3>
+		<p>Explain why the heaviest passenger&#x27;s fate can be decided now. Derive the cost-difference ordering from a fixed baseline total.</p>
+	</article>
+}
+
+templ lessonDay73() {
+	<article class="leetgrinder-lesson">
+		<h2>Intervals and commitments</h2>
+		<p>For maximum nonoverlapping interval count, choosing the earliest finishing compatible interval leaves the most room for later choices. Hitting overlapping intervals with points uses the current common end boundary. Partitioning a string by last occurrences instead expands a required boundary until every seen symbol is contained.</p>
+		<h3>Worked example</h3>
+		<p>Intervals [1,4], [2,3], and [3,5] favor selecting [2,3] first when touching endpoints are compatible. Choosing the longest interval first can remove two opportunities. For closed balloon intervals, touching endpoints may still share one arrow.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Sorting gives O(n log n) time. A character last-occurrence scan can be O(n+alphabet size). Endpoint inclusivity changes comparisons; decide whether equality means conflict, compatibility, or a valid hit.</p>
+		<h3>Before you finish</h3>
+		<p>Give a counterexample to earliest-start selection. Write the endpoint convention beside the comparison operator.</p>
+	</article>
+}
+
+templ lessonDay74() {
+	<article class="leetgrinder-lesson">
+		<h2>Merge and intersect intervals</h2>
+		<p>Merging maintains one current union interval while sorted starts arrive. Extend it when the next interval overlaps; otherwise emit it and begin a new one. Intersecting two sorted interval lists compares their current ends, then advances the list whose interval cannot contribute further.</p>
+		<h3>Worked example</h3>
+		<p>Intersect [1,6] with [4,9] to obtain [4,6]. Since the first interval ends at 6, advance that list while retaining [4,9] for possible overlap with later intervals.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Merging costs O(n log n) when sorting is needed, then O(n). Two-list intersection costs O(n+m). Output storage is separate from working space. Insertion can avoid sorting when the existing intervals are already sorted and disjoint.</p>
+		<h3>Before you finish</h3>
+		<p>Trace containment as well as partial overlap. Explain why advancing the later-ending interval could miss an intersection.</p>
+	</article>
+}
+
+templ lessonDay75() {
+	<article class="leetgrinder-lesson">
+		<h2>Greedy repair and reachable ranges</h2>
+		<p>A greedy scan can maintain a feasible prefix rather than make an isolated choice. Jump problems track the farthest reachable position and layer boundaries for minimum jumps. Gas-station reasoning discards a whole range of starts after a negative running balance. Monotone digits repair a violation and may need to propagate that repair leftward.</p>
+		<h3>Worked example</h3>
+		<p>If a candidate fuel route becomes negative after station j, any later start inside the same failed segment also lacks the discarded positive prefix, so those starts cannot work. Start again after j and continue tracking the total balance.</p>
+		<h3>Complexity and cautions</h3>
+		<p>These scans are O(n), aside from digit representation. Reachability and minimum jumps are different objectives. Check whether reachability is guaranteed. A local digit decrement can create a new violation with its predecessor.</p>
+		<h3>Before you finish</h3>
+		<p>State the range of candidates eliminated by a failed segment. Trace a digit sequence where one repair must move left more than once.</p>
+	</article>
+}
+
+templ lessonDay76() {
+	<article class="leetgrinder-lesson">
+		<h2>Monotonic stacks and unresolved indices</h2>
+		<p>A monotonic stack stores elements whose next qualifying neighbor has not yet appeared. A new value resolves a suffix of the stack, so pop those indices and record their answers. Store indices when distances or duplicate positions matter. Every index enters and leaves at most once.</p>
+		<h3>Worked example</h3>
+		<p>For temperatures [60,55,63], index 0 waits, then index 1 waits. Reading 63 resolves index 1 with distance 1 and index 0 with distance 2. Both pops are charged to their earlier pushes.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Total time is O(n), even with a while loop inside the scan, and space is O(n). Circular arrays may need a second pass but should not push duplicate unresolved indices indiscriminately. Strict versus non-strict comparisons change equal-value behavior.</p>
+		<h3>Before you finish</h3>
+		<p>Write what the stack order means and what remains unresolved. Trace equal adjacent values and an entirely decreasing sequence.</p>
+	</article>
+}
+
+templ lessonDay77() {
+	<article class="leetgrinder-lesson">
+		<h2>Compressed stack summaries</h2>
+		<p>A stack entry can summarize many earlier elements once they no longer need separate identities. Stock spans merge earlier blocks with prices no greater than the current price. Removing digits greedily discards a larger earlier digit while deletion budget remains. Car fleets use arrival-time comparisons in position order.</p>
+		<h3>Worked example</h3>
+		<p>For prices [40,30,35], spans are [1,1,2]. The last price absorbs the previous block for 30 but stops at 40. For digits &quot;4312&quot; with one deletion, removing 4 gives &quot;312&quot;, better than deleting a later smaller digit.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Each entry is pushed and popped at most once, giving O(n) stack work; car fleets also need sorting. Remaining digit-removal budget deletes from the suffix. Normalize leading zeros only after choosing the retained digits.</p>
+		<h3>Before you finish</h3>
+		<p>Explain what information a compressed block preserves. State why equal arrival times form one fleet under the problem&#x27;s rules.</p>
+	</article>
+}
+
+templ lessonDay78() {
+	<article class="leetgrinder-lesson">
+		<h2>Mixed set and pointer diagnosis</h2>
+		<p>Begin without a named pattern. Identify whether the task asks for adjacency in value space, repeated states in an implicit graph, or recurrence across integer representations. A consecutive-run set starts only where the preceding value is absent. A duplicate-number pointer method treats array values as next references under strict input constraints.</p>
+		<h3>Worked example</h3>
+		<p>For values [8,4,6,5], start the run at 4 and count 4,5,6; 5 and 6 are not separate starts. A bitwise AND keeps only positions set in both numbers. For bit counts, n &amp; (n - 1) removes the lowest set bit: 1100 AND 1011 becomes 1000. Thus count(12)=count(8)+1, with count(0)=0.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Run scanning is expected O(n) when each value belongs to one started run. Implicit-cycle methods require valid index ranges and special duplicate guarantees. Counting bits across 0..n is O(n).</p>
+		<h3>Before you finish</h3>
+		<p>For each assignment, reject one tempting but invalid approach. Explain the exact input promise that permits treating values as pointers.</p>
+	</article>
+}
+
+templ lessonDay79() {
+	<article class="leetgrinder-lesson">
+		<h2>Mixed boundaries and prefix counts</h2>
+		<p>Decide whether the answer is a contiguous region of sorted order or a count of subarrays in original order. K closest sorted elements can be found by searching a window boundary. Exact-count subarray questions can use prefix frequencies or the difference between two at-most counts when a suitable window invariant exists.</p>
+		<h3>Worked example</h3>
+		<p>For sorted [1,3,6,8,10], compare the two candidate windows [3,6,8] and [6,8,10] around 7. The endpoint distances are 4 for 3 and 3 for 10, so choose [6,8,10]. For binary values, equal prefix differences count sums exactly.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Boundary search can be O(log(n-k)+k) including output. Prefix counting is expected O(n). At-most subtraction relies on a monotone nonnegative statistic; it does not apply to arbitrary signed sums without further reasoning.</p>
+		<h3>Before you finish</h3>
+		<p>Name the property that makes each method legal. Verify distance ties and the target-zero case explicitly.</p>
+	</article>
+}
+
+templ lessonDay80() {
+	<article class="leetgrinder-lesson">
+		<h2>Mixed pointer structure and traversal</h2>
+		<p>Separate the desired node order from the mechanics used to produce it. Rotation can temporarily connect a list into a ring and cut at a computed position. Iterative inorder traversal stores the path to the next unfinished ancestor. Flattening a multilevel list must preserve both forward and backward links.</p>
+		<h3>Worked example</h3>
+		<p>A list a→b→c→d rotated right once becomes d→a→b→c. Closing the ring makes the order easy to find, but forgetting the final cut leaves an infinite traversal. An inorder stack descends left before visiting a node.</p>
+		<h3>Complexity and cautions</h3>
+		<p>These operations take O(n) time. Rotation uses O(1) extra references; iterative traversal uses O(h) stack space. Reduce large rotation counts modulo length and handle an empty list before division.</p>
+		<h3>Before you finish</h3>
+		<p>Draw the final pointer relationships, including nil endpoints and backward links. Explain what each stack entry represents.</p>
+	</article>
+}
+
+templ lessonDay81() {
+	<article class="leetgrinder-lesson">
+		<h2>Mixed graph direction and identity</h2>
+		<p>A graph question may be easier when edges are reversed. Water reachability can start at oceans and move to nondecreasing heights. Cloning requires one new node per original identity, stored in a map before visiting neighbors. Tree-center trimming removes leaves in layers until only the central one or two vertices remain.</p>
+		<h3>Worked example</h3>
+		<p>If water can descend from height 7 to 4, reverse reachability moves from 4 to 7. A cycle A→B→A in a clone must return to the already allocated clone of A, not allocate a second copy.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Each adjacency-list traversal is O(V+E). Grid reachability uses O(rows×columns) storage. Leaf trimming assumes an undirected tree; arbitrary cycles may leave no initial leaves and require a different model.</p>
+		<h3>Before you finish</h3>
+		<p>Explain the reversal of the reachability question. Trace a two-node cycle during cloning and a tree with two centers.</p>
+	</article>
+}
+
+templ lessonDay82() {
+	<article class="leetgrinder-lesson">
+		<h2>Mixed feasibility, heaps, and construction</h2>
+		<p>Classify the output before searching: minimum feasible distance, a limited resource allocation, and any missing binary string demand different proofs. Maximizing a minimum distance searches a monotone packing test. A heap can reserve scarce ladders for the largest climbs encountered. A constructive diagonal argument can avoid enumerating all strings.</p>
+		<h3>Worked example</h3>
+		<p>For climbs [2,7,3] and one ladder, spending bricks on 2 and 3 while assigning the ladder to 7 uses five bricks. A min-heap of ladder-covered climbs can eject the smallest climb when ladder capacity is exceeded.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Distance search is O(n log R) after sorting. Climb allocation is O(n log L) with a bounded heap for L ladders. Diagonal construction takes O(n) character choices under the square binary-string input promise.</p>
+		<h3>Before you finish</h3>
+		<p>Prove feasibility monotonicity, the ladder exchange, and why the constructed string differs from every listed string at a known position.</p>
+	</article>
+}
+
+templ lessonDay83() {
+	<article class="leetgrinder-lesson">
+		<h2>Mixed ranges and strategic state</h2>
+		<p>Today&#x27;s tasks mix local ordering with decisions whose consequences depend on future play. Selecting k sorted scores minimizes a range by checking contiguous windows. Covering a target interval can greedily extend the farthest available endpoint. A game with a changing move limit needs that limit in its DP state.</p>
+		<h3>Worked example</h3>
+		<p>For sorted scores [2,4,9,11] and k=2, adjacent ranges are 2,5,2. A noncontiguous choice cannot improve the range. In a game where the next move limit depends on the previous take, two identical suffixes with different limits are different states.</p>
+		<h3>Complexity and cautions</h3>
+		<p>Sorted range scanning is O(n log n) including sorting. Interval covering is usually O(n log n). Game DP cost depends on the number of (position,limit) states and the choices tried in each state.</p>
+		<h3>Before you finish</h3>
+		<p>Write a greedy proof for the range tasks and a counterexample to greedily taking the most available game items.</p>
+	</article>
+}
+
+templ lessonDay84() {
+	<article class="leetgrinder-lesson">
+		<h2>Mock interview and invariant review</h2>
+		<p>Treat the final three problems as separate interview attempts. Spend the first minutes clarifying operations and constraints, then state a baseline and one invariant before coding. An LRU cache combines constant-time lookup with a doubly linked recency list. Bipartite checking colors components. Adjacent duplicate removal can compress runs on a stack.</p>
+		<h3>Worked example</h3>
+		<p>For cache capacity two, access A, then B, then A. Inserting C should evict B because the second access moved A to the most recent position. For a run-removal threshold of three, &quot;abbba&quot; becomes &quot;aa&quot; after removing the b run.</p>
+		<h3>Complexity and cautions</h3>
+		<p>An LRU operation is expected O(1) with a map and linked list. Bipartite traversal is O(V+E); compressed run removal is O(n). Cache updates must synchronize both structures, and graph coloring must cover disconnected components.</p>
+		<h3>Before you finish</h3>
+		<p>After each 25-minute attempt, record what was independent and where help was needed. Use the final 15 minutes to test one failure-prone invariant from each solution.</p>
+	</article>
+}
