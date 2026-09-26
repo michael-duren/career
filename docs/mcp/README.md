@@ -87,9 +87,10 @@ Write tools (need **Allow read and edit**):
   line breaks). Titles need letters or digits. A name that `list_connection_companies`
   would report as tracked (linked connections, or a title/slug match ignoring case and
   legal suffixes) is skipped with `created: false` and the stored title and slug, so
-  retries are safe. New companies are linked to unlinked connections whose employer best
-  matches them among all companies; last-talked dates are not changed. The batch is all
-  or nothing if any company fails validation.
+  retries are safe. Like a company created on the website, new companies pick up unlinked
+  connections whose employer best matches them among all companies; the total is returned
+  as `linkedConnections` and last-talked dates are not changed. The batch is all or
+  nothing if any company fails validation.
 
 Saves use the website's validation. There is no delete tool. Claude clients ask before
 running write tools unless you allow them permanently. Request

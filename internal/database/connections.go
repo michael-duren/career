@@ -205,10 +205,10 @@ func adoptWithoutURL(withoutURL map[string][]*existingConnection, name, company,
 	return c
 }
 
-// companyMatcher matches LinkedIn company names against every tracked company.
-func companyMatcher(ctx context.Context, tx *sql.Tx) (*linkedin.Matcher, error) {
+// trackedCompanies returns every tracked company's slug and title.
+func trackedCompanies(ctx context.Context, q queryer) ([]linkedin.Company, error) {
 	companies := []linkedin.Company{}
-	rows, err := tx.QueryContext(ctx, "SELECT slug,title FROM companies")
+	rows, err := q.QueryContext(ctx, "SELECT slug,title FROM companies")
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +220,13 @@ func companyMatcher(ctx context.Context, tx *sql.Tx) (*linkedin.Matcher, error) 
 		}
 		companies = append(companies, c)
 	}
-	return linkedin.NewMatcher(companies), rows.Err()
+	return companies, rows.Err()
+}
+
+// companyMatcher matches LinkedIn company names against every tracked company.
+func companyMatcher(ctx context.Context, q queryer) (*linkedin.Matcher, error) {
+	companies, err := trackedCompanies(ctx, q)
+	return linkedin.NewMatcher(companies), err
 }
 
 // linkUnlinkedConnections links unlinked connections to whichever of the given
@@ -240,7 +246,9 @@ func linkUnlinkedConnections(ctx context.Context, tx *sql.Tx, slugs []string) (i
 	}
 	targets := map[string]bool{}
 	for _, slug := range slugs {
-		targets[slug] = true
+		if slug != "" {
+			targets[slug] = true
+		}
 	}
 	var ids, names, matches []string
 	rows, err := tx.QueryContext(ctx, "SELECT id::text,company_name FROM connections WHERE company_slug IS NULL AND company_name<>''")
@@ -255,7 +263,7 @@ func linkUnlinkedConnections(ctx context.Context, tx *sql.Tx, slugs []string) (i
 		}
 		// Use the best match across all companies so a more specific tracked
 		// company keeps its people.
-		if match := matcher.Match(name); targets[match] {
+		if match := matcher.Match(name); match != "" && targets[match] {
 			ids, names, matches = append(ids, id), append(names, name), append(matches, match)
 		}
 	}

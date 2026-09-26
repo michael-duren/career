@@ -515,7 +515,7 @@ func TestMCPConnectionCompanies(t *testing.T) {
 		t.Fatal(added)
 	}
 	first := results[0].(map[string]any)
-	if first["created"] != true || first["linkedConnections"] != float64(2) || results[1].(map[string]any)["slug"] != first["slug"] {
+	if first["created"] != true || added["linkedConnections"] != float64(2) || results[1].(map[string]any)["slug"] != first["slug"] {
 		t.Fatal(results)
 	}
 	saved, err := db.Detail(ctx, "company", first["slug"].(string))
