@@ -14,21 +14,29 @@ import (
 
 var leetgrinderSlug = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
 
-const leetgrinderAttemptColumns = "id,problem_slug,outcome,minutes,assisted,notes,created_at,revision"
+const leetgrinderAttemptColumns = "id,problem_slug,outcome,minutes,assisted,notes,created_at,revision,source,is_review"
 
 func scanLeetgrinderAttempt(row interface{ Scan(...any) error }) (leetgrinder.Attempt, error) {
 	var a leetgrinder.Attempt
-	err := row.Scan(&a.ID, &a.ProblemSlug, &a.Outcome, &a.Minutes, &a.Assisted, &a.Notes, &a.CreatedAt, &a.Revision)
+	err := row.Scan(&a.ID, &a.ProblemSlug, &a.Outcome, &a.Minutes, &a.Assisted, &a.Notes, &a.CreatedAt, &a.Revision, &a.Source, &a.IsReview)
 	return a, err
 }
 
 func (s *Store) LeetgrinderState(ctx context.Context) (leetgrinder.State, error) {
-	state := leetgrinder.State{Attempts: []leetgrinder.Attempt{}, CompletedDays: []int{}}
 	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true})
+	if err != nil {
+		return leetgrinder.State{Attempts: []leetgrinder.Attempt{}, CompletedDays: []int{}}, err
+	}
+	defer tx.Rollback()
+	state, err := loadLeetgrinderState(ctx, tx)
 	if err != nil {
 		return state, err
 	}
-	defer tx.Rollback()
+	return state, tx.Commit()
+}
+
+func loadLeetgrinderState(ctx context.Context, tx queryer) (leetgrinder.State, error) {
+	state := leetgrinder.State{Attempts: []leetgrinder.Attempt{}, CompletedDays: []int{}}
 	rows, err := tx.QueryContext(ctx, "SELECT "+leetgrinderAttemptColumns+" FROM leetgrinder_attempts ORDER BY created_at DESC,id")
 	if err != nil {
 		return state, err
@@ -50,20 +58,15 @@ func (s *Store) LeetgrinderState(ctx context.Context) (leetgrinder.State, error)
 	if err != nil {
 		return state, err
 	}
+	defer rows.Close()
 	for rows.Next() {
 		var day int
 		if err = rows.Scan(&day); err != nil {
-			rows.Close()
 			return state, err
 		}
 		state.CompletedDays = append(state.CompletedDays, day)
 	}
-	err = rows.Err()
-	rows.Close()
-	if err != nil {
-		return state, err
-	}
-	return state, tx.Commit()
+	return state, rows.Err()
 }
 
 func (s *Store) SaveLeetgrinderAttempt(ctx context.Context, a leetgrinder.Attempt, expectedRevision string) (leetgrinder.Attempt, error) {
@@ -74,6 +77,12 @@ func (s *Store) SaveLeetgrinderAttempt(ctx context.Context, a leetgrinder.Attemp
 	switch a.Outcome {
 	case "solved", "struggled", "unfinished":
 	default:
+		return leetgrinder.Attempt{}, ErrInvalid
+	}
+	if a.Source == "" {
+		a.Source = "web"
+	}
+	if a.Source != "web" && a.Source != "extension" {
 		return leetgrinder.Attempt{}, ErrInvalid
 	}
 	a.ID = id.String()
@@ -88,7 +97,7 @@ func (s *Store) SaveLeetgrinderAttempt(ctx context.Context, a leetgrinder.Attemp
 	}
 	defer tx.Rollback()
 	if expectedRevision == "" {
-		_, err = tx.ExecContext(ctx, `INSERT INTO leetgrinder_attempts(id,problem_slug,outcome,minutes,assisted,notes,revision) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(id) DO NOTHING`, a.ID, a.ProblemSlug, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString())
+		_, err = tx.ExecContext(ctx, `INSERT INTO leetgrinder_attempts(id,problem_slug,outcome,minutes,assisted,notes,revision,source,is_review) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT(id) DO NOTHING`, a.ID, a.ProblemSlug, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString(), a.Source, a.IsReview)
 		if err != nil {
 			return leetgrinder.Attempt{}, err
 		}
@@ -96,7 +105,7 @@ func (s *Store) SaveLeetgrinderAttempt(ctx context.Context, a leetgrinder.Attemp
 		if readErr != nil {
 			return leetgrinder.Attempt{}, readErr
 		}
-		if saved.ProblemSlug != a.ProblemSlug || saved.Outcome != a.Outcome || saved.Minutes != a.Minutes || saved.Assisted != a.Assisted || saved.Notes != a.Notes {
+		if saved.ProblemSlug != a.ProblemSlug || saved.Outcome != a.Outcome || saved.Minutes != a.Minutes || saved.Assisted != a.Assisted || saved.Notes != a.Notes || saved.Source != a.Source || saved.IsReview != a.IsReview {
 			return leetgrinder.Attempt{}, ErrConflict
 		}
 		return saved, tx.Commit()

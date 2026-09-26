@@ -1,6 +1,9 @@
 package config
 
 import (
+	"crypto/hkdf"
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"net/url"
 	"os"
@@ -17,6 +20,10 @@ type Config struct {
 	// OTelEndpoint is the OTLP gRPC endpoint; empty means export metrics to stdout.
 	OTelEndpoint, OTelServiceName string
 	OTelExportInterval            time.Duration
+	// LeetgrinderSecretKey encrypts the ntfy token. It is nil in production
+	// when LEETGRINDER_SECRET_KEY is unset; serve refuses to start if a token
+	// is already stored in that case.
+	LeetgrinderSecretKey []byte
 }
 
 func Load() (Config, error) {
@@ -93,8 +100,37 @@ func Load() (Config, error) {
 		return c, fmt.Errorf("PUBLIC_ORIGIN must be an absolute origin")
 	}
 	c.PublicOrigin = strings.TrimSuffix(c.PublicOrigin, "/")
+	if c.LeetgrinderSecretKey, err = leetgrinderSecretKey(os.Getenv("LEETGRINDER_SECRET_KEY"), c.JWTSecret, c.Production); err != nil {
+		return c, err
+	}
 	if c.Production && (len(c.JWTSecret) < 32 || strings.Contains(c.JWTSecret, "local-development") || strings.Contains(c.JWTSecret, "your-secure") || c.PasswordHash == "" || strings.Contains(c.PasswordHash, "YourHashed")) {
 		return c, fmt.Errorf("production requires a bcrypt AUTH_PASSWORD_HASH and a strong JWT_SECRET (32+ characters)")
 	}
 	return c, nil
+}
+
+// leetgrinderSecretKey decodes a base64 32-byte key. Development derives one
+// from JWT_SECRET so local runs need no extra setup.
+func leetgrinderSecretKey(encoded, jwtSecret string, production bool) ([]byte, error) {
+	if encoded == "" {
+		if production {
+			return nil, nil
+		}
+		return hkdf.Key(sha256.New, []byte(jwtSecret), nil, "career leetgrinder secret key", 32)
+	}
+	for _, enc := range []*base64.Encoding{base64.StdEncoding, base64.RawStdEncoding, base64.URLEncoding, base64.RawURLEncoding} {
+		if key, err := enc.DecodeString(encoded); err == nil && len(key) == 32 {
+			return key, nil
+		}
+	}
+	return nil, fmt.Errorf("LEETGRINDER_SECRET_KEY must be 32 bytes encoded as base64")
+}
+
+// RequireLeetgrinderSecret fails when there is no key but an encrypted ntfy
+// token is already stored, since that token could never be decrypted.
+func (c Config) RequireLeetgrinderSecret(tokenStored bool) error {
+	if len(c.LeetgrinderSecretKey) == 0 && tokenStored {
+		return fmt.Errorf("LEETGRINDER_SECRET_KEY is required because an encrypted ntfy token is stored")
+	}
+	return nil
 }
