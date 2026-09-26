@@ -88,5 +88,5 @@ type AgentContext = { goals: Goal[]; rules: string[] };
 export function AgentView() {
   const { data, error } = useJSON<AgentContext>('/api/agent-context');
   if (!data) return <State error={error} />;
-  return <section className="space-y-4" aria-label="Current timeline goals"><h2 className="text-xl font-semibold">Current timeline goals ({data.goals.length})</h2>{data.goals.length === 0 ? <p className="text-zinc-400">No goals saved yet.</p> : null}{data.goals.map(goal => <article key={goal.id} className="rounded-lg border border-zinc-700 p-4"><h3 className="font-semibold">{goal.title}</h3><p className="mt-1 text-sm text-zinc-400">{goal.startDate} → {goal.endDate} · {goal.steps.filter(step => step.done).length}/{goal.steps.length} substeps complete</p></article>)}</section>;
+  return <section className="space-y-4" aria-label="Current timeline goals"><h2 className="text-xl font-semibold">Current timeline goals ({data.goals.length})</h2>{data.goals.length === 0 ? <p className="text-zinc-400">No goals saved yet.</p> : null}{data.goals.map(goal => <article key={goal.id} className="rounded-lg border border-zinc-700 p-4"><h3 className="font-semibold">{goal.title}</h3><p className="mt-1 text-sm text-zinc-400">{goal.startDate} → {goal.endDate} · {goal.steps.filter(step => step.done).length}/{goal.steps.length} mini goals complete</p></article>)}</section>;
 }
