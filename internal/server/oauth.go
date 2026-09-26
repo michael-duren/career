@@ -31,6 +31,7 @@ import (
 
 const (
 	mcpScope        = "career:read"
+	mcpWriteScope   = "career:write"
 	accessTokenTTL  = time.Hour
 	refreshTokenTTL = 30 * 24 * time.Hour
 	codeTTL         = 5 * time.Minute
@@ -139,7 +140,7 @@ func (s *Server) registerOAuth(r interface {
 	metadata := auth.ProtectedResourceMetadataHandler(&oauthex.ProtectedResourceMetadata{
 		Resource:               s.mcpResource(),
 		AuthorizationServers:   []string{s.config.PublicOrigin},
-		ScopesSupported:        []string{mcpScope},
+		ScopesSupported:        []string{mcpScope, mcpWriteScope},
 		BearerMethodsSupported: []string{"header"},
 		ResourceName:           "Career Strategy",
 	})
@@ -160,7 +161,7 @@ func (s *Server) authorizationServerMetadata(w http.ResponseWriter, r *http.Requ
 		"authorization_endpoint":                         o + "/oauth/authorize",
 		"token_endpoint":                                 o + "/oauth/token",
 		"registration_endpoint":                          o + "/oauth/register",
-		"scopes_supported":                               []string{mcpScope},
+		"scopes_supported":                               []string{mcpScope, mcpWriteScope},
 		"response_types_supported":                       []string{"code"},
 		"grant_types_supported":                          []string{"authorization_code", "refresh_token"},
 		"code_challenge_methods_supported":               []string{"S256"},
@@ -315,7 +316,14 @@ func (s *Server) approve(w http.ResponseWriter, r *http.Request) {
 		authorizePage(w, 400, consentView{Error: "This approval expired. Start the connection again from your MCP client."})
 		return
 	}
-	if r.PostFormValue("decision") != "approve" {
+	// The owner picks the access level; the client's requested scope is not
+	// trusted to decide whether edits are allowed.
+	scope := mcpScope
+	switch r.PostFormValue("decision") {
+	case "read":
+	case "write":
+		scope += " " + mcpWriteScope
+	default:
 		s.redirectResult(w, r, req.RedirectURI, url.Values{"error": {"access_denied"}, "state": {req.State}})
 		return
 	}
@@ -323,7 +331,7 @@ func (s *Server) approve(w http.ResponseWriter, r *http.Request) {
 	if req.Explicit {
 		bound = req.RedirectURI
 	}
-	code := s.seal("code", grantClaims{JTI: newJTI(), Client: clientHash(req.ClientID), RedirectURI: bound, Challenge: req.Challenge, Scope: mcpScope, Audience: s.mcpResource(), Exp: time.Now().Add(codeTTL).Unix()})
+	code := s.seal("code", grantClaims{JTI: newJTI(), Client: clientHash(req.ClientID), RedirectURI: bound, Challenge: req.Challenge, Scope: scope, Audience: s.mcpResource(), Exp: time.Now().Add(codeTTL).Unix()})
 	s.redirectResult(w, r, req.RedirectURI, url.Values{"code": {code}, "state": {req.State}})
 }
 
@@ -420,16 +428,17 @@ var consentTemplate = template.Must(template.New("consent").Parse(`<!doctype htm
 body{font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;display:grid;place-items:center;min-height:100vh;margin:0;padding:16px;box-sizing:border-box}
 main{max-width:28rem;background:#1e293b;border-radius:12px;padding:24px}
 h1{font-size:1.25rem;margin-top:0}code{background:#0f172a;padding:2px 6px;border-radius:4px}
-.actions{display:flex;gap:12px;margin-top:20px}button{flex:1;padding:10px;border-radius:8px;border:0;font-size:1rem;cursor:pointer}
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}button{flex:1;padding:10px;border-radius:8px;border:0;font-size:1rem;cursor:pointer}
 .approve{background:#38bdf8;color:#0f172a;font-weight:600}.deny{background:#334155;color:#e2e8f0}
 </style></head><body><main>
 {{if .Error}}<h1>Cannot connect</h1><p>{{.Error}}</p>{{else}}
-<h1>Allow this application to read your career workspace?</h1>
+<h1>Connect this application to your career workspace?</h1>
 {{if .Client}}<p>It calls itself <strong>{{.Client}}</strong>. Names are self-reported; check where you return below.</p>{{end}}
-<p>It will be able to read your goals, work and personal journals, notes, pages, books, companies, and connections. It cannot change anything.</p>
+<p>It will be able to read your goals, work and personal journals, notes, pages, books, companies, and connections.</p>
+<p><strong>Read and edit</strong> also lets it create and change goals, companies, and notes. It cannot delete anything.</p>
 <p>After approval you return to <code>{{.Host}}</code>. Only allow it if you started this connection there.</p>
 <form method="post" action="/oauth/authorize"><input type="hidden" name="request" value="{{.Request}}">
-<div class="actions"><button class="deny" name="decision" value="deny">Deny</button><button class="approve" name="decision" value="approve">Allow</button></div>
+<div class="actions"><button class="deny" name="decision" value="deny">Deny</button><button class="approve" name="decision" value="read">Allow read only</button><button class="approve" name="decision" value="write">Allow read and edit</button></div>
 </form>{{end}}
 </main></body></html>`))
 
