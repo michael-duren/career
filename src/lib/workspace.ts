@@ -2,6 +2,7 @@ import type { RawBook } from './books';
 import type { RawCompany } from './companies';
 import { PLAN_START, weekNumberFor, type WeekEntry } from './progress.ts';
 
+export interface NoteTodo { id: string; title: string; done: boolean }
 export interface Note {
   id: string;
   title: string;
@@ -9,6 +10,8 @@ export interface Note {
   description: string;
   tags: string[];
   body: string;
+  /** Omitted by the API when a note has no todos. */
+  todos?: NoteTodo[];
   updatedAt?: string;
 }
 export interface JournalWeek extends WeekEntry { updatedAt?: string }

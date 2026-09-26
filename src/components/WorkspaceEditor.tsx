@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { RunningClips } from './RunningRecorder';
 import MarkdownPreview from './MarkdownPreview';
-import type { JournalWeek, WorkspaceEntry as Entry, EntryKind } from '../lib/workspace';
+import type { JournalWeek, WorkspaceEntry as Entry, EntryKind, NoteTodo } from '../lib/workspace';
 import { getEntryId as entryId, getEntryTitle as entryTitle } from '../lib/workspace';
 import EntryFields, { EntryChecklist } from './EntryFields';
+import { NoteTodos, TagInput } from './NoteInputs';
 import { appendDailyEntry, localDate, newWeek } from '../lib/workspace';
 
 const field = 'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
 const button = 'rounded-lg border border-zinc-700 px-3 py-2 text-sm hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed';
 const primary = `${button} bg-blue-600 border-blue-500 text-white hover:bg-blue-500`;
 const labels = { run: 'run', personal: 'personal journal entry', note: 'note', week: 'week', book: 'book or course', company: 'company', document: 'page' };
-const parseTags = (text: string) => [...new Set(text.split(',').map(t => t.trim()).filter(Boolean))];
 
 type EntryResult = { entry: Entry; revision: string };
 async function request(kind: EntryKind, method = 'GET', input?: unknown, id?: string): Promise<any> {
@@ -46,13 +46,13 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
   const listFirst = kind === 'note' || kind === 'week' || kind === 'personal';
   const openedInitialEntry = useRef(false);
   const selectionRequest = useRef(0);
+  const todoQueue = useRef<{ running: boolean; pending: NoteTodo[] | null; waiters: ((ok: boolean) => void)[] }>({ running: false, pending: null, waiters: [] });
   const backButton = useRef<HTMLButtonElement>(null);
   const listPosition = useRef<{ scroll: number; focus: HTMLElement | null } | null>(null);
   const recovered = useRef(false);
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const [entry, setEntry] = useState<Entry | null>(null);
   const [baseRevision, setBaseRevision] = useState<string | null>(null);
-  const [tagsText, setTagsText] = useState('');
   const [query, setQuery] = useState('');
   const [selectedTopics, setSelectedTopics] = useState<string[] | null>(null);
   const initializedTopics = useRef(false);
@@ -69,7 +69,7 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
     try {
       // List responses are summaries; restore the complete saved body and revision.
       const detail = saved ? await request(kind, 'GET', undefined, entryId(saved)) as EntryResult : null;
-      setEntry(detail?.entry ?? null); setTagsText(detail?.entry.tags.join(', ') ?? '');
+      setEntry(detail?.entry ?? null);
       setBaseRevision(detail?.revision ?? null);
       setEditing(false); setDirty(false); setPreview(false); setStatus('Cancelled.');
       try { localStorage.removeItem(draftKey(kind)); } catch { /* Optional storage. */ }
@@ -92,7 +92,7 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
         const selection = ++selectionRequest.current;
         const found = await request(kind, 'GET', undefined, requested).catch(() => null) as EntryResult | null;
         if (selection !== selectionRequest.current || recovered.current) return;
-        if (found) { setEntry(found.entry); setTagsText(found.entry.tags.join(', ')); setBaseRevision(found.revision); }
+        if (found) { setEntry(found.entry); setBaseRevision(found.revision); }
         else setError('Entry not found. Choose another entry or create a new one.');
       }
     } catch (e) { setError((e as Error).message); }
@@ -110,7 +110,7 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
         const draft = JSON.parse(saved);
         if (draft.entry && typeof draft.entry.body === 'string' && Array.isArray(draft.entry.tags)) {
           recovered.current = true;
-          setEntry(draft.entry); setBaseRevision(draft.revision); setTagsText(draft.entry.tags.join(', '));
+          setEntry(draft.entry); setBaseRevision(draft.revision);
           setEditing(true); setDirty(true); setStatus('Recovered your unsaved draft.');
         }
       }
@@ -131,9 +131,9 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
     const selection = ++selectionRequest.current;
     try { localStorage.removeItem(draftKey(kind)); } catch { /* Storage is optional. */ }
     if (edit && !entries?.some(item => entryId(item) === entryId(next))) {
-      setEntry(next); setBaseRevision(null); setTagsText(next.tags.join(', '));
+      setEntry(next); setBaseRevision(null);
     } else {
-      void request(kind, 'GET', undefined, entryId(next)).then((detail: EntryResult) => { if (selection !== selectionRequest.current) return; setEntry(detail.entry); setBaseRevision(detail.revision); setTagsText(detail.entry.tags.join(', ')); }).catch(e => setError(e instanceof Error ? e.message : 'Entry could not be loaded.'));
+      void request(kind, 'GET', undefined, entryId(next)).then((detail: EntryResult) => { if (selection !== selectionRequest.current) return; setEntry(detail.entry); setBaseRevision(detail.revision); }).catch(e => setError(e instanceof Error ? e.message : 'Entry could not be loaded.'));
     }
     setEditing(edit); setDirty(false); setPreview(false); setStatus(''); setError('');
   }
@@ -182,6 +182,47 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
   }
+  /**
+   * Todo changes while reading save at once without disabling the todo controls,
+   * so keyboard focus survives. Changes made mid-save are queued and sent with
+   * the revision the previous save returned.
+   */
+  async function saveTodos(todos: NoteTodo[]): Promise<boolean> {
+    if (!entry || !('topic' in entry)) return false;
+    setEntry(current => current ? { ...current, todos } as Entry : current);
+    const queue = todoQueue.current;
+    queue.pending = todos;
+    // Queued callers learn the outcome of the save that carries their change.
+    if (queue.running) return new Promise(resolve => queue.waiters.push(resolve));
+    queue.running = true; setBusy(true); setError('');
+    let saved: Entry = entry;
+    let revision = baseRevision;
+    try {
+      while (queue.pending) {
+        const next = queue.pending; queue.pending = null;
+        const result = await request(kind, 'POST', { entry: { ...saved, todos: next }, revision }) as EntryResult;
+        saved = result.entry; revision = result.revision;
+        setBaseRevision(revision);
+      }
+      setEntry(saved);
+      setEntries(current => [...(current ?? []).filter(item => entryId(item) !== entryId(saved)), saved]);
+      setStatus('Saved.');
+      window.dispatchEvent(new Event('workspace-saved'));
+      queue.waiters.splice(0).forEach(resolve => resolve(true));
+      return true;
+    } catch (e) {
+      queue.pending = null;
+      setError((e as Error).message);
+      // Reload the saved note so a conflict does not leave a stale revision behind.
+      const detail = await request(kind, 'GET', undefined, entryId(entry)).catch(() => null) as EntryResult | null;
+      if (detail) { setEntry(detail.entry); setBaseRevision(detail.revision); }
+      queue.waiters.splice(0).forEach(resolve => resolve(false));
+      return false;
+    } finally {
+      // Changes made during the failure reload were reverted with it.
+      queue.pending = null; queue.running = false; setBusy(false);
+    }
+  }
   async function remove() {
     if (!entry || !window.confirm(`Delete ${entryTitle(entry)}? This cannot be undone.`)) return;
     setBusy(true); setError('');
@@ -197,7 +238,9 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
     finally { setBusy(false); }
   }
   const loadedEntries = entries ?? [];
-  const topics = [...new Set(loadedEntries.flatMap(note => 'topic' in note ? [note.topic] : []))].sort();
+  const topicCounts = loadedEntries.reduce((counts, note) => 'topic' in note ? counts.set(note.topic, (counts.get(note.topic) ?? 0) + 1) : counts, new Map<string, number>());
+  const topics = [...topicCounts.keys()].sort((a, b) => a.localeCompare(b));
+  const tagOptions = [...new Set(loadedEntries.flatMap(item => item.tags))].sort((a, b) => a.localeCompare(b));
   const filtered = [...loadedEntries].filter(e => kind !== 'note' || selectedTopics === null || ('topic' in e && selectedTopics.includes(e.topic))).filter(e => `${entryTitle(e)} ${e.tags.join(' ')} ${'topic' in e ? e.topic : ''}`.toLowerCase().includes(query.toLowerCase()))
     .sort((a, b) => kind === 'run' ? ('startedAt' in b ? b.startedAt : '').localeCompare('startedAt' in a ? a.startedAt : '') : kind === 'personal' ? (('date' in b ? b.date : '') || '').localeCompare(('date' in a ? a.date : '') || '') || (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') : kind === 'week' ? (b as JournalWeek).dates.localeCompare((a as JournalWeek).dates) : (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') || entryTitle(a).localeCompare(entryTitle(b)));
 
@@ -234,16 +277,18 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
     {kind === 'note' && entries && <fieldset className="space-y-2">
       <legend className="mb-2 text-sm text-zinc-400">Topics</legend>
       <div className="flex flex-wrap gap-2">
-        <button type="button" className="rounded-full border border-zinc-600 px-4 py-2 text-sm hover:bg-zinc-800 focus-visible:outline-2 focus-visible:outline-blue-400" onClick={() => setSelectedTopics(null)}>Select all</button>
+        <button type="button" className="rounded-full border border-zinc-600 px-4 py-2 text-sm hover:bg-zinc-800 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-blue-400" disabled={selectedTopics === null} onClick={() => setSelectedTopics(null)}>Select all</button>
+        <button type="button" className="rounded-full border border-zinc-600 px-4 py-2 text-sm hover:bg-zinc-800 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-blue-400" disabled={selectedTopics?.length === 0} onClick={() => setSelectedTopics([])}>Clear all</button>
+        <span aria-hidden="true" className="w-px self-stretch bg-zinc-700" />
         {topics.map(name => {
           const selected = selectedTopics === null || selectedTopics.includes(name);
           return <button type="button" key={name} aria-pressed={selected} className={`rounded-full border px-4 py-2 text-sm focus-visible:outline-2 focus-visible:outline-blue-400 ${selected ? 'border-blue-500 bg-blue-600/25 text-blue-200 hover:bg-blue-600/40' : 'border-zinc-700 text-zinc-400 hover:bg-zinc-800'}`} onClick={() => setSelectedTopics(current => {
             const active = current ?? topics;
             return active.includes(name) ? active.filter(topic => topic !== name) : [...active, name];
-          })}>{name}</button>;
+          })}>{name} <span className="text-xs opacity-70">{topicCounts.get(name)}</span></button>;
         })}
       </div>
-      <p className="text-xs text-zinc-400">{filtered.length} of {loadedEntries.length} notes shown · Toggle topics to include or exclude them.</p>
+      <p className="text-xs text-zinc-400">{filtered.length} of {loadedEntries.length} notes shown · {selectedTopics?.length === 0 ? 'No topics selected. Pick topics or use Select all.' : 'Toggle topics to include or exclude them.'}</p>
     </fieldset>}
     </div>
     <div className={listFirst ? "space-y-5" : "grid gap-5 md:grid-cols-[220px_minmax(0,1fr)]"}>
@@ -257,9 +302,10 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
       {entry && <div className="order-first min-w-0 rounded-xl md:order-last border border-zinc-800 bg-zinc-900/40 p-4 sm:p-5">
         {editing ? <form onSubmit={e => { e.preventDefault(); void save(); }} className="space-y-4">
           <fieldset disabled={busy} className="space-y-4 disabled:opacity-60">
-            <EntryFields entry={entry} change={change} />
+            <EntryFields entry={entry} change={change} topics={topics} />
             {(kind === 'book' || kind === 'company') && <EntryChecklist body={entry.body} onChange={body => change({ body })} />}
-            <label className="block text-sm">Tags <span className="text-zinc-400">(comma separated)</span><input className={`${field} mt-1`} value={tagsText} onChange={e => { setTagsText(e.target.value); change({ tags: parseTags(e.target.value) }); }} /></label>
+            <TagInput value={entry.tags} options={tagOptions} onChange={tags => change({ tags })} />
+            {'topic' in entry && <NoteTodos todos={entry.todos ?? []} onChange={todos => change({ todos })} />}
             <div className="flex gap-2"><button type="button" className={button} aria-pressed={!preview} onClick={() => setPreview(false)}>Write</button><button type="button" className={button} aria-pressed={preview} onClick={() => setPreview(true)}>Preview</button></div>
             {preview ? <div className="min-h-72 rounded-lg bg-zinc-950 p-4"><Preview body={entry.body} /></div> : <label className="block text-sm">Markdown<textarea className={`${field} mt-1 min-h-80 font-mono text-sm`} maxLength={100000} value={entry.body} onChange={e => change({ body: e.target.value })} placeholder="Write your thoughts. Markdown, lists, links, and code blocks are welcome." /></label>}
             <button className={primary} type="submit">{busy ? 'Saving…' : 'Save'}</button> <button className={button} type="button" onClick={cancel}>Cancel</button>
@@ -268,6 +314,7 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
           <div className="flex flex-wrap items-start justify-between gap-3"><h2 className="text-xl font-semibold">{entryTitle(entry)}</h2><div className="flex gap-2"><button type="button" className={button} disabled={busy} onClick={() => setEditing(true)}>Edit</button>{!(kind === 'document' && ['index', '2026/career-study-plan'].includes(entryId(entry))) && <button type="button" className={`${button} text-red-300`} disabled={busy} onClick={() => void remove()}>Delete</button>}</div></div>
           {kind === 'document' && <a className="inline-block text-sm text-blue-400 hover:underline" href={entryId(entry) === 'index' ? '/' : `/documents/${entryId(entry).split('/').map(encodeURIComponent).join('/')}`}>Open page →</a>}
           <div className="flex flex-wrap gap-2">{entry.tags.map(tag => <span key={tag} className="rounded-full bg-zinc-800 px-2 py-1 text-xs text-zinc-300">{tag}</span>)}</div>
+          {'topic' in entry && <NoteTodos todos={entry.todos ?? []} onChange={saveTodos} />}
           {'status' in entry && <p className="text-sm text-zinc-400">{entry.status.replaceAll('_', ' ')} · {entry.priority} priority</p>}
           {'date' in entry && <p className="text-sm text-zinc-400">{entry.date || 'Undated background'}</p>}
           <Preview body={entry.body} />

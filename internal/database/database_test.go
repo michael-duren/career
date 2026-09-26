@@ -403,3 +403,44 @@ func TestTypeScriptProjectionParity(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+func TestNoteTodos(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	todo := func(title string, done bool) any {
+		return map[string]any{"id": uuid.NewString(), "title": title, "done": done}
+	}
+	note := Entity{"id": "todo-note", "title": "Todos", "topic": "General", "description": "", "tags": []any{}, "body": "", "todos": []any{todo(" first ", false), todo("second", true)}}
+	e, err := PrepareSave("note", note)
+	if err != nil {
+		t.Fatal(err)
+	}
+	saved, err := s.Save(ctx, "note", e, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := s.Detail(ctx, "note", "todo-note")
+	if err != nil {
+		t.Fatal(err)
+	}
+	todos, _ := got.Entry["todos"].([]any)
+	if len(todos) != 2 || todos[0].(map[string]any)["title"] != "first" || todos[1].(map[string]any)["done"] != true {
+		t.Fatalf("todos not persisted in order: %+v", got.Entry["todos"])
+	}
+	delete(e, "todos")
+	if _, err = s.Save(ctx, "note", e, &saved.Revision); err != nil {
+		t.Fatal(err)
+	}
+	if got, err = s.Detail(ctx, "note", "todo-note"); err != nil || got.Entry["todos"] != nil {
+		t.Fatalf("absent todos should clear and be omitted: %+v %v", got.Entry, err)
+	}
+	for _, bad := range []any{
+		[]any{map[string]any{"id": uuid.NewString(), "title": " ", "done": false}},
+		[]any{map[string]any{"id": uuid.NewString(), "title": "x"}},
+		[]any{map[string]any{"id": "nope", "title": "x", "done": false}},
+	} {
+		note["todos"] = bad
+		if _, err := PrepareSave("note", note); err == nil {
+			t.Fatalf("invalid todos accepted: %+v", bad)
+		}
+	}
+}
