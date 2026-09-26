@@ -11,7 +11,7 @@ import { THOUGHT_PLACEHOLDER, isAutoTitle, thoughtDate, thoughtExcerpt, thoughtT
 import { AudioLines, CalendarPlus, Clock, ListChecks, PencilLine, Trash2 } from 'lucide-react';
 import { entryTone, tagChipClass } from '../lib/tag-colors';
 import { noteDate, noteStats } from '../lib/note-card';
-import { queuedClips, removeClip, takesForThought, type QueuedClip } from '../lib/running-queue';
+import { queuedClips, removeClip, syncSettled, takesForThought, type QueuedClip } from '../lib/running-queue';
 
 const field = 'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
 const button = 'rounded-lg border border-zinc-700 px-3 py-2 text-sm hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed';
@@ -19,13 +19,17 @@ const primary = `${button} bg-blue-600 border-blue-500 text-white hover:bg-blue-
 const labels = { run: 'audio thought', personal: 'personal journal entry', note: 'note', week: 'week', book: 'book or course', company: 'company', document: 'page' };
 
 type EntryResult = { entry: Entry; revision: string };
+function signInAgain(): never {
+  location.assign(`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`);
+  throw new Error('Your session expired. Sign in again.');
+}
 async function request(kind: EntryKind, method = 'GET', input?: unknown, id?: string): Promise<any> {
   if (method === 'GET' && !id) {
     const entries: EntryResult[] = [];
     let offset = 0;
     do {
       const response = await fetch(`/api/entries/${kind}?limit=100&offset=${offset}`, { cache: 'no-store' });
-      if (response.status === 401) { location.assign(`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`); throw new Error('Your session expired. Sign in again.'); }
+      if (response.status === 401) signInAgain();
       const page = await response.json();
       if (!response.ok) throw new Error(page.error || 'Request failed. Please retry.');
       entries.push(...page.entries); offset = page.nextOffset ?? -1;
@@ -36,7 +40,7 @@ async function request(kind: EntryKind, method = 'GET', input?: unknown, id?: st
   const response = await fetch(`/api/entries/${kind}${method === 'GET' ? query : ''}`, method === 'GET' ? { cache: 'no-store' } : {
     method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input),
   });
-  if (response.status === 401) { location.assign(`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`); throw new Error('Your session expired. Sign in again.'); }
+  if (response.status === 401) signInAgain();
   const result = await response.json();
   if (!response.ok) throw Object.assign(new Error(result.error || 'Request failed. Please retry.'), { status: response.status });
   return result;
@@ -322,9 +326,14 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
   }
   /** Queued takes that would upload into this thought, found with the server's grouping window. */
   async function unsentTakes(noteId: string): Promise<QueuedClip[]> {
+    // Let an upload in progress finish so its take is counted as stored, not queued.
+    await syncSettled();
     const queued = await queuedClips().catch(() => [] as QueuedClip[]);
     if (!queued.length) return [];
     const response = await fetch(`/api/running/${encodeURIComponent(noteId)}/status`, { cache: 'no-store' });
+    if (response.status === 401) signInAgain();
+    // Without stored clips, only takes addressed to the thought would join it.
+    if (response.status === 404) return takesForThought(queued, noteId, [], 0);
     const result = await response.json().catch(() => ({}));
     if (!response.ok || typeof result.groupWindowMs !== 'number') throw new Error(result.error || 'Could not check this thought for unsent takes. Please retry.');
     return takesForThought(queued, noteId, (result.clips ?? []).map((clip: { recordedAt: string }) => clip.recordedAt), result.groupWindowMs);

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { indexedDB } from 'fake-indexeddb';
-import { enqueueClip, queuedClips, syncClips, takesForThought, type QueuedClip } from '../src/lib/running-queue.ts';
+import { enqueueClip, queuedClips, removeClip, syncClips, syncSettled, takesForThought, type QueuedClip } from '../src/lib/running-queue.ts';
 import { agentContext, journalMarkdown } from '../src/lib/agent-context.ts';
 import { careerEntries } from '../src/lib/mcp-server.ts';
 import { searchEntries } from '../src/lib/search.ts';
@@ -49,6 +49,31 @@ test('deleting a thought finds unsent takes the server would group into it', () 
   const ids = (clips: QueuedClip[]) => clips.map(c => c.clientId).sort();
   assert.deepEqual(ids(takesForThought(queued, 'run-one', ['2026-09-19T10:00:00Z', '2026-09-19T11:30:00Z'], window)), ['addressed', 'edge', 'near']);
   assert.deepEqual(ids(takesForThought(queued, 'run-one', [], window)), ['addressed'], 'a typed thought only owns addressed takes');
+  const chained = [take('a', '2026-09-19T11:20:00Z'), take('b', '2026-09-19T12:30:00Z'), take('c', '2026-09-19T14:01:00Z')];
+  assert.deepEqual(ids(takesForThought(chained, 'run-one', ['2026-09-19T10:00:00Z'], window)), ['a', 'b'], 'takes chain through earlier backlog takes, like server grouping');
+});
+
+test('a take discarded while a sync is running is not uploaded', async () => {
+  Object.defineProperty(globalThis, 'indexedDB', { value: indexedDB, configurable: true });
+  Object.defineProperty(globalThis, 'window', { value: new EventTarget(), configurable: true });
+  const original = globalThis.fetch;
+  try {
+    for (const clip of await queuedClips()) await removeClip(clip.clientId);
+    await enqueueClip({ clientId: 'kept', recordedAt: '2026-09-19T10:00:00Z', durationMs: 1000, audio: new Blob(['a'], { type: 'audio/webm' }) });
+    await enqueueClip({ clientId: 'discarded', recordedAt: '2026-09-19T10:05:00Z', durationMs: 1000, audio: new Blob(['a'], { type: 'audio/webm' }) });
+    const uploaded: string[] = [];
+    globalThis.fetch = async (_url, init) => {
+      const id = String((init?.body as FormData).get('clientId'));
+      uploaded.push(id);
+      // The thought is deleted while the first take uploads.
+      await removeClip('discarded');
+      return new Response(JSON.stringify({ clipId: id, noteId: 'run-one' }), { status: 200 });
+    };
+    await syncClips(() => {});
+    await syncSettled();
+    assert.deepEqual(uploaded, ['kept']);
+    assert.equal((await queuedClips()).length, 0);
+  } finally { globalThis.fetch = original; }
 });
 
 test('running notes are searchable and explicitly opt in to agent and MCP context', () => {
