@@ -276,6 +276,15 @@ func Validate(kind string, e Entity) error {
 			}
 		}
 	}
+	if kind == "note" {
+		// Older clients and archives have no todos; absence means none.
+		known["todos"] = true
+		if v, exists := e["todos"]; exists {
+			if err := validateChildren("todos", v, 200); err != nil {
+				return err
+			}
+		}
+	}
 	if kind == "goal" {
 		if !allowed(e["status"].(string), "planned|active|done|dropped") {
 			return fmt.Errorf("invalid goal status")
@@ -348,10 +357,11 @@ func validateChildren(kind string, v any, max int) error {
 		case "notes":
 			spec["body"] = 20000
 			spec["createdAt"] = 100
-		case "steps":
+		case "steps", "todos":
 			spec["title"] = 500
 		}
-		if len(o) != len(spec)+map[bool]int{true: 1, false: 0}[kind == "steps"] {
+		hasDone := allowed(kind, "steps|todos")
+		if len(o) != len(spec)+map[bool]int{true: 1, false: 0}[hasDone] {
 			return fmt.Errorf("unsupported child fields")
 		}
 		for k, max := range spec {
@@ -377,9 +387,9 @@ func validateChildren(kind string, v any, max int) error {
 				}
 			}
 		}
-		if kind == "steps" {
+		if hasDone {
 			if _, ok := o["done"].(bool); !ok {
-				return fmt.Errorf("invalid step done")
+				return fmt.Errorf("invalid %s done", kind)
 			}
 		}
 	}
@@ -462,6 +472,9 @@ func NormalizeForSave(kind string, input Entity) Entity {
 	if kind == "goal" {
 		children["notes"] = []string{"body"}
 		children["steps"] = []string{"title"}
+	}
+	if kind == "note" {
+		children["todos"] = []string{"title"}
 	}
 	for key, trim := range children {
 		if items, ok := e[key].([]any); ok {
