@@ -1,0 +1,115 @@
+package leetgrinder
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"strings"
+	"testing"
+)
+
+func TestCurriculumAssignments(t *testing.T) {
+	weeks := Curriculum()
+	if len(weeks) != 12 {
+		t.Fatalf("weeks = %d, want 12", len(weeks))
+	}
+	seen := map[string]bool{}
+	ids := map[int]bool{}
+	dayNumber := 0
+	for wi, week := range weeks {
+		if week.Number != wi+1 || len(week.Days) != 7 {
+			t.Fatalf("invalid week %#v", week)
+		}
+		optional := 0
+		for _, day := range week.Days {
+			dayNumber++
+			if day.Number != dayNumber || len(day.Core) != 3 {
+				t.Fatalf("invalid day %d", day.Number)
+			}
+			if day.Title == "" || day.Lesson == "" || len(day.Readings) == 0 {
+				t.Fatalf("day %d lacks instruction", day.Number)
+			}
+			minutes := 0
+			for _, r := range day.Readings {
+				if !strings.HasPrefix(r.URL, "https://") || r.Title == "" || r.Guidance == "" || r.Minutes <= 0 {
+					t.Fatalf("day %d invalid reading: %#v", day.Number, r)
+				}
+				minutes += r.Minutes
+			}
+			if minutes > 30 {
+				t.Fatalf("day %d reading exceeds budget: %d", day.Number, minutes)
+			}
+			optional += len(day.Optional)
+			for _, p := range append(append([]Problem{}, day.Core...), day.Optional...) {
+				if p.ID <= 0 || p.Slug == "" || p.Title == "" || seen[p.Slug] || ids[p.ID] {
+					t.Fatalf("invalid or duplicate problem %#v", p)
+				}
+				if p.Difficulty != "Easy" && p.Difficulty != "Medium" && p.Difficulty != "Hard" {
+					t.Fatalf("invalid difficulty %#v", p)
+				}
+				seen[p.Slug], ids[p.ID] = true, true
+				got, ok := FindProblem(p.Slug)
+				if !ok || got != p {
+					t.Fatalf("lookup failed: %#v", p)
+				}
+			}
+			got, ok := FindDay(day.Number)
+			if !ok || got.Title != day.Title {
+				t.Fatalf("day lookup failed: %d", day.Number)
+			}
+		}
+		if optional != 4 {
+			t.Fatalf("week %d optional = %d, want 4", week.Number, optional)
+		}
+	}
+	if dayNumber != 84 || len(seen) != 300 {
+		t.Fatalf("days=%d problems=%d", dayNumber, len(seen))
+	}
+	for _, n := range []int{-1, 0, 85} {
+		if _, ok := FindDay(n); ok {
+			t.Errorf("FindDay(%d) found invalid day", n)
+		}
+	}
+	if _, ok := FindProblem("missing"); ok {
+		t.Error("found unknown problem")
+	}
+}
+
+func TestEveryLessonRendersInstruction(t *testing.T) {
+	seen := map[string]bool{}
+	for _, week := range Curriculum() {
+		for _, day := range week.Days {
+			var b bytes.Buffer
+			if err := Lesson(day.Lesson).Render(context.Background(), &b); err != nil {
+				t.Fatal(err)
+			}
+			html := b.String()
+			for _, marker := range []string{"Worked example", "Complexity and cautions", "Before you finish"} {
+				if !strings.Contains(html, marker) {
+					t.Errorf("day %d lacks %s", day.Number, marker)
+				}
+			}
+			if len(strings.Fields(html)) < 100 {
+				t.Errorf("day %d lesson is too thin (%d words)", day.Number, len(strings.Fields(html)))
+			}
+			if seen[html] {
+				t.Errorf("day %d repeats another lesson", day.Number)
+			}
+			seen[html] = true
+			if strings.Contains(html, "TODO") || strings.Contains(html, "placeholder") {
+				t.Errorf("unfinished lesson %d", day.Number)
+			}
+		}
+	}
+}
+
+func TestKnownCurriculumEndpoints(t *testing.T) {
+	day, ok := FindDay(1)
+	if !ok || day.Core[0].Slug != "two-sum" {
+		t.Fatal("day one must start with Two Sum")
+	}
+	day, ok = FindDay(84)
+	if !ok || !strings.Contains(day.Title, "Mock") {
+		t.Fatalf("final session is not a mock: %s", fmt.Sprint(day))
+	}
+}

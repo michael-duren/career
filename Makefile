@@ -6,14 +6,14 @@ export COMPOSE_FILE := compose/docker-compose.yml
 # Build the application
 all: build test ## Build and test the Go application
 
-build: ## Build the Go binary
+build: generate ## Build the Go binary
 	@echo "Building..."
 	
 	
 	@go build -o main cmd/api/main.go
 
 # Run the application
-run: ## Run the Go application
+run: generate ## Run the Go application
 	@go run cmd/api/main.go
 # Create DB container
 docker-run: ## Start the local Docker Compose stack
@@ -34,11 +34,11 @@ docker-down: ## Stop the local Docker Compose stack
 	fi
 
 # Test the application
-test: ## Run Go tests
+test: generate ## Run Go tests
 	@echo "Testing..."
 	@go test ./... -v
 # Integrations Tests for the application
-itest: ## Run database package tests
+itest: generate ## Run database package tests
 	@echo "Running integration tests..."
 	@go test ./internal/database -v
 
@@ -90,19 +90,19 @@ alloy-local: ## Run Alloy on the host
 	PROMETHEUS_REMOTE_WRITE_URL=http://localhost:9090/api/v1/write \
 		$(ALLOY) run compose/config/alloy/config.alloy --storage.path=tmp/alloy-data
 
-migrate: ## Apply database migrations
+migrate: generate ## Apply database migrations
 	go run ./cmd/api migrate
 
-check-db: ## Verify database connection and schema
+check-db: generate ## Verify database connection and schema
 	go run ./cmd/api check-db
 
-go-dev: migrate ## Apply migrations and start the Go development server
+go-dev: generate migrate ## Apply migrations and start the Go development server
 	go run ./cmd/api serve
 
-rebuild-projections: ## Rebuild book and company summaries
+rebuild-projections: generate ## Rebuild book and company summaries
 	go run ./cmd/api rebuild-projections
 
-test-postgres: ## Run Go race tests against local PostgreSQL
+test-postgres: generate ## Run Go race tests against local PostgreSQL
 	TEST_DATABASE_URL='postgres://career_dev:career_dev_local@127.0.0.1:5433/career_dev?sslmode=disable' go test -race ./...
 
 .PHONY: postgres-up postgres-check otel-up otel-up-local alloy-local migrate check-db go-dev rebuild-projections test-postgres
@@ -133,3 +133,9 @@ help: ## Show available commands
 	@awk 'BEGIN { print "Usage: make <command>\n" } /^[a-zA-Z0-9_-]+:.*## / { split($$0, parts, "## "); sub(/:.*/, "", parts[1]); printf "  %-22s %s\n", parts[1], parts[2] }' $(MAKEFILE_LIST)
 
 .PHONY: dev help
+
+# Pin generator and runtime together through go.mod.
+generate: ## Generate Go code from templ components
+	go tool templ generate
+
+.PHONY: generate

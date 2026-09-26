@@ -14,7 +14,7 @@ import (
 //go:embed migrations/*.sql
 var migrations embed.FS
 
-const SchemaVersion = 7
+const SchemaVersion = 10
 
 func (s *Store) Migrate(ctx context.Context) error {
 	tx, err := s.DB.BeginTx(ctx, nil)
@@ -54,7 +54,7 @@ func (s *Store) Migrate(ctx context.Context) error {
 		err = tx.QueryRowContext(ctx, "SELECT checksum FROM schema_migrations WHERE version=$1", version).Scan(&stored)
 		if err == nil {
 			if stored != checksum {
-				return fmt.Errorf("applied migration checksum mismatch")
+				return fmt.Errorf("applied migration checksum mismatch for version %d (%s): database has %s, file has %s", version, name, stored, checksum)
 			}
 			continue
 		}

@@ -39,3 +39,7 @@ Run `make postgres-up migrate check-db` to start PostgreSQL 17 and verify the sc
 See [local development](docs/migration/local-development.md) for Go API, seed,
 import/export and testing commands. [migration.md](migration.md) is the historical
 record of the Netlify → Go/PostgreSQL move.
+
+## Leetgrinder
+
+Open `/leetgrinder` after signing in for the self-paced 12-week curriculum and manual attempt tracking. See [Leetgrinder usage and development](docs/leetgrinder.md) and [curriculum sources](docs/leetgrinder-sources.md).

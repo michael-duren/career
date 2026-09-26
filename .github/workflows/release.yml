@@ -51,6 +51,7 @@ jobs:
           npm ci
           npm test
           npm run build
+          go tool templ generate
           go test -race ./...
           go build -o /tmp/career-migration ./cmd/api
           /tmp/career-migration migrate

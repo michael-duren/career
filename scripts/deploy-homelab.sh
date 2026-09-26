@@ -9,6 +9,7 @@ case "${1:-deploy}" in
     npm run tc -- --noEmit
     npm test
     npm run build
+    go tool templ generate
     go test -race ./...
     go build -o /tmp/career-migration ./cmd/api
     node tests/go-api.integration.mjs

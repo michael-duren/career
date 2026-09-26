@@ -1,0 +1,384 @@
+package leetgrinder
+
+templ layout(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<meta name="description" content="A self-paced, twelve-week data structures and algorithms curriculum in Leetgrinder."/>
+			<title>{ title } · Leetgrinder</title>
+			<link rel="icon" href="/favicon.svg"/>
+			<link rel="stylesheet" href="/leetgrinder/style.css"/>
+		</head>
+		<body>
+			<a class="skip" href="#main">Skip to content</a>
+			<header class="site-header">
+				<a class="brand" href="/">Career strategy</a>
+				<nav aria-label="Main navigation"><a href="/leetgrinder" aria-current="page">Leetgrinder</a><a href="/2026/career-study-plan">Study plan</a><a href="/notes">Notes</a></nav>
+			</header>
+			<main id="main">
+				{ children... }
+			</main>
+			<footer>12 weeks · 84 sessions · At your pace <a href="/leetgrinder/export">Export attempt history</a></footer>
+		</body>
+	</html>
+}
+
+templ Overview(state State) {
+	@layout("Your curriculum") {
+		<section class="hero">
+			<div><p class="eyebrow">THE DAILY PRACTICE</p><h1>Build the habits.<br/>Learn the patterns.</h1><p class="lead">A 12-week DSA curriculum for programmers getting back into problem solving. One focused session at a time.</p></div>
+			<aside class="resume">
+				<p class="eyebrow">YOUR NEXT SESSION</p>
+				if Summarize(state).NextDay > 0 {
+					<h2>
+						{ DayLabel(Summarize(state).NextDay) }
+					</h2>
+					<p>90 minutes of practice.<br/>30 minutes to read and review.</p>
+					<a
+						class="button primary"
+						href={ templ.SafeURL(DayURL(Summarize(state).NextDay)) }
+					>Continue learning <span aria-hidden="true">→</span></a>
+				} else {
+					<h2>84 sessions complete</h2>
+					<p>Revisit unfinished problems or work through optional practice.</p><a class="button primary" href="#curriculum">Revisit the curriculum</a>
+				}
+				<p class="small muted">No deadlines. Pick up where you left off.</p>
+			</aside>
+		</section>
+		<section class="stats" aria-label="Your progress">
+			<div><strong>{ Count(Summarize(state).Completed) }<span>/ 84</span></strong><p>Sessions finished</p></div>
+			<div><strong>{ Count(Summarize(state).Solved) }<span>/ 300</span></strong><p>Unique problems solved</p></div>
+			<div>
+				<strong>
+					{ Count(Summarize(state).Independent) }
+				</strong>
+				<p>Solved independently</p>
+			</div>
+			<div><strong>252<span>+ 48</span></strong><p>Core + optional problems</p></div>
+		</section>
+		<details class="guide"><summary>How to use your two hours</summary><div class="prose"><p>Start with the lesson and any required reading. Attempt each core problem for up to 25 minutes, leaving 15 minutes of your practice budget for debugging or another attempt. Spend the separate 30-minute block on reading and reviewing solutions.</p><p>Record “Solved” when your solution passes on LeetCode. Record “Struggled” when you need to revisit the approach, or “Unfinished” when you stop without completing it. Mark solution help separately, including hints. Reviewed solutions do not count as independent solves.</p><p>Optional problems are for days when core practice finishes early. The 300-problem target is a stretch goal, not a deadline. Finish a day when your session is over, even if some problems remain unfinished.</p></div></details>
+		<section id="curriculum">
+			<div class="section-heading"><h2>Your curriculum</h2><p class="muted">12 weeks of progressively harder patterns</p></div>
+			<div class="weeks">
+				for _, week := range Curriculum() {
+					<section class="week-card">
+						<div class="week-heading">
+							<p class="eyebrow">
+								{ WeekLabel(week.Number) }
+							</p><span class="small muted">21 core · 4 optional</span>
+						</div>
+						<h3>
+							{ week.Title }
+						</h3>
+						<p class="muted">
+							{ week.Summary }
+						</p>
+						<ol class="days">
+							for _, day := range week.Days {
+								<li>
+									<a
+										href={ templ.SafeURL(DayURL(day.Number)) }
+									>
+										<span class="day-number">
+											{ Count(day.Number) }
+										</span>
+										<span>
+											{ day.Title }
+										</span>
+										if state.DayCompleted(day.Number) {
+											<span class="day-status done">Finished</span>
+										} else if Summarize(state).NextDay == day.Number {
+											<span class="day-status">Next</span>
+										}
+									</a>
+								</li>
+							}
+						</ol>
+					</section>
+				}
+			</div>
+		</section>
+	}
+}
+
+templ Session(page DayPage) {
+	@layout(DayLabel(page.Day.Number) + " · " + page.Day.Title) {
+		<nav class="breadcrumb" aria-label="Breadcrumb">
+			<a href="/leetgrinder">Curriculum</a><span>/</span>
+			<span>
+				{ WeekLabel(WeekNumber(page.Day.Number)) }
+			</span><span>/</span>
+			<span>
+				{ DayLabel(page.Day.Number) }
+			</span>
+		</nav>
+		<div class="session-title">
+			<div>
+				<p class="eyebrow">
+					{ WeekLabel(WeekNumber(page.Day.Number)) } · { DayLabel(page.Day.Number) } OF 84
+				</p>
+				<h1>
+					{ page.Day.Title }
+				</h1>
+			</div>
+			if page.State.DayCompleted(page.Day.Number) {
+				<span class="badge">Session finished</span>
+			}
+		</div>
+		if page.Error != "" {
+			<p class="error" role="alert">
+				{ page.Error }
+			</p>
+		}
+		<div class="session-grid">
+			<div>
+				<section class="lesson panel" aria-labelledby="lesson-title">
+					if page.Day.Number >= 78 {
+						<p class="eyebrow">01 / CHOOSE AN APPROACH</p>
+						<h2 id="lesson-title">Attempt first, then review</h2>
+						<p class="muted">For mixed practice, choose a technique before opening the guidance. Explain your baseline and invariant before coding.</p>
+						<details class="review-guidance">
+							<summary>Review after your attempts</summary>
+							<div class="prose">
+								@Lesson(page.Day.Lesson)
+							</div>
+						</details>
+					} else {
+						<p class="eyebrow">01 / UNDERSTAND</p>
+						<h2 id="lesson-title">Before you start</h2>
+						<div class="prose">
+							@Lesson(page.Day.Lesson)
+						</div>
+					}
+				</section>
+				if len(page.Day.Readings) > 0 {
+					<section class="panel reading">
+						<h2>Reading &amp; references</h2>
+						<p class="muted">Use these within your 30-minute reading and review budget.</p>
+						for _, reading := range page.Day.Readings {
+							<article>
+								<a href={ templ.SafeURL(reading.URL) } target="_blank" rel="noopener noreferrer">{ reading.Title } <span aria-label="opens in a new tab">↗</span></a>
+								<p>
+									{ reading.Guidance }
+								</p>
+								<span class="small muted">
+									{ Count(reading.Minutes) } min ·
+									if reading.Optional {
+										Optional reference
+									} else {
+										Read before practice
+									}
+								</span>
+							</article>
+						}
+					</section>
+				}
+				<section aria-labelledby="practice-title">
+					<p class="eyebrow">02 / PRACTICE</p>
+					<h2 id="practice-title">Three core problems</h2>
+					<p class="muted">Try each for up to 25 minutes. Solve on LeetCode, then record your attempt here.</p>
+					for _, problem := range page.Day.Core {
+						@problemCard(problem, page.State, NewForm(page.IDs[problem.Slug], page.Day.Number))
+					}
+				</section>
+				if len(page.Day.Optional)>0 {
+					<section class="optional" aria-labelledby="optional-title">
+						<p class="eyebrow">GO FURTHER</p>
+						<h2 id="optional-title">Optional practice</h2>
+						<p class="muted">Only if you have time left. These count toward your 300-problem stretch goal.</p>
+						for _, problem := range page.Day.Optional {
+							@problemCard(problem, page.State, NewForm(page.IDs[problem.Slug], page.Day.Number))
+						}
+					</section>
+				}
+				<section class="panel finish">
+					<p class="eyebrow">03 / REVIEW</p>
+					<h2>Close the session</h2>
+					<p>Explain your approach and its complexity out loud. For anything you struggled with, review a solution and write down what you missed. Record any use of hints or solutions.</p>
+					<p class="muted">Finishing this day does not mark its problems solved. You can return to them anytime.</p>
+					<form method="post" action={ templ.SafeURL(DayURL(page.Day.Number) + "/complete") }>
+						if page.State.DayCompleted(page.Day.Number) {
+							<input type="hidden" name="completed" value="false"/><button class="button" type="submit">Reopen this day</button>
+						} else {
+							<input type="hidden" name="completed" value="true"/><button class="button primary" type="submit">Finish day <span aria-hidden="true">→</span></button>
+						}
+					</form>
+				</section>
+			</div>
+			<aside class="session-aside">
+				<div class="panel"><p class="eyebrow">TODAY'S BUDGET</p><h3>Two focused hours</h3><dl><dt>Core attempts</dt><dd>3 × 25 min</dd><dt>Debug or retry</dt><dd>15 min</dd><dt>Read &amp; review</dt><dd>30 min</dd></dl><p class="small muted">Stop at the time limit and record where you got stuck. A useful attempt matters more than rushing to mark a solve.</p></div>
+				<nav class="session-nav" aria-label="Session navigation">
+					if page.Day.Number>1 {
+						<a
+							href={ templ.SafeURL(DayURL(page.Day.Number - 1)) }
+						>← Previous day</a>
+					}
+					if page.Day.Number<84 {
+						<a
+							href={ templ.SafeURL(DayURL(page.Day.Number + 1)) }
+						>Next day →</a>
+					}
+					<a href="/leetgrinder">All 84 sessions</a>
+				</nav>
+			</aside>
+		</div>
+	}
+}
+
+templ problemCard(problem Problem, state State, form AttemptForm) {
+	<article class="problem-card" id={ problem.Slug }>
+		<div class="problem-heading">
+			<div>
+				<p class="small muted">
+					LEETCODE { Count(problem.ID) } · { problem.Difficulty }
+				</p>
+				<h3>
+					<a
+						href={ templ.SafeURL(problem.URL()) }
+						target="_blank"
+						rel="noopener noreferrer"
+					>{ problem.Title } <span aria-label="opens in a new tab">↗</span></a>
+				</h3>
+			</div>
+			<span class="badge">
+				{ state.ProblemStatus(problem.Slug) }
+			</span>
+		</div>
+		<div class="problem-actions">
+			<a
+				href={ templ.SafeURL(ProblemURL(problem.Slug)) }
+			>
+				Attempt history ({ Count(len(state.ProblemAttempts(problem.Slug))) })
+			</a>
+		</div>
+		<details class="log-attempt">
+			<summary>Record an attempt</summary>@attemptFields(problem, form)
+		</details>
+	</article>
+}
+
+templ attemptFields(problem Problem, form AttemptForm) {
+	<form class="attempt-form" method="post" action={ templ.SafeURL(ProblemURL(problem.Slug) + "/attempts") }>
+		<input type="hidden" name="id" value={ form.ID }/><input type="hidden" name="revision" value={ form.Revision }/><input type="hidden" name="returnDay" value={ Count(form.ReturnDay) }/>
+		if form.Error!="" {
+			<p class="error" role="alert">
+				{ form.Error }
+			</p>
+		}
+		<div class="form-row"><label>Outcome<select name="outcome" required><option value="unfinished" selected?={ form.Outcome=="unfinished" }>Unfinished</option><option value="struggled" selected?={ form.Outcome=="struggled" }>Struggled</option><option value="solved" selected?={ form.Outcome=="solved" }>Solved</option></select></label><label>Minutes spent<input type="number" name="minutes" min="1" max="240" required value={ form.Minutes }/></label></div>
+		<label class="checkbox"><input type="checkbox" name="assisted" value="true" checked?={ form.Assisted }/>I used hints or reviewed a solution</label>
+		<label>
+			Notes <span class="muted">(optional)</span>
+			<textarea name="notes" rows="3" maxlength="2000" placeholder="What worked? Where did you get stuck?">
+				{ form.Notes }
+			</textarea>
+		</label>
+		<p class="small muted">Solved means your solution passed on LeetCode. Mark help even if you wrote the final code yourself.</p>
+		<button class="button primary" type="submit">
+			if form.Revision!="" {
+				Save correction
+			} else {
+				Save attempt
+			}
+		</button>
+	</form>
+}
+
+templ ProblemHistory(problem Problem, state State, form AttemptForm) {
+	@layout(problem.Title) {
+		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder">Curriculum</a><span>/</span><span>Attempt history</span></nav>
+		<p class="eyebrow">
+			LEETCODE { Count(problem.ID) } · { problem.Difficulty }
+		</p>
+		<h1>
+			{ problem.Title }
+		</h1>
+		<div class="history-links">
+			<a
+				class="button"
+				href={ templ.SafeURL(problem.URL()) }
+				target="_blank"
+				rel="noopener noreferrer"
+			>Open on LeetCode ↗</a>
+			<span class="badge">
+				{ state.ProblemStatus(problem.Slug) }
+			</span>
+			for _, week:= range Curriculum() {
+				for _, day:=range week.Days {
+					for _, p:=range append(day.Core,day.Optional...) {
+						if p.Slug==problem.Slug {
+							<a href={ templ.SafeURL(DayURL(day.Number) + "#" + problem.Slug) }>
+								Back to { DayLabel(day.Number) }
+							</a>
+						}
+					}
+				}
+			}
+		</div>
+		<div class="history-grid">
+			<section class="panel">
+				<h2>
+					if form.Revision!="" {
+						Correct your attempt
+					} else {
+						Record an attempt
+					}
+				</h2>@attemptFields(problem, form)
+				if form.Error!="" && form.Revision!="" {
+					<p>
+						<a
+							href={ templ.SafeURL(ProblemURL(problem.Slug)) }
+						>Reload current history</a> before reapplying a conflicting correction. Your draft is shown above.
+					</p>
+				}
+			</section>
+			<section>
+				<h2>Previous attempts</h2>
+				if len(state.ProblemAttempts(problem.Slug))==0 {
+					<p class="muted">No attempts recorded yet.</p>
+				}
+				for _, a:=range state.ProblemAttempts(problem.Slug) {
+					<article class="panel attempt">
+						<div class="problem-heading">
+							<h3>
+								{ OutcomeLabel(a.Outcome) }
+							</h3><span>{ Count(a.Minutes) } min</span>
+						</div>
+						<p class="small muted">
+							<time datetime={ a.CreatedAt.Format("2006-01-02T15:04:05Z07:00") }>
+								{ a.CreatedAt.UTC().Format("02 Jan 2006 · 15:04 UTC") }
+							</time> ·
+							if a.Assisted {
+								Used solution help
+							} else {
+								No solution help
+							}
+						</p>
+						if a.Notes!="" {
+							<p class="notes">
+								{ a.Notes }
+							</p>
+						}
+						<details>
+							<summary>Correct this attempt</summary>@attemptFields(problem, EditForm(a))
+						</details>
+					</article>
+				}
+			</section>
+		</div>
+	}
+}
+
+templ Unavailable(message string) {
+	@layout("Unable to load") {
+		<section class="panel">
+			<h1>Unable to load your progress</h1>
+			<p role="alert">
+				{ message }
+			</p>
+			<p><a href="/leetgrinder">Try again</a></p>
+		</section>
+	}
+}

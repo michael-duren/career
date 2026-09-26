@@ -119,6 +119,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 			}
 		})
 	})
+	s.registerLeetgrinder(r)
 	s.registerStatic(r)
 	return r
 }
