@@ -61,6 +61,12 @@ login blocks the connector.
 - `list_career_entries`: page through one kind without bodies.
 - `search_career_context`: case-insensitive phrase search with excerpts.
 - `read_career_entry`: one entry with all metadata and body as JSON, in chunks.
+- `list_connection_companies`: employers of your LinkedIn connections, grouped by
+  normalized company name (case and suffixes like Inc ignored), with people count, most
+  recent conversation date, a few people with roles, and `trackedSlug` when the company is
+  already on the companies board. Filter by `query`, `role` (count only matching people),
+  `minConnections` and `untracked`; sort by `connections`, `recent` or `name`; page with
+  `offset`/`limit` (1-100).
 
 Kinds: `goal`, `work_journal`, `personal_journal`, `note`, `page`, `book`, `company`,
 `connection`, `audio_thought`. Audio thoughts are private and only returned when
@@ -73,6 +79,18 @@ Write tools (need **Allow read and edit**):
 - `update_career_entry`: patch a goal, company or note. Pass the `revision` from
   `read_career_entry` and only changed fields. A stale revision is rejected instead of
   overwriting newer edits. New steps, notes and todos may omit IDs.
+- `add_companies_to_queue`: batch-add 1-50 companies to the companies board as
+  `not_started` with the website's outreach checklist and an empty Log, so no reach-out
+  date is recorded. Only `title` is required; `category` defaults to "From connections",
+  `url` to a LinkedIn company search link, `priority` to medium, and `why` fills the Why
+  section (no `#`/`##` headings or unclosed code fences; `\r`, U+2028 and U+2029 count as
+  line breaks). Titles need letters or digits. A name that `list_connection_companies`
+  would report as tracked (linked connections, or a title/slug match ignoring case and
+  legal suffixes) is skipped with `created: false` and the stored title and slug, so
+  retries are safe. Like a company created on the website, new companies pick up unlinked
+  connections whose employer best matches them among all companies; the total is returned
+  as `linkedConnections` and last-talked dates are not changed. The batch is all or
+  nothing if any company fails validation.
 
 Saves use the website's validation. There is no delete tool. Claude clients ask before
 running write tools unless you allow them permanently. Request
@@ -86,7 +104,9 @@ make test-postgres   # includes the OAuth flow and MCP tool tests
 
 `internal/server/mcp_test.go` covers discovery, registration, login redirect, consent,
 cross-origin approval rejection, PKCE, code replay, refresh rotation, read tools, and write
-tools (scope enforcement, revision conflicts, validation) through the Go MCP client.
+tools (scope enforcement, revision conflicts, validation) and the connection company tools
+through the Go MCP client. `internal/database/connection_companies_test.go` covers grouping,
+filters, duplicate detection and linking.
 
 ## History
 

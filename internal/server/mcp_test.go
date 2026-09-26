@@ -16,6 +16,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/michael-duren/career-strategy/internal/config"
 	"github.com/michael-duren/career-strategy/internal/database"
+	"github.com/michael-duren/career-strategy/internal/linkedin"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -284,7 +285,7 @@ func TestMCPOverOAuth(t *testing.T) {
 		t.Fatal(w.Code)
 	}
 
-	call := connectMCP(t, h, rotated["access_token"].(string), 6)
+	call := connectMCP(t, h, rotated["access_token"].(string), 8)
 	overview, _ := call("get_career_overview", nil)
 	goals, _ := overview["goals"].([]any)
 	counts, _ := overview["counts"].(map[string]any)
@@ -330,6 +331,9 @@ func TestMCPOverOAuth(t *testing.T) {
 	}
 	if out, isErr := call("update_career_entry", map[string]any{"kind": "note", "id": "systems/nested-note", "revision": revision, "fields": map[string]any{"title": "x"}}); !isErr || !strings.Contains(out["error"].(string), "read-only") {
 		t.Fatal("read-only token wrote", out)
+	}
+	if out, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "Acme"}}}); !isErr || !strings.Contains(out["error"].(string), "read-only") {
+		t.Fatal("read-only token queued companies", out)
 	}
 }
 
@@ -378,7 +382,7 @@ func TestMCPWriteTools(t *testing.T) {
 	if status != 200 || tokens["scope"] != "career:read career:write" {
 		t.Fatal(status, tokens)
 	}
-	call := connectMCP(t, h, tokens["access_token"].(string), 6)
+	call := connectMCP(t, h, tokens["access_token"].(string), 8)
 	ctx := context.Background()
 
 	company, isErr := call("create_career_entry", map[string]any{"kind": "company", "entry": map[string]any{"title": "Duck Corp!", "category": "Infra", "url": "https://duck.example", "slug": "ignored"}})
@@ -464,5 +468,97 @@ func TestMCPWriteTools(t *testing.T) {
 	status, refreshed := h.token(url.Values{"grant_type": {"refresh_token"}, "refresh_token": {tokens["refresh_token"].(string)}, "client_id": {clientID}, "scope": {"career:read"}})
 	if status != 200 || refreshed["scope"] != "career:read career:write" {
 		t.Fatal(status, refreshed)
+	}
+}
+
+func TestMCPConnectionCompanies(t *testing.T) {
+	db := testDB(t)
+	ctx := context.Background()
+	rows := []linkedin.Connection{
+		{Name: "Ada", Role: "Staff Engineer", Company: "Acme, Inc.", URL: "https://linkedin.com/in/ada"},
+		{Name: "Bob", Role: "Recruiter", Company: "ACME", URL: "https://linkedin.com/in/bob"},
+		{Name: "Eve", Role: "Engineer", Company: "Initech", URL: "https://linkedin.com/in/eve"},
+	}
+	if _, err := db.ImportConnections(ctx, rows, map[string]string{"https://www.linkedin.com/in/bob": "2026-08-01"}); err != nil {
+		t.Fatal(err)
+	}
+	h := newOAuthHarness(t, db)
+	clientID := h.register(testCallback)
+	verifier := strings.Repeat("c7", 30)
+	code := h.approve(h.consent(clientID, testCallback, pkce(verifier)), "write").Query().Get("code")
+	status, tokens := h.token(url.Values{"grant_type": {"authorization_code"}, "code": {code}, "redirect_uri": {testCallback}, "client_id": {clientID}, "code_verifier": {verifier}})
+	if status != 200 {
+		t.Fatal(status, tokens)
+	}
+	call := connectMCP(t, h, tokens["access_token"].(string), 8)
+
+	// The fixture adds a third employer, linked to a tracked company.
+	list, isErr := call("list_connection_companies", map[string]any{"limit": 1})
+	companies, _ := list["companies"].([]any)
+	if isErr || len(companies) != 1 || list["total"] != float64(3) || list["nextOffset"] != float64(1) {
+		t.Fatal(list)
+	}
+	acme := companies[0].(map[string]any)
+	if acme["connections"] != float64(2) || acme["lastContactedOn"] != "2026-08-01" || acme["trackedSlug"] != nil || len(acme["people"].([]any)) != 2 {
+		t.Fatal(acme)
+	}
+	if out, isErr := call("list_connection_companies", map[string]any{"sort": "size"}); !isErr || !strings.Contains(out["error"].(string), "sort must be") {
+		t.Fatal(out)
+	}
+
+	added, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{
+		map[string]any{"title": " Acme ", "why": "Two friends there.", "priority": "high"},
+		map[string]any{"title": "acme inc"},
+	}})
+	results, _ := added["companies"].([]any)
+	if isErr || added["created"] != float64(1) || added["skipped"] != float64(1) || len(results) != 2 {
+		t.Fatal(added)
+	}
+	first := results[0].(map[string]any)
+	if first["created"] != true || added["linkedConnections"] != float64(2) || results[1].(map[string]any)["slug"] != first["slug"] {
+		t.Fatal(results)
+	}
+	saved, err := db.Detail(ctx, "company", first["slug"].(string))
+	body, _ := saved.Entry["body"].(string)
+	if err != nil || saved.Entry["title"] != "Acme" || saved.Entry["status"] != "not_started" || saved.Entry["priority"] != "high" || saved.Entry["category"] != "From connections" ||
+		saved.Entry["url"] != "https://www.linkedin.com/search/results/companies/?keywords=Acme" || !strings.HasPrefix(body, "## Why\n\nTwo friends there.\n\n## Steps") || !strings.HasSuffix(body, "## Log\n") {
+		t.Fatal(saved, err)
+	}
+	// Retrying the same batch creates nothing.
+	if again, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "ACME"}}}); isErr || again["created"] != float64(0) {
+		t.Fatal(again)
+	}
+	list, _ = call("list_connection_companies", map[string]any{"untracked": true})
+	if companies, _ := list["companies"].([]any); len(companies) != 1 || companies[0].(map[string]any)["name"] != "Initech" {
+		t.Fatal(list)
+	}
+	if out, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "Hooli", "why": "## Log\n- 2026-01-01: fake"}}}); !isErr || !strings.Contains(out["error"].(string), "headings") {
+		t.Fatal("why headings accepted", out)
+	}
+	// The website's JavaScript parser treats all of these as line breaks.
+	for _, br := range []string{"\r", " ", " "} {
+		if out, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "Hooli", "why": "Hi" + br + "## Log" + br + "- 2026-01-01: fake"}}}); !isErr || !strings.Contains(out["error"].(string), "headings") {
+			t.Fatalf("heading after %q accepted: %v", br, out)
+		}
+	}
+	if out, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "Hooli", "why": "```\ncode"}}}); !isErr || !strings.Contains(out["error"].(string), "unclosed code fence") {
+		t.Fatal("unclosed fence accepted", out)
+	}
+	if out, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "---"}}}); !isErr || !strings.Contains(out["error"].(string), "letters or digits") {
+		t.Fatal("punctuation-only title accepted", out)
+	}
+	fenced, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "Hooli", "why": "Stack:\r\n```\ngo run .\n```"}}})
+	if isErr || fenced["created"] != float64(1) {
+		t.Fatal(fenced)
+	}
+	hooli, _ := db.Detail(ctx, "company", fenced["companies"].([]any)[0].(map[string]any)["slug"].(string))
+	if body, _ := hooli.Entry["body"].(string); !strings.HasPrefix(body, "## Why\n\nStack:\n```") {
+		t.Fatal("line breaks not normalized", body)
+	}
+	if out, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "Hooli", "url": "ftp://hooli"}}}); !isErr || !strings.Contains(out["error"].(string), "Hooli") || strings.Contains(out["error"].(string), "invalid query") {
+		t.Fatal("invalid url accepted", out)
+	}
+	if out, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{}}); !isErr {
+		t.Fatal("empty batch accepted", out)
 	}
 }
