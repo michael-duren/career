@@ -375,6 +375,7 @@ export function QuickJournal({ returnTo }: { returnTo?: string } = {}) {
   }, [body, date, ready]);
   async function save() {
     setBusy(true); setError(''); setStatus('');
+    let leaving = false;
     try {
       const candidate = newWeek(date);
       const page = await request('week');
@@ -386,17 +387,19 @@ export function QuickJournal({ returnTo }: { returnTo?: string } = {}) {
       window.dispatchEvent(new Event('workspace-saved'));
       if (returnTo) {
         try { localStorage.removeItem(draftKey('quick')); } catch { /* Draft recovery is optional. */ }
+        // Keep the form disabled while the browser navigates away.
+        leaving = true;
         window.location.assign(returnTo);
       }
     } catch (e) { setError((e as Error).message); }
-    finally { setBusy(false); }
+    finally { if (!leaving) setBusy(false); }
   }
   return <section className="rounded-xl border border-blue-900/60 bg-zinc-900 p-5 space-y-4">
-    <div className="flex flex-wrap justify-between gap-2"><div><h2 className="text-xl font-semibold">A moment to reflect</h2><p className="mt-1 text-sm text-zinc-400">What did you learn, finish, or get stuck on?</p></div>{returnTo ? <a className="text-sm text-blue-400 hover:underline" href={returnTo}>← Back to journal</a> : <a className="text-sm text-blue-400 hover:underline" href="/journal">Open journal →</a>}</div>
+    <div className="flex flex-wrap justify-between gap-2"><div>{!returnTo && <h2 className="text-xl font-semibold">A moment to reflect</h2>}<p className={`${returnTo ? '' : 'mt-1 '}text-sm text-zinc-400`}>What did you learn, finish, or get stuck on?</p></div>{returnTo ? <a className="text-sm text-blue-400 hover:underline" href={returnTo}>← Back to journal</a> : <a className="text-sm text-blue-400 hover:underline" href="/journal">Open journal →</a>}</div>
     <form onSubmit={e => { e.preventDefault(); void save(); }} className="space-y-3"><fieldset disabled={busy || !ready} className="space-y-3">
       <div className="flex flex-wrap gap-3 items-end"><label className="text-sm">Entry date<input type="date" required min="2026-04-20" max="2199-12-31" className={`${field} mt-1`} value={date} onChange={e => setDate(e.target.value)} /></label><button type="button" className={button} aria-pressed={preview} onClick={() => setPreview(!preview)}>{preview ? 'Write' : 'Markdown preview'}</button></div>
       {preview ? <div className="min-h-32 rounded-lg bg-zinc-950 p-4"><Preview body={body} /></div> : <textarea aria-label="Journal entry in Markdown" className={`${field} min-h-32`} required maxLength={50000} placeholder="Today I learned…" value={body} onChange={e => { setBody(e.target.value); setStatus(''); }} />}
-      <button className={primary} type="submit" disabled={!body.trim()}>{busy ? 'Saving…' : 'Save entry'}</button> <button className={button} type="button" onClick={() => { setBody(''); setDate(localDate()); setPreview(false); setError(''); setStatus('Cancelled.'); if (returnTo) { try { localStorage.removeItem(draftKey('quick')); } catch { /* Draft recovery is optional. */ } window.location.assign(returnTo); } }}>Cancel</button>
+      <button className={primary} type="submit" disabled={!body.trim()}>{busy ? 'Saving…' : 'Save entry'}</button> <button className={button} type="button" onClick={() => { if (returnTo && body.trim() && !window.confirm('Discard this unsaved entry?')) return; setBody(''); setDate(localDate()); setPreview(false); setError(''); setStatus('Cancelled.'); if (returnTo) { try { localStorage.removeItem(draftKey('quick')); } catch { /* Draft recovery is optional. */ } window.location.assign(returnTo); } }}>Cancel</button>
     </fieldset></form>
     {error && <p role="alert" className="text-sm text-red-300">{error} {error.includes('session') && <a href="/login" className="underline">Sign in</a>}</p>}
     <p role="status" className="text-sm text-zinc-400">{status}</p>
