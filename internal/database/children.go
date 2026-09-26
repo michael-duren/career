@@ -28,6 +28,17 @@ func writeChildren(ctx context.Context, tx *sql.Tx, kind, id string, e Entity) e
 				return err
 			}
 		}
+	case "note":
+		if err := exec("DELETE FROM note_todos WHERE note_id=$1", id); err != nil {
+			return err
+		}
+		todos, _ := e["todos"].([]any)
+		for i, v := range todos {
+			o := v.(map[string]any)
+			if err := exec("INSERT INTO note_todos(note_id,id,position,title,done) VALUES($1,$2,$3,$4,$5)", id, o["id"], i, o["title"], o["done"]); err != nil {
+				return err
+			}
+		}
 	case "goal":
 		for _, t := range []string{"goal_notes", "goal_steps", "goal_metadata"} {
 			if err := exec("DELETE FROM "+t+" WHERE goal_id=$1", id); err != nil {
@@ -82,6 +93,15 @@ func readChildren(ctx context.Context, q queryer, kind string, e Entity) error {
 			}
 		}
 		return rows.Err()
+	case "note":
+		todos, err := childJSON(ctx, q, "SELECT json_build_object('id',id,'title',title,'done',done) FROM note_todos WHERE note_id=$1 ORDER BY position", id)
+		if err != nil {
+			return err
+		}
+		// Omit when empty so exports of notes without todos stay unchanged.
+		if len(todos) > 0 {
+			e["todos"] = todos
+		}
 	case "goal":
 		for key, query := range map[string]string{"notes": "SELECT json_build_object('id',id,'body',body,'createdAt',to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"')) FROM goal_notes WHERE goal_id=$1 ORDER BY position", "steps": "SELECT json_build_object('id',id,'title',title,'done',done) FROM goal_steps WHERE goal_id=$1 ORDER BY position"} {
 			a, err := childJSON(ctx, q, query, id)
