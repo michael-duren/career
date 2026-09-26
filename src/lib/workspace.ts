@@ -26,7 +26,9 @@ export interface Document {
 export type WorkspaceBook = RawBook & { updatedAt?: string };
 export type WorkspaceCompany = RawCompany & { updatedAt?: string };
 export interface PersonalJournalEntry extends Document { date: string }
-export interface RunningNote { id: string; title: string; runDate: string; startedAt: string; distanceKm?: number; durationMin?: number; tags: string[]; body: string; updatedAt?: string }
+// distanceKm survives only so older exports still import; it is no longer shown or edited.
+// excerpt is present on list summaries, which omit the body.
+export interface RunningNote { id: string; title: string; runDate: string; startedAt: string; distanceKm?: number; durationMin?: number; tags: string[]; body: string; excerpt?: string; updatedAt?: string }
 export type EntryKind = 'run' | 'personal' | 'note' | 'week' | 'book' | 'company' | 'document';
 export type WorkspaceEntry = RunningNote | Note | JournalWeek | WorkspaceBook | WorkspaceCompany | Document | PersonalJournalEntry;
 export interface LegacyWorkspace {
