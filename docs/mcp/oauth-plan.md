@@ -1,6 +1,6 @@
 # MCP OAuth implementation plan
 
-> **Status (2026-09-19):** the app now runs as a Go service on the homelab k3s cluster and Netlify is no longer used. The Go server does not serve MCP, so the Netlify-hosted MCP endpoint and OAuth setup described here are not deployed. Treat this as a plan to revisit if MCP is ported to Go.
+> **Status (2026-09-26):** historical. MCP is now served by the Go server with built-in single-owner OAuth; see [README.md](README.md).
 
 Status: application implementation and local OAuth integration tests completed; live managed-provider qualification, hosted client testing, and deployment remain pending provider/account and owner configuration. See `README.md` for the implemented configuration and validation checklist. This document preserves the original implementation plan.
 

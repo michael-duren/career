@@ -15,7 +15,7 @@ import (
 )
 
 func publicPagePath(path string) bool {
-	return path == "/login" || path == "/login/" || path == "/offline.html" || path == "/manifest.webmanifest" || path == "/favicon.svg" || path == "/apple-touch-icon.png" || path == "/sw.js" || path == "/.well-known/oauth-protected-resource" || path == "/.well-known/oauth-protected-resource/api/mcp" || strings.HasPrefix(path, "/_astro/") || strings.HasPrefix(path, "/icons/")
+	return path == "/login" || path == "/login/" || path == "/offline.html" || path == "/manifest.webmanifest" || path == "/favicon.svg" || path == "/apple-touch-icon.png" || path == "/sw.js" || path == "/.well-known/oauth-protected-resource" || path == "/.well-known/oauth-protected-resource/api/mcp" || path == "/.well-known/oauth-authorization-server" || path == "/oauth/register" || path == "/oauth/token" || strings.HasPrefix(path, "/_astro/") || strings.HasPrefix(path, "/icons/")
 }
 
 func (s *Server) pageAccess(next http.Handler) http.Handler {

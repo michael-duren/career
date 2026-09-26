@@ -72,6 +72,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.Get("/readyz", s.healthHandler)
 	r.Get("/health", s.healthHandler)
 	r.Post("/api/auth/login", s.login)
+	s.registerOAuth(r)
+	r.Handle("/api/mcp", s.mcpHandler())
 	r.Group(func(r chi.Router) {
 		r.Use(s.private)
 		r.Get("/api/auth/verify", func(w http.ResponseWriter, r *http.Request) {
