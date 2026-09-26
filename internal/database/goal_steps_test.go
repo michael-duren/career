@@ -101,8 +101,14 @@ func TestMoveGoalStep(t *testing.T) {
 	if _, err = s.MoveGoalStep(ctx, StepMove{StepID: stepID(a.Entry, 0), From: aID, FromRevision: a.Revision, To: bID, ToRevision: b.Revision, Index: -1}); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("negative index: %v", err)
 	}
+	if _, err = s.MoveGoalStep(ctx, StepMove{StepID: stepID(a.Entry, 0), From: aID, FromRevision: a.Revision, To: aID, ToRevision: b.Revision}); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("same goal, differing revisions: %v", err)
+	}
 	// Failed moves leave both goals untouched.
 	if detail, _ := s.Detail(ctx, "goal", aID); detail.Revision != a.Revision || len(stepTitles(detail.Entry)) != 1 {
 		t.Fatal("failed move changed source", detail)
+	}
+	if detail, _ := s.Detail(ctx, "goal", bID); detail.Revision != b.Revision || len(stepTitles(detail.Entry)) != 3 {
+		t.Fatal("failed move changed destination", detail)
 	}
 }

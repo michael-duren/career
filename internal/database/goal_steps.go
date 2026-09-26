@@ -26,8 +26,9 @@ func (s *Store) MoveGoalStep(ctx context.Context, m StepMove) ([]Result, error) 
 	if !ValidID("goal", m.From) || !ValidID("goal", m.To) || !uuidRE.MatchString(m.StepID) || m.Index < 0 {
 		return nil, fmt.Errorf("%w: goal IDs, step ID and a non-negative index required", ErrInvalid)
 	}
+	// One goal has one revision; differing values are a malformed request.
 	if m.From == m.To && m.FromRevision != m.ToRevision {
-		return nil, ErrConflict
+		return nil, fmt.Errorf("%w: a move within one goal needs matching revisions", ErrInvalid)
 	}
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
