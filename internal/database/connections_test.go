@@ -177,6 +177,85 @@ func TestImportConnections(t *testing.T) {
 	}
 }
 
+func TestCompanySaveLinksUnlinkedConnections(t *testing.T) {
+	s := imported(t)
+	ctx := context.Background()
+	rows := []linkedin.Connection{
+		{Name: "Nia", Company: "Newco, Inc.", URL: "https://www.linkedin.com/in/nia"},
+		{Name: "Sub", Company: "Newco Labs", URL: "https://www.linkedin.com/in/sub"},
+		{Name: "Pat", Company: "Renamed Corp", URL: "https://www.linkedin.com/in/pat"},
+		{Name: "Out", Company: "Unrelated", URL: "https://www.linkedin.com/in/out"},
+	}
+	if got, err := s.ImportConnections(ctx, rows, nil); err != nil || got.Linked != 0 {
+		t.Fatalf("import %+v %v", got, err)
+	}
+	slugs := func() map[string]any {
+		page, err := s.List(ctx, "connection", Filter{Limit: 100})
+		if err != nil {
+			t.Fatal(err)
+		}
+		out := map[string]any{}
+		for _, r := range page.Entries {
+			out[r.Entry["name"].(string)] = r.Entry["companySlug"]
+		}
+		return out
+	}
+	company, _ := s.Detail(ctx, "company", "company/nested")
+	create := func(slug, title string) {
+		e := Entity{}
+		for k, v := range company.Entry {
+			e[k] = v
+		}
+		e["slug"], e["title"] = slug, title
+		if _, err := s.Save(ctx, "company", e, nil); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// "Newco Labs" goes to the more specific company, not "Newco".
+	create("newco-labs", "Newco Labs")
+	create("newco", "Newco")
+	got := slugs()
+	if got["Nia"] != "newco" || got["Sub"] != "newco-labs" || got["Pat"] != nil || got["Out"] != nil || got["Zoë"] != "company/nested" {
+		t.Fatalf("after create %v", got)
+	}
+
+	// Saving without a rename leaves unlinked people alone; a rename links them.
+	company, _ = s.Detail(ctx, "company", "company/nested")
+	company.Entry["status"] = "applied"
+	saved, err := s.Save(ctx, "company", company.Entry, &company.Revision)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got = slugs(); got["Pat"] != nil {
+		t.Fatalf("linked without rename %v", got)
+	}
+	saved.Entry["title"] = "Renamed"
+	if saved, err = s.Save(ctx, "company", saved.Entry, &saved.Revision); err != nil {
+		t.Fatal(err)
+	}
+	if got = slugs(); got["Pat"] != "company/nested" || got["Out"] != nil {
+		t.Fatalf("after rename %v", got)
+	}
+
+	// A deliberate unlink survives a cosmetic rename.
+	page, _ := s.List(ctx, "connection", Filter{Limit: 100, Company: "company/nested"})
+	for _, r := range page.Entries {
+		if r.Entry["name"] == "Pat" {
+			delete(r.Entry, "companySlug")
+			if _, err = s.Save(ctx, "connection", r.Entry, &r.Revision); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	saved.Entry["title"] = "Renamed, Inc."
+	if _, err = s.Save(ctx, "company", saved.Entry, &saved.Revision); err != nil {
+		t.Fatal(err)
+	}
+	if got = slugs(); got["Pat"] != nil {
+		t.Fatalf("cosmetic rename re-linked %v", got)
+	}
+}
+
 func TestMigration004RepairsLegacyContacts(t *testing.T) {
 	s := emptyStore(t)
 	ctx := context.Background()
