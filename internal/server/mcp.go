@@ -111,6 +111,14 @@ type overviewGoal struct {
 	DailyHours     any    `json:"dailyHours,omitempty"`
 	CompletedSteps int    `json:"completedSteps"`
 	TotalSteps     int    `json:"totalSteps"`
+	// Steps are the goal's mini goals: ordered, dateless sub-goals.
+	Steps []overviewStep `json:"steps"`
+}
+
+type overviewStep struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
+	Done  bool   `json:"done"`
 }
 
 type listInput struct {
@@ -262,7 +270,7 @@ func (s *Server) newMCPServer() *mcp.Server {
 func (s *Server) addOverviewTool(server *mcp.Server) {
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get_career_overview",
-		Description: "Start here. Returns the current timeline goals with status, dates and step progress, entry counts per kind, and rules for interpreting the workspace.",
+		Description: "Start here. Returns the current timeline goals with status, dates, mini goals (steps) and their progress, entry counts per kind, and rules for interpreting the workspace.",
 		Annotations: readOnly,
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, any, error) {
 		counts, err := s.db.Counts(ctx)
@@ -308,8 +316,17 @@ func summarizeGoal(e database.Entity) overviewGoal {
 	g.EndDate, _ = e["endDate"].(string)
 	steps, _ := e["steps"].([]any)
 	g.TotalSteps = len(steps)
+	g.Steps = []overviewStep{}
 	for _, step := range steps {
-		if m, ok := step.(map[string]any); ok && m["done"] == true {
+		m, ok := step.(map[string]any)
+		if !ok {
+			continue
+		}
+		item := overviewStep{Done: m["done"] == true}
+		item.ID, _ = m["id"].(string)
+		item.Title, _ = m["title"].(string)
+		g.Steps = append(g.Steps, item)
+		if item.Done {
 			g.CompletedSteps++
 		}
 	}

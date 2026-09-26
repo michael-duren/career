@@ -75,7 +75,7 @@ export function GoalTimeline() {
     } finally { saving.current = false; setBusy(false); setPreview(null); }
   }
   async function remove(goal: Goal) {
-    if (saving.current || !window.confirm(`Delete ${goal.title} and its notes and substeps?${goals.filter(g => g.dependsOn.includes(goal.id)).length ? " Dependents will lose this prerequisite: " + goals.filter(g => g.dependsOn.includes(goal.id)).map(g => g.title).join(", ") : ""}`)) return;
+    if (saving.current || !window.confirm(`Delete ${goal.title} and its notes and mini goals?${goals.filter(g => g.dependsOn.includes(goal.id)).length ? " Dependents will lose this prerequisite: " + goals.filter(g => g.dependsOn.includes(goal.id)).map(g => g.title).join(", ") : ""}`)) return;
     saving.current = true; setBusy(true); setError('');
     try {
       const response = await fetch('/api/goals', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: goal.id, revision: revisions[goal.id] }) });
@@ -177,10 +177,10 @@ export function GoalTimeline() {
             <label>Add a note<textarea maxLength={20000} value={note} onChange={e => setNote(e.target.value)} placeholder="What changed? What did you learn?" /></label>
             {[...draft.notes].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map(n => <article className="goal-note" key={n.id}><time>{new Date(n.createdAt).toLocaleString()}</time><p>{n.body}</p></article>)}
             {!draft.notes.length && <p className="timeline-help">No notes yet.</p>}
-            <h3>Substeps</h3>
+            <h3>Mini goals</h3>
             {draft.steps.map(s => <label className="goal-step" key={s.id}><input type="checkbox" checked={s.done} onChange={e => setDraft({ ...draft, steps: draft.steps.map(item => item.id === s.id ? { ...item, done: e.target.checked } : item) })} /><span>{s.title}</span><button type="button" aria-label={`Remove ${s.title}`} onClick={() => setDraft({ ...draft, steps: draft.steps.filter(item => item.id !== s.id) })}>×</button></label>)}
-            <label>New substep<input maxLength={500} value={step} onChange={e => setStep(e.target.value)} /></label>
-            <button type="button" disabled={!step.trim()} onClick={() => { setDraft({ ...draft, steps: [...draft.steps, { id: crypto.randomUUID(), title: step.trim(), done: false }] }); setStep(''); }}>Add substep</button>
+            <label>New mini goal<input maxLength={500} value={step} onChange={e => setStep(e.target.value)} /></label>
+            <button type="button" disabled={!step.trim()} onClick={() => { setDraft({ ...draft, steps: [...draft.steps, { id: crypto.randomUUID(), title: step.trim(), done: false }] }); setStep(''); }}>Add mini goal</button>
             <h3>Metadata</h3>
             {Object.entries(draft.metadata).map(([key, value]) => <label key={key}>{key}<input maxLength={2000} value={value} onChange={e => setDraft({ ...draft, metadata: { ...draft.metadata, [key]: e.target.value } })} /></label>)}
             <div className="goal-dates"><label>New field<input maxLength={80} placeholder="e.g. Focus area" value={metaKey} onChange={e => setMetaKey(e.target.value)} /></label><label>Value<input maxLength={2000} value={metaValue} onChange={e => setMetaValue(e.target.value)} /></label></div>

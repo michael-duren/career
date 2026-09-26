@@ -291,6 +291,10 @@ func TestMCPOverOAuth(t *testing.T) {
 	if len(goals) != 1 || goals[0].(map[string]any)["title"] != "Learn" || counts["note"] != float64(1) || counts["page"] != float64(2) {
 		t.Fatal(overview)
 	}
+	// Mini goals (steps) are listed, not only counted.
+	if steps, _ := goals[0].(map[string]any)["steps"].([]any); len(steps) != 1 || steps[0].(map[string]any)["title"] != "First" || steps[0].(map[string]any)["done"] != false || steps[0].(map[string]any)["id"] != "44444444-4444-4444-8444-444444444444" {
+		t.Fatal("overview steps", goals[0])
+	}
 	list, _ := call("list_career_entries", map[string]any{"kind": "page", "limit": 1})
 	if entries, _ := list["entries"].([]any); len(entries) != 1 || list["nextOffset"] != float64(1) {
 		t.Fatal(list)
