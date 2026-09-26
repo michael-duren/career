@@ -165,7 +165,7 @@ func (s *Store) FinishRunningClip(ctx context.Context, c RunningClip, transcript
 		return err
 	}
 	if !merged {
-		if body = strings.TrimSpace(body); body != "" {
+		if body = strings.TrimRight(body, " \t\r\n"); body != "" {
 			body += "\n\n"
 		}
 		body += strings.TrimSpace(transcript)
