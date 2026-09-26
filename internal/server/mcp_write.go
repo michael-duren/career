@@ -4,9 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,8 +18,6 @@ var mcpWritableKinds = map[string]bool{"goal": true, "company": true, "note": tr
 // managedFields are set by the server and cannot be written through MCP.
 var managedFields = map[string]bool{"id": true, "slug": true, "createdAt": true, "updatedAt": true}
 
-var slugRE = regexp.MustCompile(`[^a-z0-9]+`)
-
 var errNeedsWrite = errors.New("this connection is read-only; reconnect the connector and choose \"Allow read and edit\" to change saved data")
 
 func canWrite(req *mcp.CallToolRequest) bool {
@@ -30,43 +26,52 @@ func canWrite(req *mcp.CallToolRequest) bool {
 
 func writableKind(name string) (string, error) {
 	if !mcpWritableKinds[name] {
-		return "", fmt.Errorf("%w: kind must be goal, company or note", database.ErrInvalid)
+		return "", invalidInput("kind must be goal, company or note")
 	}
 	return mcpKinds[name], nil
 }
 
-func slugify(title string) string {
-	slug := strings.Trim(slugRE.ReplaceAllString(strings.ToLower(title), "-"), "-")
-	if len(slug) > 80 {
-		slug = strings.Trim(slug[:80], "-")
-	}
-	return slug
-}
-
 // fillChildren gives new goal steps/notes and note todos the IDs and defaults
 // the website would create, so clients only need to send titles and bodies.
-func fillChildren(kind string, e database.Entity) {
+// Goal notes re-sent without createdAt keep their time from previousNotes.
+func fillChildren(kind string, e database.Entity, previousNotes any) error {
 	keys := map[string][]string{"goal": {"steps", "notes"}, "note": {"todos"}}[kind]
 	now := time.Now().UTC().Format(time.RFC3339Nano)
+	created := map[string]any{}
+	old, _ := previousNotes.([]any)
+	for _, raw := range old {
+		if note, ok := raw.(map[string]any); ok {
+			created[fmt.Sprint(note["id"])] = note["createdAt"]
+		}
+	}
 	for _, key := range keys {
 		items, _ := e[key].([]any)
 		for _, raw := range items {
 			item, ok := raw.(map[string]any)
 			if !ok {
-				continue
+				continue // rejected by validation
 			}
-			if id, _ := item["id"].(string); id == "" {
+			id, present := item["id"]
+			if _, isString := id.(string); present && !isString {
+				return invalidInput("%s id must be a string", key)
+			}
+			if id == nil || id == "" {
 				item["id"] = uuid.NewString()
 			}
 			if key == "notes" {
 				if _, ok := item["createdAt"]; !ok {
-					item["createdAt"] = now
+					if at, ok := created[fmt.Sprint(item["id"])]; ok {
+						item["createdAt"] = at
+					} else {
+						item["createdAt"] = now
+					}
 				}
 			} else if _, ok := item["done"]; !ok {
 				item["done"] = false
 			}
 		}
 	}
+	return nil
 }
 
 func setDefault(e database.Entity, key string, value any) {
@@ -84,7 +89,6 @@ func newEntry(kind string, input map[string]any) (database.Entity, error) {
 		}
 		e[k] = v
 	}
-	title, _ := e["title"].(string)
 	setDefault(e, "tags", []any{})
 	switch kind {
 	case "goal":
@@ -94,24 +98,25 @@ func newEntry(kind string, input map[string]any) (database.Entity, error) {
 		setDefault(e, "steps", []any{})
 		setDefault(e, "notes", []any{})
 		setDefault(e, "metadata", map[string]any{})
+		if tags, _ := e["tags"].([]any); len(tags) > 0 {
+			return nil, invalidInput("goals have no tags")
+		}
 		delete(e, "tags")
 	case "note":
-		topic, _ := e["topic"].(string)
-		e["id"] = slugify(topic + " " + title)
+		e["id"] = uuid.NewString()
 		setDefault(e, "description", "")
 		setDefault(e, "body", "")
 	case "company":
-		e["slug"] = slugify(title)
+		e["slug"] = uuid.NewString()
 		setDefault(e, "type", "company")
 		setDefault(e, "featured", false)
 		setDefault(e, "priority", "medium")
 		setDefault(e, "status", "not_started")
 		setDefault(e, "body", "")
 	}
-	if e["slug"] == "" || e["id"] == "" {
-		return nil, fmt.Errorf("%w: title must contain letters or digits", database.ErrInvalid)
+	if err := fillChildren(kind, e, nil); err != nil {
+		return nil, err
 	}
-	fillChildren(kind, e)
 	return e, nil
 }
 
@@ -175,19 +180,20 @@ func (s *Server) addWriteTools(server *mcp.Server) {
 			return nil, nil, err
 		}
 		if !database.ValidID(kind, in.ID) || in.Revision == "" {
-			return nil, nil, fmt.Errorf("%w: valid id and revision are required", database.ErrInvalid)
+			return nil, nil, invalidInput("valid id and revision are required")
 		}
 		if len(in.Fields) == 0 {
-			return nil, nil, fmt.Errorf("%w: no fields to change", database.ErrInvalid)
+			return nil, nil, invalidInput("no fields to change")
 		}
 		current, err := s.db.Detail(ctx, kind, in.ID)
 		if err != nil {
 			return nil, nil, toolError(err)
 		}
 		entry := current.Entry
+		previousNotes := entry["notes"]
 		for k, v := range in.Fields {
 			if managedFields[k] {
-				return nil, nil, fmt.Errorf("%w: %s cannot be changed", database.ErrInvalid, k)
+				return nil, nil, invalidInput("%s cannot be changed", k)
 			}
 			if v == nil {
 				delete(entry, k)
@@ -195,7 +201,9 @@ func (s *Server) addWriteTools(server *mcp.Server) {
 				entry[k] = v
 			}
 		}
-		fillChildren(kind, entry)
+		if err := fillChildren(kind, entry, previousNotes); err != nil {
+			return nil, nil, err
+		}
 		return s.saveFromMCP(ctx, in.Kind, kind, entry, &in.Revision)
 	})
 }
@@ -205,14 +213,14 @@ func (s *Server) addWriteTools(server *mcp.Server) {
 func (s *Server) saveFromMCP(ctx context.Context, name, kind string, entry database.Entity, revision *string) (*mcp.CallToolResult, any, error) {
 	prepared, err := database.PrepareSave(kind, entry)
 	if err != nil {
-		return nil, nil, fmt.Errorf("%w: %v", database.ErrInvalid, err)
+		return nil, nil, invalidInput("%v", err)
 	}
 	saved, err := s.db.Save(ctx, kind, prepared, revision)
 	switch {
 	case errors.Is(err, database.ErrConflict) && revision == nil:
-		return nil, nil, fmt.Errorf("%w: an entry with this ID already exists; update it instead or choose another title", database.ErrInvalid)
+		return nil, nil, invalidInput("an entry with this ID already exists; update it instead or choose another title")
 	case errors.Is(err, database.ErrConflict):
-		return nil, nil, fmt.Errorf("%w: the entry changed since it was read; read it again, reapply the change, and retry", database.ErrInvalid)
+		return nil, nil, invalidInput("the entry changed since it was read; read it again, reapply the change, and retry")
 	case err != nil:
 		return nil, nil, toolError(err)
 	}

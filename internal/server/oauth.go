@@ -161,7 +161,7 @@ func (s *Server) authorizationServerMetadata(w http.ResponseWriter, r *http.Requ
 		"authorization_endpoint":                         o + "/oauth/authorize",
 		"token_endpoint":                                 o + "/oauth/token",
 		"registration_endpoint":                          o + "/oauth/register",
-		"scopes_supported":                               []string{mcpScope},
+		"scopes_supported":                               []string{mcpScope, mcpWriteScope},
 		"response_types_supported":                       []string{"code"},
 		"grant_types_supported":                          []string{"authorization_code", "refresh_token"},
 		"code_challenge_methods_supported":               []string{"S256"},
@@ -432,7 +432,7 @@ h1{font-size:1.25rem;margin-top:0}code{background:#0f172a;padding:2px 6px;border
 .approve{background:#38bdf8;color:#0f172a;font-weight:600}.deny{background:#334155;color:#e2e8f0}
 </style></head><body><main>
 {{if .Error}}<h1>Cannot connect</h1><p>{{.Error}}</p>{{else}}
-<h1>Allow this application to read your career workspace?</h1>
+<h1>Connect this application to your career workspace?</h1>
 {{if .Client}}<p>It calls itself <strong>{{.Client}}</strong>. Names are self-reported; check where you return below.</p>{{end}}
 <p>It will be able to read your goals, work and personal journals, notes, pages, books, companies, and connections.</p>
 <p><strong>Read and edit</strong> also lets it create and change goals, companies, and notes. It cannot delete anything.</p>

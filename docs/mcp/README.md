@@ -69,7 +69,7 @@ requested by kind. Prompt `career_conversation` offers a guided entry point.
 Write tools (need **Allow read and edit**):
 
 - `create_career_entry`: create a goal, company or note. IDs, slugs and timestamps are
-  generated (company slug from title, note ID from topic and title).
+  generated as random UUIDs, like the website.
 - `update_career_entry`: patch a goal, company or note. Pass the `revision` from
   `read_career_entry` and only changed fields. A stale revision is rejected instead of
   overwriting newer edits. New steps, notes and todos may omit IDs.
