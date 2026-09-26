@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { indexedDB } from 'fake-indexeddb';
-import { enqueueClip, queuedClips, removeClip, syncClips, syncSettled, takesForThought, type QueuedClip } from '../src/lib/running-queue.ts';
+import { enqueueClip, queuedClips, removeClip, pauseSync, syncClips, takesForThought, type QueuedClip } from '../src/lib/running-queue.ts';
 import { agentContext, journalMarkdown } from '../src/lib/agent-context.ts';
 import { careerEntries } from '../src/lib/mcp-server.ts';
 import { searchEntries } from '../src/lib/search.ts';
@@ -70,8 +70,49 @@ test('a take discarded while a sync is running is not uploaded', async () => {
       return new Response(JSON.stringify({ clipId: id, noteId: 'run-one' }), { status: 200 });
     };
     await syncClips(() => {});
-    await syncSettled();
     assert.deepEqual(uploaded, ['kept']);
+    assert.equal((await queuedClips()).length, 0);
+  } finally { globalThis.fetch = original; }
+});
+
+test('pausing sync waits only for the take in flight, holds the rest until resumed', async () => {
+  Object.defineProperty(globalThis, 'indexedDB', { value: indexedDB, configurable: true });
+  Object.defineProperty(globalThis, 'window', { value: new EventTarget(), configurable: true });
+  const original = globalThis.fetch;
+  try {
+    for (const clip of await queuedClips()) await removeClip(clip.clientId);
+    for (let i = 0; i < 3; i++) await enqueueClip({ clientId: `take-${i}`, recordedAt: `2026-09-19T10:0${i}:00Z`, durationMs: 1000, audio: new Blob(['a'], { type: 'audio/webm' }) });
+    const uploaded: string[] = [];
+    let release!: () => void, started!: () => void;
+    const inFlight = new Promise<void>(resolve => { started = resolve; });
+    globalThis.fetch = async (_url, init) => {
+      const id = String((init?.body as FormData).get('clientId'));
+      uploaded.push(id);
+      if (id === 'take-0') { started(); await new Promise<void>(resolve => { release = resolve; }); }
+      return new Response(JSON.stringify({ clipId: id, noteId: 'run-one' }), { status: 200 });
+    };
+    const running = syncClips(() => {});
+    await inFlight;
+    const pause = pauseSync();
+    assert.equal(pause.uploading, true);
+    let settled = false;
+    void pause.settled.then(() => { settled = true; });
+    await new Promise(resolve => setTimeout(resolve, 10));
+    assert.equal(settled, false, 'waits for the take being uploaded');
+    release();
+    await pause.settled; await running;
+    assert.deepEqual(uploaded, ['take-0'], 'stops before the next take');
+    await syncClips(() => {});
+    assert.deepEqual(uploaded, ['take-0'], 'a retry while paused uploads nothing');
+    assert.equal((await queuedClips()).length, 2);
+    const idle = pauseSync();
+    assert.equal(idle.uploading, false);
+    pause.resume(); pause.resume();
+    await syncClips(() => {});
+    assert.deepEqual(uploaded, ['take-0'], 'still paused by the second holder; double resume counts once');
+    idle.resume();
+    await syncClips(() => {});
+    assert.deepEqual(uploaded, ['take-0', 'take-1', 'take-2']);
     assert.equal((await queuedClips()).length, 0);
   } finally { globalThis.fetch = original; }
 });

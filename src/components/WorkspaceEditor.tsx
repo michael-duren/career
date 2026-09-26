@@ -11,7 +11,7 @@ import { THOUGHT_PLACEHOLDER, isAutoTitle, thoughtDate, thoughtExcerpt, thoughtT
 import { AudioLines, CalendarPlus, Clock, ListChecks, PencilLine, Trash2 } from 'lucide-react';
 import { entryTone, tagChipClass } from '../lib/tag-colors';
 import { noteDate, noteStats } from '../lib/note-card';
-import { queuedClips, removeClip, syncSettled, takesForThought, type QueuedClip } from '../lib/running-queue';
+import { pauseSync, queuedClips, removeClip, syncClips, takesForThought, type QueuedClip } from '../lib/running-queue';
 
 const field = 'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
 const button = 'rounded-lg border border-zinc-700 px-3 py-2 text-sm hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed';
@@ -300,10 +300,25 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
     // Cards hold list summaries and transcription can change the title and revision
     // after the list loaded, so confirm and delete against the latest saved thought.
     const latest = () => request(kind, 'GET', undefined, thought.id).catch(e => { if (httpStatus(e) === 404) return null; throw e; }) as Promise<EntryResult | null>;
-    setBusy(true); setError(''); setStatus('');
+    // Hold uploads while deleting so no take joins the thought between counting and
+    // discarding its takes. Only the take already uploading is waited for.
+    const sync = pauseSync();
+    const discard = async (takes: QueuedClip[]) => {
+      const kept = (await Promise.allSettled(takes.map(take => removeClip(take.clientId)))).filter(result => result.status === 'rejected').length;
+      if (kept) setError(`Thought deleted, but ${kept} unsent take${kept === 1 ? '' : 's'} could not be discarded from this device.`);
+    };
+    setBusy(true); setError(''); setStatus(sync.uploading ? 'Finishing the current upload…' : '');
     try {
+      await sync.settled;
+      setStatus('');
       let detail = await latest();
-      if (!detail) { deleted(); return; }
+      if (!detail) {
+        // Already deleted elsewhere: takes addressed to it could only fail to upload.
+        const queued = await queuedClips().catch(() => [] as QueuedClip[]);
+        await discard(takesForThought(queued, thought.id, [], 0));
+        deleted();
+        return;
+      }
       const takes = await unsentTakes(thought.id);
       const title = 'runDate' in detail.entry && !isAutoTitle(detail.entry.title) ? `"${detail.entry.title}"` : 'this untitled thought';
       const discarded = takes.length ? ` ${takes.length} unsent take${takes.length === 1 ? '' : 's'} from this session will also be discarded.` : '';
@@ -318,16 +333,18 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
         }
       }
       // Unsent takes would otherwise recreate the thought when they upload.
-      const kept = (await Promise.allSettled(takes.map(take => removeClip(take.clientId)))).filter(result => result.status === 'rejected').length;
+      await discard(takes);
       deleted();
-      if (kept) setError(`Thought deleted, but ${kept} unsent take${kept === 1 ? '' : 's'} could not be discarded from this device.`);
     } catch (e) { setError((e as Error).message); }
-    finally { setBusy(false); }
+    finally {
+      setBusy(false);
+      sync.resume();
+      // Upload the takes that were held back; the recorder reports any failure on its next retry.
+      void syncClips(() => {}).catch(() => {});
+    }
   }
   /** Queued takes that would upload into this thought, found with the server's grouping window. */
   async function unsentTakes(noteId: string): Promise<QueuedClip[]> {
-    // Let an upload in progress finish so its take is counted as stored, not queued.
-    await syncSettled();
     const queued = await queuedClips().catch(() => [] as QueuedClip[]);
     if (!queued.length) return [];
     const response = await fetch(`/api/running/${encodeURIComponent(noteId)}/status`, { cache: 'no-store' });

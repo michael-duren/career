@@ -39,26 +39,47 @@ export function takesForThought(queued: QueuedClip[], noteId: string, clipTimes:
   }
   return queued.filter(clip => matched.has(clip));
 }
+// Sync state is module-level: RunningRecorder and WorkspaceEditor must share this one
+// module instance (one bundle per page) for pausing to stop the recorder's uploads.
 let syncing: Promise<void> | undefined;
-/** Settles once any upload in progress has finished, successfully or not. */
-export const syncSettled = () => (syncing ?? Promise.resolve()).catch(() => {});
+let uploading: Promise<void> | undefined;
+let pauses = 0;
+/**
+ * Stops syncing before its next take, leaving the rest queued, and blocks new syncs
+ * until resumed. `settled` waits only for the take being uploaded right now.
+ */
+export function pauseSync(): { uploading: boolean; settled: Promise<void>; resume: () => void } {
+  pauses++;
+  let resumed = false;
+  return {
+    uploading: !!uploading,
+    settled: (uploading ?? Promise.resolve()).catch(() => {}),
+    resume: () => { if (!resumed) { resumed = true; pauses--; } },
+  };
+}
+async function uploadTake(clip: QueuedClip, onChange: () => void) {
+  const form = new FormData(); form.set('audio', clip.audio, 'recording');
+  form.set('clientId', clip.clientId); form.set('recordedAt', clip.recordedAt); form.set('durationMs', String(clip.durationMs));
+  if (clip.noteId) form.set('noteId', clip.noteId);
+  const response = await fetch('/api/running/clips', { method: 'POST', body: form, redirect: 'error', signal: AbortSignal.timeout(180000) });
+  if (!response.ok) throw new Error(response.status === 401 ? 'Sign in to upload saved clips.' : (await response.json()).error || 'Upload failed; audio remains on this device.');
+  const acknowledgement = await response.json();
+  if (acknowledgement.clipId !== clip.clientId || typeof acknowledgement.noteId !== 'string' || !acknowledgement.noteId) throw new Error('Upload acknowledgement invalid; audio remains on this device.');
+  await removeClip(clip.clientId); onChange();
+  window.dispatchEvent(new Event('workspace-saved'));
+}
 export function syncClips(onChange: () => void): Promise<void> {
   if (syncing) return syncing;
+  if (pauses) return Promise.resolve();
   syncing = (async () => {
     const snapshot = (await queuedClips()).sort((a, b) => a.recordedAt.localeCompare(b.recordedAt));
     for (const { clientId } of snapshot) {
       // Re-read each take: deleting its thought may have discarded it since the snapshot.
       const clip = await queuedClip(clientId);
+      if (pauses) return;
       if (!clip) continue;
-      const form = new FormData(); form.set('audio', clip.audio, 'recording');
-      form.set('clientId', clip.clientId); form.set('recordedAt', clip.recordedAt); form.set('durationMs', String(clip.durationMs));
-      if (clip.noteId) form.set('noteId', clip.noteId);
-      const response = await fetch('/api/running/clips', { method: 'POST', body: form, redirect: 'error', signal: AbortSignal.timeout(180000) });
-      if (!response.ok) throw new Error(response.status === 401 ? 'Sign in to upload saved clips.' : (await response.json()).error || 'Upload failed; audio remains on this device.');
-      const acknowledgement = await response.json();
-      if (acknowledgement.clipId !== clip.clientId || typeof acknowledgement.noteId !== 'string' || !acknowledgement.noteId) throw new Error('Upload acknowledgement invalid; audio remains on this device.');
-      await removeClip(clip.clientId); onChange();
-      window.dispatchEvent(new Event('workspace-saved'));
+      uploading = uploadTake(clip, onChange);
+      try { await uploading; } finally { uploading = undefined; }
     }
   })().finally(() => { syncing = undefined; });
   return syncing;
