@@ -142,7 +142,19 @@ try {
   await saved('Mini goal reordered');
   assert.deepEqual((await stored('Parent A')).map(s => s.title), ['one', 'three', 'two renamed']);
   await wait(`document.activeElement === ${card('Parent A')}.querySelector('[aria-label="Move three up"]')`);
+  // Reaching the top disables ↑; focus falls back to ↓ instead of being lost.
+  await evaluate(`${card('Parent A')}.querySelector('[aria-label="Move three up"]').click()`);
+  await saved('Mini goal reordered');
+  assert.deepEqual((await stored('Parent A')).map(s => s.title), ['three', 'one', 'two renamed']);
+  await wait(`document.activeElement === ${card('Parent A')}.querySelector('[aria-label="Move three down"]')`);
+  assert.equal(await evaluate(`${card('Parent A')}.querySelector('[aria-label="Move three up"]').disabled`), true);
   await evaluate(`Array.from(${card('Parent A')}.querySelectorAll('li.is-editing button')).find(b => b.textContent === 'Cancel').click()`);
+  // Enter on the handle opens the same edit form; Escape closes it.
+  await evaluate(`${handle('Parent A', 'two renamed')}.focus()`);
+  await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
+  await wait(`document.activeElement === ${card('Parent A')}.querySelector('li.is-editing input') && document.activeElement.value === 'two renamed'`);
+  await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+  await wait(`!${card('Parent A')}.querySelector('li.is-editing')`);
 
   // Real drag from the handle at a zoomed-out view: drop "one" on the lower half of Parent B's "bee".
   await evaluate(`Array.from(document.querySelectorAll('.graph-navigation button')).find(b => b.textContent === 'Fit view').click()`);

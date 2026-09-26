@@ -86,11 +86,11 @@ export function GoalGraph() {
   }, [loaded, showFinished, showMinis]);
   /**
    * Runs one save at a time and merges the changed goals the server returns.
-   * `pin` keeps every card where it is (connections); otherwise only manually
-   * dragged cards stay put and the rest re-layout around changed card heights.
+   * Manually dragged cards keep their positions; the rest re-layout around
+   * changed edges and card heights, so growing cards never overlap.
    * `preview` shows the change immediately and is reverted if the save fails.
    */
-  async function mutate(pending: string, done: string, conflict: string, request: () => Promise<Response>, options: { pin?: boolean; preview?: (goals: Goal[]) => Goal[] } = {}) {
+  async function mutate(pending: string, done: string, conflict: string, request: () => Promise<Response>, options: { preview?: (goals: Goal[]) => Goal[] } = {}) {
     if (busy.current) return false;
     busy.current = true; setSaving(true); setMessage(pending); setError('');
     const before = goals;
@@ -100,7 +100,6 @@ export function GoalGraph() {
       const data = await response.json();
       if (!response.ok) throw new Error(response.status === 409 ? conflict : data.error || 'Could not save. Try again.');
       const changed: Goal[] = data.goals ?? [data.goal];
-      if (options.pin) setPositions(points);
       setGoals(current => current.map(g => changed.find(c => c.id === g.id) ?? g));
       setRevisions(current => ({ ...current, ...(data.revisions ?? { [data.goal.id]: data.revision }) }));
       setMessage(done); return true;
@@ -118,7 +117,7 @@ export function GoalGraph() {
     if (!remove && (from === to || goal.dependsOn.includes(from))) { setError(from === to ? 'Choose a different goal to connect.' : 'These goals are already connected.'); return; }
     const draft = { ...goal, dependsOn: remove ? goal.dependsOn.filter(id => id !== from) : [...goal.dependsOn, from] };
     if (dependencyCycle(goals, draft)) { setError('That connection would create a loop. A prerequisite cannot depend on its own goal.'); return; }
-    if (await mutate('Saving connection…', remove ? 'Connection removed' : 'Connection saved', 'This goal changed elsewhere. Reload the page before connecting it.', postGoal(draft), { pin: true })) setSelected(null);
+    if (await mutate('Saving connection…', remove ? 'Connection removed' : 'Connection saved', 'This goal changed elsewhere. Reload the page before connecting it.', postGoal(draft))) setSelected(null);
   }
   const saveSteps = (goal: Goal, steps: MiniGoal[], pending: string, done: string) =>
     mutate(pending, done, 'This goal changed elsewhere. Reload the page before editing its mini goals.', postGoal({ ...goal, steps }));
@@ -142,11 +141,21 @@ export function GoalGraph() {
       () => fetch('/api/goals/steps/move', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stepId: move.stepId, from: move.from, fromRevision: revisions[move.from], to: move.to, toRevision: revisions[move.to], index: move.index }) }),
       { preview: current => applyStepMove(current, move) });
   }
-  /** Keyboard and button reorders keep focus on the moved mini goal's control. */
+  /**
+   * Keyboard and button reorders keep focus on the moved mini goal. When the
+   * pressed arrow becomes disabled (top or bottom), focus moves to the other
+   * arrow, then the handle, then the name field.
+   */
   async function shiftMini(goal: Goal, step: MiniGoal, by: -1 | 1, focus: string) {
     const index = goal.steps.findIndex(s => s.id === step.id);
     const move = stepMove(goals, step.id, goal.id, by < 0 ? index - 1 : index + 2);
-    const refocus = () => requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-mini-focus="${focus}"]`)?.focus());
+    const order = [focus, focus.startsWith('up:') ? `down:${step.id}` : `up:${step.id}`, `handle:${step.id}`, `name:${step.id}`];
+    const refocus = () => requestAnimationFrame(() => {
+      for (const key of order) {
+        const el = document.querySelector<HTMLElement>(`[data-mini-focus="${key}"]`);
+        if (el && !(el as HTMLButtonElement).disabled) { el.focus(); return; }
+      }
+    });
     if (!move) return;
     refocus();
     await moveMini(move);
@@ -184,7 +193,7 @@ export function GoalGraph() {
           const open = () => setEditing({ step: step.id, title: step.title, to: goal.id });
           return <li key={step.id} data-mini-index={index} className={`${step.done ? 'is-done' : ''} ${dragging === step.id ? 'is-dragging' : ''} ${target === index ? 'drop-before' : ''} ${edit ? 'is-editing' : ''}`}>
             {edit ? <form onSubmit={e => { e.preventDefault(); void renameMini(goal, step, edit.title); }}>
-              <input autoFocus aria-label="Mini goal name" maxLength={500} value={edit.title} onChange={e => setEditing({ ...edit, title: e.target.value })} onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); setEditing(null); } }} />
+              <input autoFocus data-mini-focus={`name:${step.id}`} aria-label="Mini goal name" maxLength={500} value={edit.title} onChange={e => setEditing({ ...edit, title: e.target.value })} onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); setEditing(null); } }} />
               <div>
                 <button type="button" data-mini-focus={`up:${step.id}`} aria-label={`Move ${step.title} up`} disabled={saving || index === 0} onClick={() => void shiftMini(goal, step, -1, `up:${step.id}`)}>↑</button>
                 <button type="button" data-mini-focus={`down:${step.id}`} aria-label={`Move ${step.title} down`} disabled={saving || index === goal.steps.length - 1} onClick={() => void shiftMini(goal, step, 1, `down:${step.id}`)}>↓</button>
@@ -199,7 +208,7 @@ export function GoalGraph() {
               </div>
             </form> : <>
               <span className="graph-mini-handle" role="button" tabIndex={0} draggable data-mini-focus={`handle:${step.id}`}
-                aria-label={`Reorder ${step.title}. Drag this handle to reorder or move to another goal, or press the up and down arrow keys.`} title="Drag to reorder or move to another goal"
+                aria-label={`Reorder ${step.title}. Drag this handle to reorder or move to another goal, press the up and down arrow keys, or press Enter to edit.`} title="Drag to reorder or move to another goal"
                 onDragStart={e => {
                   if (busy.current) { e.preventDefault(); return; }
                   e.dataTransfer.setData('text/plain', step.id); e.dataTransfer.effectAllowed = 'move';
@@ -208,7 +217,11 @@ export function GoalGraph() {
                   setDragging(step.id);
                 }}
                 onDragEnd={endDrag}
-                onKeyDown={e => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); void shiftMini(goal, step, e.key === 'ArrowUp' ? -1 : 1, `handle:${step.id}`); } }}>⋮⋮</span>
+                onKeyDown={e => {
+                  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); void shiftMini(goal, step, e.key === 'ArrowUp' ? -1 : 1, `handle:${step.id}`); }
+                  // Like the edit button: open the form to rename, reorder or move.
+                  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+                }}>⋮⋮</span>
               <input type="checkbox" aria-label={`Mark ${step.title} ${step.done ? 'not done' : 'done'}`} checked={step.done} disabled={saving}
                 onChange={e => void saveSteps(goal, goal.steps.map(s => s.id === step.id ? { ...s, done: e.target.checked } : s), 'Saving mini goal…', e.target.checked ? 'Mini goal done' : 'Mini goal reopened')} />
               <span title={step.title} onDoubleClick={open}>{step.title}</span>
