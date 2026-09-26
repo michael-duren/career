@@ -120,6 +120,11 @@ func TestLeetgrinderWorkflow(t *testing.T) {
 	if err != nil || len(state.Attempts) != 1 {
 		t.Fatalf("retry duplicated attempt: %+v %v", state, err)
 	}
+	reused := url.Values{"id": values["id"], "outcome": {"struggled"}, "minutes": {"30"}, "notes": {"reused form"}}
+	w := request("POST", path, reused)
+	if w.Code != 409 || !strings.Contains(w.Body.String(), "reused form") || strings.Contains(w.Body.String(), `value="`+values.Get("id")+`"><input type="hidden" name="revision" value="">`) {
+		t.Fatalf("reused create identifier was not replaced: %d %s", w.Code, w.Body.String())
+	}
 	values.Set("revision", state.Attempts[0].Revision)
 	values.Set("assisted", "false")
 	if w := request("POST", path, values); w.Code != 303 {
@@ -135,7 +140,7 @@ func TestLeetgrinderWorkflow(t *testing.T) {
 	if w := request("POST", "/leetgrinder/day/1/complete", url.Values{"completed": {"true"}}); w.Code != 303 || w.Header().Get("Location") != "/leetgrinder/day/2" {
 		t.Fatalf("finish day: %d %s", w.Code, w.Header().Get("Location"))
 	}
-	w := request("GET", "/leetgrinder/export", nil)
+	w = request("GET", "/leetgrinder/export", nil)
 	var exported leetgrinder.State
 	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &exported) != nil {
 		t.Fatal("bad export")
