@@ -10,9 +10,14 @@ self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     for (const name of await caches.keys()) {
       if (!name.startsWith('career-public-') || name === CACHE) continue;
-      // Carry the pre-rename /running shell over so the recorder still opens offline after upgrading.
-      const legacy = await (await caches.open(name)).match('/running');
-      if (legacy && !await caches.match(SHELL)) await (await caches.open(CACHE)).put(SHELL, legacy);
+      // Carry the pre-rename /running shell, and the hashed assets it links to, over so
+      // the recorder still opens offline after upgrading. Hashed names cannot collide.
+      const old = await caches.open(name), next = await caches.open(CACHE);
+      const legacy = await old.match('/running');
+      if (legacy && !await next.match(SHELL)) {
+        await next.put(SHELL, legacy);
+        for (const request of await old.keys()) if (new URL(request.url).pathname.startsWith('/_astro/') && !await next.match(request)) await next.put(request, await old.match(request));
+      }
       await caches.delete(name);
     }
     await self.clients.claim();
