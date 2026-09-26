@@ -72,7 +72,7 @@ try {
   await send('Network.enable');
   await send('Network.setCookie', { name: 'session', value: session, url: base, httpOnly: true, sameSite: 'Lax' });
 
-  const routes = new Set(['/', '/login', '/agents', '/personal-journal', '/journal', '/timeline', '/documents', '/notes', '/companies', '/progress', '/logs', '/books', '/manage/books', '/manage/companies']);
+  const routes = new Set(['/', '/login', '/agents', '/personal-journal', '/journal', '/journal/new', '/timeline', '/documents', '/notes', '/companies', '/progress', '/logs', '/books', '/manage/books', '/manage/companies']);
   const { readdir } = await import('node:fs/promises');
   for (const route of ['/2026/career-study-plan', '/2026/languages', '/2026/os-oss', '/2026/os-oss/ostep', '/2026/os-oss/build-runtime', '/2026/os-oss/conference-talk', '/2026/os-oss/container-internals', '/2026/system-design', '/2026/system-design/alex-xu-vol1', '/2026/system-design/ddia-read', '/2026/system-design/hello-interview', '/2026/random/vintage-computers']) routes.add(route);
   for (const kind of ['notes', 'docs']) {
