@@ -44,9 +44,10 @@ test('formatting helpers', () => {
   assert.ok(!matchesQuery(base, 'datadog'));
 });
 
-test('connections group by company, most recently contacted first, ignoring unlinked people', () => {
+test('connections group by company, most recent touchpoint first, ignoring unlinked people', () => {
   const groups = connectionsByCompany([
     { ...base, id: 'old', name: 'Old', companySlug: 'grafana-labs', lastContactedOn: '2026-01-01' },
+    { ...base, id: 'connected', name: 'Connected', companySlug: 'grafana-labs', connectedOn: '2026-06-01' },
     { ...base, id: 'never-b', name: 'Bea', companySlug: 'grafana-labs' },
     { ...base, id: 'unlinked', name: 'Unlinked' },
     { ...base, id: 'recent', name: 'Recent', companySlug: 'grafana-labs', lastContactedOn: '2026-09-01' },
@@ -54,7 +55,8 @@ test('connections group by company, most recently contacted first, ignoring unli
     { ...base, id: 'other', name: 'Other', companySlug: 'datadog' },
   ]);
   assert.deepEqual([...groups.keys()], ['grafana-labs', 'datadog']);
-  assert.deepEqual(groups.get('grafana-labs')?.map(c => c.id), ['recent', 'old', 'never-a', 'never-b']);
+  assert.deepEqual(groups.get('grafana-labs')?.map(c => c.id), ['recent', 'connected', 'old', 'never-a', 'never-b']);
+  assert.equal(connectionsByCompany([]).size, 0);
 });
 
 test('avatar stacks cap circles and never show +1', () => {
@@ -62,4 +64,9 @@ test('avatar stacks cap circles and never show +1', () => {
   assert.deepEqual(avatarStack([1, 2, 3, 4], 4), { shown: [1, 2, 3, 4], overflow: 0 });
   assert.deepEqual(avatarStack([1, 2, 3, 4, 5], 4), { shown: [1, 2, 3], overflow: 2 });
   assert.deepEqual(avatarStack([1, 2, 3, 4, 5, 6, 7, 8, 9], 4), { shown: [1, 2, 3], overflow: 6 });
+  assert.deepEqual(avatarStack([1, 2, 3, 4, 5], 5), { shown: [1, 2, 3, 4, 5], overflow: 0 });
+  assert.deepEqual(avatarStack([1, 2, 3, 4, 5, 6], 5), { shown: [1, 2, 3, 4], overflow: 2 });
+  assert.deepEqual(avatarStack([1], 1), { shown: [1], overflow: 0 });
+  // With room for one circle, it becomes the "+N" badge.
+  assert.deepEqual(avatarStack([1, 2], 1), { shown: [], overflow: 2 });
 });

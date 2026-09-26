@@ -48,4 +48,7 @@ test('company filters combine category and has-connections', () => {
   assert.deepEqual(slugs('Infra', true), ['a']);
   assert.deepEqual(slugs('AI', false), ['c']);
   assert.deepEqual(slugs('Missing', false), []);
+  // Before connections load (or with none), the filter shows nothing rather than everything.
+  assert.deepEqual(filterCompanies(board, { category: 'all', hasConnections: true }, () => 0), []);
+  assert.deepEqual(filterCompanies(board, { category: 'all', hasConnections: false }, () => 0).length, 3);
 });

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { buildBoard, appendCompanyNote, filterCompanies, type RawCompany, type Company, type CompanyStatus } from "../lib/companies";
 import { avatarStack, connectionsByCompany, relativeDays, type Connection } from '../lib/connections';
 import { ConnectionAvatar } from './ConnectionAvatar';
@@ -39,6 +39,7 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
   const [revisions, setRevisions] = useState<Record<string, string>>(initialRevisions);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [connections, setConnections] = useState<Connection[]>();
+  const [connectionsFailed, setConnectionsFailed] = useState(false);
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
   const [error, setError] = useState('');
@@ -54,11 +55,14 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
   useEffect(() => { if (!skipInitialReload) void reload(); }, []);
   useEffect(() => {
     const url = detailSlug ? `/api/connections?company=${encodeURIComponent(detailSlug)}` : '/api/connections?linked=1';
-    void fetch(url, { cache: 'no-store' }).then(response => response.ok ? response.json() : undefined)
-      .then(result => { if (result) setConnections(result.connections); }).catch(() => undefined);
+    setConnectionsFailed(false);
+    void fetch(url, { cache: 'no-store' }).then(response => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.json();
+    }).then(result => setConnections(result.connections)).catch(() => setConnectionsFailed(true));
   }, [detailSlug]);
   // One request loads every linked connection; group client-side instead of fetching per company.
-  const connectionsBySlug = connectionsByCompany(connections ?? []);
+  const connectionsBySlug = useMemo(() => connectionsByCompany(connections ?? []), [connections]);
   async function persist(slug: string, change: (company: RawCompany) => RawCompany, action: 'step' | 'note' = 'step') {
     if (lock.current) return;
     lock.current = true; setBusy(true); setError(''); setStatus('Saving…');
@@ -106,49 +110,53 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
 
       {error && <div role="alert" className="rounded-lg border border-red-800 p-3 text-sm text-red-200">{error} <button type="button" disabled={busy} className="underline disabled:opacity-50" onClick={() => void reload()}>Reload latest (keep drafts)</button></div>}
       <p role="status" className="text-sm text-zinc-400">{status}</p>
-      {!detailSlug && <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          aria-pressed={activeCategory === "all"}
-          onClick={() => setActiveCategory("all")}
-          className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${
-            activeCategory === "all"
-              ? "bg-zinc-100 text-zinc-900 border-zinc-100"
-              : "bg-transparent text-zinc-300 border-zinc-700 hover:border-zinc-500"
-          }`}
-        >
-          All categories
-        </button>
-        {data.categories.map((t) => (
+      {!detailSlug && <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex flex-wrap gap-2">
           <button
-            key={t.label}
             type="button"
-            aria-pressed={activeCategory === t.label}
-            onClick={() => setActiveCategory(t.label)}
+            aria-pressed={activeCategory === "all"}
+            onClick={() => setActiveCategory("all")}
             className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${
-              activeCategory === t.label
+              activeCategory === "all"
                 ? "bg-zinc-100 text-zinc-900 border-zinc-100"
                 : "bg-transparent text-zinc-300 border-zinc-700 hover:border-zinc-500"
             }`}
           >
-            {t.label}
+            All categories
           </button>
-        ))}
-        <span aria-hidden="true" className="mx-1 w-px self-stretch bg-zinc-800" />
-        <button
-          type="button"
-          aria-pressed={hasConnections}
-          disabled={!connections}
-          title={connections ? 'Only companies where you know someone' : 'Loading connections…'}
-          onClick={() => setHasConnections(value => !value)}
-          className={`px-3 py-1.5 rounded-md text-sm border transition-colors disabled:opacity-50 ${
-            hasConnections
-              ? "bg-zinc-100 text-zinc-900 border-zinc-100"
-              : "bg-transparent text-zinc-300 border-zinc-700 hover:border-zinc-500"
-          }`}
-        >
-          Has connections
-        </button>
+          {data.categories.map((t) => (
+            <button
+              key={t.label}
+              type="button"
+              aria-pressed={activeCategory === t.label}
+              onClick={() => setActiveCategory(t.label)}
+              className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${
+                activeCategory === t.label
+                  ? "bg-zinc-100 text-zinc-900 border-zinc-100"
+                  : "bg-transparent text-zinc-300 border-zinc-700 hover:border-zinc-500"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-2 sm:border-l sm:border-zinc-800 sm:pl-4">
+          <button
+            type="button"
+            aria-pressed={hasConnections}
+            disabled={!connections}
+            title={connections ? 'Only companies where you know someone' : connectionsFailed ? "Couldn't load connections" : 'Loading connections…'}
+            onClick={() => setHasConnections(value => !value)}
+            className={`px-3 py-1.5 rounded-md text-sm border transition-colors disabled:opacity-50 ${
+              hasConnections
+                ? "bg-zinc-100 text-zinc-900 border-zinc-100"
+                : "bg-transparent text-zinc-300 border-zinc-700 hover:border-zinc-500"
+            }`}
+          >
+            Has connections
+          </button>
+          {connectionsFailed && <span className="text-xs text-red-300">Couldn't load connections.</span>}
+        </div>
       </div>}
 
       {totalCompanies === 0 && <p className="text-zinc-400">{detailSlug ? 'This company is no longer available.' : 'No companies added yet.'}</p>}
@@ -194,7 +202,7 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
                   <label className="block text-zinc-200">Add a note for {company.title}<textarea aria-label={`Add a note for ${company.title}`} required maxLength={5000} disabled={busy} className="mt-1 min-h-20 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="A contact, an impression, or a reminder…" value={drafts[company.slug] ?? ''} onChange={event => setDrafts(previous => ({ ...previous, [company.slug]: event.target.value }))} /></label>
                   <button type="submit" disabled={busy || !drafts[company.slug]?.trim()} className="rounded-lg bg-blue-600 px-3 py-2 text-white hover:bg-blue-500 disabled:opacity-50">Add note</button>
                 </form>
-                <CompanyConnections company={company} connections={connectionsBySlug.get(company.slug)} />
+                <CompanyConnections company={company} connections={connectionsBySlug.get(company.slug)} failed={connectionsFailed} />
               </div>
             </Details>
           </article>
@@ -204,24 +212,25 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
   );
 }
 
-/** Overlapping avatars of the people you know at a company, most recently contacted first. */
+/** Overlapping avatars of the people you know at a company, most recently in touch first. */
 function ConnectionStack({ company, connections = [] }: { company: Company; connections?: Connection[] }) {
   if (connections.length === 0) return null;
   const { shown, overflow } = avatarStack(connections, 4);
-  const label = `${connections.length} connection${connections.length === 1 ? '' : 's'} at ${company.title}`;
-  return <a href={`/connections?company=${encodeURIComponent(company.slug)}`} aria-label={label} title={connections.map(person => person.name).join(', ')}
+  const names = connections.map(person => person.name).join(', ');
+  const label = `${connections.length} connection${connections.length === 1 ? '' : 's'} at ${company.title}: ${names}`;
+  return <a href={`/connections?company=${encodeURIComponent(company.slug)}`} aria-label={label} title={names}
     className="flex shrink-0 self-start -space-x-1.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
     {shown.map(person => <ConnectionAvatar key={person.id} connection={person} size={22} ring="ring-2 ring-zinc-900" />)}
     {overflow > 0 && <span aria-hidden="true" className="flex h-[22px] min-w-[22px] items-center justify-center rounded-full bg-zinc-700 px-1 text-[10px] font-semibold text-zinc-100 ring-2 ring-zinc-900">+{overflow}</span>}
   </a>;
 }
 
-function CompanyConnections({ company, connections: people = [] }: { company: Company; connections?: Connection[] }) {
+function CompanyConnections({ company, connections: people = [], failed }: { company: Company; connections?: Connection[]; failed: boolean }) {
   const today = localDate();
   const slug = encodeURIComponent(company.slug);
   return <section aria-label={`Connections at ${company.title}`} className="space-y-2 border-t border-zinc-800 pt-3">
     <h3 className="font-medium text-zinc-200">Connections{people.length > 0 && ` (${people.length})`}</h3>
-    {people.length === 0 && <p>No connections here yet.</p>}
+    {people.length === 0 && <p>{failed ? "Couldn't load connections." : 'No connections here yet.'}</p>}
     <ul className="space-y-1">
       {people.slice(0, 8).map(person => <li key={person.id}>
         <a href={`/connections?id=${encodeURIComponent(person.id)}`} className="flex items-center gap-2 rounded-lg p-1 hover:bg-zinc-800">

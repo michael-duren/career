@@ -77,7 +77,7 @@ export function photoURL(c: Connection): string | undefined {
   return c.photo ? `/api/connections/photo?id=${encodeURIComponent(c.id)}&v=${encodeURIComponent(c.photo)}` : undefined;
 }
 
-/** Group linked connections by company slug, most recently contacted first. */
+/** Group linked connections by company slug, most recent touchpoint first. */
 export function connectionsByCompany(connections: Connection[]): Map<string, Connection[]> {
   const groups = new Map<string, Connection[]>();
   for (const connection of connections) {
@@ -86,7 +86,7 @@ export function connectionsByCompany(connections: Connection[]): Map<string, Con
     group.push(connection);
     groups.set(connection.companySlug, group);
   }
-  for (const group of groups.values()) group.sort((a, b) => (b.lastContactedOn ?? '').localeCompare(a.lastContactedOn ?? '') || a.name.localeCompare(b.name));
+  for (const group of groups.values()) group.sort((a, b) => (lastTouch(b) ?? '').localeCompare(lastTouch(a) ?? '') || a.name.localeCompare(b.name));
   return groups;
 }
 
