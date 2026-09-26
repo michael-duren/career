@@ -5,6 +5,7 @@ import { ConnectionAvatar } from './ConnectionAvatar';
 
 import { toggleTask } from '../lib/checklist';
 import { localDate } from '../lib/workspace';
+import { tagChipClass } from '../lib/tag-colors';
 
 const STATUS_LABEL: Record<CompanyStatus, string> = {
   not_started: "Not started",
@@ -169,7 +170,7 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
                   {company.url && <a href={company.url} target="_blank" rel="noreferrer" className="hover:underline">Careers ↗</a>}
                 </div>
                 {company.why && <p>{inlineLinks(company.why)}</p>}
-                <div className="flex flex-wrap gap-1">{company.tags.map(tag => <span key={tag} className="rounded bg-zinc-800 px-1.5 py-0.5">{tag}</span>)}</div>
+                <div className="flex flex-wrap gap-1">{company.tags.map(tag => <span key={tag} className={`${tagChipClass(tag)} px-2 py-0.5`}>{tag}</span>)}</div>
                 {company.steps.length > 0 && <div><h3 className="mb-1 font-medium text-zinc-200">Application steps</h3><ul className="space-y-1">{company.steps.map((step) => <li key={step.index}><label className="flex cursor-pointer items-start gap-2"><input type="checkbox" className="mt-0.5 accent-blue-500" disabled={busy} checked={step.completed} onChange={event => { const checked = event.target.checked; void persist(company.slug, saved => ({ ...saved, body: toggleTask(saved.body, step.index, checked) })); }} /><span>{step.label}</span></label></li>)}</ul></div>}
                 <h3 className="font-medium text-zinc-200">Notes</h3>
                 {company.logEntries.length > 0 && <div><ul className="space-y-1">{company.logEntries.map((entry, i) => <li key={i} className="whitespace-pre-wrap break-words">{inlineLinks(entry)}</li>)}</ul></div>}

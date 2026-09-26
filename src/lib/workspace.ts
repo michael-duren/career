@@ -12,7 +12,11 @@ export interface Note {
   body: string;
   /** Omitted by the API when a note has no todos. */
   todos?: NoteTodo[];
+  /** Set by the server on first save; absent on notes imported without one. */
+  createdAt?: string;
   updatedAt?: string;
+  /** Present on list results, which omit the body. */
+  summary?: { wordCount: number; todoCount: number; todoDone: number };
 }
 export interface JournalWeek extends WeekEntry { updatedAt?: string }
 export interface Document {

@@ -6,9 +6,11 @@ import { getEntryId as entryId, getEntryTitle as entryTitle } from '../lib/works
 import EntryFields, { EntryChecklist } from './EntryFields';
 import { NoteTodos, TagInput } from './NoteInputs';
 import { appendDailyEntry, localDate, newWeek } from '../lib/workspace';
-import type { RunningNote } from '../lib/workspace';
+import type { Note, RunningNote } from '../lib/workspace';
 import { THOUGHT_PLACEHOLDER, isAutoTitle, thoughtDate, thoughtExcerpt, thoughtTitle } from '../lib/audio-thoughts';
-import { AudioLines } from 'lucide-react';
+import { AudioLines, CalendarPlus, Clock, ListChecks, PencilLine } from 'lucide-react';
+import { entryTone, tagChipClass } from '../lib/tag-colors';
+import { noteDate, noteStats } from '../lib/note-card';
 
 const field = 'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
 const button = 'rounded-lg border border-zinc-700 px-3 py-2 text-sm hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed';
@@ -53,7 +55,25 @@ function ThoughtCard({ thought, selected, disabled, onOpen }: { thought: Running
   return <button type="button" disabled={disabled} onClick={onOpen} className={`group flex w-full flex-col gap-2 rounded-xl border p-4 text-left transition-colors ${selected ? 'border-sky-500 bg-sky-950/30' : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-600 hover:bg-zinc-900'}`}>
     <span className={`block font-medium ${untitled ? 'text-zinc-400 italic' : 'text-zinc-100'}`}>{untitled ? 'Untitled thought' : thought.title}</span>
     {excerpt ? <span className="line-clamp-2 text-sm leading-relaxed text-zinc-400">{excerpt}</span> : <Transcribing label="Waiting for transcription…" />}
-    <span className="mt-auto flex flex-wrap items-center gap-2 pt-1 text-xs text-zinc-500">{thoughtDate(thought.startedAt)}{thought.tags.map(tag => <span key={tag} className="rounded-full bg-zinc-800 px-2 py-0.5 text-zinc-300">{tag}</span>)}</span>
+    <span className="mt-auto flex flex-wrap items-center gap-2 pt-1 text-xs text-zinc-500">{thoughtDate(thought.startedAt)}{thought.tags.map(tag => <span key={tag} className={`${tagChipClass(tag)} px-2 py-0.5`}>{tag}</span>)}</span>
+  </button>;
+}
+function NoteCard({ note, selected, disabled, onOpen }: { note: Note; selected: boolean; disabled: boolean; onOpen: () => void }) {
+  const tone = entryTone(note.tags), stats = noteStats(note);
+  const created = noteDate(note.createdAt), updated = noteDate(note.updatedAt);
+  return <button type="button" disabled={disabled} onClick={onOpen} data-tone={tone.name} className={`flex w-full flex-col gap-2 rounded-lg border border-l-4 p-3 text-left transition-colors sm:p-4 ${selected ? 'border-blue-500 bg-blue-950/30' : `border-zinc-800 ${tone.card}`}`}>
+    <span className="flex items-start justify-between gap-3">
+      <span className="min-w-0 font-medium text-zinc-100">{note.title}</span>
+      <span className="shrink-0 text-xs text-zinc-500">{note.topic}</span>
+    </span>
+    {note.description && <span className="line-clamp-2 text-sm leading-relaxed text-zinc-400">{note.description}</span>}
+    {note.tags.length > 0 && <span className="flex flex-wrap gap-1.5">{note.tags.map(tag => <span key={tag} className={`${tagChipClass(tag)} px-2 py-0.5 text-xs`}>{tag}</span>)}</span>}
+    <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500">
+      {created && <span className="inline-flex items-center gap-1" title={note.createdAt}><CalendarPlus className="size-3.5" aria-hidden />Created {created}</span>}
+      {updated && updated !== created && <span className="inline-flex items-center gap-1" title={note.updatedAt}><PencilLine className="size-3.5" aria-hidden />Edited {updated}</span>}
+      <span className="inline-flex items-center gap-1"><Clock className="size-3.5" aria-hidden />{stats.words ? `${stats.words.toLocaleString()} words · ${stats.minutes} min read` : 'Empty'}</span>
+      {stats.todos > 0 && <span className="inline-flex items-center gap-1"><ListChecks className="size-3.5" aria-hidden />{stats.todosDone}/{stats.todos} todos</span>}
+    </span>
   </button>;
 }
 export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialId?: string }) {
@@ -316,7 +336,8 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
         </div>}
         {kind !== 'run' && entries && filtered.length === 0 && <p className="text-sm text-zinc-400">No matching entries.</p>}
         {kind === 'run' && filtered.map(item => <ThoughtCard key={entryId(item)} thought={item as RunningNote} selected={!!entry && entryId(entry) === entryId(item)} disabled={busy} onOpen={() => choose(item)} />)}
-        {kind !== 'run' && filtered.map(item => <button type="button" disabled={busy} key={entryId(item)} onClick={() => choose(item)} className={`w-full rounded-lg border p-3 text-left ${entry && entryId(entry) === entryId(item) ? 'border-blue-500 bg-blue-950/30' : 'border-zinc-800 hover:bg-zinc-900'}`}>
+        {kind === 'note' && filtered.map(item => <NoteCard key={entryId(item)} note={item as Note} selected={!!entry && entryId(entry) === entryId(item)} disabled={busy} onOpen={() => choose(item)} />)}
+        {kind !== 'run' && kind !== 'note' && filtered.map(item => <button type="button" disabled={busy} key={entryId(item)} onClick={() => choose(item)} className={`w-full rounded-lg border p-3 text-left ${entry && entryId(entry) === entryId(item) ? 'border-blue-500 bg-blue-950/30' : 'border-zinc-800 hover:bg-zinc-900'}`}>
           <span className="block text-sm font-medium">{entryTitle(item)}</span>
           <span className="mt-1 block text-xs text-zinc-400">{'topic' in item ? item.topic : 'week' in item ? (item.hours ? `${Object.values(item.hours as Record<string, number>).reduce((a, b) => a + b, 0)}h logged` : 'Work journal') : 'status' in item ? item.status.replaceAll('_', ' ') : 'description' in item ? item.description : 'runDate' in item ? item.runDate : ''}</span>
         </button>)}
@@ -335,7 +356,7 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
         </form> : <div className="space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-3"><h2 className={`text-xl font-semibold ${'runDate' in entry && isAutoTitle(entry.title) ? 'text-zinc-400 italic' : ''}`}>{'runDate' in entry && isAutoTitle(entry.title) ? 'Untitled thought' : entryTitle(entry)}</h2><div className="flex gap-2"><button type="button" className={button} disabled={busy} onClick={() => setEditing(true)}>Edit</button>{!(kind === 'document' && ['index', '2026/career-study-plan'].includes(entryId(entry))) && <button type="button" className={`${button} text-red-300`} disabled={busy} onClick={() => void remove()}>Delete</button>}</div></div>
           {kind === 'document' && <a className="inline-block text-sm text-blue-400 hover:underline" href={entryId(entry) === 'index' ? '/' : `/documents/${entryId(entry).split('/').map(encodeURIComponent).join('/')}`}>Open page →</a>}
-          <div className="flex flex-wrap gap-2">{entry.tags.map(tag => <span key={tag} className="rounded-full bg-zinc-800 px-2 py-1 text-xs text-zinc-300">{tag}</span>)}</div>
+          <div className="flex flex-wrap gap-2">{entry.tags.map(tag => <span key={tag} className={`${tagChipClass(tag)} px-2 py-1 text-xs`}>{tag}</span>)}</div>
           {'topic' in entry && <NoteTodos todos={entry.todos ?? []} onChange={saveTodos} />}
           {'status' in entry && <p className="text-sm text-zinc-400">{entry.status.replaceAll('_', ' ')} · {entry.priority} priority</p>}
           {'date' in entry && <p className="text-sm text-zinc-400">{entry.date || 'Undated background'}</p>}
