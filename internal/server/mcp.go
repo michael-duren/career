@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -165,25 +166,25 @@ func (s *Server) newMCPServer() *mcp.Server {
 		if err != nil {
 			return nil, nil, err
 		}
+		if kind == "goal" {
+			return nil, nil, fmt.Errorf("%w: goals are not searchable; use get_career_overview or list_career_entries", database.ErrInvalid)
+		}
 		if in.Limit == 0 {
 			in.Limit = 10
 		}
 		if in.Limit < 1 || in.Limit > 20 {
 			return nil, nil, fmt.Errorf("%w: limit must be 1-20", database.ErrInvalid)
 		}
-		// Fetch extra rows so excluding private audio thoughts still fills the page.
-		results, err := s.db.Search(ctx, query, 100, kind)
+		exclude := ""
+		if kind == "" {
+			exclude = "run"
+		}
+		results, err := s.db.SearchExcluding(ctx, query, in.Limit, kind, exclude)
 		if err != nil {
 			return nil, nil, toolError(err)
 		}
 		matches := []map[string]string{}
 		for _, result := range results {
-			if len(matches) == in.Limit {
-				break
-			}
-			if kind == "" && result.Kind == "run" {
-				continue
-			}
 			matches = append(matches, map[string]string{"kind": mcpKindName(result.Kind), "id": result.ID, "title": result.Title, "excerpt": excerpt(result.Body, query, 400)})
 		}
 		return nil, map[string]any{"matches": matches}, nil
@@ -212,8 +213,14 @@ func (s *Server) newMCPServer() *mcp.Server {
 		if err != nil {
 			return nil, nil, toolError(err)
 		}
-		b, _ := json.MarshalIndent(entry.Entry, "", "  ")
-		text := []rune(string(b))
+		var buf bytes.Buffer
+		encoder := json.NewEncoder(&buf)
+		encoder.SetEscapeHTML(false)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(entry.Entry); err != nil {
+			return nil, nil, toolError(err)
+		}
+		text := []rune(strings.TrimSuffix(buf.String(), "\n"))
 		start := min(in.Offset, len(text))
 		end := min(start+in.Length, len(text))
 		var next *int
@@ -254,12 +261,20 @@ func (s *Server) addOverviewTool(server *mcp.Server) {
 		}
 		goals := []overviewGoal{}
 		for offset := 0; offset >= 0; {
-			page, err := s.db.ListDetails(ctx, "goal", database.Filter{Limit: 100, Offset: offset})
+			page, err := s.db.List(ctx, "goal", database.Filter{Limit: 100, Offset: offset})
 			if err != nil {
 				return nil, nil, toolError(err)
 			}
 			for _, item := range page.Entries {
-				goals = append(goals, summarizeGoal(item.Entry))
+				id, _ := item.Entry["id"].(string)
+				detail, err := s.db.Detail(ctx, "goal", id)
+				if errors.Is(err, database.ErrNotFound) {
+					continue // deleted since the list query
+				}
+				if err != nil {
+					return nil, nil, toolError(err)
+				}
+				goals = append(goals, summarizeGoal(detail.Entry))
 			}
 			offset = -1
 			if page.NextOffset != nil {

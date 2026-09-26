@@ -106,8 +106,9 @@ import '../styles/global.css';
 
         if (result.authenticated) {
           // Redirect to home or previous page
-          const redirectTo = new URLSearchParams(window.location.search).get('redirect') || '/';
-          window.location.href = redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : '/';
+          // Resolve before checking: browsers treat paths like /\evil.com as protocol-relative.
+          const redirectTo = new URL(new URLSearchParams(window.location.search).get('redirect') || '/', window.location.origin);
+          window.location.href = redirectTo.origin === window.location.origin ? redirectTo.pathname + redirectTo.search + redirectTo.hash : '/';
         } else {
           errorMessage.textContent = result.error || 'Invalid credentials';
           errorMessage.classList.remove('hidden');
