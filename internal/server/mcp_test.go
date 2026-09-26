@@ -172,7 +172,7 @@ func TestOAuthDiscoveryAndAuthorize(t *testing.T) {
 	if u := h.approve(request, "deny"); u.Query().Get("error") != "access_denied" || u.Query().Get("state") != "xyz" || u.Query().Get("iss") != testOrigin {
 		t.Fatal(u)
 	}
-	u := h.approve(request, "approve")
+	u := h.approve(request, "read")
 	if u.Host != "client.example" || u.Query().Get("code") == "" || u.Query().Get("state") != "xyz" {
 		t.Fatal(u)
 	}
@@ -241,13 +241,13 @@ func TestMCPOverOAuth(t *testing.T) {
 	w := h.do("GET", implicitAuthorize, "", nil, true)
 	_, rest, _ := strings.Cut(w.Body.String(), `name="request" value="`)
 	implicitRequest, _, _ := strings.Cut(rest, `"`)
-	implicitCode := h.approve(implicitRequest, "approve").Query().Get("code")
+	implicitCode := h.approve(implicitRequest, "read").Query().Get("code")
 	if status, out := h.token(url.Values{"grant_type": {"authorization_code"}, "code": {implicitCode}, "client_id": {clientID}, "code_verifier": {implicitVerifier}}); status != 200 {
 		t.Fatal("omitted redirect_uri rejected", status, out)
 	}
 
 	verifier := strings.Repeat("a1", 30)
-	code := h.approve(h.consent(clientID, testCallback, pkce(verifier)), "approve").Query().Get("code")
+	code := h.approve(h.consent(clientID, testCallback, pkce(verifier)), "read").Query().Get("code")
 
 	exchange := url.Values{"grant_type": {"authorization_code"}, "code": {code}, "redirect_uri": {testCallback}, "client_id": {clientID}, "code_verifier": {verifier}}
 	bad := url.Values{}
@@ -284,34 +284,7 @@ func TestMCPOverOAuth(t *testing.T) {
 		t.Fatal(w.Code)
 	}
 
-	var session *mcp.ClientSession
-	srv := httptest.NewServer(h.handler)
-	defer srv.Close()
-	ctx := context.Background()
-	client := mcp.NewClient(&mcp.Implementation{Name: "test", Version: "1"}, nil)
-	session, err = client.Connect(ctx, &mcp.StreamableClientTransport{Endpoint: srv.URL + "/api/mcp", HTTPClient: &http.Client{Transport: bearerTransport{rotated["access_token"].(string)}}, DisableStandaloneSSE: true}, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer session.Close()
-	tools, err := session.ListTools(ctx, nil)
-	if err != nil || len(tools.Tools) != 4 {
-		t.Fatal(err, tools)
-	}
-	call := func(name string, args map[string]any) (map[string]any, bool) {
-		t.Helper()
-		res, err := session.CallTool(ctx, &mcp.CallToolParams{Name: name, Arguments: args})
-		if err != nil {
-			t.Fatal(name, err)
-		}
-		var out map[string]any
-		b, _ := json.Marshal(res.StructuredContent)
-		_ = json.Unmarshal(b, &out)
-		if res.IsError {
-			return map[string]any{"error": res.Content[0].(*mcp.TextContent).Text}, true
-		}
-		return out, false
-	}
+	call := connectMCP(t, h, rotated["access_token"].(string), 6)
 	overview, _ := call("get_career_overview", nil)
 	goals, _ := overview["goals"].([]any)
 	counts, _ := overview["counts"].(map[string]any)
@@ -354,5 +327,116 @@ func TestMCPOverOAuth(t *testing.T) {
 	}
 	if out, isErr := call("list_career_entries", map[string]any{"kind": "secrets"}); !isErr {
 		t.Fatal(out)
+	}
+	if out, isErr := call("update_career_entry", map[string]any{"kind": "note", "id": "systems/nested-note", "revision": revision, "fields": map[string]any{"title": "x"}}); !isErr || !strings.Contains(out["error"].(string), "read-only") {
+		t.Fatal("read-only token wrote", out)
+	}
+}
+
+type toolCall func(name string, args map[string]any) (map[string]any, bool)
+
+// connectMCP opens a Go MCP client session with the bearer token and returns
+// a helper that decodes structured results or the tool error text.
+func connectMCP(t *testing.T, h *oauthHarness, token string, wantTools int) toolCall {
+	t.Helper()
+	srv := httptest.NewServer(h.handler)
+	t.Cleanup(srv.Close)
+	ctx := context.Background()
+	client := mcp.NewClient(&mcp.Implementation{Name: "test", Version: "1"}, nil)
+	session, err := client.Connect(ctx, &mcp.StreamableClientTransport{Endpoint: srv.URL + "/api/mcp", HTTPClient: &http.Client{Transport: bearerTransport{token}}, DisableStandaloneSSE: true}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { session.Close() })
+	tools, err := session.ListTools(ctx, nil)
+	if err != nil || len(tools.Tools) != wantTools {
+		t.Fatal(err, tools)
+	}
+	return func(name string, args map[string]any) (map[string]any, bool) {
+		t.Helper()
+		res, err := session.CallTool(ctx, &mcp.CallToolParams{Name: name, Arguments: args})
+		if err != nil {
+			t.Fatal(name, err)
+		}
+		if res.IsError {
+			return map[string]any{"error": res.Content[0].(*mcp.TextContent).Text}, true
+		}
+		var out map[string]any
+		b, _ := json.Marshal(res.StructuredContent)
+		_ = json.Unmarshal(b, &out)
+		return out, false
+	}
+}
+
+func TestMCPWriteTools(t *testing.T) {
+	db := testDB(t)
+	h := newOAuthHarness(t, db)
+	clientID := h.register(testCallback)
+	verifier := strings.Repeat("w9", 30)
+	code := h.approve(h.consent(clientID, testCallback, pkce(verifier)), "write").Query().Get("code")
+	status, tokens := h.token(url.Values{"grant_type": {"authorization_code"}, "code": {code}, "redirect_uri": {testCallback}, "client_id": {clientID}, "code_verifier": {verifier}})
+	if status != 200 || tokens["scope"] != "career:read career:write" {
+		t.Fatal(status, tokens)
+	}
+	call := connectMCP(t, h, tokens["access_token"].(string), 6)
+	ctx := context.Background()
+
+	company, isErr := call("create_career_entry", map[string]any{"kind": "company", "entry": map[string]any{"title": "Duck Corp!", "category": "Infra", "url": "https://duck.example", "slug": "ignored"}})
+	if isErr || company["id"] != "duck-corp" || company["revision"] == "" {
+		t.Fatal(company)
+	}
+	if out, isErr := call("create_career_entry", map[string]any{"kind": "company", "entry": map[string]any{"title": "Duck Corp", "category": "Infra", "url": "https://duck.example"}}); !isErr || !strings.Contains(out["error"].(string), "already exists") {
+		t.Fatal("duplicate company created", out)
+	}
+	updated, isErr := call("update_career_entry", map[string]any{"kind": "company", "id": "duck-corp", "revision": company["revision"], "fields": map[string]any{"status": "applied", "body": "Applied via referral."}})
+	if isErr || updated["revision"] == company["revision"] {
+		t.Fatal(updated)
+	}
+	saved, err := db.Detail(ctx, "company", "duck-corp")
+	if err != nil || saved.Entry["status"] != "applied" || saved.Entry["body"] != "Applied via referral." || saved.Entry["title"] != "Duck Corp!" {
+		t.Fatal(saved, err)
+	}
+	// A stale revision never overwrites newer edits.
+	if out, isErr := call("update_career_entry", map[string]any{"kind": "company", "id": "duck-corp", "revision": company["revision"], "fields": map[string]any{"status": "offer"}}); !isErr || !strings.Contains(out["error"].(string), "changed since") {
+		t.Fatal("stale revision accepted", out)
+	}
+	if out, isErr := call("update_career_entry", map[string]any{"kind": "company", "id": "duck-corp", "revision": updated["revision"], "fields": map[string]any{"status": "hired"}}); !isErr || !strings.Contains(out["error"].(string), "invalid company enum") {
+		t.Fatal("invalid status accepted", out)
+	}
+	if out, isErr := call("update_career_entry", map[string]any{"kind": "company", "id": "duck-corp", "revision": updated["revision"], "fields": map[string]any{"slug": "other"}}); !isErr || !strings.Contains(out["error"].(string), "cannot be changed") {
+		t.Fatal("managed field changed", out)
+	}
+	if out, isErr := call("update_career_entry", map[string]any{"kind": "page", "id": "x", "revision": "r", "fields": map[string]any{"title": "x"}}); !isErr {
+		t.Fatal("page kind writable", out)
+	}
+
+	goal, isErr := call("create_career_entry", map[string]any{"kind": "goal", "entry": map[string]any{"title": "Ship MCP writes", "startDate": "2026-10-01", "endDate": "2026-10-31", "steps": []any{map[string]any{"title": "Write tests"}}, "notes": []any{map[string]any{"body": "Started"}}}})
+	if isErr {
+		t.Fatal(goal)
+	}
+	goalID, _ := goal["id"].(string)
+	g, err := db.Detail(ctx, "goal", goalID)
+	steps, _ := g.Entry["steps"].([]any)
+	if err != nil || g.Entry["status"] != "planned" || len(steps) != 1 || steps[0].(map[string]any)["done"] != false {
+		t.Fatal(g, err)
+	}
+	step := steps[0].(map[string]any)
+	step["done"] = true
+	if out, isErr := call("update_career_entry", map[string]any{"kind": "goal", "id": goalID, "revision": g.Revision, "fields": map[string]any{"status": "active", "steps": []any{step, map[string]any{"title": "Deploy"}}}}); isErr {
+		t.Fatal(out)
+	}
+	g, _ = db.Detail(ctx, "goal", goalID)
+	steps, _ = g.Entry["steps"].([]any)
+	if g.Entry["status"] != "active" || len(steps) != 2 || steps[0].(map[string]any)["id"] != step["id"] || steps[0].(map[string]any)["done"] != true {
+		t.Fatal(g.Entry)
+	}
+
+	note, isErr := call("create_career_entry", map[string]any{"kind": "note", "entry": map[string]any{"title": "Interview prep", "topic": "Career", "todos": []any{map[string]any{"title": "Mock interview"}}}})
+	if isErr || note["id"] != "career-interview-prep" {
+		t.Fatal(note)
+	}
+	n, err := db.Detail(ctx, "note", "career-interview-prep")
+	if todos, _ := n.Entry["todos"].([]any); err != nil || len(todos) != 1 {
+		t.Fatal(n, err)
 	}
 }

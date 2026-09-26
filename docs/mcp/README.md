@@ -1,6 +1,6 @@
 # Career MCP server
 
-The Go service serves a read-only MCP endpoint at `https://career.duckgc.com/api/mcp`
+The Go service serves an MCP endpoint at `https://career.duckgc.com/api/mcp`
 (`PUBLIC_ORIGIN` + `/api/mcp`). It uses stateless Streamable HTTP with JSON responses and
 reads the same PostgreSQL workspace as the website.
 
@@ -14,10 +14,11 @@ extra secret is needed:
 - Dynamic client registration at `/oauth/register` (RFC 7591). Clients are public
   (`token_endpoint_auth_method: none`); redirect URIs must be HTTPS or loopback HTTP.
   Loopback callbacks may use any port (RFC 8252).
-- `/oauth/authorize` requires the website login, then shows a consent page. Authorization
-  Code with PKCE `S256` only.
-- `/oauth/token` issues 1-hour access tokens and 30-day rotating refresh tokens, scope
-  `career:read`, audience `/api/mcp`.
+- `/oauth/authorize` requires the website login, then shows a consent page where you choose
+  **Allow read only** (`career:read`) or **Allow read and edit** (`career:read career:write`).
+  The client's requested scope does not decide this. Authorization Code with PKCE `S256` only.
+- `/oauth/token` issues 1-hour access tokens and 30-day rotating refresh tokens with the
+  chosen scope, audience `/api/mcp`. Refreshing keeps the scope; to change it, reconnect.
 
 Client IDs, codes and tokens are HMAC-signed claim sets keyed from `JWT_SECRET` with a
 separate key per purpose, so every replica verifies them without shared sessions. Codes and
@@ -65,7 +66,16 @@ Kinds: `goal`, `work_journal`, `personal_journal`, `note`, `page`, `book`, `comp
 `connection`, `audio_thought`. Audio thoughts are private and only returned when
 requested by kind. Prompt `career_conversation` offers a guided entry point.
 
-All tools are read-only. Suggested changes must be saved through the website. Request
+Write tools (need **Allow read and edit**):
+
+- `create_career_entry`: create a goal, company or note. IDs, slugs and timestamps are
+  generated (company slug from title, note ID from topic and title).
+- `update_career_entry`: patch a goal, company or note. Pass the `revision` from
+  `read_career_entry` and only changed fields. A stale revision is rejected instead of
+  overwriting newer edits. New steps, notes and todos may omit IDs.
+
+Saves use the website's validation. There is no delete tool. Claude clients ask before
+running write tools unless you allow them permanently. Request
 bodies are limited to 64 KiB.
 
 ## Verify
@@ -75,8 +85,8 @@ make test-postgres   # includes the OAuth flow and MCP tool tests
 ```
 
 `internal/server/mcp_test.go` covers discovery, registration, login redirect, consent,
-cross-origin approval rejection, PKCE, code replay, refresh rotation, and all four tools
-through the Go MCP client.
+cross-origin approval rejection, PKCE, code replay, refresh rotation, read tools, and write
+tools (scope enforcement, revision conflicts, validation) through the Go MCP client.
 
 ## History
 
