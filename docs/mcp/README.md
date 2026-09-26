@@ -22,7 +22,7 @@ extra secret is needed:
 Client IDs, codes and tokens are HMAC-signed claim sets keyed from `JWT_SECRET` with a
 separate key per purpose, so every replica verifies them without shared sessions. Codes and
 refresh tokens are single use: their IDs are recorded in `oauth_consumed_tokens`
-(migration 006), so replay fails on every replica. Website session cookies and website JWTs
+(migration 007), so replay fails on every replica. Website session cookies and website JWTs
 cannot authenticate MCP, and MCP tokens cannot call website APIs.
 
 **Revoke everything:** rotate `JWT_SECRET` and restart. This signs out the website too and
