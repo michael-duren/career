@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { buildBoard, appendCompanyNote, type RawCompany, type Company, type CompanyStatus } from "../lib/companies";
-import { relativeDays, type Connection } from '../lib/connections';
+import { buildBoard, appendCompanyNote, filterCompanies, type RawCompany, type Company, type CompanyStatus } from "../lib/companies";
+import { avatarStack, connectionsByCompany, relativeDays, type Connection } from '../lib/connections';
 import { ConnectionAvatar } from './ConnectionAvatar';
 
 import { toggleTask } from '../lib/checklist';
@@ -57,10 +57,8 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
     void fetch(url, { cache: 'no-store' }).then(response => response.ok ? response.json() : undefined)
       .then(result => { if (result) setConnections(result.connections); }).catch(() => undefined);
   }, [detailSlug]);
-  const connectionsBySlug = new Map<string, Connection[]>();
-  for (const connection of connections ?? []) {
-    if (connection.companySlug) connectionsBySlug.set(connection.companySlug, [...(connectionsBySlug.get(connection.companySlug) ?? []), connection]);
-  }
+  // One request loads every linked connection; group client-side instead of fetching per company.
+  const connectionsBySlug = connectionsByCompany(connections ?? []);
   async function persist(slug: string, change: (company: RawCompany) => RawCompany, action: 'step' | 'note' = 'step') {
     if (lock.current) return;
     lock.current = true; setBusy(true); setError(''); setStatus('Saving…');
@@ -93,7 +91,8 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
     finally { lock.current = false; setBusy(false); }
   }
   const [activeCategory, setActiveCategory] = useState('all');
-  const visibleCategories = activeCategory === 'all' ? data.categories : data.categories.filter(group => group.label === activeCategory);
+  const [hasConnections, setHasConnections] = useState(false);
+  const visibleCompanies = filterCompanies(data, { category: activeCategory, hasConnections }, slug => connectionsBySlug.get(slug)?.length ?? 0);
   const totalCompanies = data.categories.reduce((sum, group) => sum + group.companies.length, 0);
 
   return (
@@ -135,11 +134,27 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
             {t.label}
           </button>
         ))}
+        <span aria-hidden="true" className="mx-1 w-px self-stretch bg-zinc-800" />
+        <button
+          type="button"
+          aria-pressed={hasConnections}
+          disabled={!connections}
+          title={connections ? 'Only companies where you know someone' : 'Loading connections…'}
+          onClick={() => setHasConnections(value => !value)}
+          className={`px-3 py-1.5 rounded-md text-sm border transition-colors disabled:opacity-50 ${
+            hasConnections
+              ? "bg-zinc-100 text-zinc-900 border-zinc-100"
+              : "bg-transparent text-zinc-300 border-zinc-700 hover:border-zinc-500"
+          }`}
+        >
+          Has connections
+        </button>
       </div>}
 
       {totalCompanies === 0 && <p className="text-zinc-400">{detailSlug ? 'This company is no longer available.' : 'No companies added yet.'}</p>}
+      {totalCompanies > 0 && visibleCompanies.length === 0 && <p className="text-zinc-400">No companies match these filters.</p>}
       <div className={detailSlug ? 'space-y-6' : 'grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'}>
-        {visibleCategories.flatMap(group => group.companies).map(company => (
+        {visibleCompanies.map(company => (
           <article key={company.slug} className={`min-w-0 rounded-lg border border-zinc-800 bg-zinc-900 ${detailSlug ? 'p-5 sm:p-8' : 'p-3 transition-colors hover:border-zinc-600'}`}>
             <div className="flex items-center gap-3">
               <CompanyImage key={company.cover || company.slug} company={company} />
@@ -154,11 +169,12 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
                   {company.featured && <span className="ml-auto text-amber-300" title="Standout fit">★<span className="sr-only"> Standout fit</span></span>}
                 </span>
               </div>
+              {!detailSlug && <ConnectionStack company={company} connections={connectionsBySlug.get(company.slug)} />}
             </div>
             <div className="mt-3">
               <div className="flex justify-between gap-2 text-[10px] text-zinc-500">
                 <label htmlFor={`progress-${company.slug}`}>{company.completed}/{company.steps.length} steps</label>
-                <span>{(count => count ? `${count} connection${count === 1 ? '' : 's'} · ` : '')(connectionsBySlug.get(company.slug)?.length ?? 0)}{company.priority} priority</span>
+                <span>{company.priority} priority</span>
               </div>
               <progress id={`progress-${company.slug}`} className="mt-1 block h-1 w-full overflow-hidden rounded accent-blue-500" value={company.completed} max={company.steps.length || 1} />
             </div>
@@ -188,9 +204,20 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
   );
 }
 
-function CompanyConnections({ company, connections = [] }: { company: Company; connections?: Connection[] }) {
+/** Overlapping avatars of the people you know at a company, most recently contacted first. */
+function ConnectionStack({ company, connections = [] }: { company: Company; connections?: Connection[] }) {
+  if (connections.length === 0) return null;
+  const { shown, overflow } = avatarStack(connections, 4);
+  const label = `${connections.length} connection${connections.length === 1 ? '' : 's'} at ${company.title}`;
+  return <a href={`/connections?company=${encodeURIComponent(company.slug)}`} aria-label={label} title={connections.map(person => person.name).join(', ')}
+    className="flex shrink-0 self-start -space-x-1.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+    {shown.map(person => <ConnectionAvatar key={person.id} connection={person} size={22} ring="ring-2 ring-zinc-900" />)}
+    {overflow > 0 && <span aria-hidden="true" className="flex h-[22px] min-w-[22px] items-center justify-center rounded-full bg-zinc-700 px-1 text-[10px] font-semibold text-zinc-100 ring-2 ring-zinc-900">+{overflow}</span>}
+  </a>;
+}
+
+function CompanyConnections({ company, connections: people = [] }: { company: Company; connections?: Connection[] }) {
   const today = localDate();
-  const people = [...connections].sort((a, b) => (b.lastContactedOn ?? '').localeCompare(a.lastContactedOn ?? '') || a.name.localeCompare(b.name));
   const slug = encodeURIComponent(company.slug);
   return <section aria-label={`Connections at ${company.title}`} className="space-y-2 border-t border-zinc-800 pt-3">
     <h3 className="font-medium text-zinc-200">Connections{people.length > 0 && ` (${people.length})`}</h3>

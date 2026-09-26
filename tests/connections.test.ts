@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { catchUpQueue, markCaughtUp, nextDue, relativeDays, initials, matchesQuery, type Connection } from '../src/lib/connections.ts';
+import { avatarStack, catchUpQueue, connectionsByCompany, markCaughtUp, nextDue, relativeDays, initials, matchesQuery, type Connection } from '../src/lib/connections.ts';
 
 const base: Connection = { id: 'x', name: 'Ada Lovelace', role: 'SRE', companyName: 'Grafana Labs', email: '', queued: false, notes: '', tags: ['observability'] };
 const today = '2026-09-25';
@@ -42,4 +42,24 @@ test('formatting helpers', () => {
   assert.ok(matchesQuery(base, 'grafana'));
   assert.ok(matchesQuery(base, 'OBSERV'));
   assert.ok(!matchesQuery(base, 'datadog'));
+});
+
+test('connections group by company, most recently contacted first, ignoring unlinked people', () => {
+  const groups = connectionsByCompany([
+    { ...base, id: 'old', name: 'Old', companySlug: 'grafana-labs', lastContactedOn: '2026-01-01' },
+    { ...base, id: 'never-b', name: 'Bea', companySlug: 'grafana-labs' },
+    { ...base, id: 'unlinked', name: 'Unlinked' },
+    { ...base, id: 'recent', name: 'Recent', companySlug: 'grafana-labs', lastContactedOn: '2026-09-01' },
+    { ...base, id: 'never-a', name: 'Abe', companySlug: 'grafana-labs' },
+    { ...base, id: 'other', name: 'Other', companySlug: 'datadog' },
+  ]);
+  assert.deepEqual([...groups.keys()], ['grafana-labs', 'datadog']);
+  assert.deepEqual(groups.get('grafana-labs')?.map(c => c.id), ['recent', 'old', 'never-a', 'never-b']);
+});
+
+test('avatar stacks cap circles and never show +1', () => {
+  assert.deepEqual(avatarStack([], 4), { shown: [], overflow: 0 });
+  assert.deepEqual(avatarStack([1, 2, 3, 4], 4), { shown: [1, 2, 3, 4], overflow: 0 });
+  assert.deepEqual(avatarStack([1, 2, 3, 4, 5], 4), { shown: [1, 2, 3], overflow: 2 });
+  assert.deepEqual(avatarStack([1, 2, 3, 4, 5, 6, 7, 8, 9], 4), { shown: [1, 2, 3], overflow: 6 });
 });

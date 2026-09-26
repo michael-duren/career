@@ -43,6 +43,15 @@ export function buildBoard(raws: RawCompany[]): CompanyBoardData {
   return { categories: Array.from(groups, ([label, companies]) => ({ label, companies: companies.sort((a, b) => priority[a.priority] - priority[b.priority] || a.title.localeCompare(b.title)) })).sort((a, b) => (categories.includes(a.label) ? categories.indexOf(a.label) : categories.length) - (categories.includes(b.label) ? categories.indexOf(b.label) : categories.length) || a.label.localeCompare(b.label)), totals };
 }
 
+export interface CompanyFilter { category: string; hasConnections: boolean }
+
+/** Companies matching every active filter, in board order. */
+export function filterCompanies(board: CompanyBoardData, filter: CompanyFilter, connectionCount: (slug: string) => number): Company[] {
+  return board.categories
+    .filter(group => filter.category === 'all' || group.label === filter.category)
+    .flatMap(group => group.companies)
+    .filter(company => !filter.hasConnections || connectionCount(company.slug) > 0);
+}
 
 /** Add a dated note to the Log section without changing company steps or other sections. */
 export function appendCompanyNote(body: string, note: string, date: string): string {

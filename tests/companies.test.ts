@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { appendCompanyNote, buildBoard, type RawCompany } from '../src/lib/companies.ts';
+import { appendCompanyNote, buildBoard, filterCompanies, type RawCompany } from '../src/lib/companies.ts';
 import { toggleTask } from '../src/lib/checklist.ts';
 const company: RawCompany = {
   slug: 'test', title: 'Test', type: 'company', category: 'Infra', url: 'https://example.com', status: 'not_started', priority: 'high', featured: false, tags: [],
@@ -33,4 +33,19 @@ test('research follows relationship steps for saved companies and toggles retain
   assert.deepEqual(steps.map(step => step.label), ['Identify one person at the company to connect with', 'Reach out and start building a relationship', 'Research team & open roles', 'Apply']);
   assert.equal(steps[2].completed, true);
   assert.match(toggleTask(body, steps[2].index, false), /- \[ \] Research team & open roles/);
+});
+
+test('company filters combine category and has-connections', () => {
+  const board = buildBoard([
+    { ...company, slug: 'a', title: 'A', category: 'Infra' },
+    { ...company, slug: 'b', title: 'B', category: 'Infra' },
+    { ...company, slug: 'c', title: 'C', category: 'AI' },
+  ]);
+  const counts: Record<string, number> = { a: 2, c: 1 };
+  const slugs = (category: string, hasConnections: boolean) => filterCompanies(board, { category, hasConnections }, slug => counts[slug] ?? 0).map(c => c.slug);
+  assert.deepEqual(slugs('all', false), ['c', 'a', 'b']);
+  assert.deepEqual(slugs('all', true), ['c', 'a']);
+  assert.deepEqual(slugs('Infra', true), ['a']);
+  assert.deepEqual(slugs('AI', false), ['c']);
+  assert.deepEqual(slugs('Missing', false), []);
 });

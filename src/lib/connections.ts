@@ -76,3 +76,23 @@ export function newConnection(company?: { slug: string; title: string }): Connec
 export function photoURL(c: Connection): string | undefined {
   return c.photo ? `/api/connections/photo?id=${encodeURIComponent(c.id)}&v=${encodeURIComponent(c.photo)}` : undefined;
 }
+
+/** Group linked connections by company slug, most recently contacted first. */
+export function connectionsByCompany(connections: Connection[]): Map<string, Connection[]> {
+  const groups = new Map<string, Connection[]>();
+  for (const connection of connections) {
+    if (!connection.companySlug) continue;
+    const group = groups.get(connection.companySlug) ?? [];
+    group.push(connection);
+    groups.set(connection.companySlug, group);
+  }
+  for (const group of groups.values()) group.sort((a, b) => (b.lastContactedOn ?? '').localeCompare(a.lastContactedOn ?? '') || a.name.localeCompare(b.name));
+  return groups;
+}
+
+/** The people to show in an avatar stack of at most `max` circles, and how many hide behind "+N". */
+export function avatarStack<T>(people: T[], max: number): { shown: T[]; overflow: number } {
+  // "+1" would take the same space as the one person it hides.
+  const shown = people.length > max ? people.slice(0, max - 1) : people;
+  return { shown, overflow: people.length - shown.length };
+}
