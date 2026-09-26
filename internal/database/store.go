@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/michael-duren/career-strategy/internal/linkedin"
 	"strings"
 	"time"
 )
@@ -290,12 +291,33 @@ func (s *Store) Save(ctx context.Context, kind string, e Entity, revision *strin
 		return Result{}, err
 	}
 	defer tx.Rollback()
+	var oldTitle string
+	if kind == "company" && revision != nil {
+		if err = tx.QueryRowContext(ctx, "SELECT title FROM companies WHERE slug=$1", e["slug"]).Scan(&oldTitle); err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return Result{}, err
+		}
+	}
 	r, err := saveTx(ctx, tx, kind, e, revision, false)
 	if err != nil {
 		return r, dbError(err)
 	}
 	if err = bump(ctx, tx, kind); err != nil {
 		return r, err
+	}
+	// A new or renamed company picks up people imported before it was tracked.
+	// Cosmetic renames ("Acme" to "Acme, Inc.") skip this so deliberate unlinks stay.
+	slug, _ := e["slug"].(string)
+	title, _ := e["title"].(string)
+	if kind == "company" && (revision == nil || linkedin.NormalizeCompany(oldTitle) != linkedin.NormalizeCompany(title)) {
+		linked, err := linkUnlinkedConnections(ctx, tx, []string{slug})
+		if err != nil {
+			return r, err
+		}
+		if linked > 0 {
+			if err = bump(ctx, tx, "connection"); err != nil {
+				return r, err
+			}
+		}
 	}
 	return r, tx.Commit()
 }

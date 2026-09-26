@@ -43,7 +43,8 @@ type existingConnection struct {
 // name, role, company, email and connection date; notes, tags, cadence and the
 // queue flag stay as the user left them. The company link is only recomputed
 // when the LinkedIn company name changes, so manual links and deliberate
-// unlinks survive re-imports.
+// unlinks survive re-imports. People imported before their company was
+// tracked are linked when that company is saved (see linkUnlinkedConnections).
 func (s *Store) ImportConnections(ctx context.Context, rows []linkedin.Connection, lastMessages map[string]string) (ConnectionImport, error) {
 	summary := ConnectionImport{Parsed: len(rows)}
 	tx, err := s.DB.BeginTx(ctx, nil)
@@ -59,24 +60,10 @@ func (s *Store) ImportConnections(ctx context.Context, rows []linkedin.Connectio
 	if _, err = tx.ExecContext(ctx, "LOCK TABLE connections IN SHARE ROW EXCLUSIVE MODE"); err != nil {
 		return summary, err
 	}
-	companies := []linkedin.Company{}
-	companyRows, err := tx.QueryContext(ctx, "SELECT slug,title FROM companies")
+	matcher, err := companyMatcher(ctx, tx)
 	if err != nil {
 		return summary, err
 	}
-	for companyRows.Next() {
-		var c linkedin.Company
-		if err = companyRows.Scan(&c.Slug, &c.Title); err != nil {
-			companyRows.Close()
-			return summary, err
-		}
-		companies = append(companies, c)
-	}
-	companyRows.Close()
-	if err = companyRows.Err(); err != nil {
-		return summary, err
-	}
-	matcher := linkedin.NewMatcher(companies)
 
 	existing := map[string]*existingConnection{}
 	// People added by hand or migrated from company contacts may lack a URL;
@@ -216,6 +203,73 @@ func adoptWithoutURL(withoutURL map[string][]*existingConnection, name, company,
 	c := withoutURL[key][found]
 	withoutURL[key] = append(withoutURL[key][:found], withoutURL[key][found+1:]...)
 	return c
+}
+
+// companyMatcher matches LinkedIn company names against every tracked company.
+func companyMatcher(ctx context.Context, tx *sql.Tx) (*linkedin.Matcher, error) {
+	companies := []linkedin.Company{}
+	rows, err := tx.QueryContext(ctx, "SELECT slug,title FROM companies")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var c linkedin.Company
+		if err = rows.Scan(&c.Slug, &c.Title); err != nil {
+			return nil, err
+		}
+		companies = append(companies, c)
+	}
+	return linkedin.NewMatcher(companies), rows.Err()
+}
+
+// linkUnlinkedConnections links unlinked connections to whichever of the given
+// companies their company name best matches, and returns how many it linked.
+// Call it in the transaction that creates or renames those companies. It makes
+// one read of companies, one plain read of unlinked connections and one batched
+// update. The update only touches rows that are still unlinked and still have
+// the name that was read, so it takes no row locks up front and cannot deadlock
+// with ImportConnections' table lock.
+func linkUnlinkedConnections(ctx context.Context, tx *sql.Tx, slugs []string) (int64, error) {
+	if len(slugs) == 0 {
+		return 0, nil
+	}
+	matcher, err := companyMatcher(ctx, tx)
+	if err != nil {
+		return 0, err
+	}
+	targets := map[string]bool{}
+	for _, slug := range slugs {
+		targets[slug] = true
+	}
+	var ids, names, matches []string
+	rows, err := tx.QueryContext(ctx, "SELECT id::text,company_name FROM connections WHERE company_slug IS NULL AND company_name<>''")
+	if err != nil {
+		return 0, err
+	}
+	for rows.Next() {
+		var id, name string
+		if err = rows.Scan(&id, &name); err != nil {
+			rows.Close()
+			return 0, err
+		}
+		// Use the best match across all companies so a more specific tracked
+		// company keeps its people.
+		if match := matcher.Match(name); targets[match] {
+			ids, names, matches = append(ids, id), append(names, name), append(matches, match)
+		}
+	}
+	rows.Close()
+	if err = rows.Err(); err != nil || len(ids) == 0 {
+		return 0, err
+	}
+	r, err := tx.ExecContext(ctx, `UPDATE connections c SET company_slug=v.slug,revision=gen_random_uuid()::text,updated_at=now()
+		FROM unnest($1::uuid[],$2::text[],$3::text[]) AS v(id,name,slug)
+		WHERE c.id=v.id AND c.company_name=v.name AND c.company_slug IS NULL`, ids, names, matches)
+	if err != nil {
+		return 0, err
+	}
+	return r.RowsAffected()
 }
 
 func updateImported(ctx context.Context, tx *sql.Tx, c *existingConnection) error {
