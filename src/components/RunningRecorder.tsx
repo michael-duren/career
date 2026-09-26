@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { CloudUpload, Download, Mic, RefreshCw, Square, Upload } from 'lucide-react';
 import { enqueueClip, queuedClips, syncClips, type QueuedClip } from '../lib/running-queue';
 // Hardware-style transport key shared by the dock and the clip list.
@@ -154,7 +154,15 @@ export default function RunningRecorder() {
     } catch (e) { setError((e as Error).message); } finally { URL.revokeObjectURL(url); }
   }
   const busy = recording || !!rescue, db = level > 0 ? Math.round(FLOOR_DB + level * -FLOOR_DB) : null;
-  return <div data-recorder data-recording={recording || undefined}><section aria-label="Audio thoughts recorder" className="mb-8 overflow-hidden rounded-xl border border-black bg-zinc-900 shadow-[0_12px_40px_rgb(0_0_0/0.5),inset_0_1px_0_rgb(255_255_255/0.05)]">
+  const root = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    // Finishing a take while reading a thought hides the recorder (and the Stop key disables itself),
+    // so focus has already fallen to <body>; hand it to the note's Back button instead.
+    const el = root.current, active = document.activeElement;
+    if (el && !el.offsetParent && (el.contains(active) || active === document.body)) document.querySelector<HTMLButtonElement>('[data-thought-reading] button')?.focus();
+  }, [busy, starting, error]);
+  // Stay visible over a thought being read while anything needs attention: a live take, an unsaved rescue, or an error.
+  return <div ref={root} data-recorder data-recorder-active={busy || starting || !!error || undefined}><section aria-label="Audio thoughts recorder" className="mb-8 overflow-hidden rounded-xl border border-black bg-zinc-900 shadow-[0_12px_40px_rgb(0_0_0/0.5),inset_0_1px_0_rgb(255_255_255/0.05)]">
     <div className="flex flex-wrap items-stretch gap-3 border-b border-black bg-linear-to-b from-zinc-800 to-zinc-900 p-3 lg:flex-nowrap">
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-black bg-zinc-900/95 px-6 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur lg:static lg:z-auto lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
         <div className="mx-auto flex max-w-sm items-center justify-between gap-2 lg:max-w-none lg:justify-start">

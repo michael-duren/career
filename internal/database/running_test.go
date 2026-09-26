@@ -234,7 +234,10 @@ func TestAudioThoughtMigrationCleansLegacyNotes(t *testing.T) {
 		('legacy','Run 2026-09-20 07:15','2026-09-20',now(),'{}',E'\n\n### 07:15\nfirst take words here and some more after\n\n### 07:40\nsecond take','r1',1),
 		('empty','Run 2026-09-21 07:15','2026-09-21',now(),'{}','','r2',2),
 		('named','Tempo notes','2026-09-22',now(),'{}',E'### 08:00\nkept title','r3',3),
-		('dated','Audio thought 2026-09-23','2026-09-23',now(),'{}','short one','r4',4)`)
+		('dated','Audio thought 2026-09-23','2026-09-23',now(),'{}','short one','r4',4),
+		('blank','Run 2026-09-24 07:15','2026-09-24',now(),'{}',E'\n','r5',5),
+		('padded','Run 2026-09-25 07:15','2026-09-25',now(),'{}',E'\n\thello world','r6',6),
+		('crlf','Run 2026-09-26 07:15','2026-09-26',now(),'{}',E'### 07:15\r\nfrom windows\r\n\n\n\nkept gap','r7',7)`)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -250,6 +253,9 @@ func TestAudioThoughtMigrationCleansLegacyNotes(t *testing.T) {
 		"empty":  {ThoughtPlaceholder, ""},
 		"named":  {"Tempo notes", "kept title"},
 		"dated":  {"short one", "short one"},
+		"blank":  {ThoughtPlaceholder, "\n"},
+		"padded": {"hello world", "\n\thello world"},
+		"crlf":   {"from windows kept gap", "from windows\r\n\n\n\nkept gap"},
 	}
 	for id, w := range want {
 		var title, body, revision string

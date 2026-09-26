@@ -9,6 +9,6 @@ import { WorkspaceEditor } from '../components/WorkspaceEditor';
   <WorkspaceEditor kind="run" client:load />
 </DocsLayout>
 <style is:global>
-  /* Reading a thought shows just the note, unless a take is still recording. */
-  body:has([data-thought-reading]) [data-recorder]:not([data-recording]) { display: none; }
+  /* Reading a thought shows just the note, unless the recorder needs attention. */
+  body:has([data-thought-reading]) [data-recorder]:not([data-recorder-active]) { display: none; }
 </style>
