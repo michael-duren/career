@@ -46,6 +46,7 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
   const listFirst = kind === 'note' || kind === 'week' || kind === 'personal';
   const openedInitialEntry = useRef(false);
   const selectionRequest = useRef(0);
+  const todoQueue = useRef<{ running: boolean; pending: NoteTodo[] | null }>({ running: false, pending: null });
   const backButton = useRef<HTMLButtonElement>(null);
   const listPosition = useRef<{ scroll: number; focus: HTMLElement | null } | null>(null);
   const recovered = useRef(false);
@@ -167,27 +168,54 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
     }
   }
 
-  async function save(target = entry) {
-    if (!target) return;
+  async function save() {
+    if (!entry) return;
     setBusy(true); setError('');
     try {
-      const next = await request(kind, 'POST', { entry: target, revision: baseRevision }) as EntryResult;
+      const next = await request(kind, 'POST', { entry, revision: baseRevision }) as EntryResult;
       const savedEntry = next.entry as Entry;
-      setEntries((current: Entry[] | null) => [...(current ?? []).filter(n => entryId(n) !== entryId(target)), savedEntry]); setBaseRevision(next.revision); setDirty(false); setEditing(false);
+      setEntries((current: Entry[] | null) => [...(current ?? []).filter(n => entryId(n) !== entryId(entry)), savedEntry]); setBaseRevision(next.revision); setDirty(false); setEditing(false);
       setEntry(savedEntry);
       try { localStorage.removeItem(draftKey(kind)); } catch { /* Optional draft storage. */ }
       setStatus('Saved.');
       window.dispatchEvent(new Event('workspace-saved'));
-    } catch (e) { setError((e as Error).message); return false; }
+    } catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
-    return true;
   }
-  /** Todo changes while reading save at once; the note body is untouched. */
-  async function saveTodos(todos: NoteTodo[]) {
-    if (!entry || !('topic' in entry)) return;
-    const previous = entry;
-    setEntry({ ...entry, todos });
-    if (!await save({ ...entry, todos })) setEntry(previous);
+  /**
+   * Todo changes while reading save at once without disabling the todo controls,
+   * so keyboard focus survives. Changes made mid-save are queued and sent with
+   * the revision the previous save returned.
+   */
+  async function saveTodos(todos: NoteTodo[]): Promise<boolean> {
+    if (!entry || !('topic' in entry)) return false;
+    setEntry(current => current ? { ...current, todos } as Entry : current);
+    const queue = todoQueue.current;
+    queue.pending = todos;
+    if (queue.running) return true;
+    queue.running = true; setBusy(true); setError('');
+    let saved: Entry = entry;
+    let revision = baseRevision;
+    try {
+      while (queue.pending) {
+        const next = queue.pending; queue.pending = null;
+        const result = await request(kind, 'POST', { entry: { ...saved, todos: next }, revision }) as EntryResult;
+        saved = result.entry; revision = result.revision;
+        setBaseRevision(revision);
+      }
+      setEntry(saved);
+      setEntries(current => [...(current ?? []).filter(item => entryId(item) !== entryId(saved)), saved]);
+      setStatus('Saved.');
+      window.dispatchEvent(new Event('workspace-saved'));
+      return true;
+    } catch (e) {
+      queue.pending = null;
+      setError((e as Error).message);
+      // Reload the saved note so a conflict does not leave a stale revision behind.
+      const detail = await request(kind, 'GET', undefined, entryId(entry)).catch(() => null) as EntryResult | null;
+      if (detail) { setEntry(detail.entry); setBaseRevision(detail.revision); }
+      return false;
+    } finally { queue.running = false; setBusy(false); }
   }
   async function remove() {
     if (!entry || !window.confirm(`Delete ${entryTitle(entry)}? This cannot be undone.`)) return;
@@ -280,7 +308,7 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
           <div className="flex flex-wrap items-start justify-between gap-3"><h2 className="text-xl font-semibold">{entryTitle(entry)}</h2><div className="flex gap-2"><button type="button" className={button} disabled={busy} onClick={() => setEditing(true)}>Edit</button>{!(kind === 'document' && ['index', '2026/career-study-plan'].includes(entryId(entry))) && <button type="button" className={`${button} text-red-300`} disabled={busy} onClick={() => void remove()}>Delete</button>}</div></div>
           {kind === 'document' && <a className="inline-block text-sm text-blue-400 hover:underline" href={entryId(entry) === 'index' ? '/' : `/documents/${entryId(entry).split('/').map(encodeURIComponent).join('/')}`}>Open page →</a>}
           <div className="flex flex-wrap gap-2">{entry.tags.map(tag => <span key={tag} className="rounded-full bg-zinc-800 px-2 py-1 text-xs text-zinc-300">{tag}</span>)}</div>
-          {'topic' in entry && <NoteTodos todos={entry.todos ?? []} disabled={busy} onChange={todos => void saveTodos(todos)} />}
+          {'topic' in entry && <NoteTodos todos={entry.todos ?? []} onChange={saveTodos} />}
           {'status' in entry && <p className="text-sm text-zinc-400">{entry.status.replaceAll('_', ' ')} · {entry.priority} priority</p>}
           {'date' in entry && <p className="text-sm text-zinc-400">{entry.date || 'Undated background'}</p>}
           <Preview body={entry.body} />

@@ -1,4 +1,4 @@
-import { useId, useState, type KeyboardEvent } from 'react';
+import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import type { NoteTodo } from '../lib/workspace';
 
 const field = 'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
@@ -44,13 +44,15 @@ export function Combobox({ label, value, options, onChange, required = false, ma
   const query = options.includes(value) ? '' : value.trim().toLowerCase();
   const matches = options.filter(option => option.toLowerCase().includes(query));
   const { list, inputProps, open, setOpen, setActive } = useSuggestions(matches, option => { onChange(option); setOpen(false); });
-  return <label className="block text-sm">{label}<div className="relative mt-1">
-    <input {...inputProps} className={`${field} pr-9`} value={value} required={required} maxLength={maxLength} autoComplete="off"
+  const inputId = `${inputProps['aria-controls']}-input`;
+  // A separate label keeps the toggle button and options out of the input's accessible name.
+  return <div className="block text-sm"><label htmlFor={inputId}>{label}</label><div className="relative mt-1">
+    <input {...inputProps} id={inputId} className={`${field} pr-9`} value={value} required={required} maxLength={maxLength} autoComplete="off"
       onChange={e => { onChange(e.target.value); setOpen(true); setActive(-1); }} />
     <button type="button" tabIndex={-1} aria-label={`Show ${label.toLowerCase()} options`} className="absolute inset-y-0 right-0 px-3 text-zinc-400 hover:text-zinc-100"
       onMouseDown={event => event.preventDefault()} onClick={() => setOpen(!open)}>▾</button>
     {list}
-  </div></label>;
+  </div></div>;
 }
 
 /** Tag chips with suggestions; Enter or comma adds, Backspace on empty removes the last tag. */
@@ -58,7 +60,10 @@ export function TagInput({ value, options, onChange }: { value: string[]; option
   const [text, setText] = useState('');
   const query = text.trim().toLowerCase();
   const matches = options.filter(option => !value.includes(option) && option.toLowerCase().includes(query));
+  const full = value.length >= 30;
   const add = (...tags: string[]) => {
+    // Keep the typed text when the API limit is reached so nothing vanishes silently.
+    if (full) return;
     const next = [...new Set([...value, ...tags.map(tag => tag.trim()).filter(Boolean)])].slice(0, 30);
     if (next.length !== value.length) onChange(next);
     setText('');
@@ -88,38 +93,43 @@ export function TagInput({ value, options, onChange }: { value: string[]; option
       </div>
       {list}
     </div>
+    {full && <p className="mt-1 text-xs text-amber-300">30 tag limit reached. Remove a tag to add another.</p>}
   </div>;
 }
 
 /** Small checklist kept apart from the note body; completed items stay hidden until asked for. */
-export function NoteTodos({ todos, onChange, disabled = false }: { todos: NoteTodo[]; onChange: (todos: NoteTodo[]) => void; disabled?: boolean }) {
+export function NoteTodos({ todos, onChange }: { todos: NoteTodo[]; onChange: (todos: NoteTodo[]) => void | Promise<boolean> }) {
   const [text, setText] = useState('');
+  const newTodo = useRef<HTMLInputElement>(null);
   const [showDone, setShowDone] = useState(false);
   const open = todos.filter(todo => !todo.done);
   const done = todos.filter(todo => todo.done);
-  const add = () => {
-    if (!text.trim() || todos.length >= 200) return;
-    onChange([...todos, { id: crypto.randomUUID(), title: text.trim(), done: false }]);
+  const add = async () => {
+    const title = text.trim();
+    if (!title || todos.length >= 200) return;
     setText('');
+    if (await onChange([...todos, { id: crypto.randomUUID(), title, done: false }]) === false) setText(title);
   };
-  const toggle = (id: string, checked: boolean) => onChange(todos.map(todo => todo.id === id ? { ...todo, done: checked } : todo));
+  // These actions unmount the focused control, so hand focus to the new-todo input.
+  const replace = (next: NoteTodo[]) => { newTodo.current?.focus(); void onChange(next); };
+  const toggle = (id: string, checked: boolean) => replace(todos.map(todo => todo.id === id ? { ...todo, done: checked } : todo));
   const row = (todo: NoteTodo) => <li key={todo.id} className="group flex items-start gap-2 text-sm">
-    <input type="checkbox" className="mt-1" checked={todo.done} disabled={disabled} aria-label={`Mark ${todo.title} ${todo.done ? 'not done' : 'done'}`} onChange={e => toggle(todo.id, e.target.checked)} />
+    <input type="checkbox" className="mt-1" checked={todo.done} aria-label={`Mark ${todo.title} ${todo.done ? 'not done' : 'done'}`} onChange={e => toggle(todo.id, e.target.checked)} />
     <span className={`flex-1 ${todo.done ? 'text-zinc-500 line-through' : ''}`}>{todo.title}</span>
-    <button type="button" disabled={disabled} aria-label={`Delete ${todo.title}`} className="px-1 text-zinc-500 opacity-0 hover:text-red-300 focus-visible:opacity-100 group-hover:opacity-100" onClick={() => onChange(todos.filter(t => t.id !== todo.id))}>×</button>
+    <button type="button" aria-label={`Delete ${todo.title}`} className="px-1 text-zinc-600 hover:text-red-300" onClick={() => replace(todos.filter(t => t.id !== todo.id))}>×</button>
   </li>;
   return <fieldset className="space-y-2 rounded-lg border border-zinc-700 p-3">
     <legend className="px-1 text-sm text-zinc-400">Todos</legend>
     {open.length > 0 ? <ul className="space-y-1.5">{open.map(row)}</ul> : <p className="text-xs text-zinc-500">{done.length ? 'All done.' : 'No todos yet.'}</p>}
     <div className="flex gap-2">
-      <input className={`${field} py-1.5 text-sm`} aria-label="New todo" placeholder="Add a todo" maxLength={500} value={text} disabled={disabled}
-        onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); add(); } }} />
-      <button type="button" className={`${button} py-1.5`} disabled={disabled || !text.trim()} onClick={add}>Add</button>
+      <input ref={newTodo} className={`${field} py-1.5 text-sm`} aria-label="New todo" placeholder="Add a todo" maxLength={500} value={text}
+        onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void add(); } }} />
+      <button type="button" className={`${button} py-1.5`} disabled={!text.trim()} onClick={() => void add()}>Add</button>
     </div>
     {done.length > 0 && <div className="space-y-1.5 border-t border-zinc-800 pt-2">
       <div className="flex gap-3 text-xs text-zinc-400">
         <button type="button" className="hover:text-zinc-100" aria-expanded={showDone} onClick={() => setShowDone(!showDone)}>{showDone ? 'Hide' : 'Show'} {done.length} completed</button>
-        <button type="button" className="hover:text-red-300" disabled={disabled} onClick={() => onChange(open)}>Clear completed</button>
+        <button type="button" className="hover:text-red-300" onClick={() => replace(open)}>Clear completed</button>
       </div>
       {showDone && <ul className="space-y-1.5">{done.map(row)}</ul>}
     </div>}
