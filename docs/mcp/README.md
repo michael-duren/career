@@ -83,9 +83,12 @@ Write tools (need **Allow read and edit**):
   `not_started` with the website's outreach checklist and an empty Log, so no reach-out
   date is recorded. Only `title` is required; `category` defaults to "From connections",
   `url` to a LinkedIn company search link, `priority` to medium, and `why` fills the Why
-  section. Names that already exist (case-insensitive, ignoring legal suffixes) are
-  skipped with `created: false`, so retries are safe. New companies are linked to unlinked
-  connections who work there; their last-talked dates are not changed. The batch is all
+  section (no `#`/`##` headings or unclosed code fences; `\r`, U+2028 and U+2029 count as
+  line breaks). Titles need letters or digits. A name that `list_connection_companies`
+  would report as tracked (linked connections, or a title/slug match ignoring case and
+  legal suffixes) is skipped with `created: false` and the stored title and slug, so
+  retries are safe. New companies are linked to unlinked connections whose employer best
+  matches them among all companies; last-talked dates are not changed. The batch is all
   or nothing if any company fails validation.
 
 Saves use the website's validation. There is no delete tool. Claude clients ask before

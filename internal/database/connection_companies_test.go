@@ -68,7 +68,7 @@ func TestConnectionCompaniesAndAddCompanies(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !results[0].Created || results[0].Linked != 3 || results[1].Created || results[1].Slug != "tracked/globex" || results[2].Created || results[2].Slug != results[0].Slug || !results[3].Created || results[3].Linked != 1 {
+	if !results[0].Created || results[0].Linked != 3 || results[1].Created || results[1].Slug != "tracked/globex" || results[1].Title != "Globex" || results[2].Created || results[2].Slug != results[0].Slug || !results[3].Created || results[3].Linked != 1 {
 		t.Fatalf("results %+v", results)
 	}
 	bob, _ := s.ConnectionCompanies(ctx, ConnectionCompanyFilter{Limit: 50, Query: "acme", People: 20})
@@ -92,5 +92,61 @@ func TestConnectionCompaniesAndAddCompanies(t *testing.T) {
 	}
 	if page, _ := s.List(ctx, "company", Filter{Limit: 100}); len(page.Entries) != 3 {
 		t.Fatalf("partial batch saved: %d companies", len(page.Entries))
+	}
+}
+
+func TestAddCompaniesAgreesWithTracked(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	datadog := newCompany("Datadog (DDOG)")
+	datadog["slug"] = "datadog"
+	globex := newCompany("Globex")
+	for _, c := range []Entity{datadog, newCompany("Amazon Web Services"), globex} {
+		if _, err := s.Save(ctx, "company", c, nil); err != nil {
+			t.Fatal(err)
+		}
+	}
+	rows := []linkedin.Connection{
+		{Name: "Ada", Role: "SRE", Company: "Datadog", URL: "https://linkedin.com/in/ada"},
+		{Name: "Bob", Role: "SRE", Company: "Umbrella", URL: "https://linkedin.com/in/bob"},
+		{Name: "Cy", Role: "SRE", Company: "Amazon Web Services", URL: "https://linkedin.com/in/cy"},
+		{Name: "Dee", Role: "SRE", Company: "Amazon", URL: "https://linkedin.com/in/dee"},
+		{Name: "Eve", Role: "SRE", Company: "---", URL: "https://linkedin.com/in/eve"},
+	}
+	if _, err := s.ImportConnections(ctx, rows, nil); err != nil {
+		t.Fatal(err)
+	}
+	// Bob was linked by hand to another company; Cy was deliberately unlinked.
+	if _, err := s.DB.ExecContext(ctx, "UPDATE connections SET company_slug=CASE name WHEN 'Bob' THEN $1 END WHERE name IN ('Bob','Cy')", globex["slug"]); err != nil {
+		t.Fatal(err)
+	}
+	page, err := s.ConnectionCompanies(ctx, ConnectionCompanyFilter{Limit: 50, Sort: "name"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	tracked := map[string]string{}
+	for _, c := range page.Companies {
+		tracked[c.Name] = c.TrackedSlug
+	}
+	if len(page.Companies) != 4 || tracked["Datadog"] != "datadog" || tracked["Umbrella"] != globex["slug"] || tracked["Amazon"] != "" {
+		t.Fatalf("tracked %v", tracked)
+	}
+	results, err := s.AddCompanies(ctx, []Entity{newCompany("Datadog"), newCompany("umbrella"), newCompany("Amazon")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if results[0].Created || results[0].Slug != "datadog" || results[0].Title != "Datadog (DDOG)" || results[1].Created || results[1].Title != "Globex" {
+		t.Fatalf("names listed as tracked were added: %+v", results)
+	}
+	// Dee joins the new company; Cy still best matches Amazon Web Services and stays unlinked.
+	if !results[2].Created || results[2].Linked != 1 {
+		t.Fatalf("amazon %+v", results[2])
+	}
+	var cy *string
+	if err = s.DB.QueryRowContext(ctx, "SELECT company_slug FROM connections WHERE name='Cy'").Scan(&cy); err != nil || cy != nil {
+		t.Fatalf("new shorter name took a connection from an existing company: %v %v", cy, err)
+	}
+	if _, err = s.AddCompanies(ctx, []Entity{newCompany("!!!")}); !errors.Is(err, ErrInvalid) {
+		t.Fatal("punctuation-only title accepted", err)
 	}
 }

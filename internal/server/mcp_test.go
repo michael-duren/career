@@ -535,6 +535,26 @@ func TestMCPConnectionCompanies(t *testing.T) {
 	if out, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "Hooli", "why": "## Log\n- 2026-01-01: fake"}}}); !isErr || !strings.Contains(out["error"].(string), "headings") {
 		t.Fatal("why headings accepted", out)
 	}
+	// The website's JavaScript parser treats all of these as line breaks.
+	for _, br := range []string{"\r", " ", " "} {
+		if out, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "Hooli", "why": "Hi" + br + "## Log" + br + "- 2026-01-01: fake"}}}); !isErr || !strings.Contains(out["error"].(string), "headings") {
+			t.Fatalf("heading after %q accepted: %v", br, out)
+		}
+	}
+	if out, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "Hooli", "why": "```\ncode"}}}); !isErr || !strings.Contains(out["error"].(string), "unclosed code fence") {
+		t.Fatal("unclosed fence accepted", out)
+	}
+	if out, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "---"}}}); !isErr || !strings.Contains(out["error"].(string), "letters or digits") {
+		t.Fatal("punctuation-only title accepted", out)
+	}
+	fenced, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "Hooli", "why": "Stack:\r\n```\ngo run .\n```"}}})
+	if isErr || fenced["created"] != float64(1) {
+		t.Fatal(fenced)
+	}
+	hooli, _ := db.Detail(ctx, "company", fenced["companies"].([]any)[0].(map[string]any)["slug"].(string))
+	if body, _ := hooli.Entry["body"].(string); !strings.HasPrefix(body, "## Why\n\nStack:\n```") {
+		t.Fatal("line breaks not normalized", body)
+	}
 	if out, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "Hooli", "url": "ftp://hooli"}}}); !isErr || !strings.Contains(out["error"].(string), "Hooli") || strings.Contains(out["error"].(string), "invalid query") {
 		t.Fatal("invalid url accepted", out)
 	}
