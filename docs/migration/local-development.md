@@ -61,7 +61,7 @@ For `kind` use `note`, `document`, `personal`, `week`, `book`, `company`, or `go
 - `POST /api/entries/book/toggle` (or company) with `{ id, revision, index, checked }` → changed entity. The source-line index must identify a task in the matching revision, outside a fenced block.
 - `GET /api/export` → streamed legacy workspace JSON under one repeatable-read snapshot. This is an explicit export, never a routine editor fetch. Entity revisions stay in the scoped API; metadata change sequence is internal export provenance rather than a global write token.
 
-Notes support `topic`; books/companies support `status`, `category`, `priority`; goals support inclusive overlap `from`/`to` date filters. Other filters are rejected. Mutations require exact configured Origin and JSON content type. Save reads are capped at 150,000 bytes, deletes/toggles at 2,000, login at 4,096. Conflict is 409, missing entity 404, validation 400, storage failure 503. Private responses are no-store. The Go router intentionally has no MCP/discovery endpoint.
+Notes support `topic`; books/companies support `status`, `category`, `priority`; goals support inclusive overlap `from`/`to` date filters. Other filters are rejected. Mutations require exact configured Origin and JSON content type. Save reads are capped at 150,000 bytes, deletes/toggles at 2,000, login at 4,096. Conflict is 409, missing entity 404, validation 400, storage failure 503. Private responses are no-store. The Go router serves the read-only MCP endpoint and its OAuth routes; see [MCP](../mcp/README.md).
 
 ## Seeds, imports, and exports
 

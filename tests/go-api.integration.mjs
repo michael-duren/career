@@ -18,8 +18,8 @@ try {
   assert.equal((await request('/api/entries/note')).status, 401);
   response = await fetch(origin + '/', { redirect: 'manual' }); assert.equal(response.status, 303); assert.match(response.headers.get('location'), /^\/login/);
   response = await request('/login'); assert.equal(response.status, 200); assert.match(response.headers.get('content-type'), /text\/html/);
-  assert.equal((await request('/api/mcp')).status, 404);
-  assert.equal((await request('/.well-known/oauth-protected-resource')).status, 404);
+  response = await request('/api/mcp', 'POST', {}); assert.equal(response.status, 401); assert.match(response.headers.get('www-authenticate'), /resource_metadata=/);
+  response = await request('/.well-known/oauth-protected-resource'); assert.equal(response.status, 200); assert.equal((await response.json()).resource, `${origin}/api/mcp`);
   response = await request('/api/auth/login', 'POST', { username: 'migration-test', password: 'local-test-password' });
   assert.equal(response.status, 200); cookie = response.headers.get('set-cookie').split(';')[0];
   response = await request('/'); assert.equal(response.status, 200); assert.equal(response.headers.get('cache-control'), 'private, no-store');
