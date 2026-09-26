@@ -11,6 +11,7 @@ import { THOUGHT_PLACEHOLDER, isAutoTitle, thoughtDate, thoughtExcerpt, thoughtT
 import { AudioLines, CalendarPlus, Clock, ListChecks, PencilLine, Trash2 } from 'lucide-react';
 import { entryTone, tagChipClass } from '../lib/tag-colors';
 import { noteDate, noteStats } from '../lib/note-card';
+import { queuedClips, removeClip, takesForThought, type QueuedClip } from '../lib/running-queue';
 
 const field = 'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
 const button = 'rounded-lg border border-zinc-700 px-3 py-2 text-sm hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed';
@@ -37,9 +38,10 @@ async function request(kind: EntryKind, method = 'GET', input?: unknown, id?: st
   });
   if (response.status === 401) { location.assign(`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`); throw new Error('Your session expired. Sign in again.'); }
   const result = await response.json();
-  if (!response.ok) throw new Error(result.error || 'Request failed. Please retry.');
+  if (!response.ok) throw Object.assign(new Error(result.error || 'Request failed. Please retry.'), { status: response.status });
   return result;
 }
+const httpStatus = (e: unknown) => (e as { status?: number }).status;
 
 function draftKey(kind: string) {
   return `career-workspace:v1:${localStorage.getItem('auth_username') || 'user'}:${kind}`;
@@ -53,12 +55,12 @@ function Transcribing({ label }: { label: string }) {
 function ThoughtCard({ thought, selected, disabled, onOpen, onDelete }: { thought: RunningNote; selected: boolean; disabled: boolean; onOpen: () => void; onDelete: () => void }) {
   const excerpt = thoughtExcerpt(thought), untitled = isAutoTitle(thought.title), name = untitled ? 'Untitled thought' : thought.title;
   return <div className="relative">
-    <button type="button" disabled={disabled} onClick={onOpen} className={`group flex h-full w-full flex-col gap-2 rounded-xl border p-4 text-left transition-colors ${selected ? 'border-sky-500 bg-sky-950/30' : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-600 hover:bg-zinc-900'}`}>
-      <span className={`block pr-8 font-medium ${untitled ? 'text-zinc-400 italic' : 'text-zinc-100'}`}>{name}</span>
+    <button type="button" data-thought-open={thought.id} disabled={disabled} onClick={onOpen} className={`group flex h-full w-full flex-col gap-2 rounded-xl border p-4 text-left transition-colors ${selected ? 'border-sky-500 bg-sky-950/30' : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-600 hover:bg-zinc-900'}`}>
+      <span className={`block pr-10 font-medium ${untitled ? 'text-zinc-400 italic' : 'text-zinc-100'}`}>{name}</span>
       {excerpt ? <span className="line-clamp-2 text-sm leading-relaxed text-zinc-400">{excerpt}</span> : <Transcribing label="Waiting for transcription…" />}
       <span className="mt-auto flex flex-wrap items-center gap-2 pt-1 text-xs text-zinc-500">{thoughtDate(thought.startedAt)}{thought.tags.map(tag => <span key={tag} className={`${tagChipClass(tag)} px-2 py-0.5`}>{tag}</span>)}</span>
     </button>
-    <button type="button" disabled={disabled} onClick={onDelete} aria-label={`Delete ${name}`} title="Delete thought" className="absolute right-2 top-2 rounded-lg p-2 text-zinc-500 hover:bg-red-950/40 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 disabled:cursor-not-allowed disabled:opacity-50">
+    <button type="button" disabled={disabled} onClick={onDelete} aria-label={`Delete ${name}`} title="Delete thought" className="absolute right-1 top-1 flex min-h-11 min-w-11 items-center justify-center rounded-lg text-zinc-500 hover:bg-red-950/40 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 disabled:cursor-not-allowed disabled:opacity-50">
       <Trash2 className="size-4" aria-hidden />
     </button>
   </div>;
@@ -87,6 +89,9 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
   const selectionRequest = useRef(0);
   const todoQueue = useRef<{ running: boolean; pending: NoteTodo[] | null; waiters: ((ok: boolean) => void)[] }>({ running: false, pending: null, waiters: [] });
   const backButton = useRef<HTMLButtonElement>(null);
+  const emptyThoughts = useRef<HTMLDivElement>(null);
+  /** After a card delete: the thought whose card takes focus, '' for the empty state. */
+  const focusAfterDelete = useRef<string | null>(null);
   const listPosition = useRef<{ scroll: number; focus: HTMLElement | null } | null>(null);
   const recovered = useRef(false);
   const [entries, setEntries] = useState<Entry[] | null>(null);
@@ -280,19 +285,49 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
   }
   /** Deletes a thought straight from its card, without opening it first. */
   async function removeThought(thought: RunningNote) {
-    const name = isAutoTitle(thought.title) ? 'this untitled thought' : `"${thought.title}"`;
-    if (!window.confirm(`Delete ${name} and its recordings? This cannot be undone.`)) return;
-    setBusy(true); setError(''); setStatus('');
-    try {
-      // Cards hold list summaries and transcription can change the revision after
-      // the list loaded, so delete against the latest saved revision.
-      const detail = await request(kind, 'GET', undefined, thought.id) as EntryResult;
-      await request(kind, 'DELETE', { id: thought.id, revision: detail.revision });
+    const index = filtered.findIndex(item => entryId(item) === thought.id);
+    const neighbour = filtered[index + 1] ?? filtered[index - 1];
+    const deleted = () => {
       setEntries(current => (current ?? []).filter(item => entryId(item) !== thought.id));
+      focusAfterDelete.current = neighbour ? entryId(neighbour) : '';
       setStatus('Deleted.');
       window.dispatchEvent(new Event('workspace-saved'));
+    };
+    // Cards hold list summaries and transcription can change the title and revision
+    // after the list loaded, so confirm and delete against the latest saved thought.
+    const latest = () => request(kind, 'GET', undefined, thought.id).catch(e => { if (httpStatus(e) === 404) return null; throw e; }) as Promise<EntryResult | null>;
+    setBusy(true); setError(''); setStatus('');
+    try {
+      let detail = await latest();
+      if (!detail) { deleted(); return; }
+      const takes = await unsentTakes(thought.id);
+      const title = 'runDate' in detail.entry && !isAutoTitle(detail.entry.title) ? `"${detail.entry.title}"` : 'this untitled thought';
+      const discarded = takes.length ? ` ${takes.length} unsent take${takes.length === 1 ? '' : 's'} from this session will also be discarded.` : '';
+      if (!window.confirm(`Delete ${title} and its recordings?${discarded} This cannot be undone.`)) return;
+      for (let retried = false; detail; retried = true) {
+        try { await request(kind, 'DELETE', { id: thought.id, revision: detail.revision }); break; }
+        catch (e) {
+          if (httpStatus(e) === 404) break;
+          if (httpStatus(e) !== 409) throw e;
+          if (retried) throw new Error('This thought was just updated. Try deleting again.');
+          detail = await latest();
+        }
+      }
+      // Unsent takes would otherwise recreate the thought when they upload.
+      const kept = (await Promise.allSettled(takes.map(take => removeClip(take.clientId)))).filter(result => result.status === 'rejected').length;
+      deleted();
+      if (kept) setError(`Thought deleted, but ${kept} unsent take${kept === 1 ? '' : 's'} could not be discarded from this device.`);
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
+  }
+  /** Queued takes that would upload into this thought, found with the server's grouping window. */
+  async function unsentTakes(noteId: string): Promise<QueuedClip[]> {
+    const queued = await queuedClips().catch(() => [] as QueuedClip[]);
+    if (!queued.length) return [];
+    const response = await fetch(`/api/running/${encodeURIComponent(noteId)}/status`, { cache: 'no-store' });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || typeof result.groupWindowMs !== 'number') throw new Error(result.error || 'Could not check this thought for unsent takes. Please retry.');
+    return takesForThought(queued, noteId, (result.clips ?? []).map((clip: { recordedAt: string }) => clip.recordedAt), result.groupWindowMs);
   }
   const loadedEntries = entries ?? [];
   const topicCounts = loadedEntries.reduce((counts, note) => 'topic' in note ? counts.set(note.topic, (counts.get(note.topic) ?? 0) + 1) : counts, new Map<string, number>());
@@ -312,6 +347,13 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
       listPosition.current = null;
     }
   }, [reading]);
+  useEffect(() => {
+    // Wait until the cards are enabled again; disabled buttons cannot take focus.
+    const target = focusAfterDelete.current;
+    if (target === null || busy) return;
+    focusAfterDelete.current = null;
+    (target ? document.querySelector<HTMLElement>(`[data-thought-open="${CSS.escape(target)}"]`) : emptyThoughts.current)?.focus();
+  }, [entries, busy]);
 
   return <section className="space-y-5" data-thought-reading={kind === 'run' && reading ? '' : undefined}>
     {reading && <div className="flex flex-wrap gap-2">
@@ -350,7 +392,7 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
     </div>
     <div className={listFirst ? "space-y-5" : "grid gap-5 md:grid-cols-[220px_minmax(0,1fr)]"}>
       <nav hidden={reading} aria-label={`${labels[kind]} entries`} className={kind === 'run' ? 'grid gap-3 sm:grid-cols-2' : listFirst ? "space-y-2" : "max-h-72 overflow-y-auto space-y-2 md:max-h-[700px]"}>
-        {kind === 'run' && entries && filtered.length === 0 && <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-700 px-6 py-10 text-center sm:col-span-2">
+        {kind === 'run' && entries && filtered.length === 0 && <div ref={emptyThoughts} tabIndex={-1} className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-700 px-6 py-10 text-center sm:col-span-2">
           <AudioLines className="size-8 text-zinc-600" aria-hidden />
           <p className="font-medium text-zinc-300">{loadedEntries.length ? 'No thoughts match your search' : 'No audio thoughts yet'}</p>
           <p className="max-w-sm text-sm text-zinc-500">{loadedEntries.length ? 'Try fewer words, or clear the search to see everything.' : 'Record a take above. It shows up here and is named after its first few words once it is transcribed.'}</p>

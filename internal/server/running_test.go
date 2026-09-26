@@ -140,6 +140,14 @@ func TestRunningAPI(t *testing.T) {
 		handler.ServeHTTP(w, r)
 		return w
 	}
+	w = get("/api/running/" + clip.NoteID + "/status")
+	var status struct {
+		Clips         []database.RunningClip `json:"clips"`
+		GroupWindowMs int64                  `json:"groupWindowMs"`
+	}
+	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &status) != nil || len(status.Clips) != 1 || status.GroupWindowMs != database.RunningGroupWindow.Milliseconds() {
+		t.Fatal(w.Code, w.Body.String())
+	}
 	w = get("/api/entries/run?id=" + clip.NoteID)
 	var detail struct {
 		Revision string `json:"revision"`

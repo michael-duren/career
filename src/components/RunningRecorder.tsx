@@ -139,8 +139,10 @@ export default function RunningRecorder() {
     const online = () => sync(); const visible = () => { if (recorder.current?.state === 'recording') void holdScreen(); else sync(); };
     const leaving = (e: BeforeUnloadEvent) => { if (recorder.current?.state === 'recording' || pending.current) e.preventDefault(); };
     const retry = setInterval(sync, 30000);
+    // Deleting a thought can discard its unsent takes.
+    window.addEventListener('workspace-saved', count);
     window.addEventListener('online', online); document.addEventListener('visibilitychange', visible); window.addEventListener('beforeunload', leaving);
-    return () => { clearInterval(retry); window.removeEventListener('online', online); document.removeEventListener('visibilitychange', visible); window.removeEventListener('beforeunload', leaving); if (recorder.current?.state === 'recording') recorder.current.stop(); release(); };
+    return () => { clearInterval(retry); window.removeEventListener('workspace-saved', count); window.removeEventListener('online', online); document.removeEventListener('visibilitychange', visible); window.removeEventListener('beforeunload', leaving); if (recorder.current?.state === 'recording') recorder.current.stop(); release(); };
   }, []);
   async function importFile(file: File) {
     if (file.size > 15 * 1024 * 1024 || !file.size) { setError('Choose an audio file between 1 byte and 15 MiB.'); return; }

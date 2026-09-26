@@ -19,6 +19,18 @@ async function transaction<T>(mode: IDBTransactionMode, operation: (store: IDBOb
 export const enqueueClip = (clip: QueuedClip) => transaction('readwrite', s => s.put(clip));
 export const queuedClips = () => transaction<QueuedClip[]>('readonly', s => s.getAll());
 export const removeClip = (id: string) => transaction('readwrite', s => s.delete(id));
+/**
+ * Unsent takes that would land in a thought once uploaded: those addressed to it,
+ * and unaddressed ones recorded within the server's grouping window of its clips.
+ */
+export function takesForThought(queued: QueuedClip[], noteId: string, clipTimes: string[], windowMs: number): QueuedClip[] {
+  const times = clipTimes.map(t => Date.parse(t)).filter(t => !Number.isNaN(t));
+  return queued.filter(clip => {
+    if (clip.noteId) return clip.noteId === noteId;
+    const at = Date.parse(clip.recordedAt);
+    return !Number.isNaN(at) && times.some(t => Math.abs(at - t) <= windowMs);
+  });
+}
 let syncing: Promise<void> | undefined;
 export function syncClips(onChange: () => void): Promise<void> {
   if (syncing) return syncing;

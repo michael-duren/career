@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { indexedDB } from 'fake-indexeddb';
-import { enqueueClip, queuedClips, syncClips } from '../src/lib/running-queue.ts';
+import { enqueueClip, queuedClips, syncClips, takesForThought, type QueuedClip } from '../src/lib/running-queue.ts';
 import { agentContext, journalMarkdown } from '../src/lib/agent-context.ts';
 import { careerEntries } from '../src/lib/mcp-server.ts';
 import { searchEntries } from '../src/lib/search.ts';
@@ -33,6 +33,22 @@ test('three offline clips survive failed and lost-response uploads, replay once 
     assert.equal(stored.size, 3);
     assert.equal(await stored.get('clip-0')!.text(), 'audio');
   } finally { globalThis.fetch = original; }
+});
+
+test('deleting a thought finds unsent takes the server would group into it', () => {
+  const take = (clientId: string, recordedAt: string, noteId?: string): QueuedClip => ({ clientId, recordedAt, noteId, durationMs: 1000, audio: new Blob(['a']) });
+  const window = 90 * 60 * 1000;
+  const queued = [
+    take('near', '2026-09-19T11:30:00Z'),
+    take('edge', '2026-09-19T08:30:00Z'),
+    take('far', '2026-09-19T13:00:01Z'),
+    take('addressed', '2026-09-20T10:00:00Z', 'run-one'),
+    take('other-note', '2026-09-19T10:05:00Z', 'run-two'),
+    take('bad-time', 'not a date'),
+  ];
+  const ids = (clips: QueuedClip[]) => clips.map(c => c.clientId).sort();
+  assert.deepEqual(ids(takesForThought(queued, 'run-one', ['2026-09-19T10:00:00Z', '2026-09-19T11:30:00Z'], window)), ['addressed', 'edge', 'near']);
+  assert.deepEqual(ids(takesForThought(queued, 'run-one', [], window)), ['addressed'], 'a typed thought only owns addressed takes');
 });
 
 test('running notes are searchable and explicitly opt in to agent and MCP context', () => {
