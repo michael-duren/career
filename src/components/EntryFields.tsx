@@ -17,7 +17,7 @@ export default function EntryFields({ entry, change }: { entry: WorkspaceEntry; 
   </>;
   return <>
     <label className="block text-sm">Title<input className={field} value={entry.title} autoFocus required maxLength={200} onChange={e => change({ title: e.target.value })} /></label>
-    {'runDate' in entry && <><Text label="Run date" type="date" value={entry.runDate} onChange={runDate => change({ runDate })} />{(['distanceKm', 'durationMin'] as const).map(key => <label key={key} className="block text-sm">{key === 'distanceKm' ? 'Distance (km)' : 'Duration (minutes)'}<input className={field} type="number" min="0" max={key === 'distanceKm' ? 500 : 1440} step="any" value={entry[key] ?? ''} onChange={e => change({ [key]: e.target.value === '' ? undefined : Number(e.target.value) })} /></label>)}</>}
+    {'runDate' in entry && <><Text label="Date" type="date" value={entry.runDate} onChange={runDate => change({ runDate })} />{(['distanceKm', 'durationMin'] as const).map(key => <label key={key} className="block text-sm">{key === 'distanceKm' ? 'Distance (km)' : 'Duration (minutes)'}<input className={field} type="number" min="0" max={key === 'distanceKm' ? 500 : 1440} step="any" value={entry[key] ?? ''} onChange={e => change({ [key]: e.target.value === '' ? undefined : Number(e.target.value) })} /></label>)}</>}
     {'date' in entry && <Text label="Entry date (optional for background)" type="date" value={entry.date} onChange={date => change({ date })} />}
     {'topic' in entry && <Text label="Topic" value={entry.topic} required onChange={topic => change({ topic })} />}
     {'description' in entry && <Text label="Summary" value={entry.description} onChange={description => change({ description })} />}

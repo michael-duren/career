@@ -32,7 +32,7 @@ function source(body: string): string {
 const line = (value: string) => value.replace(/[\r\n]+/g, ' ');
 export function journalMarkdown(data: Workspace, kind: 'work' | 'personal' | 'running'): string {
   const entries = kind === 'running' ? [...(data.runningNotes ?? [])].sort((a,b)=>b.startedAt.localeCompare(a.startedAt)) : agentContext({ data, revision: null }).journals[kind];
-  const heading = kind === 'running' ? 'Running notes' : kind === 'work' ? 'Work journal' : 'Personal journal';
+  const heading = kind === 'running' ? 'Audio thoughts' : kind === 'work' ? 'Work journal' : 'Personal journal';
   return `# ${heading}\n\nHistorical context. Current goals and dates come from /agents.\n\n` +
     (entries.length ? entries.map(entry => {
       const title = 'week' in entry ? `Week ${entry.week} · ${entry.dates}` : entry.title;

@@ -9,7 +9,7 @@
   </div>
   <div id="search-panel" hidden>
     <div class="search-panel-top"><span>YOUR WORKSPACE</span>
-      <select id="search-kind" aria-label="Search collection"><option value="">All collections</option><option value="note">Notes</option><option value="document">Documents</option><option value="book">Books</option><option value="company">Companies</option><option value="connection">Connections</option><option value="week">Work journal</option><option value="personal">Personal journal</option><option value="run">Running</option></select>
+      <select id="search-kind" aria-label="Search collection"><option value="">All collections</option><option value="note">Notes</option><option value="document">Documents</option><option value="book">Books</option><option value="company">Companies</option><option value="connection">Connections</option><option value="week">Work journal</option><option value="personal">Personal journal</option><option value="run">Audio thoughts</option></select>
     </div>
     <p id="search-status" role="status"></p>
     <ul id="search-results" aria-label="Search results"></ul>
@@ -53,7 +53,7 @@
   let request: AbortController | undefined;
   let version = 0;
   const clear = document.querySelector<HTMLButtonElement>('#search-clear')!;
-  const labels: Record<string, string> = { run: 'Running', note: 'Notes', document: 'Documents', company: 'Companies', connection: 'Connections', book: 'Books', personal: 'Personal journal', week: 'Work journal' };
+  const labels: Record<string, string> = { run: 'Audio thoughts', note: 'Notes', document: 'Documents', company: 'Companies', connection: 'Connections', book: 'Books', personal: 'Personal journal', week: 'Work journal' };
   function close() { panel.hidden = true; input.setAttribute('aria-expanded', 'false'); request?.abort(); clearTimeout(timer); }
   clear.addEventListener('click', () => { input.value = ''; clear.hidden = true; input.focus(); void render(); });
   document.addEventListener('keydown', e => {
@@ -84,7 +84,7 @@
       const li = document.createElement('li');
       const link = document.createElement('a');
       const encoded = item.id.split('/').map(encodeURIComponent).join('/');
-      link.href = item.kind === 'run' ? `/running?id=${encodeURIComponent(item.id)}` : item.kind === 'note' ? `/notes/${encoded}` : item.kind === 'document' ? (item.id === 'index' ? '/' : `/documents/${encoded}`) : item.kind === 'company' ? `/companies/${encoded}` : item.kind === 'connection' ? `/connections?id=${encodeURIComponent(item.id)}` : item.kind === 'book' ? `/books?id=${encodeURIComponent(item.id)}` : item.kind === 'personal' ? `/personal-journal?id=${encodeURIComponent(item.id)}` : `/journal?id=${encodeURIComponent(item.id)}`;
+      link.href = item.kind === 'run' ? `/audio-thoughts?id=${encodeURIComponent(item.id)}` : item.kind === 'note' ? `/notes/${encoded}` : item.kind === 'document' ? (item.id === 'index' ? '/' : `/documents/${encoded}`) : item.kind === 'company' ? `/companies/${encoded}` : item.kind === 'connection' ? `/connections?id=${encodeURIComponent(item.id)}` : item.kind === 'book' ? `/books?id=${encodeURIComponent(item.id)}` : item.kind === 'personal' ? `/personal-journal?id=${encodeURIComponent(item.id)}` : `/journal?id=${encodeURIComponent(item.id)}`;
       link.className = 'search-result';
       const title = document.createElement('div');
       title.className = 'search-result-title';

@@ -37,7 +37,7 @@ test('three offline clips survive failed and lost-response uploads, replay once 
 
 test('running notes are searchable and explicitly opt in to agent and MCP context', () => {
   const data: Workspace = { version: 2, notes: [], weeks: [], books: [], companies: [], documents: [], runningNotes: [{ id: 'run-one', title: 'Morning run', runDate: '2026-09-19', startedAt: '2026-09-19T10:00:00Z', tags: [], body: 'Private running thoughts' }] };
-  assert.equal(searchEntries(data).find(e => e.kind === 'Run')?.href, '/running?id=run-one');
+  assert.equal(searchEntries(data).find(e => e.kind === 'Audio thought')?.href, '/audio-thoughts?id=run-one');
   assert.equal(data.notes.length, 0);
   assert.equal(JSON.stringify(agentContext({ data, revision: null })).includes('Private running'), false);
   assert.equal(careerEntries({ data, revision: null }).some(e => e.kind === 'running'), false);
@@ -45,7 +45,7 @@ test('running notes are searchable and explicitly opt in to agent and MCP contex
   assert.match(journalMarkdown(data, 'running'), /Private running thoughts/);
 });
 
-test('service worker caches only data-free running shell and public assets; private APIs stay network-only', async () => {
+test('service worker caches only data-free audio thoughts shell and public assets; private APIs stay network-only', async () => {
   const { readFile } = await import('node:fs/promises');
   const { runInNewContext } = await import('node:vm');
   const listeners: Record<string, (event: any) => void> = {};
@@ -63,7 +63,8 @@ test('service worker caches only data-free running shell and public assets; priv
   assert.equal(fetchEvent('/api/running/clips/run/clip/audio', 'cors'), undefined);
   await fetchEvent('/personal-journal');
   assert.equal(stored.has('/personal-journal'), false);
-  loginRedirect = true; await fetchEvent('/running'); assert.equal(stored.has('/running'), false);
-  loginRedirect = false; await fetchEvent('/running?id=run'); assert.equal(stored.has('/running'), true);
-  offline = true; assert.equal(await (await fetchEvent('/running'))!.text(), 'data-free shell');
+  loginRedirect = true; await fetchEvent('/audio-thoughts'); assert.equal(stored.has('/audio-thoughts'), false);
+  loginRedirect = false; await fetchEvent('/audio-thoughts?id=run'); assert.equal(stored.has('/audio-thoughts'), true);
+  offline = true; assert.equal(await (await fetchEvent('/audio-thoughts'))!.clone().text(), 'data-free shell');
+  assert.equal(await (await fetchEvent('/running'))!.text(), 'data-free shell');
 });
