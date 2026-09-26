@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/michael-duren/career-strategy/internal/linkedin"
 	"strings"
 	"time"
 )
@@ -66,6 +67,12 @@ func projection(m model, detail bool) string {
 	}
 	if !detail && m.Table == "companies" {
 		pairs = append(pairs, "'summary',(SELECT json_build_object('why',why,'stepCount',step_count,'completedCount',completed_count,'sourceRevision',source_revision,'parserVersion',parser_version) FROM company_summaries WHERE company_slug=companies.slug)")
+	}
+	if !detail && m.Table == "notes" {
+		// Cards show length and todo progress without shipping every body.
+		// Postgres \s is the locale's [[:space:]] while JS \s is a fixed Unicode
+		// set, so countWords in src/lib/note-card.ts may differ on unusual whitespace.
+		pairs = append(pairs, `'summary',(SELECT json_build_object('wordCount',COALESCE(array_length(regexp_split_to_array(NULLIF(regexp_replace(body,'^\s+|\s+$','','g'),''),'\s+'),1),0),'todoCount',count(*),'todoDone',count(*) FILTER (WHERE done)) FROM note_todos WHERE note_id=notes.id)`)
 	}
 
 	if !detail && m.Table == "running_notes" {
@@ -284,12 +291,33 @@ func (s *Store) Save(ctx context.Context, kind string, e Entity, revision *strin
 		return Result{}, err
 	}
 	defer tx.Rollback()
+	var oldTitle string
+	if kind == "company" && revision != nil {
+		if err = tx.QueryRowContext(ctx, "SELECT title FROM companies WHERE slug=$1", e["slug"]).Scan(&oldTitle); err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return Result{}, err
+		}
+	}
 	r, err := saveTx(ctx, tx, kind, e, revision, false)
 	if err != nil {
 		return r, dbError(err)
 	}
 	if err = bump(ctx, tx, kind); err != nil {
 		return r, err
+	}
+	// A new or renamed company picks up people imported before it was tracked.
+	// Cosmetic renames ("Acme" to "Acme, Inc.") skip this so deliberate unlinks stay.
+	slug, _ := e["slug"].(string)
+	title, _ := e["title"].(string)
+	if kind == "company" && (revision == nil || linkedin.NormalizeCompany(oldTitle) != linkedin.NormalizeCompany(title)) {
+		linked, err := linkUnlinkedConnections(ctx, tx, []string{slug})
+		if err != nil {
+			return r, err
+		}
+		if linked > 0 {
+			if err = bump(ctx, tx, "connection"); err != nil {
+				return r, err
+			}
+		}
 	}
 	return r, tx.Commit()
 }
@@ -314,13 +342,18 @@ func saveTx(ctx context.Context, tx *sql.Tx, kind string, e Entity, revision *st
 		args = append(args, v)
 		vals = append(vals, fmt.Sprintf("$%d%s", len(args), cast))
 	}
+	if _, ok := e["createdAt"]; importing && kind == "note" && !ok && e["updatedAt"] != nil {
+		// Archives from before notes tracked creation use their last edit,
+		// matching migration 008, so a later edit keeps a real date.
+		e["createdAt"] = e["updatedAt"]
+	}
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 	for _, f := range m.Fields {
 		v := e[f.Name]
 		if !importing && f.Name == "updatedAt" {
 			v = now
 		}
-		if !importing && kind == "goal" && f.Name == "createdAt" {
+		if !importing && f.Name == "createdAt" {
 			v = now
 		}
 		cast := ""
@@ -364,7 +397,7 @@ func saveTx(ctx context.Context, tx *sql.Tx, kind string, e Entity, revision *st
 	} else {
 		sets := []string{"position=nextval('entity_position')"}
 		for i, c := range cols {
-			if kind == "goal" && c == "created_at" {
+			if c == "created_at" {
 				sets = append(sets, c+"=COALESCE(created_at,"+vals[i]+"::timestamptz)")
 				continue
 			}

@@ -9,12 +9,12 @@ function color(name: string): string {
   return COLORS[Math.abs(hash) % COLORS.length];
 }
 
-export function ConnectionAvatar({ connection, size = 40 }: { connection: Connection; size?: number }) {
+export function ConnectionAvatar({ connection, size = 40, ring = 'ring-1 ring-white/10' }: { connection: Connection; size?: number; ring?: string }) {
   const source = photoURL(connection);
   const [failed, setFailed] = useState<string>();
   const style = { width: size, height: size, fontSize: size * 0.38 };
   if (source && failed !== source) {
-    return <img src={source} alt="" width={size} height={size} loading="lazy" decoding="async" style={style} className="shrink-0 rounded-full object-cover ring-1 ring-white/10" onError={() => setFailed(source)} />;
+    return <img src={source} alt="" width={size} height={size} loading="lazy" decoding="async" style={style} className={`shrink-0 rounded-full object-cover ${ring}`} onError={() => setFailed(source)} />;
   }
-  return <span aria-hidden="true" style={style} className={`flex shrink-0 items-center justify-center rounded-full font-semibold text-white ring-1 ring-white/10 ${color(connection.name)}`}>{initials(connection.name)}</span>;
+  return <span aria-hidden="true" style={style} className={`flex shrink-0 items-center justify-center rounded-full font-semibold text-white ${ring} ${color(connection.name)}`}>{initials(connection.name)}</span>;
 }

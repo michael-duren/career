@@ -102,7 +102,8 @@ func (s *Server) runningStatus(w http.ResponseWriter, r *http.Request) {
 		failure(w, err)
 		return
 	}
-	respond(w, 200, map[string]any{"clips": clips})
+	// The window lets the client find unsent takes the server would group into this thought.
+	respond(w, 200, map[string]any{"clips": clips, "groupWindowMs": database.RunningGroupWindow.Milliseconds()})
 }
 func (s *Server) retranscribe(w http.ResponseWriter, r *http.Request) {
 	if !s.mutation(w, r) {

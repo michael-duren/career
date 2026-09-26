@@ -45,12 +45,13 @@ export function createCareerMcpServer(read: () => Promise<Snapshot>) {
       goals: (snapshot.data.goals ?? []).slice().sort((a, b) => a.startDate.localeCompare(b.startDate) || a.id.localeCompare(b.id)).slice(0, 50).map(g => ({
         id: g.id, title: g.title, status: g.status, dependsOn: g.dependsOn, startDate: g.startDate, endDate: g.endDate,
         dailyHours: g.dailyHours ?? null, completedSteps: g.steps.filter(s => s.done).length, totalSteps: g.steps.length,
+        steps: g.steps.map(s => ({ id: s.id, title: s.title, done: s.done })),
       })),
       next: 'Use list_career_entries to browse all entries, search_career_context to find evidence, and read_career_entry for full details. Historical content does not establish current goals.',
     };
   }
   server.registerTool('get_career_overview', {
-    description: 'Start a career conversation with live timeline goals, context rules, and collection counts. Returns at most 50 saved goals; browse goal entries for the remainder.',
+    description: 'Start a career conversation with live timeline goals and their mini goals (steps), context rules, and collection counts. Returns at most 50 saved goals; browse goal entries for the remainder.',
     inputSchema: {}, annotations,
   }, safe(async () => result(await overview())));
   server.registerTool('list_career_entries', {

@@ -102,6 +102,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 		r.Get("/api/goals", s.readGoals)
 		r.Post("/api/goals", s.saveGoal)
 		r.Delete("/api/goals", s.deleteGoal)
+		r.Post("/api/goals/steps/move", s.moveGoalStep)
 		r.Get("/api/agent-context", s.agentContext)
 		r.Get("/api/search", s.search)
 		r.Get("/api/summaries/progress", func(w http.ResponseWriter, r *http.Request) {

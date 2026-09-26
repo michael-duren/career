@@ -1,5 +1,6 @@
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import type { NoteTodo } from '../lib/workspace';
+import { tagChipClass } from '../lib/tag-colors';
 
 const field = 'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
 const button = 'rounded-lg border border-zinc-700 px-3 py-2 text-sm hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed';
@@ -72,7 +73,7 @@ export function TagInput({ value, options, onChange }: { value: string[]; option
   return <div className="block text-sm"><label htmlFor={`${inputProps['aria-controls']}-input`}>Tags</label>
     <div className="relative mt-1">
       <div className={`${field} flex flex-wrap items-center gap-1.5 focus-within:ring-2 focus-within:ring-blue-500`}>
-        {value.map(tag => <span key={tag} className="flex items-center gap-1 rounded-full bg-zinc-800 py-0.5 pl-2.5 pr-1 text-xs text-zinc-200">{tag}
+        {value.map(tag => <span key={tag} className={`${tagChipClass(tag)} flex items-center gap-1 py-0.5 pl-2.5 pr-1 text-xs`}>{tag}
           <button type="button" aria-label={`Remove tag ${tag}`} className="rounded-full px-1 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-100" onClick={() => onChange(value.filter(t => t !== tag))}>×</button></span>)}
         <input {...inputProps} id={`${inputProps['aria-controls']}-input`} className="min-w-32 flex-1 bg-transparent py-0.5 focus:outline-none focus-visible:outline-none" value={text} maxLength={80} autoComplete="off"
           placeholder={value.length ? '' : 'Type to search or add tags'}

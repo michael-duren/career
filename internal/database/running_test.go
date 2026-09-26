@@ -228,6 +228,41 @@ func TestTranscriptKeepsUserTitle(t *testing.T) {
 		t.Fatal("user title overwritten", final.Entry["title"])
 	}
 }
+func TestDeleteThoughtWhileTranscribing(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	c, err := s.AddRunningClip(ctx, clipFixture())
+	if err != nil {
+		t.Fatal(err)
+	}
+	claimed, err := s.ClaimRunningClip(ctx)
+	if err != nil || claimed.ID != c.ID {
+		t.Fatal(claimed, err)
+	}
+	detail, err := s.Detail(ctx, "run", c.NoteID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = s.Delete(ctx, "run", c.NoteID, &detail.Revision); err != nil {
+		t.Fatal(err)
+	}
+	// The worker finishing or retrying afterwards must not recreate the thought.
+	if err = s.FinishRunningClip(ctx, claimed, "late transcript", "base"); !errors.Is(err, sql.ErrNoRows) {
+		t.Fatal("finish after delete", err)
+	}
+	if err = s.RetryRunningClip(ctx, claimed, "late failure", false); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.Detail(ctx, "run", c.NoteID); !errors.Is(err, ErrNotFound) {
+		t.Fatal("deleted thought recreated", err)
+	}
+	if clips, err := s.RunningClips(ctx, c.NoteID); err != nil || len(clips) != 0 {
+		t.Fatal("deleted thought kept clips", clips, err)
+	}
+	if _, err = s.ClaimRunningClip(ctx); !errors.Is(err, sql.ErrNoRows) {
+		t.Fatal("deleted clip still claimable", err)
+	}
+}
 func TestAudioThoughtMigrationCleansLegacyNotes(t *testing.T) {
 	s := testStore(t)
 	_, err := s.DB.Exec(`INSERT INTO running_notes(id,title,run_date,started_at,tags,body,revision,position) VALUES

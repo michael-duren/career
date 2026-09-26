@@ -18,7 +18,7 @@ var staticPages = map[string]string{
 	"/": "index.html", "/login": "login/index.html", "/books": "books/index.html",
 	"/companies": "companies/index.html", "/connections": "connections/index.html", "/logs": "logs/index.html", "/progress": "progress/index.html",
 	"/goals/graph": "goals/graph/index.html", "/agents": "agents/index.html", "/timeline": "timeline/index.html", "/journal": "journal/index.html",
-	"/personal-journal": "personal-journal/index.html", "/notes": "notes/index.html", "/audio-thoughts": "audio-thoughts/index.html",
+	"/journal/new": "journal/new/index.html", "/personal-journal": "personal-journal/index.html", "/notes": "notes/index.html", "/audio-thoughts": "audio-thoughts/index.html",
 	"/documents": "documents/index.html", "/manage/books": "manage/books/index.html",
 	"/manage/companies": "manage/companies/index.html",
 }

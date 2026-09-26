@@ -29,6 +29,10 @@ type RunningClip struct {
 // ThoughtPlaceholder names a thought until its first transcript arrives.
 const ThoughtPlaceholder = "New audio thought"
 
+// RunningGroupWindow groups a clip uploaded without a note into the thought whose
+// clip was recorded nearest to it within this window.
+const RunningGroupWindow = 90 * time.Minute
+
 // autoTitle matches generated titles, including the timestamped ones used before
 // audio thoughts, so transcripts only ever replace a title the user did not write.
 var autoTitle = regexp.MustCompile(`^(New audio thought|Run \d{4}-\d{2}-\d{2} \d{2}:\d{2}|Audio thought \d{4}-\d{2}-\d{2})$`)
@@ -73,7 +77,7 @@ func (s *Store) AddRunningClip(ctx context.Context, c RunningClip) (RunningClip,
 	}
 	if c.NoteID == "" {
 		// Group by recording time, not upload time, so an offline backlog remains one run.
-		err = tx.QueryRowContext(ctx, `SELECT note_id FROM running_note_clips WHERE recorded_at BETWEEN $1::timestamptz-interval '90 minutes' AND $1::timestamptz+interval '90 minutes' ORDER BY abs(extract(epoch FROM recorded_at-$1::timestamptz)) LIMIT 1`, c.RecordedAt).Scan(&c.NoteID)
+		err = tx.QueryRowContext(ctx, `SELECT note_id FROM running_note_clips WHERE recorded_at BETWEEN $1::timestamptz-$2*interval '1 second' AND $1::timestamptz+$2*interval '1 second' ORDER BY abs(extract(epoch FROM recorded_at-$1::timestamptz)) LIMIT 1`, c.RecordedAt, RunningGroupWindow.Seconds()).Scan(&c.NoteID)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return c, err
 		}

@@ -1,6 +1,6 @@
 # Career MCP server
 
-The Go service serves a read-only MCP endpoint at `https://career.duckgc.com/api/mcp`
+The Go service serves an MCP endpoint at `https://career.duckgc.com/api/mcp`
 (`PUBLIC_ORIGIN` + `/api/mcp`). It uses stateless Streamable HTTP with JSON responses and
 reads the same PostgreSQL workspace as the website.
 
@@ -14,10 +14,11 @@ extra secret is needed:
 - Dynamic client registration at `/oauth/register` (RFC 7591). Clients are public
   (`token_endpoint_auth_method: none`); redirect URIs must be HTTPS or loopback HTTP.
   Loopback callbacks may use any port (RFC 8252).
-- `/oauth/authorize` requires the website login, then shows a consent page. Authorization
-  Code with PKCE `S256` only.
-- `/oauth/token` issues 1-hour access tokens and 30-day rotating refresh tokens, scope
-  `career:read`, audience `/api/mcp`.
+- `/oauth/authorize` requires the website login, then shows a consent page where you choose
+  **Allow read only** (`career:read`) or **Allow read and edit** (`career:read career:write`).
+  The client's requested scope does not decide this. Authorization Code with PKCE `S256` only.
+- `/oauth/token` issues 1-hour access tokens and 30-day rotating refresh tokens with the
+  chosen scope, audience `/api/mcp`. Refreshing keeps the scope; to change it, reconnect.
 
 Client IDs, codes and tokens are HMAC-signed claim sets keyed from `JWT_SECRET` with a
 separate key per purpose, so every replica verifies them without shared sessions. Codes and
@@ -60,12 +61,43 @@ login blocks the connector.
 - `list_career_entries`: page through one kind without bodies.
 - `search_career_context`: case-insensitive phrase search with excerpts.
 - `read_career_entry`: one entry with all metadata and body as JSON, in chunks.
+- `list_connection_companies`: employers of your LinkedIn connections, grouped by
+  normalized company name (case and suffixes like Inc ignored), with people count, most
+  recent conversation date, a few people with roles, and `trackedSlug` when the company is
+  already on the companies board. Filter by `query`, `role` (count only matching people),
+  `minConnections` and `untracked`; sort by `connections`, `recent` or `name`; page with
+  `offset`/`limit` (1-100).
 
 Kinds: `goal`, `work_journal`, `personal_journal`, `note`, `page`, `book`, `company`,
 `connection`, `audio_thought`. Audio thoughts are private and only returned when
 requested by kind. Prompt `career_conversation` offers a guided entry point.
 
-All tools are read-only. Suggested changes must be saved through the website. Request
+Write tools (need **Allow read and edit**):
+
+- `create_career_entry`: create a goal, company or note. IDs, slugs and timestamps are
+  generated as random UUIDs, like the website.
+- `update_career_entry`: patch a goal, company or note. Pass the `revision` from
+  `read_career_entry` and only changed fields. A stale revision is rejected instead of
+  overwriting newer edits. New steps, notes and todos may omit IDs.
+- `add_companies_to_queue`: batch-add 1-50 companies to the companies board as
+  `not_started` with the website's outreach checklist and an empty Log, so no reach-out
+  date is recorded. Only `title` is required; `category` defaults to "From connections",
+  `url` to a LinkedIn company search link, `priority` to medium, and `why` fills the Why
+  section (no `#`/`##` headings or unclosed code fences; `\r`, U+2028 and U+2029 count as
+  line breaks). Titles need letters or digits. A name that `list_connection_companies`
+  would report as tracked is skipped with `created: false` and the stored title and slug,
+  so retries are safe. Tracked means connections at that employer are linked to a
+  company, or the name equals a company's title or slug or starts with it as whole words,
+  ignoring case and legal suffixes: with "Google" tracked, "Google DeepMind" is skipped.
+  Use `create_career_entry` to add such a company deliberately. Within one batch only
+  exact name repeats are skipped, so `["Acme", "Acme Robotics"]` creates both. Like a
+  company created on the website, new companies pick up unlinked connections whose
+  employer best matches them among all companies; the total is returned as
+  `linkedConnections` and last-talked dates are not changed. The batch is all or nothing
+  if any company fails validation.
+
+Saves use the website's validation. There is no delete tool. Claude clients ask before
+running write tools unless you allow them permanently. Request
 bodies are limited to 64 KiB.
 
 ## Verify
@@ -75,8 +107,10 @@ make test-postgres   # includes the OAuth flow and MCP tool tests
 ```
 
 `internal/server/mcp_test.go` covers discovery, registration, login redirect, consent,
-cross-origin approval rejection, PKCE, code replay, refresh rotation, and all four tools
-through the Go MCP client.
+cross-origin approval rejection, PKCE, code replay, refresh rotation, read tools, and write
+tools (scope enforcement, revision conflicts, validation) and the connection company tools
+through the Go MCP client. `internal/database/connection_companies_test.go` covers grouping,
+filters, duplicate detection and linking.
 
 ## History
 

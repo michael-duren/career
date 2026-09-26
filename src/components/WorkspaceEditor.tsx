@@ -6,9 +6,12 @@ import { getEntryId as entryId, getEntryTitle as entryTitle } from '../lib/works
 import EntryFields, { EntryChecklist } from './EntryFields';
 import { NoteTodos, TagInput } from './NoteInputs';
 import { appendDailyEntry, localDate, newWeek } from '../lib/workspace';
-import type { RunningNote } from '../lib/workspace';
+import type { Note, RunningNote } from '../lib/workspace';
 import { THOUGHT_PLACEHOLDER, isAutoTitle, thoughtDate, thoughtExcerpt, thoughtTitle } from '../lib/audio-thoughts';
-import { AudioLines } from 'lucide-react';
+import { AudioLines, CalendarPlus, Clock, ListChecks, PencilLine, Trash2 } from 'lucide-react';
+import { entryTone, tagChipClass } from '../lib/tag-colors';
+import { noteDate, noteStats } from '../lib/note-card';
+import { pauseSync, queuedClips, removeClip, syncClips, takesForThought, type QueuedClip } from '../lib/running-queue';
 
 const field = 'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
 const button = 'rounded-lg border border-zinc-700 px-3 py-2 text-sm hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed';
@@ -16,13 +19,17 @@ const primary = `${button} bg-blue-600 border-blue-500 text-white hover:bg-blue-
 const labels = { run: 'audio thought', personal: 'personal journal entry', note: 'note', week: 'week', book: 'book or course', company: 'company', document: 'page' };
 
 type EntryResult = { entry: Entry; revision: string };
+function signInAgain(): never {
+  location.assign(`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`);
+  throw new Error('Your session expired. Sign in again.');
+}
 async function request(kind: EntryKind, method = 'GET', input?: unknown, id?: string): Promise<any> {
   if (method === 'GET' && !id) {
     const entries: EntryResult[] = [];
     let offset = 0;
     do {
       const response = await fetch(`/api/entries/${kind}?limit=100&offset=${offset}`, { cache: 'no-store' });
-      if (response.status === 401) { location.assign(`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`); throw new Error('Your session expired. Sign in again.'); }
+      if (response.status === 401) signInAgain();
       const page = await response.json();
       if (!response.ok) throw new Error(page.error || 'Request failed. Please retry.');
       entries.push(...page.entries); offset = page.nextOffset ?? -1;
@@ -33,11 +40,12 @@ async function request(kind: EntryKind, method = 'GET', input?: unknown, id?: st
   const response = await fetch(`/api/entries/${kind}${method === 'GET' ? query : ''}`, method === 'GET' ? { cache: 'no-store' } : {
     method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input),
   });
-  if (response.status === 401) { location.assign(`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`); throw new Error('Your session expired. Sign in again.'); }
+  if (response.status === 401) signInAgain();
   const result = await response.json();
-  if (!response.ok) throw new Error(result.error || 'Request failed. Please retry.');
+  if (!response.ok) throw Object.assign(new Error(result.error || 'Request failed. Please retry.'), { status: response.status });
   return result;
 }
+const httpStatus = (e: unknown) => (e as { status?: number }).status;
 
 function draftKey(kind: string) {
   return `career-workspace:v1:${localStorage.getItem('auth_username') || 'user'}:${kind}`;
@@ -48,20 +56,46 @@ function Preview({ body }: { body: string }) {
 function Transcribing({ label }: { label: string }) {
   return <span className="inline-flex items-center gap-2 text-sm text-zinc-500"><span className="size-1.5 animate-pulse rounded-full bg-amber-400" />{label}</span>;
 }
-function ThoughtCard({ thought, selected, disabled, onOpen }: { thought: RunningNote; selected: boolean; disabled: boolean; onOpen: () => void }) {
-  const excerpt = thoughtExcerpt(thought), untitled = isAutoTitle(thought.title);
-  return <button type="button" disabled={disabled} onClick={onOpen} className={`group flex w-full flex-col gap-2 rounded-xl border p-4 text-left transition-colors ${selected ? 'border-sky-500 bg-sky-950/30' : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-600 hover:bg-zinc-900'}`}>
-    <span className={`block font-medium ${untitled ? 'text-zinc-400 italic' : 'text-zinc-100'}`}>{untitled ? 'Untitled thought' : thought.title}</span>
-    {excerpt ? <span className="line-clamp-2 text-sm leading-relaxed text-zinc-400">{excerpt}</span> : <Transcribing label="Waiting for transcription…" />}
-    <span className="mt-auto flex flex-wrap items-center gap-2 pt-1 text-xs text-zinc-500">{thoughtDate(thought.startedAt)}{thought.tags.map(tag => <span key={tag} className="rounded-full bg-zinc-800 px-2 py-0.5 text-zinc-300">{tag}</span>)}</span>
+function ThoughtCard({ thought, selected, disabled, onOpen, onDelete }: { thought: RunningNote; selected: boolean; disabled: boolean; onOpen: () => void; onDelete: () => void }) {
+  const excerpt = thoughtExcerpt(thought), untitled = isAutoTitle(thought.title), name = untitled ? 'Untitled thought' : thought.title;
+  return <div className="relative">
+    <button type="button" data-thought-open={thought.id} disabled={disabled} onClick={onOpen} className={`group flex h-full w-full flex-col gap-2 rounded-xl border p-4 text-left transition-colors ${selected ? 'border-sky-500 bg-sky-950/30' : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-600 hover:bg-zinc-900'}`}>
+      <span className={`block pr-10 font-medium ${untitled ? 'text-zinc-400 italic' : 'text-zinc-100'}`}>{name}</span>
+      {excerpt ? <span className="line-clamp-2 text-sm leading-relaxed text-zinc-400">{excerpt}</span> : <Transcribing label="Waiting for transcription…" />}
+      <span className="mt-auto flex flex-wrap items-center gap-2 pt-1 text-xs text-zinc-500">{thoughtDate(thought.startedAt)}{thought.tags.map(tag => <span key={tag} className={`${tagChipClass(tag)} px-2 py-0.5`}>{tag}</span>)}</span>
+    </button>
+    <button type="button" disabled={disabled} onClick={onDelete} aria-label={`Delete ${name}`} title="Delete thought" className="absolute right-1 top-1 flex min-h-11 min-w-11 items-center justify-center rounded-lg text-zinc-500 hover:bg-red-950/40 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 disabled:cursor-not-allowed disabled:opacity-50">
+      <Trash2 className="size-4" aria-hidden />
+    </button>
+  </div>;
+}
+function NoteCard({ note, selected, disabled, onOpen }: { note: Note; selected: boolean; disabled: boolean; onOpen: () => void }) {
+  const tone = entryTone(note.tags), stats = noteStats(note);
+  const created = noteDate(note.createdAt), updated = noteDate(note.updatedAt);
+  return <button type="button" disabled={disabled} onClick={onOpen} data-tone={tone.name} className={`flex w-full flex-col gap-2 rounded-lg border border-l-4 p-3 text-left transition-colors sm:p-4 ${selected ? 'border-blue-500 bg-blue-950/30' : `border-zinc-800 ${tone.card}`}`}>
+    <span className="flex items-start justify-between gap-3">
+      <span className="min-w-0 font-medium text-zinc-100">{note.title}</span>
+      <span className="shrink-0 text-xs text-zinc-500">{note.topic}</span>
+    </span>
+    {note.description && <span className="line-clamp-2 text-sm leading-relaxed text-zinc-400">{note.description}</span>}
+    {note.tags.length > 0 && <span className="flex flex-wrap gap-1.5">{note.tags.map(tag => <span key={tag} className={`${tagChipClass(tag)} px-2 py-0.5 text-xs`}>{tag}</span>)}</span>}
+    <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500">
+      {created && <span className="inline-flex items-center gap-1" title={note.createdAt}><CalendarPlus className="size-3.5" aria-hidden />Created {created}</span>}
+      {updated && updated !== created && <span className="inline-flex items-center gap-1" title={note.updatedAt}><PencilLine className="size-3.5" aria-hidden />Edited {updated}</span>}
+      <span className="inline-flex items-center gap-1"><Clock className="size-3.5" aria-hidden />{stats.words ? `${stats.words.toLocaleString()} words · ${stats.minutes} min read` : 'Empty'}</span>
+      {stats.todos > 0 && <span className="inline-flex items-center gap-1"><ListChecks className="size-3.5" aria-hidden />{stats.todosDone}/{stats.todos} todos</span>}
+    </span>
   </button>;
 }
-export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kind: EntryKind; initialId?: string; quickJournal?: boolean }) {
+export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialId?: string }) {
   const listFirst = kind === 'note' || kind === 'week' || kind === 'personal' || kind === 'run';
   const openedInitialEntry = useRef(false);
   const selectionRequest = useRef(0);
   const todoQueue = useRef<{ running: boolean; pending: NoteTodo[] | null; waiters: ((ok: boolean) => void)[] }>({ running: false, pending: null, waiters: [] });
   const backButton = useRef<HTMLButtonElement>(null);
+  const emptyThoughts = useRef<HTMLDivElement>(null);
+  /** After a card delete: the thought whose card takes focus, '' for the empty state. */
+  const focusAfterDelete = useRef<string | null>(null);
   const listPosition = useRef<{ scroll: number; focus: HTMLElement | null } | null>(null);
   const recovered = useRef(false);
   const [entries, setEntries] = useState<Entry[] | null>(null);
@@ -253,6 +287,74 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
   }
+  /** Deletes a thought straight from its card, without opening it first. */
+  async function removeThought(thought: RunningNote) {
+    const index = filtered.findIndex(item => entryId(item) === thought.id);
+    const neighbour = filtered[index + 1] ?? filtered[index - 1];
+    const deleted = () => {
+      setEntries(current => (current ?? []).filter(item => entryId(item) !== thought.id));
+      focusAfterDelete.current = neighbour ? entryId(neighbour) : '';
+      setStatus('Deleted.');
+      window.dispatchEvent(new Event('workspace-saved'));
+    };
+    // Cards hold list summaries and transcription can change the title and revision
+    // after the list loaded, so confirm and delete against the latest saved thought.
+    const latest = () => request(kind, 'GET', undefined, thought.id).catch(e => { if (httpStatus(e) === 404) return null; throw e; }) as Promise<EntryResult | null>;
+    // Hold uploads while deleting so no take joins the thought between counting and
+    // discarding its takes. Only the take already uploading is waited for.
+    const sync = pauseSync();
+    const discard = async (takes: QueuedClip[]) => {
+      const kept = (await Promise.allSettled(takes.map(take => removeClip(take.clientId)))).filter(result => result.status === 'rejected').length;
+      if (kept) setError(`Thought deleted, but ${kept} unsent take${kept === 1 ? '' : 's'} could not be discarded from this device.`);
+    };
+    setBusy(true); setError(''); setStatus(sync.uploading ? 'Finishing the current upload…' : '');
+    try {
+      await sync.settled;
+      setStatus('');
+      let detail = await latest();
+      if (!detail) {
+        // Already deleted elsewhere: takes addressed to it could only fail to upload.
+        const queued = await queuedClips().catch(() => [] as QueuedClip[]);
+        await discard(takesForThought(queued, thought.id, [], 0));
+        deleted();
+        return;
+      }
+      const takes = await unsentTakes(thought.id);
+      const title = 'runDate' in detail.entry && !isAutoTitle(detail.entry.title) ? `"${detail.entry.title}"` : 'this untitled thought';
+      const discarded = takes.length ? ` ${takes.length} unsent take${takes.length === 1 ? '' : 's'} from this session will also be discarded.` : '';
+      if (!window.confirm(`Delete ${title} and its recordings?${discarded} This cannot be undone.`)) return;
+      for (let retried = false; detail; retried = true) {
+        try { await request(kind, 'DELETE', { id: thought.id, revision: detail.revision }); break; }
+        catch (e) {
+          if (httpStatus(e) === 404) break;
+          if (httpStatus(e) !== 409) throw e;
+          if (retried) throw new Error('This thought was just updated. Try deleting again.');
+          detail = await latest();
+        }
+      }
+      // Unsent takes would otherwise recreate the thought when they upload.
+      await discard(takes);
+      deleted();
+    } catch (e) { setError((e as Error).message); }
+    finally {
+      setBusy(false);
+      sync.resume();
+      // Upload the takes that were held back; the recorder reports any failure on its next retry.
+      void syncClips(() => {}).catch(() => {});
+    }
+  }
+  /** Queued takes that would upload into this thought, found with the server's grouping window. */
+  async function unsentTakes(noteId: string): Promise<QueuedClip[]> {
+    const queued = await queuedClips().catch(() => [] as QueuedClip[]);
+    if (!queued.length) return [];
+    const response = await fetch(`/api/running/${encodeURIComponent(noteId)}/status`, { cache: 'no-store' });
+    if (response.status === 401) signInAgain();
+    // Without stored clips, only takes addressed to the thought would join it.
+    if (response.status === 404) return takesForThought(queued, noteId, [], 0);
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || typeof result.groupWindowMs !== 'number') throw new Error(result.error || 'Could not check this thought for unsent takes. Please retry.');
+    return takesForThought(queued, noteId, (result.clips ?? []).map((clip: { recordedAt: string }) => clip.recordedAt), result.groupWindowMs);
+  }
   const loadedEntries = entries ?? [];
   const topicCounts = loadedEntries.reduce((counts, note) => 'topic' in note ? counts.set(note.topic, (counts.get(note.topic) ?? 0) + 1) : counts, new Map<string, number>());
   const topics = [...topicCounts.keys()].sort((a, b) => a.localeCompare(b));
@@ -271,6 +373,13 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
       listPosition.current = null;
     }
   }, [reading]);
+  useEffect(() => {
+    // Wait until the cards are enabled again; disabled buttons cannot take focus.
+    const target = focusAfterDelete.current;
+    if (target === null || busy) return;
+    focusAfterDelete.current = null;
+    (target ? document.querySelector<HTMLElement>(`[data-thought-open="${CSS.escape(target)}"]`) : emptyThoughts.current)?.focus();
+  }, [entries, busy]);
 
   return <section className="space-y-5" data-thought-reading={kind === 'run' && reading ? '' : undefined}>
     {reading && <div className="flex flex-wrap gap-2">
@@ -309,14 +418,15 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
     </div>
     <div className={listFirst ? "space-y-5" : "grid gap-5 md:grid-cols-[220px_minmax(0,1fr)]"}>
       <nav hidden={reading} aria-label={`${labels[kind]} entries`} className={kind === 'run' ? 'grid gap-3 sm:grid-cols-2' : listFirst ? "space-y-2" : "max-h-72 overflow-y-auto space-y-2 md:max-h-[700px]"}>
-        {kind === 'run' && entries && filtered.length === 0 && <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-700 px-6 py-10 text-center sm:col-span-2">
+        {kind === 'run' && entries && filtered.length === 0 && <div ref={emptyThoughts} tabIndex={-1} className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-700 px-6 py-10 text-center sm:col-span-2">
           <AudioLines className="size-8 text-zinc-600" aria-hidden />
           <p className="font-medium text-zinc-300">{loadedEntries.length ? 'No thoughts match your search' : 'No audio thoughts yet'}</p>
           <p className="max-w-sm text-sm text-zinc-500">{loadedEntries.length ? 'Try fewer words, or clear the search to see everything.' : 'Record a take above. It shows up here and is named after its first few words once it is transcribed.'}</p>
         </div>}
         {kind !== 'run' && entries && filtered.length === 0 && <p className="text-sm text-zinc-400">No matching entries.</p>}
-        {kind === 'run' && filtered.map(item => <ThoughtCard key={entryId(item)} thought={item as RunningNote} selected={!!entry && entryId(entry) === entryId(item)} disabled={busy} onOpen={() => choose(item)} />)}
-        {kind !== 'run' && filtered.map(item => <button type="button" disabled={busy} key={entryId(item)} onClick={() => choose(item)} className={`w-full rounded-lg border p-3 text-left ${entry && entryId(entry) === entryId(item) ? 'border-blue-500 bg-blue-950/30' : 'border-zinc-800 hover:bg-zinc-900'}`}>
+        {kind === 'run' && filtered.map(item => <ThoughtCard key={entryId(item)} thought={item as RunningNote} selected={!!entry && entryId(entry) === entryId(item)} disabled={busy} onOpen={() => choose(item)} onDelete={() => void removeThought(item as RunningNote)} />)}
+        {kind === 'note' && filtered.map(item => <NoteCard key={entryId(item)} note={item as Note} selected={!!entry && entryId(entry) === entryId(item)} disabled={busy} onOpen={() => choose(item)} />)}
+        {kind !== 'run' && kind !== 'note' && filtered.map(item => <button type="button" disabled={busy} key={entryId(item)} onClick={() => choose(item)} className={`w-full rounded-lg border p-3 text-left ${entry && entryId(entry) === entryId(item) ? 'border-blue-500 bg-blue-950/30' : 'border-zinc-800 hover:bg-zinc-900'}`}>
           <span className="block text-sm font-medium">{entryTitle(item)}</span>
           <span className="mt-1 block text-xs text-zinc-400">{'topic' in item ? item.topic : 'week' in item ? (item.hours ? `${Object.values(item.hours as Record<string, number>).reduce((a, b) => a + b, 0)}h logged` : 'Work journal') : 'status' in item ? item.status.replaceAll('_', ' ') : 'description' in item ? item.description : 'runDate' in item ? item.runDate : ''}</span>
         </button>)}
@@ -335,7 +445,7 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
         </form> : <div className="space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-3"><h2 className={`text-xl font-semibold ${'runDate' in entry && isAutoTitle(entry.title) ? 'text-zinc-400 italic' : ''}`}>{'runDate' in entry && isAutoTitle(entry.title) ? 'Untitled thought' : entryTitle(entry)}</h2><div className="flex gap-2"><button type="button" className={button} disabled={busy} onClick={() => setEditing(true)}>Edit</button>{!(kind === 'document' && ['index', '2026/career-study-plan'].includes(entryId(entry))) && <button type="button" className={`${button} text-red-300`} disabled={busy} onClick={() => void remove()}>Delete</button>}</div></div>
           {kind === 'document' && <a className="inline-block text-sm text-blue-400 hover:underline" href={entryId(entry) === 'index' ? '/' : `/documents/${entryId(entry).split('/').map(encodeURIComponent).join('/')}`}>Open page →</a>}
-          <div className="flex flex-wrap gap-2">{entry.tags.map(tag => <span key={tag} className="rounded-full bg-zinc-800 px-2 py-1 text-xs text-zinc-300">{tag}</span>)}</div>
+          <div className="flex flex-wrap gap-2">{entry.tags.map(tag => <span key={tag} className={`${tagChipClass(tag)} px-2 py-1 text-xs`}>{tag}</span>)}</div>
           {'topic' in entry && <NoteTodos todos={entry.todos ?? []} onChange={saveTodos} />}
           {'status' in entry && <p className="text-sm text-zinc-400">{entry.status.replaceAll('_', ' ')} · {entry.priority} priority</p>}
           {'date' in entry && <p className="text-sm text-zinc-400">{entry.date || 'Undated background'}</p>}
@@ -347,11 +457,10 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
         {kind === 'run' && entry && baseRevision && <RunningClips noteId={entryId(entry)} />}
       </div>}
     </div>
-    {quickJournal && <div hidden={reading}><QuickJournal /></div>}
   </section>;
 }
 
-export function QuickJournal() {
+export function QuickJournal({ returnTo }: { returnTo?: string } = {}) {
   const [date, setDate] = useState('');
   const [body, setBody] = useState('');
   const [preview, setPreview] = useState(false);
@@ -376,6 +485,7 @@ export function QuickJournal() {
   }, [body, date, ready]);
   async function save() {
     setBusy(true); setError(''); setStatus('');
+    let leaving = false;
     try {
       const candidate = newWeek(date);
       const page = await request('week');
@@ -385,15 +495,21 @@ export function QuickJournal() {
       await request('week', 'POST', { revision: detail?.revision ?? null, entry: { ...week, body: appendDailyEntry(week.body, date, body) } });
       setBody(''); setPreview(false); setStatus('Saved to your journal.');
       window.dispatchEvent(new Event('workspace-saved'));
+      if (returnTo) {
+        try { localStorage.removeItem(draftKey('quick')); } catch { /* Draft recovery is optional. */ }
+        // Keep the form disabled while the browser navigates away.
+        leaving = true;
+        window.location.assign(returnTo);
+      }
     } catch (e) { setError((e as Error).message); }
-    finally { setBusy(false); }
+    finally { if (!leaving) setBusy(false); }
   }
   return <section className="rounded-xl border border-blue-900/60 bg-zinc-900 p-5 space-y-4">
-    <div className="flex flex-wrap justify-between gap-2"><div><h2 className="text-xl font-semibold">A moment to reflect</h2><p className="mt-1 text-sm text-zinc-400">What did you learn, finish, or get stuck on?</p></div><a className="text-sm text-blue-400 hover:underline" href="/journal">Open journal →</a></div>
+    <div className="flex flex-wrap justify-between gap-2"><div>{!returnTo && <h2 className="text-xl font-semibold">A moment to reflect</h2>}<p className={`${returnTo ? '' : 'mt-1 '}text-sm text-zinc-400`}>What did you learn, finish, or get stuck on?</p></div>{returnTo ? <a className="text-sm text-blue-400 hover:underline" href={returnTo}>← Back to journal</a> : <a className="text-sm text-blue-400 hover:underline" href="/journal">Open journal →</a>}</div>
     <form onSubmit={e => { e.preventDefault(); void save(); }} className="space-y-3"><fieldset disabled={busy || !ready} className="space-y-3">
       <div className="flex flex-wrap gap-3 items-end"><label className="text-sm">Entry date<input type="date" required min="2026-04-20" max="2199-12-31" className={`${field} mt-1`} value={date} onChange={e => setDate(e.target.value)} /></label><button type="button" className={button} aria-pressed={preview} onClick={() => setPreview(!preview)}>{preview ? 'Write' : 'Markdown preview'}</button></div>
       {preview ? <div className="min-h-32 rounded-lg bg-zinc-950 p-4"><Preview body={body} /></div> : <textarea aria-label="Journal entry in Markdown" className={`${field} min-h-32`} required maxLength={50000} placeholder="Today I learned…" value={body} onChange={e => { setBody(e.target.value); setStatus(''); }} />}
-      <button className={primary} type="submit" disabled={!body.trim()}>{busy ? 'Saving…' : 'Save entry'}</button> <button className={button} type="button" onClick={() => { setBody(''); setDate(localDate()); setPreview(false); setError(''); setStatus('Cancelled.'); }}>Cancel</button>
+      <button className={primary} type="submit" disabled={!body.trim()}>{busy ? 'Saving…' : 'Save entry'}</button> <button className={button} type="button" onClick={() => { if (returnTo && body.trim() && !window.confirm('Discard this unsaved entry?')) return; setBody(''); setDate(localDate()); setPreview(false); setError(''); setStatus('Cancelled.'); if (returnTo) { try { localStorage.removeItem(draftKey('quick')); } catch { /* Draft recovery is optional. */ } window.location.assign(returnTo); } }}>Cancel</button>
     </fieldset></form>
     {error && <p role="alert" className="text-sm text-red-300">{error} {error.includes('session') && <a href="/login" className="underline">Sign in</a>}</p>}
     <p role="status" className="text-sm text-zinc-400">{status}</p>
