@@ -20,39 +20,41 @@ templ layout(title string) {
 			<main id="main">
 				{ children... }
 			</main>
-			<footer>12 weeks · 84 sessions · At your pace <a href="/leetgrinder/export">Export attempt history</a></footer>
+			<footer>12 weeks · 84 sessions <nav aria-label="Leetgrinder links"><a href="/leetgrinder/reviews">Review queue</a><a href="/leetgrinder/settings">Settings</a><a href="/leetgrinder/export">Export attempt history</a></nav></footer>
 		</body>
 	</html>
 }
 
-templ Overview(state State) {
+templ Overview(page OverviewPage) {
 	@layout("Your curriculum") {
 		<section class="hero">
 			<div><p class="eyebrow">THE DAILY PRACTICE</p><h1>Build the habits.<br/>Learn the patterns.</h1><p class="lead">A 12-week DSA curriculum for programmers getting back into problem solving. One focused session at a time.</p></div>
 			<aside class="resume">
 				<p class="eyebrow">YOUR NEXT SESSION</p>
-				if Summarize(state).NextDay > 0 {
+				if Summarize(page.Today.State).NextDay > 0 {
 					<h2>
-						{ DayLabel(Summarize(state).NextDay) }
+						{ DayLabel(Summarize(page.Today.State).NextDay) }
 					</h2>
 					<p>90 minutes of practice.<br/>30 minutes to read and review.</p>
 					<a
 						class="button primary"
-						href={ templ.SafeURL(DayURL(Summarize(state).NextDay)) }
+						href={ templ.SafeURL(DayURL(Summarize(page.Today.State).NextDay)) }
 					>Continue learning <span aria-hidden="true">→</span></a>
 				} else {
 					<h2>84 sessions complete</h2>
 					<p>Revisit unfinished problems or work through optional practice.</p><a class="button primary" href="#curriculum">Revisit the curriculum</a>
 				}
-				<p class="small muted">No deadlines. Pick up where you left off.</p>
+				<p class="small muted">Pick up where you left off.</p>
 			</aside>
 		</section>
+		@scheduleCard(page.Today)
+		@todaysReviews(page.Today, page.IDs, 0, "overview")
 		<section class="stats" aria-label="Your progress">
-			<div><strong>{ Count(Summarize(state).Completed) }<span>/ 84</span></strong><p>Sessions finished</p></div>
-			<div><strong>{ Count(Summarize(state).Solved) }<span>/ 300</span></strong><p>Unique problems solved</p></div>
+			<div><strong>{ Count(Summarize(page.Today.State).Completed) }<span>/ 84</span></strong><p>Sessions finished</p></div>
+			<div><strong>{ Count(Summarize(page.Today.State).Solved) }<span>/ 300</span></strong><p>Unique problems solved</p></div>
 			<div>
 				<strong>
-					{ Count(Summarize(state).Independent) }
+					{ Count(Summarize(page.Today.State).Independent) }
 				</strong>
 				<p>Solved independently</p>
 			</div>
@@ -87,9 +89,9 @@ templ Overview(state State) {
 										<span>
 											{ day.Title }
 										</span>
-										if state.DayCompleted(day.Number) {
+										if page.Today.State.DayCompleted(day.Number) {
 											<span class="day-status done">Finished</span>
-										} else if Summarize(state).NextDay == day.Number {
+										} else if Summarize(page.Today.State).NextDay == day.Number {
 											<span class="day-status">Next</span>
 										}
 									</a>
@@ -174,6 +176,9 @@ templ Session(page DayPage) {
 							</article>
 						}
 					</section>
+				}
+				if page.ShowReviews() {
+					@todaysReviews(*page.Today, page.IDs, page.Day.Number, "")
 				}
 				<section aria-labelledby="practice-title">
 					<p class="eyebrow">02 / PRACTICE</p>
@@ -262,6 +267,12 @@ templ problemCard(problem Problem, state State, form AttemptForm) {
 templ attemptFields(problem Problem, form AttemptForm) {
 	<form class="attempt-form" method="post" action={ templ.SafeURL(ProblemURL(problem.Slug) + "/attempts") }>
 		<input type="hidden" name="id" value={ form.ID }/><input type="hidden" name="revision" value={ form.Revision }/><input type="hidden" name="returnDay" value={ Count(form.ReturnDay) }/>
+		if form.Review {
+			<input type="hidden" name="review" value="true"/>
+		}
+		if form.Return != "" {
+			<input type="hidden" name="return" value={ form.Return }/>
+		}
 		if form.Error!="" {
 			<p class="error" role="alert">
 				{ form.Error }
@@ -355,6 +366,9 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm) {
 							} else {
 								No solution help
 							}
+							if a.IsReview {
+								· Review
+							}
 						</p>
 						if a.Notes!="" {
 							<p class="notes">
@@ -381,4 +395,178 @@ templ Unavailable(message string) {
 			<p><a href="/leetgrinder">Try again</a></p>
 		</section>
 	}
+}
+
+templ scheduleCard(today Today) {
+	<section class="panel schedule-card" aria-labelledby="schedule-title">
+		if schedule, ok := today.Schedule(); ok {
+			<div>
+				<p class="eyebrow">YOUR SCHEDULE</p>
+				<h2 id="schedule-title">{ today.Status() }</h2>
+				<p class="muted">
+					if today.Session > 0 {
+						Today is { DayLabel(today.Session) } of 84.
+					} else if today.Date.Before(schedule.Start) {
+						{ DayLabel(1) } is on { DateLabel(schedule.Start) }.
+					} else {
+						The scheduled 84 days are over. Keep reviewing at your own pace.
+					}
+					{ Count(Summarize(today.State).Completed) } of { Count(schedule.ExpectedSessions(today.Now)) } expected sessions finished.
+				</p>
+			</div>
+			<dl>
+				<dt>Start</dt><dd>{ DateLabel(schedule.Start) }</dd>
+				<dt>End</dt><dd>{ DateLabel(schedule.End()) }</dd>
+				<dt>Daily time</dt><dd>{ HoursLabel(today.Settings.DailyHours) }</dd>
+			</dl>
+			<a href="/leetgrinder/settings">Adjust schedule</a>
+		} else {
+			<div>
+				<p class="eyebrow">YOUR SCHEDULE</p>
+				<h2 id="schedule-title">Set a start date</h2>
+				<p class="muted">Pick when you start the 84 sessions to see whether you are ahead or behind.</p>
+			</div>
+			<a class="button" href="/leetgrinder/settings">Set your schedule</a>
+		}
+	</section>
+}
+
+templ todaysReviews(today Today, ids map[string]string, day int, ret string) {
+	<section class="reviews" aria-labelledby="reviews-title">
+		<p class="eyebrow">SPACED REPETITION</p>
+		<h2 id="reviews-title">Today's review</h2>
+		if len(today.Reviews) == 0 {
+			<p class="muted">Nothing is due for review today. <a href="/leetgrinder/reviews">See the review queue</a></p>
+		} else {
+			<p class="muted">Re-solve each problem from scratch before looking at your old solution. <a href="/leetgrinder/reviews">Review queue</a></p>
+			for _, item := range today.Reviews {
+				@reviewCard(item, NewReviewForm(ids[ReviewKey(item.Problem.Slug)], day, ret))
+			}
+		}
+	</section>
+}
+
+templ reviewCard(item ReviewItem, form AttemptForm) {
+	<article class="problem-card review-card" id={ ReviewKey(item.Problem.Slug) }>
+		<div class="problem-heading">
+			<div>
+				<p class="small muted">
+					LEETCODE { Count(item.Problem.ID) } · { item.Problem.Difficulty } · { WeekLabel(WeekNumber(ProblemDay(item.Problem.Slug))) }
+				</p>
+				<h3>
+					<a
+						href={ templ.SafeURL(item.Problem.URL()) }
+						target="_blank"
+						rel="noopener noreferrer"
+					>{ item.Problem.Title } <span aria-label="opens in a new tab">↗</span></a>
+				</h3>
+			</div>
+			if item.Done {
+				<span class="badge done">Reviewed today</span>
+			} else {
+				<span class="badge">Review</span>
+			}
+		</div>
+		if item.Reason != "" {
+			<p class="reason">{ item.Reason }</p>
+		}
+		<div class="problem-actions">
+			<a href={ templ.SafeURL(ProblemURL(item.Problem.Slug)) }>Attempt history</a>
+		</div>
+		if !item.Done && form.ID != "" {
+			<details class="log-attempt">
+				<summary>Record your review</summary>@attemptFields(item.Problem, form)
+			</details>
+		}
+	</article>
+}
+
+templ Reviews(page ReviewsPage) {
+	@layout("Review queue") {
+		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder">Curriculum</a><span>/</span><span>Review queue</span></nav>
+		<p class="eyebrow">SPACED REPETITION</p>
+		<h1>Review queue</h1>
+		<p class="lead">Every problem you have attempted, scheduled by how likely you are to recall it.</p>
+		<section class="stats" aria-label="Review summary">
+			<div><strong>{ Count(len(page.Today.Reviews)) }</strong><p>Planned today</p></div>
+			<div><strong>{ Count(page.Today.Backlog(page.Cards)) }</strong><p>Due but not planned</p></div>
+			<div><strong>{ Count(len(page.Cards)) }</strong><p>Problems tracked</p></div>
+			<div><strong>{ Count(ReviewSlots(page.Today.Session, page.Today.Settings.DailyHours)) }</strong><p>Review slots today</p></div>
+		</section>
+		@todaysReviews(page.Today, page.IDs, 0, "reviews")
+		<section class="queue" aria-labelledby="queue-title">
+			<h2 id="queue-title">All cards</h2>
+			if len(page.Cards) == 0 {
+				<p class="muted">Record an attempt on any problem to start its review schedule.</p>
+			} else {
+				<div class="table-scroll">
+					<table>
+						<thead><tr><th scope="col">Problem</th><th scope="col">Week</th><th scope="col">Last counted attempt</th><th scope="col">Due</th><th scope="col">Recall now</th></tr></thead>
+						<tbody>
+							for _, card := range page.Cards {
+								<tr>
+									<td><a href={ templ.SafeURL(ProblemURL(card.Problem.Slug)) }>{ card.Problem.Title }</a></td>
+									<td>{ WeekLabel(card.Week()) }</td>
+									<td>{ OutcomeLabel(card.Last.Outcome) } · { DateLabel(Date(card.Last.CreatedAt, page.Today.Settings.Location())) }</td>
+									<td>{ DateLabel(Date(card.Due, page.Today.Settings.Location())) }</td>
+									<td>{ Percent(card.Retrievability(page.Today.Now)) }</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			}
+		</section>
+	}
+}
+
+templ SettingsView(page SettingsPage) {
+	@layout("Settings") {
+		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder">Curriculum</a><span>/</span><span>Settings</span></nav>
+		<h1>Settings</h1>
+		if page.Error != "" {
+			<p class="error" role="alert">{ page.Error }</p>
+		}
+		if page.Saved {
+			<p class="notice" role="status">Settings saved.</p>
+		}
+		<div class="settings-sections">
+			@scheduleSettings(page)
+		</div>
+	}
+}
+
+templ scheduleSettings(page SettingsPage) {
+	<section class="panel" id="schedule" aria-labelledby="schedule-settings-title">
+		<h2 id="schedule-settings-title">Schedule</h2>
+		<p class="muted">The 84 sessions run on consecutive days. Change the start or the end date; the other follows.</p>
+		<form class="attempt-form settings-form" method="post" action="/leetgrinder/settings/schedule">
+			<input type="hidden" name="revision" value={ page.Schedule.Revision }/>
+			<div class="form-row">
+				<label>Start date<input type="date" name="start" value={ page.Schedule.Start }/></label>
+				<label>End date<input type="date" name="end" value={ page.Schedule.End }/></label>
+			</div>
+			<div class="form-row">
+				<label>
+					Time zone
+					<input type="text" name="timezone" list="timezones" required value={ page.Schedule.Timezone } autocomplete="off" spellcheck="false"/>
+				</label>
+				<label>
+					Daily time
+					<select name="hours" required>
+						for _, h := range HoursOptions() {
+							<option value={ HoursValue(h) } selected?={ page.Schedule.Hours == HoursValue(h) }>{ HoursLabel(h) } · { ReviewSlotsLabel(ExtraReviewSlots(h)) } extra</option>
+						}
+					</select>
+				</label>
+			</div>
+			<datalist id="timezones">
+				for _, tz := range timezoneSuggestions {
+					<option value={ tz }></option>
+				}
+			</datalist>
+			<p class="small muted">Two hours covers each session plus one review, or the reading on days with required reading. Every extra 25 minutes adds a review slot. Clear both dates to remove the schedule.</p>
+			<button class="button primary" type="submit">Save schedule</button>
+		</form>
+	</section>
 }

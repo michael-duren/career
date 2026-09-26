@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/a-h/templ"
@@ -38,6 +39,9 @@ func (s *Server) registerLeetgrinder(r chi.Router) {
 		r.Post("/leetgrinder/day/{day}/complete", s.leetgrinderComplete)
 		r.Get("/leetgrinder/problem/{slug}", s.leetgrinderProblem)
 		r.Post("/leetgrinder/problem/{slug}/attempts", s.leetgrinderAttempt)
+		r.Get("/leetgrinder/reviews", s.leetgrinderReviews)
+		r.Get("/leetgrinder/settings", s.leetgrinderSettings)
+		r.Post("/leetgrinder/settings/schedule", s.leetgrinderSaveSchedule)
 		r.Get("/leetgrinder/export", func(w http.ResponseWriter, r *http.Request) {
 			state, err := s.db.LeetgrinderState(r.Context())
 			if err != nil {
@@ -61,13 +65,34 @@ func renderLeetgrinder(w http.ResponseWriter, r *http.Request, status int, compo
 	w.WriteHeader(status)
 	_, _ = w.Write(body.Bytes())
 }
+func (s *Server) clock() time.Time {
+	if s.now != nil {
+		return s.now()
+	}
+	return time.Now()
+}
+func reviewIDs(ids map[string]string, today leetgrinder.Today) map[string]string {
+	for _, item := range today.Reviews {
+		ids[leetgrinder.ReviewKey(item.Problem.Slug)] = uuid.NewString()
+	}
+	return ids
+}
 func (s *Server) leetgrinderOverview(w http.ResponseWriter, r *http.Request) {
-	state, err := s.db.LeetgrinderState(r.Context())
+	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
 	if err != nil {
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your saved progress is unavailable. Please retry."))
 		return
 	}
-	renderLeetgrinder(w, r, 200, leetgrinder.Overview(state))
+	renderLeetgrinder(w, r, 200, leetgrinder.Overview(leetgrinder.OverviewPage{Today: today, IDs: reviewIDs(map[string]string{}, today)}))
+}
+func (s *Server) leetgrinderReviews(w http.ResponseWriter, r *http.Request) {
+	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
+	if err != nil {
+		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your review queue is unavailable. Please retry."))
+		return
+	}
+	cards := leetgrinder.BuildCards(today.State.Attempts, today.Settings.Location())
+	renderLeetgrinder(w, r, 200, leetgrinder.Reviews(leetgrinder.ReviewsPage{Today: today, Cards: cards, IDs: reviewIDs(map[string]string{}, today)}))
 }
 func leetgrinderRouteDay(r *http.Request) (leetgrinder.Day, bool) {
 	n, err := strconv.Atoi(chi.URLParam(r, "day"))
@@ -76,7 +101,7 @@ func leetgrinderRouteDay(r *http.Request) (leetgrinder.Day, bool) {
 	}
 	return leetgrinder.FindDay(n)
 }
-func dayPage(day leetgrinder.Day, state leetgrinder.State, message string) leetgrinder.DayPage {
+func dayPage(day leetgrinder.Day, state leetgrinder.State, today *leetgrinder.Today, message string) leetgrinder.DayPage {
 	ids := map[string]string{}
 	for _, p := range day.Core {
 		ids[p.Slug] = uuid.NewString()
@@ -84,7 +109,10 @@ func dayPage(day leetgrinder.Day, state leetgrinder.State, message string) leetg
 	for _, p := range day.Optional {
 		ids[p.Slug] = uuid.NewString()
 	}
-	return leetgrinder.DayPage{Day: day, State: state, IDs: ids, Error: message}
+	if today != nil {
+		reviewIDs(ids, *today)
+	}
+	return leetgrinder.DayPage{Day: day, State: state, IDs: ids, Error: message, Today: today}
 }
 func (s *Server) leetgrinderDay(w http.ResponseWriter, r *http.Request) {
 	day, ok := leetgrinderRouteDay(r)
@@ -92,12 +120,12 @@ func (s *Server) leetgrinderDay(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	state, err := s.db.LeetgrinderState(r.Context())
+	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
 	if err != nil {
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your saved progress is unavailable. Please retry."))
 		return
 	}
-	renderLeetgrinder(w, r, 200, leetgrinder.Session(dayPage(day, state, "")))
+	renderLeetgrinder(w, r, 200, leetgrinder.Session(dayPage(day, today.State, &today, "")))
 }
 func (s *Server) leetgrinderProblem(w http.ResponseWriter, r *http.Request) {
 	problem, ok := leetgrinder.FindProblem(chi.URLParam(r, "slug"))
@@ -136,7 +164,11 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 	if returnDay < 0 || returnDay > 84 {
 		returnDay = 0
 	}
-	form := leetgrinder.AttemptForm{ID: r.PostForm.Get("id"), Revision: r.PostForm.Get("revision"), Outcome: r.PostForm.Get("outcome"), Minutes: r.PostForm.Get("minutes"), Assisted: r.PostForm.Get("assisted") == "true", Notes: r.PostForm.Get("notes"), ReturnDay: returnDay}
+	form := leetgrinder.AttemptForm{ID: r.PostForm.Get("id"), Revision: r.PostForm.Get("revision"), Outcome: r.PostForm.Get("outcome"), Minutes: r.PostForm.Get("minutes"), Assisted: r.PostForm.Get("assisted") == "true", Notes: r.PostForm.Get("notes"), ReturnDay: returnDay, Review: r.PostForm.Get("review") == "true"}
+	switch ret := r.PostForm.Get("return"); ret {
+	case "overview", "reviews":
+		form.Return = ret
+	}
 	reject := func(status int, message string) {
 		form.Error = message
 		state, err := s.db.LeetgrinderState(r.Context())
@@ -173,7 +205,7 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 		reject(400, "Choose whether you used hints or a solution.")
 		return
 	}
-	_, err = s.db.SaveLeetgrinderAttempt(r.Context(), leetgrinder.Attempt{ID: form.ID, ProblemSlug: problem.Slug, Outcome: form.Outcome, Minutes: minutes, Assisted: form.Assisted, Notes: form.Notes}, form.Revision)
+	_, err = s.db.SaveLeetgrinderAttempt(r.Context(), leetgrinder.Attempt{ID: form.ID, ProblemSlug: problem.Slug, Outcome: form.Outcome, Minutes: minutes, Assisted: form.Assisted, Notes: form.Notes, Source: "web", IsReview: form.Review}, form.Revision)
 	if err != nil {
 		switch {
 		case errors.Is(err, database.ErrConflict) && form.Revision == "":
@@ -191,9 +223,18 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	anchor := problem.Slug
+	if form.Review {
+		anchor = leetgrinder.ReviewKey(problem.Slug)
+	}
 	target := leetgrinder.ProblemURL(problem.Slug)
-	if form.ReturnDay > 0 {
-		target = leetgrinder.DayURL(form.ReturnDay) + "#" + problem.Slug
+	switch {
+	case form.ReturnDay > 0:
+		target = leetgrinder.DayURL(form.ReturnDay) + "#" + anchor
+	case form.Return == "overview":
+		target = "/leetgrinder#" + anchor
+	case form.Return == "reviews":
+		target = "/leetgrinder/reviews#" + anchor
 	}
 	http.Redirect(w, r, target, http.StatusSeeOther)
 }
@@ -213,7 +254,7 @@ func (s *Server) leetgrinderComplete(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := s.db.SetLeetgrinderDay(r.Context(), day.Number, value == "true"); err != nil {
 		state, _ := s.db.LeetgrinderState(r.Context())
-		renderLeetgrinder(w, r, 503, leetgrinder.Session(dayPage(day, state, "The session status could not be saved. Please retry; your attempts have not changed.")))
+		renderLeetgrinder(w, r, 503, leetgrinder.Session(dayPage(day, state, nil, "The session status could not be saved. Please retry; your attempts have not changed.")))
 		return
 	}
 	if value == "false" {
@@ -230,4 +271,92 @@ func (s *Server) leetgrinderComplete(w http.ResponseWriter, r *http.Request) {
 		target = fmt.Sprintf("/leetgrinder/day/%d", next)
 	}
 	http.Redirect(w, r, target, 303)
+}
+
+func (s *Server) leetgrinderSettings(w http.ResponseWriter, r *http.Request) {
+	settings, err := s.db.LeetgrinderSettings(r.Context())
+	if err != nil {
+		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your settings are unavailable. Please retry."))
+		return
+	}
+	renderLeetgrinder(w, r, 200, leetgrinder.SettingsView(leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), Schedule: leetgrinder.NewScheduleForm(settings), Saved: r.URL.Query().Get("saved") != ""}))
+}
+
+// settingsError carries a message that is safe to show next to the form.
+type settingsError string
+
+func (e settingsError) Error() string { return string(e) }
+
+func (s *Server) leetgrinderSaveSchedule(w http.ResponseWriter, r *http.Request) {
+	if !s.leetgrinderForm(w, r) {
+		return
+	}
+	form := leetgrinder.ScheduleForm{Start: strings.TrimSpace(r.PostForm.Get("start")), End: strings.TrimSpace(r.PostForm.Get("end")), Timezone: strings.TrimSpace(r.PostForm.Get("timezone")), Hours: r.PostForm.Get("hours"), Revision: r.PostForm.Get("revision")}
+	reject := func(status int, message string) {
+		settings, err := s.db.LeetgrinderSettings(r.Context())
+		if err != nil {
+			message += " Your settings could not be reloaded; your draft is retained below."
+		}
+		renderLeetgrinder(w, r, status, leetgrinder.SettingsView(leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), Schedule: form, Error: message}))
+	}
+	hours, err := strconv.ParseFloat(form.Hours, 64)
+	if err != nil || !leetgrinder.ValidDailyHours(hours) {
+		reject(400, "Choose between 2 and 4 hours in half-hour steps.")
+		return
+	}
+	var start, end *time.Time
+	for _, field := range []struct {
+		value  string
+		target **time.Time
+		name   string
+	}{{form.Start, &start, "start"}, {form.End, &end, "end"}} {
+		if field.value == "" {
+			continue
+		}
+		t, err := time.Parse(time.DateOnly, field.value)
+		if err != nil {
+			reject(400, "Enter the "+field.name+" date as YYYY-MM-DD.")
+			return
+		}
+		*field.target = &t
+	}
+	_, err = s.db.UpdateLeetgrinderSettings(r.Context(), form.Revision, func(settings *leetgrinder.Settings) error {
+		loc, err := leetgrinder.LoadTimezone(form.Timezone)
+		if err != nil {
+			return settingsError("Choose an IANA time zone such as America/Chicago.")
+		}
+		current := leetgrinder.NewScheduleForm(*settings)
+		startChanged, endChanged := form.Start != current.Start, form.End != current.End
+		switch {
+		case start == nil && end == nil:
+			settings.StartDate = nil
+		case end != nil && (start == nil || (endChanged && !startChanged)):
+			first := leetgrinder.ScheduleEndingOn(*end, loc).Start
+			settings.StartDate = &first
+		default:
+			if end != nil && startChanged && endChanged && !leetgrinder.NewSchedule(*start, loc).End().Equal(*end) {
+				return settingsError("Change the start date or the end date, not both. The schedule is always 84 consecutive days.")
+			}
+			first := leetgrinder.NewSchedule(*start, loc).Start
+			settings.StartDate = &first
+		}
+		settings.Timezone, settings.DailyHours = form.Timezone, hours
+		if err := settings.Validate(); err != nil {
+			return settingsError("Check the schedule: " + err.Error() + ".")
+		}
+		return nil
+	})
+	var invalid settingsError
+	switch {
+	case err == nil:
+		http.Redirect(w, r, "/leetgrinder/settings?saved=schedule#schedule", http.StatusSeeOther)
+	case errors.As(err, &invalid):
+		reject(400, invalid.Error())
+	case errors.Is(err, database.ErrConflict):
+		reject(409, "Settings changed since you opened this page. Reload settings to see the current values, then reapply your draft shown below.")
+	case errors.Is(err, database.ErrInvalid):
+		reject(400, "Reload the settings page and try again.")
+	default:
+		reject(503, "The schedule could not be saved. Your draft is retained; please retry.")
+	}
 }

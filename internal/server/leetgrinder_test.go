@@ -19,7 +19,7 @@ import (
 func TestLeetgrinderAccess(t *testing.T) {
 	s := &Server{config: config.Config{Username: "admin", JWTSecret: "test", PublicOrigin: "https://example.com"}}
 	handler := s.RegisterRoutes()
-	for _, path := range []string{"/leetgrinder", "/leetgrinder/day/1", "/leetgrinder/problem/two-sum", "/leetgrinder/export"} {
+	for _, path := range []string{"/leetgrinder", "/leetgrinder/day/1", "/leetgrinder/problem/two-sum", "/leetgrinder/export", "/leetgrinder/reviews", "/leetgrinder/settings"} {
 		w := httptest.NewRecorder()
 		handler.ServeHTTP(w, httptest.NewRequest("GET", path, nil))
 		if w.Code != 303 {
@@ -42,6 +42,7 @@ func TestLeetgrinderAccess(t *testing.T) {
 		want   int
 	}{
 		{"/leetgrinder/problem/two-sum/attempts", url.Values{}, "https://evil.com", 403},
+		{"/leetgrinder/settings/schedule", url.Values{"hours": {"2.0"}}, "https://evil.com", 403},
 		{"/leetgrinder/day/1/complete", url.Values{"completed": {"yes"}}, "https://example.com", 400},
 		{"/leetgrinder/day/85/complete", url.Values{"completed": {"true"}}, "https://example.com", 404},
 	} {
@@ -57,7 +58,8 @@ func TestLeetgrinderAccess(t *testing.T) {
 	}
 }
 
-func TestLeetgrinderWorkflow(t *testing.T) {
+func leetgrinderTestServer(t *testing.T) (*Server, *database.Store, func(method, path string, values url.Values) *httptest.ResponseRecorder) {
+	t.Helper()
 	dsn := os.Getenv("TEST_DATABASE_URL")
 	if dsn == "" {
 		t.Skip("set TEST_DATABASE_URL")
@@ -66,12 +68,12 @@ func TestLeetgrinderWorkflow(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer base.Close()
+	t.Cleanup(func() { base.Close() })
 	schema := "leetgrinder_http_" + strings.ReplaceAll(uuid.NewString(), "-", "")
 	if _, err = base.DB.Exec("CREATE SCHEMA " + schema); err != nil {
 		t.Fatal(err)
 	}
-	defer base.DB.Exec("DROP SCHEMA " + schema + " CASCADE")
+	t.Cleanup(func() { base.DB.Exec("DROP SCHEMA " + schema + " CASCADE") })
 	sep := "?"
 	if strings.Contains(dsn, "?") {
 		sep = "&"
@@ -80,7 +82,7 @@ func TestLeetgrinderWorkflow(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer db.Close()
+	t.Cleanup(func() { db.Close() })
 	if err = db.Migrate(context.Background()); err != nil {
 		t.Fatal(err)
 	}
@@ -95,7 +97,12 @@ func TestLeetgrinderWorkflow(t *testing.T) {
 		handler.ServeHTTP(w, r)
 		return w
 	}
-	for _, path := range []string{"/leetgrinder", "/leetgrinder/day/1", "/leetgrinder/day/84", "/leetgrinder/problem/two-sum"} {
+	return s, db, request
+}
+
+func TestLeetgrinderWorkflow(t *testing.T) {
+	_, db, request := leetgrinderTestServer(t)
+	for _, path := range []string{"/leetgrinder", "/leetgrinder/day/1", "/leetgrinder/day/84", "/leetgrinder/problem/two-sum", "/leetgrinder/reviews", "/leetgrinder/settings"} {
 		w := request("GET", path, nil)
 		if w.Code != 200 {
 			t.Fatalf("%s: %d %s", path, w.Code, w.Body.String())
