@@ -120,7 +120,7 @@ func (s *Server) addConnectionTools(server *mcp.Server) {
 		Name: "add_companies_to_queue",
 		Description: "Add companies to the companies board as not started, with the website's outreach checklist and an empty Log, so no reach-out date is recorded. Confirm the list with the user first. " +
 			"Names list_connection_companies reports as tracked (case and legal suffixes like Inc ignored) are skipped and returned with created=false and the stored title and slug, so retries are safe. " +
-			"New companies are linked to unlinked connections who work there; their last-talked dates are unchanged. Returns each company's slug and revision.",
+			"As on the website, new companies pick up unlinked connections who work there (linkedConnections); their last-talked dates are unchanged. Returns each company's slug and revision.",
 		InputSchema: inputSchema[queueCompaniesInput](),
 		Annotations: queueAnnotations,
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in queueCompaniesInput) (*mcp.CallToolResult, any, error) {
@@ -141,16 +141,16 @@ func (s *Server) addConnectionTools(server *mcp.Server) {
 			}
 			entries = append(entries, entry)
 		}
-		results, err := s.db.AddCompanies(ctx, entries)
+		added, err := s.db.AddCompanies(ctx, entries)
 		if err != nil {
 			return nil, nil, toolError(err)
 		}
 		created := 0
-		for _, r := range results {
+		for _, r := range added.Companies {
 			if r.Created {
 				created++
 			}
 		}
-		return nil, map[string]any{"created": created, "skipped": len(results) - created, "companies": results}, nil
+		return nil, map[string]any{"created": created, "skipped": len(added.Companies) - created, "linkedConnections": added.Linked, "companies": added.Companies}, nil
 	})
 }

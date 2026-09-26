@@ -8,7 +8,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/michael-duren/career-strategy/internal/linkedin"
 )
 
@@ -53,7 +52,8 @@ func ValidCompanyName(name string) bool { return linkedin.NormalizeCompany(name)
 // companyTracker decides whether an employer is already on the companies
 // board. Listing and adding share it so a company listed as tracked is never
 // added again: an employer whose connections are linked to a company maps to
-// that company, otherwise the import matcher compares titles and slugs.
+// that company, otherwise the same matcher that links connections compares
+// titles and slugs.
 type companyTracker struct {
 	companies []linkedin.Company
 	titles    map[string]string
@@ -63,23 +63,13 @@ type companyTracker struct {
 
 func loadTracker(ctx context.Context, q queryer) (*companyTracker, error) {
 	t := &companyTracker{titles: map[string]string{}, linked: map[string]string{}}
-	rows, err := q.QueryContext(ctx, "SELECT slug,title FROM companies ORDER BY position")
+	companies, err := trackedCompanies(ctx, q)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-	for rows.Next() {
-		var c linkedin.Company
-		if err = rows.Scan(&c.Slug, &c.Title); err != nil {
-			return nil, err
-		}
-		t.companies = append(t.companies, c)
-		t.titles[c.Slug] = c.Title
+	for _, c := range companies {
+		t.add(c)
 	}
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-	t.matcher = linkedin.NewMatcher(t.companies)
 	links, err := q.QueryContext(ctx, "SELECT company_name,company_slug,count(*) FROM connections WHERE company_slug IS NOT NULL GROUP BY 1,2")
 	if err != nil {
 		return nil, err
@@ -115,6 +105,7 @@ func (t *companyTracker) Match(name string) string {
 	return t.matcher.Match(name)
 }
 
+// add tracks a company created in this transaction.
 func (t *companyTracker) add(c linkedin.Company) {
 	t.companies = append(t.companies, c)
 	t.titles[c.Slug] = c.Title
@@ -232,17 +223,21 @@ type AddedCompany struct {
 	Slug     string `json:"slug"`
 	Revision string `json:"revision,omitempty"`
 	Created  bool   `json:"created"`
-	// Linked counts unlinked connections now attached to the new company.
-	Linked int `json:"linkedConnections"`
+}
+
+type AddedCompanies struct {
+	Companies []AddedCompany
+	// Linked counts unlinked connections now attached to the new companies.
+	Linked int64
 }
 
 // AddCompanies creates companies unless list_connection_companies would call
 // the name tracked (see companyTracker), then links unlinked connections whose
-// employer best matches a new company. Skipped companies report the stored
-// title and slug. It never
+// employer best matches a new company (see linkUnlinkedConnections). Skipped
+// companies report the stored title and slug. It never
 // changes existing companies or connection contact dates. Invalid input
 // saves nothing.
-func (s *Store) AddCompanies(ctx context.Context, entries []Entity) ([]AddedCompany, error) {
+func (s *Store) AddCompanies(ctx context.Context, entries []Entity) (AddedCompanies, error) {
 	prepared := make([]Entity, len(entries))
 	for i, e := range entries {
 		p, err := PrepareSave("company", e)
@@ -250,25 +245,25 @@ func (s *Store) AddCompanies(ctx context.Context, entries []Entity) ([]AddedComp
 			err = fmt.Errorf("title needs letters or digits")
 		}
 		if err != nil {
-			return nil, fmt.Errorf("%w: company %d: %v", ErrInvalid, i+1, err)
+			return AddedCompanies{}, fmt.Errorf("%w: company %d: %v", ErrInvalid, i+1, err)
 		}
 		prepared[i] = p
 	}
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, err
+		return AddedCompanies{}, err
 	}
 	defer tx.Rollback()
 	// Block concurrent company inserts so duplicate checks stay true until commit.
 	if _, err = tx.ExecContext(ctx, "LOCK TABLE companies IN SHARE ROW EXCLUSIVE MODE"); err != nil {
-		return nil, err
+		return AddedCompanies{}, err
 	}
 	tracker, err := loadTracker(ctx, tx)
 	if err != nil {
-		return nil, err
+		return AddedCompanies{}, err
 	}
 	results := make([]AddedCompany, len(prepared))
-	index := map[string]int{}
+	created := []string{}
 	for i, e := range prepared {
 		title, _ := e["title"].(string)
 		if slug := tracker.Match(title); slug != "" {
@@ -277,64 +272,27 @@ func (s *Store) AddCompanies(ctx context.Context, entries []Entity) ([]AddedComp
 		}
 		saved, err := saveTx(ctx, tx, "company", e, nil, false)
 		if err != nil {
-			return nil, dbError(err)
+			return AddedCompanies{}, dbError(err)
 		}
 		slug, _ := saved.Entry["slug"].(string)
-		index[slug] = i
+		created = append(created, slug)
 		tracker.add(linkedin.Company{Slug: slug, Title: title})
 		results[i] = AddedCompany{Title: title, Slug: slug, Revision: saved.Revision, Created: true}
 	}
-	if len(index) == 0 {
-		return results, nil
-	}
-	linked, err := linkNewCompanies(ctx, tx, tracker.companies, index)
-	if err != nil {
-		return nil, err
-	}
-	for slug, n := range linked {
-		results[index[slug]].Linked = n
+	if len(created) == 0 {
+		return AddedCompanies{Companies: results}, nil
 	}
 	if err = bump(ctx, tx, "company"); err != nil {
-		return nil, err
+		return AddedCompanies{}, err
 	}
-	return results, tx.Commit()
-}
-
-// linkNewCompanies attaches unlinked connections whose employer best matches
-// one of the created companies among all companies, so a shorter new name
-// never takes people from an existing company.
-func linkNewCompanies(ctx context.Context, tx *sql.Tx, all []linkedin.Company, created map[string]int) (map[string]int, error) {
-	matcher := linkedin.NewMatcher(all)
-	rows, err := tx.QueryContext(ctx, "SELECT id::text,company_name FROM connections WHERE company_slug IS NULL AND company_name<>''")
+	linked, err := linkUnlinkedConnections(ctx, tx, created)
 	if err != nil {
-		return nil, err
+		return AddedCompanies{}, err
 	}
-	matches := map[string]string{}
-	for rows.Next() {
-		var id, company string
-		if err = rows.Scan(&id, &company); err != nil {
-			rows.Close()
-			return nil, err
-		}
-		slug := matcher.Match(company)
-		if _, isNew := created[slug]; isNew {
-			matches[id] = slug
+	if linked > 0 {
+		if err = bump(ctx, tx, "connection"); err != nil {
+			return AddedCompanies{}, err
 		}
 	}
-	rows.Close()
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-	linked := map[string]int{}
-	for id, slug := range matches {
-		// Only the link and revision change; last_contacted_on stays as it was.
-		r, err := tx.ExecContext(ctx, "UPDATE connections SET company_slug=$2,revision=$3,updated_at=now() WHERE id=$1 AND company_slug IS NULL", id, slug, uuid.NewString())
-		if err != nil {
-			return nil, err
-		}
-		if n, _ := r.RowsAffected(); n == 1 {
-			linked[slug]++
-		}
-	}
-	return linked, nil
+	return AddedCompanies{Companies: results, Linked: linked}, tx.Commit()
 }
