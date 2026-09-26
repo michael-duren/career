@@ -78,7 +78,7 @@ export function TagInput({ value, options, onChange }: { value: string[]; option
           placeholder={value.length ? '' : 'Type to search or add tags'}
           onChange={e => {
             const parts = e.target.value.split(',');
-            if (parts.length > 1) { add(...parts.slice(0, -1)); setText(parts.at(-1) ?? ''); }
+            if (parts.length > 1 && !full) { add(...parts.slice(0, -1)); setText(parts.at(-1) ?? ''); }
             else setText(e.target.value);
             setOpen(true); setActive(-1);
           }}

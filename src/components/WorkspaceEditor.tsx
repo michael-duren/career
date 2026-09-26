@@ -46,7 +46,7 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
   const listFirst = kind === 'note' || kind === 'week' || kind === 'personal';
   const openedInitialEntry = useRef(false);
   const selectionRequest = useRef(0);
-  const todoQueue = useRef<{ running: boolean; pending: NoteTodo[] | null }>({ running: false, pending: null });
+  const todoQueue = useRef<{ running: boolean; pending: NoteTodo[] | null; waiters: ((ok: boolean) => void)[] }>({ running: false, pending: null, waiters: [] });
   const backButton = useRef<HTMLButtonElement>(null);
   const listPosition = useRef<{ scroll: number; focus: HTMLElement | null } | null>(null);
   const recovered = useRef(false);
@@ -192,7 +192,8 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
     setEntry(current => current ? { ...current, todos } as Entry : current);
     const queue = todoQueue.current;
     queue.pending = todos;
-    if (queue.running) return true;
+    // Queued callers learn the outcome of the save that carries their change.
+    if (queue.running) return new Promise(resolve => queue.waiters.push(resolve));
     queue.running = true; setBusy(true); setError('');
     let saved: Entry = entry;
     let revision = baseRevision;
@@ -207,6 +208,7 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
       setEntries(current => [...(current ?? []).filter(item => entryId(item) !== entryId(saved)), saved]);
       setStatus('Saved.');
       window.dispatchEvent(new Event('workspace-saved'));
+      queue.waiters.splice(0).forEach(resolve => resolve(true));
       return true;
     } catch (e) {
       queue.pending = null;
@@ -214,8 +216,12 @@ export function WorkspaceEditor({ kind, initialId, quickJournal = false }: { kin
       // Reload the saved note so a conflict does not leave a stale revision behind.
       const detail = await request(kind, 'GET', undefined, entryId(entry)).catch(() => null) as EntryResult | null;
       if (detail) { setEntry(detail.entry); setBaseRevision(detail.revision); }
+      queue.waiters.splice(0).forEach(resolve => resolve(false));
       return false;
-    } finally { queue.running = false; setBusy(false); }
+    } finally {
+      // Changes made during the failure reload were reverted with it.
+      queue.pending = null; queue.running = false; setBusy(false);
+    }
   }
   async function remove() {
     if (!entry || !window.confirm(`Delete ${entryTitle(entry)}? This cannot be undone.`)) return;
