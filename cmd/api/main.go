@@ -142,7 +142,10 @@ func run() error {
 		}
 		if len(c.LeetgrinderSecretKey) == 0 {
 			// The database may be down at startup; readiness reports that.
-			if stored, err := db.LeetgrinderNtfyTokenStored(ctx); err != nil {
+			check, stop := context.WithTimeout(ctx, time.Second)
+			stored, err := db.LeetgrinderNtfyTokenStored(check)
+			stop()
+			if err != nil {
 				log.Printf("leetgrinder: could not check for a stored ntfy token: %v", err)
 			} else if err = c.RequireLeetgrinderSecret(stored); err != nil {
 				return err

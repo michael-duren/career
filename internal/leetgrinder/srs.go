@@ -65,13 +65,25 @@ type Card struct {
 	Reviews int
 	Due     time.Time
 	fsrs    fsrs.Card
+	loc     *time.Location
+}
+
+// go-fsrs counts elapsed days between UTC calendar dates. Feeding it local
+// wall-clock times labelled as UTC makes those days the learner's local days.
+func wallClock(t time.Time, loc *time.Location) time.Time {
+	l := t.In(loc)
+	return time.Date(l.Year(), l.Month(), l.Day(), l.Hour(), l.Minute(), l.Second(), l.Nanosecond(), time.UTC)
+}
+
+func fromWallClock(t time.Time, loc *time.Location) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), loc)
 }
 
 func (c Card) Week() int { return WeekNumber(c.Day) }
 
 // Retrievability is the estimated recall probability at t.
 func (c Card) Retrievability(t time.Time) float64 {
-	r, err := scheduler.Retrievability(c.fsrs, t)
+	r, err := scheduler.Retrievability(c.fsrs, wallClock(t, c.loc))
 	if err != nil {
 		return 0
 	}
@@ -93,20 +105,20 @@ func BuildCards(attempts []Attempt, loc *time.Location) []Card {
 			return cmp.Or(a.CreatedAt.Compare(b.CreatedAt), cmp.Compare(a.ID, b.ID))
 		})
 		place := problemIndex()[slug]
-		card := Card{Problem: place.Problem, Day: place.Day}
+		card := Card{Problem: place.Problem, Day: place.Day, loc: loc}
 		for i, a := range list {
 			if i+1 < len(list) && Date(list[i+1].CreatedAt, loc).Equal(Date(a.CreatedAt, loc)) {
 				continue
 			}
 			state := card.fsrs
 			if card.Reviews == 0 {
-				state = fsrs.NewCard(a.CreatedAt)
+				state = fsrs.NewCard(wallClock(a.CreatedAt, loc))
 			}
-			info, err := scheduler.Next(state, a.CreatedAt, ReviewRating(a))
+			info, err := scheduler.Next(state, wallClock(a.CreatedAt, loc), ReviewRating(a))
 			if err != nil {
 				continue
 			}
-			card.fsrs, card.Last, card.Due = info.Card, a, info.Card.Due
+			card.fsrs, card.Last, card.Due = info.Card, a, fromWallClock(info.Card.Due, loc)
 			card.Reviews++
 		}
 		if card.Reviews > 0 {

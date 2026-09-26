@@ -53,6 +53,19 @@ func TestCardsReplayAttempts(t *testing.T) {
 	if split[0].Reviews != 2 {
 		t.Fatalf("local days merged: %d", split[0].Reviews)
 	}
+	// Mon 20:00 and Tue 18:00 in Chicago share a UTC date; FSRS must still see
+	// one elapsed day, exactly as it does for the same local times in UTC.
+	chicagoDays := BuildCards([]Attempt{
+		attempt("two-sum", "struggled", 30, false, time.Date(2026, 10, 5, 20, 0, 0, 0, chicago)),
+		attempt("two-sum", "solved", 20, false, time.Date(2026, 10, 6, 18, 0, 0, 0, chicago)),
+	}, chicago)
+	utcDays := BuildCards([]Attempt{
+		attempt("two-sum", "struggled", 30, false, time.Date(2026, 10, 5, 20, 0, 0, 0, time.UTC)),
+		attempt("two-sum", "solved", 20, false, time.Date(2026, 10, 6, 18, 0, 0, 0, time.UTC)),
+	}, time.UTC)
+	if got, want := Date(chicagoDays[0].Due, chicago), Date(utcDays[0].Due, time.UTC); !got.Equal(want) {
+		t.Fatalf("local due %s, want %s", got, want)
+	}
 	// A correction from unfinished to easy solved pushes the due date out.
 	before := BuildCards([]Attempt{attempt("two-sum", "unfinished", 25, false, morning)}, chicago)
 	after := BuildCards([]Attempt{attempt("two-sum", "solved", 12, false, morning)}, chicago)
