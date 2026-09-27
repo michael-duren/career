@@ -53,7 +53,7 @@ func TestAttemptDraftEscapesAndRetainsInput(t *testing.T) {
 	problem := Problem{ID: 1, Slug: "two-sum", Title: "Two Sum"}
 	form := AttemptForm{ID: uuid.NewString(), Revision: uuid.NewString(), Outcome: "struggled", Minutes: "26", Assisted: true, Notes: "<script>alert(1)</script>", Error: "Please retry"}
 	var out bytes.Buffer
-	if err := ProblemHistory(problem, State{}, form, false).Render(context.Background(), &out); err != nil {
+	if err := ProblemHistory(problem, State{}, form, AnalysisAvailability{}).Render(context.Background(), &out); err != nil {
 		t.Fatal(err)
 	}
 	html := out.String()

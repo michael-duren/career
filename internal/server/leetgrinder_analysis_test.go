@@ -46,8 +46,15 @@ func TestLeetgrinderAnalysisSettings(t *testing.T) {
 	if w = request("POST", "/leetgrinder/settings/analysis", url.Values{"revision": {settings.Revision}, "enabled": {"yes"}}); w.Code != 400 {
 		t.Fatalf("bad value: %d", w.Code)
 	}
-	if w = request("POST", "/leetgrinder/settings/analysis", url.Values{"revision": {"00000000-0000-4000-8000-000000000000"}, "enabled": {"true"}}); w.Code != 409 {
+	// A rejected save keeps the submitted choice.
+	if w = request("POST", "/leetgrinder/settings/analysis", url.Values{"revision": {"00000000-0000-4000-8000-000000000000"}, "enabled": {"true"}}); w.Code != 409 || !strings.Contains(w.Body.String(), `name="enabled" value="true" checked`) || !strings.Contains(w.Body.String(), "reapply your analysis choice") {
 		t.Fatalf("stale revision: %d", w.Code)
+	}
+	if err := db.PauseLeetgrinderAnalysis(ctx, time.Now().Add(time.Hour), "Anthropic API returned 401 authentication_error: check ANTHROPIC_API_KEY"); err != nil {
+		t.Fatal(err)
+	}
+	if body = request("GET", "/leetgrinder/settings", nil).Body.String(); !strings.Contains(body, "<dt>Paused</dt>") || !strings.Contains(body, "check ANTHROPIC_API_KEY") {
+		t.Fatal("pause not shown")
 	}
 	if w = request("POST", "/leetgrinder/settings/analysis", url.Values{"revision": {settings.Revision}, "enabled": {"true"}}); w.Code != 303 {
 		t.Fatalf("turn on: %d", w.Code)
@@ -137,6 +144,9 @@ func TestLeetgrinderAnalysisDisplayAndReanalyse(t *testing.T) {
 	if b := request("GET", "/leetgrinder/problems", nil).Body.String(); strings.Contains(b, "Check complexity") {
 		t.Error("badge kept after re-analyse")
 	}
+	if w = request("POST", "/leetgrinder/problem/two-sum/attempts/"+uuid.NewString()+"/analysis", url.Values{}); w.Code != 404 || !strings.Contains(w.Body.String(), `href="/leetgrinder/problem/two-sum"`) {
+		t.Errorf("missing attempt page: %d", w.Code)
+	}
 	for _, bad := range []string{"/leetgrinder/problem/valid-anagram/attempts/" + attempt.ID + "/analysis", "/leetgrinder/problem/two-sum/attempts/not-a-uuid/analysis", "/leetgrinder/problem/two-sum/attempts/" + uuid.NewString() + "/analysis"} {
 		if w = request("POST", bad, url.Values{}); w.Code != 404 {
 			t.Errorf("%s: %d", bad, w.Code)
@@ -155,7 +165,15 @@ func TestLeetgrinderAnalysisDisplayAndReanalyse(t *testing.T) {
 	if _, err = db.SaveLeetgrinderAttempt(ctx, leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "two-sum", Outcome: "solved", Minutes: 9, Source: "extension", TimeComplexity: "O(n)", SpaceComplexity: "O(n)", Code: "pass", CodeLanguage: "python3"}, ""); err != nil {
 		t.Fatal(err)
 	}
-	if body = history(); !strings.Contains(body, "Analysis is off.") {
-		t.Error("analysis-off note missing")
+	if body = history(); !strings.Contains(body, "Analysis needs an Anthropic API key") || strings.Contains(body, "Re-analyse") {
+		t.Error("no-key note missing, or Re-analyse offered without a key")
+	}
+	s.config.AnthropicAPIKey = config.Secret("sk-ant-test")
+	settings, _ := db.LeetgrinderSettings(ctx)
+	if _, err = db.UpdateLeetgrinderSettings(ctx, settings.Revision, func(s *leetgrinder.Settings) error { s.AnalysisEnabled = false; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	if body = history(); !strings.Contains(body, "Analysis is turned off.") || strings.Contains(body, "Re-analyse") {
+		t.Error("off note missing, or Re-analyse offered while off")
 	}
 }

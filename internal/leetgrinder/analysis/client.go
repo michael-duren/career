@@ -43,8 +43,12 @@ type Error struct {
 	Message string
 	// Retry reports whether a later request may succeed.
 	Retry bool
-	// Config marks a server configuration problem (key, permissions,
-	// billing or model) rather than a problem with this attempt.
+	// Pause asks the worker to stop sending for a while: the error is
+	// likely to hit every attempt (configuration, account, or a request
+	// shape the model rejects).
+	Pause bool
+	// Config marks a certain configuration problem (key, permissions,
+	// billing, or model); it does not count as a try for the attempt.
 	Config bool
 }
 
@@ -141,7 +145,12 @@ func (c *Client) requestError(err error) *Error {
 		}
 		switch apiErr.StatusCode {
 		case http.StatusUnauthorized, http.StatusPaymentRequired, http.StatusForbidden, http.StatusNotFound:
-			return &Error{Message: msg, Retry: true, Config: true}
+			return &Error{Message: msg, Retry: true, Pause: true, Config: true}
+		case http.StatusBadRequest:
+			// Inputs are bounded, so a 400 usually means the model or account
+			// cannot serve this request shape (or credit ran out). It still
+			// counts as a try, so one bad attempt cannot block the queue.
+			return &Error{Message: msg, Retry: true, Pause: true}
 		}
 		retry := apiErr.StatusCode == http.StatusRequestTimeout || apiErr.StatusCode == http.StatusConflict || apiErr.StatusCode == http.StatusTooManyRequests || apiErr.StatusCode >= 500
 		return &Error{Message: msg, Retry: retry}

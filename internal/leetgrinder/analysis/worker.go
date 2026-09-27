@@ -15,8 +15,9 @@ import (
 // maxPerStep bounds the requests one tick sends, one after another.
 const maxPerStep = 10
 
-// ConfigPause is how long the worker waits after a configuration error
-// (bad key, permissions, billing, or model) before sending again.
+// ConfigPause is how long every worker waits after an error that would hit
+// every attempt (bad key, permissions, billing, model, or a 400) before
+// sending again.
 const ConfigPause = 15 * time.Minute
 
 // Worker analyses queued attempts in the background, one request at a time.
@@ -33,8 +34,6 @@ type Worker struct {
 
 	once   sync.Once
 	client *Client
-	// pausedUntil holds requests back after a configuration error.
-	pausedUntil time.Time
 }
 
 func (w *Worker) now() time.Time {
@@ -74,19 +73,26 @@ func (w *Worker) Run(ctx context.Context) {
 // without a key, while analysis is turned off in settings, or while another
 // worker holds the analysis lock.
 func (w *Worker) Step(ctx context.Context) error {
-	if w.Key == "" || w.now().Before(w.pausedUntil) {
+	if w.Key == "" {
 		return nil
 	}
-	settings, err := w.Store.LeetgrinderSettings(ctx)
-	if err != nil || !settings.AnalysisEnabled {
-		return err
-	}
-	loc := settings.Location()
-	_, err = w.Store.WithLeetgrinderAnalysisLock(ctx, func(ctx context.Context) error {
+	_, err := w.Store.WithLeetgrinderAnalysisLock(ctx, func(ctx context.Context) error {
+		// The pause is stored, so it holds across restarts and replicas.
+		pause, err := w.Store.LeetgrinderAnalysisPause(ctx)
+		if err != nil || w.now().Before(pause.Until) {
+			return err
+		}
 		for range maxPerStep {
 			if ctx.Err() != nil {
 				return nil
 			}
+			// Settings are read before every request, so turning analysis
+			// off stops the next one.
+			settings, err := w.Store.LeetgrinderSettings(ctx)
+			if err != nil || !settings.AnalysisEnabled {
+				return err
+			}
+			loc := settings.Location()
 			job, ok, err := w.Store.NextLeetgrinderAnalysis(ctx, w.now())
 			if err != nil || !ok {
 				return err
@@ -108,9 +114,9 @@ func (w *Worker) Step(ctx context.Context) error {
 
 // analyse sends one request and records its outcome, reporting whether it
 // succeeded. A request cut short by shutdown is not recorded, so it runs
-// again after the restart. A configuration error leaves the attempt pending
-// without counting the try and pauses the worker, so fixing the environment
-// needs no re-analyse.
+// again after the restart. An error that would hit every attempt pauses all
+// workers; a certain configuration error also leaves the attempt pending
+// without counting the try, so fixing the environment needs no re-analyse.
 func (w *Worker) analyse(ctx context.Context, job database.LeetgrinderAnalysisJob) (bool, error) {
 	a := job.Attempt
 	problem, known := leetgrinder.FindProblem(a.ProblemSlug)
@@ -127,11 +133,11 @@ func (w *Worker) analyse(ctx context.Context, job database.LeetgrinderAnalysisJo
 	if err != nil {
 		message, retry := "the analysis failed", true
 		var e *Error
+		var pause bool
 		if errors.As(err, &e) {
-			message, retry = e.Message, e.Retry
+			message, retry, pause = e.Message, e.Retry, e.Pause
 			if e.Config {
 				tries = job.Tries
-				w.pausedUntil = w.now().Add(ConfigPause)
 			}
 		}
 		detail = Redact(message, w.Key)
@@ -141,6 +147,15 @@ func (w *Worker) analyse(ctx context.Context, job database.LeetgrinderAnalysisJo
 			status = leetgrinder.AnalysisPending
 		}
 		log.Printf("leetgrinder analysis: attempt %s, try %d: %s", a.ID, tries, detail)
+		if pause {
+			defer func() {
+				stop, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+				defer cancel()
+				if err := w.Store.PauseLeetgrinderAnalysis(stop, w.now().Add(ConfigPause), detail); err != nil {
+					log.Printf("leetgrinder analysis: could not record the pause: %v", err)
+				}
+			}()
+		}
 	}
 	// The request already happened, so record it even if ctx was cancelled.
 	finish, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)

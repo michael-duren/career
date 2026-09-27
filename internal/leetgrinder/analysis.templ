@@ -28,6 +28,10 @@ templ analysisSettings(p AnalysisPanel) {
 					}
 				}
 			</dd>
+			if p.PausedNow {
+				<dt>Paused</dt>
+				<dd>Until { NotificationTimeLabel(p.Pause.Until, p.Location) } after an error that affects every attempt: { p.Pause.Reason }</dd>
+			}
 			<dt>Queue</dt>
 			<dd>
 				if p.QueueError {
@@ -53,7 +57,7 @@ templ analysisSettings(p AnalysisPanel) {
 }
 
 // analysisCard shows Claude's assessment of one attempt's captured code.
-templ analysisCard(slug string, a Attempt, state State, analysisOn bool) {
+templ analysisCard(slug string, a Attempt, state State, avail AnalysisAvailability) {
 	if a.Code != "" {
 		<section class="analysis-card" aria-labelledby={ "analysis-title-" + a.ID }>
 			<h4 id={ "analysis-title-" + a.ID }>Claude's assessment</h4>
@@ -78,12 +82,12 @@ templ analysisCard(slug string, a Attempt, state State, analysisOn bool) {
 					<p class="analysis-explanation">{ an.Explanation }</p>
 				}
 				<p class="small muted">Assessed by { an.Model }. It can be wrong about subtle cases; your stated values are unchanged.</p>
-				@reanalyseButton(slug, a)
+				@reanalyseButton(slug, a, avail)
 			} else if ok && an.Current && an.Status == AnalysisFailed {
 				<p class="small analysis-failed">Analysis failed: { an.Error }</p>
-				@reanalyseButton(slug, a)
-			} else if !analysisOn {
-				<p class="small muted">Analysis is off. <a href="/leetgrinder/settings#analysis">Analysis settings</a></p>
+				@reanalyseButton(slug, a, avail)
+			} else if !avail.On() {
+				@analysisUnavailable(avail)
 			} else {
 				<p class="small muted">Queued for analysis. Reload the page later to see the result.</p>
 				if ok && an.Current && an.Error != "" {
@@ -104,10 +108,39 @@ templ analysisMatch(stated string, matches *bool) {
 	}
 }
 
-templ reanalyseButton(slug string, a Attempt) {
+templ analysisUnavailable(avail AnalysisAvailability) {
+	if !avail.KeyConfigured {
+		<p class="small muted">Analysis needs an Anthropic API key on the server. <a href="/leetgrinder/settings#analysis">Analysis settings</a></p>
+	} else {
+		<p class="small muted">Analysis is turned off. <a href="/leetgrinder/settings#analysis">Analysis settings</a></p>
+	}
+}
+
+// reanalyseButton queues the attempt again. It is hidden while analysis
+// cannot run, since queueing would only clear the current result.
+templ reanalyseButton(slug string, a Attempt, avail AnalysisAvailability) {
+	if !avail.On() {
+		@analysisUnavailable(avail)
+	} else {
+		@reanalyseForm(slug, a)
+	}
+}
+
+templ reanalyseForm(slug string, a Attempt) {
 	<form method="post" action={ templ.SafeURL(AnalysisReanalyseURL(slug, a.ID)) } class="analysis-actions">
 		<button class="button" type="submit">Re-analyse<span class="visually-hidden"> the attempt from { a.CreatedAt.UTC().Format("02 Jan 2006 15:04 UTC") }</span></button>
 	</form>
+}
+
+// ReanalyseError explains a re-analyse request that could not be queued.
+templ ReanalyseError(problem Problem, message string) {
+	@layout("Re-analyse", "") {
+		<section class="panel">
+			<h1>The analysis was not queued</h1>
+			<p role="alert">{ message }</p>
+			<p><a href={ templ.SafeURL(ProblemURL(problem.Slug)) }>Back to { problem.Title }</a></p>
+		</section>
+	}
 }
 
 // complexityBadge flags an attempt whose stated complexity was judged wrong.

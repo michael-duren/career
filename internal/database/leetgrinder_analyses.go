@@ -189,6 +189,25 @@ WHERE `+leetgrinderAnalysable).Scan(&q.Queued, &q.Failed, &q.Done)
 	return q, err
 }
 
+// LeetgrinderAnalysisPause returns the stored pause; its zero value means
+// requests are not held back.
+func (s *Store) LeetgrinderAnalysisPause(ctx context.Context) (leetgrinder.AnalysisPause, error) {
+	var p leetgrinder.AnalysisPause
+	err := s.DB.QueryRowContext(ctx, "SELECT paused_until,reason FROM leetgrinder_analysis_pause WHERE id=1").Scan(&p.Until, &p.Reason)
+	if errors.Is(err, sql.ErrNoRows) {
+		return leetgrinder.AnalysisPause{}, nil
+	}
+	return p, err
+}
+
+// PauseLeetgrinderAnalysis holds requests back until until, recording the
+// (already redacted) reason.
+func (s *Store) PauseLeetgrinderAnalysis(ctx context.Context, until time.Time, reason string) error {
+	_, err := s.DB.ExecContext(ctx, `INSERT INTO leetgrinder_analysis_pause(id,paused_until,reason) VALUES(1,$1,$2)
+ON CONFLICT (id) DO UPDATE SET paused_until=EXCLUDED.paused_until,reason=EXCLUDED.reason`, until, leetgrinder.CleanAnalysisText(reason, leetgrinder.MaxAnalysisError))
+	return err
+}
+
 // WithLeetgrinderAnalysisLock runs fn while holding a session advisory lock,
 // so only one analysis request is in flight across server replicas. It
 // returns false without running fn when another worker holds the lock.

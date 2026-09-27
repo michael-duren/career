@@ -113,6 +113,22 @@ type AnalysisQueue struct {
 	Queued, Failed, Done int
 }
 
+// AnalysisPause holds analysis requests back after an error that would hit
+// every attempt. Reason is a redacted error summary.
+type AnalysisPause struct {
+	Until  time.Time
+	Reason string
+}
+
+// AnalysisAvailability is what the history page needs to explain queued
+// attempts.
+type AnalysisAvailability struct {
+	KeyConfigured, Enabled bool
+}
+
+// On reports whether the worker sends requests.
+func (a AnalysisAvailability) On() bool { return a.KeyConfigured && a.Enabled }
+
 // AnalysisPanel is the complexity analysis section of the settings page.
 // It never carries the API key, only whether one is configured.
 type AnalysisPanel struct {
@@ -123,7 +139,12 @@ type AnalysisPanel struct {
 	UsageError    bool
 	Queue         AnalysisQueue
 	QueueError    bool
-	Revision      string
+	// Pause is set while requests are held back; PausedNow reports whether
+	// it is still in effect.
+	Pause     AnalysisPause
+	PausedNow bool
+	Location  *time.Location
+	Revision  string
 }
 
 // Active reports whether the worker sends requests.

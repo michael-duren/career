@@ -223,14 +223,31 @@ func TestWorkerRetryCapAndRedaction(t *testing.T) {
 		t.Fatalf("stored error %q %v", stored, err)
 	}
 
-	// Non-retryable errors fail at once.
+	// A refusal fails at once.
 	b := saveAttempt(t, db, leetgrinder.Attempt{ProblemSlug: "two-sum", TimeComplexity: "O(n)", SpaceComplexity: "O(1)", Code: "other", CodeLanguage: "python3", Source: "extension"})
+	api.answer(`{}`, "refusal")
+	step(t, w)
+	if got, _ := analysisOf(t, db, b.ID); got.Status != leetgrinder.AnalysisFailed || got.Tries != 1 || !strings.Contains(got.Error, "declined") {
+		t.Fatalf("refusal %+v", got)
+	}
+	// A 400 counts a try but pauses every worker, since it usually affects every attempt.
+	d := saveAttempt(t, db, leetgrinder.Attempt{ProblemSlug: "two-sum", TimeComplexity: "O(n)", SpaceComplexity: "O(1)", Code: "third", CodeLanguage: "python3", Source: "extension"})
 	api.reply(400, `{"type":"error","error":{"type":"invalid_request_error","message":"bad"}}`)
 	step(t, w)
-	if got, _ := analysisOf(t, db, b.ID); got.Status != leetgrinder.AnalysisFailed || got.Tries != 1 || !strings.Contains(got.Error, "400 invalid_request_error") {
+	if got, _ := analysisOf(t, db, d.ID); got.Status != leetgrinder.AnalysisPending || got.Tries != 1 || !strings.Contains(got.Error, "400 invalid_request_error") {
 		t.Fatalf("bad request %+v", got)
 	}
-	api.take()
+	pause, err := db.LeetgrinderAnalysisPause(context.Background())
+	if err != nil || !pause.Until.Equal(c.now().Add(ConfigPause)) || !strings.Contains(pause.Reason, "400") {
+		t.Fatalf("pause %+v %v", pause, err)
+	}
+	// A second worker (another replica or a restart) honours the stored pause.
+	other := c.worker(db, api)
+	c.advance(5 * time.Minute)
+	step(t, other)
+	if n := len(api.take()); n != 2 {
+		t.Fatalf("requests: %d, want the refusal and the 400 only", n)
+	}
 }
 
 func TestWorkerOutageAndConfigErrors(t *testing.T) {
@@ -295,7 +312,7 @@ func TestWorkerDailyLimitToggleAndKey(t *testing.T) {
 	c := newClock()
 	w := c.worker(db, api)
 	w.DailyLimit = 2
-	for i := range 3 {
+	for i := range 4 {
 		saveAttempt(t, db, leetgrinder.Attempt{ProblemSlug: "two-sum", TimeComplexity: "O(n)", SpaceComplexity: "O(1)", Code: "code " + string(rune('a'+i)), CodeLanguage: "python3", Source: "extension"})
 	}
 
@@ -325,13 +342,31 @@ func TestWorkerDailyLimitToggleAndKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Turning analysis off stops the next request, even within a tick.
+	api.onRequest(func() {
+		s, _ := db.LeetgrinderSettings(ctx)
+		if _, err := db.UpdateLeetgrinderSettings(ctx, s.Revision, func(s *leetgrinder.Settings) error { s.AnalysisEnabled = false; return nil }); err != nil {
+			t.Error(err)
+		}
+	})
+	step(t, w)
+	if n := len(api.take()); n != 1 {
+		t.Fatalf("requests after turning off mid-tick: %d", n)
+	}
+	api.onRequest(nil)
+	settings, _ = db.LeetgrinderSettings(ctx)
+	if _, err := db.UpdateLeetgrinderSettings(ctx, settings.Revision, func(s *leetgrinder.Settings) error { s.AnalysisEnabled = true; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	w.DailyLimit = 3
+
 	// The daily limit stops the queue until the next local day.
 	step(t, w)
 	if n := len(api.take()); n != 2 {
-		t.Fatalf("requests under a limit of 2: %d", n)
+		t.Fatalf("requests up to a limit of 3: %d", n)
 	}
 	day := leetgrinder.Date(c.now(), settings.Location())
-	if used, err := db.LeetgrinderAnalysisUsage(ctx, day); err != nil || used != 2 {
+	if used, err := db.LeetgrinderAnalysisUsage(ctx, day); err != nil || used != 3 {
 		t.Fatalf("usage %d %v", used, err)
 	}
 	c.advance(time.Hour)
@@ -340,7 +375,7 @@ func TestWorkerDailyLimitToggleAndKey(t *testing.T) {
 		t.Fatalf("requests past the limit: %d", n)
 	}
 	q, err := db.LeetgrinderAnalysisQueueCounts(ctx)
-	if err != nil || q.Queued != 1 || q.Done != 2 || q.Failed != 0 {
+	if err != nil || q.Queued != 1 || q.Done != 3 || q.Failed != 0 {
 		t.Fatalf("queue %+v %v", q, err)
 	}
 	c.advance(24 * time.Hour)

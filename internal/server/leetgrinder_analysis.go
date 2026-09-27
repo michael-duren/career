@@ -16,12 +16,6 @@ func (s *Server) registerLeetgrinderAnalysis(r chi.Router) {
 	r.Post("/leetgrinder/problem/{slug}/attempts/{id}/analysis", s.leetgrinderReanalyse)
 }
 
-// analysisOn reports whether the analysis worker sends requests: a key is
-// configured and analysis is turned on in settings.
-func (s *Server) analysisOn(settings leetgrinder.Settings) bool {
-	return s.config.AnthropicAPIKey.Reveal() != "" && settings.AnalysisEnabled
-}
-
 // analysisPanel builds the settings section. It reports only whether a key
 // is configured, never the key.
 func (s *Server) analysisPanel(ctx context.Context, settings leetgrinder.Settings) leetgrinder.AnalysisPanel {
@@ -31,6 +25,10 @@ func (s *Server) analysisPanel(ctx context.Context, settings leetgrinder.Setting
 		Model:         s.config.AnalysisModel,
 		Limit:         s.config.AnalysisDailyLimit,
 		Revision:      settings.Revision,
+		Location:      settings.Location(),
+	}
+	if pause, err := s.db.LeetgrinderAnalysisPause(ctx); err == nil {
+		p.Pause, p.PausedNow = pause, s.clock().Before(pause.Until)
 	}
 	var err error
 	p.Used, err = s.db.LeetgrinderAnalysisUsage(ctx, leetgrinder.Date(s.clock(), settings.Location()))
@@ -44,15 +42,35 @@ func (s *Server) leetgrinderSaveAnalysis(w http.ResponseWriter, r *http.Request)
 	if !s.leetgrinderForm(w, r) {
 		return
 	}
-	enabled := r.PostForm.Get("enabled")
+	enabled, revision := r.PostForm.Get("enabled"), r.PostForm.Get("revision")
+	// reject re-renders settings with the submitted toggle and revision.
+	reject := func(status int, message string) {
+		settings, err := s.db.LeetgrinderSettings(r.Context())
+		if err != nil {
+			message += " Your settings could not be reloaded; your draft is retained below."
+		}
+		page := s.withNotify(r.Context(), leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), Schedule: leetgrinder.NewScheduleForm(settings), Error: message})
+		page.Analysis.Enabled, page.Analysis.Revision = enabled == "true", revision
+		renderLeetgrinder(w, r, status, leetgrinder.SettingsView(s.withAPITokens(r, page)))
+	}
 	if enabled != "" && enabled != "true" {
-		s.rejectNotify(w, r, 400, "Choose whether to analyse captured code.", leetgrinder.NotifyPanel{})
+		reject(400, "Choose whether to analyse captured code.")
 		return
 	}
-	s.saveNotifySettings(w, r, r.PostForm.Get("revision"), "analysis", leetgrinder.NotifyPanel{}, func(settings *leetgrinder.Settings) error {
+	_, err := s.db.UpdateLeetgrinderSettings(r.Context(), revision, func(settings *leetgrinder.Settings) error {
 		settings.AnalysisEnabled = enabled == "true"
 		return nil
 	})
+	switch {
+	case err == nil:
+		http.Redirect(w, r, "/leetgrinder/settings?saved=analysis#analysis", http.StatusSeeOther)
+	case errors.Is(err, database.ErrConflict):
+		reject(409, "Settings changed since you opened this page. Reload settings to see the current values, then reapply your analysis choice shown below.")
+	case errors.Is(err, database.ErrInvalid):
+		reject(400, "Reload the settings page and try again.")
+	default:
+		reject(503, "The analysis setting could not be saved. Please retry.")
+	}
 }
 
 // leetgrinderReanalyse queues an attempt's analysis again from scratch.
@@ -69,9 +87,9 @@ func (s *Server) leetgrinderReanalyse(w http.ResponseWriter, r *http.Request) {
 	err = s.db.RequeueLeetgrinderAnalysis(r.Context(), problem.Slug, id.String(), s.clock())
 	switch {
 	case errors.Is(err, database.ErrNotFound):
-		http.Error(w, "This attempt has no code and stated complexity to analyse.", http.StatusNotFound)
+		renderLeetgrinder(w, r, http.StatusNotFound, leetgrinder.ReanalyseError(problem, "This attempt has no captured code and stated complexity to analyse."))
 	case err != nil:
-		http.Error(w, "The analysis could not be queued. Please retry.", http.StatusServiceUnavailable)
+		renderLeetgrinder(w, r, http.StatusServiceUnavailable, leetgrinder.ReanalyseError(problem, "The analysis could not be queued. Please retry."))
 	default:
 		http.Redirect(w, r, leetgrinder.ProblemURL(problem.Slug)+"#"+leetgrinder.AttemptAnchor(id.String()), http.StatusSeeOther)
 	}

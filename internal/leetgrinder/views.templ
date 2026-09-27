@@ -507,8 +507,8 @@ templ attemptCode(a Attempt) {
 	}
 }
 
-// analysisOn reports whether the analysis worker is sending requests.
-templ ProblemHistory(problem Problem, state State, form AttemptForm, analysisOn bool) {
+// avail says whether the analysis worker is sending requests, and if not, why.
+templ ProblemHistory(problem Problem, state State, form AttemptForm, avail AnalysisAvailability) {
 	@layout(problem.Title, "") {
 		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder/about#curriculum">Curriculum</a><span>/</span><span>Attempt history</span></nav>
 		<p class="eyebrow">
@@ -589,7 +589,7 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, analysisOn 
 							</p>
 						}
 						@attemptCode(a)
-						@analysisCard(problem.Slug, a, state, analysisOn)
+						@analysisCard(problem.Slug, a, state, avail)
 						<details>
 							<summary>Correct this attempt</summary>@attemptFields(problem, EditForm(a))
 						</details>

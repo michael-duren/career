@@ -23,5 +23,13 @@ CREATE TABLE leetgrinder_analysis_usage (
     requests INTEGER NOT NULL DEFAULT 0 CHECK (requests >= 0)
 );
 
+-- Set after an error that would hit every attempt (bad key, billing, model),
+-- so every worker holds requests back until it passes.
+CREATE TABLE leetgrinder_analysis_pause (
+    id SMALLINT PRIMARY KEY CHECK (id = 1),
+    paused_until TIMESTAMPTZ NOT NULL,
+    reason TEXT NOT NULL DEFAULT '' CHECK (char_length(reason) <= 300)
+);
+
 -- Analysis is on by default; it also needs ANTHROPIC_API_KEY in the environment.
 ALTER TABLE leetgrinder_settings ADD COLUMN analysis_enabled BOOLEAN NOT NULL DEFAULT true;

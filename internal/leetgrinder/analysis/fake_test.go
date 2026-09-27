@@ -22,6 +22,8 @@ type fakeAPI struct {
 	body string
 	text string
 	stop string
+	// hook runs during each request, before the reply.
+	hook func()
 }
 
 type fakeRequest struct {
@@ -38,8 +40,11 @@ func newFakeAPI(t *testing.T) *fakeAPI {
 		_ = json.Unmarshal(raw, &body)
 		f.mu.Lock()
 		f.requests = append(f.requests, fakeRequest{r.URL.Path, r.Header.Clone(), body})
-		status, reply, text, stop := f.status, f.body, f.text, f.stop
+		status, reply, text, stop, hook := f.status, f.body, f.text, f.stop, f.hook
 		f.mu.Unlock()
+		if hook != nil {
+			hook()
+		}
 		if reply == "" {
 			content := []map[string]any{{"type": "thinking", "thinking": "", "signature": "sig"}, {"type": "text", "text": text}}
 			b, _ := json.Marshal(map[string]any{"id": "msg_test", "type": "message", "role": "assistant", "model": "claude-sonnet-5", "content": content, "stop_reason": stop, "stop_sequence": nil, "usage": map[string]any{"input_tokens": 10, "output_tokens": 20}})
@@ -63,6 +68,12 @@ func (f *fakeAPI) answer(text, stop string) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.status, f.body, f.text, f.stop = 200, "", text, stop
+}
+
+func (f *fakeAPI) onRequest(hook func()) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.hook = hook
 }
 
 func (f *fakeAPI) take() []fakeRequest {
