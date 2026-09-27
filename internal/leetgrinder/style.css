@@ -1351,3 +1351,7 @@ dd {
   align-self: flex-start;
   margin-left: 0;
 }
+.analysis-values .optimal-value {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
