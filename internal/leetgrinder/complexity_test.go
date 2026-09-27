@@ -122,7 +122,7 @@ func TestHistoryShowsComplexityAndEscapedCode(t *testing.T) {
 	problem := Problem{ID: 1, Slug: "two-sum", Title: "Two Sum"}
 	state := State{Attempts: []Attempt{{ID: uuid.NewString(), ProblemSlug: "two-sum", Outcome: "solved", Minutes: 12, CreatedAt: time.Now(), Revision: uuid.NewString(), TimeComplexity: "O(n)", SpaceComplexity: "O(V + E)", Code: "if a < b && c > d:\n    return '</code><script>alert(1)</script>'", CodeLanguage: "python3"}}}
 	var out bytes.Buffer
-	if err := ProblemHistory(problem, state, NewForm(uuid.NewString(), 0)).Render(context.Background(), &out); err != nil {
+	if err := ProblemHistory(problem, state, NewForm(uuid.NewString(), 0), AnalysisAvailability{}).Render(context.Background(), &out); err != nil {
 		t.Fatal(err)
 	}
 	html := out.String()
@@ -140,7 +140,7 @@ func TestAttemptFormKeepsComplexityDraft(t *testing.T) {
 	problem := Problem{ID: 1, Slug: "two-sum", Title: "Two Sum"}
 	form := AttemptForm{ID: uuid.NewString(), Outcome: "solved", Minutes: "20", Time: ComplexityInput{Choice: "O(n log n)"}, Space: ComplexityInput{Choice: "other", Other: "O(<k>)"}, Error: "Please retry"}
 	var out bytes.Buffer
-	if err := ProblemHistory(problem, State{}, form).Render(context.Background(), &out); err != nil {
+	if err := ProblemHistory(problem, State{}, form, AnalysisAvailability{}).Render(context.Background(), &out); err != nil {
 		t.Fatal(err)
 	}
 	html := out.String()

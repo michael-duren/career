@@ -35,7 +35,7 @@ func TestOptimalComplexityDisplay(t *testing.T) {
 	problem, _ := FindProblem("group-anagrams")
 	render := func(state State) string {
 		var out bytes.Buffer
-		if err := ProblemHistory(problem, state, AttemptForm{}).Render(context.Background(), &out); err != nil {
+		if err := ProblemHistory(problem, state, AttemptForm{}, AnalysisAvailability{}).Render(context.Background(), &out); err != nil {
 			t.Fatal(err)
 		}
 		return out.String()

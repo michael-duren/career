@@ -1,0 +1,168 @@
+package leetgrinder
+
+// analysisSettings shows whether LLM complexity analysis runs and lets the
+// learner turn it off. The API key itself is never rendered.
+templ analysisSettings(p AnalysisPanel) {
+	<section class="panel" id="analysis" aria-labelledby="analysis-settings-title">
+		<h2 id="analysis-settings-title">Complexity analysis</h2>
+		<p class="muted">Claude reviews the code the browser extension captures, reports its actual time and space complexity, checks the complexity you stated, and says whether the solution is optimal. Your code is sent to Anthropic only while analysis is on and an API key is configured.</p>
+		<dl class="analysis-status">
+			<dt>API key</dt>
+			<dd>
+				if p.KeyConfigured {
+					Configured
+				} else {
+					Not configured. Set <code>ANTHROPIC_API_KEY</code> in the server environment to enable analysis.
+				}
+			</dd>
+			<dt>Model</dt>
+			<dd><code>{ p.Model }</code></dd>
+			<dt>Requests today</dt>
+			<dd>
+				if p.UsageError {
+					Unavailable
+				} else {
+					{ Count(p.Used) } of { Count(p.Limit) }
+					if p.Limit == 0 {
+						<span class="small muted">· <code>LEETGRINDER_ANALYSIS_DAILY_LIMIT</code> is 0, so no code is sent</span>
+					} else if p.LimitReached() && p.Active() {
+						<span class="small muted">· daily limit reached; the queue resumes tomorrow</span>
+					}
+				}
+			</dd>
+			if p.PauseError {
+				<dt>Pause status</dt>
+				<dd>Unavailable</dd>
+			} else if p.PausedNow {
+				<dt>Paused</dt>
+				<dd>Until { NotificationTimeLabel(p.Pause.Until, p.Location) } after an error that affects every attempt: { p.Pause.Reason }</dd>
+			}
+			<dt>Queue</dt>
+			<dd>
+				if p.QueueError {
+					Unavailable
+				} else {
+					{ Count(p.Queue.Queued) } queued · { Count(p.Queue.Done) } analysed · { Count(p.Queue.Failed) } failed
+				}
+			</dd>
+		</dl>
+		<form class="attempt-form settings-form" method="post" action="/leetgrinder/settings/analysis">
+			<input type="hidden" name="revision" value={ p.Revision }/>
+			<label class="checkbox"><input type="checkbox" name="enabled" value="true" checked?={ p.Enabled } aria-describedby="analysis-toggle-help"/>Analyse captured code</label>
+			<p class="small muted" id="analysis-toggle-help">
+				if p.KeyConfigured {
+					While this is off, no code is sent and queued attempts wait.
+				} else {
+					This setting takes effect once an API key is configured.
+				}
+			</p>
+			<button class="button primary" type="submit">Save analysis setting</button>
+		</form>
+	</section>
+}
+
+// analysisCard shows Claude's assessment of one attempt's captured code.
+templ analysisCard(slug string, a Attempt, state State, avail AnalysisAvailability) {
+	if a.Code != "" {
+		<div class="analysis-card">
+			<h4 id={ "analysis-title-" + a.ID }>Claude's assessment</h4>
+			if !a.Analysable() {
+				<p class="small muted">State a time or space complexity to get an assessment.</p>
+			} else if an, ok := state.AnalysisFor(a.ID); ok && an.Done() {
+				<dl class="analysis-values">
+					<dt>Time</dt>
+					<dd><span class="optimal-value">{ an.ActualTime }</span> @analysisMatch(a.TimeComplexity, an.TimeMatches)</dd>
+					<dt>Space</dt>
+					<dd><span class="optimal-value">{ an.ActualSpace }</span> @analysisMatch(a.SpaceComplexity, an.SpaceMatches)</dd>
+					<dt>Optimal</dt>
+					<dd>
+						if an.Optimal != nil && *an.Optimal {
+							Yes
+						} else {
+							No
+						}
+					</dd>
+				</dl>
+				if an.Explanation != "" {
+					<p class="analysis-explanation">{ an.Explanation }</p>
+				}
+				<p class="small muted">Assessed by { an.Model }. It can be wrong about subtle cases; your stated values are unchanged.</p>
+				@reanalyseButton(slug, a, avail)
+			} else if ok && an.Current && an.Status == AnalysisFailed {
+				<p class="small analysis-failed">Analysis failed: { an.Error }</p>
+				@reanalyseButton(slug, a, avail)
+			} else if !avail.On() {
+				@analysisUnavailable(avail)
+			} else {
+				if avail.Paused {
+					<p class="small muted">Queued. Analysis is paused after an error that affects every attempt. <a href="/leetgrinder/settings#analysis">Analysis settings</a></p>
+				} else if avail.LimitReached {
+					<p class="small muted">Queued. Today's analysis limit is used up, so this runs tomorrow. <a href="/leetgrinder/settings#analysis">Analysis settings</a></p>
+				} else {
+					<p class="small muted">Queued for analysis. Reload the page later to see the result.</p>
+				}
+				if ok && an.Current && an.Error != "" {
+					<p class="small muted">Retrying after an error: { an.Error }</p>
+				}
+			}
+		</div>
+	}
+}
+
+templ analysisMatch(stated string, matches *bool) {
+	if stated == "" || matches == nil {
+		<span class="analysis-match muted">(no stated value)</span>
+	} else if *matches {
+		<span class="analysis-match match-yes"><span aria-hidden="true">✓</span> matches your { stated }</span>
+	} else {
+		<span class="analysis-match match-no"><span aria-hidden="true">✗</span> your { stated } does not match</span>
+	}
+}
+
+templ analysisUnavailable(avail AnalysisAvailability) {
+	if avail.Unknown {
+		<p class="small muted">The analysis status could not be loaded. Reload the page to retry.</p>
+	} else if !avail.KeyConfigured {
+		<p class="small muted">Analysis needs an Anthropic API key on the server. <a href="/leetgrinder/settings#analysis">Analysis settings</a></p>
+	} else {
+		if avail.ZeroLimit {
+			<p class="small muted">Analysis is disabled: the server's daily request limit is 0. <a href="/leetgrinder/settings#analysis">Analysis settings</a></p>
+		} else {
+			<p class="small muted">Analysis is turned off. <a href="/leetgrinder/settings#analysis">Analysis settings</a></p>
+		}
+	}
+}
+
+// reanalyseButton queues the attempt again. It is hidden while analysis
+// cannot run or is on hold, since queueing would only clear the current result.
+templ reanalyseButton(slug string, a Attempt, avail AnalysisAvailability) {
+	if !avail.On() {
+		@analysisUnavailable(avail)
+	} else if avail.Waiting() {
+		<p class="small muted">Re-analyse is available once analysis resumes. <a href="/leetgrinder/settings#analysis">Analysis settings</a></p>
+	} else {
+		@reanalyseForm(slug, a)
+	}
+}
+
+templ reanalyseForm(slug string, a Attempt) {
+	<form method="post" action={ templ.SafeURL(AnalysisReanalyseURL(slug, a.ID)) } class="analysis-actions">
+		<button class="button" type="submit">Re-analyse<span class="visually-hidden"> the attempt from { a.CreatedAt.UTC().Format("02 Jan 2006 15:04 UTC") }</span></button>
+	</form>
+}
+
+// ReanalyseError explains a re-analyse request that could not be queued.
+templ ReanalyseError(problem Problem, attemptID string, message string) {
+	@layout("Re-analyse", "") {
+		<section class="panel">
+			<h1>The analysis was not queued</h1>
+			<p role="alert">{ message }</p>
+			<p><a href={ templ.SafeURL(ProblemURL(problem.Slug) + "#" + AttemptAnchor(attemptID)) }>Back to { problem.Title }</a></p>
+		</section>
+	}
+}
+
+// complexityBadge flags an attempt whose stated complexity was judged wrong.
+templ complexityBadge() {
+	<span class="badge complexity-badge">Check complexity<span class="visually-hidden">: Claude judged a stated complexity wrong</span></span>
+}

@@ -45,6 +45,7 @@ func (s *Server) registerLeetgrinder(r chi.Router) {
 		r.Get("/leetgrinder/settings", s.leetgrinderSettings)
 		r.Post("/leetgrinder/settings/schedule", s.leetgrinderSaveSchedule)
 		s.registerLeetgrinderNotify(r)
+		s.registerLeetgrinderAnalysis(r)
 		r.Get("/leetgrinder/export", func(w http.ResponseWriter, r *http.Request) {
 			state, err := s.db.LeetgrinderState(r.Context())
 			if err != nil {
@@ -165,8 +166,40 @@ func (s *Server) leetgrinderProblem(w http.ResponseWriter, r *http.Request) {
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your attempt history is unavailable. Please retry."))
 		return
 	}
-	renderLeetgrinder(w, r, 200, leetgrinder.ProblemHistory(problem, state, leetgrinder.NewForm(uuid.NewString(), 0)))
+	renderLeetgrinder(w, r, 200, leetgrinder.ProblemHistory(problem, state, leetgrinder.NewForm(uuid.NewString(), 0), s.historyAnalysis(r)))
 }
+
+// historyAnalysis reports whether analysis runs, for the history page. A
+// settings failure is reported as an unknown status on the cards.
+func (s *Server) historyAnalysis(r *http.Request) leetgrinder.AnalysisAvailability {
+	a := leetgrinder.AnalysisAvailability{KeyConfigured: s.config.AnthropicAPIKey.Reveal() != "", ZeroLimit: s.config.AnalysisDailyLimit <= 0}
+	settings, err := s.db.LeetgrinderSettings(r.Context())
+	if err != nil {
+		a.Unknown = true
+		return a
+	}
+	a.Enabled = settings.AnalysisEnabled
+	if !a.On() {
+		return a
+	}
+	now := s.clock()
+	// A failed read is an unknown status, so re-analyse is refused rather
+	// than clearing a result while analysis may be on hold.
+	pause, err := s.db.LeetgrinderAnalysisPause(r.Context())
+	if err != nil {
+		a.Unknown = true
+		return a
+	}
+	a.Paused = now.Before(pause.Until)
+	used, err := s.db.LeetgrinderAnalysisUsage(r.Context(), leetgrinder.Date(now, settings.Location()))
+	if err != nil {
+		a.Unknown = true
+		return a
+	}
+	a.LimitReached = used >= s.config.AnalysisDailyLimit
+	return a
+}
+
 func (s *Server) leetgrinderForm(w http.ResponseWriter, r *http.Request) bool {
 	if !s.mutation(w, r, "application/x-www-form-urlencoded") {
 		return false
@@ -204,7 +237,7 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			form.Error += " Your history could not be loaded; your draft is retained below."
 		}
-		renderLeetgrinder(w, r, status, leetgrinder.ProblemHistory(problem, state, form))
+		renderLeetgrinder(w, r, status, leetgrinder.ProblemHistory(problem, state, form, s.historyAnalysis(r)))
 	}
 	if _, err := uuid.Parse(form.ID); err != nil {
 		form.ID = uuid.NewString()

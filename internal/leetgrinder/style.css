@@ -1276,3 +1276,82 @@ dd {
 .optimal-panel p {
   margin: 12px 0 0;
 }
+.analysis-card {
+  margin: 14px 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+}
+.analysis-card h4 {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+}
+.analysis-values,
+.analysis-status {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 16px;
+  margin: 0;
+  font-size: 0.85rem;
+}
+.analysis-values dt,
+.analysis-status dt {
+  color: var(--muted);
+}
+.analysis-values dd,
+.analysis-status dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.analysis-status {
+  margin-bottom: 16px;
+}
+.analysis-match {
+  margin-left: 8px;
+  font-size: 0.8rem;
+}
+.match-yes {
+  color: #86efac;
+}
+.match-no {
+  color: #fca5a5;
+}
+.analysis-explanation {
+  margin: 10px 0 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  font-size: 0.88rem;
+}
+.analysis-failed {
+  color: #fca5a5;
+  overflow-wrap: anywhere;
+}
+.analysis-card p.small {
+  margin: 10px 0 0;
+}
+.analysis-actions {
+  margin-top: 12px;
+}
+.analysis-actions .button {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+.complexity-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px dashed #fb923c;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  background: transparent;
+  color: #fdba74;
+}
+.side-list li > .complexity-badge {
+  align-self: flex-start;
+  margin-left: 0;
+}
+.analysis-values .optimal-value {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

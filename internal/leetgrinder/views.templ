@@ -181,6 +181,9 @@ templ Overview(page OverviewPage) {
 										<span>{ a.ProblemSlug }</span>
 									}
 									<span class="small muted">{ OutcomeLabel(a.Outcome) } · { Count(a.Minutes) } min</span>
+									if page.Today.State.StatedWrong(a.ID) {
+										@complexityBadge()
+									}
 								</li>
 							}
 						</ol>
@@ -504,7 +507,8 @@ templ attemptCode(a Attempt) {
 	}
 }
 
-templ ProblemHistory(problem Problem, state State, form AttemptForm) {
+// avail says whether the analysis worker is sending requests, and if not, why.
+templ ProblemHistory(problem Problem, state State, form AttemptForm, avail AnalysisAvailability) {
 	@layout(problem.Title, "") {
 		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder/about#curriculum">Curriculum</a><span>/</span><span>Attempt history</span></nav>
 		<p class="eyebrow">
@@ -559,7 +563,7 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm) {
 					<p class="muted">No attempts recorded yet.</p>
 				}
 				for _, a:=range state.ProblemAttempts(problem.Slug) {
-					<article class="panel attempt">
+					<article class="panel attempt" id={ AttemptAnchor(a.ID) }>
 						<div class="problem-heading">
 							<h3>
 								{ OutcomeLabel(a.Outcome) }
@@ -585,6 +589,7 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm) {
 							</p>
 						}
 						@attemptCode(a)
+						@analysisCard(problem.Slug, a, state, avail)
 						<details>
 							<summary>Correct this attempt</summary>@attemptFields(problem, EditForm(a))
 						</details>
@@ -741,6 +746,7 @@ templ SettingsView(page SettingsPage) {
 		<div class="settings-sections">
 			@scheduleSettings(page)
 			@notifySettings(page.Notify)
+			@analysisSettings(page.Analysis)
 			@apiTokenSettings(page)
 		</div>
 	}
@@ -876,7 +882,12 @@ templ Problems(page ProblemsPage) {
 								<td class="optimal">@optimalCell(row.Problem, row.Attempts > 0)</td>
 								<td class="topic">{ row.Week.Title }<span class="small muted">{ row.Day.Title }</span></td>
 								<td><a href={ templ.SafeURL(DayURL(row.Day.Number)) }>{ DayLabel(row.Day.Number) }</a></td>
-								<td><span class={ StatusClass(row.Status) }>{ row.Status }</span></td>
+								<td>
+									<span class={ StatusClass(row.Status) }>{ row.Status }</span>
+									if row.ComplexityWrong {
+										@complexityBadge()
+									}
+								</td>
 								<td class="num">{ Count(row.Attempts) }</td>
 								<td>
 									if row.Attempts > 0 {

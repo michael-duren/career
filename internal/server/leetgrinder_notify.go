@@ -42,6 +42,7 @@ func (s *Server) withNotify(ctx context.Context, page leetgrinder.SettingsPage) 
 	var err error
 	n.Log, err = s.db.RecentLeetgrinderNotifications(ctx, notificationLogRows)
 	n.LogError = err != nil
+	page.Analysis = s.analysisPanel(ctx, page.Settings)
 	return page
 }
 

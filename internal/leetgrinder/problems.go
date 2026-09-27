@@ -21,6 +21,9 @@ type ProblemRow struct {
 	Attempts int
 	// Last is the newest attempt; it is zero when Attempts is 0.
 	Last Attempt
+	// ComplexityWrong reports that the analysis of Last judged a stated
+	// complexity wrong.
+	ComplexityWrong bool
 }
 
 // Status filter keys, in the order the filter lists them.
@@ -126,6 +129,7 @@ func ProblemRows(state State) []ProblemRow {
 				row := ProblemRow{Problem: p, Week: week, Day: day, Optional: optional, Order: len(rows) + 1, Status: state.ProblemStatus(p.Slug), Attempts: len(attempts)}
 				if len(attempts) > 0 {
 					row.Last = attempts[0]
+					row.ComplexityWrong = state.StatedWrong(row.Last.ID)
 				}
 				rows = append(rows, row)
 			}
