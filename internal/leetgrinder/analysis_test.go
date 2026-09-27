@@ -1,6 +1,7 @@
 package leetgrinder
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"unicode/utf8"
@@ -42,5 +43,17 @@ func TestAnalysisStatedWrong(t *testing.T) {
 	}
 	if (Attempt{Code: "x"}).Analysable() || !(Attempt{Code: "x", SpaceComplexity: "O(1)"}).Analysable() || (Attempt{TimeComplexity: "O(1)"}).Analysable() {
 		t.Error("Analysable")
+	}
+}
+
+func TestAnalysisCardUnknownStatus(t *testing.T) {
+	problem, _ := FindProblem("two-sum")
+	state := State{Attempts: []Attempt{{ID: "11111111-1111-4111-8111-111111111111", ProblemSlug: "two-sum", Outcome: "solved", Minutes: 5, TimeComplexity: "O(n)", Code: "pass", CodeLanguage: "python3"}}}
+	var out strings.Builder
+	if err := ProblemHistory(problem, state, AttemptForm{}, AnalysisAvailability{KeyConfigured: true, Unknown: true}).Render(context.Background(), &out); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.String(), "analysis status could not be loaded") || strings.Contains(out.String(), "turned off") {
+		t.Fatal("unknown status not explained")
 	}
 }

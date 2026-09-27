@@ -126,10 +126,15 @@ type AnalysisAvailability struct {
 	KeyConfigured, Enabled bool
 	// Paused and LimitReached explain why queued attempts are waiting.
 	Paused, LimitReached bool
+	// Unknown reports that the settings could not be loaded.
+	Unknown bool
 }
 
 // On reports whether the worker sends requests.
-func (a AnalysisAvailability) On() bool { return a.KeyConfigured && a.Enabled }
+func (a AnalysisAvailability) On() bool { return a.KeyConfigured && a.Enabled && !a.Unknown }
+
+// Waiting reports whether requests are on hold for now.
+func (a AnalysisAvailability) Waiting() bool { return a.Paused || a.LimitReached }
 
 // AnalysisPanel is the complexity analysis section of the settings page.
 // It never carries the API key, only whether one is configured.

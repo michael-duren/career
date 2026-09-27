@@ -115,7 +115,9 @@ templ analysisMatch(stated string, matches *bool) {
 }
 
 templ analysisUnavailable(avail AnalysisAvailability) {
-	if !avail.KeyConfigured {
+	if avail.Unknown {
+		<p class="small muted">The analysis status could not be loaded. Reload the page to retry.</p>
+	} else if !avail.KeyConfigured {
 		<p class="small muted">Analysis needs an Anthropic API key on the server. <a href="/leetgrinder/settings#analysis">Analysis settings</a></p>
 	} else {
 		<p class="small muted">Analysis is turned off. <a href="/leetgrinder/settings#analysis">Analysis settings</a></p>
@@ -123,10 +125,12 @@ templ analysisUnavailable(avail AnalysisAvailability) {
 }
 
 // reanalyseButton queues the attempt again. It is hidden while analysis
-// cannot run, since queueing would only clear the current result.
+// cannot run or is on hold, since queueing would only clear the current result.
 templ reanalyseButton(slug string, a Attempt, avail AnalysisAvailability) {
 	if !avail.On() {
 		@analysisUnavailable(avail)
+	} else if avail.Waiting() {
+		<p class="small muted">Re-analyse is available once analysis resumes. <a href="/leetgrinder/settings#analysis">Analysis settings</a></p>
 	} else {
 		@reanalyseForm(slug, a)
 	}

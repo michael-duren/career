@@ -98,6 +98,16 @@ func TestLeetgrinderAnalysisDisplayAndReanalyse(t *testing.T) {
 	if strings.Contains(body, "<script>alert") {
 		t.Fatal("explanation not escaped")
 	}
+	// While requests are on hold, Re-analyse is hidden so the result is kept.
+	if err = db.PauseLeetgrinderAnalysis(ctx, now.Add(time.Minute), "Anthropic API returned 402 billing_error"); err != nil {
+		t.Fatal(err)
+	}
+	if body = history(); strings.Contains(body, "/analysis\"") || !strings.Contains(body, "Re-analyse is available once analysis resumes") || !strings.Contains(body, "Assessed by") {
+		t.Error("Re-analyse offered while paused")
+	}
+	if err = db.PauseLeetgrinderAnalysis(ctx, now.Add(-time.Minute), ""); err != nil {
+		t.Fatal(err)
+	}
 	for _, path := range []string{"/leetgrinder/problems", "/leetgrinder"} {
 		if b := request("GET", path, nil).Body.String(); !strings.Contains(b, "Check complexity") {
 			t.Errorf("%s lacks the complexity badge", path)
