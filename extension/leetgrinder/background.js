@@ -73,25 +73,23 @@ function serialized(slug, fn) {
   return run;
 }
 
-async function readTimer(slug) {
+// readTimer returns the slug's timer, restarting it when it belongs to an
+// earlier visit, and records that the problem page is open now.
+async function readTimer(slug, patch = {}) {
   const key = timerKey(slug);
+  const now = Date.now();
   const stored = (await ext.storage.session.get(key))[key];
-  if (stored && Number.isFinite(stored.startedAt)) return stored;
-  const timer = { startedAt: Date.now(), assisted: false, nudged: false };
+  const timer = lib.timerExpired(stored, now) ? { startedAt: now, assisted: false, nudged: false } : stored;
+  timer.lastSeenAt = now;
+  if (patch.assisted === true) timer.assisted = true;
+  if (patch.nudged === true) timer.nudged = true;
   await ext.storage.session.set({ [key]: timer });
   return timer;
 }
 
 const getTimer = (slug) => serialized(slug, () => readTimer(slug));
 
-const updateTimer = (slug, patch) =>
-  serialized(slug, async () => {
-    const timer = await readTimer(slug);
-    if (patch.assisted === true) timer.assisted = true;
-    if (patch.nudged === true) timer.nudged = true;
-    await ext.storage.session.set({ [timerKey(slug)]: timer });
-    return timer;
-  });
+const updateTimer = (slug, patch) => serialized(slug, () => readTimer(slug, patch));
 
 const resetTimer = (slug) => serialized(slug, () => ext.storage.session.remove(timerKey(slug)));
 

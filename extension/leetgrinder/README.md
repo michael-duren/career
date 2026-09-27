@@ -47,7 +47,7 @@ Temporary add-ons are removed when Firefox restarts; load it again afterwards. Y
 Behavior:
 
 - **Curriculum only.** On each problem page the extension asks the app whether the slug is in the curriculum. Other problems get no timer, panel, or nudge. If the app cannot be reached, the timer still starts; an Accepted submission then shows the error with **Try again**.
-- **Timer.** Starts when a curriculum problem first opens and survives page reloads (it lives in `storage.session`, so a browser restart clears it). It resets after an attempt is logged.
+- **Timer.** Starts when a curriculum problem first opens and survives page reloads (it lives in `storage.session`, so a browser restart clears it). It resets after an attempt is logged. It also restarts when the problem has not been open for 30 minutes, or when it is more than 12 hours old, so a later visit (for example a review days later) starts fresh.
 - **Assisted.** Opening the problem's Solutions or Editorial tab marks the attempt as assisted.
 - **Prefill.** Solved if the timer shows 25 minutes or less, otherwise struggled. Every field is editable.
 - **Reviews.** When the problem is one of today's planned reviews, the panel shows a badge and a "Count as today's review" checkbox, checked unless today's review was already logged.
@@ -73,6 +73,7 @@ Run through this after loading the extension in each browser, with the app runni
 - [ ] Open a curriculum problem (for example `https://leetcode.com/problems/two-sum/`). Submit an accepted solution within a few minutes: the panel opens with Solved, the elapsed minutes, and assisted unchecked.
 - [ ] Log attempt: the panel says "Logged to Leetgrinder" and closes. The app's problem history shows the attempt with the right values.
 - [ ] Reload the problem page mid-attempt: the next Accepted panel's minutes include time before the reload.
+- [ ] Close the problem tab, wait over 30 minutes, reopen it and submit: the minutes count from the reopen, and no nudge fires immediately.
 - [ ] Open the Solutions or Editorial tab, then submit an accepted solution: assisted is checked.
 - [ ] Press **Run** (not Submit) with passing tests: no panel opens.
 - [ ] Dismiss: the panel closes and nothing is recorded in the app.

@@ -63,17 +63,19 @@
     onPath(lastPath);
   }
 
-  async function checkNudge() {
+  // tick runs every 30 seconds. Its timer:get doubles as the heartbeat that
+  // keeps the open problem's timer from expiring (see lib.timerExpired).
+  async function tick() {
     const state = current;
-    if (!state || ui) return;
+    if (!state) return;
     let found = await state.lookup;
-    if (found.status === "error" && current === state) {
+    if (found.status === "error" && current === state && !ui) {
       state.lookup = lookup(state.slug);
       found = await state.lookup;
     }
-    if (found.status !== "in" || current !== state) return;
+    if (found.status === "out" || current !== state) return;
     const res = await send({ type: "timer:get", slug: state.slug });
-    if (!res.ok || !lib.shouldNudge(res.data, Date.now()) || ui || current !== state) return;
+    if (found.status !== "in" || !res.ok || !lib.shouldNudge(res.data, Date.now()) || ui || current !== state) return;
     await send({ type: "timer:update", slug: state.slug, patch: { nudged: true } });
     showNudge(state.slug, found.info);
   }
@@ -294,5 +296,5 @@
   // LeetCode is a single-page app; poll the path to follow its navigation.
   watchLocation();
   setInterval(watchLocation, 1000);
-  setInterval(checkNudge, 30000);
+  setInterval(tick, 30000);
 })();

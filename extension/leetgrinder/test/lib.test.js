@@ -41,6 +41,21 @@ test("shouldNudge", () => {
   assert.ok(!lib.shouldNudge(null, 60 * 60000));
 });
 
+test("timerExpired", () => {
+  const min = 60000;
+  const start = 1_000_000_000;
+  assert.ok(lib.timerExpired(undefined, start));
+  assert.ok(lib.timerExpired({ startedAt: "x" }, start));
+  // Reloads and short absences keep the timer.
+  assert.ok(!lib.timerExpired({ startedAt: start, lastSeenAt: start + 40 * min }, start + 60 * min));
+  assert.ok(!lib.timerExpired({ startedAt: start }, start + 30 * min));
+  // A page gone for over 30 minutes starts over, as does a days-old timer.
+  assert.ok(lib.timerExpired({ startedAt: start, lastSeenAt: start + 10 * min }, start + 41 * min));
+  assert.ok(lib.timerExpired({ startedAt: start }, start + 3 * 24 * 60 * min));
+  // A tab left open all day (heartbeats continuing) still restarts.
+  assert.ok(lib.timerExpired({ startedAt: start, lastSeenAt: start + 13 * 60 * min }, start + 13 * 60 * min));
+});
+
 test("normalizeOrigin and originPattern", () => {
   assert.equal(lib.normalizeOrigin("https://career.example.com/leetgrinder"), "https://career.example.com");
   assert.equal(lib.normalizeOrigin(" https://career.example.com:8443 "), "https://career.example.com:8443");

@@ -34,6 +34,18 @@
     return minutes <= NUDGE_MINUTES ? "solved" : "struggled";
   }
 
+  // Open problem pages refresh lastSeenAt every 30 seconds. A timer whose
+  // page has been gone this long, or that is older than a sitting, belongs to
+  // an earlier visit and restarts.
+  const TIMER_IDLE_MS = 30 * 60000;
+  const TIMER_MAX_AGE_MS = 12 * 3600000;
+
+  function timerExpired(timer, now) {
+    if (!timer || !Number.isFinite(timer.startedAt)) return true;
+    const seen = Number.isFinite(timer.lastSeenAt) ? timer.lastSeenAt : timer.startedAt;
+    return now - seen > TIMER_IDLE_MS || now - timer.startedAt > TIMER_MAX_AGE_MS;
+  }
+
   function shouldNudge(timer, now) {
     return Boolean(timer) && !timer.nudged && now - timer.startedAt >= NUDGE_MINUTES * 60000;
   }
@@ -111,6 +123,7 @@
     elapsedMinutes,
     inferOutcome,
     shouldNudge,
+    timerExpired,
     normalizeOrigin,
     originPattern,
     validToken,
