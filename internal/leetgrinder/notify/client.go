@@ -111,15 +111,16 @@ func Send(ctx context.Context, client *http.Client, settings leetgrinder.Setting
 }
 
 // errorBody reads the start of an error response with the token redacted.
-// Redaction happens before any shortening, and a body cut at the read limit
-// loses its tail, so no partial token can survive.
+// Whole tokens are redacted first. A partial token can then only remain at
+// the tail where the read limit cut the body, so that tail is dropped.
 func errorBody(r io.Reader, token string) string {
 	const limit = 1024
 	body, _ := io.ReadAll(io.LimitReader(r, limit+1))
+	text := redact(string(body), token)
 	if len(body) > limit {
-		body = body[:max(0, limit-len(token))]
+		text = text[:max(0, len(text)-len(token))]
 	}
-	return redact(string(body), token)
+	return text
 }
 
 // headerSafe flattens control characters, including newlines, to spaces.

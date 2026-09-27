@@ -83,6 +83,29 @@ func TestSendRedactsTokenAcrossCuts(t *testing.T) {
 	}
 }
 
+func TestSendRedactsLongTokenInMultibyteBody(t *testing.T) {
+	token := "tk_" + strings.Repeat("0123456789", 20)
+	for _, pad := range []int{150, 160, 170, 200, 255} {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(500)
+			_, _ = w.Write([]byte(strings.Repeat("😀", pad) + strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ") + strings.Repeat("😀", 100)))
+		}))
+		settings := settingsFor(server.URL)
+		box, _ := leetgrinder.NewSecretBox(testKey)
+		settings.NtfyTokenCiphertext, _ = box.Seal([]byte(token))
+		err := Send(context.Background(), nil, settings, testKey, Message{Title: "x"})
+		server.Close()
+		if err == nil {
+			t.Fatalf("pad %d: no error", pad)
+		}
+		for i := 0; i+8 <= len(token); i++ {
+			if strings.Contains(err.Error(), token[i:i+8]) {
+				t.Fatalf("pad %d: token fragment %q leaked: %v", pad, token[i:i+8], err)
+			}
+		}
+	}
+}
+
 func TestSendTimeoutAndRedirects(t *testing.T) {
 	release := make(chan struct{})
 	slow := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { <-release }))
