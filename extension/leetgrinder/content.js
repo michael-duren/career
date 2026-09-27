@@ -10,9 +10,13 @@
   const lib = globalThis.LeetgrinderLib;
   const DETECT_SOURCE = "leetgrinder-detect";
 
-  // current is the problem on screen: {slug, info: Promise<info|null>}.
+  // current is the problem on screen: {slug, lookup: Promise<lookup>}.
+  // A lookup is {status: "in", info} for curriculum problems, {status: "out"}
+  // for others, or {status: "error", error} when the app could not answer.
   let current = null;
   let lastPath = "";
+  // ui is the mounted panel: {host, root, locked}. A locked panel holds an
+  // attempt that may already be saved and must stay until it is retried.
   let ui = null;
 
   async function send(message) {
@@ -24,27 +28,31 @@
     }
   }
 
-  async function loadInfo(slug) {
+  async function lookup(slug) {
     const res = await send({ type: "problem", slug });
-    return res.ok && res.data && res.data.inCurriculum ? res.data : null;
+    if (!res.ok || !res.data) return { status: "error", error: res.error || lib.describeStatus(res.status, "") };
+    return res.data.inCurriculum ? { status: "in", info: res.data } : { status: "out" };
   }
+
+  const busy = () => Boolean(ui && ui.locked);
 
   // onPath runs on first load and on LeetCode's client-side navigation.
   async function onPath(path) {
     const slug = lib.slugFromPath(path);
     if (!slug) {
       current = null;
-      closeUI();
+      if (!busy()) closeUI();
       return;
     }
     if (!current || current.slug !== slug) {
-      closeUI();
-      current = { slug, info: loadInfo(slug) };
+      if (!busy()) closeUI();
+      current = { slug, lookup: lookup(slug) };
     }
     const state = current;
-    const info = await state.info;
-    // Problems outside the curriculum get no timer and no panel.
-    if (!info || current !== state) return;
+    const found = await state.lookup;
+    // Problems outside the curriculum get no timer and no panel. When the app
+    // is unreachable the timer still starts, so the minutes stay right.
+    if (found.status === "out" || current !== state) return;
     await send({ type: "timer:get", slug });
     if (lib.isAssistPath(path)) await send({ type: "timer:update", slug, patch: { assisted: true } });
   }
@@ -58,25 +66,33 @@
   async function checkNudge() {
     const state = current;
     if (!state || ui) return;
-    const info = await state.info;
-    if (!info || current !== state) return;
+    let found = await state.lookup;
+    if (found.status === "error" && current === state) {
+      state.lookup = lookup(state.slug);
+      found = await state.lookup;
+    }
+    if (found.status !== "in" || current !== state) return;
     const res = await send({ type: "timer:get", slug: state.slug });
     if (!res.ok || !lib.shouldNudge(res.data, Date.now()) || ui || current !== state) return;
     await send({ type: "timer:update", slug: state.slug, patch: { nudged: true } });
-    showNudge(state.slug, info);
+    showNudge(state.slug, found.info);
   }
 
   async function onAccepted() {
     const state = current;
-    if (!state) return;
+    if (!state || busy()) return;
     // Refresh so review status reflects anything logged since page load.
-    state.info = loadInfo(state.slug);
-    const info = await state.info;
-    if (!info || current !== state) return;
+    state.lookup = lookup(state.slug);
+    const found = await state.lookup;
+    if (found.status === "out" || current !== state || busy()) return;
+    if (found.status === "error") {
+      showError(`Accepted, but Leetgrinder could not be reached: ${found.error}`);
+      return;
+    }
     const res = await send({ type: "timer:get", slug: state.slug });
     const timer = res.ok ? res.data : { startedAt: Date.now(), assisted: false };
     const minutes = lib.elapsedMinutes(timer.startedAt, Date.now());
-    showPanel(state.slug, info, { outcome: lib.inferOutcome(minutes), minutes, assisted: Boolean(timer.assisted) });
+    showPanel(state.slug, found.info, { outcome: lib.inferOutcome(minutes), minutes, assisted: Boolean(timer.assisted) });
   }
 
   window.addEventListener("message", (event) => {
@@ -128,8 +144,26 @@
     const root = host.attachShadow({ mode: "closed" });
     root.append(el("style", { text: STYLE }));
     document.documentElement.append(host);
-    ui = { host, root };
+    ui = { host, root, locked: false };
     return root;
+  }
+
+  function showError(message) {
+    const root = mount();
+    const retry = el("button", { type: "button", className: "primary", text: "Try again" });
+    const dismiss = el("button", { type: "button", text: "Dismiss" });
+    retry.addEventListener("click", () => {
+      closeUI();
+      onAccepted();
+    });
+    dismiss.addEventListener("click", closeUI);
+    root.append(
+      el("section", { className: "box", role: "alert" }, [
+        el("h2", { text: "Leetgrinder" }),
+        el("p", { className: "status error", text: message }),
+        el("div", { className: "actions" }, [dismiss, retry]),
+      ]),
+    );
   }
 
   function closeUI() {
@@ -221,8 +255,13 @@
       for (const f of fields) f.disabled = true;
       status.className = "status";
       status.textContent = "Saving…";
+      // Until the outcome is known, a new Accepted must not replace this panel.
+      const panel = ui;
+      panel.locked = true;
       const res = await send({ type: "attempt", attempt });
+      panel.locked = Boolean(locked);
       if (res.ok) {
+        panel.locked = false;
         status.textContent = "Logged to Leetgrinder.";
         // Start a fresh timer for the next attempt on this problem.
         await send({ type: "timer:reset", slug });
@@ -234,10 +273,15 @@
       }
       status.className = "status error";
       status.textContent = res.error || lib.describeStatus(res.status, "");
-      if (res.status === 409) return; // This id can never succeed; correct it in the app.
+      if (res.status === 409) {
+        // This id can never succeed; correct it in the app.
+        panel.locked = false;
+        return;
+      }
       submit.disabled = false;
       if (res.status === 0 || res.status >= 500) {
         locked = attempt;
+        panel.locked = true;
         submit.textContent = "Retry";
       } else if (!locked) {
         for (const f of fields) f.disabled = false;

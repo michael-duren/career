@@ -61,7 +61,19 @@ async function api(method, path, body) {
 // restart clears them. Only this worker touches that storage area.
 const timerKey = (slug) => `timer:${slug}`;
 
-async function getTimer(slug) {
+// Timer changes are read-modify-write, so they run one at a time per slug.
+const timerQueues = new Map();
+function serialized(slug, fn) {
+  const run = (timerQueues.get(slug) || Promise.resolve()).then(fn);
+  const settled = run.catch(() => {});
+  timerQueues.set(slug, settled);
+  settled.then(() => {
+    if (timerQueues.get(slug) === settled) timerQueues.delete(slug);
+  });
+  return run;
+}
+
+async function readTimer(slug) {
   const key = timerKey(slug);
   const stored = (await ext.storage.session.get(key))[key];
   if (stored && Number.isFinite(stored.startedAt)) return stored;
@@ -70,20 +82,27 @@ async function getTimer(slug) {
   return timer;
 }
 
-async function updateTimer(slug, patch) {
-  const timer = await getTimer(slug);
-  if (patch.assisted === true) timer.assisted = true;
-  if (patch.nudged === true) timer.nudged = true;
-  await ext.storage.session.set({ [timerKey(slug)]: timer });
-  return timer;
-}
+const getTimer = (slug) => serialized(slug, () => readTimer(slug));
+
+const updateTimer = (slug, patch) =>
+  serialized(slug, async () => {
+    const timer = await readTimer(slug);
+    if (patch.assisted === true) timer.assisted = true;
+    if (patch.nudged === true) timer.nudged = true;
+    await ext.storage.session.set({ [timerKey(slug)]: timer });
+    return timer;
+  });
+
+const resetTimer = (slug) => serialized(slug, () => ext.storage.session.remove(timerKey(slug)));
 
 function fromLeetCode(sender) {
   return Boolean(sender.tab) && typeof sender.url === "string" && sender.url.startsWith("https://leetcode.com/");
 }
 
+// The options page opens in a tab, so sender.tab is set there too; its
+// extension URL is what identifies it (content scripts report the page URL).
 function fromOptions(sender) {
-  return !sender.tab && typeof sender.url === "string" && sender.url.startsWith(ext.runtime.getURL("options.html"));
+  return typeof sender.url === "string" && sender.url.startsWith(ext.runtime.getURL("options.html"));
 }
 
 async function handle(message, sender) {
@@ -108,7 +127,7 @@ async function handle(message, sender) {
       return { ok: true, status: 200, data: await updateTimer(slug, message.patch) };
     case "timer:reset":
       if (!lib.validSlug(slug)) return { ok: false, status: 0, error: "Invalid problem." };
-      await ext.storage.session.remove(timerKey(slug));
+      await resetTimer(slug);
       return { ok: true, status: 200 };
     case "attempt": {
       const attempt = lib.cleanAttempt(message.attempt);
