@@ -128,10 +128,14 @@ type AnalysisAvailability struct {
 	Paused, LimitReached bool
 	// Unknown reports that the settings could not be loaded.
 	Unknown bool
+	// ZeroLimit reports LEETGRINDER_ANALYSIS_DAILY_LIMIT=0, which sends nothing.
+	ZeroLimit bool
 }
 
 // On reports whether the worker sends requests.
-func (a AnalysisAvailability) On() bool { return a.KeyConfigured && a.Enabled && !a.Unknown }
+func (a AnalysisAvailability) On() bool {
+	return a.KeyConfigured && a.Enabled && !a.Unknown && !a.ZeroLimit
+}
 
 // Waiting reports whether requests are on hold for now.
 func (a AnalysisAvailability) Waiting() bool { return a.Paused || a.LimitReached }
@@ -155,10 +159,10 @@ type AnalysisPanel struct {
 }
 
 // Active reports whether the worker sends requests.
-func (p AnalysisPanel) Active() bool { return p.KeyConfigured && p.Enabled }
+func (p AnalysisPanel) Active() bool { return p.KeyConfigured && p.Enabled && p.Limit > 0 }
 
-// LimitReached reports whether today's requests used the daily limit.
-func (p AnalysisPanel) LimitReached() bool { return !p.UsageError && p.Used >= p.Limit }
+// LimitReached reports whether today's requests used a non-zero daily limit.
+func (p AnalysisPanel) LimitReached() bool { return !p.UsageError && p.Limit > 0 && p.Used >= p.Limit }
 
 // AnalysisReanalyseURL is the form action that queues an attempt again.
 func AnalysisReanalyseURL(slug, attemptID string) string {

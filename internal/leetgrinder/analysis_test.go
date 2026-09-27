@@ -56,4 +56,15 @@ func TestAnalysisCardUnknownStatus(t *testing.T) {
 	if !strings.Contains(out.String(), "analysis status could not be loaded") || strings.Contains(out.String(), "turned off") {
 		t.Fatal("unknown status not explained")
 	}
+	// A daily limit of 0 never runs, so nothing promises tomorrow.
+	out.Reset()
+	if err := ProblemHistory(problem, state, AttemptForm{}, AnalysisAvailability{KeyConfigured: true, Enabled: true, ZeroLimit: true, LimitReached: true}).Render(context.Background(), &out); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.String(), "daily request limit is 0") || strings.Contains(out.String(), "tomorrow") {
+		t.Fatal("zero limit not explained")
+	}
+	if p := (AnalysisPanel{KeyConfigured: true, Enabled: true}); p.Active() || p.LimitReached() {
+		t.Fatal("zero-limit panel reported active or reached")
+	}
 }

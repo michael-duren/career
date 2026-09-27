@@ -23,7 +23,9 @@ templ analysisSettings(p AnalysisPanel) {
 					Unavailable
 				} else {
 					{ Count(p.Used) } of { Count(p.Limit) }
-					if p.LimitReached() {
+					if p.Limit == 0 {
+						<span class="small muted">· <code>LEETGRINDER_ANALYSIS_DAILY_LIMIT</code> is 0, so no code is sent</span>
+					} else if p.LimitReached() {
 						<span class="small muted">· daily limit reached; the queue resumes tomorrow</span>
 					}
 				}
@@ -45,8 +47,10 @@ templ analysisSettings(p AnalysisPanel) {
 			<input type="hidden" name="revision" value={ p.Revision }/>
 			<label class="checkbox"><input type="checkbox" name="enabled" value="true" checked?={ p.Enabled } aria-describedby="analysis-toggle-help"/>Analyse captured code</label>
 			<p class="small muted" id="analysis-toggle-help">
-				if p.KeyConfigured {
+				if p.KeyConfigured && p.Enabled {
 					Turn this off to stop sending code. Queued attempts wait until you turn it back on.
+				} else if p.KeyConfigured {
+					Analysis is off, so no code is sent. Queued attempts wait until you turn it back on.
 				} else {
 					This setting takes effect once an API key is configured.
 				}
@@ -120,7 +124,11 @@ templ analysisUnavailable(avail AnalysisAvailability) {
 	} else if !avail.KeyConfigured {
 		<p class="small muted">Analysis needs an Anthropic API key on the server. <a href="/leetgrinder/settings#analysis">Analysis settings</a></p>
 	} else {
-		<p class="small muted">Analysis is turned off. <a href="/leetgrinder/settings#analysis">Analysis settings</a></p>
+		if avail.ZeroLimit {
+			<p class="small muted">Analysis is disabled: the server's daily request limit is 0. <a href="/leetgrinder/settings#analysis">Analysis settings</a></p>
+		} else {
+			<p class="small muted">Analysis is turned off. <a href="/leetgrinder/settings#analysis">Analysis settings</a></p>
+		}
 	}
 }
 

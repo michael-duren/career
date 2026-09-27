@@ -172,7 +172,7 @@ func (s *Server) leetgrinderProblem(w http.ResponseWriter, r *http.Request) {
 // historyAnalysis reports whether analysis runs, for the history page. A
 // settings failure is reported as an unknown status on the cards.
 func (s *Server) historyAnalysis(r *http.Request) leetgrinder.AnalysisAvailability {
-	a := leetgrinder.AnalysisAvailability{KeyConfigured: s.config.AnthropicAPIKey.Reveal() != ""}
+	a := leetgrinder.AnalysisAvailability{KeyConfigured: s.config.AnthropicAPIKey.Reveal() != "", ZeroLimit: s.config.AnalysisDailyLimit <= 0}
 	settings, err := s.db.LeetgrinderSettings(r.Context())
 	if err != nil {
 		a.Unknown = true
