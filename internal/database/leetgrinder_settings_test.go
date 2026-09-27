@@ -93,7 +93,7 @@ func TestLeetgrinderSettingsRevisions(t *testing.T) {
 	saved, err := s.UpdateLeetgrinderSettings(ctx, original.Revision, func(v *leetgrinder.Settings) error {
 		v.StartDate, v.Timezone, v.DailyHours = &start, "Asia/Tokyo", 3.5
 		v.NtfyTokenCiphertext = []byte{1, 2, 3}
-		v.Notifications = map[string]leetgrinder.NotificationPref{"missing_work": {Enabled: true, Time: "17:00"}}
+		v.Notifications = map[string]leetgrinder.NotificationPref{"missing_work": {Enabled: true, Time: "17:00", Priority: "default"}}
 		return nil
 	})
 	if err != nil {

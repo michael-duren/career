@@ -17,6 +17,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/michael-duren/career-strategy/internal/config"
 	"github.com/michael-duren/career-strategy/internal/database"
+	"github.com/michael-duren/career-strategy/internal/leetgrinder/notify"
 	"github.com/michael-duren/career-strategy/internal/otel"
 	"github.com/michael-duren/career-strategy/internal/running"
 	"github.com/michael-duren/career-strategy/internal/server"
@@ -171,6 +172,8 @@ func run() error {
 			worker := &running.Worker{Store: db, URL: c.WhisperURL, Model: c.WhisperModel}
 			go worker.Run(ctx)
 		}
+		notifier := &notify.Worker{Store: db, SecretKey: c.LeetgrinderSecretKey, Origin: c.PublicOrigin}
+		go notifier.Run(ctx)
 		srv := server.NewServer(c, db)
 		done := make(chan error, 1)
 		go func() { done <- srv.ListenAndServe() }()

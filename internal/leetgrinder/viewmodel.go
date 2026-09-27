@@ -72,6 +72,8 @@ type SettingsPage struct {
 	Schedule ScheduleForm
 	Error    string
 	Saved    bool
+	// Notify holds the ntfy and notification sections.
+	Notify NotifyPanel
 }
 
 func ReviewKey(slug string) string { return "review-" + slug }

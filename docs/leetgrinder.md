@@ -20,6 +20,26 @@ Each date gets a review plan the first time the overview, a session page, or the
 
 "Today's review" appears on the overview, on today's scheduled session page, and on the page of the session you are working through. Each pick shows the problem, its curriculum week, and a reason such as "Struggled 9 days ago · recall estimate 62%". A review is done once any attempt on that problem is logged that local day. Attempts recorded from a review card are marked as reviews in history. `/leetgrinder/reviews` lists every card with its due date and current recall estimate, plus how many due cards today's plan left out.
 
+## Notifications
+
+Leetgrinder can send reminders to [ntfy](https://ntfy.sh). In `/leetgrinder/settings`, set the ntfy server URL (default `https://ntfy.sh`), a topic, and optionally an access token, then subscribe to the same topic in the ntfy app. Anyone who knows a public ntfy.sh topic can read it, so use a long random topic name or a protected topic with a token. "Send test notification" posts a test message with the saved settings and shows the result. An empty topic turns every notification off.
+
+The token field is write-only. The page shows only "Token set" or "No token set"; leave the field blank to keep the saved token, or tick "Clear the saved token". Tokens are encrypted with AES-256-GCM before they are stored (see `LEETGRINDER_SECRET_KEY` below) and never appear in pages, logs, or notification errors.
+
+Each reminder can be turned on or off and has its own time, priority, and, where it applies, threshold:
+
+| Reminder | Default | Sends when |
+|---|---|---|
+| Morning plan | off, 08:00 | Always: today's session, required reading, and planned reviews. |
+| Missing work | on, 17:00 | Today's scheduled session is unfinished, or a planned review has no attempt today. Lists what is missing. |
+| Behind schedule | on, 17:00, threshold 3 | You are at least the threshold number of sessions behind. |
+| Review backlog | off, 17:00, threshold 10 | At least the threshold number of due reviews did not fit in today's plan. |
+| Late escalation | off, 21:00, high priority | Same condition as missing work. |
+
+A worker inside the server checks once a minute, using the schedule's time zone. Each reminder is evaluated once its time has passed and sends at most once per local date; if its condition is not met at that point it is logged as "Nothing to send" and not checked again that day. Enabling a reminder after its time has passed evaluates it on the next tick. Nothing is sent before the start date, more than one day after the end date, or while no schedule is set. Notifications carry a title, priority, tags, and a click link to the day page (or the overview or review queue), built from `PUBLIC_ORIGIN`.
+
+Every send is recorded in `leetgrinder_notification_log`, keyed by reminder and local date. The worker claims a row with `INSERT ... ON CONFLICT` before sending, so ticks and restarts never double-send. A failed send is logged with the error and retried on a later tick at least five minutes apart, up to three retries (four attempts) that day. A send interrupted by a crash is retried the same way. Settings show the latest 14 log rows, including test sends.
+
 ## Attempts
 
 Record each attempt as solved, struggled, or unfinished, with minutes spent and whether you used a hint or reviewed a solution. A solve means the solution passed on LeetCode. The overview counts distinct solved problems and independent solves separately. History retains repeated attempts. Use “Correct this attempt” to fix an entry; concurrent corrections cannot silently replace one another.
@@ -43,12 +63,12 @@ make test-postgres
 
 Leetgrinder pages require the existing login. Writes use same-origin HTML forms with server validation. Failed attempt saves display the submitted draft for retry. Attempt IDs prevent duplicate creates; revisions protect corrections. Tracking belongs to the app's existing single configured account.
 
-ntfy notifications and the browser extension are still to come. Migration 011 already creates their tables: `leetgrinder_api_tokens`, `leetgrinder_notification_log`, the ntfy columns on `leetgrinder_settings`, and `source` on attempts (`web` or `extension`).
+The browser extension is still to come. Migration 011 already creates its tables: `leetgrinder_api_tokens` and `source` on attempts (`web` or `extension`).
 
-The ntfy access token will be stored encrypted with AES-256-GCM. Set `LEETGRINDER_SECRET_KEY` to 32 random bytes encoded as base64 (for example `openssl rand -base64 32`). Development derives a key from `JWT_SECRET` when it is unset. In production, `serve` refuses to start without the key once an encrypted token is stored. Changing the key makes a stored token unreadable, so re-enter the token afterwards.
+The ntfy access token is stored encrypted with AES-256-GCM. Set `LEETGRINDER_SECRET_KEY` to 32 random bytes encoded as base64 (for example `openssl rand -base64 32`). Development derives a key from `JWT_SECRET` when it is unset. In production, `serve` refuses to start without the key once an encrypted token is stored. Changing the key makes a stored token unreadable, so re-enter the token afterwards.
 
 See [sources and verification](leetgrinder-sources.md) for the reading bibliography and the command that checks all 300 assignments against LeetCode.
 
 Migration 010 renames the existing tracking tables, indexes, and constraints to `leetgrinder` names while preserving saved attempts and completed days. Migration 009 keeps its historical SQL unchanged so previously applied checksums remain valid.
 
-The shared local database already reserves migration 008 for note creation timestamps. Leetgrinder uses migrations 009 through 011. Migration 011 adds the settings row, review plans, notification log, API tokens, and the attempt `source` and `is_review` columns; existing attempts become web attempts that are not reviews. Run `make go-dev` to apply them; existing notes and learning history are retained.
+The shared local database already reserves migration 008 for note creation timestamps. Leetgrinder uses migrations 009 through 012. Migration 011 adds the settings row, review plans, notification log, API tokens, and the attempt `source` and `is_review` columns; existing attempts become web attempts that are not reviews. Run `make go-dev` to apply them; existing notes and learning history are retained. Migration 012 adds an `attempts` count to the notification log for bounded retries.
