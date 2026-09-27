@@ -77,6 +77,8 @@
     const res = await send({ type: "timer:get", slug: state.slug });
     if (found.status !== "in" || !res.ok || !lib.shouldNudge(res.data, Date.now()) || ui || current !== state) return;
     await send({ type: "timer:update", slug: state.slug, patch: { nudged: true } });
+    // An Accepted panel may have opened while the update was in flight.
+    if (ui || current !== state) return;
     showNudge(state.slug, found.info);
   }
 
@@ -87,12 +89,14 @@
     state.lookup = lookup(state.slug);
     const found = await state.lookup;
     if (found.status === "out" || current !== state || busy()) return;
+    // Accepted ends the nudge window even if the panel is dismissed or the
+    // app is unreachable.
+    const res = await send({ type: "timer:update", slug: state.slug, patch: { nudged: true } });
+    if (current !== state || busy()) return;
     if (found.status === "error") {
       showError(`Accepted, but Leetgrinder could not be reached: ${found.error}`);
       return;
     }
-    // Accepted ends the nudge window even if the panel is dismissed.
-    const res = await send({ type: "timer:update", slug: state.slug, patch: { nudged: true } });
     const timer = res.ok ? res.data : { startedAt: Date.now(), assisted: false };
     const minutes = lib.elapsedMinutes(timer.startedAt, Date.now());
     showPanel(state.slug, found.info, { outcome: lib.inferOutcome(minutes), minutes, assisted: Boolean(timer.assisted) });

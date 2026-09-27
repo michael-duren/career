@@ -42,12 +42,13 @@ func (s *Server) withAPITokens(r *http.Request, page leetgrinder.SettingsPage) l
 }
 
 func (s *Server) renderTokenSettings(w http.ResponseWriter, r *http.Request, status int, section leetgrinder.APITokensSection) {
+	// A settings load failure must not hide the token section: after a
+	// create it holds the only copy of the new token.
 	settings, err := s.db.LeetgrinderSettings(r.Context())
-	if err != nil {
-		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your settings are unavailable. Please retry."))
-		return
-	}
 	page := leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), Schedule: leetgrinder.NewScheduleForm(settings), APITokens: section}
+	if err != nil {
+		page.Error = "Your other settings could not be loaded. Reload the page before changing them."
+	}
 	renderLeetgrinder(w, r, status, leetgrinder.SettingsView(s.withAPITokens(r, s.withNotify(r.Context(), page))))
 }
 

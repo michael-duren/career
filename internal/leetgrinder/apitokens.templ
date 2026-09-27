@@ -17,7 +17,7 @@ templ apiTokenSettings(page SettingsPage) {
 				</label>
 			</div>
 		}
-		<form class="attempt-form settings-form" method="post" action="/leetgrinder/settings/tokens">
+		<form class="attempt-form settings-form" method="post" action="/leetgrinder/settings/tokens#api-tokens">
 			<div class="form-row">
 				<label>Token name<input type="text" name="name" required maxlength="64" placeholder="Firefox laptop" value={ page.APITokens.Name } autocomplete="off"/></label>
 			</div>

@@ -205,6 +205,17 @@ func TestLeetgrinderExtensionAPI(t *testing.T) {
 	}
 }
 
+func TestLeetgrinderTokenShownWhenSettingsFail(t *testing.T) {
+	_, db, request := leetgrinderTestServer(t)
+	if _, err := db.DB.Exec("DELETE FROM leetgrinder_settings"); err != nil {
+		t.Fatal(err)
+	}
+	w := request("POST", "/leetgrinder/settings/tokens", url.Values{"name": {"Chrome"}})
+	if w.Code != 200 || !createdToken.MatchString(w.Body.String()) || !strings.Contains(w.Body.String(), "could not be loaded") {
+		t.Fatalf("created token hidden by settings failure: %d %s", w.Code, w.Body.String())
+	}
+}
+
 func TestLeetgrinderAPIReviewStatus(t *testing.T) {
 	s, db, _ := leetgrinderTestServer(t)
 	ctx := context.Background()
