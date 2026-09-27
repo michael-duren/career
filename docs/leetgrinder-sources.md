@@ -1,42 +1,30 @@
 # Leetgrinder sources and verification
 
-Verified on 2026-09-26. The curriculum has 84 sessions with 252 core problems and 48 optional problems. All 300 assignments are distinct, and all are free according to LeetCode's public catalog at verification time. Access rules and external pages can change.
+Problem catalog verified on 2026-09-26. The curriculum has 84 sessions with 252 core problems and 48 optional problems. All 300 assignments are distinct, and all are free according to LeetCode's public catalog at verification time. Access rules and external pages can change.
 
 ## Authorship and local source material
 
 The local `data/algomonster/CURRICULUM.md` was used to identify subject coverage and prerequisite relationships. The new lessons, worked examples, review prompts, and daily assignments were authored independently. No source lesson text, source code, problem statements, or solutions are embedded in the application. The local source directory is not required at build time and is excluded by the Docker context allowlist.
 
-All instructional prose is in `internal/leetgrinder/lessons.templ`. Day metadata, reading directions, and public problem titles are in `internal/leetgrinder/curriculum.go`. The runtime uses these compiled files and never fetches or renders the private source material.
+All instructional prose is in `internal/leetgrinder/lessons.templ`. Day metadata and public problem titles are in `internal/leetgrinder/curriculum.go`. Reading directions and source attribution are in `internal/leetgrinder/readings.go`. The runtime uses these compiled files and never fetches or renders the private source material.
 
 ## Reading references
 
-Required reading normally has a ten-minute allowance. Later references to the same introductory material are optional five-minute refreshers. Daily directions identify sections to read and questions to answer. Reading and solution review share the 30-minute budget; the linked textbooks are references, not assignments to read whole chapters.
+Each lesson has its own introductory document, followed by optional deeper reading. The first reading assigns a focused excerpt of at most ten minutes. Paper assignments identify a section, algorithm, or example to inspect. Their time estimates cover that excerpt, not a complete paper. All assigned excerpts together fit within the existing 30-minute reading and review budget.
 
-| Topic | Original educational source |
-| --- | --- |
-| Hash tables | Pat Morin, [Hashing with chaining](https://opendatastructures.org/ods-python/5_1_ChainedHashTable_Hashin.html) |
-| Arrays and introductory binary search | Robert Sedgewick and Kevin Wayne, [Programming model](https://algs4.cs.princeton.edu/11model/) |
-| Merge sort | Sedgewick and Wayne, [Mergesort](https://algs4.cs.princeton.edu/22mergesort/) |
-| Boundaries, predicates, and answer-space search | [CP-Algorithms: binary search](https://cp-algorithms.com/num_methods/binary_search.html) |
-| Two pointers and sliding windows | [USACO Guide: two pointers](https://usaco.guide/silver/two-pointers) |
-| Prefix sums | [USACO Guide: prefix sums](https://usaco.guide/silver/prefix-sums) |
-| Linked lists | Morin, [Singly-linked lists](https://opendatastructures.org/ods-python/3_1_SLList_Singly_Linked_Li.html) |
-| Stacks and queues | Sedgewick and Wayne, [Bags, queues, and stacks](https://algs4.cs.princeton.edu/13stacks/) |
-| Recursion | Jeff Erickson, [Recursion](https://jeffe.cs.illinois.edu/teaching/algorithms/book/01-recursion.pdf) |
-| Trees | Morin, [A basic binary tree](https://opendatastructures.org/ods-python/6_1_BinaryTree_Basic_Binary.html) |
-| Backtracking | Erickson, [Backtracking](https://jeffe.cs.illinois.edu/teaching/algorithms/book/02-backtracking.pdf) |
-| Graph traversal | Sedgewick and Wayne, [Undirected graphs](https://algs4.cs.princeton.edu/41graph/) |
-| Directed dependencies | Sedgewick and Wayne, [Directed graphs](https://algs4.cs.princeton.edu/42digraph/) |
-| Disjoint sets | Sedgewick and Wayne, [Union-find](https://algs4.cs.princeton.edu/15uf/) |
-| Weighted paths | Sedgewick and Wayne, [Shortest paths](https://algs4.cs.princeton.edu/44sp/) |
-| Heaps | Morin, [Binary heap](https://opendatastructures.org/ods-python/10_1_BinaryHeap_Implicit_Bi.html) |
-| Tries | Carnegie Mellon, Thomas Cortina's course with notes by Frank Pfenning, [Tries, sections 2–3](https://www.cs.cmu.edu/~wlovas/15122-r11/lectures/24-tries.pdf) |
-| Dynamic programming | Erickson, [Dynamic programming](https://jeffe.cs.illinois.edu/teaching/algorithms/book/03-dynprog.pdf), with separate directions for text segmentation, sequence states, edit distance, subset sum, and interval dependencies |
-| Greedy proofs and scheduling | Erickson, [Greedy algorithms](https://jeffe.cs.illinois.edu/teaching/algorithms/book/04-greedy.pdf) |
-| Monotonic stacks | [USACO Guide: stacks](https://usaco.guide/gold/stacks) |
-| Bit operations | [CP-Algorithms: bit manipulation](https://cp-algorithms.com/algebra/bit-manipulation.html) |
+The source selection favors free textbooks, university course notes, author-hosted articles, and open research papers or technical reports. A paper is useful when it explains an algorithm's origin, proof, limitations, or application. It is not a prerequisite for the day's practice. A shared foundational source can support more than one lesson, but the introductory documents must be distinct and the reading directions must match the day's concepts.
 
-Sources were opened and their relevant sections inspected. A link returning HTTP 200 is checked separately from its educational relevance. The final mixed-practice lessons are collapsed by default so learners can choose an approach before seeing the discussion.
+Every lesson ends with a References section. Each linked citation states which concepts or analysis it supports. Worked examples and practice prompts remain original instructional material. The Reading path panel gives the reading order and excerpt instructions. For mixed practice, both the lesson and its readings stay inside the review disclosure so they do not reveal the intended technique before an attempt.
+
+The existing required/optional status of each day's introduction is preserved because it also determines the base spaced-review allowance. Optional introductions are still listed first. Deeper research readings are always optional.
+
+`internal/leetgrinder/readings.go` is the source of truth for the bibliography. Per-lesson Sol review records are in:
+
+- [Lessons 1–28](leetgrinder-review-01-28.md)
+- [Lessons 29–56](leetgrinder-review-29-56.md)
+- [Lessons 57–84](leetgrinder-review-57-84.md)
+
+Run `go test ./internal/leetgrinder` after `make generate` to check all 84 introductory documents for uniqueness, reading budgets, optional papers, and rendered bottom citations. These tests check structure and rendering. Source relevance requires the lesson-by-lesson review; an HTTP success code alone does not establish it.
 
 ## Problem catalog verification
 

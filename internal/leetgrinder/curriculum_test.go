@@ -4,9 +4,67 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"html"
+	"net/url"
 	"strings"
 	"testing"
 )
+
+func TestEveryLessonHasDistinctSourcesAndCitedReadings(t *testing.T) {
+	documents := map[string]int{}
+	for _, week := range Curriculum() {
+		for _, day := range week.Days {
+			t.Run(day.Lesson, func(t *testing.T) {
+				if len(day.Readings) < 2 {
+					t.Fatal("lesson needs an introduction and a deeper reading")
+				}
+				intro := day.Readings[0]
+				if intro.Kind != "introduction" || intro.Minutes > 10 {
+					t.Error("first reading must be an introduction of at most ten minutes")
+				}
+				var b bytes.Buffer
+				if err := Lesson(day.Lesson).Render(context.Background(), &b); err != nil {
+					t.Fatal(err)
+				}
+				body := b.String()
+				start := strings.Index(body, ">References</h3>")
+				if start < strings.Index(body, "Before you finish") || start < 0 {
+					t.Fatal("references must follow the lesson content")
+				}
+				papers := 0
+				for _, reading := range day.Readings {
+					document, err := url.Parse(reading.URL)
+					if err != nil {
+						t.Fatal(err)
+					}
+					document.Fragment = ""
+					if document.Scheme != "https" || document.Host == "" {
+						t.Errorf("reference must use an absolute HTTPS URL: %s", reading.URL)
+					}
+					if earlier, exists := documents[document.String()]; exists {
+						t.Errorf("reading document repeats day %d: %s", earlier, reading.URL)
+					}
+					documents[document.String()] = day.Number
+					if reading.Kind == "paper" {
+						papers++
+						if !reading.Optional {
+							t.Error("papers must be optional deeper reading")
+						}
+					}
+					if reading.Supports == "" || !strings.Contains(body[start:], html.EscapeString(reading.Supports)) {
+						t.Errorf("reference %q must explain which lesson concepts it supports", reading.Title)
+					}
+					if !strings.Contains(body[start:], `href="`+html.EscapeString(reading.URL)+`"`) {
+						t.Errorf("references omit %q", reading.Title)
+					}
+				}
+				if papers == 0 {
+					t.Error("lesson needs a research paper or technical report")
+				}
+			})
+		}
+	}
+}
 
 func TestCurriculumAssignments(t *testing.T) {
 	weeks := Curriculum()

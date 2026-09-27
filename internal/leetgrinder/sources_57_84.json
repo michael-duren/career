@@ -1,0 +1,853 @@
+[
+  {
+    "day": 57,
+    "readings": [
+      {
+        "title": "CMU 15-122: Dynamic Programming",
+        "url": "https://www.cs.cmu.edu/~wlovas/15122-r11/lectures/dynprog.pdf",
+        "guidance": "Read pages 1-5, through the bottom-up Fibonacci program. Focus on the subproblem contract, repeated recursive calls, table order, and the two-value space reduction. Stop before the BDD application.",
+        "minutes": 9,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Supports the lesson's cached-subproblem model, dependency order, base cases, linear table, rolling-state optimization, and comparison with exponential recursion."
+      },
+      {
+        "title": "Bellman: On the Theory of Dynamic Programming",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1063639/",
+        "guidance": "Open the free four-page paper and read the opening multistage decision model and recurrence. Focus on how the remaining state determines the next subproblem; skip the later continuous optimization details.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Introduces the decomposition of a multistage optimization problem into smaller decision problems. The lesson applies that principle to finite cached subproblems."
+      }
+    ]
+  },
+  {
+    "day": 58,
+    "readings": [
+      {
+        "title": "Cornell CS 4820: Introduction to Dynamic Programming",
+        "url": "https://courses.cs.cornell.edu/cs4820/2024sp/notes/08_WIS-reading.pdf",
+        "guidance": "Read sections 1 and 2 through the recurrence for maximum-weight independent set on a path. Translate include-or-exclude into take-or-skip, then write the two endpoint exclusions needed when the path closes into a cycle.",
+        "minutes": 9,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Directly supports nonadjacent choice recurrence, optimal substructure on a path, reconstruction, and the path-versus-cycle distinction used by House Robber variants."
+      },
+      {
+        "title": "Korhonen: Lower Bounds on Dynamic Programming for Maximum Weight Independent Set",
+        "url": "https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.87",
+        "guidance": "Read the abstract and introduction through the max-plus circuit model. Treat this as an advanced extension: connect max and addition gates to the take-or-skip recurrence on a path, then stop before the lower-bound proofs for wider graph classes.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Places the lesson's maximum-weight independent-set recurrence in its research problem family and distinguishes easy path structure from the harder graph structures studied by the paper."
+      }
+    ]
+  },
+  {
+    "day": 59,
+    "readings": [
+      {
+        "title": "Carnegie Mellon 15-451: Coin Change",
+        "url": "https://www.cs.cmu.edu/~ab/15-451F10/Dynamic%20Programming.pdf",
+        "guidance": "Read the Coin Change Problem slides on PDF pages 4 and 5. Trace the 1, 6, 10 denomination table and the choice between reusing a coin and excluding its denomination. Stop before knapsack.",
+        "minutes": 9,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Derives an unbounded coin-change recurrence and shows why arbitrary denominations can defeat a greedy choice."
+      },
+      {
+        "title": "Kozen and Zaks: Optimal Bounds for the Change-Making Problem",
+        "url": "https://www.cs.cornell.edu/~kozen/Papers/change.pdf",
+        "guidance": "Read the abstract and sections 1-2 through the bounds on the smallest greedy counterexample. Use one noncanonical coin system to contrast a greedy representation with the optimal dynamic-programming value.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Establishes formally that greedy coin selection is denomination-dependent and motivates computing optimal values over all legal final coins."
+      },
+      {
+        "title": "Stanford CS161 Section 6 Solutions: Encoding",
+        "url": "https://web.stanford.edu/class/archive/cs/cs161/cs161.1236/Sections/Section6/Section6_Solutions.pdf",
+        "guidance": "Read only the Encoding problem and solution. Trace its prefix recurrence on 101, checking the one-digit and two-digit conditions separately and identifying why zero cannot contribute by itself.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Directly supports the lesson's decoding prefix state, addition of valid one- and two-digit endings, O(n) evaluation, and zero-sensitive transition guards."
+      }
+    ]
+  },
+  {
+    "day": 60,
+    "readings": [
+      {
+        "title": "Jeff Erickson: Dynamic Programming",
+        "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/03-dynprog.pdf",
+        "guidance": "Read the text-segmentation example, from the problem statement through the recurrence and evaluation order. Track what the suffix index records and how dictionary membership controls legal transitions.",
+        "minutes": 10,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Directly supports suffix feasibility, Word Break's candidate split checks, quadratic candidate structure, and the rule that state must retain every fact needed by later choices."
+      },
+      {
+        "title": "He, Haffari, and Norouzi: Dynamic Programming Encoding for Subword Segmentation",
+        "url": "https://aclanthology.org/2020.acl-main.275.pdf",
+        "guidance": "Read the abstract, section 1, and section 3.1 through the dynamic-programming formulation. Focus on segmentation as a sequence of locally legal transitions over prefix positions; skip the neural architecture and experiments.",
+        "minutes": 13,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Shows a research use of dynamic programming for string segmentation and reinforces the lesson's position-based feasibility state."
+      },
+      {
+        "title": "MIT 6.006: Winning the Stock Market",
+        "url": "https://courses.csail.mit.edu/6.006/fall07/handouts/H09-ps3.pdf",
+        "guidance": "Read Problem 3 on pages 2 and 3, including the waiting-period and transaction-fee variants. Identify which state must record time since a trade. Do not download the stock dataset or complete the assignment.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Provides a finite, known-price trading model with waiting periods and fees. It supports choosing state from permitted transitions, rather than a stochastic forecasting model."
+      }
+    ]
+  },
+  {
+    "day": 61,
+    "readings": [
+      {
+        "title": "Stanford CS161: Guide to Dynamic Programming, Longest Increasing Subsequence",
+        "url": "https://web.stanford.edu/class/archive/cs/cs161/cs161.1138/handouts/140%20Guide%20to%20Dynamic%20Programming.pdf",
+        "guidance": "Read the Longest Increasing Subsequence problem, recurrence, proof, and runtime analysis. Pay attention to the phrase 'ends at position i' and why the final answer takes a maximum over all ending positions.",
+        "minutes": 10,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Directly supports the exact-ending state, compatible predecessor scan, quadratic evaluation order, and separation between a local ending value and the global optimum."
+      },
+      {
+        "title": "Aldous and Diaconis: Patience Sorting and Longest Increasing Subsequences",
+        "url": "https://www.stat.berkeley.edu/users/aldous/Research/OP/patience.pdf",
+        "guidance": "Read Section 1.1, the card-pile example, and the connection to increasing subsequences. Stop before the probabilistic analysis. Compare the pile-top summary with the lesson's quadratic predecessor recurrence.",
+        "minutes": 11,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Explains how patience sorting relates to longest increasing subsequences. It is an optional faster-algorithm perspective on the sequence state used in the lesson."
+      }
+    ]
+  },
+  {
+    "day": 62,
+    "readings": [
+      {
+        "title": "MIT 6.006 Recitation 21: Subset Sum",
+        "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/95e744ee64464cb6bc8f8264faeea080_MIT6_006F11_rec21.pdf",
+        "guidance": "Read pages 1-4 through the bottom-up subset-sum table. State the boolean subproblem in words, identify the take and skip predecessors, and note why the numeric target appears in the runtime.",
+        "minutes": 10,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Directly supports zero-or-one subset feasibility, the O(nS) pseudopolynomial bound, parity and range checks, and the source table that a descending one-dimensional update compresses."
+      },
+      {
+        "title": "Horowitz and Sahni: Computing Partitions with Applications to the Knapsack Problem",
+        "url": "https://www.cise.ufl.edu/~sahni/papers/computingPartitions.pdf",
+        "guidance": "Read the abstract and sections 1-2 through the basic partition and knapsack formulations. Compare input bit length with dependence on the numeric sum, then stop before the empirical comparisons.",
+        "minutes": 13,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Provides the classic research context for subset sum, partition, and zero-or-one knapsack, including why algorithms polynomial in the target magnitude are pseudopolynomial."
+      }
+    ]
+  },
+  {
+    "day": 63,
+    "readings": [
+      {
+        "title": "Saint Louis University: Notes on the Maximum Subarray Problem",
+        "url": "https://www.cs.slu.edu/~goldwamh/courses/slu/csci314/2012_Fall/lectures/maxsubarray/",
+        "guidance": "Read the problem statement and Algorithms 1-4, ending after the linear scan. Track the difference between the best sum ending at the current position and the best sum seen anywhere.",
+        "minutes": 9,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Directly supports the local-ending versus global-best split, the linear recurrence, actual-element initialization for nonempty answers, and the all-negative edge case."
+      },
+      {
+        "title": "Takaoka: Efficient Algorithms for the Maximum Subarray Problem by Distance Matrix Multiplication",
+        "url": "https://theory.stanford.edu/~virgi/cs367/papers/maxsubarray.pdf",
+        "guidance": "Read the abstract and opening maximum-subarray definition, then the one-dimensional baseline discussion. Stop before distance-matrix multiplication. Distinguish the lesson's linear one-dimensional recurrence from the paper's multidimensional extension.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Defines maximum-subarray optimization and places the one-dimensional problem within research on higher-dimensional arrays. The matrix algorithms are an extension, not the lesson's implementation."
+      }
+    ]
+  },
+  {
+    "day": 64,
+    "readings": [
+      {
+        "title": "Princeton Competitive Programming: Dynamic Programming I",
+        "url": "https://competitive-programming.cs.princeton.edu/files/lec_f22_w4.pdf",
+        "guidance": "Read the Paths on a Grid section through its recurrence and table fill. Compare addition for path counts with minimum-plus-cell-cost for a shortest grid path, then add a blocked-cell state that contributes zero paths.",
+        "minutes": 9,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Supports the acyclic grid dependency, permitted predecessors, path-count addition, minimum-cost combination, boundary initialization, and row compression."
+      },
+      {
+        "title": "Goldstein et al.: Path Counting for Grid-Based Navigation",
+        "url": "https://damassets.autodesk.net/content/dam/autodesk/research/publications-assets/pdf/path-counting-for-grid-based-navigation.pdf",
+        "guidance": "Read section 3 through section 3.1. This is a navigation-graph extension, not the lesson's right-and-down grid: compare its Pascal-style addition of predecessor counts and unavailable regions with the simpler acyclic grid recurrence, then stop before the empirical results.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Studies counting shortest paths on grid graphs. Its obstacle and movement assumptions differ from right/down-only DP, so it is an application extension, not a replacement for the lesson's acyclic recurrence."
+      }
+    ]
+  },
+  {
+    "day": 65,
+    "readings": [
+      {
+        "title": "Florida State CIS4930: Dynamic Programming, Largest Square of All 1s",
+        "url": "https://www.cs.fsu.edu/~tvhoang/classes/cis4930/scribe8_cis4930.pdf",
+        "guidance": "Read section 8.5.3. Draw the upper, left, and upper-left supporting squares for one cell, derive one plus their minimum, and distinguish stored side length from reported area.",
+        "minutes": 8,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Directly supports the three-neighbor maximal-square recurrence, the need for a minimum, quadratic grid time, and squaring the final side length."
+      },
+      {
+        "title": "Bhandari: An Efficient Frequency-Based Approach for Maximal Square Detection in Binary Matrices",
+        "url": "https://arxiv.org/abs/2503.18974",
+        "guidance": "Read the abstract, introduction, and section 2.1 only. Verify that its standard-DP baseline uses the same three-neighbor minimum and O(mn) scan as the lesson; treat the proposed frequency method as a research extension and do not substitute it for the lesson exercise.",
+        "minutes": 11,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Documents the standard maximal-square recurrence and rolling-row space bound in a research comparison, then shows that the same contiguous-square problem can motivate a different representation."
+      },
+      {
+        "title": "UT Austin CS313E: Greatest Path Sum in a Triangle",
+        "url": "https://www.cs.utexas.edu/~mitra/csSpring2018/cs313/assgn/assgn8.html",
+        "guidance": "Read the triangle example and the allowed adjacent-child moves. Sketch a bottom-up recurrence; skip the submission instructions. The assignment maximizes a sum, while a minimum-path task changes the combining operation.",
+        "minutes": 5,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Defines triangle-path adjacency and contrasts exhaustive, greedy, and dynamic-programming approaches. It supports deriving predecessors from the allowed moves."
+      }
+    ]
+  },
+  {
+    "day": 66,
+    "readings": [
+      {
+        "title": "MIT 6.006: Dynamic Programming II, Longest Common Subsequence",
+        "url": "https://courses.csail.mit.edu/6.006/fall09/lecture_notes/lecture19.pdf",
+        "guidance": "Read the LCS definition, suffix-state recurrence, and evaluation order on pages 1-3. Separate a diagonal match from dropping one side, and note why a subsequence need not be contiguous.",
+        "minutes": 10,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Directly supports the two-sequence state, equal-symbol diagonal extension, skip transitions, O(nm) table, and distinction between subsequences and substrings."
+      },
+      {
+        "title": "Hirschberg: A Linear Space Algorithm for Computing Maximal Common Subsequences",
+        "url": "https://ics.uci.edu/~dhirschb/pubs/p341-hirschberg.pdf",
+        "guidance": "Read the introduction and Algorithm B's space analysis. Identify which table information is sufficient to recover an LCS with linear working space; skip the detailed induction if time expires.",
+        "minutes": 13,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Supports the lesson's O(min(n,m)) length-space claim and its warning that reconstructing an actual common subsequence requires stored decisions or extra work."
+      }
+    ]
+  },
+  {
+    "day": 67,
+    "readings": [
+      {
+        "title": "MIT 6.006: Edit Distance Lecture Notes",
+        "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/06fe52fd13d711cb32dd0e5c6c8f0980_MIT6_006F11_lec21_orig.pdf",
+        "guidance": "Read the edit-distance pages that define the subproblem, insertion, deletion, and replacement transitions, base cases, and two-dimensional topological order. Draw the index change for each edit.",
+        "minutes": 10,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Directly supports the edit-distance recurrence, empty-prefix base cases, O(nm) evaluation, and the need to compute smaller prefixes before larger ones."
+      },
+      {
+        "title": "Wagner and Fischer: The String-to-String Correction Problem",
+        "url": "https://computingbiology.github.io/docs/wagner1974.pdf",
+        "guidance": "Read pages 168-171 through the dynamic-programming algorithm and complexity argument. Match each correction operation to a predecessor cell; stop before the later theorem details.",
+        "minutes": 13,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Is the foundational paper for insertion, deletion, and substitution edit distance and supports the lesson's product-of-lengths running time."
+      },
+      {
+        "title": "MIT 6.046J: Longest Palindromic Subsequence",
+        "url": "https://ocw.mit.edu/courses/6-046j-design-and-analysis-of-algorithms-spring-2015/6144f2dfbe515abfbeb32f99a6907af7_MIT6_046JS15_lec10.pdf",
+        "guidance": "Read the longest-palindromic-subsequence state and recurrence only. Contrast its freedom to discard an endpoint with a palindromic-substring check, which must keep every interior character; stop before optimal binary search trees.",
+        "minutes": 5,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Directly supports the interval state, equal-endpoint recurrence, shorter-interval evaluation order, and the lesson's distinction between subsequence freedom and substring contiguity."
+      }
+    ]
+  },
+  {
+    "day": 68,
+    "readings": [
+      {
+        "title": "CMU Notes on the Distinct Sequence Problem",
+        "url": "https://www.cs.cmu.edu/~yandongl/distinctseq.html",
+        "guidance": "Read the problem, subproblem definition, recurrence, and empty-string initialization. Trace source 'aab' and target 'ab', identifying the skip and use-current-character contributions.",
+        "minutes": 8,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Directly supports counting index-distinct target subsequences, adding alternative predecessors, and the separate empty-target and empty-source base cases."
+      },
+      {
+        "title": "Collins: The Number of Distinct Subsequences of a Random Binary String",
+        "url": "https://arxiv.org/pdf/1310.7288",
+        "guidance": "Read the abstract, introduction, and section 1.1 through equation (1), the recurrence for the number of distinct m-subsequences. Focus on why a subsequence count splits by its starting run rather than by a single character; skip the probabilistic expectation analysis.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Gives an open, author-hosted treatment of a distinct-subsequence-counting recurrence and reinforces why counting alternatives uses addition rather than a maximum."
+      },
+      {
+        "title": "Stony Brook CSE 373: String Dynamic Programming Exercises",
+        "url": "https://www3.cs.stonybrook.edu/~skiena/373/hw/hw.pdf",
+        "guidance": "Read Chapter 5 exercises 1 and 4 only. Derive the repeated-substring table so a mismatch resets the current matching suffix, then derive the Boolean shuffle table in which each step consumes one character from exactly one source.",
+        "minutes": 5,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Directly scopes the lesson's other two string-table problems: contiguous common substring and order-preserving interleaving, with different combination rules from subsequence counting."
+      }
+    ]
+  },
+  {
+    "day": 69,
+    "readings": [
+      {
+        "title": "Oregon State: 0-1 Knapsack as a Two-Dimensional State Graph",
+        "url": "https://web.engr.oregonstate.edu/~huanlian/algorithms_course/2-DP/knapsack.html",
+        "guidance": "Read the 0-1 knapsack subproblem, graph interpretation, base cases, and bottom-up order. Generalize the capacity coordinate to two resources and state why both coordinates scan downward during compression.",
+        "minutes": 9,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Supports multiple state dimensions, take-or-skip transitions, capacity-dependent complexity, and downward updates that prevent selecting one item twice."
+      },
+      {
+        "title": "Boussier et al.: Solving the 0-1 Multidimensional Knapsack Problem with Resolution Search",
+        "url": "https://arxiv.org/abs/0905.0848",
+        "guidance": "Read the abstract and opening mathematical model of items constrained by several resources. Stop before resolution search. Compare its resource vector with the lesson's two-capacity DP; the paper uses a different exact solver.",
+        "minutes": 11,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Formalizes zero-or-one choices under several simultaneous resource constraints. Resolution search is optional research context; it does not establish the lesson's DP update order."
+      },
+      {
+        "title": "University of Colorado: Dice-Sum Recurrence",
+        "url": "https://home.cs.colorado.edu/~srirams/courses/csci2824-spr14/recursiveCounting-27.html",
+        "guidance": "Read Example 4 only. Derive the last-roll recurrence and its impossible base cases, then compare its two coordinates with the lesson's dice-count and target-total state.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Directly supports the dice-count and total-sum state, addition of alternatives, and careful base cases for unreachable totals."
+      }
+    ]
+  },
+  {
+    "day": 70,
+    "readings": [
+      {
+        "title": "CMU 15-210: Dynamic Programming, Optimal Binary Search Trees",
+        "url": "https://www.cs.cmu.edu/afs/cs/academic/class/15210-s15/www/lectures/dp-notes.pdf",
+        "guidance": "Read the optimal-binary-search-tree section from its interval definition through the recurrence. Track how choosing one root splits a contiguous range into two smaller independent ranges and why table order follows interval length.",
+        "minutes": 10,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Supports interval states, trying every split or last action, increasing-length evaluation, O(n squared) states, and O(n cubed) split enumeration."
+      },
+      {
+        "title": "Hu and Shing: Computation of Matrix Chain Products",
+        "url": "https://cic.tju.edu.cn/faculty/gongxj/course/algorithm/doc/1981-Computationofmatrixchainproducts.pdf",
+        "guidance": "Read the opening formulation and the standard interval recurrence before the faster algorithm. Identify how fixing the final split makes the two remaining intervals independent.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Provides classic research context for interval dynamic programming and the lesson's technique of choosing a final structural action so boundary information becomes fixed."
+      },
+      {
+        "title": "University of Iowa: Nim and Deterministic Dynamic Programming",
+        "url": "https://user.engineering.uiowa.edu/~dbricker/or_lectures.html",
+        "guidance": "Open the Nim lecture under Deterministic Dynamic Programming and read the state-value recurrence. Recast the value as the current player's advantage and note why the opponent's best future value is subtracted.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Supports the lesson's game-state viewpoint and the current-player score-difference recurrence; it does not prescribe the lesson's array example."
+      }
+    ]
+  },
+  {
+    "day": 71,
+    "readings": [
+      {
+        "title": "University of Washington CSE417: Introduction to Greedy Algorithms",
+        "url": "https://courses.cs.washington.edu/courses/cse417/25au/readings/introgreedy.html",
+        "guidance": "Read through section 3, Exchange Arguments. Write the five-part proof template in your own words, then identify the feasibility-preserving swap needed for matching the smallest adequate resource to the smallest demand.",
+        "minutes": 9,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Supports the lesson's core claim that a greedy rule needs a proof, especially a swap that preserves feasibility and does not worsen the objective."
+      },
+      {
+        "title": "Arratia: The Greedy Algorithm and the Cohen-Macaulay Property",
+        "url": "https://www.cs.upc.edu/~argimiro/mypapers/Journals/2018/Argimiro4AC65rev.pdf",
+        "guidance": "Read the first two pages through the discussion of Edmonds' exchange condition. Stop before the algebraic definitions in Section 2. Contrast a proved structural condition with assuming that any locally best choice works.",
+        "minutes": 11,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Explains why greedy optimality requires structure and discusses the exchange property of matroids. The algebraic extension is not needed for the lesson's elementary exchange proofs."
+      }
+    ]
+  },
+  {
+    "day": 72,
+    "readings": [
+      {
+        "title": "Middlebury CS302: Scheduling and Exchange Arguments",
+        "url": "https://www.cs.middlebury.edu/~skimmel/Courses/302/site/Scheduling.html",
+        "guidance": "Read sections 5-6 on swapping adjacent out-of-order choices. Use the same two-item comparison to derive the ordering by A-cost minus B-cost for two-city assignment.",
+        "minutes": 9,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Supports deriving a sorted greedy order with a local exchange calculation rather than memorizing a direction, including the cost-difference baseline used by two-city assignment."
+      },
+      {
+        "title": "Dragan: On Greedy Matching Ordering and Greedy Matchable Graphs",
+        "url": "https://www.cs.kent.edu/~dragan/greedymatching.pdf",
+        "guidance": "Read the introduction, matching definition, and greedy algorithm on the first two pages. Notice that correctness depends on the vertex ordering and graph class. Do not apply this general-graph algorithm as the proof for sorted numeric pairing.",
+        "minutes": 11,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Studies when an ordering makes greedy pairing correct. It extends the lesson's ordering principle to graph matching under additional structural assumptions."
+      },
+      {
+        "title": "UC Riverside CS141: Rowing Pair Exchange Proof",
+        "url": "https://www.cs.ucr.edu/~yihans/teaching/141/f20/141F20/discussion/discussion5.pdf",
+        "guidance": "Read Midterm Problem 4's rowing algorithm and greedy-choice proof. Compare its chosen feasible partner with the lesson's two-pointer boat rule, keeping the at-most-two-people capacity assumption explicit.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Directly supports the lesson's decide-the-heaviest-item exchange argument and makes clear that the two-person capacity is what closes the greedy choice."
+      }
+    ]
+  },
+  {
+    "day": 73,
+    "readings": [
+      {
+        "title": "MIT 6.046J: Interval Scheduling",
+        "url": "https://people.csail.mit.edu/rmwu/static/files/notes/6-046-notes.pdf",
+        "guidance": "Read section 1.4 through the earliest-finish-time theorem and proof. Compare earliest finish with shortest interval and earliest start, and record the notes' endpoint compatibility convention.",
+        "minutes": 10,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Directly supports earliest-finish interval selection, its exchange argument, counterexamples to tempting alternatives, O(n log n) sorting, and endpoint conventions."
+      },
+      {
+        "title": "Kolen et al.: Interval Scheduling, A Survey",
+        "url": "https://ir.cwi.nl/pub/11585/11585B.pdf",
+        "guidance": "Read the abstract and introductory taxonomy of interval scheduling variants. Identify which assumptions produce the unweighted single-machine problem solved by earliest finish, then stop before the broader approximation survey.",
+        "minutes": 11,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Provides research context for interval scheduling and explains why changing weights, machines, or compatibility rules changes the algorithm."
+      },
+      {
+        "title": "UT Austin: Classical Greedy Interval Scheduling",
+        "url": "https://users.ece.utexas.edu/~garg/publicCompanion/chapter6-classical.html",
+        "guidance": "Use the IntervalScheduling section as pseudocode reference. For balloon hitting, reinterpret overlap under closed endpoints; for partition labels, write the analogous maintained right boundary from last occurrences.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Supplies concise implementation and complexity details while the scoped comparison covers the lesson's shared pattern of committing to a maintained interval boundary."
+      }
+    ]
+  },
+  {
+    "day": 74,
+    "readings": [
+      {
+        "title": "UC Irvine: Allen's Interval Algebra",
+        "url": "https://ics.uci.edu/~alspaugh/cls/shr/allen.html",
+        "guidance": "Read the thirteen basic interval relations and the endpoint definitions for before, meets, overlaps, starts, during, and finishes. Translate those relations into the lesson's overlap test before tracing merge and intersection scans.",
+        "minutes": 9,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Supports precise interval overlap and containment semantics, including endpoint equality, which the merge and intersection algorithms rely on."
+      },
+      {
+        "title": "Allen: Maintaining Knowledge about Temporal Intervals",
+        "url": "https://cse.unl.edu/~choueiry/Documents/Allen-CACM1983.pdf",
+        "guidance": "Read sections 1-2 through the definition of interval relations. Concentrate on overlap, containment, and endpoint order; skip the constraint-propagation algorithm.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Is the primary research source for the interval relations used to reason about containment, partial overlap, disjointness, and touching endpoints."
+      },
+      {
+        "title": "Princeton COS226: Geometric Search and Interval Intersection",
+        "url": "https://www.cs.princeton.edu/courses/archive/spr07/cos226/lectures/17GeometricSearch.pdf",
+        "guidance": "Read the interval-intersection definition and examples, not the interval-tree implementation. For two already sorted disjoint lists, prove that the interval with the earlier end cannot meet a later interval in the other list.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Supports the intersection predicate and the endpoint-order fact behind advancing the earlier-ending interval in an O(n+m) two-list scan."
+      }
+    ]
+  },
+  {
+    "day": 75,
+    "readings": [
+      {
+        "title": "Stanford CS161: Greedy Algorithms",
+        "url": "https://web.stanford.edu/class/archive/cs/cs161/cs161.1138/lectures/13/Slides13.pdf",
+        "guidance": "Read the farthest-feasible-jump example and its stays-ahead proof. Convert each jump layer into a reachable index range, and state separately whether the task asks only for reachability or for the minimum number of jumps.",
+        "minutes": 9,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Supports greedy maintenance of a reachable prefix, farthest progress, stays-ahead reasoning, and the distinction between feasibility and minimizing the number of jumps."
+      },
+      {
+        "title": "Khuller, Malekian, and Mestre: To Fill or Not to Fill, The Gas Station Problem",
+        "url": "https://www.cs.umd.edu/users/samir/grant/gas-j.pdf",
+        "guidance": "Read the introduction and the fixed-path problem statement. Focus on what a failed or dominated prefix lets an algorithm discard; skip the tour approximation analysis.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Provides a formal gas-station optimization setting and supports reasoning about route prefixes, feasibility, and eliminating candidate stops or starts."
+      },
+      {
+        "title": "WPI CS2223: Greedy Gas-Station Proof",
+        "url": "https://web.cs.wpi.edu/~cs2223/b05/Exams/Quiz2/",
+        "guidance": "Read Problem I and Alternate Solution 1. Adapt the stays-ahead proof to the lesson's rule that every start inside a segment whose running balance fails can be discarded together.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Supplies a short proof that a greedy route choice eliminates a range of alternatives rather than only one candidate."
+      }
+    ]
+  },
+  {
+    "day": 76,
+    "readings": [
+      {
+        "title": "Cornell CS2110: Monotonic Stacks",
+        "url": "https://www.cs.cornell.edu/courses/cs2110/2026sp/lectures/lec15/",
+        "guidance": "Read Exercise 15.10. State the stack-order invariant for next-greater values, explain why a dominated candidate can be removed, and trace equal values under strict and non-strict comparisons.",
+        "minutes": 9,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Directly supports unresolved next-greater queries, stack monotonicity, candidate removal, equal-value behavior, and storing positions when answers require distances."
+      },
+      {
+        "title": "Sitchinava and Svenning: The All Nearest Smaller Values Problem Revisited in Practice, Parallel and External Memory",
+        "url": "https://par.nsf.gov/servlets/purl/10590978",
+        "guidance": "Read the abstract, problem definition, and sequential stack baseline. Stop before parallel and external-memory algorithms. Relate each pop to an index whose nearest-smaller question is now resolved.",
+        "minutes": 11,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Connects nearest-smaller queries to a monotonic-stack baseline and examines faster execution in other computational models."
+      },
+      {
+        "title": "University of Hawaii: Aggregate Analysis of Stack Operations",
+        "url": "https://algoparc.ics.hawaii.edu/~nodari/teaching/s15/Notes/Topic-15.html",
+        "guidance": "Read Aggregate Analysis and the stack example. Replace ordinary pops with monotonic-stack candidate pops and charge every pop to the unique earlier push that created it.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Justifies the lesson's O(n) total-time claim even though one iteration may contain a while loop that pops many entries."
+      }
+    ]
+  },
+  {
+    "day": 77,
+    "readings": [
+      {
+        "title": "University of Chicago: Stacks and the Stock Span Problem",
+        "url": "https://classes.cs.uchicago.edu/archive/2019/fall/30121-1/lecture-examples/Stacks_and_Stock_Span.html",
+        "guidance": "Read the stock-span definition, quadratic baseline, and stack implementation. For each stack entry, write the exact earlier range it summarizes and why that range never needs to be split again.",
+        "minutes": 9,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Directly supports stock spans, compressed stack blocks, the no-greater-than comparison, and the linear total number of pushes and pops."
+      },
+      {
+        "title": "Tarjan: Amortized Computational Complexity",
+        "url": "https://courses.cs.duke.edu/fall11/cps234/reading/Tarjan85_AmortizedComplexity.pdf",
+        "guidance": "Read the introduction and section 2's accounting view. Apply its credits to an entry that absorbs earlier entries, and distinguish one expensive operation from the total cost of the full scan.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Provides the formal analysis method behind compressed-stack algorithms in which each element is inserted and removed at most once."
+      },
+      {
+        "title": "Rensselaer: Remove Duplicate Letters with a Greedy Stack",
+        "url": "https://www.cs.rpi.edu/~xiaoj8/ds/animations/stack/p316/",
+        "guidance": "Read the two-scan stack construction and step through cbacdcbc. Compare its safe removal of a larger earlier character with removing a larger earlier digit while budget remains; record which future-occurrence condition is specific to duplicate-letter removal.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Supports the greedy lexicographic stack pattern behind digit removal while making clear that the exact pop guard depends on the problem's deletion constraints."
+      }
+    ]
+  },
+  {
+    "day": 78,
+    "readings": [
+      {
+        "title": "CMU 15-122: Linked Lists and Tortoise-and-Hare Cycle Detection",
+        "url": "https://www.cs.cmu.edu/~15122-archive/n19/handouts/10-linkedlist.pdf",
+        "guidance": "After the core attempts, read the cyclic-list and tortoise-and-hare discussion. Trace node identity and the two speeds; stop before the proof exercises.",
+        "minutes": 8,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Explains cycle detection with two references moving at different speeds. The lesson separately chooses among cycle, set, and bit-count models."
+      },
+      {
+        "title": "Brent: An Improved Monte Carlo Factorization Algorithm",
+        "url": "https://maths-people.anu.edu.au/brent/pd/rpb051i.pdf",
+        "guidance": "Read the introduction's review of Floyd cycle finding and section 2's cycle model. Ignore factorization details; compare the number of function evaluations with the familiar two-speed method.",
+        "minutes": 11,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Provides a primary research analysis of constant-memory cycle finding in iterated functions, the abstraction used by the duplicate-number pointer method."
+      },
+      {
+        "title": "CP-Algorithms: Bit Manipulation",
+        "url": "https://cp-algorithms.com/algebra/bit-manipulation.html",
+        "guidance": "After the core attempts, read Binary Representation and Clear the Right-Most Set Bit. Trace 12 AND 11, then write count(n) as count(n AND (n-1)) plus one with count(0)=0.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Directly supports the lowest-set-bit removal identity and the O(n) bit-count recurrence used in the lesson's third task."
+      }
+    ]
+  },
+  {
+    "day": 79,
+    "readings": [
+      {
+        "title": "Cornell CS2110: Binary Search and Prefix Sums",
+        "url": "https://www.cs.cornell.edu/courses/cs2110/2026sp/lectures/lec05/",
+        "guidance": "After the core attempts, read the binary-search and prefix-sum portions. Name the monotone boundary searched in the k-closest window problem, then state what a prefix-frequency key represents for an exact subarray sum.",
+        "minutes": 9,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Supports sorted-order elimination for binary search, prefix precomputation, and the need for a precise invariant before choosing either method."
+      },
+      {
+        "title": "Fenwick: A New Data Structure for Cumulative Probability Tables",
+        "url": "https://www.cs.auckland.ac.nz/~peter-f/FTPfiles/TechRep110.pdf",
+        "guidance": "Read the abstract and section 1. Treat this as a research extension beyond the lesson's static prefix-frequency map: identify what changes when cumulative frequencies must support both updates and inverse lookup, then stop before the implementation details.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Shows how cumulative-frequency queries lead to a richer indexed representation when updates are allowed; it does not replace the lesson's simpler exact-sum prefix map."
+      },
+      {
+        "title": "Xianwei Zhang: Map-Based String and Window Algorithms",
+        "url": "https://people.cs.pitt.edu/~xianeizhang/notes/alg/MapSum_Xianwei.html",
+        "guidance": "After the core attempts, read only the Longest Substring with At Most K Distinct Characters discussion (LC159/340). Track how the window shrinks once the distinct count exceeds K, then compare that atMost(K) count with the lesson's atMost(k) minus atMost(k-1) subtraction for an exact count.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Provides a worked atMost(K) sliding-window count. It supports the lesson's exact-count subtraction technique, not its boundary-search or prefix-sum topics."
+      }
+    ]
+  },
+  {
+    "day": 80,
+    "readings": [
+      {
+        "title": "NYU CSCI-UA 102: Iterative Inorder Traversal",
+        "url": "https://cs.nyu.edu/~joannakl/cs102_s17/notes/lecture04_TreesAndBST.pdf",
+        "guidance": "After the core attempts, read section 7.1.2 and trace its explicit stack. For every saved node, state which subtree is complete and which work remains after the node returns to the top.",
+        "minutes": 8,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Directly supports iterative inorder traversal, O(h) explicit stack space, and the interpretation of each stack entry as an unfinished ancestor."
+      },
+      {
+        "title": "A Formal Derivation of a Constant-Space Tree Traversal Algorithm",
+        "url": "https://ipsj.ixsq.nii.ac.jp/record/74122/files/IPSJ-SE11171026.pdf",
+        "guidance": "After the core attempts, read the introduction and traversal invariant. Compare how pending work is represented with the lesson's explicit inorder stack. Skip the formal derivation on the first pass.",
+        "minutes": 10,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Examines correctness of tree traversal without an explicit stack. This is an alternative to, not the implementation of, the lesson's stack-based traversal."
+      },
+      {
+        "title": "Open Data Structures: Doubly Linked Lists",
+        "url": "https://opendatastructures.org/ods-python/3_2_DLList_Doubly_Linked_Li.html",
+        "guidance": "After the core attempts, read the node and add/remove pointer updates. Draw prev and next links before and after splicing a child list, including the head and tail nil endpoints.",
+        "minutes": 7,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Supports the bidirectional pointer invariants required when flattening a multilevel doubly linked list and the need to update both directions together."
+      },
+      {
+        "title": "University of Pittsburgh: Rotate List",
+        "url": "https://people.cs.pitt.edu/~xianeizhang/notes/alg/ListSum_Xianwei.html",
+        "guidance": "After the core attempts, read only LC61: Rotate List. Trace the temporary ring, k modulo length, new-tail position, and final cut; check the empty-list guard before the modulo operation.",
+        "minutes": 5,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Directly supports the lesson's constant-space ring-and-cut rotation, modulo reduction, O(n) traversal, and empty-list edge case."
+      }
+    ]
+  },
+  {
+    "day": 81,
+    "readings": [
+      {
+        "title": "MIT 6.006: Breadth-First Search",
+        "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/resources/lecture-13-breadth-first-search-bfs/",
+        "guidance": "After the core attempts, read the typed lecture notes on adjacency lists, discovery marks, and breadth-first traversal. Explain why marking at discovery prevents a two-node cycle from allocating or enqueueing a second copy.",
+        "minutes": 9,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Supports O(V+E) adjacency-list traversal, visited identity maps for cycles and cloning, and frontier expansion used for reverse grid reachability and leaf layers."
+      },
+      {
+        "title": "Hedetniemi, Cockayne, and Hedetniemi: Linear Algorithms for Finding Tree Centers",
+        "url": "https://www.cs.kent.edu/~dragan/ST/papers/HEDETNIEMI-COCKAYNE-HEDETNIEMIR-83.pdf",
+        "guidance": "Read the introduction and the Jordan-center algorithm. Focus on why deleting outer structure preserves the center and why a tree has one center or two adjacent centers; skip weighted variants.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Provides a primary research algorithm for tree centers and supports the lesson's layer-by-layer leaf removal and one-or-two-center stopping condition."
+      },
+      {
+        "title": "University of Washington CSE417: Graph Search",
+        "url": "https://courses.cs.washington.edu/courses/cse417/25au/readings/bfsdfs.html",
+        "guidance": "After the core attempts, read the in-neighbor and out-neighbor definitions plus BFS runtime. Reverse every water-flow edge and state why searching outward from each ocean answers the original can-reach-ocean question.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Supports explicit edge reversal, reverse reachability, adjacency-list complexity, and avoiding duplicate visits."
+      }
+    ]
+  },
+  {
+    "day": 82,
+    "readings": [
+      {
+        "title": "Stanford CS106B: Binary Search over a Function Parameter",
+        "url": "https://web.stanford.edu/class/archive/cs/cs106b/cs106b.1242/lectures/28-wrap/",
+        "guidance": "After the core attempts, read the Crystal Etching section. Identify the monotone decision predicate and write which side of the numeric range remains after a feasible or infeasible midpoint.",
+        "minutes": 8,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Supports binary search over an answer space and the requirement that feasibility change monotonically, which underlies maximizing a minimum placement distance."
+      },
+      {
+        "title": "Megiddo: Applying Parallel Computation Algorithms in the Design of Serial Algorithms",
+        "url": "https://theory.stanford.edu/~megiddo/pdf/applying.pdf",
+        "guidance": "Read the introduction and the decision-oracle description of parametric search. Relate its unknown optimum and monotone comparisons to the simpler discrete binary search used in the lesson; skip the parallel simulation details.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Provides the foundational research framework for turning a monotone feasibility test into an optimization algorithm."
+      },
+      {
+        "title": "MIT 6.042J: Diagonal Arguments",
+        "url": "https://courses.csail.mit.edu/6.042/spring15/cantor.pdf",
+        "guidance": "After the core attempts, read the binary-sequence diagonal construction. For the finite n-by-n input, choose the opposite of row i at position i and state the known position where the result differs from every row.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Directly supports the constructive diagonal proof for producing a missing binary string without enumeration."
+      },
+      {
+        "title": "Kansas State CC315: Min-Heaps and Priority Queues",
+        "url": "https://textbooks.cs.ksu.edu/cc315/iv-priority-queues/10-heaps-and-priority-queues/1-introduction/tele.html",
+        "guidance": "After the core attempts, review the min-heap root and replacement operations. Use a heap of ladder-covered climbs: when its size exceeds the ladder count, eject the smallest climb and pay that one with bricks.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Supports the bounded min-heap mechanics used to retain the largest climbs; the lesson's exchange argument supplies why those climbs should receive the ladders."
+      }
+    ]
+  },
+  {
+    "day": 83,
+    "readings": [
+      {
+        "title": "University of Washington CSE421: Interval Covering",
+        "url": "https://courses.cs.washington.edu/courses/cse421/24wi/lectures/Section03/section03-solns.pdf",
+        "guidance": "After the core attempts, read Problem 2.5 and its farthest-right covering rule. Translate the chosen interval into the video clip that extends coverage farthest among clips already available at the current boundary.",
+        "minutes": 8,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Supports greedily extending a covered target interval, sorted scanning, and the proof obligation that every chosen interval makes the farthest feasible progress."
+      },
+      {
+        "title": "Holshouser, Rudzinski, and Reiter: Two-Pile Move-Size Dynamic Nim",
+        "url": "https://dmtcs.episciences.org/355",
+        "guidance": "Read the abstract and problem definition, especially how the maximum legal take changes during play. Compare its game position with a state containing both a suffix position and the current move limit.",
+        "minutes": 11,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Provides research context for take-away games whose legal future moves depend on a changing limit, supporting the lesson's need to keep that limit in the memoized state."
+      },
+      {
+        "title": "CMU 15-451: Selection and Sorted Order",
+        "url": "https://www.cs.cmu.edu/~15451-f23/lectures/lecture01-selection.pdf",
+        "guidance": "After the core attempts, read section 3.1's select-k formulation. For the lesson's different range objective, use the resulting sorted order to prove that any chosen minimum and maximum bracket at least one contiguous k-element window whose range is no larger.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Supports reasoning in sorted rank order; the scoped derivation applies that order to the lesson's claim that a minimum-range k-subset can be replaced by a contiguous sorted window."
+      }
+    ]
+  },
+  {
+    "day": 84,
+    "readings": [
+      {
+        "title": "Princeton COS226: LRU Cache Exam Solution",
+        "url": "https://www.cs.princeton.edu/courses/archive/fall20/cos226/exams/mid-f12-sol.pdf",
+        "guidance": "After the mock attempts, read problem 7. Trace a hit, an insertion, and an eviction through both the symbol table and doubly linked list, checking that every key maps to exactly one list node.",
+        "minutes": 8,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Directly supports expected O(1) LRU lookup and update, the recency-list ordering, and the invariant that cache membership and list membership stay synchronized."
+      },
+      {
+        "title": "Mattson et al.: Evaluation Techniques for Storage Hierarchies",
+        "url": "https://www.bitsavers.org/pdf/ibm/IBM_Systems_Journal/092/ibmsj0902B.pdf",
+        "guidance": "Read the abstract and the opening explanation of stack algorithms, including least-recently-used replacement. Stop before the trace-evaluation derivations.",
+        "minutes": 11,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Provides the foundational research context for LRU as a stack replacement policy and explains why recency order is the state an implementation must maintain."
+      },
+      {
+        "title": "Penn CIS1210: Bipartiteness by Breadth-First Search",
+        "url": "https://www.cis.upenn.edu/~cis1210/current/lectures/notes.pdf",
+        "guidance": "After the mock attempts, read section 17. Color one disconnected example component by component and identify the edge that certifies failure on an odd cycle. Then review your run-compression stack invariant separately.",
+        "minutes": 7,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Supports two-coloring by traversal, the O(V+E) bound, odd-cycle conflicts, and the need to start a traversal in every disconnected component."
+      },
+      {
+        "title": "UPC: Removing Adjacent Duplicates",
+        "url": "https://www.cs.upc.edu/~tonis/inf1/how-to-think/list_algorithms.html",
+        "guidance": "After the mock attempts, read section 14.5 only. Contrast its one-item memory with threshold run removal: store a character and count together so deleting one run can expose and continue the preceding run.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Supplies the linear adjacent-run scan that the lesson extends into a compressed (character, count) stack for threshold deletions and chain reactions."
+      }
+    ]
+  }
+]

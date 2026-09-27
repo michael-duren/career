@@ -185,6 +185,7 @@ templ lessonDay01() {
 		<p>A scan with expected constant-time hashing takes expected O(n) time and O(n) space. A double loop takes O(n²) time but little extra memory. Hashing is not a worst-case constant-time promise.</p>
 		<h3>Before you finish</h3>
 		<p>Explain why the lookup happens before insertion. Test a single element and two equal values.</p>
+		@lessonReferences(1)
 	</article>
 }
 
@@ -198,6 +199,7 @@ templ lessonDay02() {
 		<p>Counting costs O(n+alphabet size) time with an array, or expected O(n) with a map. Do not treat bytes as characters when the problem permits general Unicode.</p>
 		<h3>Before you finish</h3>
 		<p>Write the invariant for each counter. Explain what changes when the input guarantees a majority.</p>
+		@lessonReferences(2)
 	</article>
 }
 
@@ -211,6 +213,7 @@ templ lessonDay03() {
 		<p>Sorting each word of length k costs O(k log k); fixed-alphabet counts cost O(k). Group storage includes all output references. Serialize count vectors without ambiguous digit concatenation.</p>
 		<h3>Before you finish</h3>
 		<p>Invent a collision for a badly designed key and a case that defeats a one-way mapping.</p>
+		@lessonReferences(3)
 	</article>
 }
 
@@ -224,6 +227,7 @@ templ lessonDay04() {
 		<p>Hash-based intersection is expected O(n+m) time. A visited-state simulation costs O(s) space for s distinct states. Never store only part of a state if omitted information affects the next step.</p>
 		<h3>Before you finish</h3>
 		<p>Describe when a boolean membership record loses information. Write the stopping condition before coding the simulation.</p>
+		@lessonReferences(4)
 	</article>
 }
 
@@ -237,6 +241,7 @@ templ lessonDay05() {
 		<p>Merge sort takes O(n log n) time and typically O(n) auxiliary space. An in-place three-category partition takes O(n) time. A comparator must define a consistent ordering, including ties.</p>
 		<h3>Before you finish</h3>
 		<p>Draw each region after a swap. Explain why moving a scan pointer after every swap can skip an unclassified value.</p>
+		@lessonReferences(5)
 	</article>
 }
 
@@ -250,6 +255,7 @@ templ lessonDay06() {
 		<p>Simple scans are O(n) time. Returning a new array costs O(n) output space even if the working state is constant. Check empty-input rules and whether arithmetic can overflow the chosen integer type.</p>
 		<h3>Before you finish</h3>
 		<p>State the processed-prefix invariant for the running total and the processed-suffix invariant for the carry.</p>
+		@lessonReferences(6)
 	</article>
 }
 
@@ -263,6 +269,7 @@ templ lessonDay07() {
 		<p>Most full-matrix transformations cost O(rows×columns). Marker arrays use O(rows+columns) space; first-row and first-column markers need separate flags for those boundaries. Thin matrices expose duplicate visits.</p>
 		<h3>Before you finish</h3>
 		<p>Trace a single row and a single column. Explain how your algorithm distinguishes original zeros from newly written zeros.</p>
+		@lessonReferences(7)
 	</article>
 }
 
@@ -276,6 +283,7 @@ templ lessonDay08() {
 		<p>There are O(log n) probes and O(1) auxiliary space for an iterative search. Use lo+(hi-lo)/2. Mixing inclusive and exclusive formulas causes missed elements or nontermination.</p>
 		<h3>Before you finish</h3>
 		<p>Write what is known about indices before lo and at or after hi. Trace an absent value smaller than every element.</p>
+		@lessonReferences(8)
 	</article>
 }
 
@@ -289,6 +297,7 @@ templ lessonDay09() {
 		<p>Boundary search uses O(log R) predicate evaluations over a range of size R. Special-case zero before dividing by a candidate. Avoid floating-point rounding as a substitute for an integer proof.</p>
 		<h3>Before you finish</h3>
 		<p>List the false and true regions for each assignment. Check the smallest allowed input and an exact square.</p>
+		@lessonReferences(9)
 	</article>
 }
 
@@ -302,6 +311,7 @@ templ lessonDay10() {
 		<p>Two searches still cost O(log n). A monotone matrix boundary walk costs O(rows+columns). Verify sort direction before choosing which side to discard; negative-count tasks may reverse the usual orientation.</p>
 		<h3>Before you finish</h3>
 		<p>Explain why an equality hit alone cannot give the first position. Test an array containing only the target.</p>
+		@lessonReferences(10)
 	</article>
 }
 
@@ -315,6 +325,7 @@ templ lessonDay11() {
 		<p>Flattened binary search costs O(log(rows×columns)); a corner walk costs O(rows+columns). Rotation-minimum search costs O(log n) with distinct keys. Never discard the midpoint when it might itself be the minimum.</p>
 		<h3>Before you finish</h3>
 		<p>Give one matrix where flattened search is valid and another where it is not. State the rotation-search invariant.</p>
+		@lessonReferences(11)
 	</article>
 }
 
@@ -328,6 +339,7 @@ templ lessonDay12() {
 		<p>Distinct rotated search and strict peak search are O(log n). Duplicates can force O(n) behavior. Be explicit about whether the goal is any peak, the global maximum, or the rotation point.</p>
 		<h3>Before you finish</h3>
 		<p>Construct a duplicate-heavy array that defeats the sorted-side test. Explain why a local slope is enough to preserve a peak.</p>
+		@lessonReferences(12)
 	</article>
 }
 
@@ -341,6 +353,7 @@ templ lessonDay13() {
 		<p>If a check scans n items and the search range has size R, total time is O(n log R). Use integer ceiling division carefully and accumulate totals in a sufficiently wide type.</p>
 		<h3>Before you finish</h3>
 		<p>Write feasible(candidate) separately. Derive a lower and upper bound and test whether the upper bound really permits a solution.</p>
+		@lessonReferences(13)
 	</article>
 }
 
@@ -354,6 +367,7 @@ templ lessonDay14() {
 		<p>Sorting m values costs O(m log m), then n boundary queries cost O(n log m). Positive multipliers preserve product order; zeros and negative multipliers need different reasoning. Guard impossible bouquet counts before searching.</p>
 		<h3>Before you finish</h3>
 		<p>For each problem, write the predicate and the reason it changes only once. Compare the search solution to a direct scan.</p>
+		@lessonReferences(14)
 	</article>
 }
 
@@ -367,6 +381,7 @@ templ lessonDay15() {
 		<p>A monotone inward scan is O(n) time and O(1) working space. Filtering a string into a second buffer changes the space bound. Beware character classification and case rules specified by the problem.</p>
 		<h3>Before you finish</h3>
 		<p>Explain why each discarded endpoint cannot participate in an answer. Trace a palindrome consisting entirely of ignored characters.</p>
+		@lessonReferences(15)
 	</article>
 }
 
@@ -380,6 +395,7 @@ templ lessonDay16() {
 		<p>One pass costs O(n) time and O(1) extra space. Returning a length is different from physically shortening an array. Moving zeros requires preserving nonzero order and then filling the remaining suffix.</p>
 		<h3>Before you finish</h3>
 		<p>State exactly which array prefix is valid after each iteration. Test all-kept, all-removed, and alternating inputs.</p>
+		@lessonReferences(16)
 	</article>
 }
 
@@ -393,6 +409,7 @@ templ lessonDay17() {
 		<p>Sorting plus a two-pointer scan per anchor costs O(n²); a container scan costs O(n). Include sorting space in your bound. Closest-sum problems must update the best candidate before moving pointers.</p>
 		<h3>Before you finish</h3>
 		<p>Explain the safe elimination in words. Distinguish duplicate values from reusing the same index.</p>
+		@lessonReferences(17)
 	</article>
 }
 
@@ -406,6 +423,7 @@ templ lessonDay18() {
 		<p>The sliding update makes O(n) time and usually O(1) auxiliary space. A count table depends on alphabet size. Width zero or greater than input length requires checking the stated constraints.</p>
 		<h3>Before you finish</h3>
 		<p>Derive the update equation and trace the very first and last valid windows. Explain why the result must be recorded before leaving the first window.</p>
+		@lessonReferences(18)
 	</article>
 }
 
@@ -419,6 +437,7 @@ templ lessonDay19() {
 		<p>Each pointer advances at most n times, giving O(n) time despite a nested loop. Character frequencies need map or alphabet storage. A single shrink is insufficient when several violations remain.</p>
 		<h3>Before you finish</h3>
 		<p>Explain whether you shrink while valid or while invalid. Give a negative-number example where the positive-sum method fails.</p>
+		@lessonReferences(19)
 	</article>
 }
 
@@ -432,6 +451,7 @@ templ lessonDay20() {
 		<p>Prefix construction is O(n), range queries O(1), and hash-based target counting expected O(n). Store prefix frequencies rather than one index when counting all ranges. Seed the empty prefix once.</p>
 		<h3>Before you finish</h3>
 		<p>Explain why the empty prefix matters. Trace target zero without accidentally counting an empty subarray at every position.</p>
+		@lessonReferences(20)
 	</article>
 }
 
@@ -445,6 +465,7 @@ templ lessonDay21() {
 		<p>Product passes are O(n) with constant working state beyond output. Remainder maps need up to O(min(n,k)) entries. Normalize negative remainders and distinguish storing earliest indices from storing counts.</p>
 		<h3>Before you finish</h3>
 		<p>Explain why division fails with zeros. State whether today&#x27;s remainder map needs frequency or earliest position and why.</p>
+		@lessonReferences(21)
 	</article>
 }
 
@@ -458,6 +479,7 @@ templ lessonDay22() {
 		<p>Reversal and merging take O(n) or O(n+m) time with O(1) auxiliary space when reusing nodes. Recursive versions consume stack space. Distinguish node identity from equal stored values.</p>
 		<h3>Before you finish</h3>
 		<p>Draw references before and after each assignment. Test nil, one node, and equal values in distinct nodes.</p>
+		@lessonReferences(22)
 	</article>
 }
 
@@ -471,6 +493,7 @@ templ lessonDay23() {
 		<p>Middle and cycle detection take O(n) time and O(1) space. Test fast and fast.next before advancing two links. For intersection, align lengths or switch heads so both pointers cover the same total distance.</p>
 		<h3>Before you finish</h3>
 		<p>Specify which middle is required for even lengths. Explain why equal values do not prove either a cycle or an intersection.</p>
+		@lessonReferences(23)
 	</article>
 }
 
@@ -484,6 +507,7 @@ templ lessonDay24() {
 		<p>These methods are O(n) time and O(1) space. Count whether the gap measures nodes or edges. Reversal changes the caller&#x27;s list unless restored; recursion is not constant-space.</p>
 		<h3>Before you finish</h3>
 		<p>Draw a cycle with a nonempty stem. Derive the meeting-to-entry reasoning rather than memorizing pointer resets.</p>
+		@lessonReferences(24)
 	</article>
 }
 
@@ -497,6 +521,7 @@ templ lessonDay25() {
 		<p>Each node is visited a constant number of times, so time is O(n) and extra references O(1). Terminate detached tails to avoid accidental cycles. Position parity is not the parity of node values.</p>
 		<h3>Before you finish</h3>
 		<p>Draw the sentinel and all affected links. Test deletion of every node and a final unpaired node.</p>
+		@lessonReferences(25)
 	</article>
 }
 
@@ -510,6 +535,7 @@ templ lessonDay26() {
 		<p>Each token is handled once, so evaluation is O(n) time and O(n) space in the worst case. Check underflow and leftover operands. Duplicate minimum values must survive one of their copies being removed.</p>
 		<h3>Before you finish</h3>
 		<p>Explain why nesting requires last-in-first-out order. Trace two equal minima followed by two pops.</p>
+		@lessonReferences(26)
 	</article>
 }
 
@@ -523,6 +549,7 @@ templ lessonDay27() {
 		<p>A single dequeue can cost O(n), but each element moves between stacks once, giving amortized O(1) queue operations. A queue-based stack can instead make push or pop expensive. State which operation bears the cost.</p>
 		<h3>Before you finish</h3>
 		<p>Simulate interleaved inserts and removals. Explain amortized cost using the lifetime of one element.</p>
+		@lessonReferences(27)
 	</article>
 }
 
@@ -536,6 +563,7 @@ templ lessonDay28() {
 		<p>Exponentiation uses O(log n) multiplications and O(log n) recursive space, or constant iterative space. Naive Fibonacci is exponential. Handle negative exponents and the minimum signed integer without overflowing its negation.</p>
 		<h3>Before you finish</h3>
 		<p>Write a decreasing measure for each recursion. Distinguish recursion depth from the total number of calls.</p>
+		@lessonReferences(28)
 	</article>
 }
 
@@ -549,6 +577,7 @@ templ lessonDay29() {
 		<p>Traversals cost O(n) time and O(h) call-stack space for height h. A skewed tree can have h=n. Count nodes or edges consistently and follow the problem&#x27;s depth convention.</p>
 		<h3>Before you finish</h3>
 		<p>State each function&#x27;s return contract. Test an empty tree, a leaf, and a chain with one missing child at every level.</p>
+		@lessonReferences(29)
 	</article>
 }
 
@@ -562,6 +591,7 @@ templ lessonDay30() {
 		<p>Equality and symmetry are O(n). Trying a full subtree match at every node can cost O(nm). A serialized form must mark missing children and delimit values to avoid ambiguous encodings.</p>
 		<h3>Before you finish</h3>
 		<p>Draw two trees with identical preorder values but different null positions. Explain the base case when only one argument is nil.</p>
+		@lessonReferences(30)
 	</article>
 }
 
@@ -575,6 +605,7 @@ templ lessonDay31() {
 		<p>Traversal work is O(n), plus the total size of copied output paths. Auxiliary stack and current path use O(h). Negative values prevent pruning merely because a partial sum already exceeds a target.</p>
 		<h3>Before you finish</h3>
 		<p>Explain the difference between any prefix and a root-to-leaf path. Demonstrate why storing one mutable path buffer repeatedly is unsafe.</p>
+		@lessonReferences(31)
 	</article>
 }
 
@@ -588,6 +619,7 @@ templ lessonDay32() {
 		<p>Time is O(n); queue space is O(w) for maximum width. A wide tree can require linear memory. Removing the first array element repeatedly may make a nominal queue quadratic.</p>
 		<h3>Before you finish</h3>
 		<p>Trace a level containing missing children. Explain why processing until the queue is empty does not isolate one level.</p>
+		@lessonReferences(32)
 	</article>
 }
 
@@ -601,6 +633,7 @@ templ lessonDay33() {
 		<p>Search and insertion are O(h), which is O(log n) only for balanced trees. Validation is O(n). Avoid fake infinite sentinels that exclude valid extreme values.</p>
 		<h3>Before you finish</h3>
 		<p>Write the allowed interval for every node in a small tree. Explain how the interval changes when traversing left or right.</p>
+		@lessonReferences(33)
 	</article>
 }
 
@@ -614,6 +647,7 @@ templ lessonDay34() {
 		<p>General ancestor search is O(n) time and O(h) stack space. Search-tree ancestor lookup takes O(h). A kth-element traversal may stop early but can still visit O(n) nodes. Clarify whether both targets are guaranteed present.</p>
 		<h3>Before you finish</h3>
 		<p>Explain what each recursive ancestor result means. Test a target that is an ancestor of the other target.</p>
+		@lessonReferences(34)
 	</article>
 }
 
@@ -627,6 +661,7 @@ templ lessonDay35() {
 		<p>One postorder traversal computes these facts in O(n) time and O(h) space. For optional reconstruction, preorder selects a root and inorder divides its left and right subtrees; postorder places the root last. Serialization needs explicit null markers. Recomputing height from scratch at every node can degrade to O(n²). Keep edge and node counts separate.</p>
 		<h3>Before you finish</h3>
 		<p>Write the return value and the global update as separate equations. Test a longest path that never passes through the root.</p>
+		@lessonReferences(35)
 	</article>
 }
 
@@ -640,6 +675,7 @@ templ lessonDay36() {
 		<p>With b independent binary choices, enumeration has 2^b leaves. Output construction adds its own cost. Digits do not create case branches, and a clock mask must still satisfy hour and minute bounds.</p>
 		<h3>Before you finish</h3>
 		<p>Draw the first two levels of the decision tree. Explain which choices change state and how each change is undone.</p>
+		@lessonReferences(36)
 	</article>
 }
 
@@ -653,6 +689,7 @@ templ lessonDay37() {
 		<p>Subsets have 2^n outputs, permutations n!, and size-k combinations C(n,k). Multiplying by output length gives a realistic time bound. Prune a combination when too few remaining elements can fill it.</p>
 		<h3>Before you finish</h3>
 		<p>Explain the role of start versus used. Predict the number of outputs for three distinct elements before running the code.</p>
+		@lessonReferences(37)
 	</article>
 }
 
@@ -666,6 +703,7 @@ templ lessonDay38() {
 		<p>Worst-case output remains exponential or factorial. Sorting costs O(n log n) and may mutate input. For increasing subsequences, use a per-depth value set while leaving input order intact.</p>
 		<h3>Before you finish</h3>
 		<p>Draw which duplicate branch you skip and which you retain. Explain why sorting is allowed for subsets but not for subsequences.</p>
+		@lessonReferences(38)
 	</article>
 }
 
@@ -679,6 +717,7 @@ templ lessonDay39() {
 		<p>Search is exponential in the worst case. A bound in terms of target depends on the smallest positive candidate. Zero or negative reusable values can destroy termination, so rely only on explicit constraints.</p>
 		<h3>Before you finish</h3>
 		<p>Write the recursive state for reuse and no-reuse variants. Justify every pruning condition rather than treating it as a heuristic.</p>
+		@lessonReferences(39)
 	</article>
 }
 
@@ -692,6 +731,7 @@ templ lessonDay40() {
 		<p>There can be O(2^n) boundary choices. Checking every substring directly adds a length factor. IP addresses limit both segment count and length; use these constraints to prune impossible remaining suffixes.</p>
 		<h3>Before you finish</h3>
 		<p>Explain why a valid next piece does not guarantee a valid complete partition. Test leading zeros and a suffix left over after all required pieces.</p>
+		@lessonReferences(40)
 	</article>
 }
 
@@ -705,6 +745,7 @@ templ lessonDay41() {
 		<p>Grid path search is exponential in path length, with depth bounded by available cells. Additive parsing must account for integer size or compare decimal strings. Shared global visited marks would incorrectly forbid independent starting paths.</p>
 		<h3>Before you finish</h3>
 		<p>Identify which decisions branch and which become forced. Trace how the visited state is restored after a failed route.</p>
+		@lessonReferences(41)
 	</article>
 }
 
@@ -718,6 +759,7 @@ templ lessonDay42() {
 		<p>Worst-case search is exponential. Sorting and symmetry pruning improve many instances but do not change that guarantee. A letter mask must reject words that repeat a letter internally before combining masks.</p>
 		<h3>Before you finish</h3>
 		<p>Explain why two branches are equivalent under a relabeling of containers. Record an impossible instance and show where your pruning detects it.</p>
+		@lessonReferences(42)
 	</article>
 }
 
@@ -731,6 +773,7 @@ templ lessonDay43() {
 		<p>DFS or BFS visits O(rows×columns) cells with O(rows×columns) worst-case storage. Recursive DFS can overflow a limited call stack. If the replacement color equals the original, avoid revisiting unchanged cells forever.</p>
 		<h3>Before you finish</h3>
 		<p>Write the neighbor rule and visited rule. Compare component count, largest component size, and recoloring as different aggregations over the same traversal.</p>
+		@lessonReferences(43)
 	</article>
 }
 
@@ -744,6 +787,7 @@ templ lessonDay44() {
 		<p>A grid traversal is O(rows×columns). Traversing an adjacency matrix costs O(V²), while adjacency lists cost O(V+E). Do not confuse a matrix diagonal entry with a separate component.</p>
 		<h3>Before you finish</h3>
 		<p>Explain why starting from every boundary cell does not need a separate full traversal each time. Trace a narrow passage to the border.</p>
+		@lessonReferences(44)
 	</article>
 }
 
@@ -757,6 +801,7 @@ templ lessonDay45() {
 		<p>BFS costs O(V+E) time and O(V) memory. Obstacles remove edges or vertices. Unreachable cells must retain a distinct sentinel; zero already means a valid source distance.</p>
 		<h3>Before you finish</h3>
 		<p>Explain why FIFO order proves minimal distance. Check the conventions for a one-cell path and for an unreachable destination.</p>
+		@lessonReferences(45)
 	</article>
 }
 
@@ -770,6 +815,7 @@ templ lessonDay46() {
 		<p>Reachability is O(V+E). Enumerating paths may take exponential time even in a DAG because output can be exponential. A global visited set would incorrectly suppress valid path alternatives.</p>
 		<h3>Before you finish</h3>
 		<p>State whether your output is a boolean, a set of reachable nodes, or all paths. Explain how that choice changes visited-state lifetime.</p>
+		@lessonReferences(46)
 	</article>
 }
 
@@ -783,6 +829,7 @@ templ lessonDay47() {
 		<p>Topological processing costs O(V+E). An ordinary visited boolean cannot distinguish a back edge from an edge to a completed subtree. Eventual safety asks which nodes cannot reach any cycle, which can be solved by reversing edges.</p>
 		<h3>Before you finish</h3>
 		<p>Trace indegree changes rather than merely memorizing an ordering. Give a graph with several valid topological orders.</p>
+		@lessonReferences(47)
 	</article>
 }
 
@@ -796,6 +843,7 @@ templ lessonDay48() {
 		<p>With compression and balancing, operations cost amortized O(α(n)); storage is O(n). Equations with equality and inequality require applying all equalities before checking inequalities. Root labels are implementation details, not semantic identities.</p>
 		<h3>Before you finish</h3>
 		<p>Explain why a representative may change after union. Contrast undirected cycle detection with the directed active-stack rule.</p>
+		@lessonReferences(48)
 	</article>
 }
 
@@ -809,6 +857,7 @@ templ lessonDay49() {
 		<p>Heap Dijkstra costs O((V+E) log V) in a standard adjacency-list implementation; a scan-based version costs O(V²+E). Skip stale heap entries. A bounded-edge relaxation must use the previous round&#x27;s distances to avoid exceeding the stop budget.</p>
 		<h3>Before you finish</h3>
 		<p>Write the path-combination operation for each task. Give a reason ordinary BFS would choose the wrong weighted route.</p>
+		@lessonReferences(49)
 	</article>
 }
 
@@ -822,6 +871,7 @@ templ lessonDay50() {
 		<p>Streaming top-k costs O(n log k) time and O(k) space. Building a heap from an array can be O(n). Repeatedly removing the largest stone needs a max-heap or a reversed comparator.</p>
 		<h3>Before you finish</h3>
 		<p>Explain the difference between the heap root and a sorted rank. Test k=1 and k equal to the number of values.</p>
+		@lessonReferences(50)
 	</article>
 }
 
@@ -835,6 +885,7 @@ templ lessonDay51() {
 		<p>Counting is expected O(n); retaining k of u distinct keys costs O(u log k). Squared coordinates can overflow narrow integers. Returning heap storage directly does not produce sorted output.</p>
 		<h3>Before you finish</h3>
 		<p>Write the comparator in plain words before coding. Create equal-priority examples that expose a reversed tie breaker.</p>
+		@lessonReferences(51)
 	</article>
 }
 
@@ -848,6 +899,7 @@ templ lessonDay52() {
 		<p>Counting is expected O(n), then sorting u distinct values costs O(u log u). A bucket approach can use O(n) additional space. Keep the original problem&#x27;s tie direction visible in the comparator.</p>
 		<h3>Before you finish</h3>
 		<p>Give an exchange argument for largest-group-first removal. Explain why a frequency sort cannot reuse every top-k comparator unchanged.</p>
+		@lessonReferences(52)
 	</article>
 }
 
@@ -861,6 +913,7 @@ templ lessonDay53() {
 		<p>Producing k values from r streams takes O(k log r) time with O(r) heap space, plus initialization. Pair or fraction comparisons should avoid floating-point tie errors where exact products are practical.</p>
 		<h3>Before you finish</h3>
 		<p>State why no unseen value can be smaller than every frontier candidate. Explain how duplicate pairs are prevented.</p>
+		@lessonReferences(53)
 	</article>
 }
 
@@ -874,6 +927,7 @@ templ lessonDay54() {
 		<p>Insert and exact lookup take O(L) time for word length L. Wildcards can visit many trie nodes. Space is proportional to stored prefix nodes and their child representation, not merely the number of words.</p>
 		<h3>Before you finish</h3>
 		<p>Explain why leaf status cannot replace a terminal marker. Trace an update to an existing key without double-counting its previous value.</p>
+		@lessonReferences(54)
 	</article>
 }
 
@@ -887,6 +941,7 @@ templ lessonDay55() {
 		<p>Building a trie costs O(total characters). A suggestion query costs prefix traversal plus visited output paths. Sorting words costs O(n log n) comparisons, each potentially comparing multiple characters. Avoid assuming map iteration is alphabetical.</p>
 		<h3>Before you finish</h3>
 		<p>Compare the trie and sorted-array approaches for a dictionary that never changes. State the exact stopping condition for each assignment.</p>
+		@lessonReferences(55)
 	</article>
 }
 
@@ -900,6 +955,7 @@ templ lessonDay56() {
 		<p>Sorting and heap operations usually cost O(n log n). Cooldown construction may use a queue of future availability times. The optional median stream uses a max-heap for the lower half and a min-heap for the upper half; rebalance so their sizes differ by at most one. A frequency formula needs a proof that both the most frequent group and total task count constrain the schedule.</p>
 		<h3>Before you finish</h3>
 		<p>List availability separately from priority. Trace a tie and an idle interval before coding.</p>
+		@lessonReferences(56)
 	</article>
 }
 
@@ -913,6 +969,7 @@ templ lessonDay57() {
 		<p>A constant number of transitions per index gives O(n) time. A full table uses O(n) space; keeping only the needed prior states uses O(1). Naive recursive evaluation repeats subproblems exponentially.</p>
 		<h3>Before you finish</h3>
 		<p>Write the meaning of dp[i] as a sentence. Derive base cases without relying on a table copied from memory.</p>
+		@lessonReferences(57)
 	</article>
 }
 
@@ -926,6 +983,7 @@ templ lessonDay58() {
 		<p>Linear choice-or-skip DP costs O(n) time and can use O(1) space. A circle requires excluding one endpoint in each of two cases. Grouping by value may require sorting or a bounded-value array.</p>
 		<h3>Before you finish</h3>
 		<p>Explain why greedily taking the larger adjacent reward can fail. Test a circle with only one item before splitting into ranges.</p>
+		@lessonReferences(58)
 	</article>
 }
 
@@ -939,6 +997,7 @@ templ lessonDay59() {
 		<p>Coin DP costs O(amount×number of coins). Decoding uses O(n) time with constant prior-state storage. Greedy coin selection is not valid for arbitrary denominations. Guard impossible-state arithmetic before adding one.</p>
 		<h3>Before you finish</h3>
 		<p>Write the transition and impossible sentinel separately. Explain why a zero digit changes which transitions exist.</p>
+		@lessonReferences(59)
 	</article>
 }
 
@@ -952,6 +1011,7 @@ templ lessonDay60() {
 		<p>Word-break DP can take O(n²) candidate checks, with substring comparison costs depending on implementation. A constant-state stock recurrence is O(n) time. Update from previous-day values so one transition does not accidentally chain within a day.</p>
 		<h3>Before you finish</h3>
 		<p>Draw legal state transitions. Explain the difference between charging a fee and forbidding the next purchase.</p>
+		@lessonReferences(60)
 	</article>
 }
 
@@ -965,6 +1025,7 @@ templ lessonDay61() {
 		<p>The direct DP is O(n²) time and O(n) space. A tails-based length algorithm can reach O(n log n), but its entries are not necessarily one actual subsequence and do not directly count answers.</p>
 		<h3>Before you finish</h3>
 		<p>Explain why the state ends exactly at i rather than somewhere before i. Compare length optimization with counting optimal paths.</p>
+		@lessonReferences(61)
 	</article>
 }
 
@@ -978,6 +1039,7 @@ templ lessonDay62() {
 		<p>Subset-sum DP costs O(nS) time and O(S) space for target S. This is pseudopolynomial in numeric magnitude. Counting assignments must preserve multiplicity, especially when an item is zero.</p>
 		<h3>Before you finish</h3>
 		<p>Explain the direction of the capacity loop with a one-item counterexample. Derive the target transformation before coding it.</p>
+		@lessonReferences(62)
 	</article>
 }
 
@@ -991,6 +1053,7 @@ templ lessonDay63() {
 		<p>Each recurrence is O(n) time and O(1) working space. Initialize from an actual element when a nonempty answer is required. Compute new minimum and maximum from the old values, not partially updated ones.</p>
 		<h3>Before you finish</h3>
 		<p>Name the local state and the global answer separately. Test all-negative sums, a zero in a product chain, and decreasing stock prices.</p>
+		@lessonReferences(63)
 	</article>
 }
 
@@ -1004,6 +1067,7 @@ templ lessonDay64() {
 		<p>The table costs O(rows×columns) time and space; row compression reduces space to O(columns). The first row and column need consistent initialization. An unreachable cost is not the same as zero cost.</p>
 		<h3>Before you finish</h3>
 		<p>Derive boundary values using the same recurrence where possible. Trace an obstacle at the start and one in the first row.</p>
+		@lessonReferences(64)
 	</article>
 }
 
@@ -1017,6 +1081,7 @@ templ lessonDay65() {
 		<p>These local recurrences cost O(rows×columns) time. Rolling rows use O(columns) space, but a diagonal old value may need a saved variable. Square area is side length squared, not the stored side length.</p>
 		<h3>Before you finish</h3>
 		<p>Draw the three supporting squares. Explain why taking the minimum is necessary, and distinguish an in-place update from a fresh row.</p>
+		@lessonReferences(65)
 	</article>
 }
 
@@ -1030,6 +1095,7 @@ templ lessonDay66() {
 		<p>The standard DP costs O(nm) time and space, with O(min(n,m)) space for length only. Reconstructing a sequence needs stored decisions or more work. Subsequence and substring recurrences are not interchangeable.</p>
 		<h3>Before you finish</h3>
 		<p>Write what dp[i][j] means and why the empty row is zero. Draw a case where a common substring is shorter than a common subsequence.</p>
+		@lessonReferences(66)
 	</article>
 }
 
@@ -1043,6 +1109,7 @@ templ lessonDay67() {
 		<p>Edit distance and interval DP are O(nm) or O(n²) time. Center expansion is O(n²) time and O(1) auxiliary space. Distinguish substring contiguity from subsequence deletion freedom.</p>
 		<h3>Before you finish</h3>
 		<p>Draw the three edit transitions with their index changes. Explain why equal endpoints alone do not make a whole interval a palindrome.</p>
+		@lessonReferences(67)
 	</article>
 }
 
@@ -1056,6 +1123,7 @@ templ lessonDay68() {
 		<p>All three standard tables cost O(nm) time. Counts may require a wide integer or a specified modulus. In compressed subsequence counting, descending target indices prevent reusing a source character in the same step.</p>
 		<h3>Before you finish</h3>
 		<p>Write a tiny example where addition is correct and max is wrong. Check the empty-target count separately from the empty-source case.</p>
+		@lessonReferences(68)
 	</article>
 }
 
@@ -1069,6 +1137,7 @@ templ lessonDay69() {
 		<p>Cost is the number of reachable table states times transitions per state. Two-resource zero-or-one knapsack updates both capacities downward. Counting problems must apply the required modulus after additions.</p>
 		<h3>Before you finish</h3>
 		<p>Explain what information capping discards and why it is safe. Trace one item to prove it cannot be selected twice.</p>
+		@lessonReferences(69)
 	</article>
 }
 
@@ -1082,6 +1151,7 @@ templ lessonDay70() {
 		<p>Endpoint games take O(n²) states and O(1) transitions each. Trying every last action in every interval takes O(n³) time. Padding interval boundaries can simplify formulas but must preserve their intended meaning.</p>
 		<h3>Before you finish</h3>
 		<p>Explain whose turn the stored difference represents. For the burst problem, explain why choosing the last action removes a dependency that choosing first does not.</p>
+		@lessonReferences(70)
 	</article>
 }
 
@@ -1095,6 +1165,7 @@ templ lessonDay71() {
 		<p>Sorting often dominates at O(n log n). Change-making with fixed bill denominations can have a problem-specific greedy proof; arbitrary coin systems do not. Check feasibility after every transaction, not merely at the end.</p>
 		<h3>Before you finish</h3>
 		<p>Write the swap that replaces a different first choice with the greedy choice. Identify which input constraint makes the argument valid.</p>
+		@lessonReferences(71)
 	</article>
 }
 
@@ -1108,6 +1179,7 @@ templ lessonDay72() {
 		<p>Sorting costs O(n log n), followed by a linear scan. Boat pairing relies on at most two passengers per boat; more passengers would change the problem. Stable sorting is unnecessary unless identity ties matter.</p>
 		<h3>Before you finish</h3>
 		<p>Explain why the heaviest passenger&#x27;s fate can be decided now. Derive the cost-difference ordering from a fixed baseline total.</p>
+		@lessonReferences(72)
 	</article>
 }
 
@@ -1121,6 +1193,7 @@ templ lessonDay73() {
 		<p>Sorting gives O(n log n) time. A character last-occurrence scan can be O(n+alphabet size). Endpoint inclusivity changes comparisons; decide whether equality means conflict, compatibility, or a valid hit.</p>
 		<h3>Before you finish</h3>
 		<p>Give a counterexample to earliest-start selection. Write the endpoint convention beside the comparison operator.</p>
+		@lessonReferences(73)
 	</article>
 }
 
@@ -1134,6 +1207,7 @@ templ lessonDay74() {
 		<p>Merging costs O(n log n) when sorting is needed, then O(n). Two-list intersection costs O(n+m). Output storage is separate from working space. Insertion can avoid sorting when the existing intervals are already sorted and disjoint.</p>
 		<h3>Before you finish</h3>
 		<p>Trace containment as well as partial overlap. Explain why advancing the later-ending interval could miss an intersection.</p>
+		@lessonReferences(74)
 	</article>
 }
 
@@ -1147,6 +1221,7 @@ templ lessonDay75() {
 		<p>These scans are O(n), aside from digit representation. Reachability and minimum jumps are different objectives. Check whether reachability is guaranteed. A local digit decrement can create a new violation with its predecessor.</p>
 		<h3>Before you finish</h3>
 		<p>State the range of candidates eliminated by a failed segment. Trace a digit sequence where one repair must move left more than once.</p>
+		@lessonReferences(75)
 	</article>
 }
 
@@ -1160,6 +1235,7 @@ templ lessonDay76() {
 		<p>Total time is O(n), even with a while loop inside the scan, and space is O(n). Circular arrays may need a second pass but should not push duplicate unresolved indices indiscriminately. Strict versus non-strict comparisons change equal-value behavior.</p>
 		<h3>Before you finish</h3>
 		<p>Write what the stack order means and what remains unresolved. Trace equal adjacent values and an entirely decreasing sequence.</p>
+		@lessonReferences(76)
 	</article>
 }
 
@@ -1173,6 +1249,7 @@ templ lessonDay77() {
 		<p>Each entry is pushed and popped at most once, giving O(n) stack work; car fleets also need sorting. Remaining digit-removal budget deletes from the suffix. Normalize leading zeros only after choosing the retained digits.</p>
 		<h3>Before you finish</h3>
 		<p>Explain what information a compressed block preserves. State why equal arrival times form one fleet under the problem&#x27;s rules.</p>
+		@lessonReferences(77)
 	</article>
 }
 
@@ -1186,6 +1263,7 @@ templ lessonDay78() {
 		<p>Run scanning is expected O(n) when each value belongs to one started run. Implicit-cycle methods require valid index ranges and special duplicate guarantees. Counting bits across 0..n is O(n).</p>
 		<h3>Before you finish</h3>
 		<p>For each assignment, reject one tempting but invalid approach. Explain the exact input promise that permits treating values as pointers.</p>
+		@lessonReferences(78)
 	</article>
 }
 
@@ -1199,6 +1277,7 @@ templ lessonDay79() {
 		<p>Boundary search can be O(log(n-k)+k) including output. Prefix counting is expected O(n). At-most subtraction relies on a monotone nonnegative statistic; it does not apply to arbitrary signed sums without further reasoning.</p>
 		<h3>Before you finish</h3>
 		<p>Name the property that makes each method legal. Verify distance ties and the target-zero case explicitly.</p>
+		@lessonReferences(79)
 	</article>
 }
 
@@ -1212,6 +1291,7 @@ templ lessonDay80() {
 		<p>These operations take O(n) time. Rotation uses O(1) extra references; iterative traversal uses O(h) stack space. Reduce large rotation counts modulo length and handle an empty list before division.</p>
 		<h3>Before you finish</h3>
 		<p>Draw the final pointer relationships, including nil endpoints and backward links. Explain what each stack entry represents.</p>
+		@lessonReferences(80)
 	</article>
 }
 
@@ -1225,6 +1305,7 @@ templ lessonDay81() {
 		<p>Each adjacency-list traversal is O(V+E). Grid reachability uses O(rows×columns) storage. Leaf trimming assumes an undirected tree; arbitrary cycles may leave no initial leaves and require a different model.</p>
 		<h3>Before you finish</h3>
 		<p>Explain the reversal of the reachability question. Trace a two-node cycle during cloning and a tree with two centers.</p>
+		@lessonReferences(81)
 	</article>
 }
 
@@ -1238,6 +1319,7 @@ templ lessonDay82() {
 		<p>Distance search is O(n log R) after sorting. Climb allocation is O(n log L) with a bounded heap for L ladders. Diagonal construction takes O(n) character choices under the square binary-string input promise.</p>
 		<h3>Before you finish</h3>
 		<p>Prove feasibility monotonicity, the ladder exchange, and why the constructed string differs from every listed string at a known position.</p>
+		@lessonReferences(82)
 	</article>
 }
 
@@ -1251,6 +1333,7 @@ templ lessonDay83() {
 		<p>Sorted range scanning is O(n log n) including sorting. Interval covering is usually O(n log n). Game DP cost depends on the number of (position,limit) states and the choices tried in each state.</p>
 		<h3>Before you finish</h3>
 		<p>Write a greedy proof for the range tasks and a counterexample to greedily taking the most available game items.</p>
+		@lessonReferences(83)
 	</article>
 }
 
@@ -1264,5 +1347,22 @@ templ lessonDay84() {
 		<p>An LRU operation is expected O(1) with a map and linked list. Bipartite traversal is O(V+E); compressed run removal is O(n). Cache updates must synchronize both structures, and graph coloring must cover disconnected components.</p>
 		<h3>Before you finish</h3>
 		<p>After each 25-minute attempt, record what was independent and where help was needed. Use the final 15 minutes to test one failure-prone invariant from each solution.</p>
+		@lessonReferences(84)
 	</article>
+}
+
+
+templ lessonReferences(day int) {
+	<footer class="lesson-references">
+		<h3>References</h3>
+		<p class="small muted">Sources and further reading for the concepts above. The worked examples and practice prompts are original to this lesson.</p>
+		<ol>
+			for _, reading := range lessonReadings(day) {
+				<li>
+					<a href={ templ.SafeURL(reading.URL) } target="_blank" rel="noopener noreferrer">{ reading.Title }<span class="visually-hidden"> (opens in a new tab)</span></a>
+					<p>{ reading.Supports }</p>
+				</li>
+			}
+		</ol>
+	</footer>
 }

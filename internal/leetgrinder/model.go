@@ -17,6 +17,8 @@ type Reading struct {
 	Guidance string
 	Minutes  int
 	Optional bool
+	Kind     string
+	Supports string
 }
 type Day struct {
 	Number   int
