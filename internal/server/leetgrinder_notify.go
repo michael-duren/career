@@ -37,6 +37,8 @@ func (s *Server) withNotify(ctx context.Context, page leetgrinder.SettingsPage) 
 	n.Ntfy.TokenSet = page.Settings.TokenSet()
 	n.Location = page.Settings.Location()
 	n.SecretMissing = len(s.config.LeetgrinderSecretKey) == 0
+	// A failed settings load leaves Revision empty; don't claim the topic is missing then.
+	n.TopicMissing = page.Settings.Revision != "" && strings.TrimSpace(page.Settings.NtfyTopic) == ""
 	var err error
 	n.Log, err = s.db.RecentLeetgrinderNotifications(ctx, notificationLogRows)
 	n.LogError = err != nil

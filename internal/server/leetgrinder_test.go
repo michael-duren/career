@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/michael-duren/career-strategy/internal/config"
@@ -19,7 +20,7 @@ import (
 func TestLeetgrinderAccess(t *testing.T) {
 	s := &Server{config: config.Config{Username: "admin", JWTSecret: "test", PublicOrigin: "https://example.com"}}
 	handler := s.RegisterRoutes()
-	for _, path := range []string{"/leetgrinder", "/leetgrinder/day/1", "/leetgrinder/problem/two-sum", "/leetgrinder/export", "/leetgrinder/reviews", "/leetgrinder/settings"} {
+	for _, path := range []string{"/leetgrinder", "/leetgrinder/day/1", "/leetgrinder/problem/two-sum", "/leetgrinder/export", "/leetgrinder/reviews", "/leetgrinder/settings", "/leetgrinder/about"} {
 		w := httptest.NewRecorder()
 		handler.ServeHTTP(w, httptest.NewRequest("GET", path, nil))
 		if w.Code != 303 {
@@ -102,7 +103,7 @@ func leetgrinderTestServer(t *testing.T) (*Server, *database.Store, func(method,
 
 func TestLeetgrinderWorkflow(t *testing.T) {
 	_, db, request := leetgrinderTestServer(t)
-	for _, path := range []string{"/leetgrinder", "/leetgrinder/day/1", "/leetgrinder/day/84", "/leetgrinder/problem/two-sum", "/leetgrinder/reviews", "/leetgrinder/settings"} {
+	for _, path := range []string{"/leetgrinder", "/leetgrinder/day/1", "/leetgrinder/day/84", "/leetgrinder/problem/two-sum", "/leetgrinder/reviews", "/leetgrinder/settings", "/leetgrinder/about"} {
 		w := request("GET", path, nil)
 		if w.Code != 200 {
 			t.Fatalf("%s: %d %s", path, w.Code, w.Body.String())
@@ -174,5 +175,28 @@ func TestLeetgrinderWorkflow(t *testing.T) {
 	w = request("POST", path, values)
 	if w.Code != 503 || !strings.Contains(w.Body.String(), "needed a hint &lt;script&gt;") {
 		t.Fatalf("storage failure lost draft: %d %s", w.Code, w.Body.String())
+	}
+}
+
+func TestLeetgrinderAboutLeavesReviewPlanAlone(t *testing.T) {
+	s, db, request := leetgrinderTestServer(t)
+	ctx := context.Background()
+	if _, err := db.SaveLeetgrinderAttempt(ctx, leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "two-sum", Outcome: "unfinished", Minutes: 25}, ""); err != nil {
+		t.Fatal(err)
+	}
+	// A month later the failed attempt is due, so loading today would plan it.
+	s.now = func() time.Time { return time.Now().AddDate(0, 1, 0) }
+	planned := func() int {
+		var n int
+		if err := db.DB.QueryRow("SELECT count(*) FROM leetgrinder_review_plan").Scan(&n); err != nil {
+			t.Fatal(err)
+		}
+		return n
+	}
+	if w := request("GET", "/leetgrinder/about", nil); w.Code != 200 || planned() != 0 {
+		t.Fatalf("about planned reviews: %d, %d rows", w.Code, planned())
+	}
+	if w := request("GET", "/leetgrinder", nil); w.Code != 200 || planned() == 0 {
+		t.Fatalf("dashboard did not plan the due review: %d", w.Code)
 	}
 }

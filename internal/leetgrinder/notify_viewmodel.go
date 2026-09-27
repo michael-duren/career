@@ -34,6 +34,8 @@ type NotifyPanel struct {
 	// SecretMissing warns that a token cannot be stored or read.
 	SecretMissing bool
 	TestSent      bool
+	// TopicMissing reports that no ntfy topic is saved, so nothing can send.
+	TopicMissing bool
 }
 
 func NewNtfyForm(s Settings) NtfyForm {

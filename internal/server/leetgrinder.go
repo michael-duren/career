@@ -39,6 +39,7 @@ func (s *Server) registerLeetgrinder(r chi.Router) {
 		r.Post("/leetgrinder/day/{day}/complete", s.leetgrinderComplete)
 		r.Get("/leetgrinder/problem/{slug}", s.leetgrinderProblem)
 		r.Post("/leetgrinder/problem/{slug}/attempts", s.leetgrinderAttempt)
+		r.Get("/leetgrinder/about", s.leetgrinderAbout)
 		r.Get("/leetgrinder/reviews", s.leetgrinderReviews)
 		r.Get("/leetgrinder/settings", s.leetgrinderSettings)
 		r.Post("/leetgrinder/settings/schedule", s.leetgrinderSaveSchedule)
@@ -85,6 +86,15 @@ func (s *Server) leetgrinderOverview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	renderLeetgrinder(w, r, 200, leetgrinder.Overview(leetgrinder.OverviewPage{Today: today, IDs: reviewIDs(map[string]string{}, today)}))
+}
+func (s *Server) leetgrinderAbout(w http.ResponseWriter, r *http.Request) {
+	// Only attempt history is needed; loading Today would freeze the review plan.
+	state, err := s.db.LeetgrinderState(r.Context())
+	if err != nil {
+		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your saved progress is unavailable. Please retry."))
+		return
+	}
+	renderLeetgrinder(w, r, 200, leetgrinder.About(state))
 }
 func (s *Server) leetgrinderReviews(w http.ResponseWriter, r *http.Request) {
 	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
