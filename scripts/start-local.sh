@@ -37,7 +37,10 @@ env_value() {
     }
     END { print found }' .env
 }
-setting() { local v=${!1-}; [[ -n "$v" ]] && echo "$v" || env_value "$1"; }
+# Environment variables win over .env, even when set to empty, as with godotenv.
+env_has() { [[ -f .env ]] && grep -Eq "^[[:space:]]*(export[[:space:]]+)?$1[[:space:]]*=" .env; }
+defined() { [[ -n ${!1+x} ]] || env_has "$1"; }
+setting() { if [[ -n ${!1+x} ]]; then printf '%s\n' "${!1}"; else env_value "$1"; fi; }
 local_host() { [[ "$1" == localhost || "$1" == 127.0.0.1 || "$1" == ::1 || "$1" == "[::1]" ]]; }
 
 step "npm dependencies"
@@ -54,41 +57,58 @@ else
   ./scripts/setup-env.sh
 fi
 
+# Splits host[:port] (IPv6 in brackets) into $host and $port.
+split_host() {
+  if [[ "$1" == \[* ]]; then host=${1%%]*}]; else host=${1%%:*}; fi
+  port=${1#"$host"}; port=${port#:}
+}
+
 step "PostgreSQL"
+# Go's development default when DATABASE_URL is empty.
 database_url=$(setting DATABASE_URL)
+database_url=${database_url:-postgres://career_dev:career_dev_local@127.0.0.1:5433/career_dev}
 authority=${database_url#*://}; authority=${authority#*@}; authority=${authority%%/*}
-if [[ "$authority" == \[* ]]; then
-  pg_host=${authority%%]*}]; pg_port=${authority#"$pg_host"}; pg_port=${pg_port#:}
-else
-  pg_host=${authority%%:*}; pg_port=${authority#"$pg_host"}; pg_port=${pg_port#:}
-fi
-pg_host=${pg_host:-127.0.0.1}; pg_port=${pg_port:-5433}
+split_host "$authority"
+pg_host=${host:-127.0.0.1}; pg_port=${port:-5432}
 if ! local_host "$pg_host"; then
   echo "using remote database at $pg_host"
 elif listening "$pg_port"; then
   echo "already running on port $pg_port"
 else
-  docker compose up -d --wait postgres
+  POSTGRES_LOCAL_PORT=$pg_port docker compose up -d --wait postgres
 fi
 
 step "Observability (Alloy, Prometheus, Grafana)"
-endpoint=$(setting OTEL_EXPORTER_OTLP_METRICS_ENDPOINT)
-endpoint=${endpoint:-$(setting OTEL_EXPORTER_OTLP_ENDPOINT)}
-otel_host=${endpoint#*://}; otel_host=${otel_host%%/*}; otel_host=${otel_host%:*}
-if [[ -n "$endpoint" ]] && ! local_host "$otel_host"; then
+# Same precedence as internal/config: the metrics-specific endpoint, then the
+# general one, then the local collector. A defined but empty value means stdout.
+if defined OTEL_EXPORTER_OTLP_METRICS_ENDPOINT; then
+  endpoint=$(setting OTEL_EXPORTER_OTLP_METRICS_ENDPOINT)
+elif defined OTEL_EXPORTER_OTLP_ENDPOINT; then
+  endpoint=$(setting OTEL_EXPORTER_OTLP_ENDPOINT)
+else
+  endpoint=http://localhost:4317
+fi
+authority=${endpoint#*://}; authority=${authority%%/*}
+split_host "$authority"
+otel_host=$host; otel_port=${port:-4317}
+if [[ -z "$endpoint" ]]; then
+  echo "metrics go to stdout (endpoint set empty)"
+elif ! local_host "$otel_host"; then
   echo "using configured collector at $endpoint"
 else
   if [[ "${SKIP_OTEL:-}" == 1 ]]; then
     echo "skipped (SKIP_OTEL=1)"
-  elif listening 4317; then
-    echo "collector already running on port 4317"
+  elif listening "$otel_port"; then
+    echo "collector already running on port $otel_port"
+  elif [[ "$otel_port" != 4317 ]]; then
+    echo "warning: nothing listens on $endpoint and the local stack only serves port 4317" >&2
   elif ! docker compose up -d --no-recreate alloy prometheus grafana; then
     echo "warning: observability stack failed to start (see above); continuing without it" >&2
   fi
-  if ! listening 4317; then
+  if ! listening "$otel_port"; then
     # No collector: print metrics to stdout rarely instead of failing every export.
     export OTEL_EXPORTER_OTLP_METRICS_ENDPOINT= OTEL_EXPORTER_OTLP_ENDPOINT= OTEL_METRIC_EXPORT_INTERVAL=600000
-    echo "no collector on port 4317; metrics go to stdout every 10 minutes"
+    echo "no collector on port $otel_port; metrics go to stdout every 10 minutes"
   fi
 fi
 

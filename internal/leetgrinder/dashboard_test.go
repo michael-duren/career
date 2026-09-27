@@ -51,7 +51,7 @@ func TestDashboard(t *testing.T) {
 		t.Fatal(err)
 	}
 	html = out.String()
-	for _, want := range []string{"Resume Day 2", "Welcome back", "Solved with help", "Sat 3 Oct 2026"} {
+	for _, want := range []string{"Resume Day 2", "Welcome back", "Solved with help", "Overdue · was Sat 3 Oct 2026"} {
 		if !strings.Contains(html, want) {
 			t.Errorf("dashboard missing %q", want)
 		}

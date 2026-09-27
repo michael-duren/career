@@ -14,6 +14,9 @@ type UpcomingSession struct {
 
 func (u UpcomingSession) Scheduled() bool { return !u.Date.IsZero() }
 
+// Overdue reports that the session's scheduled date is before today.
+func (u UpcomingSession) Overdue(today time.Time) bool { return u.Scheduled() && u.Date.Before(today) }
+
 // Upcoming lists up to n unfinished sessions after the next unfinished one.
 func (p OverviewPage) Upcoming(n int) []UpcomingSession {
 	next := Summarize(p.Today.State).NextDay

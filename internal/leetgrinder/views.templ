@@ -79,9 +79,6 @@ templ Overview(page OverviewPage) {
 				</h1>
 				<p class="muted">{ DateLabel(page.Today.Date) }</p>
 			</div>
-			if page.Today.Status() != "" {
-				<span class="status-chip">{ page.Today.Status() }</span>
-			}
 		</header>
 		<section class="panel dash-hero" aria-labelledby="next-title">
 			if next, ok := page.NextSession(); ok {
@@ -157,7 +154,9 @@ templ Overview(page OverviewPage) {
 										<span class="day-number">{ Count(u.Day.Number) }</span>
 										<span>{ u.Day.Title }</span>
 									</a>
-									if u.Scheduled() {
+									if u.Overdue(page.Today.Date) {
+										<span class="small overdue">Overdue · was { DateLabel(u.Date) }</span>
+									} else if u.Scheduled() {
 										<span class="small muted">{ DateLabel(u.Date) }</span>
 									}
 								</li>
