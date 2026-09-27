@@ -29,7 +29,7 @@ func TestLeetgrinderNtfySettings(t *testing.T) {
 
 	w := request("GET", "/leetgrinder/settings", nil)
 	body := w.Body.String()
-	for _, want := range []string{`id="ntfy"`, `id="notifications"`, `id="notification-log"`, "No token set.", "No notifications yet.", `name="missing_work_enabled" value="true" checked`, `name="behind_schedule_threshold" min="1" max="84" required value="3"`, `name="late_escalation_time" required value="21:00"`} {
+	for _, want := range []string{"No topic set", "No reminders will be sent", `id="ntfy"`, `id="notifications"`, `id="notification-log"`, "No token set.", "No notifications yet.", `name="missing_work_enabled" value="true" checked`, `name="behind_schedule_threshold" min="1" max="84" required value="3"`, `name="late_escalation_time" required value="21:00"`} {
 		if !strings.Contains(body, want) {
 			t.Fatalf("settings page lacks %q", want)
 		}
@@ -50,7 +50,7 @@ func TestLeetgrinderNtfySettings(t *testing.T) {
 		t.Fatalf("stored: %q %v %+v", plain, err, settings)
 	}
 	w = request("GET", "/leetgrinder/settings", nil)
-	if body = w.Body.String(); strings.Contains(body, token) || !strings.Contains(body, "Token set.") || !strings.Contains(body, "Clear the saved token") {
+	if body = w.Body.String(); strings.Contains(body, token) || strings.Contains(body, "No topic set") || !strings.Contains(body, "Token set.") || !strings.Contains(body, "Clear the saved token") {
 		t.Fatal("token rendered or status missing")
 	}
 

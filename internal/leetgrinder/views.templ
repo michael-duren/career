@@ -14,17 +14,17 @@ templ layout(title string, active string) {
 		<body>
 			<a class="skip" href="#main">Skip to content</a>
 			<div class="shell">
-				<aside class="sidenav">
+				<nav class="sidenav" aria-label="Leetgrinder">
 					<a class="sidenav-back" href="/">@icon("arrow-left") Career Strategy</a>
 					<p class="sidenav-brand">@icon("terminal") Leetgrinder</p>
-					<nav aria-label="Leetgrinder">
+					<div class="sidenav-links">
 						@navLink("/leetgrinder", "Dashboard", "dashboard", active)
 						@navLink("/leetgrinder/reviews", "Review queue", "reviews", active)
 						@navLink("/leetgrinder/about", "About", "about", active)
 						@navLink("/leetgrinder/settings", "Settings", "settings", active)
-					</nav>
+					</div>
 					<a class="sidenav-foot" href="/leetgrinder/export">@icon("download") Export history</a>
-				</aside>
+				</nav>
 				<main id="main">
 					{ children... }
 				</main>
@@ -100,7 +100,7 @@ templ Overview(page OverviewPage) {
 					<ul class="upnext">
 						for _, problem := range next.Core {
 							<li>
-								<a href={ templ.SafeURL(problem.URL()) } target="_blank" rel="noopener noreferrer">{ problem.Title } <span aria-label="opens in a new tab">↗</span></a>
+								<a href={ templ.SafeURL(problem.URL()) } target="_blank" rel="noopener noreferrer">{ problem.Title } <span aria-hidden="true">↗</span><span class="visually-hidden">(opens in a new tab)</span></a>
 								<span class={ DifficultyClass(problem.Difficulty) }>{ problem.Difficulty }</span>
 								<span class="small muted">{ page.Today.State.ProblemStatus(problem.Slug) }</span>
 							</li>
@@ -302,7 +302,7 @@ templ Session(page DayPage) {
 						<p class="muted">Use these within your 30-minute reading and review budget.</p>
 						for _, reading := range page.Day.Readings {
 							<article>
-								<a href={ templ.SafeURL(reading.URL) } target="_blank" rel="noopener noreferrer">{ reading.Title } <span aria-label="opens in a new tab">↗</span></a>
+								<a href={ templ.SafeURL(reading.URL) } target="_blank" rel="noopener noreferrer">{ reading.Title } <span aria-hidden="true">↗</span><span class="visually-hidden">(opens in a new tab)</span></a>
 								<p>
 									{ reading.Guidance }
 								</p>
@@ -385,7 +385,7 @@ templ problemCard(problem Problem, state State, form AttemptForm) {
 						href={ templ.SafeURL(problem.URL()) }
 						target="_blank"
 						rel="noopener noreferrer"
-					>{ problem.Title } <span aria-label="opens in a new tab">↗</span></a>
+					>{ problem.Title } <span aria-hidden="true">↗</span><span class="visually-hidden">(opens in a new tab)</span></a>
 				</h3>
 			</div>
 			<span class="badge">
@@ -599,7 +599,7 @@ templ reviewCard(item ReviewItem, form AttemptForm) {
 						href={ templ.SafeURL(item.Problem.URL()) }
 						target="_blank"
 						rel="noopener noreferrer"
-					>{ item.Problem.Title } <span aria-label="opens in a new tab">↗</span></a>
+					>{ item.Problem.Title } <span aria-hidden="true">↗</span><span class="visually-hidden">(opens in a new tab)</span></a>
 				</h3>
 			</div>
 			if item.Done {

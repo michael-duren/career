@@ -97,7 +97,7 @@ summary:focus-visible {
   background: #3b82f6;
   border-radius: 0 4px 4px 0;
 }
-.sidenav nav {
+.sidenav-links {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -639,6 +639,9 @@ dd {
   font-size: 0.85rem;
   color: #bfdbfe;
 }
+.notice .muted {
+  color: #bfdbfe;
+}
 .notice {
   padding: 14px;
   border: 1px solid #1e40af;
@@ -994,13 +997,13 @@ dd {
     margin: 0 8px 0 0;
     font-size: 1.05rem;
   }
-  .sidenav nav {
+  .sidenav-links {
     flex-direction: row;
     flex-wrap: wrap;
     order: 3;
     flex-basis: 100%;
   }
-  .sidenav nav a {
+  .sidenav-links a {
     white-space: nowrap;
   }
   .sidenav a[aria-current]::before {
@@ -1011,7 +1014,8 @@ dd {
     margin-left: auto;
   }
   .sidenav .sidenav-foot {
-    display: none;
+    order: 2;
+    margin-top: 0;
   }
   main {
     margin-left: 0;
@@ -1086,6 +1090,8 @@ dd {
 }
 .help-popover {
   width: min(520px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
   padding: 22px 24px;
   border: 1px solid #3f3f46;
   border-radius: 12px;
@@ -1112,4 +1118,15 @@ dd {
   font-size: 0.85em;
   color: #bfdbfe;
   overflow-wrap: anywhere;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }

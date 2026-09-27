@@ -69,6 +69,29 @@ func TestDashboard(t *testing.T) {
 	}
 }
 
+func TestDashboardSkipsFinishedAndUsesLocalDates(t *testing.T) {
+	settings := DefaultSettings()
+	settings.Timezone = "America/Los_Angeles"
+	loc := settings.Location()
+	// 10:00 local on 20 Oct is 17:00 UTC; 23:30 local on 19 Oct is already 20 Oct in UTC.
+	now := time.Date(2026, 10, 20, 10, 0, 0, 0, loc)
+	state := State{
+		Attempts: []Attempt{
+			attempt("two-sum", "solved", 15, false, time.Date(2026, 10, 19, 23, 30, 0, 0, loc)),
+			attempt("ransom-note", "solved", 15, false, time.Date(2026, 10, 18, 9, 0, 0, 0, loc)),
+		},
+		CompletedDays: []int{1, 3},
+	}
+	page := OverviewPage{Today: NewToday(settings, state, nil, now)}
+	if got := page.Streak(); got != 2 {
+		t.Fatalf("streak %d, want 2 local days ending yesterday", got)
+	}
+	upcoming := page.Upcoming(2)
+	if len(upcoming) != 2 || upcoming[0].Day.Number != 4 || upcoming[1].Day.Number != 5 {
+		t.Fatalf("upcoming should skip finished day 3: %+v", upcoming)
+	}
+}
+
 func TestNtfyTopicWarning(t *testing.T) {
 	render := func(missing bool) string {
 		var out bytes.Buffer

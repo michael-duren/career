@@ -14,7 +14,7 @@ type UpcomingSession struct {
 
 func (u UpcomingSession) Scheduled() bool { return !u.Date.IsZero() }
 
-// Upcoming lists up to n sessions after the next unfinished one.
+// Upcoming lists up to n unfinished sessions after the next unfinished one.
 func (p OverviewPage) Upcoming(n int) []UpcomingSession {
 	next := Summarize(p.Today.State).NextDay
 	if next == 0 {
@@ -23,6 +23,9 @@ func (p OverviewPage) Upcoming(n int) []UpcomingSession {
 	schedule, scheduled := p.Today.Schedule()
 	var result []UpcomingSession
 	for number := next + 1; number <= SessionCount && len(result) < n; number++ {
+		if p.Today.State.DayCompleted(number) {
+			continue
+		}
 		day, _ := FindDay(number)
 		u := UpcomingSession{Day: day}
 		if scheduled {
