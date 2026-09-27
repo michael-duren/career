@@ -91,7 +91,7 @@ func TestLeetgrinderAnalysisDisplayAndReanalyse(t *testing.T) {
 		t.Fatal("explanation not escaped")
 	}
 	for _, path := range []string{"/leetgrinder/problems", "/leetgrinder"} {
-		if b := request("GET", path, nil).Body.String(); !strings.Contains(b, "Complexity off") {
+		if b := request("GET", path, nil).Body.String(); !strings.Contains(b, "Check complexity") {
 			t.Errorf("%s lacks the complexity badge", path)
 		}
 	}
@@ -134,7 +134,7 @@ func TestLeetgrinderAnalysisDisplayAndReanalyse(t *testing.T) {
 	if a := state.Analyses[attempt.ID]; a.Status != leetgrinder.AnalysisPending || a.Tries != 0 || a.ActualTime != "" {
 		t.Fatalf("requeued %+v", a)
 	}
-	if b := request("GET", "/leetgrinder/problems", nil).Body.String(); strings.Contains(b, "Complexity off") {
+	if b := request("GET", "/leetgrinder/problems", nil).Body.String(); strings.Contains(b, "Check complexity") {
 		t.Error("badge kept after re-analyse")
 	}
 	for _, bad := range []string{"/leetgrinder/problem/valid-anagram/attempts/" + attempt.ID + "/analysis", "/leetgrinder/problem/two-sum/attempts/not-a-uuid/analysis", "/leetgrinder/problem/two-sum/attempts/" + uuid.NewString() + "/analysis"} {

@@ -168,6 +168,7 @@ func (s *Server) leetgrinderProblem(w http.ResponseWriter, r *http.Request) {
 	}
 	renderLeetgrinder(w, r, 200, leetgrinder.ProblemHistory(problem, state, leetgrinder.NewForm(uuid.NewString(), 0), s.historyAnalysisOn(r)))
 }
+
 // historyAnalysisOn reports whether analysis runs, for the history page. A
 // settings failure only affects the analysis card's wording.
 func (s *Server) historyAnalysisOn(r *http.Request) bool {

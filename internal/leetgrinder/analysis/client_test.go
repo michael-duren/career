@@ -94,7 +94,7 @@ func TestAnalyzeErrors(t *testing.T) {
 		{"overloaded", func() { api.reply(529, `{"type":"error","error":{"type":"overloaded_error","message":"busy"}}`) }, true, "529 overloaded_error", nil},
 		{"bad key", func() {
 			api.reply(401, `{"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"}}`)
-		}, false, "check ANTHROPIC_API_KEY", []string{"invalid x-api-key"}},
+		}, true, "check ANTHROPIC_API_KEY", []string{"invalid x-api-key"}},
 		{"bad request", func() { api.reply(400, `{"type":"error","error":{"type":"invalid_request_error","message":"bad"}}`) }, false, "400 invalid_request_error", nil},
 		{"refusal", func() { api.answer(`{}`, "refusal") }, false, "declined", nil},
 		{"cut off", func() { api.answer(`{"actualTime":"O(n`, "max_tokens") }, false, "cut off", nil},

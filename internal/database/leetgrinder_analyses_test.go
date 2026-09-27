@@ -39,7 +39,7 @@ func TestLeetgrinderAnalysesMigration(t *testing.T) {
 		}
 	}
 	const id = "11111111-1111-4111-8111-111111111111"
-	if _, err = s.DB.Exec(`UPDATE leetgrinder_settings SET ntfy_topic='keep-me'; INSERT INTO leetgrinder_attempts(id,problem_slug,outcome,minutes,assisted,notes,revision,source,time_complexity,space_complexity,code,code_language) VALUES('`+id+`','two-sum','solved',23,false,'','22222222-2222-4222-8222-222222222222','extension','O(n)','O(1)','pass','python3')`); err != nil {
+	if _, err = s.DB.Exec(`UPDATE leetgrinder_settings SET ntfy_topic='keep-me'; INSERT INTO leetgrinder_attempts(id,problem_slug,outcome,minutes,assisted,notes,revision,source,time_complexity,space_complexity,code,code_language) VALUES('` + id + `','two-sum','solved',23,false,'','22222222-2222-4222-8222-222222222222','extension','O(n)','O(1)','pass','python3')`); err != nil {
 		t.Fatal(err)
 	}
 	for range 2 {

@@ -15,6 +15,10 @@ import (
 // maxPerStep bounds the requests one tick sends, one after another.
 const maxPerStep = 10
 
+// ConfigPause is how long the worker waits after a configuration error
+// (bad key, permissions, billing, or model) before sending again.
+const ConfigPause = 15 * time.Minute
+
 // Worker analyses queued attempts in the background, one request at a time.
 type Worker struct {
 	Store *database.Store
@@ -29,6 +33,8 @@ type Worker struct {
 
 	once   sync.Once
 	client *Client
+	// pausedUntil holds requests back after a configuration error.
+	pausedUntil time.Time
 }
 
 func (w *Worker) now() time.Time {
@@ -68,7 +74,7 @@ func (w *Worker) Run(ctx context.Context) {
 // without a key, while analysis is turned off in settings, or while another
 // worker holds the analysis lock.
 func (w *Worker) Step(ctx context.Context) error {
-	if w.Key == "" {
+	if w.Key == "" || w.now().Before(w.pausedUntil) {
 		return nil
 	}
 	settings, err := w.Store.LeetgrinderSettings(ctx)
@@ -89,7 +95,9 @@ func (w *Worker) Step(ctx context.Context) error {
 			if err != nil || !reserved {
 				return err
 			}
-			if err = w.analyse(ctx, job); err != nil {
+			ok, err = w.analyse(ctx, job)
+			if err != nil || !ok {
+				// A failure ends the tick, so an outage costs one request a minute.
 				return err
 			}
 		}
@@ -98,9 +106,12 @@ func (w *Worker) Step(ctx context.Context) error {
 	return err
 }
 
-// analyse sends one request and records its outcome. A request cut short by
-// shutdown is not recorded, so it runs again after the restart.
-func (w *Worker) analyse(ctx context.Context, job database.LeetgrinderAnalysisJob) error {
+// analyse sends one request and records its outcome, reporting whether it
+// succeeded. A request cut short by shutdown is not recorded, so it runs
+// again after the restart. A configuration error leaves the attempt pending
+// without counting the try and pauses the worker, so fixing the environment
+// needs no re-analyse.
+func (w *Worker) analyse(ctx context.Context, job database.LeetgrinderAnalysisJob) (bool, error) {
 	a := job.Attempt
 	problem, known := leetgrinder.FindProblem(a.ProblemSlug)
 	if !known {
@@ -109,7 +120,7 @@ func (w *Worker) analyse(ctx context.Context, job database.LeetgrinderAnalysisJo
 	client := w.api()
 	result, err := client.Analyze(ctx, Input{Problem: problem, Known: known, Language: a.CodeLanguage, Code: a.Code, StatedTime: a.TimeComplexity, StatedSpace: a.SpaceComplexity})
 	if err != nil && ctx.Err() != nil {
-		return nil
+		return false, nil
 	}
 	tries := job.Tries + 1
 	status, detail := leetgrinder.AnalysisDone, ""
@@ -118,6 +129,10 @@ func (w *Worker) analyse(ctx context.Context, job database.LeetgrinderAnalysisJo
 		var e *Error
 		if errors.As(err, &e) {
 			message, retry = e.Message, e.Retry
+			if e.Config {
+				tries = job.Tries
+				w.pausedUntil = w.now().Add(ConfigPause)
+			}
 		}
 		detail = Redact(message, w.Key)
 		result = leetgrinder.AnalysisResult{}
@@ -130,5 +145,5 @@ func (w *Worker) analyse(ctx context.Context, job database.LeetgrinderAnalysisJo
 	// The request already happened, so record it even if ctx was cancelled.
 	finish, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 	defer cancel()
-	return w.Store.FinishLeetgrinderAnalysis(finish, job, status, tries, result, client.Model(), detail, w.now())
+	return err == nil, w.Store.FinishLeetgrinderAnalysis(finish, job, status, tries, result, client.Model(), detail, w.now())
 }

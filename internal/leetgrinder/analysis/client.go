@@ -43,6 +43,9 @@ type Error struct {
 	Message string
 	// Retry reports whether a later request may succeed.
 	Retry bool
+	// Config marks a server configuration problem (key, permissions,
+	// billing or model) rather than a problem with this attempt.
+	Config bool
 }
 
 func (e *Error) Error() string { return e.Message }
@@ -135,6 +138,10 @@ func (c *Client) requestError(err error) *Error {
 			msg += ": check ANTHROPIC_API_KEY"
 		case http.StatusNotFound:
 			msg += ": check LEETGRINDER_ANALYSIS_MODEL"
+		}
+		switch apiErr.StatusCode {
+		case http.StatusUnauthorized, http.StatusPaymentRequired, http.StatusForbidden, http.StatusNotFound:
+			return &Error{Message: msg, Retry: true, Config: true}
 		}
 		retry := apiErr.StatusCode == http.StatusRequestTimeout || apiErr.StatusCode == http.StatusConflict || apiErr.StatusCode == http.StatusTooManyRequests || apiErr.StatusCode >= 500
 		return &Error{Message: msg, Retry: retry}

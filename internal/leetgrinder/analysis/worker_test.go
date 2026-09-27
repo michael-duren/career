@@ -225,10 +225,66 @@ func TestWorkerRetryCapAndRedaction(t *testing.T) {
 
 	// Non-retryable errors fail at once.
 	b := saveAttempt(t, db, leetgrinder.Attempt{ProblemSlug: "two-sum", TimeComplexity: "O(n)", SpaceComplexity: "O(1)", Code: "other", CodeLanguage: "python3", Source: "extension"})
+	api.reply(400, `{"type":"error","error":{"type":"invalid_request_error","message":"bad"}}`)
+	step(t, w)
+	if got, _ := analysisOf(t, db, b.ID); got.Status != leetgrinder.AnalysisFailed || got.Tries != 1 || !strings.Contains(got.Error, "400 invalid_request_error") {
+		t.Fatalf("bad request %+v", got)
+	}
+	api.take()
+}
+
+func TestWorkerOutageAndConfigErrors(t *testing.T) {
+	db := testStore(t)
+	api := newFakeAPI(t)
+	c := newClock()
+	w := c.worker(db, api)
+	var ids []string
+	for i := range 3 {
+		ids = append(ids, saveAttempt(t, db, leetgrinder.Attempt{ProblemSlug: "two-sum", TimeComplexity: "O(n)", SpaceComplexity: "O(1)", Code: "code " + string(rune('a'+i)), CodeLanguage: "python3", Source: "extension"}).ID)
+	}
+	// An outage costs one request per tick, not one per queued attempt.
+	api.reply(529, `{"type":"error","error":{"type":"overloaded_error","message":"busy"}}`)
+	step(t, w)
+	if n := len(api.take()); n != 1 {
+		t.Fatalf("outage: %d requests in one tick", n)
+	}
+
+	// A bad key leaves attempts pending without using a try, and pauses the worker.
+	c.advance(time.Hour)
 	api.reply(401, `{"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"}}`)
 	step(t, w)
-	if got, _ := analysisOf(t, db, b.ID); got.Status != leetgrinder.AnalysisFailed || got.Tries != 1 || !strings.Contains(got.Error, "check ANTHROPIC_API_KEY") {
-		t.Fatalf("auth failure %+v", got)
+	if n := len(api.take()); n != 1 {
+		t.Fatalf("bad key: %d requests", n)
+	}
+	var failed int
+	for _, id := range ids {
+		got, ok := analysisOf(t, db, id)
+		if ok && got.Status == leetgrinder.AnalysisFailed {
+			failed++
+		}
+		if ok && strings.Contains(got.Error, "check ANTHROPIC_API_KEY") && (got.Status != leetgrinder.AnalysisPending || got.Tries != 1) { // the one try from the outage
+			t.Fatalf("config error counted a try: %+v", got)
+		}
+	}
+	if failed != 0 {
+		t.Fatalf("%d attempts failed on a configuration error", failed)
+	}
+	c.advance(ConfigPause - time.Minute)
+	step(t, w)
+	if n := len(api.take()); n != 0 {
+		t.Fatalf("sent during the configuration pause: %d", n)
+	}
+	// Once the key works, everything is analysed with no re-analyse needed.
+	api.answer(`{"actualTime":"O(n)","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"explanation":"Fine."}`, "end_turn")
+	c.advance(2 * time.Minute)
+	step(t, w)
+	if n := len(api.take()); n != 3 {
+		t.Fatalf("after the pause: %d requests", n)
+	}
+	for _, id := range ids {
+		if got, _ := analysisOf(t, db, id); !got.Done() {
+			t.Fatalf("not done: %+v", got)
+		}
 	}
 }
 
