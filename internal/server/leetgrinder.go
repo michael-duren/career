@@ -183,12 +183,20 @@ func (s *Server) historyAnalysis(r *http.Request) leetgrinder.AnalysisAvailabili
 		return a
 	}
 	now := s.clock()
-	if pause, err := s.db.LeetgrinderAnalysisPause(r.Context()); err == nil {
-		a.Paused = now.Before(pause.Until)
+	// A failed read is an unknown status, so re-analyse is refused rather
+	// than clearing a result while analysis may be on hold.
+	pause, err := s.db.LeetgrinderAnalysisPause(r.Context())
+	if err != nil {
+		a.Unknown = true
+		return a
 	}
-	if used, err := s.db.LeetgrinderAnalysisUsage(r.Context(), leetgrinder.Date(now, settings.Location())); err == nil {
-		a.LimitReached = used >= s.config.AnalysisDailyLimit
+	a.Paused = now.Before(pause.Until)
+	used, err := s.db.LeetgrinderAnalysisUsage(r.Context(), leetgrinder.Date(now, settings.Location()))
+	if err != nil {
+		a.Unknown = true
+		return a
 	}
+	a.LimitReached = used >= s.config.AnalysisDailyLimit
 	return a
 }
 

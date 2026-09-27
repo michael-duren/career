@@ -25,7 +25,7 @@ templ analysisSettings(p AnalysisPanel) {
 					{ Count(p.Used) } of { Count(p.Limit) }
 					if p.Limit == 0 {
 						<span class="small muted">· <code>LEETGRINDER_ANALYSIS_DAILY_LIMIT</code> is 0, so no code is sent</span>
-					} else if p.LimitReached() {
+					} else if p.LimitReached() && p.Active() {
 						<span class="small muted">· daily limit reached; the queue resumes tomorrow</span>
 					}
 				}

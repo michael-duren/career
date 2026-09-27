@@ -173,7 +173,7 @@ func TestLeetgrinderAnalysisDisplayAndReanalyse(t *testing.T) {
 		t.Error("limit note missing")
 	}
 	// A replayed Re-analyse while on hold is refused and keeps the row.
-	if w = request("POST", target, url.Values{}); w.Code != 409 || !strings.Contains(w.Body.String(), "limit is used up, so the current result was kept") {
+	if w = request("POST", target, url.Values{}); w.Code != 409 || !strings.Contains(w.Body.String(), "limit is used up, so nothing was changed") {
 		t.Errorf("re-analyse at the limit: %d", w.Code)
 	}
 	s.config.AnalysisDailyLimit = 50

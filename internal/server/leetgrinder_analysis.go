@@ -87,10 +87,12 @@ func (s *Server) leetgrinderReanalyse(w http.ResponseWriter, r *http.Request) {
 	// Requeueing clears the current result, so it is refused whenever the
 	// worker would not pick the attempt up soon (as the hidden button implies).
 	if avail := s.historyAnalysis(r); !avail.On() || avail.Waiting() {
+		if avail.Unknown {
+			renderLeetgrinder(w, r, http.StatusServiceUnavailable, leetgrinder.ReanalyseError(problem, "The analysis status could not be loaded, so nothing was changed. Please retry."))
+			return
+		}
 		reason := "Analysis is not running right now"
 		switch {
-		case avail.Unknown:
-			reason = "The analysis status could not be loaded"
 		case !avail.KeyConfigured:
 			reason = "Analysis needs an Anthropic API key on the server"
 		case avail.ZeroLimit:
@@ -102,7 +104,7 @@ func (s *Server) leetgrinderReanalyse(w http.ResponseWriter, r *http.Request) {
 		case avail.LimitReached:
 			reason = "Today's analysis limit is used up"
 		}
-		renderLeetgrinder(w, r, http.StatusConflict, leetgrinder.ReanalyseError(problem, reason+", so the current result was kept."))
+		renderLeetgrinder(w, r, http.StatusConflict, leetgrinder.ReanalyseError(problem, reason+", so nothing was changed."))
 		return
 	}
 	err = s.db.RequeueLeetgrinderAnalysis(r.Context(), problem.Slug, id.String(), s.clock())
