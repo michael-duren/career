@@ -17,6 +17,8 @@ type Server struct {
 	config   config.Config
 	mu       sync.Mutex
 	attempts map[string]attempt
+	// now overrides the clock in tests.
+	now func() time.Time
 }
 
 func NewServer(c config.Config, db *database.Store) *http.Server {

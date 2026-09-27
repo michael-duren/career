@@ -43,6 +43,9 @@ type Attempt struct {
 	Notes       string    `json:"notes"`
 	CreatedAt   time.Time `json:"createdAt"`
 	Revision    string    `json:"revision"`
+	// Source is "web" or "extension". Corrections keep Source and IsReview.
+	Source   string `json:"source"`
+	IsReview bool   `json:"isReview"`
 }
 type State struct {
 	Attempts      []Attempt `json:"attempts"`

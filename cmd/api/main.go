@@ -140,6 +140,17 @@ func run() error {
 				return fmt.Errorf("invalid AUTH_PASSWORD_HASH: %w", err)
 			}
 		}
+		if len(c.LeetgrinderSecretKey) == 0 {
+			// The database may be down at startup; readiness reports that.
+			check, stop := context.WithTimeout(ctx, time.Second)
+			stored, err := db.LeetgrinderNtfyTokenStored(check)
+			stop()
+			if err != nil {
+				log.Printf("leetgrinder: could not check for a stored ntfy token: %v", err)
+			} else if err = c.RequireLeetgrinderSecret(stored); err != nil {
+				return err
+			}
+		}
 		shutdownOtel, err := otel.Setup(ctx, otel.Options{Endpoint: c.OTelEndpoint, ServiceName: c.OTelServiceName, ExportInterval: c.OTelExportInterval})
 		if err != nil {
 			return fmt.Errorf("setup opentelemetry: %w", err)
