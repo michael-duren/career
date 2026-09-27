@@ -20,9 +20,9 @@ import (
 
 const (
 	// Timeout bounds one request.
-	Timeout = 2 * time.Minute
+	Timeout = 5 * time.Minute
 	// MaxTokens caps the output, including adaptive thinking, of one request.
-	MaxTokens = 8192
+	MaxTokens = 16000
 )
 
 // Input is one attempt to analyse.

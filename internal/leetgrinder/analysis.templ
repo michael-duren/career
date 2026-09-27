@@ -47,10 +47,8 @@ templ analysisSettings(p AnalysisPanel) {
 			<input type="hidden" name="revision" value={ p.Revision }/>
 			<label class="checkbox"><input type="checkbox" name="enabled" value="true" checked?={ p.Enabled } aria-describedby="analysis-toggle-help"/>Analyse captured code</label>
 			<p class="small muted" id="analysis-toggle-help">
-				if p.KeyConfigured && p.Enabled {
-					Turn this off to stop sending code. Queued attempts wait until you turn it back on.
-				} else if p.KeyConfigured {
-					Analysis is off, so no code is sent. Queued attempts wait until you turn it back on.
+				if p.KeyConfigured {
+					While this is off, no code is sent and queued attempts wait.
 				} else {
 					This setting takes effect once an API key is configured.
 				}
