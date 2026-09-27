@@ -30,6 +30,7 @@ templ layout(title string, active string) {
 					{ children... }
 				</main>
 			</div>
+			@complexityScript()
 		</body>
 	</html>
 }
@@ -422,6 +423,13 @@ templ attemptFields(problem Problem, form AttemptForm) {
 			</p>
 		}
 		<div class="form-row"><label>Outcome<select name="outcome" required><option value="unfinished" selected?={ form.Outcome=="unfinished" }>Unfinished</option><option value="struggled" selected?={ form.Outcome=="struggled" }>Struggled</option><option value="solved" selected?={ form.Outcome=="solved" }>Solved</option></select></label><label>Minutes spent<input type="number" name="minutes" min="1" max="240" required value={ form.Minutes }/></label></div>
+		<fieldset class="complexity">
+			<legend>Complexity <span class="muted">(required when solved or struggled)</span></legend>
+			<div class="form-row">
+				@complexityField("timeComplexity", "time", form.Time)
+				@complexityField("spaceComplexity", "space", form.Space)
+			</div>
+		</fieldset>
 		<label class="checkbox"><input type="checkbox" name="assisted" value="true" checked?={ form.Assisted }/>I used hints or reviewed a solution</label>
 		<label>
 			Notes <span class="muted">(optional)</span>
@@ -438,6 +446,62 @@ templ attemptFields(problem Problem, form AttemptForm) {
 			}
 		</button>
 	</form>
+}
+
+// complexityField is a select of common classes plus a text field for any
+// other value. It works without JavaScript; complexityScript only hides the
+// text field until "Other…" is chosen.
+templ complexityField(name string, label string, input ComplexityInput) {
+	<div class="complexity-field" data-complexity>
+		<label>
+			<span class="capitalize">{ label }</span>
+			<select name={ name }>
+				<option value="" selected?={ input.Choice=="" }>Not stated</option>
+				for _, c := range Complexities {
+					<option value={ c } selected?={ input.Choice==c }>{ c }</option>
+				}
+				<option value="other" selected?={ input.Choice=="other" }>Other…</option>
+			</select>
+		</label>
+		<label class="complexity-other">
+			Other { label } complexity
+			<input type="text" name={ name + "Other" } maxlength="40" placeholder="O(m·n)" autocomplete="off" spellcheck="false" value={ input.Other }/>
+		</label>
+	</div>
+}
+
+templ complexityScript() {
+	<script>
+		(() => {
+			const sync = (select) => {
+				const other = select.closest("[data-complexity]").querySelector(".complexity-other");
+				const show = select.value === "other";
+				other.hidden = !show;
+				other.querySelector("input").disabled = !show;
+			};
+			document.querySelectorAll("[data-complexity] select").forEach(sync);
+			document.addEventListener("change", (event) => {
+				if (event.target instanceof HTMLSelectElement && event.target.closest("[data-complexity]")) sync(event.target);
+			});
+		})();
+	</script>
+}
+
+templ statedComplexity(a Attempt) {
+	if a.TimeComplexity != "" || a.SpaceComplexity != "" {
+		<p class="small stated-complexity">
+			Time <strong>{ orDash(a.TimeComplexity) }</strong> · Space <strong>{ orDash(a.SpaceComplexity) }</strong>
+		</p>
+	}
+}
+
+templ attemptCode(a Attempt) {
+	if a.Code != "" {
+		<details class="attempt-code">
+			<summary>Submitted code ({ LanguageLabel(a.CodeLanguage) }, { ByteSize(len(a.Code)) })</summary>
+			<pre><code data-language={ a.CodeLanguage }>{ a.Code }</code></pre>
+		</details>
+	}
 }
 
 templ ProblemHistory(problem Problem, state State, form AttemptForm) {
@@ -513,11 +577,13 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm) {
 								· Review
 							}
 						</p>
+						@statedComplexity(a)
 						if a.Notes!="" {
 							<p class="notes">
 								{ a.Notes }
 							</p>
 						}
+						@attemptCode(a)
 						<details>
 							<summary>Correct this attempt</summary>@attemptFields(problem, EditForm(a))
 						</details>

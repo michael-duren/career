@@ -116,7 +116,7 @@ func TestLeetgrinderExtensionAPI(t *testing.T) {
 	}
 
 	id := uuid.NewString()
-	attempt := map[string]any{"id": id, "problemSlug": "two-sum", "outcome": "solved", "minutes": 18, "assisted": false, "notes": "hash map"}
+	attempt := map[string]any{"id": id, "problemSlug": "two-sum", "outcome": "solved", "minutes": 18, "assisted": false, "notes": "hash map", "timeComplexity": "O(n)", "spaceComplexity": "O(n)"}
 	for i := 0; i < 2; i++ {
 		if w = api("POST", "/api/leetgrinder/attempts", plain, attempt); w.Code != 200 {
 			t.Fatalf("save %d: %d %s", i, w.Code, w.Body.String())
@@ -132,7 +132,7 @@ func TestLeetgrinderExtensionAPI(t *testing.T) {
 		t.Fatalf("latest attempt: %s", w.Body.String())
 	}
 
-	conflict := map[string]any{"id": id, "problemSlug": "two-sum", "outcome": "struggled", "minutes": 30, "assisted": false, "notes": "hash map"}
+	conflict := map[string]any{"id": id, "problemSlug": "two-sum", "outcome": "struggled", "minutes": 30, "assisted": false, "notes": "hash map", "timeComplexity": "O(n)", "spaceComplexity": "O(n)"}
 	if w = api("POST", "/api/leetgrinder/attempts", plain, conflict); w.Code != 409 {
 		t.Fatalf("reused id: %d %s", w.Code, w.Body.String())
 	}
@@ -250,7 +250,7 @@ func TestLeetgrinderAPIReviewStatus(t *testing.T) {
 		t.Fatalf("due review not reported: %+v", info)
 	}
 	review := uuid.NewString()
-	if _, err := db.SaveLeetgrinderAttempt(ctx, leetgrinder.Attempt{ID: review, ProblemSlug: "two-sum", Outcome: "solved", Minutes: 12, Source: "extension", IsReview: true}, ""); err != nil {
+	if _, err := db.SaveLeetgrinderAttempt(ctx, leetgrinder.Attempt{ID: review, ProblemSlug: "two-sum", Outcome: "solved", Minutes: 12, Source: "extension", IsReview: true, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}, ""); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := db.DB.ExecContext(ctx, "UPDATE leetgrinder_attempts SET created_at=$1 WHERE id=$2", now.Add(-time.Hour), review); err != nil {

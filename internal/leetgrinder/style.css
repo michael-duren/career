@@ -607,6 +607,46 @@ dd {
   border-top: 1px solid var(--line);
   padding-top: 12px;
 }
+.attempt-form .complexity {
+  margin: 18px 0 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.complexity legend {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+.complexity-field {
+  display: grid;
+  gap: 8px;
+}
+.complexity-other[hidden] {
+  display: none;
+}
+.capitalize {
+  text-transform: capitalize;
+}
+.stated-complexity strong {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 600;
+}
+.attempt-code pre {
+  max-height: 480px;
+  overflow: auto;
+  margin: 10px 0 0;
+  padding: 14px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.82rem;
+  tab-size: 4;
+}
+.attempt-code summary,
+.attempt details summary {
+  cursor: pointer;
+}
 .schedule-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;

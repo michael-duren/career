@@ -85,10 +85,26 @@ test("cleanAttempt", () => {
     assisted: false,
     notes: "hash map",
     isReview: true,
+    timeComplexity: "O(n)",
+    spaceComplexity: "O(n^2)",
     extra: "dropped",
   };
   const cleaned = lib.cleanAttempt(good);
-  assert.deepEqual(Object.keys(cleaned).sort(), ["assisted", "id", "isReview", "minutes", "notes", "outcome", "problemSlug"]);
+  assert.deepEqual(Object.keys(cleaned).sort(), [
+    "assisted",
+    "code",
+    "codeLanguage",
+    "id",
+    "isReview",
+    "minutes",
+    "notes",
+    "outcome",
+    "problemSlug",
+    "spaceComplexity",
+    "timeComplexity",
+  ]);
+  assert.equal(cleaned.spaceComplexity, "O(n²)");
+  assert.equal(cleaned.code, "");
   for (const bad of [
     { id: "nope" },
     { problemSlug: "../etc" },

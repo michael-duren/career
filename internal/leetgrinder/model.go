@@ -46,6 +46,13 @@ type Attempt struct {
 	// Source is "web" or "extension". Corrections keep Source and IsReview.
 	Source   string `json:"source"`
 	IsReview bool   `json:"isReview"`
+	// Stated complexities, "" when not stated (see NormalizeComplexity).
+	TimeComplexity  string `json:"timeComplexity"`
+	SpaceComplexity string `json:"spaceComplexity"`
+	// Code is the judged submission captured by the extension, with its
+	// LeetCode language slug; both are "" for web-logged attempts.
+	Code         string `json:"code"`
+	CodeLanguage string `json:"codeLanguage"`
 }
 type State struct {
 	Attempts      []Attempt `json:"attempts"`

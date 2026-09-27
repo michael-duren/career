@@ -191,7 +191,9 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 	if returnDay < 0 || returnDay > 84 {
 		returnDay = 0
 	}
-	form := leetgrinder.AttemptForm{ID: r.PostForm.Get("id"), Revision: r.PostForm.Get("revision"), Outcome: r.PostForm.Get("outcome"), Minutes: r.PostForm.Get("minutes"), Assisted: r.PostForm.Get("assisted") == "true", Notes: r.PostForm.Get("notes"), ReturnDay: returnDay, Review: r.PostForm.Get("review") == "true"}
+	form := leetgrinder.AttemptForm{ID: r.PostForm.Get("id"), Revision: r.PostForm.Get("revision"), Outcome: r.PostForm.Get("outcome"), Minutes: r.PostForm.Get("minutes"), Assisted: r.PostForm.Get("assisted") == "true", Notes: r.PostForm.Get("notes"), ReturnDay: returnDay, Review: r.PostForm.Get("review") == "true",
+		Time:  leetgrinder.ComplexityInput{Choice: r.PostForm.Get("timeComplexity"), Other: r.PostForm.Get("timeComplexityOther")},
+		Space: leetgrinder.ComplexityInput{Choice: r.PostForm.Get("spaceComplexity"), Other: r.PostForm.Get("spaceComplexityOther")}}
 	switch ret := r.PostForm.Get("return"); ret {
 	case "overview", "reviews":
 		form.Return = ret
@@ -232,7 +234,16 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 		reject(400, "Choose whether you used hints or a solution.")
 		return
 	}
-	_, err = s.db.SaveLeetgrinderAttempt(r.Context(), leetgrinder.Attempt{ID: form.ID, ProblemSlug: problem.Slug, Outcome: form.Outcome, Minutes: minutes, Assisted: form.Assisted, Notes: form.Notes, Source: "web", IsReview: form.Review}, form.Revision)
+	attempt := leetgrinder.Attempt{ID: form.ID, ProblemSlug: problem.Slug, Outcome: form.Outcome, Minutes: minutes, Assisted: form.Assisted, Notes: form.Notes, Source: "web", IsReview: form.Review, TimeComplexity: form.Time.Value(), SpaceComplexity: form.Space.Value()}
+	switch err := attempt.NormalizeDetails(); {
+	case errors.Is(err, leetgrinder.ErrComplexityRequired):
+		reject(400, "Choose the time and space complexity of your solution. They are required for solved and struggled attempts.")
+		return
+	case err != nil:
+		reject(400, "Write complexity in big-O notation, such as O(m·n): start with O( and end with ), in 40 characters or fewer.")
+		return
+	}
+	_, err = s.db.SaveLeetgrinderAttempt(r.Context(), attempt, form.Revision)
 	if err != nil {
 		switch {
 		case errors.Is(err, database.ErrConflict) && form.Revision == "":
