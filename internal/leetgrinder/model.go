@@ -7,6 +7,13 @@ type Problem struct {
 	Slug       string
 	Title      string
 	Difficulty string
+	// OptimalTime and OptimalSpace are the best-known bounds under the
+	// problem's constraints, in the notation NormalizeComplexity produces. Space is auxiliary
+	// space and excludes the returned output.
+	OptimalTime  string
+	OptimalSpace string
+	// OptimalNote defines variables other than n and names alternatives.
+	OptimalNote string
 }
 
 func (p Problem) URL() string { return "https://leetcode.com/problems/" + p.Slug + "/" }
