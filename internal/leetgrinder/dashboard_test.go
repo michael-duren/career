@@ -83,6 +83,9 @@ func TestDashboardSkipsFinishedAndUsesLocalDates(t *testing.T) {
 		CompletedDays: []int{1, 3},
 	}
 	page := OverviewPage{Today: NewToday(settings, state, nil, now)}
+	if DayUnit(1) != "day" || DayUnit(0) != "days" || DayUnit(2) != "days" {
+		t.Fatal("day unit")
+	}
 	if got := page.Streak(); got != 2 {
 		t.Fatalf("streak %d, want 2 local days ending yesterday", got)
 	}

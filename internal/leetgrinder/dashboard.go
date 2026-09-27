@@ -82,6 +82,14 @@ func (p OverviewPage) ReviewsLeft() int {
 	return len(p.Today.Missing().Reviews)
 }
 
+// DayUnit is the unit label for a count of days.
+func DayUnit(n int) string {
+	if n == 1 {
+		return "day"
+	}
+	return "days"
+}
+
 // IndependentRate is the share of solved problems solved without help.
 func (p OverviewPage) IndependentRate() string {
 	progress := Summarize(p.Today.State)

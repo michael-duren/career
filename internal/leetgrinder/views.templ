@@ -136,7 +136,7 @@ templ Overview(page OverviewPage) {
 				<progress value={ Count(Summarize(page.Today.State).Solved) } max="300">{ Count(Summarize(page.Today.State).Solved) } of 300</progress>
 			</div>
 			<div><strong>{ page.IndependentRate() }</strong><p>Solved independently</p></div>
-			<div><strong>{ Count(page.Streak()) }<span>days</span></strong><p>Practice streak</p></div>
+			<div><strong>{ Count(page.Streak()) }<span>{ DayUnit(page.Streak()) }</span></strong><p>Practice streak</p></div>
 		</section>
 		@scheduleCard(page.Today)
 		<div class="dash-grid">
