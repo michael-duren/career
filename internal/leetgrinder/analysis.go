@@ -152,10 +152,11 @@ type AnalysisPanel struct {
 	QueueError    bool
 	// Pause is set while requests are held back; PausedNow reports whether
 	// it is still in effect.
-	Pause     AnalysisPause
-	PausedNow bool
-	Location  *time.Location
-	Revision  string
+	Pause      AnalysisPause
+	PausedNow  bool
+	PauseError bool
+	Location   *time.Location
+	Revision   string
 }
 
 // Active reports whether the worker sends requests.

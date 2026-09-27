@@ -29,6 +29,8 @@ func (s *Server) analysisPanel(ctx context.Context, settings leetgrinder.Setting
 	}
 	if pause, err := s.db.LeetgrinderAnalysisPause(ctx); err == nil {
 		p.Pause, p.PausedNow = pause, s.clock().Before(pause.Until)
+	} else {
+		p.PauseError = true
 	}
 	var err error
 	p.Used, err = s.db.LeetgrinderAnalysisUsage(ctx, leetgrinder.Date(s.clock(), settings.Location()))
@@ -88,7 +90,7 @@ func (s *Server) leetgrinderReanalyse(w http.ResponseWriter, r *http.Request) {
 	// worker would not pick the attempt up soon (as the hidden button implies).
 	if avail := s.historyAnalysis(r); !avail.On() || avail.Waiting() {
 		if avail.Unknown {
-			renderLeetgrinder(w, r, http.StatusServiceUnavailable, leetgrinder.ReanalyseError(problem, "The analysis status could not be loaded, so nothing was changed. Please retry."))
+			renderLeetgrinder(w, r, http.StatusServiceUnavailable, leetgrinder.ReanalyseError(problem, id.String(), "The analysis status could not be loaded, so nothing was changed. Please retry."))
 			return
 		}
 		reason := "Analysis is not running right now"
@@ -104,15 +106,15 @@ func (s *Server) leetgrinderReanalyse(w http.ResponseWriter, r *http.Request) {
 		case avail.LimitReached:
 			reason = "Today's analysis limit is used up"
 		}
-		renderLeetgrinder(w, r, http.StatusConflict, leetgrinder.ReanalyseError(problem, reason+", so nothing was changed."))
+		renderLeetgrinder(w, r, http.StatusConflict, leetgrinder.ReanalyseError(problem, id.String(), reason+", so nothing was changed."))
 		return
 	}
 	err = s.db.RequeueLeetgrinderAnalysis(r.Context(), problem.Slug, id.String(), s.clock())
 	switch {
 	case errors.Is(err, database.ErrNotFound):
-		renderLeetgrinder(w, r, http.StatusNotFound, leetgrinder.ReanalyseError(problem, "This attempt was not found, or it needs captured code and a stated time or space complexity before it can be analysed."))
+		renderLeetgrinder(w, r, http.StatusNotFound, leetgrinder.ReanalyseError(problem, id.String(), "This attempt was not found, or it needs captured code and a stated time or space complexity before it can be analysed."))
 	case err != nil:
-		renderLeetgrinder(w, r, http.StatusServiceUnavailable, leetgrinder.ReanalyseError(problem, "The analysis could not be queued. Please retry."))
+		renderLeetgrinder(w, r, http.StatusServiceUnavailable, leetgrinder.ReanalyseError(problem, id.String(), "The analysis could not be queued. Please retry."))
 	default:
 		http.Redirect(w, r, leetgrinder.ProblemURL(problem.Slug)+"#"+leetgrinder.AttemptAnchor(id.String()), http.StatusSeeOther)
 	}

@@ -30,7 +30,10 @@ templ analysisSettings(p AnalysisPanel) {
 					}
 				}
 			</dd>
-			if p.PausedNow {
+			if p.PauseError {
+				<dt>Pause status</dt>
+				<dd>Unavailable</dd>
+			} else if p.PausedNow {
 				<dt>Paused</dt>
 				<dd>Until { NotificationTimeLabel(p.Pause.Until, p.Location) } after an error that affects every attempt: { p.Pause.Reason }</dd>
 			}
@@ -61,7 +64,7 @@ templ analysisSettings(p AnalysisPanel) {
 // analysisCard shows Claude's assessment of one attempt's captured code.
 templ analysisCard(slug string, a Attempt, state State, avail AnalysisAvailability) {
 	if a.Code != "" {
-		<section class="analysis-card" aria-labelledby={ "analysis-title-" + a.ID }>
+		<div class="analysis-card">
 			<h4 id={ "analysis-title-" + a.ID }>Claude's assessment</h4>
 			if !a.Analysable() {
 				<p class="small muted">State a time or space complexity to get an assessment.</p>
@@ -102,7 +105,7 @@ templ analysisCard(slug string, a Attempt, state State, avail AnalysisAvailabili
 					<p class="small muted">Retrying after an error: { an.Error }</p>
 				}
 			}
-		</section>
+		</div>
 	}
 }
 
@@ -149,12 +152,12 @@ templ reanalyseForm(slug string, a Attempt) {
 }
 
 // ReanalyseError explains a re-analyse request that could not be queued.
-templ ReanalyseError(problem Problem, message string) {
+templ ReanalyseError(problem Problem, attemptID string, message string) {
 	@layout("Re-analyse", "") {
 		<section class="panel">
 			<h1>The analysis was not queued</h1>
 			<p role="alert">{ message }</p>
-			<p><a href={ templ.SafeURL(ProblemURL(problem.Slug)) }>Back to { problem.Title }</a></p>
+			<p><a href={ templ.SafeURL(ProblemURL(problem.Slug) + "#" + AttemptAnchor(attemptID)) }>Back to { problem.Title }</a></p>
 		</section>
 	}
 }

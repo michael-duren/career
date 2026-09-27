@@ -114,7 +114,8 @@ func (w *Worker) Step(ctx context.Context) error {
 
 // analyse sends one request and records its outcome, reporting whether it
 // succeeded. A request cut short by shutdown is not recorded, so it runs
-// again after the restart. An error that would hit every attempt pauses all
+// again after the restart; it stays counted against the daily limit, since it
+// may already have been billed. An error that would hit every attempt pauses all
 // workers; a certain configuration error also leaves the attempt pending
 // without counting the try, so fixing the environment needs no re-analyse.
 func (w *Worker) analyse(ctx context.Context, job database.LeetgrinderAnalysisJob) (bool, error) {
