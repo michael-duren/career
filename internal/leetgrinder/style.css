@@ -789,3 +789,29 @@ footer nav {
     font-size: 0.9rem;
   }
 }
+/* Extension API tokens (settings). */
+#api-tokens {
+  margin-top: 24px;
+}
+.token-created {
+  margin-bottom: 18px;
+}
+.token-value {
+  display: grid;
+  gap: 6px;
+}
+.token-value input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.token-list {
+  margin-top: 20px;
+}
+.token-list form {
+  margin: 0;
+}

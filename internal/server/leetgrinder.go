@@ -282,7 +282,7 @@ func (s *Server) leetgrinderSettings(w http.ResponseWriter, r *http.Request) {
 	}
 	page := s.withNotify(r.Context(), leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), Schedule: leetgrinder.NewScheduleForm(settings), Saved: r.URL.Query().Get("saved") != ""})
 	page.Notify.TestSent = r.URL.Query().Get("tested") != ""
-	renderLeetgrinder(w, r, 200, leetgrinder.SettingsView(page))
+	renderLeetgrinder(w, r, 200, leetgrinder.SettingsView(s.withAPITokens(r, page)))
 }
 
 // settingsError carries a message that is safe to show next to the form.
@@ -300,7 +300,7 @@ func (s *Server) leetgrinderSaveSchedule(w http.ResponseWriter, r *http.Request)
 		if err != nil {
 			message += " Your settings could not be reloaded; your draft is retained below."
 		}
-		renderLeetgrinder(w, r, status, leetgrinder.SettingsView(s.withNotify(r.Context(), leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), Schedule: form, Error: message})))
+		renderLeetgrinder(w, r, status, leetgrinder.SettingsView(s.withAPITokens(r, s.withNotify(r.Context(), leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), Schedule: form, Error: message}))))
 	}
 	hours, err := strconv.ParseFloat(form.Hours, 64)
 	if err != nil || !leetgrinder.ValidDailyHours(hours) {

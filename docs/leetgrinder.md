@@ -46,6 +46,17 @@ Record each attempt as solved, struggled, or unfinished, with minutes spent and 
 
 Use “Export attempt history” to download Leetgrinder attempts and completed sessions as JSON. This is separate from the existing workspace archive. There is no Leetgrinder import UI yet; PostgreSQL backups remain the full restore mechanism.
 
+## Browser extension
+
+`extension/leetgrinder/` is a Manifest V3 extension for Chrome and Firefox that logs LeetCode submissions. When a submission on a curriculum problem is Accepted, it opens a confirm panel on the LeetCode page prefilled with the outcome (solved at 25 minutes or less, otherwise struggled), the minutes since the problem was first opened, and whether you opened the Solutions or Editorial tab. Nothing is sent until you confirm. After 25 minutes without an Accepted submission it offers to log the problem as unfinished. Problems outside the curriculum are ignored. See the [extension README](../extension/leetgrinder/README.md) for loading it unpacked and the manual test checklist.
+
+The extension authenticates with a personal API token. Create one under **Browser extension tokens** on `/leetgrinder/settings`. The token (`lg_` plus 32 random bytes in base64url) is shown once, in the response to the create request; only its SHA-256 hash is stored in `leetgrinder_api_tokens`. The list shows each token's name, creation time, last use (recorded at most once a minute), and revocation. Revoked tokens are rejected immediately. At most 20 tokens can be active.
+
+API, authenticated only with `Authorization: Bearer <token>` (session cookies are ignored; `/api/` bypasses the login redirect, so these handlers check the token themselves):
+
+- `POST /api/leetgrinder/attempts` with JSON `{id, problemSlug, outcome, minutes, assisted, notes, isReview?}`. It uses the same idempotent attempt creation as the web form and records `source = 'extension'`. Retrying with the same `id` and values returns the saved attempt; the same `id` with different values is `409`. Other responses: `401` bad or revoked token, `422` slug not in the curriculum, `400` invalid fields or JSON, `413` body over 64 KiB, `415` non-JSON body. An omitted `isReview` means false.
+- `GET /api/leetgrinder/problem/{slug}` returns `inCurriculum`, and for curriculum problems the title, difficulty, session, week, `todaysReview`, `reviewDone`, and `latestAttempt`. It plans today's reviews on first access, like the day page.
+
 ## Development
 
 The feature uses Go templ, not Astro or a client-side editor. Original lessons are authored in `internal/leetgrinder/lessons*.templ`; assignments and reading references live beside them. The private source files in `data/algomonster` are not required to build or serve the feature.
@@ -57,13 +68,12 @@ make generate
 make build
 make test
 make test-postgres
+cd extension/leetgrinder && node --test
 ```
 
 `make dev` generates templates before starting Go. Docker builds generate them too. Generated `_templ.go` files remain ignored, so run `make generate` before invoking `go test ./...` directly in a fresh checkout. Air watches `.templ` files and excludes generated files from triggering rebuild loops.
 
 Leetgrinder pages require the existing login. Writes use same-origin HTML forms with server validation. Failed attempt saves display the submitted draft for retry. Attempt IDs prevent duplicate creates; revisions protect corrections. Tracking belongs to the app's existing single configured account.
-
-The browser extension is still to come. Migration 011 already creates its tables: `leetgrinder_api_tokens` and `source` on attempts (`web` or `extension`).
 
 The ntfy access token is stored encrypted with AES-256-GCM. Set `LEETGRINDER_SECRET_KEY` to 32 random bytes encoded as base64 (for example `openssl rand -base64 32`). Development derives a key from `JWT_SECRET` when it is unset. In production, `serve` refuses to start without the key once an encrypted token is stored. Changing the key makes a stored token unreadable, so re-enter the token afterwards.
 

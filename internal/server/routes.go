@@ -121,6 +121,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 		})
 	})
 	s.registerLeetgrinder(r)
+	s.registerLeetgrinderExtension(r)
 	s.registerStatic(r)
 	return r
 }

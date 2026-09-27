@@ -1,0 +1,56 @@
+package leetgrinder
+
+// apiTokenSettings manages the personal API tokens the browser extension uses.
+templ apiTokenSettings(page SettingsPage) {
+	<section class="panel" id="api-tokens" aria-labelledby="api-tokens-title">
+		<h2 id="api-tokens-title">Browser extension tokens</h2>
+		<p class="muted">The Leetgrinder browser extension logs LeetCode submissions with a personal API token. A token can only record attempts and read problem status. Revoke any token you no longer use.</p>
+		if page.APITokens.Error != "" {
+			<p class="error" role="alert">{ page.APITokens.Error }</p>
+		}
+		if page.APITokens.Created != "" {
+			<div class="notice token-created" role="status">
+				<p><strong>Token “{ page.APITokens.CreatedName }” created.</strong> Copy it into the extension's options now. It will not be shown again.</p>
+				<label class="token-value">
+					<span class="small muted">API token</span>
+					<input type="text" readonly value={ page.APITokens.Created } autocomplete="off" spellcheck="false"/>
+				</label>
+			</div>
+		}
+		<form class="attempt-form settings-form" method="post" action="/leetgrinder/settings/tokens">
+			<div class="form-row">
+				<label>Token name<input type="text" name="name" required maxlength="64" placeholder="Firefox laptop" value={ page.APITokens.Name } autocomplete="off"/></label>
+			</div>
+			<button class="button primary" type="submit">Create token</button>
+		</form>
+		if page.APITokens.Unavailable {
+			<p class="error" role="alert">Your tokens could not be loaded. Reload the page to retry.</p>
+		} else if len(page.APITokens.Tokens) == 0 {
+			<p class="muted">No tokens yet.</p>
+		} else {
+			<div class="table-scroll queue token-list">
+				<table>
+					<thead><tr><th scope="col">Name</th><th scope="col">Created</th><th scope="col">Last used</th><th scope="col">Status</th></tr></thead>
+					<tbody>
+						for _, token := range page.APITokens.Tokens {
+							<tr>
+								<td>{ token.Name }</td>
+								<td>{ TokenTimeLabel(&token.CreatedAt, page.Settings.Location()) }</td>
+								<td>{ TokenTimeLabel(token.LastUsedAt, page.Settings.Location()) }</td>
+								<td>
+									if token.Revoked() {
+										Revoked { TokenTimeLabel(token.RevokedAt, page.Settings.Location()) }
+									} else {
+										<form method="post" action={ templ.SafeURL("/leetgrinder/settings/tokens/" + token.ID + "/revoke") }>
+											<button class="button" type="submit" aria-label={ "Revoke token " + token.Name }>Revoke</button>
+										</form>
+									}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+	</section>
+}
