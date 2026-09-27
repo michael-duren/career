@@ -553,6 +553,7 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm) {
 				}
 			</section>
 			<section>
+				@optimalPanel(problem, len(state.ProblemAttempts(problem.Slug)) > 0)
 				<h2>Previous attempts</h2>
 				if len(state.ProblemAttempts(problem.Slug))==0 {
 					<p class="muted">No attempts recorded yet.</p>
@@ -852,6 +853,7 @@ templ Problems(page ProblemsPage) {
 							<th scope="col">#</th>
 							<th scope="col">Problem</th>
 							<th scope="col">Difficulty</th>
+							<th scope="col">Optimal time / space</th>
 							<th scope="col">Topic</th>
 							<th scope="col">Session</th>
 							<th scope="col">Status</th>
@@ -871,6 +873,7 @@ templ Problems(page ProblemsPage) {
 									}
 								</th>
 								<td><span class={ DifficultyClass(row.Problem.Difficulty) }>{ row.Problem.Difficulty }</span></td>
+								<td class="optimal">@optimalCell(row.Problem, row.Attempts > 0)</td>
 								<td class="topic">{ row.Week.Title }<span class="small muted">{ row.Day.Title }</span></td>
 								<td><a href={ templ.SafeURL(DayURL(row.Day.Number)) }>{ DayLabel(row.Day.Number) }</a></td>
 								<td><span class={ StatusClass(row.Status) }>{ row.Status }</span></td>

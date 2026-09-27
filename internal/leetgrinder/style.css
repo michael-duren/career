@@ -1255,3 +1255,24 @@ dd {
   background: #450a0a;
   color: #fca5a5;
 }
+.optimal-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.problem-table td.optimal .optimal-value {
+  display: block;
+}
+.optimal-panel dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 16px;
+  margin: 0;
+  font-size: 0.85rem;
+}
+.optimal-panel dt {
+  color: var(--muted);
+}
+.optimal-panel p {
+  margin: 12px 0 0;
+}

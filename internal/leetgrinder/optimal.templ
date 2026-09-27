@@ -1,0 +1,35 @@
+package leetgrinder
+
+// optimalCell shows a problem's optimal time and space in the problems table.
+// Like the history page, it waits for the first attempt so the table does not
+// hint at the intended approach beforehand.
+templ optimalCell(p Problem, attempted bool) {
+	if attempted {
+		<span class="optimal-value"><abbr title="Time" aria-hidden="true">T</abbr><span class="visually-hidden">Time</span> { p.OptimalTime }</span>
+		<span class="optimal-value"><abbr title="Space" aria-hidden="true">S</abbr><span class="visually-hidden">Space</span> { p.OptimalSpace }</span>
+	} else {
+		<span class="muted" aria-hidden="true">—</span><span class="visually-hidden">Shown after your first attempt</span>
+	}
+}
+
+// optimalPanel reveals the optimal complexity only once the learner has
+// attempted the problem, so the answer's shape is not given away beforehand.
+templ optimalPanel(p Problem, attempted bool) {
+	<div class="panel optimal-panel">
+		<h2>Optimal complexity</h2>
+		if attempted {
+			<dl>
+				<dt>Optimal time</dt>
+				<dd class="optimal-value">{ p.OptimalTime }</dd>
+				<dt>Optimal space</dt>
+				<dd class="optimal-value">{ p.OptimalSpace }</dd>
+			</dl>
+			if p.OptimalNote != "" {
+				<p class="small muted">{ p.OptimalNote }</p>
+			}
+			<p class="small muted">Best-known bounds under the problem's constraints. Space excludes the returned output.</p>
+		} else {
+			<p class="small muted">The optimal time and space complexity appears after your first attempt.</p>
+		}
+	</div>
+}
