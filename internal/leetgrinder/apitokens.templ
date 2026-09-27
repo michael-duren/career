@@ -41,7 +41,7 @@ templ apiTokenSettings(page SettingsPage) {
 									if token.Revoked() {
 										Revoked { TokenTimeLabel(token.RevokedAt, page.Settings.Location()) }
 									} else {
-										<form method="post" action={ templ.SafeURL("/leetgrinder/settings/tokens/" + token.ID + "/revoke") }>
+										<form method="post" action={ templ.SafeURL("/leetgrinder/settings/tokens/" + token.ID + "/revoke#api-tokens") }>
 											<button class="button" type="submit" aria-label={ "Revoke token " + token.Name }>Revoke</button>
 										</form>
 									}
