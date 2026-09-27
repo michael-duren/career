@@ -1,6 +1,6 @@
 package leetgrinder
 
-templ layout(title string) {
+templ layout(title string, active string) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -13,54 +13,195 @@ templ layout(title string) {
 		</head>
 		<body>
 			<a class="skip" href="#main">Skip to content</a>
-			<header class="site-header">
-				<a class="brand" href="/">Career strategy</a>
-				<nav aria-label="Main navigation"><a href="/leetgrinder" aria-current="page">Leetgrinder</a><a href="/2026/career-study-plan">Study plan</a><a href="/notes">Notes</a></nav>
-			</header>
-			<main id="main">
-				{ children... }
-			</main>
-			<footer>12 weeks · 84 sessions <nav aria-label="Leetgrinder links"><a href="/leetgrinder/reviews">Review queue</a><a href="/leetgrinder/settings">Settings</a><a href="/leetgrinder/export">Export attempt history</a></nav></footer>
+			<div class="shell">
+				<aside class="sidenav">
+					<a class="sidenav-back" href="/">@icon("arrow-left") Career Strategy</a>
+					<p class="sidenav-brand">@icon("terminal") Leetgrinder</p>
+					<nav aria-label="Leetgrinder">
+						@navLink("/leetgrinder", "Dashboard", "dashboard", active)
+						@navLink("/leetgrinder/reviews", "Review queue", "reviews", active)
+						@navLink("/leetgrinder/about", "About", "about", active)
+						@navLink("/leetgrinder/settings", "Settings", "settings", active)
+					</nav>
+					<a class="sidenav-foot" href="/leetgrinder/export">@icon("download") Export history</a>
+				</aside>
+				<main id="main">
+					{ children... }
+				</main>
+			</div>
 		</body>
 	</html>
 }
 
+templ navLink(href string, label string, key string, active string) {
+	if key == active {
+		<a href={ templ.SafeURL(href) } aria-current="page">@icon(key)<span>{ label }</span></a>
+	} else {
+		<a href={ templ.SafeURL(href) }>@icon(key)<span>{ label }</span></a>
+	}
+}
+
+// icon draws Lucide outline icons inline so pages need no icon font.
+templ icon(name string) {
+	<svg class="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		switch name {
+			case "dashboard":
+				<rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect>
+			case "reviews":
+				<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path>
+			case "about":
+				<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path>
+			case "settings":
+				<path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle>
+			case "download":
+				<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path><path d="M12 15V3"></path>
+			case "arrow-left":
+				<path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path>
+			case "warning":
+				<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path>
+			case "terminal":
+				<path d="m4 17 6-6-6-6"></path><path d="M12 19h8"></path>
+		}
+	</svg>
+}
+
 templ Overview(page OverviewPage) {
-	@layout("Your curriculum") {
+	@layout("Dashboard", "dashboard") {
+		<header class="dash-head">
+			<div>
+				<p class="eyebrow">DASHBOARD</p>
+				<h1>
+					if page.Started() {
+						Welcome back
+					} else {
+						Ready when you are
+					}
+				</h1>
+				<p class="muted">{ DateLabel(page.Today.Date) }</p>
+			</div>
+			if page.Today.Status() != "" {
+				<span class="status-chip">{ page.Today.Status() }</span>
+			}
+		</header>
+		<section class="panel dash-hero" aria-labelledby="next-title">
+			if next, ok := page.NextSession(); ok {
+				<div>
+					<p class="eyebrow">UP NEXT · { WeekLabel(WeekNumber(next.Number)) } · { DayLabel(next.Number) }</p>
+					<h2 id="next-title">{ next.Title }</h2>
+					<p class="muted small">
+						{ Count(len(next.Core)) } core problems
+						if next.RequiredReading() > 0 {
+							· { Count(next.RequiredReading()) } min required reading
+						}
+						if page.ReviewsLeft() > 0 {
+							· { Count(page.ReviewsLeft()) } to review today
+						}
+					</p>
+					<ul class="upnext">
+						for _, problem := range next.Core {
+							<li>
+								<a href={ templ.SafeURL(problem.URL()) } target="_blank" rel="noopener noreferrer">{ problem.Title } <span aria-label="opens in a new tab">↗</span></a>
+								<span class={ DifficultyClass(problem.Difficulty) }>{ problem.Difficulty }</span>
+								<span class="small muted">{ page.Today.State.ProblemStatus(problem.Slug) }</span>
+							</li>
+						}
+					</ul>
+				</div>
+				<div class="dash-cta">
+					<a class="button primary" href={ templ.SafeURL(DayURL(next.Number)) }>
+						if page.Started() {
+							Resume { DayLabel(next.Number) }
+						} else {
+							Start { DayLabel(next.Number) }
+						}
+						<span aria-hidden="true">→</span>
+					</a>
+					<p class="small muted">90 minutes of practice, 30 to read and review.</p>
+				</div>
+			} else {
+				<div>
+					<p class="eyebrow">ALL SESSIONS FINISHED</p>
+					<h2 id="next-title">84 sessions complete</h2>
+					<p class="muted">Keep your recall sharp with the review queue, or revisit optional problems.</p>
+				</div>
+				<div class="dash-cta"><a class="button primary" href="/leetgrinder/reviews">Open review queue <span aria-hidden="true">→</span></a></div>
+			}
+		</section>
+		<section class="stats" aria-label="Your progress">
+			<div>
+				<strong>{ Count(Summarize(page.Today.State).Completed) }<span>/ 84</span></strong>
+				<p>Sessions finished</p>
+				<progress value={ Count(Summarize(page.Today.State).Completed) } max="84">{ Count(Summarize(page.Today.State).Completed) } of 84</progress>
+			</div>
+			<div>
+				<strong>{ Count(Summarize(page.Today.State).Solved) }<span>/ 300</span></strong>
+				<p>Unique problems solved</p>
+				<progress value={ Count(Summarize(page.Today.State).Solved) } max="300">{ Count(Summarize(page.Today.State).Solved) } of 300</progress>
+			</div>
+			<div><strong>{ page.IndependentRate() }</strong><p>Solved independently</p></div>
+			<div><strong>{ Count(page.Streak()) }<span>days</span></strong><p>Practice streak</p></div>
+		</section>
+		@scheduleCard(page.Today)
+		<div class="dash-grid">
+			<div>
+				@todaysReviews(page.Today, page.IDs, 0, "overview")
+			</div>
+			<div>
+				if upcoming := page.Upcoming(4); len(upcoming) > 0 {
+					<section class="panel side-list" aria-labelledby="upcoming-title">
+						<h2 id="upcoming-title">Coming up</h2>
+						<ol>
+							for _, u := range upcoming {
+								<li>
+									<a href={ templ.SafeURL(DayURL(u.Day.Number)) }>
+										<span class="day-number">{ Count(u.Day.Number) }</span>
+										<span>{ u.Day.Title }</span>
+									</a>
+									if u.Scheduled() {
+										<span class="small muted">{ DateLabel(u.Date) }</span>
+									}
+								</li>
+							}
+						</ol>
+						<a class="small" href="/leetgrinder/about#curriculum">Full curriculum</a>
+					</section>
+				}
+				<section class="panel side-list" aria-labelledby="recent-title">
+					<h2 id="recent-title">Recent attempts</h2>
+					if recent := page.Recent(5); len(recent) > 0 {
+						<ol>
+							for _, a := range recent {
+								<li>
+									if problem, ok := FindProblem(a.ProblemSlug); ok {
+										<a href={ templ.SafeURL(ProblemURL(a.ProblemSlug)) }>{ problem.Title }</a>
+									} else {
+										<span>{ a.ProblemSlug }</span>
+									}
+									<span class="small muted">{ OutcomeLabel(a.Outcome) } · { Count(a.Minutes) } min</span>
+								</li>
+							}
+						</ol>
+					} else {
+						<p class="muted small">Your logged attempts will show up here.</p>
+					}
+				</section>
+			</div>
+		</div>
+	}
+}
+
+templ About(page OverviewPage) {
+	@layout("About", "about") {
 		<section class="hero">
 			<div><p class="eyebrow">THE DAILY PRACTICE</p><h1>Build the habits.<br/>Learn the patterns.</h1><p class="lead">A 12-week DSA curriculum for programmers getting back into problem solving. One focused session at a time.</p></div>
 			<aside class="resume">
-				<p class="eyebrow">YOUR NEXT SESSION</p>
-				if Summarize(page.Today.State).NextDay > 0 {
-					<h2>
-						{ DayLabel(Summarize(page.Today.State).NextDay) }
-					</h2>
-					<p>90 minutes of practice.<br/>30 minutes to read and review.</p>
-					<a
-						class="button primary"
-						href={ templ.SafeURL(DayURL(Summarize(page.Today.State).NextDay)) }
-					>Continue learning <span aria-hidden="true">→</span></a>
-				} else {
-					<h2>84 sessions complete</h2>
-					<p>Revisit unfinished problems or work through optional practice.</p><a class="button primary" href="#curriculum">Revisit the curriculum</a>
-				}
-				<p class="small muted">Pick up where you left off.</p>
+				<p class="eyebrow">HOW IT WORKS</p>
+				<h2>84 sessions</h2>
+				<p>252 core problems and 48 optional ones.<br/>Two hours a day: 90 minutes of practice, 30 to read and review.</p>
+				<a class="button primary" href="/leetgrinder">Go to your dashboard <span aria-hidden="true">→</span></a>
 			</aside>
 		</section>
-		@scheduleCard(page.Today)
-		@todaysReviews(page.Today, page.IDs, 0, "overview")
-		<section class="stats" aria-label="Your progress">
-			<div><strong>{ Count(Summarize(page.Today.State).Completed) }<span>/ 84</span></strong><p>Sessions finished</p></div>
-			<div><strong>{ Count(Summarize(page.Today.State).Solved) }<span>/ 300</span></strong><p>Unique problems solved</p></div>
-			<div>
-				<strong>
-					{ Count(Summarize(page.Today.State).Independent) }
-				</strong>
-				<p>Solved independently</p>
-			</div>
-			<div><strong>252<span>+ 48</span></strong><p>Core + optional problems</p></div>
-		</section>
-		<details class="guide"><summary>How to use your two hours</summary><div class="prose"><p>Start with the lesson and any required reading. Attempt each core problem for up to 25 minutes, leaving 15 minutes of your practice budget for debugging or another attempt. Spend the separate 30-minute block on reading and reviewing solutions.</p><p>Record “Solved” when your solution passes on LeetCode. Record “Struggled” when you need to revisit the approach, or “Unfinished” when you stop without completing it. Mark solution help separately, including hints. Reviewed solutions do not count as independent solves.</p><p>Optional problems are for days when core practice finishes early. The 300-problem target is a stretch goal, not a deadline. Finish a day when your session is over, even if some problems remain unfinished.</p></div></details>
+		<details class="guide" open><summary>How to use your two hours</summary><div class="prose"><p>Start with the lesson and any required reading. Attempt each core problem for up to 25 minutes, leaving 15 minutes of your practice budget for debugging or another attempt. Spend the separate 30-minute block on reading and reviewing solutions.</p><p>Record “Solved” when your solution passes on LeetCode. Record “Struggled” when you need to revisit the approach, or “Unfinished” when you stop without completing it. Mark solution help separately, including hints. Reviewed solutions do not count as independent solves.</p><p>Optional problems are for days when core practice finishes early. The 300-problem target is a stretch goal, not a deadline. Finish a day when your session is over, even if some problems remain unfinished.</p></div></details>
 		<section id="curriculum">
 			<div class="section-heading"><h2>Your curriculum</h2><p class="muted">12 weeks of progressively harder patterns</p></div>
 			<div class="weeks">
@@ -106,9 +247,9 @@ templ Overview(page OverviewPage) {
 }
 
 templ Session(page DayPage) {
-	@layout(DayLabel(page.Day.Number) + " · " + page.Day.Title) {
+	@layout(DayLabel(page.Day.Number)+" · "+page.Day.Title, "") {
 		<nav class="breadcrumb" aria-label="Breadcrumb">
-			<a href="/leetgrinder">Curriculum</a><span>/</span>
+			<a href="/leetgrinder/about#curriculum">Curriculum</a><span>/</span>
 			<span>
 				{ WeekLabel(WeekNumber(page.Day.Number)) }
 			</span><span>/</span>
@@ -225,7 +366,7 @@ templ Session(page DayPage) {
 							href={ templ.SafeURL(DayURL(page.Day.Number + 1)) }
 						>Next day →</a>
 					}
-					<a href="/leetgrinder">All 84 sessions</a>
+					<a href="/leetgrinder/about#curriculum">All 84 sessions</a>
 				</nav>
 			</aside>
 		</div>
@@ -298,8 +439,8 @@ templ attemptFields(problem Problem, form AttemptForm) {
 }
 
 templ ProblemHistory(problem Problem, state State, form AttemptForm) {
-	@layout(problem.Title) {
-		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder">Curriculum</a><span>/</span><span>Attempt history</span></nav>
+	@layout(problem.Title, "") {
+		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder/about#curriculum">Curriculum</a><span>/</span><span>Attempt history</span></nav>
 		<p class="eyebrow">
 			LEETCODE { Count(problem.ID) } · { problem.Difficulty }
 		</p>
@@ -386,7 +527,7 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm) {
 }
 
 templ Unavailable(message string) {
-	@layout("Unable to load") {
+	@layout("Unable to load", "") {
 		<section class="panel">
 			<h1>Unable to load your progress</h1>
 			<p role="alert">
@@ -482,8 +623,7 @@ templ reviewCard(item ReviewItem, form AttemptForm) {
 }
 
 templ Reviews(page ReviewsPage) {
-	@layout("Review queue") {
-		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder">Curriculum</a><span>/</span><span>Review queue</span></nav>
+	@layout("Review queue", "reviews") {
 		<p class="eyebrow">SPACED REPETITION</p>
 		<h1>Review queue</h1>
 		<p class="lead">Every problem you have attempted, scheduled by how likely you are to recall it.</p>
@@ -521,8 +661,7 @@ templ Reviews(page ReviewsPage) {
 }
 
 templ SettingsView(page SettingsPage) {
-	@layout("Settings") {
-		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder">Curriculum</a><span>/</span><span>Settings</span></nav>
+	@layout("Settings", "settings") {
 		<h1>Settings</h1>
 		if page.Error != "" {
 			<p class="error" role="alert">{ page.Error }</p>

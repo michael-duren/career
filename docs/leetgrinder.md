@@ -2,6 +2,8 @@
 
 Open `/leetgrinder` after signing in. The curriculum contains 84 numbered sessions across 12 weeks, with 252 core problems and 48 optional problems. Sessions still unlock at your pace, but you can pin them to a calendar to see whether you are on track.
 
+A side navigation links the dashboard, review queue, about page, and settings. The dashboard (`/leetgrinder`) shows the next unfinished session with its core problems and a Start or Resume button, progress stats (sessions, unique solves, independent-solve rate, practice streak), the schedule status, today's reviews, upcoming sessions with their scheduled dates, and recent attempts. The about page (`/leetgrinder/about`) holds the introduction, the guide to the two-hour budget, and the full curriculum. Pages use the main site's zinc and blue palette.
+
 Allow two hours per session: 90 minutes for attempts and debugging, and 30 minutes for reading and review. Optional problems are for sessions where core work finishes early. Finishing a day advances to the earliest unfinished session without marking its problems solved.
 
 ## Schedule

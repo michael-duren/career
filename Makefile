@@ -129,10 +129,13 @@ dev: ## Install dependencies, set up .env, start PostgreSQL, build, and serve
 	npm run build
 	$(MAKE) go-dev
 
+start: ## Start everything that is not running yet (deps, .env, PostgreSQL, observability, frontend build), then serve
+	./scripts/start-local.sh
+
 help: ## Show available commands
 	@awk 'BEGIN { print "Usage: make <command>\n" } /^[a-zA-Z0-9_-]+:.*## / { split($$0, parts, "## "); sub(/:.*/, "", parts[1]); printf "  %-22s %s\n", parts[1], parts[2] }' $(MAKEFILE_LIST)
 
-.PHONY: dev help
+.PHONY: dev start help
 
 # Pin generator and runtime together through go.mod.
 generate: ## Generate Go code from templ components

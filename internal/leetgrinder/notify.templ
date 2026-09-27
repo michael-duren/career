@@ -8,7 +8,11 @@ templ notifySettings(panel NotifyPanel) {
 
 templ ntfySettings(panel NotifyPanel) {
 	<section class="panel" id="ntfy" aria-labelledby="ntfy-settings-title">
-		<h2 id="ntfy-settings-title">ntfy</h2>
+		<div class="section-title">
+			<h2 id="ntfy-settings-title">ntfy</h2>
+			@topicWarning(panel)
+			@ntfyHelp("ntfy-help")
+		</div>
 		<p class="muted">Reminders are sent to an <a href="https://ntfy.sh" rel="noreferrer">ntfy</a> topic. Subscribe to the same topic in the ntfy app on your phone.</p>
 		if panel.TestSent {
 			<p class="notice" role="status">Test notification sent. Check your ntfy app.</p>
@@ -49,7 +53,14 @@ templ ntfySettings(panel NotifyPanel) {
 
 templ notificationSettings(panel NotifyPanel) {
 	<section class="panel" id="notifications" aria-labelledby="notification-settings-title">
-		<h2 id="notification-settings-title">Notifications</h2>
+		<div class="section-title">
+			<h2 id="notification-settings-title">Notifications</h2>
+			@topicWarning(panel)
+			@ntfyHelp("notifications-help")
+		</div>
+		if panel.TopicMissing {
+			<p class="warning" role="note">No reminders will be sent until you save an ntfy topic. <a href="#ntfy">Set up ntfy</a></p>
+		}
 		<p class="muted">Each reminder is checked at its time in your schedule's time zone and sent at most once a day. Nothing is sent before the start date, more than a day after the end date, or without a schedule.</p>
 		<form class="attempt-form settings-form" method="post" action="/leetgrinder/settings/notifications">
 			<input type="hidden" name="revision" value={ panel.Notifications.Revision }/>
@@ -105,4 +116,26 @@ templ notificationLog(panel NotifyPanel) {
 			</div>
 		}
 	</section>
+}
+
+templ topicWarning(panel NotifyPanel) {
+	if panel.TopicMissing {
+		<span class="warning-chip">@icon("warning")<span>No topic set</span></span>
+	}
+}
+
+// ntfyHelp is an info button that opens setup steps in a native popover.
+templ ntfyHelp(id string) {
+	<button class="info-button" type="button" popovertarget={ id } aria-label="How to set up ntfy">@icon("about")</button>
+	<div class="help-popover" id={ id } popover>
+		<h3>Set up ntfy</h3>
+		<ol>
+			<li>Install the ntfy app on your phone (<a href="https://docs.ntfy.sh/subscribe/phone/" target="_blank" rel="noopener noreferrer">Android or iOS</a>), or open <a href="https://ntfy.sh/app" target="_blank" rel="noopener noreferrer">ntfy.sh/app</a> in a browser.</li>
+			<li>Pick a long random topic name. Anyone who knows a public topic can read it. For example, run <code>echo "leetgrinder-$(openssl rand -hex 12)"</code>.</li>
+			<li>In the app, subscribe to that topic on the same server as below (<code>https://ntfy.sh</code> by default).</li>
+			<li>Enter the same topic under ntfy here and save. Leave the access token empty unless your server requires sign-in.</li>
+			<li>Press <strong>Send test notification</strong> and check your phone.</li>
+		</ol>
+		<button class="button" type="button" popovertarget={ id } popovertargetaction="hide">Close</button>
+	</div>
 }

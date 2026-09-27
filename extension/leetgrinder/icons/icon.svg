@@ -1,0 +1,50 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none"
+    xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="growth" x1="150" y1="350" x2="365" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0B4A8B"/>
+      <stop offset="55%" stop-color="#0A8FA6"/>
+      <stop offset="100%" stop-color="#12C7A3"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Code brackets -->
+  <path d="M186 138 L96 228 L186 318"
+        stroke="#0B3A73"
+        stroke-width="34"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+
+  <path d="M326 138 L416 228 L326 318"
+        stroke="#0B3A73"
+        stroke-width="34"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+
+  <!-- Career / DSA growth path -->
+  <path d="M150 350
+           C178 320 188 292 214 274
+           C238 258 257 280 279 255
+           C304 226 314 195 338 161"
+        stroke="url(#growth)"
+        stroke-width="24"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+
+  <!-- Graph nodes -->
+  <circle cx="150" cy="350" r="26" fill="white" stroke="#0B4A8B" stroke-width="16"/>
+  <circle cx="214" cy="274" r="24" fill="white" stroke="#0A74A0" stroke-width="16"/>
+  <circle cx="279" cy="255" r="24" fill="white" stroke="#0A9AA5" stroke-width="16"/>
+  <circle cx="338" cy="161" r="24" fill="white" stroke="#10BFA6" stroke-width="16"/>
+
+  <!-- Upward arrow -->
+  <path d="M338 161 L382 113"
+        stroke="#12C7A3"
+        stroke-width="24"
+        stroke-linecap="round"/>
+  <path d="M354 112 L390 104 L389 140"
+        stroke="#12C7A3"
+        stroke-width="24"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+</svg>

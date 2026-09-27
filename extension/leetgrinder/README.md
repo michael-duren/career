@@ -56,6 +56,15 @@ Behavior:
 
 The page world can forge the "Accepted" message. That only opens the panel; sending always needs your click in the extension's closed shadow-DOM panel, and the background worker re-validates every field.
 
+## Icons
+
+`icons/icon.svg` is the source. Chrome needs PNG manifest icons, so regenerate them after editing it:
+
+```sh
+cd extension/leetgrinder
+for s in 16 32 48 128; do rsvg-convert -w $s -h $s icons/icon.svg -o icons/icon-$s.png; done
+```
+
 ## Tests
 
 ```sh
