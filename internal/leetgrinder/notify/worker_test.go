@@ -174,7 +174,7 @@ func TestWorkerSendsEachKindOnceAtItsTime(t *testing.T) {
 	ctx := context.Background()
 	// Six early problems struggled 20 days ago are all due, more than today's slots.
 	for _, slug := range []string{"two-sum", "contains-duplicate", "valid-anagram", "ransom-note", "majority-element", "group-anagrams"} {
-		if _, err := f.db.SaveLeetgrinderAttempt(ctx, leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: slug, Outcome: "struggled", Minutes: 30}, ""); err != nil {
+		if _, err := f.db.SaveLeetgrinderAttempt(ctx, leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: slug, Outcome: "struggled", Minutes: 30, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}, ""); err != nil {
 			t.Fatal(err)
 		}
 	}

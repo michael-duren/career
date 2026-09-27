@@ -18,6 +18,20 @@
   // ui is the mounted panel: {host, root, locked}. A locked panel holds an
   // attempt that may already be saved and must stay until it is retried.
   let ui = null;
+  // capture is the latest validated submission on the open problem:
+  // {slug, submissionId, status, lang, code} (see lib.cleanCapture).
+  let capture = null;
+
+  // captureFor picks the code that produced the result being logged: the
+  // matching submission for a network-detected Accepted, the latest Accepted
+  // one for the DOM fallback, or the latest of any status for the nudge.
+  function captureFor(slug, submissionId) {
+    if (!capture || capture.slug !== slug) return null;
+    if (submissionId === undefined) return capture;
+    const m = /^submission-(\d+)$/.exec(submissionId);
+    if (m) return capture.submissionId === m[1] ? capture : null;
+    return capture.status === "Accepted" ? capture : null;
+  }
 
   async function send(message) {
     try {
@@ -82,7 +96,7 @@
     showNudge(state.slug, found.info);
   }
 
-  async function onAccepted() {
+  async function onAccepted(submissionId) {
     const state = current;
     if (!state || busy()) return;
     // Refresh so review status reflects anything logged since page load.
@@ -94,19 +108,27 @@
     const res = await send({ type: "timer:update", slug: state.slug, patch: { nudged: true } });
     if (current !== state || busy()) return;
     if (found.status === "error") {
-      showError(`Accepted, but Leetgrinder could not be reached: ${found.error}`);
+      showError(`Accepted, but Leetgrinder could not be reached: ${found.error}`, submissionId);
       return;
     }
     const timer = res.ok ? res.data : { startedAt: Date.now(), assisted: false };
     const minutes = lib.elapsedMinutes(timer.startedAt, Date.now());
-    showPanel(state.slug, found.info, { outcome: lib.inferOutcome(minutes), minutes, assisted: Boolean(timer.assisted) });
+    showPanel(state.slug, found.info, { outcome: lib.inferOutcome(minutes), minutes, assisted: Boolean(timer.assisted) }, captureFor(state.slug, submissionId));
   }
 
   window.addEventListener("message", (event) => {
-    // Only same-window messages from the page-world detector. Page scripts
-    // could forge this; it only opens the panel, which needs a click to send.
-    if (event.source !== window || !event.data || event.data.source !== DETECT_SOURCE) return;
-    if (event.data.type === "accepted") onAccepted();
+    // Only same-window, same-origin messages from the page-world detector.
+    // Page scripts could forge these, so they are validated strictly; they
+    // only open the panel or offer code, and nothing is sent without a click.
+    if (event.source !== window || event.origin !== location.origin) return;
+    const data = event.data;
+    if (!data || typeof data !== "object" || data.source !== DETECT_SOURCE) return;
+    if (data.type === "submission") {
+      const cleaned = lib.cleanCapture(data, current && current.slug);
+      if (cleaned) capture = cleaned;
+    } else if (data.type === "accepted" && typeof data.submissionId === "string" && data.submissionId.length <= 64) {
+      onAccepted(data.submissionId);
+    }
   });
 
   // ---- UI ----------------------------------------------------------------
@@ -122,7 +144,7 @@
     .badge { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 4px; background: #283423; color: #bee48a; font-size: 12px; }
     label { display: grid; gap: 4px; margin-bottom: 10px; font-size: 13px; }
     label.check { display: flex; gap: 8px; align-items: center; }
-    select, input[type=number], textarea { box-sizing: border-box; width: 100%; padding: 6px 8px; border: 1px solid #303832;
+    select, input[type=number], input[type=text], textarea { box-sizing: border-box; width: 100%; padding: 6px 8px; border: 1px solid #303832;
       border-radius: 6px; background: #101312; color: #edf3ed; font: inherit; }
     textarea { min-height: 64px; resize: vertical; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -155,13 +177,13 @@
     return root;
   }
 
-  function showError(message) {
+  function showError(message, submissionId) {
     const root = mount();
     const retry = el("button", { type: "button", className: "primary", text: "Try again" });
     const dismiss = el("button", { type: "button", text: "Dismiss" });
     retry.addEventListener("click", () => {
       closeUI();
-      onAccepted();
+      onAccepted(submissionId);
     });
     dismiss.addEventListener("click", closeUI);
     root.append(
@@ -192,7 +214,7 @@
     unfinished.addEventListener("click", async () => {
       const res = await send({ type: "timer:get", slug });
       const minutes = lib.elapsedMinutes(res.ok ? res.data.startedAt : Date.now(), Date.now());
-      showPanel(slug, info, { outcome: "unfinished", minutes, assisted: Boolean(res.ok && res.data.assisted) });
+      showPanel(slug, info, { outcome: "unfinished", minutes, assisted: Boolean(res.ok && res.data.assisted) }, captureFor(slug));
     });
     later.addEventListener("click", closeUI);
     root.append(
@@ -205,7 +227,29 @@
     unfinished.focus();
   }
 
-  function showPanel(slug, info, prefill) {
+  // complexityControl is a select of common classes plus "Other…", which
+  // reveals a text field. value() is the stated complexity before
+  // normalisation.
+  function complexityControl(name, label) {
+    const select = el("select", { name, "aria-label": `${label} complexity` }, [
+      el("option", { value: "", text: "Choose…" }),
+      ...lib.COMPLEXITIES.map((c) => el("option", { value: c, text: c })),
+      el("option", { value: "other", text: "Other…" }),
+    ]);
+    const other = el("input", { type: "text", name: `${name}Other`, maxLength: lib.MAX_COMPLEXITY, placeholder: "O(m·n)", autocomplete: "off", spellcheck: false, "aria-label": `Other ${label.toLowerCase()} complexity` });
+    other.hidden = true;
+    select.addEventListener("change", () => {
+      other.hidden = select.value !== "other";
+      if (!other.hidden) other.focus();
+    });
+    return {
+      node: el("label", {}, [label, select, other]),
+      fields: [select, other],
+      value: () => (select.value === "other" ? other.value : select.value),
+    };
+  }
+
+  function showPanel(slug, info, prefill, captured) {
     const root = mount();
     // One id per panel: retries of the same entry are idempotent on the server.
     const id = crypto.randomUUID();
@@ -222,7 +266,19 @@
     const status = el("p", { className: "status", role: "status" });
     const submit = el("button", { type: "submit", className: "primary", text: "Log attempt" });
     const dismiss = el("button", { type: "button", text: "Dismiss" });
-    const fields = [outcome, minutes, assisted, review, notes];
+    const time = complexityControl("timeComplexity", "Time");
+    const space = complexityControl("spaceComplexity", "Space");
+    const required = el("p", { className: "muted" });
+    const showRequired = () => {
+      required.textContent = lib.needsComplexity(outcome.value) ? "Time and space complexity are required." : "Complexity is optional for unfinished attempts.";
+    };
+    showRequired();
+    outcome.addEventListener("change", showRequired);
+    const includeCode = el("input", { type: "checkbox", name: "includeCode", checked: Boolean(captured) });
+    const codeRow = captured
+      ? [el("label", { className: "check" }, [includeCode, `Code captured (${lib.languageLabel(captured.lang)}, ${lib.formatBytes(lib.utf8Bytes(captured.code))})`])]
+      : [];
+    const fields = [outcome, minutes, ...time.fields, ...space.fields, assisted, review, includeCode, notes];
     // After an ambiguous failure the server may have saved the entry, so the
     // fields lock and retries resend exactly the same attempt.
     let locked = null;
@@ -230,6 +286,9 @@
     const form = el("form", { className: "box", "aria-label": "Log this attempt to Leetgrinder" }, [
       ...heading(info),
       el("div", { className: "row" }, [el("label", {}, ["Outcome", outcome]), el("label", {}, ["Minutes", minutes])]),
+      el("div", { className: "row" }, [time.node, space.node]),
+      required,
+      ...codeRow,
       el("label", { className: "check" }, [assisted, "Used a hint or solution"]),
       ...(info.todaysReview ? [el("label", { className: "check" }, [review, "Count as today's review"])] : []),
       el("label", {}, ["Notes", notes]),
@@ -244,20 +303,30 @@
     });
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
-      const attempt = locked || {
-        id,
-        problemSlug: slug,
-        outcome: outcome.value,
-        minutes: Number(minutes.value),
-        assisted: assisted.checked,
-        notes: notes.value,
-        isReview: Boolean(info.todaysReview && review.checked),
-      };
-      if (!lib.cleanAttempt(attempt)) {
+      const attempt =
+        locked ||
+        lib.buildAttempt(
+          {
+            id,
+            problemSlug: slug,
+            outcome: outcome.value,
+            minutes: Number(minutes.value),
+            assisted: assisted.checked,
+            notes: notes.value,
+            isReview: Boolean(info.todaysReview && review.checked),
+            timeComplexity: time.value(),
+            spaceComplexity: space.value(),
+          },
+          captured,
+          includeCode.checked,
+        );
+      const problem = lib.attemptProblem(attempt);
+      if (problem || !lib.cleanAttempt(attempt)) {
         status.className = "status error";
-        status.textContent = `Minutes must be a whole number from 1 to ${lib.MAX_MINUTES}.`;
+        status.textContent = problem || "The attempt is too large to send.";
         return;
       }
+      const droppedCode = Boolean(captured && includeCode.checked && !attempt.code);
       submit.disabled = true;
       for (const f of fields) f.disabled = true;
       status.className = "status";
@@ -269,7 +338,7 @@
       panel.locked = Boolean(locked);
       if (res.ok) {
         panel.locked = false;
-        status.textContent = "Logged to Leetgrinder.";
+        status.textContent = droppedCode ? "Logged to Leetgrinder without the code, which was too large to send." : "Logged to Leetgrinder.";
         // Start a fresh timer for the next attempt on this problem.
         await send({ type: "timer:restart", slug });
         setTimeout(() => {

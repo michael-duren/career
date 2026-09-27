@@ -1,6 +1,6 @@
 # Leetgrinder browser extension
 
-Logs LeetCode submissions to your Leetgrinder app. When a submission is Accepted, a panel opens on the LeetCode page with the outcome, minutes, and hint use filled in. Nothing is sent until you press **Log attempt**; **Dismiss** sends nothing.
+Logs LeetCode submissions to your Leetgrinder app. When a submission is Accepted, a panel opens on the LeetCode page with the outcome, minutes, and hint use filled in. You state the time and space complexity, and the code LeetCode judged is attached unless you untick it. Nothing is sent until you press **Log attempt**; **Dismiss** sends nothing.
 
 Manifest V3, plain JavaScript, no build step. One `manifest.json` works in Chrome 121+ and Firefox 128+. It is loaded unpacked; it is not published to any store.
 
@@ -38,10 +38,10 @@ Temporary add-ons are removed when Firefox restarts; load it again afterwards. Y
 |---|---|
 | `manifest.json` | Declares both `background.service_worker` (Chrome) and `background.scripts` (Firefox). Host access to your app is an optional permission requested at runtime for that origin only. |
 | `browser-shim.js` | `ext` = `browser` in Firefox, `chrome` in Chrome. |
-| `lib.js` | Pure helpers (slug parsing, timer rounding, outcome inference, validation). Tested with `node --test`. |
+| `lib.js` | Pure helpers (slug parsing, timer rounding, outcome inference, complexity normalisation, message and payload validation). Tested with `node --test`. |
 | `background.js` | The only code that reads the token and calls the app. Validates who sent each message and what it contains. Keeps per-problem timers in `storage.session`. |
-| `leetcode-detect.js` | Runs in LeetCode's page world. Watches `/submissions/detail/<id>/check/` responses for `status_msg: "Accepted"`, with a DOM fallback on the result panel. All LeetCode-specific detection lives here. |
-| `content.js` | Tracks the open problem and timer, shows the confirm panel and the 25-minute nudge. |
+| `leetcode-detect.js` | Runs in LeetCode's page world. Records the JSON body of `POST /problems/<slug>/submit/` (`lang`, `typed_code`) with the `submission_id` from its response, and watches `/submissions/detail/<id>/check/` responses. When a check finishes it posts `{slug, submissionId, status, lang, code}`, then an Accepted message if `status_msg` is `"Accepted"`. A DOM fallback on the result panel covers Accepted without code. All LeetCode-specific detection lives here. |
+| `content.js` | Tracks the open problem and timer, validates page-world messages, and shows the confirm panel and the 25-minute nudge. |
 | `options.html`, `options.js` | App origin, token, and Test connection. |
 
 Behavior:
@@ -50,11 +50,13 @@ Behavior:
 - **Timer.** Starts when a curriculum problem first opens and survives page reloads (it lives in `storage.session`, so a browser restart clears it). It resets after an attempt is logged. It also restarts when the problem has not been open for 30 minutes, or when it is more than 12 hours old, so a later visit (for example a review days later) starts fresh.
 - **Assisted.** Opening the problem's Solutions or Editorial tab marks the attempt as assisted.
 - **Prefill.** Solved if the timer shows 25 minutes or less, otherwise struggled. Every field is editable.
+- **Complexity.** Time and Space each offer the common classes (`O(1)` to `O(n!)`) or **Other…**, which shows a text field for values such as `O(m·n)` or `O(V + E)`. Other values must start with `O(`, end with `)`, and fit in 40 characters; `n^2`, `nlogn` and `logn` are rewritten as `n²`, `n log n` and `log n`. Both are required for solved and struggled attempts and optional for unfinished ones; the panel refuses to send without them. The same rules run in the app.
+- **Code.** When the judged submission's code was captured, the panel shows "Code captured (Python3, 1.2 KB)" with a checkbox, ticked by default, to include it. The Accepted panel attaches the code of the submission it reports; the unfinished panel attaches the latest submission on the problem, whatever its result. Code over 64 KiB is never captured, and code whose request would exceed the app's 96 KiB body limit is left out (the panel says so after saving). Code goes only to the configured app origin, through the background worker.
 - **Reviews.** When the problem is one of today's planned reviews, the panel shows a badge and a "Count as today's review" checkbox, checked unless today's review was already logged.
 - **Nudge.** After 25 minutes without an Accepted submission, a small panel offers **Log as unfinished** (opens the confirm panel prefilled as unfinished) or **Keep going**. It appears once per problem timer, and never after an Accepted submission on that timer (logged or dismissed). The timer that starts after logging an attempt does not nudge either.
 - **Retries.** Each panel has one attempt id. After a network or server error the fields lock and **Retry** resends the identical attempt, so the app never records it twice. While a save is in flight or waiting for Retry, a new Accepted submission does not replace the panel. A 409 means that id was already saved with different values; correct the attempt in the app.
 
-The page world can forge the "Accepted" message. That only opens the panel; sending always needs your click in the extension's closed shadow-DOM panel, and the background worker re-validates every field.
+The page world can forge both messages. The content script accepts them only from the same window and origin, and checks a submission message's exact keys, types, and sizes (numeric submission id, status up to 64 characters, a LeetCode-style language slug up to 32 characters, code up to 64 KiB) and that it names the problem on screen. A forged message can only open the panel or offer code that the panel shows with its size; sending always needs your click in the extension's closed shadow-DOM panel, and the background worker re-validates every field. The app escapes code when it displays it.
 
 ## Icons
 
@@ -80,7 +82,9 @@ Run through this after loading the extension in each browser, with the app runni
 - [ ] Options: Save prompts for access to the app origin only; Test connection says "Connected".
 - [ ] Options: Test connection with a revoked token reports that the token was rejected.
 - [ ] Open a curriculum problem (for example `https://leetcode.com/problems/two-sum/`). Submit an accepted solution within a few minutes: the panel opens with Solved, the elapsed minutes, and assisted unchecked.
-- [ ] Log attempt: the panel says "Logged to Leetgrinder" and closes. The app's problem history shows the attempt with the right values.
+- [ ] Log attempt without choosing Time or Space: the panel refuses with a message. Choose both (try **Other…** with `O(nlogn)`) and log: the panel says "Logged to Leetgrinder" and closes. The app's problem history shows the attempt with the right values, `O(n log n)`, and the submitted code under "Submitted code".
+- [ ] The Accepted panel shows "Code captured (<language>, <size>)". Untick it and log: the history shows no code.
+- [ ] Submit a wrong answer, then wait for the 25-minute nudge and **Log as unfinished**: the panel offers the wrong answer's code and complexity is optional.
 - [ ] Reload the problem page mid-attempt: the next Accepted panel's minutes include time before the reload.
 - [ ] Close the problem tab, wait over 30 minutes, reopen it and submit: the minutes count from the reopen, and no nudge fires immediately.
 - [ ] Open the Solutions or Editorial tab, then submit an accepted solution: assisted is checked.

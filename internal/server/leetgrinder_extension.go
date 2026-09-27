@@ -12,9 +12,9 @@ import (
 	"github.com/michael-duren/career-strategy/internal/leetgrinder"
 )
 
-// leetgrinderAPIBodyLimit fits 2,000 notes characters even when every one is
-// escaped as a JSON surrogate pair.
-const leetgrinderAPIBodyLimit = 64 << 10
+// leetgrinderAPIBodyLimit fits 64 KiB of captured code plus JSON escaping
+// and the other fields; the extension checks the encoded size before sending.
+const leetgrinderAPIBodyLimit = 96 << 10
 
 // registerLeetgrinderExtension adds token management (cookie session) and the
 // extension API (bearer token). /api/ bypasses pageAccess, so the API
@@ -125,6 +125,12 @@ type leetgrinderAPIAttemptInput struct {
 	Assisted    bool   `json:"assisted"`
 	Notes       string `json:"notes"`
 	IsReview    *bool  `json:"isReview"`
+	// Complexity is required for solved and struggled attempts; code is the
+	// judged submission and its LeetCode language slug.
+	TimeComplexity  string `json:"timeComplexity"`
+	SpaceComplexity string `json:"spaceComplexity"`
+	Code            string `json:"code"`
+	CodeLanguage    string `json:"codeLanguage"`
 }
 
 func (s *Server) leetgrinderAPIAttempt(w http.ResponseWriter, r *http.Request) {
@@ -160,7 +166,19 @@ func (s *Server) leetgrinderAPIAttempt(w http.ResponseWriter, r *http.Request) {
 		respond(w, 422, map[string]string{"error": "This problem is not in the Leetgrinder curriculum."})
 		return
 	}
-	attempt := leetgrinder.Attempt{ID: input.ID, ProblemSlug: problem.Slug, Outcome: input.Outcome, Minutes: input.Minutes, Assisted: input.Assisted, Notes: input.Notes, Source: "extension", IsReview: input.IsReview != nil && *input.IsReview}
+	attempt := leetgrinder.Attempt{ID: input.ID, ProblemSlug: problem.Slug, Outcome: input.Outcome, Minutes: input.Minutes, Assisted: input.Assisted, Notes: input.Notes, Source: "extension", IsReview: input.IsReview != nil && *input.IsReview,
+		TimeComplexity: input.TimeComplexity, SpaceComplexity: input.SpaceComplexity, Code: input.Code, CodeLanguage: input.CodeLanguage}
+	switch err := attempt.NormalizeDetails(); {
+	case errors.Is(err, leetgrinder.ErrComplexityRequired), errors.Is(err, leetgrinder.ErrComplexityFormat):
+		respond(w, 422, map[string]string{"error": err.Error() + "."})
+		return
+	case errors.Is(err, leetgrinder.ErrCodeTooLarge):
+		respond(w, 413, map[string]string{"error": "Code must be 64 KiB or smaller."})
+		return
+	case err != nil:
+		bad("code must be valid UTF-8 text with a LeetCode language, or both must be empty.")
+		return
+	}
 	saved, err := s.db.SaveLeetgrinderAttempt(r.Context(), attempt, "")
 	switch {
 	case err == nil:
@@ -210,6 +228,8 @@ func (s *Server) leetgrinderAPIProblem(w http.ResponseWriter, r *http.Request) {
 	for _, a := range today.State.Attempts {
 		if a.ProblemSlug == problem.Slug {
 			latest := a
+			// The extension never needs the code back; keep the reply small.
+			latest.Code = ""
 			out.Latest = &latest
 			break
 		}

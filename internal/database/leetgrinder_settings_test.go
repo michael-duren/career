@@ -215,7 +215,7 @@ func TestLeetgrinderTodayFreezesReviewPlan(t *testing.T) {
 		t.Fatalf("topped-up plan: %+v %v", today.Reviews, err)
 	}
 	// Logging the review marks it done and keeps the plan.
-	review := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "contains-duplicate", Outcome: "solved", Minutes: 20, IsReview: true}
+	review := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "contains-duplicate", Outcome: "solved", Minutes: 20, IsReview: true, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}
 	if _, err = s.SaveLeetgrinderAttempt(ctx, review, ""); err != nil {
 		t.Fatal(err)
 	}
@@ -239,7 +239,7 @@ func TestLeetgrinderTodayFreezesReviewPlan(t *testing.T) {
 func TestLeetgrinderAttemptSource(t *testing.T) {
 	s := testStore(t)
 	ctx := context.Background()
-	a := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "two-sum", Outcome: "solved", Minutes: 12, Source: "extension", IsReview: true}
+	a := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "two-sum", Outcome: "solved", Minutes: 12, Source: "extension", IsReview: true, TimeComplexity: "O(n)", SpaceComplexity: "O(1)", Code: "class Solution: pass", CodeLanguage: "python3"}
 	saved, err := s.SaveLeetgrinderAttempt(ctx, a, "")
 	if err != nil || saved.Source != "extension" || !saved.IsReview {
 		t.Fatalf("saved %+v %v", saved, err)
