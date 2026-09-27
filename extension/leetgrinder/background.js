@@ -91,7 +91,15 @@ const getTimer = (slug) => serialized(slug, () => readTimer(slug));
 
 const updateTimer = (slug, patch) => serialized(slug, () => readTimer(slug, patch));
 
-const resetTimer = (slug) => serialized(slug, () => ext.storage.session.remove(timerKey(slug)));
+// restartTimer starts timing the next attempt after one is logged. It is
+// already nudged: the learner just finished and needs no "Log as unfinished".
+const restartTimer = (slug) =>
+  serialized(slug, async () => {
+    const now = Date.now();
+    const timer = { startedAt: now, lastSeenAt: now, assisted: false, nudged: true };
+    await ext.storage.session.set({ [timerKey(slug)]: timer });
+    return timer;
+  });
 
 function fromLeetCode(sender) {
   return Boolean(sender.tab) && typeof sender.url === "string" && sender.url.startsWith("https://leetcode.com/");
@@ -123,10 +131,9 @@ async function handle(message, sender) {
     case "timer:update":
       if (!lib.validSlug(slug) || !message.patch || typeof message.patch !== "object") return { ok: false, status: 0, error: "Invalid timer update." };
       return { ok: true, status: 200, data: await updateTimer(slug, message.patch) };
-    case "timer:reset":
+    case "timer:restart":
       if (!lib.validSlug(slug)) return { ok: false, status: 0, error: "Invalid problem." };
-      await resetTimer(slug);
-      return { ok: true, status: 200 };
+      return { ok: true, status: 200, data: await restartTimer(slug) };
     case "attempt": {
       const attempt = lib.cleanAttempt(message.attempt);
       if (!attempt) return { ok: false, status: 400, error: "Check the attempt fields and try again." };

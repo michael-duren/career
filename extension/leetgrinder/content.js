@@ -91,7 +91,8 @@
       showError(`Accepted, but Leetgrinder could not be reached: ${found.error}`);
       return;
     }
-    const res = await send({ type: "timer:get", slug: state.slug });
+    // Accepted ends the nudge window even if the panel is dismissed.
+    const res = await send({ type: "timer:update", slug: state.slug, patch: { nudged: true } });
     const timer = res.ok ? res.data : { startedAt: Date.now(), assisted: false };
     const minutes = lib.elapsedMinutes(timer.startedAt, Date.now());
     showPanel(state.slug, found.info, { outcome: lib.inferOutcome(minutes), minutes, assisted: Boolean(timer.assisted) });
@@ -266,8 +267,7 @@
         panel.locked = false;
         status.textContent = "Logged to Leetgrinder.";
         // Start a fresh timer for the next attempt on this problem.
-        await send({ type: "timer:reset", slug });
-        await send({ type: "timer:get", slug });
+        await send({ type: "timer:restart", slug });
         setTimeout(() => {
           if (ui && ui.root === root) closeUI();
         }, 1500);
