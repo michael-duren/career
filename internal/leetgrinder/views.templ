@@ -128,12 +128,12 @@ templ Overview(page OverviewPage) {
 			<div>
 				<strong>{ Count(Summarize(page.Today.State).Completed) }<span>/ 84</span></strong>
 				<p>Sessions finished</p>
-				<progress value={ Count(Summarize(page.Today.State).Completed) } max="84">{ Count(Summarize(page.Today.State).Completed) } of 84</progress>
+				<progress aria-hidden="true" value={ Count(Summarize(page.Today.State).Completed) } max="84">{ Count(Summarize(page.Today.State).Completed) } of 84</progress>
 			</div>
 			<div>
 				<strong>{ Count(Summarize(page.Today.State).Solved) }<span>/ 300</span></strong>
 				<p>Unique problems solved</p>
-				<progress value={ Count(Summarize(page.Today.State).Solved) } max="300">{ Count(Summarize(page.Today.State).Solved) } of 300</progress>
+				<progress aria-hidden="true" value={ Count(Summarize(page.Today.State).Solved) } max="300">{ Count(Summarize(page.Today.State).Solved) } of 300</progress>
 			</div>
 			<div><strong>{ page.IndependentRate() }</strong><p>Solved independently</p></div>
 			<div><strong>{ Count(page.Streak()) }<span>{ DayUnit(page.Streak()) }</span></strong><p>Practice streak</p></div>

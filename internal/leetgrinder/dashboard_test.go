@@ -24,7 +24,7 @@ func TestDashboard(t *testing.T) {
 		t.Fatal(err)
 	}
 	html := out.String()
-	for _, want := range []string{"Start Day 1", `href="/leetgrinder/day/1"`, "Two Sum", `<a href="/leetgrinder" aria-current="page">`, "Coming up", "Your logged attempts will show up here.", "<span>Dashboard</span>", "<span>Settings</span>"} {
+	for _, want := range []string{"Start Day 1", `href="/leetgrinder/day/1"`, "Two Sum", `<a href="/leetgrinder" aria-current="page">`, "Coming up", "Your logged attempts will show up here.", "<span>Dashboard</span>", "<span>Settings</span>", `<progress aria-hidden="true"`} {
 		if !strings.Contains(html, want) {
 			t.Errorf("fresh dashboard missing %q", want)
 		}
