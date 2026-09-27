@@ -479,7 +479,7 @@ func Curriculum() []Week {
 			{Number: 77, Title: "Compressed stack summaries", Lesson: "day-77", Readings: []Reading{{Title: "USACO Guide: monotonic stacks", URL: "https://usaco.guide/gold/stacks#application---nearest-smaller-element", Guidance: "Optional refresher: revisit the candidate-removal argument, then explain how one stack entry can summarize several earlier values.", Minutes: 5, Optional: true}}, Core: []Problem{
 				{ID: 901, Slug: "online-stock-span", Title: "Online Stock Span", Difficulty: "Medium", OptimalTime: "O(1)", OptimalSpace: "O(n)", OptimalNote: "Amortised per next call."},
 				{ID: 853, Slug: "car-fleet", Title: "Car Fleet", Difficulty: "Medium", OptimalTime: "O(n log n)", OptimalSpace: "O(n)"},
-				{ID: 402, Slug: "remove-k-digits", Title: "Remove K Digits", Difficulty: "Medium", OptimalTime: "O(n)", OptimalSpace: "O(n)"},
+				{ID: 402, Slug: "remove-k-digits", Title: "Remove K Digits", Difficulty: "Medium", OptimalTime: "O(n)", OptimalSpace: "O(1)", OptimalNote: "The monotonic stack is built in the output buffer; counted as working space it is O(n)."},
 			}, Optional: []Problem{
 				{ID: 42, Slug: "trapping-rain-water", Title: "Trapping Rain Water", Difficulty: "Hard", OptimalTime: "O(n)", OptimalSpace: "O(1)", OptimalNote: "Two pointers."},
 			}},
