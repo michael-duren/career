@@ -180,7 +180,7 @@ func TestLeetgrinderAnalysisDisplayAndReanalyse(t *testing.T) {
 	if b := request("GET", "/leetgrinder/problems", nil).Body.String(); strings.Contains(b, "Check complexity") {
 		t.Error("badge kept after re-analyse")
 	}
-	if w = request("POST", "/leetgrinder/problem/two-sum/attempts/"+uuid.NewString()+"/analysis", url.Values{}); w.Code != 404 || !strings.Contains(w.Body.String(), `href="/leetgrinder/problem/two-sum"`) {
+	if w = request("POST", "/leetgrinder/problem/two-sum/attempts/"+uuid.NewString()+"/analysis", url.Values{}); w.Code != 404 || !strings.Contains(w.Body.String(), `href="/leetgrinder/problem/two-sum#attempt-`) {
 		t.Errorf("missing attempt page: %d", w.Code)
 	}
 	for _, bad := range []string{"/leetgrinder/problem/valid-anagram/attempts/" + attempt.ID + "/analysis", "/leetgrinder/problem/two-sum/attempts/not-a-uuid/analysis", "/leetgrinder/problem/two-sum/attempts/" + uuid.NewString() + "/analysis"} {
