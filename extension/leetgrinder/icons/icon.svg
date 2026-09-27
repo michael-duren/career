@@ -8,6 +8,11 @@
     </linearGradient>
   </defs>
 
+  <!-- Light tile keeps the navy brackets visible on dark toolbars -->
+  <rect width="512" height="512" rx="112" fill="#F1F5F9"/>
+
+  <!-- Artwork, shifted down to sit centred on the tile -->
+  <g transform="translate(0 24)">
   <!-- Code brackets -->
   <path d="M186 138 L96 228 L186 318"
         stroke="#0B3A73"
@@ -47,4 +52,5 @@
         stroke-width="24"
         stroke-linecap="round"
         stroke-linejoin="round"/>
+  </g>
 </svg>
