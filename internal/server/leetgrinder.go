@@ -42,6 +42,7 @@ func (s *Server) registerLeetgrinder(r chi.Router) {
 		r.Get("/leetgrinder/reviews", s.leetgrinderReviews)
 		r.Get("/leetgrinder/settings", s.leetgrinderSettings)
 		r.Post("/leetgrinder/settings/schedule", s.leetgrinderSaveSchedule)
+		s.registerLeetgrinderNotify(r)
 		r.Get("/leetgrinder/export", func(w http.ResponseWriter, r *http.Request) {
 			state, err := s.db.LeetgrinderState(r.Context())
 			if err != nil {
@@ -279,7 +280,9 @@ func (s *Server) leetgrinderSettings(w http.ResponseWriter, r *http.Request) {
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your settings are unavailable. Please retry."))
 		return
 	}
-	renderLeetgrinder(w, r, 200, leetgrinder.SettingsView(leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), Schedule: leetgrinder.NewScheduleForm(settings), Saved: r.URL.Query().Get("saved") != ""}))
+	page := s.withNotify(r.Context(), leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), Schedule: leetgrinder.NewScheduleForm(settings), Saved: r.URL.Query().Get("saved") != ""})
+	page.Notify.TestSent = r.URL.Query().Get("tested") != ""
+	renderLeetgrinder(w, r, 200, leetgrinder.SettingsView(page))
 }
 
 // settingsError carries a message that is safe to show next to the form.
@@ -297,7 +300,7 @@ func (s *Server) leetgrinderSaveSchedule(w http.ResponseWriter, r *http.Request)
 		if err != nil {
 			message += " Your settings could not be reloaded; your draft is retained below."
 		}
-		renderLeetgrinder(w, r, status, leetgrinder.SettingsView(leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), Schedule: form, Error: message}))
+		renderLeetgrinder(w, r, status, leetgrinder.SettingsView(s.withNotify(r.Context(), leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), Schedule: form, Error: message})))
 	}
 	hours, err := strconv.ParseFloat(form.Hours, 64)
 	if err != nil || !leetgrinder.ValidDailyHours(hours) {

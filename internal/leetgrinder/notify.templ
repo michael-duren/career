@@ -1,0 +1,108 @@
+package leetgrinder
+
+templ notifySettings(panel NotifyPanel) {
+	@ntfySettings(panel)
+	@notificationSettings(panel)
+	@notificationLog(panel)
+}
+
+templ ntfySettings(panel NotifyPanel) {
+	<section class="panel" id="ntfy" aria-labelledby="ntfy-settings-title">
+		<h2 id="ntfy-settings-title">ntfy</h2>
+		<p class="muted">Reminders are sent to an <a href="https://ntfy.sh" rel="noreferrer">ntfy</a> topic. Subscribe to the same topic in the ntfy app on your phone.</p>
+		if panel.TestSent {
+			<p class="notice" role="status">Test notification sent. Check your ntfy app.</p>
+		}
+		<form class="attempt-form settings-form" method="post" action="/leetgrinder/settings/ntfy">
+			<input type="hidden" name="revision" value={ panel.Ntfy.Revision }/>
+			<div class="form-row">
+				<label>Server URL<input type="url" name="url" required value={ panel.Ntfy.URL } autocomplete="off" spellcheck="false"/></label>
+				<label>Topic<input type="text" name="topic" value={ panel.Ntfy.Topic } pattern="[A-Za-z0-9_\-]{0,64}" maxlength="64" autocomplete="off" spellcheck="false"/></label>
+			</div>
+			<label>
+				Access token <span class="muted">(optional)</span>
+				<input type="password" name="token" value="" maxlength="256" autocomplete="new-password" spellcheck="false" aria-describedby="ntfy-token-status"/>
+			</label>
+			<p class="small muted" id="ntfy-token-status">
+				if panel.Ntfy.TokenSet {
+					Token set. Leave the field blank to keep it.
+				} else {
+					No token set.
+				}
+				The token is stored encrypted and never shown again.
+			</p>
+			if panel.Ntfy.TokenSet {
+				<label class="checkbox"><input type="checkbox" name="clear_token" value="true" checked?={ panel.Ntfy.ClearToken }/>Clear the saved token</label>
+			}
+			if panel.SecretMissing {
+				<p class="small error">LEETGRINDER_SECRET_KEY is not configured on the server, so a token cannot be saved or used.</p>
+			}
+			<p class="small muted">Leave the topic empty to turn every notification off. Anyone who knows a public ntfy.sh topic can read it, so pick a long random topic or use a token.</p>
+			<button class="button primary" type="submit">Save ntfy settings</button>
+		</form>
+		<form method="post" action="/leetgrinder/settings/ntfy/test" class="settings-test">
+			<button class="button" type="submit">Send test notification</button>
+			<span class="small muted">Uses the saved settings.</span>
+		</form>
+	</section>
+}
+
+templ notificationSettings(panel NotifyPanel) {
+	<section class="panel" id="notifications" aria-labelledby="notification-settings-title">
+		<h2 id="notification-settings-title">Notifications</h2>
+		<p class="muted">Each reminder is checked at its time in your schedule's time zone and sent at most once a day. Nothing is sent before the start date, more than a day after the end date, or without a schedule.</p>
+		<form class="attempt-form settings-form" method="post" action="/leetgrinder/settings/notifications">
+			<input type="hidden" name="revision" value={ panel.Notifications.Revision }/>
+			for _, item := range panel.Notifications.Items {
+				<fieldset class="notification-kind">
+					<legend>{ item.Kind.Label }</legend>
+					<p class="small muted">{ item.Kind.Description }</p>
+					<label class="checkbox"><input type="checkbox" name={ item.Kind.Key + "_enabled" } value="true" checked?={ item.Enabled }/>Send this reminder</label>
+					<div class="form-row">
+						<label>Time<input type="time" name={ item.Kind.Key + "_time" } required value={ item.Time }/></label>
+						if item.Kind.ThresholdLabel != "" {
+							<label>{ item.Kind.ThresholdLabel }<input type="number" name={ item.Kind.Key + "_threshold" } min="1" max={ Count(item.Kind.MaxThreshold) } required value={ item.Threshold }/></label>
+						}
+						<label>
+							Priority
+							<select name={ item.Kind.Key + "_priority" } required>
+								for _, p := range NotificationPriorities {
+									<option value={ p } selected?={ item.Priority == p }>{ PriorityLabel(p) }</option>
+								}
+							</select>
+						</label>
+					</div>
+				</fieldset>
+			}
+			<button class="button primary" type="submit">Save notifications</button>
+		</form>
+	</section>
+}
+
+templ notificationLog(panel NotifyPanel) {
+	<section class="panel queue" id="notification-log" aria-labelledby="notification-log-title">
+		<h2 id="notification-log-title">Recent notifications</h2>
+		if panel.LogError {
+			<p class="muted">The notification log could not be loaded.</p>
+		} else if len(panel.Log) == 0 {
+			<p class="muted">No notifications yet.</p>
+		} else {
+			<div class="table-scroll">
+				<table>
+					<thead><tr><th scope="col">When</th><th scope="col">Reminder</th><th scope="col">Result</th><th scope="col">Attempts</th><th scope="col">Detail</th></tr></thead>
+					<tbody>
+						for _, e := range panel.Log {
+							<tr>
+								<td>{ NotificationTimeLabel(e.SentAt, panel.Location) }</td>
+								<td>{ NotificationKindLabel(e.Kind) }</td>
+								<td>{ NotificationStatusLabel(e.Status) }</td>
+								<td>{ Count(e.Attempts) }</td>
+								<td class="log-detail">{ e.Detail }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+	</section>
+}

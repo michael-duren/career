@@ -93,7 +93,7 @@ func (s Settings) Validate() error {
 	if !ntfyTopic.MatchString(s.NtfyTopic) {
 		return errors.New("ntfy topic may use up to 64 letters, digits, - and _")
 	}
-	return nil
+	return validNotificationPrefs(s.Notifications)
 }
 
 // ExtraReviewSlots converts time beyond the base two hours into 25-minute review slots.
