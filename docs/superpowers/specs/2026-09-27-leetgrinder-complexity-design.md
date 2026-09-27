@@ -152,3 +152,9 @@ Each phase gets its own worktree, branch and PR. Separate reviewer subagents rev
 - The LeetCode submit and check endpoints are undocumented. Capture code stays isolated in `leetcode-detect.js`, alongside the existing detection.
 - LLM complexity judgements can be wrong for subtle amortised or input-dependent cases. The UI labels them "Claude's assessment" and keeps the stated values untouched.
 - The optimal table is hand-curated: 300 values, reviewed by a subagent, but errors are possible. Disputed entries are listed in the sources doc.
+
+## Phase 3 implementation notes
+
+- `code_sha256` hashes the analysed inputs (language, stated time, stated space, code), not the code alone. Corrections keep the captured code but can change the stated values, which the match verdicts depend on.
+- Migration 014 also adds `leetgrinder_analysis_usage` (requests per local date, for the daily cap) and `leetgrinder_settings.analysis_enabled` (the toggle, default true).
+- "Retried at most 3 times" means four requests in all, as for notifications; the SDK's own retries are disabled so every request is counted.

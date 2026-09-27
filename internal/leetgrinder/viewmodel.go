@@ -104,6 +104,8 @@ type SettingsPage struct {
 	Notify NotifyPanel
 	// APITokens is the extension token section; see apitokens.templ.
 	APITokens APITokensSection
+	// Analysis is the complexity analysis section; see analysis.templ.
+	Analysis AnalysisPanel
 }
 
 func ReviewKey(slug string) string { return "review-" + slug }

@@ -45,6 +45,7 @@ func (s *Server) registerLeetgrinder(r chi.Router) {
 		r.Get("/leetgrinder/settings", s.leetgrinderSettings)
 		r.Post("/leetgrinder/settings/schedule", s.leetgrinderSaveSchedule)
 		s.registerLeetgrinderNotify(r)
+		s.registerLeetgrinderAnalysis(r)
 		r.Get("/leetgrinder/export", func(w http.ResponseWriter, r *http.Request) {
 			state, err := s.db.LeetgrinderState(r.Context())
 			if err != nil {
@@ -165,8 +166,18 @@ func (s *Server) leetgrinderProblem(w http.ResponseWriter, r *http.Request) {
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your attempt history is unavailable. Please retry."))
 		return
 	}
-	renderLeetgrinder(w, r, 200, leetgrinder.ProblemHistory(problem, state, leetgrinder.NewForm(uuid.NewString(), 0)))
+	renderLeetgrinder(w, r, 200, leetgrinder.ProblemHistory(problem, state, leetgrinder.NewForm(uuid.NewString(), 0), s.historyAnalysisOn(r)))
 }
+// historyAnalysisOn reports whether analysis runs, for the history page. A
+// settings failure only affects the analysis card's wording.
+func (s *Server) historyAnalysisOn(r *http.Request) bool {
+	if s.config.AnthropicAPIKey.Reveal() == "" {
+		return false
+	}
+	settings, err := s.db.LeetgrinderSettings(r.Context())
+	return err == nil && s.analysisOn(settings)
+}
+
 func (s *Server) leetgrinderForm(w http.ResponseWriter, r *http.Request) bool {
 	if !s.mutation(w, r, "application/x-www-form-urlencoded") {
 		return false
@@ -204,7 +215,7 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			form.Error += " Your history could not be loaded; your draft is retained below."
 		}
-		renderLeetgrinder(w, r, status, leetgrinder.ProblemHistory(problem, state, form))
+		renderLeetgrinder(w, r, status, leetgrinder.ProblemHistory(problem, state, form, s.historyAnalysisOn(r)))
 	}
 	if _, err := uuid.Parse(form.ID); err != nil {
 		form.ID = uuid.NewString()

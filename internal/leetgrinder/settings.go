@@ -37,11 +37,14 @@ type Settings struct {
 	NtfyTopic           string
 	NtfyTokenCiphertext []byte
 	Notifications       map[string]NotificationPref
-	Revision            string
+	// AnalysisEnabled turns LLM complexity analysis on or off. It defaults
+	// to on; analysis also needs ANTHROPIC_API_KEY.
+	AnalysisEnabled bool
+	Revision        string
 }
 
 func DefaultSettings() Settings {
-	return Settings{Timezone: DefaultTimezone, DailyHours: MinDailyHours, NtfyURL: DefaultNtfyURL, Notifications: map[string]NotificationPref{}}
+	return Settings{Timezone: DefaultTimezone, DailyHours: MinDailyHours, NtfyURL: DefaultNtfyURL, Notifications: map[string]NotificationPref{}, AnalysisEnabled: true}
 }
 
 // LoadTimezone accepts IANA names only; "Local" would depend on the host.

@@ -64,4 +64,7 @@ type Attempt struct {
 type State struct {
 	Attempts      []Attempt `json:"attempts"`
 	CompletedDays []int     `json:"completedDays"`
+	// Analyses maps attempt IDs to their LLM analysis. They are derived
+	// data and are not exported.
+	Analyses map[string]Analysis `json:"-"`
 }

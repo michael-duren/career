@@ -17,6 +17,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/michael-duren/career-strategy/internal/config"
 	"github.com/michael-duren/career-strategy/internal/database"
+	"github.com/michael-duren/career-strategy/internal/leetgrinder/analysis"
 	"github.com/michael-duren/career-strategy/internal/leetgrinder/notify"
 	"github.com/michael-duren/career-strategy/internal/otel"
 	"github.com/michael-duren/career-strategy/internal/running"
@@ -174,6 +175,8 @@ func run() error {
 		}
 		notifier := &notify.Worker{Store: db, SecretKey: c.LeetgrinderSecretKey, Origin: c.PublicOrigin}
 		go notifier.Run(ctx)
+		analyser := &analysis.Worker{Store: db, Key: c.AnthropicAPIKey.Reveal(), Model: c.AnalysisModel, DailyLimit: c.AnalysisDailyLimit}
+		go analyser.Run(ctx)
 		srv := server.NewServer(c, db)
 		done := make(chan error, 1)
 		go func() { done <- srv.ListenAndServe() }()

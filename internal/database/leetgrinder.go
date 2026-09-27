@@ -54,6 +54,9 @@ func loadLeetgrinderState(ctx context.Context, tx queryer) (leetgrinder.State, e
 	if err != nil {
 		return state, err
 	}
+	if state.Analyses, err = loadLeetgrinderAnalyses(ctx, tx); err != nil {
+		return state, err
+	}
 	rows, err = tx.QueryContext(ctx, "SELECT day FROM leetgrinder_completed_days ORDER BY day")
 	if err != nil {
 		return state, err
