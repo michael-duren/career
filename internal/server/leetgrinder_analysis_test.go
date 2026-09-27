@@ -172,6 +172,11 @@ func TestLeetgrinderAnalysisDisplayAndReanalyse(t *testing.T) {
 	if !strings.Contains(history(), "limit is used up") {
 		t.Error("limit note missing")
 	}
+	// A replayed Re-analyse while on hold is refused and keeps the row.
+	if w = request("POST", target, url.Values{}); w.Code != 409 || !strings.Contains(w.Body.String(), "limit is used up, so the current result was kept") {
+		t.Errorf("re-analyse at the limit: %d", w.Code)
+	}
+	s.config.AnalysisDailyLimit = 50
 	if b := request("GET", "/leetgrinder/problems", nil).Body.String(); strings.Contains(b, "Check complexity") {
 		t.Error("badge kept after re-analyse")
 	}

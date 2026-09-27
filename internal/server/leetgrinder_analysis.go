@@ -84,10 +84,31 @@ func (s *Server) leetgrinderReanalyse(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	// Requeueing clears the current result, so it is refused whenever the
+	// worker would not pick the attempt up soon (as the hidden button implies).
+	if avail := s.historyAnalysis(r); !avail.On() || avail.Waiting() {
+		reason := "Analysis is not running right now"
+		switch {
+		case avail.Unknown:
+			reason = "The analysis status could not be loaded"
+		case !avail.KeyConfigured:
+			reason = "Analysis needs an Anthropic API key on the server"
+		case avail.ZeroLimit:
+			reason = "The server's daily analysis limit is 0"
+		case !avail.Enabled:
+			reason = "Analysis is turned off"
+		case avail.Paused:
+			reason = "Analysis is paused after an error that affects every attempt"
+		case avail.LimitReached:
+			reason = "Today's analysis limit is used up"
+		}
+		renderLeetgrinder(w, r, http.StatusConflict, leetgrinder.ReanalyseError(problem, reason+", so the current result was kept."))
+		return
+	}
 	err = s.db.RequeueLeetgrinderAnalysis(r.Context(), problem.Slug, id.String(), s.clock())
 	switch {
 	case errors.Is(err, database.ErrNotFound):
-		renderLeetgrinder(w, r, http.StatusNotFound, leetgrinder.ReanalyseError(problem, "This attempt has no captured code and stated complexity to analyse."))
+		renderLeetgrinder(w, r, http.StatusNotFound, leetgrinder.ReanalyseError(problem, "This attempt was not found, or it needs captured code and a stated time or space complexity before it can be analysed."))
 	case err != nil:
 		renderLeetgrinder(w, r, http.StatusServiceUnavailable, leetgrinder.ReanalyseError(problem, "The analysis could not be queued. Please retry."))
 	default:
