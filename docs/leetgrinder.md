@@ -24,7 +24,7 @@ Each date gets a review plan the first time the overview, a session page, or the
 
 Leetgrinder can send reminders to [ntfy](https://ntfy.sh). In `/leetgrinder/settings`, set the ntfy server URL (default `https://ntfy.sh`), a topic, and optionally an access token, then subscribe to the same topic in the ntfy app. Anyone who knows a public ntfy.sh topic can read it, so use a long random topic name or a protected topic with a token. "Send test notification" posts a test message with the saved settings and shows the result. An empty topic turns every notification off.
 
-The token field is write-only. The page shows only "Token set" or "No token set"; leave the field blank to keep the saved token, or tick "Clear the saved token". Tokens are encrypted with AES-256-GCM before they are stored (see `LEETGRINDER_SECRET_KEY` below) and never appear in pages, logs, or notification errors.
+The token field is write-only. The page shows only "Token set" or "No token set"; leave the field blank to keep the saved token, or tick "Clear the saved token". Tokens are encrypted with AES-256-GCM before they are stored (see `LEETGRINDER_SECRET_KEY` below) and never appear in pages, logs, or notification errors. Changing the server to a different host requires re-entering or clearing the token, so a saved token is only ever sent to the server it was entered for.
 
 Each reminder can be turned on or off and has its own time, priority, and, where it applies, threshold:
 

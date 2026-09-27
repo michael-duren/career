@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"unicode"
@@ -104,7 +105,12 @@ func (s *Server) leetgrinderSaveNtfy(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	s.saveNotifySettings(w, r, form.Revision, "ntfy", draft, func(settings *leetgrinder.Settings) error {
-		settings.NtfyURL, settings.NtfyTopic = strings.TrimRight(form.URL, "/"), form.Topic
+		next := strings.TrimRight(form.URL, "/")
+		// A saved token only ever goes to the server it was entered for.
+		if settings.TokenSet() && sealed == nil && !form.ClearToken && ntfyOrigin(next) != ntfyOrigin(settings.NtfyURL) {
+			return settingsError("The server changed. Re-enter the access token for the new server, or clear the saved token.")
+		}
+		settings.NtfyURL, settings.NtfyTopic = next, form.Topic
 		switch {
 		case sealed != nil:
 			settings.NtfyTokenCiphertext = sealed
@@ -116,6 +122,15 @@ func (s *Server) leetgrinderSaveNtfy(w http.ResponseWriter, r *http.Request) {
 		}
 		return nil
 	})
+}
+
+// ntfyOrigin is the scheme and host of an ntfy server URL, or "" if it is invalid.
+func ntfyOrigin(raw string) string {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return ""
+	}
+	return strings.ToLower(u.Scheme + "://" + u.Host)
 }
 
 func (s *Server) leetgrinderSaveNotifications(w http.ResponseWriter, r *http.Request) {

@@ -66,6 +66,23 @@ func TestSendHeadersAndErrors(t *testing.T) {
 	}
 }
 
+func TestSendRedactsTokenAcrossCuts(t *testing.T) {
+	for _, pad := range []int{200, 220, 1000, 1010, 1020} {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(500)
+			_, _ = w.Write([]byte(strings.Repeat("a", pad) + strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ") + strings.Repeat("b", 50)))
+		}))
+		settings := settingsFor(server.URL)
+		box, _ := leetgrinder.NewSecretBox(testKey)
+		settings.NtfyTokenCiphertext, _ = box.Seal([]byte(testToken))
+		err := Send(context.Background(), nil, settings, testKey, Message{Title: "x"})
+		server.Close()
+		if err == nil || strings.Contains(err.Error(), "tk_") || len([]rune(err.Error())) > 240 {
+			t.Fatalf("pad %d: %v", pad, err)
+		}
+	}
+}
+
 func TestSendTimeoutAndRedirects(t *testing.T) {
 	release := make(chan struct{})
 	slow := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { <-release }))

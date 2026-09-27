@@ -56,11 +56,12 @@ func (s *Store) FinishLeetgrinderNotification(ctx context.Context, kind string, 
 
 // SkipLeetgrinderNotification records that kind had nothing to report on the
 // local date, so it is not evaluated again that day. A pending retry of a
-// failed send is skipped too, since its condition no longer holds.
+// failed or abandoned send is skipped too, since its condition no longer
+// holds; a send still in progress is left alone.
 func (s *Store) SkipLeetgrinderNotification(ctx context.Context, kind string, date time.Time, detail string, now time.Time) error {
 	_, err := s.DB.ExecContext(ctx, `INSERT INTO leetgrinder_notification_log(kind,local_date,sent_at,status,detail,attempts) VALUES($1,$2,$3,'skipped',$4,0)
 ON CONFLICT (kind,local_date) DO UPDATE SET status='skipped', detail=EXCLUDED.detail, sent_at=EXCLUDED.sent_at
-WHERE leetgrinder_notification_log.status='failed'`, kind, date.Format(time.DateOnly), now, detail)
+WHERE leetgrinder_notification_log.status IN ('failed','sending') AND leetgrinder_notification_log.sent_at <= $5`, kind, date.Format(time.DateOnly), now, detail, now.Add(-LeetgrinderNotifyRetryDelay))
 	return err
 }
 

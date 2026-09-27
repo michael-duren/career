@@ -79,6 +79,17 @@ func TestLeetgrinderNtfySettings(t *testing.T) {
 		}
 	}
 
+	// A saved token never follows a changed server unless re-entered.
+	if w = save(url.Values{"url": {"https://attacker.example"}, "topic": {"grind"}}); w.Code != 400 || !strings.Contains(w.Body.String(), "Re-enter the access token") {
+		t.Fatalf("host change kept token: %d", w.Code)
+	}
+	if w = save(url.Values{"url": {"HTTPS://NTFY.example/"}, "topic": {"grind"}}); w.Code != 303 {
+		t.Fatalf("same host rejected: %d %s", w.Code, w.Body.String())
+	}
+	if w = save(url.Values{"url": {"https://ntfy2.example"}, "topic": {"grind"}, "token": {token}}); w.Code != 303 {
+		t.Fatalf("host change with token: %d", w.Code)
+	}
+
 	// Clearing removes the ciphertext.
 	if w = save(url.Values{"url": {"https://ntfy.example"}, "topic": {"grind"}, "clear_token": {"true"}}); w.Code != 303 {
 		t.Fatalf("clear: %d", w.Code)

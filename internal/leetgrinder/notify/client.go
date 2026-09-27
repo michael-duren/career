@@ -100,15 +100,26 @@ func Send(ctx context.Context, client *http.Client, settings leetgrinder.Setting
 		return errors.New(redact("ntfy request failed: "+err.Error(), token))
 	}
 	defer resp.Body.Close()
-	body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		detail := fmt.Sprintf("ntfy returned %d", resp.StatusCode)
-		if text := strings.TrimSpace(headerSafe(string(body))); text != "" {
+		if text := strings.TrimSpace(headerSafe(errorBody(resp.Body, token))); text != "" {
 			detail += ": " + text
 		}
-		return errors.New(redact(Truncate(detail, 240), token))
+		return errors.New(Truncate(detail, 240))
 	}
 	return nil
+}
+
+// errorBody reads the start of an error response with the token redacted.
+// Redaction happens before any shortening, and a body cut at the read limit
+// loses its tail, so no partial token can survive.
+func errorBody(r io.Reader, token string) string {
+	const limit = 1024
+	body, _ := io.ReadAll(io.LimitReader(r, limit+1))
+	if len(body) > limit {
+		body = body[:max(0, limit-len(token))]
+	}
+	return redact(string(body), token)
 }
 
 // headerSafe flattens control characters, including newlines, to spaces.

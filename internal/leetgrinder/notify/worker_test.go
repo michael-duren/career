@@ -325,6 +325,35 @@ func TestWorkerReclaimsAbandonedSends(t *testing.T) {
 	}
 }
 
+func TestWorkerSkipsAbandonedSendWhoseConditionCleared(t *testing.T) {
+	f := newFixture(t)
+	ctx := context.Background()
+	date := leetgrinder.Date(at(10, "17:00"), chicago)
+	if _, ok, err := f.db.ClaimLeetgrinderNotification(ctx, leetgrinder.NotifyMissingWork, date, at(10, "17:00")); !ok || err != nil {
+		t.Fatal(ok, err)
+	}
+	if err := f.db.SetLeetgrinderDay(ctx, 10, true); err != nil {
+		t.Fatal(err)
+	}
+	f.step(t, at(10, "17:01"))
+	if e := f.logEntry(t, leetgrinder.NotifyMissingWork, at(10, "17:00")); e.Status != leetgrinder.NotifySending {
+		t.Fatalf("fresh claim overwritten: %+v", e)
+	}
+	f.step(t, at(10, "17:05"))
+	if e := f.logEntry(t, leetgrinder.NotifyMissingWork, at(10, "17:00")); e.Status != leetgrinder.NotifySkipped {
+		t.Fatalf("abandoned send not skipped: %+v", e)
+	}
+	// Reopening the day later sends nothing.
+	if err := f.db.SetLeetgrinderDay(ctx, 10, false); err != nil {
+		t.Fatal(err)
+	}
+	for _, r := range f.step(t, at(10, "22:00")) {
+		if r.Header.Get("Title") == "Leetgrinder: work left today" {
+			t.Fatal("sent after the day was skipped")
+		}
+	}
+}
+
 func TestWorkerRespectsScheduleBounds(t *testing.T) {
 	f := newFixture(t)
 	// Before the start date.
