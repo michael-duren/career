@@ -33,7 +33,7 @@ var problemStatuses = []struct{ Key, Label string }{
 }
 
 var problemSorts = []struct{ Key, Label string }{
-	{"curriculum", "Curriculum order"},
+	{"curriculum", "Curriculum"},
 	{"difficulty", "Difficulty"},
 	{"number", "LeetCode number"},
 	{"title", "Title"},
@@ -87,9 +87,12 @@ func (f ProblemFilter) Active() bool {
 
 func (f ProblemFilter) match(r ProblemRow) bool {
 	if f.Query != "" {
-		q := strings.ToLower(f.Query)
-		text := strings.ToLower(r.Problem.Title + " " + r.Problem.Slug + " " + r.Week.Title + " " + r.Day.Title + " " + strconv.Itoa(r.Problem.ID))
-		if !strings.Contains(text, q) {
+		// A bare number is a LeetCode number; anything else searches the text.
+		if n, err := strconv.Atoi(f.Query); err == nil {
+			if r.Problem.ID != n {
+				return false
+			}
+		} else if !strings.Contains(strings.ToLower(r.Problem.Title+" "+r.Problem.Slug+" "+r.Week.Title+" "+r.Day.Title), strings.ToLower(f.Query)) {
 			return false
 		}
 	}

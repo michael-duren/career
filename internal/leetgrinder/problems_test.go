@@ -54,8 +54,8 @@ func TestProblemRowsAndFilters(t *testing.T) {
 	if got := filter("q=TWO+SUM"); len(got) < 2 || got[0].Problem.Slug != "two-sum" {
 		t.Fatal("case-insensitive title search")
 	}
-	if got := filter("q=1"); len(got) == 0 {
-		t.Fatal("number search")
+	if got := filter("q=1"); len(got) != 1 || got[0].Problem.ID != 1 {
+		t.Fatalf("number search should match exactly: %d rows", len(got))
 	}
 	if got := filter("q=binary+search&week=2"); len(got) == 0 || got[0].Week.Number != 2 {
 		t.Fatal("topic search")

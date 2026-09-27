@@ -718,7 +718,7 @@ templ Problems(page ProblemsPage) {
 	@layout("Problems", "problems") {
 		<p class="eyebrow">PROBLEM BANK</p>
 		<h1>Problems</h1>
-		<p class="lead">Every LeetCode problem in the curriculum. Search by title, number, or topic, and filter by difficulty, week, or your progress.</p>
+		<p class="lead">Every LeetCode problem in the curriculum. Search by title, LeetCode number, or topic, and filter by difficulty, week, or your progress.</p>
 		<form class="problem-filters" method="get" action="/leetgrinder/problems" role="search" aria-label="Filter problems">
 			<label class="filter-search">
 				Search
@@ -754,7 +754,7 @@ templ Problems(page ProblemsPage) {
 			<label>
 				Type
 				<select name="kind">
-					<option value="">Core and optional</option>
+					<option value="">All</option>
 					<option value="core" selected?={ page.Filter.Kind == "core" }>Core</option>
 					<option value="optional" selected?={ page.Filter.Kind == "optional" }>Optional</option>
 				</select>
