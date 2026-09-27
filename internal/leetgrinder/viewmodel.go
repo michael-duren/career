@@ -74,6 +74,8 @@ type SettingsPage struct {
 	Saved    bool
 	// Notify holds the ntfy and notification sections.
 	Notify NotifyPanel
+	// APITokens is the extension token section; see apitokens.templ.
+	APITokens APITokensSection
 }
 
 func ReviewKey(slug string) string { return "review-" + slug }

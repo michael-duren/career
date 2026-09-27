@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Leetgrinder extension options</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Leetgrinder</h1>
+      <p class="muted">
+        Connect the extension to your Leetgrinder app. Create a token under Settings → Browser extension tokens in the app.
+      </p>
+      <form id="options">
+        <label>
+          App origin
+          <input id="origin" type="url" required placeholder="https://career.example.com" autocomplete="off" spellcheck="false" />
+          <span class="muted small">HTTPS, or http://localhost for local development.</span>
+        </label>
+        <label>
+          API token
+          <input id="token" type="password" required placeholder="lg_…" autocomplete="off" spellcheck="false" />
+        </label>
+        <div class="actions">
+          <button type="submit" class="primary">Save</button>
+          <button type="button" id="test">Test connection</button>
+        </div>
+        <p id="status" role="status"></p>
+      </form>
+    </main>
+    <script src="browser-shim.js"></script>
+    <script src="lib.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>
