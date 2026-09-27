@@ -68,6 +68,7 @@ func TestLeetgrinderAnalysisDisplayAndReanalyse(t *testing.T) {
 	s, db, request := leetgrinderTestServer(t)
 	ctx := context.Background()
 	s.config.AnthropicAPIKey = config.Secret("sk-ant-test")
+	s.config.AnalysisDailyLimit = 1
 	now := time.Date(2026, 9, 27, 12, 0, 0, 0, time.UTC)
 	s.now = func() time.Time { return now }
 	attempt, err := db.SaveLeetgrinderAttempt(ctx, leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "two-sum", Outcome: "solved", Minutes: 20, Source: "extension", TimeComplexity: "O(n²)", SpaceComplexity: "O(1)", Code: "for i in a:\n  for j in a: pass", CodeLanguage: "python3"}, "")
@@ -140,6 +141,26 @@ func TestLeetgrinderAnalysisDisplayAndReanalyse(t *testing.T) {
 	state, _ := db.LeetgrinderState(ctx)
 	if a := state.Analyses[attempt.ID]; a.Status != leetgrinder.AnalysisPending || a.Tries != 0 || a.ActualTime != "" {
 		t.Fatalf("requeued %+v", a)
+	}
+	// Queued cards explain a pause or a used-up daily limit.
+	if err = db.PauseLeetgrinderAnalysis(ctx, now.Add(time.Minute), "Anthropic API returned 402 billing_error"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(history(), "Analysis is paused") {
+		t.Error("pause note missing")
+	}
+	if err = db.PauseLeetgrinderAnalysis(ctx, now.Add(-time.Minute), ""); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(history(), "Queued for analysis") {
+		t.Error("queued note missing after the pause")
+	}
+	if ok, err := db.ReserveLeetgrinderAnalysisRequest(ctx, leetgrinder.Date(now, time.UTC), 1); err != nil || !ok {
+		t.Fatal(ok, err)
+	}
+	s.now = func() time.Time { return now.Add(time.Hour) } // same day in the default zone
+	if !strings.Contains(history(), "limit is used up") {
+		t.Error("limit note missing")
 	}
 	if b := request("GET", "/leetgrinder/problems", nil).Body.String(); strings.Contains(b, "Check complexity") {
 		t.Error("badge kept after re-analyse")

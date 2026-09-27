@@ -89,7 +89,13 @@ templ analysisCard(slug string, a Attempt, state State, avail AnalysisAvailabili
 			} else if !avail.On() {
 				@analysisUnavailable(avail)
 			} else {
-				<p class="small muted">Queued for analysis. Reload the page later to see the result.</p>
+				if avail.Paused {
+					<p class="small muted">Queued. Analysis is paused after an error that affects every attempt. <a href="/leetgrinder/settings#analysis">Analysis settings</a></p>
+				} else if avail.LimitReached {
+					<p class="small muted">Queued. Today's analysis limit is used up, so this runs tomorrow. <a href="/leetgrinder/settings#analysis">Analysis settings</a></p>
+				} else {
+					<p class="small muted">Queued for analysis. Reload the page later to see the result.</p>
+				}
 				if ok && an.Current && an.Error != "" {
 					<p class="small muted">Retrying after an error: { an.Error }</p>
 				}
@@ -100,7 +106,7 @@ templ analysisCard(slug string, a Attempt, state State, avail AnalysisAvailabili
 
 templ analysisMatch(stated string, matches *bool) {
 	if stated == "" || matches == nil {
-		<span class="small muted">(no stated value)</span>
+		<span class="analysis-match muted">(no stated value)</span>
 	} else if *matches {
 		<span class="analysis-match match-yes"><span aria-hidden="true">✓</span> matches your { stated }</span>
 	} else {

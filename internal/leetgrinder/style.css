@@ -1327,7 +1327,7 @@ dd {
   color: #fca5a5;
   overflow-wrap: anywhere;
 }
-.analysis-card .small {
+.analysis-card p.small {
   margin: 10px 0 0;
 }
 .analysis-actions {
@@ -1340,8 +1340,14 @@ dd {
 .complexity-badge {
   display: inline-block;
   margin-left: 6px;
-  padding: 1px 6px;
+  padding: 1px 8px;
+  border: 1px solid #854d0e;
+  border-radius: 999px;
   font-size: 0.65rem;
-  background: #450a0a;
-  color: #fca5a5;
+  background: #422006;
+  color: #fcd34d;
+}
+.side-list li > .complexity-badge {
+  align-self: flex-start;
+  margin-left: 0;
 }

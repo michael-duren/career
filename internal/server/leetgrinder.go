@@ -173,8 +173,20 @@ func (s *Server) leetgrinderProblem(w http.ResponseWriter, r *http.Request) {
 // settings failure only affects the analysis card's wording.
 func (s *Server) historyAnalysis(r *http.Request) leetgrinder.AnalysisAvailability {
 	a := leetgrinder.AnalysisAvailability{KeyConfigured: s.config.AnthropicAPIKey.Reveal() != ""}
-	if settings, err := s.db.LeetgrinderSettings(r.Context()); err == nil {
-		a.Enabled = settings.AnalysisEnabled
+	settings, err := s.db.LeetgrinderSettings(r.Context())
+	if err != nil {
+		return a
+	}
+	a.Enabled = settings.AnalysisEnabled
+	if !a.On() {
+		return a
+	}
+	now := s.clock()
+	if pause, err := s.db.LeetgrinderAnalysisPause(r.Context()); err == nil {
+		a.Paused = now.Before(pause.Until)
+	}
+	if used, err := s.db.LeetgrinderAnalysisUsage(r.Context(), leetgrinder.Date(now, settings.Location())); err == nil {
+		a.LimitReached = used >= s.config.AnalysisDailyLimit
 	}
 	return a
 }

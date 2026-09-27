@@ -124,6 +124,8 @@ type AnalysisPause struct {
 // attempts.
 type AnalysisAvailability struct {
 	KeyConfigured, Enabled bool
+	// Paused and LimitReached explain why queued attempts are waiting.
+	Paused, LimitReached bool
 }
 
 // On reports whether the worker sends requests.
