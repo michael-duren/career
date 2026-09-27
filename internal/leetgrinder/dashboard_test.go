@@ -110,3 +110,22 @@ func TestNtfyTopicWarning(t *testing.T) {
 		t.Fatal("warning shown with a topic, or help missing")
 	}
 }
+
+func TestUpcomingOverdue(t *testing.T) {
+	now := time.Date(2026, 10, 20, 12, 0, 0, 0, time.UTC)
+	today := Date(now, time.UTC)
+	if (UpcomingSession{Date: today}).Overdue(today) || !(UpcomingSession{Date: today.AddDate(0, 0, -1)}).Overdue(today) || (UpcomingSession{}).Overdue(today) {
+		t.Fatal("overdue boundary")
+	}
+	settings := DefaultSettings()
+	settings.Timezone = "UTC"
+	start := today
+	settings.StartDate = &start
+	var out bytes.Buffer
+	if err := Overview(OverviewPage{Today: NewToday(settings, State{}, nil, now)}).Render(context.Background(), &out); err != nil {
+		t.Fatal(err)
+	}
+	if html := out.String(); strings.Contains(html, "Overdue") || !strings.Contains(html, "Wed 21 Oct 2026") {
+		t.Fatal("on-schedule sessions should show their date without an overdue label")
+	}
+}
