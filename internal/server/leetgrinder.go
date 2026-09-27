@@ -40,6 +40,7 @@ func (s *Server) registerLeetgrinder(r chi.Router) {
 		r.Get("/leetgrinder/problem/{slug}", s.leetgrinderProblem)
 		r.Post("/leetgrinder/problem/{slug}/attempts", s.leetgrinderAttempt)
 		r.Get("/leetgrinder/about", s.leetgrinderAbout)
+		r.Get("/leetgrinder/problems", s.leetgrinderProblems)
 		r.Get("/leetgrinder/reviews", s.leetgrinderReviews)
 		r.Get("/leetgrinder/settings", s.leetgrinderSettings)
 		r.Post("/leetgrinder/settings/schedule", s.leetgrinderSaveSchedule)
@@ -95,6 +96,21 @@ func (s *Server) leetgrinderAbout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	renderLeetgrinder(w, r, 200, leetgrinder.About(state))
+}
+func (s *Server) leetgrinderProblems(w http.ResponseWriter, r *http.Request) {
+	state, err := s.db.LeetgrinderState(r.Context())
+	if err != nil {
+		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your saved progress is unavailable. Please retry."))
+		return
+	}
+	settings, err := s.db.LeetgrinderSettings(r.Context())
+	if err != nil {
+		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your settings are unavailable. Please retry."))
+		return
+	}
+	rows := leetgrinder.ProblemRows(state)
+	filter := leetgrinder.ParseProblemFilter(r.URL.Query())
+	renderLeetgrinder(w, r, 200, leetgrinder.Problems(leetgrinder.ProblemsPage{Rows: leetgrinder.FilterProblems(rows, filter), Total: len(rows), Filter: filter, Location: settings.Location()}))
 }
 func (s *Server) leetgrinderReviews(w http.ResponseWriter, r *http.Request) {
 	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
