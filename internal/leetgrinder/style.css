@@ -1340,12 +1340,12 @@ dd {
 .complexity-badge {
   display: inline-block;
   margin-left: 6px;
-  padding: 1px 8px;
-  border: 1px solid #854d0e;
-  border-radius: 999px;
+  padding: 0 6px;
+  border: 1px dashed #fb923c;
+  border-radius: 3px;
   font-size: 0.65rem;
-  background: #422006;
-  color: #fcd34d;
+  background: transparent;
+  color: #fdba74;
 }
 .side-list li > .complexity-badge {
   align-self: flex-start;
