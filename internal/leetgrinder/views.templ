@@ -189,7 +189,7 @@ templ Overview(page OverviewPage) {
 	}
 }
 
-templ About(page OverviewPage) {
+templ About(state State) {
 	@layout("About", "about") {
 		<section class="hero">
 			<div><p class="eyebrow">THE DAILY PRACTICE</p><h1>Build the habits.<br/>Learn the patterns.</h1><p class="lead">A 12-week DSA curriculum for programmers getting back into problem solving. One focused session at a time.</p></div>
@@ -229,9 +229,9 @@ templ About(page OverviewPage) {
 										<span>
 											{ day.Title }
 										</span>
-										if page.Today.State.DayCompleted(day.Number) {
+										if state.DayCompleted(day.Number) {
 											<span class="day-status done">Finished</span>
-										} else if Summarize(page.Today.State).NextDay == day.Number {
+										} else if Summarize(state).NextDay == day.Number {
 											<span class="day-status">Next</span>
 										}
 									</a>

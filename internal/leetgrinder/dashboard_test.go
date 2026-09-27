@@ -58,7 +58,7 @@ func TestDashboard(t *testing.T) {
 	}
 
 	out.Reset()
-	if err := About(page).Render(context.Background(), &out); err != nil {
+	if err := About(page.Today.State).Render(context.Background(), &out); err != nil {
 		t.Fatal(err)
 	}
 	html = out.String()

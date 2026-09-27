@@ -88,12 +88,13 @@ func (s *Server) leetgrinderOverview(w http.ResponseWriter, r *http.Request) {
 	renderLeetgrinder(w, r, 200, leetgrinder.Overview(leetgrinder.OverviewPage{Today: today, IDs: reviewIDs(map[string]string{}, today)}))
 }
 func (s *Server) leetgrinderAbout(w http.ResponseWriter, r *http.Request) {
-	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
+	// Only attempt history is needed; loading Today would freeze the review plan.
+	state, err := s.db.LeetgrinderState(r.Context())
 	if err != nil {
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your saved progress is unavailable. Please retry."))
 		return
 	}
-	renderLeetgrinder(w, r, 200, leetgrinder.About(leetgrinder.OverviewPage{Today: today}))
+	renderLeetgrinder(w, r, 200, leetgrinder.About(state))
 }
 func (s *Server) leetgrinderReviews(w http.ResponseWriter, r *http.Request) {
 	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
