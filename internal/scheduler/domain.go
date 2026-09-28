@@ -364,6 +364,7 @@ func (d *Document) Reconcile(goals []Goal, now time.Time) {
 		d.Sessions[id] = s
 	}
 }
+
 // Generate creates sessions for each active rule occurrence between from and
 // to. sinceInstant is the instant this document was last reconciled; a rule
 // occurrence with no existing session and a computed start at or before that

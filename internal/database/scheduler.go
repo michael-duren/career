@@ -66,6 +66,7 @@ func schedulerGoals(ctx context.Context, q queryer) ([]scheduler.Goal, error) {
 	}
 	return goals, nil
 }
+
 // schedulerReconciledAt reads the instant of the last successful reconcile,
 // kept in its own column so it can be updated without touching document and
 // firing the Google-dirty trigger or invalidating open clients' revisions.

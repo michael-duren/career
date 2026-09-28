@@ -151,12 +151,19 @@ func (s *Store) Import(ctx context.Context, r io.Reader, source Source, dry bool
 		return counts, err
 	}
 	if schedule != nil {
+		importedAt := time.Now()
 		schedule.Revision = uuid.NewString()
 		schedule.Busy = nil
-		if err = schedulerSave(ctx, tx, *schedule, time.Time{}); err != nil {
+		// The reconcile watermark isn't exported with the document, so it
+		// starts at import time rather than zero: a zero watermark would
+		// disable the anti-fabrication guard in Generate for the very first
+		// reconcile after restore, letting it invent history the export had
+		// deliberately skipped. This trades backfilling the gap between
+		// export and import for never fabricating time on restore.
+		if err = schedulerSave(ctx, tx, *schedule, importedAt); err != nil {
 			return counts, err
 		}
-		if err = schedulerReconcileTx(ctx, tx, time.Now()); err != nil {
+		if err = schedulerReconcileTx(ctx, tx, importedAt); err != nil {
 			return counts, err
 		}
 	}
