@@ -14,11 +14,11 @@ import (
 
 var leetgrinderSlug = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
 
-const leetgrinderAttemptColumns = "id,problem_slug,outcome,minutes,assisted,notes,created_at,revision,source,is_review"
+const leetgrinderAttemptColumns = "id,problem_slug,outcome,minutes,assisted,notes,created_at,revision,source,is_review,time_complexity,space_complexity,code,code_language"
 
 func scanLeetgrinderAttempt(row interface{ Scan(...any) error }) (leetgrinder.Attempt, error) {
 	var a leetgrinder.Attempt
-	err := row.Scan(&a.ID, &a.ProblemSlug, &a.Outcome, &a.Minutes, &a.Assisted, &a.Notes, &a.CreatedAt, &a.Revision, &a.Source, &a.IsReview)
+	err := row.Scan(&a.ID, &a.ProblemSlug, &a.Outcome, &a.Minutes, &a.Assisted, &a.Notes, &a.CreatedAt, &a.Revision, &a.Source, &a.IsReview, &a.TimeComplexity, &a.SpaceComplexity, &a.Code, &a.CodeLanguage)
 	return a, err
 }
 
@@ -54,6 +54,9 @@ func loadLeetgrinderState(ctx context.Context, tx queryer) (leetgrinder.State, e
 	if err != nil {
 		return state, err
 	}
+	if state.Analyses, err = loadLeetgrinderAnalyses(ctx, tx); err != nil {
+		return state, err
+	}
 	rows, err = tx.QueryContext(ctx, "SELECT day FROM leetgrinder_completed_days ORDER BY day")
 	if err != nil {
 		return state, err
@@ -79,6 +82,9 @@ func (s *Store) SaveLeetgrinderAttempt(ctx context.Context, a leetgrinder.Attemp
 	default:
 		return leetgrinder.Attempt{}, ErrInvalid
 	}
+	if a.NormalizeDetails() != nil {
+		return leetgrinder.Attempt{}, ErrInvalid
+	}
 	if a.Source == "" {
 		a.Source = "web"
 	}
@@ -97,7 +103,7 @@ func (s *Store) SaveLeetgrinderAttempt(ctx context.Context, a leetgrinder.Attemp
 	}
 	defer tx.Rollback()
 	if expectedRevision == "" {
-		_, err = tx.ExecContext(ctx, `INSERT INTO leetgrinder_attempts(id,problem_slug,outcome,minutes,assisted,notes,revision,source,is_review) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT(id) DO NOTHING`, a.ID, a.ProblemSlug, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString(), a.Source, a.IsReview)
+		_, err = tx.ExecContext(ctx, `INSERT INTO leetgrinder_attempts(id,problem_slug,outcome,minutes,assisted,notes,revision,source,is_review,time_complexity,space_complexity,code,code_language) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) ON CONFLICT(id) DO NOTHING`, a.ID, a.ProblemSlug, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString(), a.Source, a.IsReview, a.TimeComplexity, a.SpaceComplexity, a.Code, a.CodeLanguage)
 		if err != nil {
 			return leetgrinder.Attempt{}, err
 		}
@@ -105,12 +111,15 @@ func (s *Store) SaveLeetgrinderAttempt(ctx context.Context, a leetgrinder.Attemp
 		if readErr != nil {
 			return leetgrinder.Attempt{}, readErr
 		}
-		if saved.ProblemSlug != a.ProblemSlug || saved.Outcome != a.Outcome || saved.Minutes != a.Minutes || saved.Assisted != a.Assisted || saved.Notes != a.Notes || saved.Source != a.Source || saved.IsReview != a.IsReview {
+		if saved.ProblemSlug != a.ProblemSlug || saved.Outcome != a.Outcome || saved.Minutes != a.Minutes || saved.Assisted != a.Assisted || saved.Notes != a.Notes || saved.Source != a.Source || saved.IsReview != a.IsReview ||
+			saved.TimeComplexity != a.TimeComplexity || saved.SpaceComplexity != a.SpaceComplexity || saved.Code != a.Code || saved.CodeLanguage != a.CodeLanguage {
 			return leetgrinder.Attempt{}, ErrConflict
 		}
 		return saved, tx.Commit()
 	}
-	saved, err := scanLeetgrinderAttempt(tx.QueryRowContext(ctx, `UPDATE leetgrinder_attempts SET outcome=$3,minutes=$4,assisted=$5,notes=$6,revision=$7 WHERE id=$1 AND revision=$2 AND problem_slug=$8 RETURNING `+leetgrinderAttemptColumns, a.ID, expectedRevision, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString(), a.ProblemSlug))
+	// Corrections change only what the learner states; source, review flag,
+	// and captured code stay as first recorded.
+	saved, err := scanLeetgrinderAttempt(tx.QueryRowContext(ctx, `UPDATE leetgrinder_attempts SET outcome=$3,minutes=$4,assisted=$5,notes=$6,revision=$7,time_complexity=$9,space_complexity=$10 WHERE id=$1 AND revision=$2 AND problem_slug=$8 RETURNING `+leetgrinderAttemptColumns, a.ID, expectedRevision, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString(), a.ProblemSlug, a.TimeComplexity, a.SpaceComplexity))
 	if errors.Is(err, sql.ErrNoRows) {
 		return leetgrinder.Attempt{}, ErrConflict
 	}

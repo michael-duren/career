@@ -21,6 +21,7 @@ Career Strategy</a>
 Leetgrinder</p>
 					<div class="sidenav-links">
 						@navLink("/leetgrinder", "Dashboard", "dashboard", active)
+						@navLink("/leetgrinder/problems", "Problems", "problems", active)
 						@navLink("/leetgrinder/reviews", "Review queue", "reviews", active)
 						@navLink("/leetgrinder/about", "About", "about", active)
 						@navLink("/leetgrinder/settings", "Settings", "settings", active)
@@ -32,6 +33,7 @@ Export history</a>
 					{ children... }
 				</main>
 			</div>
+			@complexityScript()
 		</body>
 	</html>
 }
@@ -52,6 +54,8 @@ templ icon(name string) {
 		switch name {
 			case "dashboard":
 				<rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect>
+			case "problems":
+				<path d="M3 5h.01"></path><path d="M3 12h.01"></path><path d="M3 19h.01"></path><path d="M8 5h13"></path><path d="M8 12h13"></path><path d="M8 19h13"></path>
 			case "reviews":
 				<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path>
 			case "about":
@@ -182,6 +186,9 @@ templ Overview(page OverviewPage) {
 										<span>{ a.ProblemSlug }</span>
 									}
 									<span class="small muted">{ OutcomeLabel(a.Outcome) } · { Count(a.Minutes) } min</span>
+									if page.Today.State.StatedWrong(a.ID) {
+										@complexityBadge()
+									}
 								</li>
 							}
 						</ol>
@@ -406,6 +413,13 @@ templ attemptFields(problem Problem, form AttemptForm) {
 			</p>
 		}
 		<div class="form-row"><label>Outcome<select name="outcome" required><option value="unfinished" selected?={ form.Outcome=="unfinished" }>Unfinished</option><option value="struggled" selected?={ form.Outcome=="struggled" }>Struggled</option><option value="solved" selected?={ form.Outcome=="solved" }>Solved</option></select></label><label>Minutes spent<input type="number" name="minutes" min="1" max="240" required value={ form.Minutes }/></label></div>
+		<fieldset class="complexity">
+			<legend>Complexity <span class="muted">(required when solved or struggled)</span></legend>
+			<div class="form-row">
+				@complexityField("timeComplexity", "time", form.Time)
+				@complexityField("spaceComplexity", "space", form.Space)
+			</div>
+		</fieldset>
 		<label class="checkbox"><input type="checkbox" name="assisted" value="true" checked?={ form.Assisted }/>I used hints or reviewed a solution</label>
 		<label>
 			Notes <span class="muted">(optional)</span>
@@ -424,7 +438,64 @@ templ attemptFields(problem Problem, form AttemptForm) {
 	</form>
 }
 
-templ ProblemHistory(problem Problem, state State, form AttemptForm) {
+// complexityField is a select of common classes plus a text field for any
+// other value. It works without JavaScript; complexityScript only hides the
+// text field until "Other…" is chosen.
+templ complexityField(name string, label string, input ComplexityInput) {
+	<div class="complexity-field" data-complexity>
+		<label>
+			<span class="capitalize">{ label }</span>
+			<select name={ name }>
+				<option value="" selected?={ input.Choice=="" }>Not stated</option>
+				for _, c := range Complexities {
+					<option value={ c } selected?={ input.Choice==c }>{ c }</option>
+				}
+				<option value="other" selected?={ input.Choice=="other" }>Other…</option>
+			</select>
+		</label>
+		<label class="complexity-other">
+			Other { label } complexity
+			<input type="text" name={ name + "Other" } maxlength="40" placeholder="O(m·n)" autocomplete="off" spellcheck="false" value={ input.Other }/>
+		</label>
+	</div>
+}
+
+templ complexityScript() {
+	<script>
+		(() => {
+			const sync = (select) => {
+				const other = select.closest("[data-complexity]").querySelector(".complexity-other");
+				const show = select.value === "other";
+				other.hidden = !show;
+				other.querySelector("input").disabled = !show;
+			};
+			document.querySelectorAll("[data-complexity] select").forEach(sync);
+			document.addEventListener("change", (event) => {
+				if (event.target instanceof HTMLSelectElement && event.target.closest("[data-complexity]")) sync(event.target);
+			});
+		})();
+	</script>
+}
+
+templ statedComplexity(a Attempt) {
+	if a.TimeComplexity != "" || a.SpaceComplexity != "" {
+		<p class="small stated-complexity">
+			Time <strong>{ orDash(a.TimeComplexity) }</strong> · Space <strong>{ orDash(a.SpaceComplexity) }</strong>
+		</p>
+	}
+}
+
+templ attemptCode(a Attempt) {
+	if a.Code != "" {
+		<details class="attempt-code">
+			<summary>Submitted code ({ LanguageLabel(a.CodeLanguage) }, { ByteSize(len(a.Code)) })</summary>
+			<pre><code data-language={ a.CodeLanguage }>{ a.Code }</code></pre>
+		</details>
+	}
+}
+
+// avail says whether the analysis worker is sending requests, and if not, why.
+templ ProblemHistory(problem Problem, state State, form AttemptForm, avail AnalysisAvailability) {
 	@layout(problem.Title, "") {
 		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder/about#curriculum">Curriculum</a><span>/</span><span>Attempt history</span></nav>
 		<p class="eyebrow">
@@ -473,12 +544,13 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm) {
 				}
 			</section>
 			<section>
+				@optimalPanel(problem, len(state.ProblemAttempts(problem.Slug)) > 0)
 				<h2>Previous attempts</h2>
 				if len(state.ProblemAttempts(problem.Slug))==0 {
 					<p class="muted">No attempts recorded yet.</p>
 				}
 				for _, a:=range state.ProblemAttempts(problem.Slug) {
-					<article class="panel attempt">
+					<article class="panel attempt" id={ AttemptAnchor(a.ID) }>
 						<div class="problem-heading">
 							<h3>
 								{ OutcomeLabel(a.Outcome) }
@@ -497,11 +569,14 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm) {
 								· Review
 							}
 						</p>
+						@statedComplexity(a)
 						if a.Notes!="" {
 							<p class="notes">
 								{ a.Notes }
 							</p>
 						}
+						@attemptCode(a)
+						@analysisCard(problem.Slug, a, state, avail)
 						<details>
 							<summary>Correct this attempt</summary>@attemptFields(problem, EditForm(a))
 						</details>
@@ -661,6 +736,7 @@ templ SettingsView(page SettingsPage) {
 		<div class="settings-sections">
 			@scheduleSettings(page)
 			@notifySettings(page.Notify)
+			@analysisSettings(page.Analysis)
 			@apiTokenSettings(page)
 		</div>
 	}
@@ -733,5 +809,126 @@ templ readingPath(day Day) {
 				</article>
 			}
 		</section>
+	}
+}
+
+templ Problems(page ProblemsPage) {
+	@layout("Problems", "problems") {
+		<p class="eyebrow">PROBLEM BANK</p>
+		<h1>Problems</h1>
+		<p class="lead">Every LeetCode problem in the curriculum. Search by title, LeetCode number, or topic, and filter by difficulty, week, or your progress.</p>
+		<form class="problem-filters" method="get" action="/leetgrinder/problems" role="search" aria-label="Filter problems">
+			<label class="filter-search">
+				Search
+				<input type="search" name="q" value={ page.Filter.Query } maxlength="100" placeholder="Title, number, or topic" autocomplete="off"/>
+			</label>
+			<label>
+				Difficulty
+				<select name="difficulty">
+					<option value="">All</option>
+					for _, d := range []string{"Easy", "Medium", "Hard"} {
+						<option value={ d } selected?={ page.Filter.Difficulty == d }>{ d }</option>
+					}
+				</select>
+			</label>
+			<label>
+				Topic
+				<select name="week">
+					<option value="">All topics</option>
+					for _, week := range Curriculum() {
+						<option value={ Count(week.Number) } selected?={ page.Filter.Week == week.Number }>{ WeekLabel(week.Number) } · { week.Title }</option>
+					}
+				</select>
+			</label>
+			<label>
+				Status
+				<select name="status">
+					<option value="">Any</option>
+					for _, s := range ProblemStatusOptions() {
+						<option value={ s.Key } selected?={ page.Filter.Status == s.Key }>{ s.Label }</option>
+					}
+				</select>
+			</label>
+			<label>
+				Type
+				<select name="kind">
+					<option value="">All</option>
+					<option value="core" selected?={ page.Filter.Kind == "core" }>Core</option>
+					<option value="optional" selected?={ page.Filter.Kind == "optional" }>Optional</option>
+				</select>
+			</label>
+			<label>
+				Sort
+				<select name="sort">
+					for _, s := range ProblemSortOptions() {
+						<option value={ s.Key } selected?={ page.Filter.Sort == s.Key }>{ s.Label }</option>
+					}
+				</select>
+			</label>
+			<div class="filter-actions">
+				<button class="button primary" type="submit">Apply</button>
+				if page.Filter.Active() {
+					<a href="/leetgrinder/problems">Clear filters</a>
+				}
+			</div>
+		</form>
+		<p class="small muted" role="status">Showing { Count(len(page.Rows)) } of { Count(page.Total) } problems</p>
+		if len(page.Rows) == 0 {
+			<p class="panel muted">No problems match these filters. <a href="/leetgrinder/problems">Clear filters</a></p>
+		} else {
+			<div class="table-scroll queue problem-table">
+				<table>
+					<caption class="visually-hidden">Curriculum problems</caption>
+					<thead>
+						<tr>
+							<th scope="col">#</th>
+							<th scope="col">Problem</th>
+							<th scope="col">Difficulty</th>
+							<th scope="col">Optimal time / space</th>
+							<th scope="col">Topic</th>
+							<th scope="col">Session</th>
+							<th scope="col">Status</th>
+							<th scope="col">Attempts</th>
+							<th scope="col">Last attempt</th>
+							<th scope="col">LeetCode</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, row := range page.Rows {
+							<tr>
+								<td class="num">{ Count(row.Problem.ID) }</td>
+								<th scope="row">
+									<a href={ templ.SafeURL(ProblemURL(row.Problem.Slug)) }>{ row.Problem.Title }</a>
+									if row.Optional {
+										<span class="badge optional-badge">Optional</span>
+									}
+								</th>
+								<td><span class={ DifficultyClass(row.Problem.Difficulty) }>{ row.Problem.Difficulty }</span></td>
+								<td class="optimal">@optimalCell(row.Problem, row.Attempts > 0)</td>
+								<td class="topic">{ row.Week.Title }<span class="small muted">{ row.Day.Title }</span></td>
+								<td><a href={ templ.SafeURL(DayURL(row.Day.Number)) }>{ DayLabel(row.Day.Number) }</a></td>
+								<td>
+									<span class={ StatusClass(row.Status) }>{ row.Status }</span>
+									if row.ComplexityWrong {
+										@complexityBadge()
+									}
+								</td>
+								<td class="num">{ Count(row.Attempts) }</td>
+								<td>
+									if row.Attempts > 0 {
+										{ DateLabel(Date(row.Last.CreatedAt, page.Location)) }
+									} else {
+										<span class="muted">—</span>
+									}
+								</td>
+								<td>
+									<a href={ templ.SafeURL(row.Problem.URL()) } target="_blank" rel="noopener noreferrer">Open<span aria-hidden="true"> ↗</span><span class="visually-hidden"> { row.Problem.Title } on LeetCode (opens in a new tab)</span></a>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
 	}
 }

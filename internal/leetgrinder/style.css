@@ -607,6 +607,46 @@ dd {
   border-top: 1px solid var(--line);
   padding-top: 12px;
 }
+.attempt-form .complexity {
+  margin: 18px 0 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.complexity legend {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+.complexity-field {
+  display: grid;
+  gap: 8px;
+}
+.complexity-other[hidden] {
+  display: none;
+}
+.capitalize {
+  text-transform: capitalize;
+}
+.stated-complexity strong {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 600;
+}
+.attempt-code pre {
+  max-height: 480px;
+  overflow: auto;
+  margin: 10px 0 0;
+  padding: 14px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.82rem;
+  tab-size: 4;
+}
+.attempt-code summary,
+.attempt details summary {
+  cursor: pointer;
+}
 .schedule-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
@@ -685,6 +725,7 @@ dd {
   min-width: 16em;
 }
 .table-scroll {
+  position: relative;
   overflow-x: auto;
 }
 .queue table {
@@ -1123,4 +1164,194 @@ dd {
   clip: rect(0 0 0 0);
   white-space: nowrap;
   border: 0;
+}
+/* Problem bank. */
+.problem-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px 16px;
+  align-items: end;
+  margin: 28px 0 14px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+.problem-filters label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.problem-filters .filter-search {
+  grid-column: 1 / -1;
+}
+.problem-filters input,
+.problem-filters select {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid #71717a;
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--ink);
+}
+.filter-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.85rem;
+}
+.problem-table th[scope="row"] {
+  font-weight: 500;
+  white-space: normal;
+  min-width: 14em;
+}
+.problem-table th[scope="row"] a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.problem-table th[scope="row"] a:hover {
+  color: var(--accent);
+}
+.problem-table td.topic {
+  white-space: normal;
+  min-width: 14em;
+}
+.problem-table td.topic .small {
+  display: block;
+}
+.problem-table .num {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.optional-badge {
+  margin-left: 6px;
+  padding: 1px 6px;
+  font-size: 0.65rem;
+  color: var(--muted);
+  background: var(--line);
+}
+.status-pill {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: var(--line);
+  color: var(--muted);
+}
+.status-solved {
+  background: #052e16;
+  color: #86efac;
+}
+.status-solved-help {
+  background: var(--soft);
+  color: #bfdbfe;
+}
+.status-struggled {
+  background: #422006;
+  color: #fcd34d;
+}
+.status-unfinished {
+  background: #450a0a;
+  color: #fca5a5;
+}
+.optimal-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.problem-table td.optimal .optimal-value {
+  display: block;
+}
+.optimal-panel dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 16px;
+  margin: 0;
+  font-size: 0.85rem;
+}
+.optimal-panel dt {
+  color: var(--muted);
+}
+.optimal-panel p {
+  margin: 12px 0 0;
+}
+.analysis-card {
+  margin: 14px 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+}
+.analysis-card h4 {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+}
+.analysis-values,
+.analysis-status {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 16px;
+  margin: 0;
+  font-size: 0.85rem;
+}
+.analysis-values dt,
+.analysis-status dt {
+  color: var(--muted);
+}
+.analysis-values dd,
+.analysis-status dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.analysis-status {
+  margin-bottom: 16px;
+}
+.analysis-match {
+  margin-left: 8px;
+  font-size: 0.8rem;
+}
+.match-yes {
+  color: #86efac;
+}
+.match-no {
+  color: #fca5a5;
+}
+.analysis-explanation {
+  margin: 10px 0 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  font-size: 0.88rem;
+}
+.analysis-failed {
+  color: #fca5a5;
+  overflow-wrap: anywhere;
+}
+.analysis-card p.small {
+  margin: 10px 0 0;
+}
+.analysis-actions {
+  margin-top: 12px;
+}
+.analysis-actions .button {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+.complexity-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px dashed #fb923c;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  background: transparent;
+  color: #fdba74;
+}
+.side-list li > .complexity-badge {
+  align-self: flex-start;
+  margin-left: 0;
+}
+.analysis-values .optimal-value {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }

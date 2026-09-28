@@ -20,7 +20,7 @@ import (
 func TestLeetgrinderAccess(t *testing.T) {
 	s := &Server{config: config.Config{Username: "admin", JWTSecret: "test", PublicOrigin: "https://example.com"}}
 	handler := s.RegisterRoutes()
-	for _, path := range []string{"/leetgrinder", "/leetgrinder/day/1", "/leetgrinder/problem/two-sum", "/leetgrinder/export", "/leetgrinder/reviews", "/leetgrinder/settings", "/leetgrinder/about"} {
+	for _, path := range []string{"/leetgrinder", "/leetgrinder/day/1", "/leetgrinder/problem/two-sum", "/leetgrinder/export", "/leetgrinder/reviews", "/leetgrinder/settings", "/leetgrinder/about", "/leetgrinder/problems"} {
 		w := httptest.NewRecorder()
 		handler.ServeHTTP(w, httptest.NewRequest("GET", path, nil))
 		if w.Code != 303 {
@@ -103,7 +103,7 @@ func leetgrinderTestServer(t *testing.T) (*Server, *database.Store, func(method,
 
 func TestLeetgrinderWorkflow(t *testing.T) {
 	_, db, request := leetgrinderTestServer(t)
-	for _, path := range []string{"/leetgrinder", "/leetgrinder/day/1", "/leetgrinder/day/84", "/leetgrinder/problem/two-sum", "/leetgrinder/reviews", "/leetgrinder/settings", "/leetgrinder/about"} {
+	for _, path := range []string{"/leetgrinder", "/leetgrinder/day/1", "/leetgrinder/day/84", "/leetgrinder/problem/two-sum", "/leetgrinder/reviews", "/leetgrinder/settings", "/leetgrinder/about", "/leetgrinder/problems"} {
 		w := request("GET", path, nil)
 		if w.Code != 200 {
 			t.Fatalf("%s: %d %s", path, w.Code, w.Body.String())
@@ -117,7 +117,7 @@ func TestLeetgrinderWorkflow(t *testing.T) {
 			t.Fatalf("bad path %s: %d", path, w.Code)
 		}
 	}
-	values := url.Values{"id": {uuid.NewString()}, "outcome": {"solved"}, "minutes": {"25"}, "assisted": {"true"}, "notes": {"needed a hint <script>"}, "returnDay": {"1"}}
+	values := url.Values{"id": {uuid.NewString()}, "outcome": {"solved"}, "minutes": {"25"}, "assisted": {"true"}, "notes": {"needed a hint <script>"}, "returnDay": {"1"}, "timeComplexity": {"O(n)"}, "spaceComplexity": {"other"}, "spaceComplexityOther": {" O(n) "}}
 	path := "/leetgrinder/problem/two-sum/attempts"
 	for i := 0; i < 2; i++ {
 		if w := request("POST", path, values); w.Code != 303 {
@@ -128,7 +128,7 @@ func TestLeetgrinderWorkflow(t *testing.T) {
 	if err != nil || len(state.Attempts) != 1 {
 		t.Fatalf("retry duplicated attempt: %+v %v", state, err)
 	}
-	reused := url.Values{"id": values["id"], "outcome": {"struggled"}, "minutes": {"30"}, "notes": {"reused form"}}
+	reused := url.Values{"id": values["id"], "outcome": {"struggled"}, "minutes": {"30"}, "notes": {"reused form"}, "timeComplexity": {"O(n)"}, "spaceComplexity": {"O(n)"}}
 	w := request("POST", path, reused)
 	if w.Code != 409 || !strings.Contains(w.Body.String(), "reused form") || strings.Contains(w.Body.String(), `value="`+values.Get("id")+`"><input type="hidden" name="revision" value="">`) {
 		t.Fatalf("reused create identifier was not replaced: %d %s", w.Code, w.Body.String())

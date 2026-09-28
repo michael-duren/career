@@ -40,10 +40,12 @@ func (s *Server) registerLeetgrinder(r chi.Router) {
 		r.Get("/leetgrinder/problem/{slug}", s.leetgrinderProblem)
 		r.Post("/leetgrinder/problem/{slug}/attempts", s.leetgrinderAttempt)
 		r.Get("/leetgrinder/about", s.leetgrinderAbout)
+		r.Get("/leetgrinder/problems", s.leetgrinderProblems)
 		r.Get("/leetgrinder/reviews", s.leetgrinderReviews)
 		r.Get("/leetgrinder/settings", s.leetgrinderSettings)
 		r.Post("/leetgrinder/settings/schedule", s.leetgrinderSaveSchedule)
 		s.registerLeetgrinderNotify(r)
+		s.registerLeetgrinderAnalysis(r)
 		r.Get("/leetgrinder/export", func(w http.ResponseWriter, r *http.Request) {
 			state, err := s.db.LeetgrinderState(r.Context())
 			if err != nil {
@@ -95,6 +97,21 @@ func (s *Server) leetgrinderAbout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	renderLeetgrinder(w, r, 200, leetgrinder.About(state))
+}
+func (s *Server) leetgrinderProblems(w http.ResponseWriter, r *http.Request) {
+	state, err := s.db.LeetgrinderState(r.Context())
+	if err != nil {
+		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your saved progress is unavailable. Please retry."))
+		return
+	}
+	settings, err := s.db.LeetgrinderSettings(r.Context())
+	if err != nil {
+		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your settings are unavailable. Please retry."))
+		return
+	}
+	rows := leetgrinder.ProblemRows(state)
+	filter := leetgrinder.ParseProblemFilter(r.URL.Query())
+	renderLeetgrinder(w, r, 200, leetgrinder.Problems(leetgrinder.ProblemsPage{Rows: leetgrinder.FilterProblems(rows, filter), Total: len(rows), Filter: filter, Location: settings.Location()}))
 }
 func (s *Server) leetgrinderReviews(w http.ResponseWriter, r *http.Request) {
 	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
@@ -149,8 +166,40 @@ func (s *Server) leetgrinderProblem(w http.ResponseWriter, r *http.Request) {
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your attempt history is unavailable. Please retry."))
 		return
 	}
-	renderLeetgrinder(w, r, 200, leetgrinder.ProblemHistory(problem, state, leetgrinder.NewForm(uuid.NewString(), 0)))
+	renderLeetgrinder(w, r, 200, leetgrinder.ProblemHistory(problem, state, leetgrinder.NewForm(uuid.NewString(), 0), s.historyAnalysis(r)))
 }
+
+// historyAnalysis reports whether analysis runs, for the history page. A
+// settings failure is reported as an unknown status on the cards.
+func (s *Server) historyAnalysis(r *http.Request) leetgrinder.AnalysisAvailability {
+	a := leetgrinder.AnalysisAvailability{KeyConfigured: s.config.AnthropicAPIKey.Reveal() != "", ZeroLimit: s.config.AnalysisDailyLimit <= 0}
+	settings, err := s.db.LeetgrinderSettings(r.Context())
+	if err != nil {
+		a.Unknown = true
+		return a
+	}
+	a.Enabled = settings.AnalysisEnabled
+	if !a.On() {
+		return a
+	}
+	now := s.clock()
+	// A failed read is an unknown status, so re-analyse is refused rather
+	// than clearing a result while analysis may be on hold.
+	pause, err := s.db.LeetgrinderAnalysisPause(r.Context())
+	if err != nil {
+		a.Unknown = true
+		return a
+	}
+	a.Paused = now.Before(pause.Until)
+	used, err := s.db.LeetgrinderAnalysisUsage(r.Context(), leetgrinder.Date(now, settings.Location()))
+	if err != nil {
+		a.Unknown = true
+		return a
+	}
+	a.LimitReached = used >= s.config.AnalysisDailyLimit
+	return a
+}
+
 func (s *Server) leetgrinderForm(w http.ResponseWriter, r *http.Request) bool {
 	if !s.mutation(w, r, "application/x-www-form-urlencoded") {
 		return false
@@ -175,7 +224,9 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 	if returnDay < 0 || returnDay > 84 {
 		returnDay = 0
 	}
-	form := leetgrinder.AttemptForm{ID: r.PostForm.Get("id"), Revision: r.PostForm.Get("revision"), Outcome: r.PostForm.Get("outcome"), Minutes: r.PostForm.Get("minutes"), Assisted: r.PostForm.Get("assisted") == "true", Notes: r.PostForm.Get("notes"), ReturnDay: returnDay, Review: r.PostForm.Get("review") == "true"}
+	form := leetgrinder.AttemptForm{ID: r.PostForm.Get("id"), Revision: r.PostForm.Get("revision"), Outcome: r.PostForm.Get("outcome"), Minutes: r.PostForm.Get("minutes"), Assisted: r.PostForm.Get("assisted") == "true", Notes: r.PostForm.Get("notes"), ReturnDay: returnDay, Review: r.PostForm.Get("review") == "true",
+		Time:  leetgrinder.ComplexityInput{Choice: r.PostForm.Get("timeComplexity"), Other: r.PostForm.Get("timeComplexityOther")},
+		Space: leetgrinder.ComplexityInput{Choice: r.PostForm.Get("spaceComplexity"), Other: r.PostForm.Get("spaceComplexityOther")}}
 	switch ret := r.PostForm.Get("return"); ret {
 	case "overview", "reviews":
 		form.Return = ret
@@ -186,7 +237,7 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			form.Error += " Your history could not be loaded; your draft is retained below."
 		}
-		renderLeetgrinder(w, r, status, leetgrinder.ProblemHistory(problem, state, form))
+		renderLeetgrinder(w, r, status, leetgrinder.ProblemHistory(problem, state, form, s.historyAnalysis(r)))
 	}
 	if _, err := uuid.Parse(form.ID); err != nil {
 		form.ID = uuid.NewString()
@@ -216,7 +267,16 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 		reject(400, "Choose whether you used hints or a solution.")
 		return
 	}
-	_, err = s.db.SaveLeetgrinderAttempt(r.Context(), leetgrinder.Attempt{ID: form.ID, ProblemSlug: problem.Slug, Outcome: form.Outcome, Minutes: minutes, Assisted: form.Assisted, Notes: form.Notes, Source: "web", IsReview: form.Review}, form.Revision)
+	attempt := leetgrinder.Attempt{ID: form.ID, ProblemSlug: problem.Slug, Outcome: form.Outcome, Minutes: minutes, Assisted: form.Assisted, Notes: form.Notes, Source: "web", IsReview: form.Review, TimeComplexity: form.Time.Value(), SpaceComplexity: form.Space.Value()}
+	switch err := attempt.NormalizeDetails(); {
+	case errors.Is(err, leetgrinder.ErrComplexityRequired):
+		reject(400, "Choose the time and space complexity of your solution. They are required for solved and struggled attempts.")
+		return
+	case err != nil:
+		reject(400, "Write complexity in big-O notation, such as O(m·n): start with O( and end with ), in 40 characters or fewer.")
+		return
+	}
+	_, err = s.db.SaveLeetgrinderAttempt(r.Context(), attempt, form.Revision)
 	if err != nil {
 		switch {
 		case errors.Is(err, database.ErrConflict) && form.Revision == "":

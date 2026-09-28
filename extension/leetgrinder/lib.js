@@ -11,6 +11,141 @@
   const TOKEN = /^lg_[A-Za-z0-9_-]{43}$/;
   const OUTCOMES = ["solved", "struggled", "unfinished"];
 
+  // Complexity rules mirror internal/leetgrinder/complexity.go; both run
+  // test/complexity-vectors.json.
+  const COMPLEXITIES = ["O(1)", "O(log n)", "O(√n)", "O(n)", "O(n log n)", "O(n²)", "O(n³)", "O(2ⁿ)", "O(n!)"];
+  const MAX_COMPLEXITY = 40;
+  const SPELLINGS = [
+    ["nlogn", "n log n"],
+    ["logn", "log n"],
+    ["n^2", "n²"],
+    ["n^3", "n³"],
+    ["2^n", "2ⁿ"],
+  ];
+  const CONTROL = /[\u0000-\u001f\u007f-\u009f]/;
+  const MAX_CODE_BYTES = 64 * 1024;
+  // The app's API body limit. Payloads over it are refused before sending.
+  const MAX_BODY_BYTES = 96 * 1024;
+  const CODE_LANGUAGE = /^[A-Za-z0-9_+#.-]{1,32}$/;
+  const SUBMISSION_ID = /^[0-9]{1,20}$/;
+  const MAX_STATUS = 64;
+  const LANGUAGE_LABELS = {
+    c: "C",
+    cpp: "C++",
+    csharp: "C#",
+    dart: "Dart",
+    elixir: "Elixir",
+    erlang: "Erlang",
+    golang: "Go",
+    java: "Java",
+    javascript: "JavaScript",
+    kotlin: "Kotlin",
+    php: "PHP",
+    python: "Python",
+    python3: "Python3",
+    racket: "Racket",
+    ruby: "Ruby",
+    rust: "Rust",
+    scala: "Scala",
+    swift: "Swift",
+    typescript: "TypeScript",
+  };
+
+  // normalizeComplexity returns the canonical spelling of a stated
+  // complexity, "" when nothing is stated, or null when it is not O(...) in
+  // at most 40 characters.
+  function normalizeComplexity(input) {
+    if (typeof input !== "string") return null;
+    let s = input
+      .split(/[ \t\n\r\f\v]+/)
+      .filter(Boolean)
+      .join(" ");
+    if (s === "") return "";
+    if (s.startsWith("o(")) s = "O(" + s.slice(2);
+    for (const [from, to] of SPELLINGS) s = s.split(from).join(to);
+    if ([...s].length > MAX_COMPLEXITY || s.length < 4 || !s.startsWith("O(") || !s.endsWith(")") || CONTROL.test(s)) return null;
+    return s;
+  }
+
+  const needsComplexity = (outcome) => outcome === "solved" || outcome === "struggled";
+
+  function utf8Bytes(s) {
+    return new TextEncoder().encode(s).length;
+  }
+
+  function validCode(code, lang) {
+    if (typeof code !== "string" || typeof lang !== "string") return false;
+    if (code === "") return lang === "";
+    return CODE_LANGUAGE.test(lang) && !code.includes("\u0000") && utf8Bytes(code) <= MAX_CODE_BYTES;
+  }
+
+  // cleanCapture checks a page-world "submission" message. Page scripts can
+  // forge these, so only exactly this shape, for the problem on screen, with
+  // bounded sizes, is accepted; the learner still sees and confirms the code.
+  function cleanCapture(data, slug) {
+    if (!data || typeof data !== "object" || Array.isArray(data)) return null;
+    if (Object.keys(data).sort().join(",") !== "code,lang,slug,source,status,submissionId,type") return null;
+    if (data.source !== "leetgrinder-detect" || data.type !== "submission") return null;
+    if (typeof data.slug !== "string" || data.slug !== slug || !SLUG.test(data.slug)) return null;
+    if (typeof data.submissionId !== "string" || !SUBMISSION_ID.test(data.submissionId)) return null;
+    if (typeof data.status !== "string" || data.status.length > MAX_STATUS || CONTROL.test(data.status)) return null;
+    if (typeof data.code !== "string" || data.code === "" || !validCode(data.code, data.lang)) return null;
+    return { slug: data.slug, submissionId: data.submissionId, status: data.status, lang: data.lang, code: data.code };
+  }
+
+  function languageLabel(lang) {
+    return Object.prototype.hasOwnProperty.call(LANGUAGE_LABELS, lang) ? LANGUAGE_LABELS[lang] : lang;
+  }
+
+  function formatBytes(n) {
+    return n < 1024 ? `${n} B` : `${(n / 1024).toFixed(1)} KB`;
+  }
+
+  // attemptProblem explains why an attempt cannot be sent, or returns "".
+  function attemptProblem(a) {
+    if (!a || typeof a !== "object") return "Invalid attempt.";
+    if (typeof a.id !== "string" || !UUID.test(a.id)) return "Invalid attempt id.";
+    if (typeof a.problemSlug !== "string" || !SLUG.test(a.problemSlug) || a.problemSlug.length > 100) return "Invalid problem.";
+    if (!OUTCOMES.includes(a.outcome)) return "Choose an outcome.";
+    if (!Number.isInteger(a.minutes) || a.minutes < 1 || a.minutes > MAX_MINUTES) return `Minutes must be a whole number from 1 to ${MAX_MINUTES}.`;
+    if (typeof a.assisted !== "boolean" || typeof a.isReview !== "boolean") return "Invalid attempt.";
+    if (typeof a.notes !== "string" || [...a.notes].length > MAX_NOTES || a.notes.includes("\u0000")) return `Keep notes to ${MAX_NOTES} characters or fewer.`;
+    const time = normalizeComplexity(a.timeComplexity);
+    const space = normalizeComplexity(a.spaceComplexity);
+    if (time === null || space === null) return "Write complexity like O(m·n): start with O( and end with ), in 40 characters or fewer.";
+    if (needsComplexity(a.outcome) && (time === "" || space === "")) return "Choose the time and space complexity. Both are required for solved and struggled attempts.";
+    if (!validCode(a.code, a.codeLanguage)) return "The captured code is invalid or over 64 KB. Leave it out and try again.";
+    return "";
+  }
+
+  function bodyTooLarge(a) {
+    return utf8Bytes(JSON.stringify(a)) > MAX_BODY_BYTES;
+  }
+
+  // buildAttempt assembles the API payload from the panel's fields. The code
+  // is attached only when the learner kept it, it belongs to this problem,
+  // and the whole body fits the API's limit.
+  function buildAttempt(fields, capture, includeCode) {
+    const a = {
+      id: fields.id,
+      problemSlug: fields.problemSlug,
+      outcome: fields.outcome,
+      minutes: fields.minutes,
+      assisted: fields.assisted,
+      notes: fields.notes,
+      isReview: fields.isReview,
+      timeComplexity: normalizeComplexity(fields.timeComplexity) ?? fields.timeComplexity,
+      spaceComplexity: normalizeComplexity(fields.spaceComplexity) ?? fields.spaceComplexity,
+      code: "",
+      codeLanguage: "",
+    };
+    if (includeCode && capture && capture.slug === fields.problemSlug) {
+      const withCode = { ...a, code: capture.code, codeLanguage: capture.lang };
+      if (!bodyTooLarge(withCode)) return withCode;
+    }
+    return a;
+  }
+
   // slugFromPath returns the problem slug for a LeetCode problem URL path.
   function slugFromPath(path) {
     const m = /^\/problems\/([^/]+)(?:\/|$)/.exec(path || "");
@@ -76,10 +211,12 @@
     return TOKEN.test(String(token || ""));
   }
 
-  // cleanAttempt returns a copy with only the API's fields, or null when any
-  // field is invalid. The background worker never forwards anything else.
+  // cleanAttempt returns a copy with only the API's fields and normalised
+  // complexities, or null when any field is invalid or the body would be
+  // over the API's limit. The background worker never forwards anything else.
   function cleanAttempt(a) {
     if (!a || typeof a !== "object") return null;
+    const text = (v) => (v === undefined ? "" : v);
     const out = {
       id: a.id,
       problemSlug: a.problemSlug,
@@ -88,14 +225,15 @@
       assisted: a.assisted,
       notes: a.notes,
       isReview: a.isReview,
+      timeComplexity: text(a.timeComplexity),
+      spaceComplexity: text(a.spaceComplexity),
+      code: text(a.code),
+      codeLanguage: text(a.codeLanguage),
     };
-    if (typeof out.id !== "string" || !UUID.test(out.id)) return null;
-    if (typeof out.problemSlug !== "string" || !SLUG.test(out.problemSlug) || out.problemSlug.length > 100) return null;
-    if (!OUTCOMES.includes(out.outcome)) return null;
-    if (!Number.isInteger(out.minutes) || out.minutes < 1 || out.minutes > MAX_MINUTES) return null;
-    if (typeof out.assisted !== "boolean" || typeof out.isReview !== "boolean") return null;
-    if (typeof out.notes !== "string" || [...out.notes].length > MAX_NOTES || out.notes.includes("\u0000")) return null;
-    return out;
+    if (attemptProblem(out)) return null;
+    out.timeComplexity = normalizeComplexity(out.timeComplexity);
+    out.spaceComplexity = normalizeComplexity(out.spaceComplexity);
+    return bodyTooLarge(out) ? null : out;
   }
 
   // describeStatus turns an API result into a message for the learner.
@@ -107,8 +245,10 @@
         return "The app rejected the API token. Check the extension options.";
       case 409:
         return "This attempt was already saved with different values. Correct it in the app.";
+      case 413:
+        return "The attempt is too large to save. Leave the code out and try again.";
       case 422:
-        return "This problem is not in the Leetgrinder curriculum.";
+        return error || "This problem is not in the Leetgrinder curriculum.";
       default:
         return error || `The app answered with status ${status}.`;
     }
@@ -129,6 +269,18 @@
     validToken,
     cleanAttempt,
     describeStatus,
+    COMPLEXITIES,
+    MAX_COMPLEXITY,
+    MAX_CODE_BYTES,
+    MAX_BODY_BYTES,
+    normalizeComplexity,
+    needsComplexity,
+    utf8Bytes,
+    cleanCapture,
+    languageLabel,
+    formatBytes,
+    attemptProblem,
+    buildAttempt,
     validSlug: (s) => typeof s === "string" && SLUG.test(s) && s.length <= 100,
   };
   root.LeetgrinderLib = lib;

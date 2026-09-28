@@ -15,7 +15,7 @@ import (
 func TestLeetgrinderAttempts(t *testing.T) {
 	s := testStore(t)
 	ctx := context.Background()
-	input := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "two-sum", Outcome: "struggled", Minutes: 25, Assisted: true, Notes: "Try a map"}
+	input := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "two-sum", Outcome: "struggled", Minutes: 25, Assisted: true, Notes: "Try a map", TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}
 	original, err := s.SaveLeetgrinderAttempt(ctx, input, "")
 	if err != nil {
 		t.Fatal(err)
@@ -124,7 +124,7 @@ func TestLeetgrinderDayCompletion(t *testing.T) {
 
 func TestLeetgrinderInvalidAttempts(t *testing.T) {
 	s := testStore(t)
-	valid := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "two-sum", Outcome: "solved", Minutes: 240, Notes: strings.Repeat("界", 2000)}
+	valid := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "two-sum", Outcome: "solved", Minutes: 240, Notes: strings.Repeat("界", 2000), TimeComplexity: "O(" + strings.Repeat("m", 37) + ")", SpaceComplexity: "O(1)"}
 	for name, change := range map[string]func(*leetgrinder.Attempt){
 		"id":           func(a *leetgrinder.Attempt) { a.ID = "bad" },
 		"slug":         func(a *leetgrinder.Attempt) { a.ProblemSlug = "../two-sum" },

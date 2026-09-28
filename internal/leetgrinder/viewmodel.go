@@ -23,6 +23,34 @@ type AttemptForm struct {
 	Review bool
 	Return string
 	Error  string
+	// Time and Space are the complexity controls as submitted.
+	Time, Space ComplexityInput
+}
+
+// ComplexityInput is one complexity control: Choice is "", a canonical
+// value from Complexities, or "other", in which case Other holds the text.
+type ComplexityInput struct {
+	Choice, Other string
+}
+
+// NewComplexityInput selects a saved value in the control.
+func NewComplexityInput(value string) ComplexityInput {
+	switch {
+	case value == "" || IsCanonicalComplexity(value):
+		return ComplexityInput{Choice: value}
+	default:
+		return ComplexityInput{Choice: "other", Other: value}
+	}
+}
+
+// Value is the stated complexity before normalisation. Without JavaScript
+// the text field is always submitted, so it also counts when nothing is
+// selected; the page script disables it unless "Other" is chosen.
+func (c ComplexityInput) Value() string {
+	if c.Choice == "" || c.Choice == "other" {
+		return c.Other
+	}
+	return c.Choice
 }
 
 type DayPage struct {
@@ -76,6 +104,8 @@ type SettingsPage struct {
 	Notify NotifyPanel
 	// APITokens is the extension token section; see apitokens.templ.
 	APITokens APITokensSection
+	// Analysis is the complexity analysis section; see analysis.templ.
+	Analysis AnalysisPanel
 }
 
 func ReviewKey(slug string) string { return "review-" + slug }
@@ -105,7 +135,21 @@ func NewReviewForm(id string, day int, ret string) AttemptForm {
 	return f
 }
 func EditForm(a Attempt) AttemptForm {
-	return AttemptForm{ID: a.ID, Revision: a.Revision, Outcome: a.Outcome, Minutes: Count(a.Minutes), Assisted: a.Assisted, Notes: a.Notes}
+	return AttemptForm{ID: a.ID, Revision: a.Revision, Outcome: a.Outcome, Minutes: Count(a.Minutes), Assisted: a.Assisted, Notes: a.Notes, Time: NewComplexityInput(a.TimeComplexity), Space: NewComplexityInput(a.SpaceComplexity)}
+}
+func orDash(s string) string {
+	if s == "" {
+		return "—"
+	}
+	return s
+}
+
+// ByteSize formats a size such as captured code for display.
+func ByteSize(n int) string {
+	if n < 1024 {
+		return fmt.Sprintf("%d B", n)
+	}
+	return fmt.Sprintf("%.1f KB", float64(n)/1024)
 }
 func OutcomeLabel(s string) string {
 	switch s {

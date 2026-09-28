@@ -12,13 +12,13 @@ import (
 	"github.com/michael-duren/career-strategy/internal/leetgrinder"
 )
 
-const leetgrinderSettingsColumns = "start_date,timezone,daily_hours::float8,ntfy_url,ntfy_topic,ntfy_token_ciphertext,notifications,revision"
+const leetgrinderSettingsColumns = "start_date,timezone,daily_hours::float8,ntfy_url,ntfy_topic,ntfy_token_ciphertext,notifications,analysis_enabled,revision"
 
 func scanLeetgrinderSettings(row interface{ Scan(...any) error }) (leetgrinder.Settings, error) {
 	var s leetgrinder.Settings
 	var start sql.NullTime
 	var notifications []byte
-	if err := row.Scan(&start, &s.Timezone, &s.DailyHours, &s.NtfyURL, &s.NtfyTopic, &s.NtfyTokenCiphertext, &notifications, &s.Revision); err != nil {
+	if err := row.Scan(&start, &s.Timezone, &s.DailyHours, &s.NtfyURL, &s.NtfyTopic, &s.NtfyTokenCiphertext, &notifications, &s.AnalysisEnabled, &s.Revision); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return s, ErrNotFound
 		}
@@ -80,8 +80,8 @@ func (s *Store) UpdateLeetgrinderSettings(ctx context.Context, expectedRevision 
 	if len(next.NtfyTokenCiphertext) > 0 {
 		token = next.NtfyTokenCiphertext
 	}
-	saved, err := scanLeetgrinderSettings(tx.QueryRowContext(ctx, `UPDATE leetgrinder_settings SET start_date=$1,timezone=$2,daily_hours=$3,ntfy_url=$4,ntfy_topic=$5,ntfy_token_ciphertext=$6,notifications=$7,revision=$8 WHERE id=1 RETURNING `+leetgrinderSettingsColumns,
-		start, next.Timezone, next.DailyHours, next.NtfyURL, next.NtfyTopic, token, notifications, uuid.NewString()))
+	saved, err := scanLeetgrinderSettings(tx.QueryRowContext(ctx, `UPDATE leetgrinder_settings SET start_date=$1,timezone=$2,daily_hours=$3,ntfy_url=$4,ntfy_topic=$5,ntfy_token_ciphertext=$6,notifications=$7,analysis_enabled=$8,revision=$9 WHERE id=1 RETURNING `+leetgrinderSettingsColumns,
+		start, next.Timezone, next.DailyHours, next.NtfyURL, next.NtfyTopic, token, notifications, next.AnalysisEnabled, uuid.NewString()))
 	if err != nil {
 		return leetgrinder.Settings{}, err
 	}
