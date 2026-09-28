@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -285,7 +286,7 @@ func TestMCPOverOAuth(t *testing.T) {
 		t.Fatal(w.Code)
 	}
 
-	call := connectMCP(t, h, rotated["access_token"].(string), 8)
+	call := connectMCP(t, h, rotated["access_token"].(string), 9)
 	overview, _ := call("get_career_overview", nil)
 	goals, _ := overview["goals"].([]any)
 	counts, _ := overview["counts"].(map[string]any)
@@ -339,6 +340,9 @@ func TestMCPOverOAuth(t *testing.T) {
 	if out, isErr := call("add_companies_to_queue", map[string]any{"companies": []any{map[string]any{"title": "Acme"}}}); !isErr || !strings.Contains(out["error"].(string), "read-only") {
 		t.Fatal("read-only token queued companies", out)
 	}
+	if out, isErr := call("delete_career_entry", map[string]any{"kind": "note", "id": "systems/nested-note", "revision": revision}); !isErr || !strings.Contains(out["error"].(string), "read-only") {
+		t.Fatal("read-only token deleted", out)
+	}
 }
 
 type toolCall func(name string, args map[string]any) (map[string]any, bool)
@@ -386,7 +390,7 @@ func TestMCPWriteTools(t *testing.T) {
 	if status != 200 || tokens["scope"] != "career:read career:write" {
 		t.Fatal(status, tokens)
 	}
-	call := connectMCP(t, h, tokens["access_token"].(string), 8)
+	call := connectMCP(t, h, tokens["access_token"].(string), 9)
 	ctx := context.Background()
 
 	company, isErr := call("create_career_entry", map[string]any{"kind": "company", "entry": map[string]any{"title": "Duck Corp!", "category": "Infra", "url": "https://duck.example", "slug": "ignored"}})
@@ -468,6 +472,37 @@ func TestMCPWriteTools(t *testing.T) {
 		t.Fatal(n, err)
 	}
 
+	book, isErr := call("create_career_entry", map[string]any{"kind": "book", "entry": map[string]any{"title": "Designing Data-Intensive Applications", "category": "Systems", "authors": []any{"Martin Kleppmann"}, "slug": "ignored"}})
+	bookID, _ := book["id"].(string)
+	if isErr || bookID == "ignored" || !database.ValidID("book", bookID) || book["revision"] == "" {
+		t.Fatal(book)
+	}
+	b, err := db.Detail(ctx, "book", bookID)
+	authors, _ := b.Entry["authors"].([]any)
+	if err != nil || b.Entry["status"] != "backlog" || b.Entry["type"] != "book" || len(authors) != 1 || authors[0] != "Martin Kleppmann" {
+		t.Fatal(b, err)
+	}
+	updatedBook, isErr := call("update_career_entry", map[string]any{"kind": "book", "id": bookID, "revision": book["revision"], "fields": map[string]any{"status": "reading", "rating": 5}})
+	if isErr || updatedBook["revision"] == book["revision"] {
+		t.Fatal(updatedBook)
+	}
+	if out, isErr := call("update_career_entry", map[string]any{"kind": "book", "id": bookID, "revision": updatedBook["revision"], "fields": map[string]any{"status": "hired"}}); !isErr || !strings.Contains(out["error"].(string), "invalid book enum") {
+		t.Fatal("invalid book status accepted", out)
+	}
+	if out, isErr := call("delete_career_entry", map[string]any{"kind": "book", "id": bookID, "revision": book["revision"]}); !isErr || !strings.Contains(out["error"].(string), "changed since") {
+		t.Fatal("stale revision deleted", out)
+	}
+	deleted, isErr := call("delete_career_entry", map[string]any{"kind": "book", "id": bookID, "revision": updatedBook["revision"]})
+	if isErr || deleted["deleted"] != true {
+		t.Fatal(deleted)
+	}
+	if _, err := db.Detail(ctx, "book", bookID); !errors.Is(err, database.ErrNotFound) {
+		t.Fatal("book not deleted", err)
+	}
+	if out, isErr := call("delete_career_entry", map[string]any{"kind": "page", "id": "index", "revision": "r"}); !isErr {
+		t.Fatal("page kind deletable", out)
+	}
+
 	// Refresh keeps the owner-chosen scope, whatever scope the client asks for.
 	status, refreshed := h.token(url.Values{"grant_type": {"refresh_token"}, "refresh_token": {tokens["refresh_token"].(string)}, "client_id": {clientID}, "scope": {"career:read"}})
 	if status != 200 || refreshed["scope"] != "career:read career:write" {
@@ -494,7 +529,7 @@ func TestMCPConnectionCompanies(t *testing.T) {
 	if status != 200 {
 		t.Fatal(status, tokens)
 	}
-	call := connectMCP(t, h, tokens["access_token"].(string), 8)
+	call := connectMCP(t, h, tokens["access_token"].(string), 9)
 
 	// The fixture adds a third employer, linked to a tracked company.
 	list, isErr := call("list_connection_companies", map[string]any{"limit": 1})
