@@ -23,6 +23,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "Places membership lookup and key-associated values in a research-grade dictionary design with constant-time lookup; its cuckoo collision scheme is an extension beyond the lesson's chained table.",
 			},
+			{
+				Title:    "cppreference: std::unordered_map",
+				URL:      "https://en.cppreference.com/w/cpp/container/unordered_map",
+				Guidance: "Skim the overview and the complexity table for insert/find/erase.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Shows a general-purpose hash map's O(1) expected lookup and insert, the operation the complement check depends on.",
+			},
+			{
+				Title:    "Wikipedia: Hash table",
+				URL:      "https://en.wikipedia.org/wiki/Hash_table",
+				Guidance: "Skim the collision-resolution section (chaining vs. open addressing).",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Surveys collision handling behind the map used for the seen-before check.",
+			},
 		}
 	case 2:
 		return []Reading{
@@ -44,6 +62,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "Establishes the cancellation invariant behind majority-candidate algorithms and why a candidate must be verified when no majority is guaranteed.",
 			},
+			{
+				Title:    "Wikipedia: Boyer-Moore majority vote algorithm",
+				URL:      "https://en.wikipedia.org/wiki/Boyer%E2%80%93Moore_majority_vote_algorithm",
+				Guidance: "Read the algorithm description and the correctness argument.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Explains why cancellation of unequal pairs finds a guaranteed majority element.",
+			},
+			{
+				Title:    "cppreference: std::count",
+				URL:      "https://en.cppreference.com/w/cpp/algorithm/count",
+				Guidance: "Skim the summary and complexity.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Frames counting occurrences as a single linear pass, the baseline the frequency map improves on.",
+			},
 		}
 	case 3:
 		return []Reading{
@@ -64,6 +100,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "Formalizes symbol matching as a bijection, supporting the lesson's need for forward and reverse maps rather than a one-way association.",
+			},
+			{
+				Title:    "Wikipedia: Anagram",
+				URL:      "https://en.wikipedia.org/wiki/Anagram",
+				Guidance: "Skim the definition and the algorithmic-detection section.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Defines the equivalence the sorted-letters key is built to detect.",
+			},
+			{
+				Title:    "Wikipedia: Bijection",
+				URL:      "https://en.wikipedia.org/wiki/Bijection",
+				Guidance: "Read the definition and the one-line criterion for a function to be bijective.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Gives the formal two-directional mapping condition the pattern-matching check must enforce.",
 			},
 		}
 	case 4:
@@ -95,6 +149,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "reference",
 				Supports: "Distinguishes sets from multisets and explains storing multiplicities rather than one boolean per value.",
 			},
+			{
+				Title:    "cppreference: std::unordered_set",
+				URL:      "https://en.cppreference.com/w/cpp/container/unordered_set",
+				Guidance: "Skim the overview and complexity table.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Shows the set interface used for membership and intersection checks.",
+			},
+			{
+				Title:    "Wikipedia: Cycle detection",
+				URL:      "https://en.wikipedia.org/wiki/Cycle_detection",
+				Guidance: "Read the introduction and the Floyd's tortoise-and-hare section.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Surveys cycle-detection strategies beyond the visited-set approach used for the digit-square sequence.",
+			},
 		}
 	case 5:
 		return []Reading{
@@ -116,6 +188,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "Provides the original partition procedure and region-boundary reasoning that underlies in-place three-way partition variants.",
 			},
+			{
+				Title:    "cppreference: std::sort",
+				URL:      "https://en.cppreference.com/w/cpp/algorithm/sort",
+				Guidance: "Skim the summary, complexity, and the in-place guarantee.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the comparison-sort contract the merge and partition logic must satisfy.",
+			},
+			{
+				Title:    "Wikipedia: Dutch national flag problem",
+				URL:      "https://en.wikipedia.org/wiki/Dutch_national_flag_problem",
+				Guidance: "Read the problem statement and the three-way partition invariant.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the exact three-region invariant Sort Colors implements in one pass.",
+			},
 		}
 	case 6:
 		return []Reading{
@@ -136,6 +226,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "Connects carry propagation to prefix recurrences and makes explicit which state must be preserved while processing digits.",
+			},
+			{
+				Title:    "Wikipedia: Prefix sum",
+				URL:      "https://en.wikipedia.org/wiki/Prefix_sum",
+				Guidance: "Read the definition and the sequential-computation section.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Defines the running-total structure built in the array pass.",
+			},
+			{
+				Title:    "Wikipedia: Multiplication algorithm",
+				URL:      "https://en.wikipedia.org/wiki/Multiplication_algorithm",
+				Guidance: "Skim the grade-school long-multiplication section.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Describes the digit-by-digit, carry-resolved multiplication the digit-array accumulator implements.",
 			},
 		}
 	case 7:
@@ -167,6 +275,15 @@ func lessonReadings(day int) []Reading {
 				Kind:     "reference",
 				Supports: "Gives coordinate-rotation equations. Discrete array rotation additionally shifts coordinates into valid nonnegative indices; zero marking is a separate lesson derivation.",
 			},
+			{
+				Title:    "Wikipedia: In-place algorithm",
+				URL:      "https://en.wikipedia.org/wiki/In-place_algorithm",
+				Guidance: "Read the definition and the auxiliary-space caveat.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Clarifies why writing into the same matrix still counts as O(1) auxiliary space.",
+			},
 		}
 	case 8:
 		return []Reading{
@@ -188,6 +305,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "Develops binary search from a loop invariant, making boundary preservation and off-by-one correctness explicit.",
 			},
+			{
+				Title:    "cppreference: std::lower_bound",
+				URL:      "https://en.cppreference.com/w/cpp/algorithm/lower_bound",
+				Guidance: "Skim the summary and the complexity note.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the first-not-less-than search this lesson's loop computes by hand.",
+			},
+			{
+				Title:    "Wikipedia: Binary search algorithm",
+				URL:      "https://en.wikipedia.org/wiki/Binary_search_algorithm",
+				Guidance: "Read the procedure section and the loop-invariant description.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "States the shrinking-range invariant every binary search in the week relies on.",
+			},
 		}
 	case 9:
 		return []Reading{
@@ -208,6 +343,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "Defines exact integer square root and remainder. The divide-and-conquer algorithm is a research extension, not the source of the lesson's binary-search predicate.",
+			},
+			{
+				Title:    "Wikipedia: Monotonic function",
+				URL:      "https://en.wikipedia.org/wiki/Monotonic_function",
+				Guidance: "Read the definition and the one-variable examples.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Defines the monotone predicate property that lets binary search replace a linear scan.",
+			},
+			{
+				Title:    "cppreference: std::upper_bound",
+				URL:      "https://en.cppreference.com/w/cpp/algorithm/upper_bound",
+				Guidance: "Skim the summary and the difference from lower_bound.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Contrasts the strict versus non-strict boundary the day's predicates must get right.",
 			},
 		}
 	case 10:
@@ -239,6 +392,15 @@ func lessonReadings(day int) []Reading {
 				Kind:     "reference",
 				Supports: "Develops the staircase-search invariant and linear row-plus-column probe bound used for sorted-matrix elimination.",
 			},
+			{
+				Title:    "cppreference: std::equal_range",
+				URL:      "https://en.cppreference.com/w/cpp/algorithm/equal_range",
+				Guidance: "Skim the summary; note it returns both boundaries in one call.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the paired lower/upper boundary search this lesson builds from two binary searches.",
+			},
 		}
 	case 11:
 		return []Reading{
@@ -268,6 +430,15 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "reference",
 				Supports: "Provides the distinct-key rotated-minimum algorithm and its midpoint/right-end boundary rule.",
+			},
+			{
+				Title:    "cppreference: std::rotate",
+				URL:      "https://en.cppreference.com/w/cpp/algorithm/rotate",
+				Guidance: "Skim the summary and the in-place rotation guarantee.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Frames a rotated sorted array as a cyclic shift, the structure the search must exploit.",
 			},
 		}
 	case 12:
@@ -329,6 +500,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "Formalizes optimization via repeated decision tests and separates feasibility from the search that finds the optimum.",
 			},
+			{
+				Title:    "Wikipedia: Bisection method",
+				URL:      "https://en.wikipedia.org/wiki/Bisection_method",
+				Guidance: "Read the algorithm section for root-finding by halving an interval.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the continuous-domain ancestor of binary-searching the answer over a feasibility predicate.",
+			},
+			{
+				Title:    "cppreference: std::partition_point",
+				URL:      "https://en.cppreference.com/w/cpp/algorithm/partition_point",
+				Guidance: "Skim the summary; note the precondition that the range is already partitioned.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Matches exactly the search-the-answer pattern: find the boundary of a monotone true/false predicate.",
+			},
 		}
 	case 14:
 		return []Reading{
@@ -359,6 +548,15 @@ func lessonReadings(day int) []Reading {
 				Kind:     "reference",
 				Supports: "Explains searching a monotone feasibility predicate and choosing answer bounds, which the lesson applies to several different counting checks.",
 			},
+			{
+				Title:    "Wikipedia: Interpolation search",
+				URL:      "https://en.wikipedia.org/wiki/Interpolation_search",
+				Guidance: "Skim the idea section contrasting it with plain binary search.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Reviews a related search strategy as contrast before applying plain binary search to paired arrays.",
+			},
 		}
 	case 15:
 		return []Reading{
@@ -380,6 +578,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "Defines palindrome recognition and its center-based string model in the algorithms literature; the lesson's whole-string normalization and two-pointer check are a simpler special case.",
 			},
+			{
+				Title:    "cppreference: std::equal",
+				URL:      "https://en.cppreference.com/w/cpp/algorithm/equal",
+				Guidance: "Skim the summary.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the range-equality check two converging pointers perform one step at a time for a palindrome.",
+			},
+			{
+				Title:    "cppreference: std::reverse",
+				URL:      "https://en.cppreference.com/w/cpp/algorithm/reverse",
+				Guidance: "Skim the summary and the in-place, linear-time guarantee.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the two-pointer swap-from-the-ends pattern applied to reversing a sequence.",
+			},
 		}
 	case 16:
 		return []Reading{
@@ -400,6 +616,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "Defines stable in-place partitioning and makes clear why preserving the relative order of retained values is a separate requirement.",
+			},
+			{
+				Title:    "cppreference: std::remove",
+				URL:      "https://en.cppreference.com/w/cpp/algorithm/remove",
+				Guidance: "Skim the summary and the erase-remove idiom note.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Shows the same read/write pointer pattern used to compact an array in place.",
+			},
+			{
+				Title:    "cppreference: std::unique",
+				URL:      "https://en.cppreference.com/w/cpp/algorithm/unique",
+				Guidance: "Skim the summary; note it removes consecutive duplicates in place.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the standard-library operation that matches Remove Duplicates from Sorted Array exactly.",
 			},
 		}
 	case 17:
@@ -431,6 +665,15 @@ func lessonReadings(day int) []Reading {
 				Kind:     "reference",
 				Supports: "Explains elimination of sorted pair candidates and extending the scan to triples. The container-height argument in the lesson is a separate application.",
 			},
+			{
+				Title:    "Wikipedia: 3SUM",
+				URL:      "https://en.wikipedia.org/wiki/3SUM",
+				Guidance: "Read the problem statement and the sort-then-two-pointer algorithm section.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the exact problem and canonical O(n^2) approach this lesson's core problems implement.",
+			},
 		}
 	case 18:
 		return []Reading{
@@ -451,6 +694,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "Formalizes window boundaries and expiring observations, which underlie fixed-window sum and count invariants.",
+			},
+			{
+				Title:    "Wikipedia: Moving average",
+				URL:      "https://en.wikipedia.org/wiki/Moving_average",
+				Guidance: "Skim the simple moving average section.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is a fixed-size window statistic recomputed incrementally, the same shape as this lesson's problems.",
+			},
+			{
+				Title:    "cppreference: std::accumulate",
+				URL:      "https://en.cppreference.com/w/cpp/algorithm/accumulate",
+				Guidance: "Skim the summary.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the running-sum reduction the window's incremental update avoids recomputing.",
 			},
 		}
 	case 19:
@@ -473,6 +734,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "Defines streaming sliding windows and explains why expiring old state is difficult; its approximate model differs from the lesson's exact in-memory windows.",
 			},
+			{
+				Title:    "Wikipedia: String (computer science)",
+				URL:      "https://en.wikipedia.org/wiki/String_(computer_science)",
+				Guidance: "Skim the operations section covering substrings.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Defines the substring unit a variable window expands and shrinks over while tracking validity.",
+			},
+			{
+				Title:    "cppreference: std::map",
+				URL:      "https://en.cppreference.com/w/cpp/container/map",
+				Guidance: "Skim the overview; note the ordered, logarithmic-time operations.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Contrasts an ordered map's O(log n) operations with the O(1) expected operations the window's frequency map relies on.",
+			},
 		}
 	case 20:
 		return []Reading{
@@ -493,6 +772,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "Defines scan as a general operation and shows how prefix state represents all earlier elements; the lesson adds a frequency map and the empty-prefix seed.",
+			},
+			{
+				Title:    "Wikipedia: Associative array",
+				URL:      "https://en.wikipedia.org/wiki/Associative_array",
+				Guidance: "Skim the definition and operations.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Generalises the frequency map used to count prefix sums seen so far.",
+			},
+			{
+				Title:    "cppreference: std::partial_sum",
+				URL:      "https://en.cppreference.com/w/cpp/algorithm/partial_sum",
+				Guidance: "Skim the summary.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the standard-library operation that computes exactly the prefix-sum array this lesson builds by hand.",
 			},
 		}
 	case 21:
@@ -524,6 +821,15 @@ func lessonReadings(day int) []Reading {
 				Kind:     "reference",
 				Supports: "Documents signed remainder behavior, explaining why modulo keys must be normalized before frequency-map lookup.",
 			},
+			{
+				Title:    "Wikipedia: Modular arithmetic",
+				URL:      "https://en.wikipedia.org/wiki/Modular_arithmetic",
+				Guidance: "Read the definition and the congruence notation.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Explains the remainder classes a prefix-product-mod-k state tracks.",
+			},
 		}
 	case 22:
 		return []Reading{
@@ -545,6 +851,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "Models disjoint linked segments and local pointer mutation, the reasoning needed for reversal and merge without losing nodes.",
 			},
+			{
+				Title:    "Wikipedia: Linked list",
+				URL:      "https://en.wikipedia.org/wiki/Linked_list",
+				Guidance: "Skim the singly linked list section and the reversal description.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Reviews the pointer-rewiring model this lesson's reversal and merge operations rely on.",
+			},
+			{
+				Title:    "cppreference: std::forward_list",
+				URL:      "https://en.cppreference.com/w/cpp/container/forward_list",
+				Guidance: "Skim the overview.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Shows a standard-library singly linked list interface for comparison with the hand-rolled node struct.",
+			},
 		}
 	case 23:
 		return []Reading{
@@ -565,6 +889,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "States and analyzes the two-speed tortoise-and-hare method used for constant-space linked-list cycle detection.",
+			},
+			{
+				Title:    "Wikipedia: Pointer (computer programming)",
+				URL:      "https://en.wikipedia.org/wiki/Pointer_(computer_programming)",
+				Guidance: "Skim the definition and the traversal example.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Reviews the reference-following model behind advancing a fast pointer twice for every one step of a slow pointer.",
+			},
+			{
+				Title:    "cppreference: std::advance",
+				URL:      "https://en.cppreference.com/w/cpp/iterator/advance",
+				Guidance: "Skim the summary.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the generic operation of moving a pointer forward by a fixed number of steps, done at two different rates here.",
 			},
 		}
 	case 24:
@@ -596,6 +938,15 @@ func lessonReadings(day int) []Reading {
 				Kind:     "reference",
 				Supports: "Explains the phase-reset step that locates a cycle entry after fast and slow pointers first meet.",
 			},
+			{
+				Title:    "Wikipedia: Palindrome",
+				URL:      "https://en.wikipedia.org/wiki/Palindrome",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Defines the symmetry property the half-list comparison problem checks.",
+			},
 		}
 	case 25:
 		return []Reading{
@@ -616,6 +967,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "Formalizes stable separation while preserving relative order, matching the lesson's tail-based linked-list partition invariant.",
+			},
+			{
+				Title:    "Wikipedia: Sentinel value",
+				URL:      "https://en.wikipedia.org/wiki/Sentinel_value",
+				Guidance: "Read the definition and the dummy-node use case.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the general technique behind the dummy head node this lesson uses to avoid special-casing the list head.",
+			},
+			{
+				Title:    "Wikipedia: Doubly linked list",
+				URL:      "https://en.wikipedia.org/wiki/Doubly_linked_list",
+				Guidance: "Skim the definition and the insertion/removal diagrams.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Shows the two-pointer node structure a stable partition must keep consistent while splicing nodes out.",
 			},
 		}
 	case 26:
@@ -638,6 +1007,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "Provides the historical operator-stack technique behind stack-based expression parsing and postfix evaluation.",
 			},
+			{
+				Title:    "Wikipedia: Stack (abstract data type)",
+				URL:      "https://en.wikipedia.org/wiki/Stack_(abstract_data_type)",
+				Guidance: "Skim the operations list and the LIFO property.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "States the last-in-first-out contract the day's stack-based problems depend on.",
+			},
+			{
+				Title:    "cppreference: std::stack",
+				URL:      "https://en.cppreference.com/w/cpp/container/stack",
+				Guidance: "Skim the overview.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Shows a standard-library stack adaptor for comparison with a hand-rolled slice-backed stack.",
+			},
 		}
 	case 27:
 		return []Reading{
@@ -658,6 +1045,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "Develops queues from front and rear lists and explains the reversal cost that amortized two-stack queues distribute across operations.",
+			},
+			{
+				Title:    "cppreference: std::queue",
+				URL:      "https://en.cppreference.com/w/cpp/container/queue",
+				Guidance: "Skim the overview and the underlying-container note.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Shows a standard queue adaptor, the interface being rebuilt on top of a different structure.",
+			},
+			{
+				Title:    "Go: container/list package",
+				URL:      "https://pkg.go.dev/container/list",
+				Guidance: "Skim the package overview.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Shows a standard-library doubly linked list, a different underlying structure than the array-backed queue built here.",
 			},
 		}
 	case 28:
@@ -680,6 +1085,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "Introduces memoization through Fibonacci and shows how caching changes repeated recursion into one computation per distinct state.",
 			},
+			{
+				Title:    "Wikipedia: Recursion (computer science)",
+				URL:      "https://en.wikipedia.org/wiki/Recursion_(computer_science)",
+				Guidance: "Read the base case and recursive case section.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "States the base-case-plus-smaller-subproblem contract every recursive function in the day must satisfy.",
+			},
+			{
+				Title:    "Wikipedia: Recursion",
+				URL:      "https://en.wikipedia.org/wiki/Recursion",
+				Guidance: "Skim the definition, outside the computer-science-specific section.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Gives the general self-reference concept before narrowing to recursive functions.",
+			},
 		}
 	case 29:
 		return []Reading{
@@ -700,6 +1123,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "recursive subtree invocations, traversal order, call-stack state, and dependencies between visits",
+			},
+			{
+				Title:    "Wikipedia: Binary tree",
+				URL:      "https://en.wikipedia.org/wiki/Binary_tree",
+				Guidance: "Skim the definitions of height, depth, and traversal.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Defines the height and depth terms the recursive contracts are stated in.",
+			},
+			{
+				Title:    "Wikipedia: Recursive data type",
+				URL:      "https://en.wikipedia.org/wiki/Recursive_data_type",
+				Guidance: "Skim the definition and the tree example.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names a tree as a value defined in terms of smaller values of the same type, the basis for the recursive contract.",
 			},
 		}
 	case 30:
@@ -722,6 +1163,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "structural comparison and unambiguous subtree encodings, with an explicit unordered-tree extension beyond ordered binary equality",
 			},
+			{
+				Title:    "Wikipedia: Tree traversal",
+				URL:      "https://en.wikipedia.org/wiki/Tree_traversal",
+				Guidance: "Skim the depth-first section covering preorder, inorder, and postorder.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the traversal order used to walk both trees during a structural comparison.",
+			},
+			{
+				Title:    "Wikipedia: Graph isomorphism",
+				URL:      "https://en.wikipedia.org/wiki/Graph_isomorphism",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Generalises structural tree comparison to the broader question of when two graphs have the same shape.",
+			},
 		}
 	case 31:
 		return []Reading{
@@ -742,6 +1201,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "ancestor paths, path aggregation and reporting, output-sensitive cost, and weighted tree paths",
+			},
+			{
+				Title:    "Wikipedia: Tree (data structure)",
+				URL:      "https://en.wikipedia.org/wiki/Tree_(data_structure)",
+				Guidance: "Skim the terminology section (root, leaf, path).",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Frames a root-to-leaf path as the state threaded through each recursive call.",
+			},
+			{
+				Title:    "Wikipedia: Depth-first search",
+				URL:      "https://en.wikipedia.org/wiki/Depth-first_search",
+				Guidance: "Skim the algorithm section.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the traversal order that produces the root-to-leaf path this lesson threads through recursive calls.",
 			},
 		}
 	case 32:
@@ -764,6 +1241,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "BFS frontiers, level-by-level discovery, linear traversal bounds, and frontier-width storage",
 			},
+			{
+				Title:    "Wikipedia: Breadth-first search",
+				URL:      "https://en.wikipedia.org/wiki/Breadth-first_search",
+				Guidance: "Read the algorithm section and the queue-based implementation.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the level-by-level traversal this lesson applies to a tree instead of a general graph.",
+			},
+			{
+				Title:    "Wikipedia: Queue (abstract data type)",
+				URL:      "https://en.wikipedia.org/wiki/Queue_(abstract_data_type)",
+				Guidance: "Skim the operations list and the FIFO property.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "States the first-in-first-out contract the level-order traversal's queue depends on.",
+			},
 		}
 	case 33:
 		return []Reading{
@@ -784,6 +1279,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "ordered left and right subtrees, search paths, insertion order, distinct-key assumptions, and expected path length",
+			},
+			{
+				Title:    "Wikipedia: Binary search tree",
+				URL:      "https://en.wikipedia.org/wiki/Binary_search_tree",
+				Guidance: "Read the definition and the search-property invariant.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "States the left-less-than-right-greater-than invariant every BST problem this week checks or exploits.",
+			},
+			{
+				Title:    "Wikipedia: Self-balancing binary search tree",
+				URL:      "https://en.wikipedia.org/wiki/Self-balancing_binary_search_tree",
+				Guidance: "Skim the definition and motivation section.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Explains why an unbalanced tree can degrade the height bound this lesson's problems assume.",
 			},
 		}
 	case 34:
@@ -806,6 +1319,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "formal LCA semantics, rooted-tree queries, preprocessing tradeoffs, and constant-time query goals",
 			},
+			{
+				Title:    "Wikipedia: Lowest common ancestor",
+				URL:      "https://en.wikipedia.org/wiki/Lowest_common_ancestor",
+				Guidance: "Read the definition and the binary-tree example.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the ancestor relationship this lesson's traversal must identify.",
+			},
+			{
+				Title:    "Wikipedia: Total order",
+				URL:      "https://en.wikipedia.org/wiki/Total_order",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Defines the ordering relation an inorder walk of a BST produces over its values.",
+			},
 		}
 	case 35:
 		return []Reading{
@@ -826,6 +1357,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "bottom-up tree dynamic programming, subtree aggregates, constant-size summaries, and diameter-sensitive complexity",
+			},
+			{
+				Title:    "Wikipedia: Distance (graph theory)",
+				URL:      "https://en.wikipedia.org/wiki/Distance_(graph_theory)",
+				Guidance: "Skim the eccentricity and diameter definitions.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Defines diameter as the longest shortest path, the quantity the height recursion computes as a byproduct.",
+			},
+			{
+				Title:    "Wikipedia: Mathematical optimization",
+				URL:      "https://en.wikipedia.org/wiki/Mathematical_optimization",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Frames updating a running best-so-far value as the general pattern behind the local-fact recursion.",
 			},
 		}
 	case 36:
@@ -848,6 +1397,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "reversible local updates, depth-first search, and constraint-guided choice points",
 			},
+			{
+				Title:    "Wikipedia: Backtracking",
+				URL:      "https://en.wikipedia.org/wiki/Backtracking",
+				Guidance: "Read the general method section.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "States the choose-explore-unchoose pattern every backtracking lesson this week follows.",
+			},
+			{
+				Title:    "Wikipedia: Decision tree",
+				URL:      "https://en.wikipedia.org/wiki/Decision_tree",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the branching choice structure a backtracking search explores and can prune.",
+			},
 		}
 	case 37:
 		return []Reading{
@@ -868,6 +1435,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "enumeration as a tree of partial sequences, distinct choices, and exponential output",
+			},
+			{
+				Title:    "Wikipedia: Combination",
+				URL:      "https://en.wikipedia.org/wiki/Combination",
+				Guidance: "Skim the definition and the formula.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Defines the unordered-selection count the subset and combination enumerations must produce.",
+			},
+			{
+				Title:    "Wikipedia: Permutation",
+				URL:      "https://en.wikipedia.org/wiki/Permutation",
+				Guidance: "Skim the definition and the counting formula.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Defines the ordered-arrangement count the permutation enumeration must produce.",
 			},
 		}
 	case 38:
@@ -890,6 +1475,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "unique enumeration when input values repeat and the distinction between positions and values",
 			},
+			{
+				Title:    "Wikipedia: Multiset",
+				URL:      "https://en.wikipedia.org/wiki/Multiset",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the repeated-element structure this lesson must dedupe against during enumeration.",
+			},
+			{
+				Title:    "cppreference: std::next_permutation",
+				URL:      "https://en.cppreference.com/w/cpp/algorithm/next_permutation",
+				Guidance: "Skim the summary and the duplicate-handling behavior.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Shows a standard-library permutation generator and how it steps over duplicate arrangements.",
+			},
 		}
 	case 39:
 		return []Reading{
@@ -910,6 +1513,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "subset-sum enumeration, duplicate removal, exponential search, and explicit complexity bounds",
+			},
+			{
+				Title:    "Wikipedia: Combinatorial search",
+				URL:      "https://en.wikipedia.org/wiki/Combinatorial_search",
+				Guidance: "Skim the definition and the pruning mention.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Frames pruning a branch once it cannot reach a valid total as combinatorial search with bounds.",
+			},
+			{
+				Title:    "Wikipedia: Branch and bound",
+				URL:      "https://en.wikipedia.org/wiki/Branch_and_bound",
+				Guidance: "Skim the definition and the pruning-bound idea.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the general prune-when-a-bound-is-exceeded strategy this lesson applies to partial sums.",
 			},
 		}
 	case 40:
@@ -932,6 +1553,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "whole-string consumption, palindromic factors, required piece counts, and repeated substring checks",
 			},
+			{
+				Title:    "Wikipedia: Substring",
+				URL:      "https://en.wikipedia.org/wiki/Substring",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Defines the contiguous-piece unit each partition of the string must be checked against.",
+			},
+			{
+				Title:    "Wikipedia: Partition of a set",
+				URL:      "https://en.wikipedia.org/wiki/Partition_of_a_set",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Defines splitting a whole into non-overlapping pieces, the structure a valid partition of the string must form.",
+			},
 		}
 	case 41:
 		return []Reading{
@@ -952,6 +1591,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "grid word search, coupled board and dictionary state, branch pruning, and exhaustive solver structure",
+			},
+			{
+				Title:    "Wikipedia: Constraint satisfaction problem",
+				URL:      "https://en.wikipedia.org/wiki/Constraint_satisfaction_problem",
+				Guidance: "Read the definition and the backtracking-search section.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the coupled-constraint search model this lesson's backtracking must respect across multiple variables at once.",
+			},
+			{
+				Title:    "Wikipedia: Constraint propagation",
+				URL:      "https://en.wikipedia.org/wiki/Constraint_propagation",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names tightening one variable's options because of another's choice, the coupling this lesson's constraints create.",
 			},
 		}
 	case 42:
@@ -974,6 +1631,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "equivalent branches, value symmetry, canonical representatives, and avoiding repeated search",
 			},
+			{
+				Title:    "Wikipedia: Symmetry",
+				URL:      "https://en.wikipedia.org/wiki/Symmetry",
+				Guidance: "Skim the definition, focusing on symmetry under reflection or rotation.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Motivates pruning symmetric branches that would otherwise be explored twice.",
+			},
+			{
+				Title:    "Wikipedia: Eight queens puzzle",
+				URL:      "https://en.wikipedia.org/wiki/Eight_queens_puzzle",
+				Guidance: "Skim the problem statement and the symmetry-reduction note if present.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the canonical constraint-first backtracking search this lesson's symmetry pruning is modeled on.",
+			},
 		}
 	case 43:
 		return []Reading{
@@ -994,6 +1669,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "depth-first traversal, discovery state, linear graph exploration, and component structure",
+			},
+			{
+				Title:    "Wikipedia: Flood fill",
+				URL:      "https://en.wikipedia.org/wiki/Flood_fill",
+				Guidance: "Read the algorithm description.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the exact grid-traversal technique this lesson uses to explore a connected region.",
+			},
+			{
+				Title:    "Wikipedia: Von Neumann neighborhood",
+				URL:      "https://en.wikipedia.org/wiki/Von_Neumann_neighborhood",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the four-directional adjacency a grid's implicit graph is built from.",
 			},
 		}
 	case 44:
@@ -1016,6 +1709,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "linear-time DFS, component discovery, DFS forests, and traversal state",
 			},
+			{
+				Title:    "Wikipedia: Connected-component labeling",
+				URL:      "https://en.wikipedia.org/wiki/Connected-component_labeling",
+				Guidance: "Skim the algorithm section.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the technique for grouping cells into components, the structure boundary-reachability problems build on.",
+			},
+			{
+				Title:    "Wikipedia: Connectivity (graph theory)",
+				URL:      "https://en.wikipedia.org/wiki/Connectivity_(graph_theory)",
+				Guidance: "Skim the definition of a connected component.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Defines the component a boundary-reachability flood fill must identify.",
+			},
 		}
 	case 45:
 		return []Reading{
@@ -1036,6 +1747,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "multi-source BFS, shared frontier work, shortest unweighted distances, and avoiding repeated traversal",
+			},
+			{
+				Title:    "Wikipedia: Shortest path problem",
+				URL:      "https://en.wikipedia.org/wiki/Shortest_path_problem",
+				Guidance: "Skim the unweighted-graph (BFS) section if present.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Frames BFS distance as shortest-path-in-hops, extended here to multiple sources at once.",
+			},
+			{
+				Title:    "Wikipedia: Cellular automaton",
+				URL:      "https://en.wikipedia.org/wiki/Cellular_automaton",
+				Guidance: "Skim the definition and a grid-update example.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is a related grid-update model where a change spreads outward from multiple active cells at once, as in a multi-source BFS.",
 			},
 		}
 	case 46:
@@ -1058,6 +1787,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "source-to-target path enumeration, depth-first generation, pruning constraints, and output-driven cost",
 			},
+			{
+				Title:    "Wikipedia: Adjacency list",
+				URL:      "https://en.wikipedia.org/wiki/Adjacency_list",
+				Guidance: "Read the definition and its trade-off against an adjacency matrix.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Contrasts the explicit edge-list representation with the implicit grid-neighbour adjacency used elsewhere this week.",
+			},
+			{
+				Title:    "Wikipedia: Adjacency matrix",
+				URL:      "https://en.wikipedia.org/wiki/Adjacency_matrix",
+				Guidance: "Skim the definition and its trade-off against an adjacency list.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Contrasts the dense matrix representation with the explicit and implicit adjacency forms used this week.",
+			},
 		}
 	case 47:
 		return []Reading{
@@ -1078,6 +1825,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "topological ordering, directed acyclic graphs, cycle-related applications, and time-space tradeoffs",
+			},
+			{
+				Title:    "Wikipedia: Topological sorting",
+				URL:      "https://en.wikipedia.org/wiki/Topological_sorting",
+				Guidance: "Read Kahn's algorithm section.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the in-degree-queue algorithm this lesson's dependency-ordering problems implement.",
+			},
+			{
+				Title:    "Python: graphlib module",
+				URL:      "https://docs.python.org/3/library/graphlib.html",
+				Guidance: "Skim the TopologicalSorter overview and example.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Shows a standard-library topological sort for comparison with the hand-rolled Kahn's algorithm.",
 			},
 		}
 	case 48:
@@ -1100,6 +1865,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "disjoint-set partitions, representatives, path compression, and amortized nonconstant analysis",
 			},
+			{
+				Title:    "Wikipedia: Disjoint-set data structure",
+				URL:      "https://en.wikipedia.org/wiki/Disjoint-set_data_structure",
+				Guidance: "Read the union by rank and path compression sections.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Describes the two optimisations behind the near-constant-time union-find used for equivalence checks.",
+			},
+			{
+				Title:    "Wikipedia: Equivalence relation",
+				URL:      "https://en.wikipedia.org/wiki/Equivalence_relation",
+				Guidance: "Skim the three defining properties.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "States the reflexive/symmetric/transitive properties the union-find structure's groups must satisfy.",
+			},
 		}
 	case 49:
 		return []Reading{
@@ -1120,6 +1903,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "greedy shortest-path finalization, weighted routes, and the edge-weight precondition",
+			},
+			{
+				Title:    "Wikipedia: Dijkstra's algorithm",
+				URL:      "https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm",
+				Guidance: "Read the algorithm section and the priority-queue implementation.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the shortest-path algorithm this lesson extends with an extra state dimension.",
+			},
+			{
+				Title:    "Wikipedia: Bellman-Ford algorithm",
+				URL:      "https://en.wikipedia.org/wiki/Bellman%E2%80%93Ford_algorithm",
+				Guidance: "Skim the algorithm section.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is an alternative shortest-path algorithm that tolerates negative edges, contrasted with Dijkstra's non-negative requirement.",
 			},
 		}
 	case 50:
@@ -1142,6 +1943,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "heap-ordered complete trees, array layout, heap construction, and partial rather than total order",
 			},
+			{
+				Title:    "Wikipedia: Heap (data structure)",
+				URL:      "https://en.wikipedia.org/wiki/Heap_(data_structure)",
+				Guidance: "Read the definition and the operations table.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "States the min/max-at-the-root invariant behind every heap problem this week.",
+			},
+			{
+				Title:    "Go: container/heap package",
+				URL:      "https://pkg.go.dev/container/heap",
+				Guidance: "Skim the package overview and the Interface documentation.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Shows a standard-library binary heap interface for comparison with the hand-maintained top-k structure.",
+			},
 		}
 	case 51:
 		return []Reading{
@@ -1162,6 +1981,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "top-k selection, heap-ordered candidates, output-sensitive cost, and ranked frontiers",
+			},
+			{
+				Title:    "cppreference: std::priority_queue",
+				URL:      "https://en.cppreference.com/w/cpp/container/priority_queue",
+				Guidance: "Skim the overview and the custom-comparator note.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Shows a heap parameterised by a custom ordering, the pattern used to rank by a derived key.",
+			},
+			{
+				Title:    "Wikipedia: Schwartzian transform",
+				URL:      "https://en.wikipedia.org/wiki/Schwartzian_transform",
+				Guidance: "Skim the definition and the decorate-sort-undecorate steps.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the exact pattern of ranking items by a computed key instead of their natural order.",
 			},
 		}
 	case 52:
@@ -1184,6 +2021,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "maximum-weight greedy selection, descending priorities, exchange structure, and the boundary where greedy needs proof",
 			},
+			{
+				Title:    "Wikipedia: Bucket sort",
+				URL:      "https://en.wikipedia.org/wiki/Bucket_sort",
+				Guidance: "Skim the description.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the linear-time alternative to a heap when frequencies are bounded by array length.",
+			},
+			{
+				Title:    "Wikipedia: Huffman coding",
+				URL:      "https://en.wikipedia.org/wiki/Huffman_coding",
+				Guidance: "Skim the algorithm section.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is a classic frequency-driven greedy algorithm built on the same repeatedly-remove-the-smallest idea.",
+			},
 		}
 	case 53:
 		return []Reading{
@@ -1204,6 +2059,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "k-way sorted frontiers, row-sorted selection, pair-sum selection, and output-sensitive bounds",
+			},
+			{
+				Title:    "Wikipedia: K-way merge algorithm",
+				URL:      "https://en.wikipedia.org/wiki/K-way_merge_algorithm",
+				Guidance: "Read the heap-based approach section.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the exact heap-driven multi-list merge this lesson's problems implement.",
+			},
+			{
+				Title:    "cppreference: std::merge",
+				URL:      "https://en.cppreference.com/w/cpp/algorithm/merge",
+				Guidance: "Skim the summary.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the two-sorted-range merge this lesson extends to many ranges with a heap.",
 			},
 		}
 	case 54:
@@ -1226,6 +2099,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "character-directed search, prefix sharing, string-key lookup, and space tradeoffs",
 			},
+			{
+				Title:    "Wikipedia: Trie",
+				URL:      "https://en.wikipedia.org/wiki/Trie",
+				Guidance: "Read the definition and the operations section.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "States the shared-prefix-node structure every trie problem this week builds and walks.",
+			},
+			{
+				Title:    "Wikipedia: Radix tree",
+				URL:      "https://en.wikipedia.org/wiki/Radix_tree",
+				Guidance: "Skim the definition and its contrast with a plain trie.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Contrasts a space-optimised compressed trie with the plain per-character trie built in this lesson.",
+			},
 		}
 	case 55:
 		return []Reading{
@@ -1246,6 +2137,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "lexicographic string search, prefix descendants, wildcard branching, and ordered output",
+			},
+			{
+				Title:    "Wikipedia: Lexicographic order",
+				URL:      "https://en.wikipedia.org/wiki/Lexicographic_order",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Defines the ordering a trie's depth-first walk naturally produces.",
+			},
+			{
+				Title:    "cppreference: std::basic_string",
+				URL:      "https://en.cppreference.com/w/cpp/string/basic_string",
+				Guidance: "Skim the overview and the comparison operators section.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Reviews how strings compare lexicographically, the ordering a trie's depth-first walk reproduces.",
 			},
 		}
 	case 56:
@@ -1268,6 +2177,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "release times, eligible-job selection, scheduling priorities, and online idle-versus-work decisions",
 			},
+			{
+				Title:    "Wikipedia: Greedy algorithm",
+				URL:      "https://en.wikipedia.org/wiki/Greedy_algorithm",
+				Guidance: "Read the definition and the scheduling-problem example if present.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Introduces choosing the locally best available option, the strategy this lesson combines with a trie or heap.",
+			},
+			{
+				Title:    "Wikipedia: Scheduling (computing)",
+				URL:      "https://en.wikipedia.org/wiki/Scheduling_(computing)",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Frames choosing among available ready tasks as a scheduling problem, here solved greedily with a heap or trie.",
+			},
 		}
 	case 57:
 		return []Reading{
@@ -1289,6 +2216,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "Introduces the decomposition of a multistage optimization problem into smaller decision problems. The lesson applies that principle to finite cached subproblems.",
 			},
+			{
+				Title:    "Wikipedia: Dynamic programming",
+				URL:      "https://en.wikipedia.org/wiki/Dynamic_programming",
+				Guidance: "Read the overlapping-subproblems and optimal-substructure sections.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "States the two properties, overlapping subproblems and optimal substructure, that justify caching here.",
+			},
+			{
+				Title:    "Wikipedia: Memoization",
+				URL:      "https://en.wikipedia.org/wiki/Memoization",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the cache-the-result technique that turns exponential recursion into linear time.",
+			},
 		}
 	case 58:
 		return []Reading{
@@ -1309,6 +2254,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "Places the lesson's maximum-weight independent-set recurrence in its research problem family and distinguishes easy path structure from the harder graph structures studied by the paper.",
+			},
+			{
+				Title:    "Wikipedia: Independent set (graph theory)",
+				URL:      "https://en.wikipedia.org/wiki/Independent_set_(graph_theory)",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "House Robber is maximum-weight independent set on a path graph, the structure behind the adjacency constraint.",
+			},
+			{
+				Title:    "Wikipedia: Recurrence relation",
+				URL:      "https://en.wikipedia.org/wiki/Recurrence_relation",
+				Guidance: "Skim the definition and a linear-recurrence example.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the general form of the choose-or-skip step this lesson's DP transition is an instance of.",
 			},
 		}
 	case 59:
@@ -1340,6 +2303,15 @@ func lessonReadings(day int) []Reading {
 				Kind:     "reference",
 				Supports: "Directly supports the lesson's decoding prefix state, addition of valid one- and two-digit endings, O(n) evaluation, and zero-sensitive transition guards.",
 			},
+			{
+				Title:    "Wikipedia: Change-making problem",
+				URL:      "https://en.wikipedia.org/wiki/Change-making_problem",
+				Guidance: "Skim the definition and the DP formulation.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the formal name for the coin-change problem and its dynamic-programming solution.",
+			},
 		}
 	case 60:
 		return []Reading{
@@ -1356,7 +2328,7 @@ func lessonReadings(day int) []Reading {
 				Title:    "He, Haffari, and Norouzi: Dynamic Programming Encoding for Subword Segmentation",
 				URL:      "https://aclanthology.org/2020.acl-main.275.pdf",
 				Guidance: "Read the abstract, section 1, and section 3.1 through the dynamic-programming formulation. Focus on segmentation as a sequence of locally legal transitions over prefix positions; skip the neural architecture and experiments.",
-				Minutes:  13,
+				Minutes:  11,
 				Optional: true,
 				Kind:     "paper",
 				Supports: "Shows a research use of dynamic programming for string segmentation and reinforces the lesson's position-based feasibility state.",
@@ -1369,6 +2341,15 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "reference",
 				Supports: "Provides a finite, known-price trading model with waiting periods and fees. It supports choosing state from permitted transitions, rather than a stochastic forecasting model.",
+			},
+			{
+				Title:    "Wikipedia: Finite-state machine",
+				URL:      "https://en.wikipedia.org/wiki/Finite-state_machine",
+				Guidance: "Skim the definition and the state-transition-table example.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the states-and-transitions model this lesson's suffix-feasibility DP is framed as.",
 			},
 		}
 	case 61:
@@ -1391,6 +2372,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "Explains how patience sorting relates to longest increasing subsequences. It is an optional faster-algorithm perspective on the sequence state used in the lesson.",
 			},
+			{
+				Title:    "Wikipedia: Longest increasing subsequence",
+				URL:      "https://en.wikipedia.org/wiki/Longest_increasing_subsequence",
+				Guidance: "Read the problem statement and the O(n log n) patience-sorting method.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the exact problem and its faster-than-DP method, contrasted with the O(n^2) DP taught first.",
+			},
+			{
+				Title:    "Wikipedia: Patience sorting",
+				URL:      "https://en.wikipedia.org/wiki/Patience_sorting",
+				Guidance: "Skim the algorithm section connecting it to longest increasing subsequence.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the card-game-derived method behind the O(n log n) longest-increasing-subsequence algorithm.",
+			},
 		}
 	case 62:
 		return []Reading{
@@ -1411,6 +2410,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "Provides the classic research context for subset sum, partition, and zero-or-one knapsack, including why algorithms polynomial in the target magnitude are pseudopolynomial.",
+			},
+			{
+				Title:    "Wikipedia: Subset sum problem",
+				URL:      "https://en.wikipedia.org/wiki/Subset_sum_problem",
+				Guidance: "Read the problem statement and the pseudo-polynomial DP section.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the exact problem this lesson's boolean reachability DP solves.",
+			},
+			{
+				Title:    "Wikipedia: Pseudo-polynomial time",
+				URL:      "https://en.wikipedia.org/wiki/Pseudo-polynomial_time",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Explains why the subset-sum DP's runtime depends on the target's magnitude, not just the input length.",
 			},
 		}
 	case 63:
@@ -1433,6 +2450,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "Defines maximum-subarray optimization and places the one-dimensional problem within research on higher-dimensional arrays. The matrix algorithms are an extension, not the lesson's implementation.",
 			},
+			{
+				Title:    "Wikipedia: Maximum subarray problem",
+				URL:      "https://en.wikipedia.org/wiki/Maximum_subarray_problem",
+				Guidance: "Skim Kadane's algorithm section.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the canonical local-ending-state-updates-global-optimum recurrence this lesson generalises.",
+			},
+			{
+				Title:    "Wikipedia: Divide-and-conquer algorithm",
+				URL:      "https://en.wikipedia.org/wiki/Divide-and-conquer_algorithm",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Contrasts a split-the-array approach to the maximum-subarray problem with the linear local-state scan taught here.",
+			},
 		}
 	case 64:
 		return []Reading{
@@ -1453,6 +2488,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "Studies counting shortest paths on grid graphs. Its obstacle and movement assumptions differ from right/down-only DP, so it is an application extension, not a replacement for the lesson's acyclic recurrence.",
+			},
+			{
+				Title:    "Wikipedia: Lattice path",
+				URL:      "https://en.wikipedia.org/wiki/Lattice_path",
+				Guidance: "Skim the definition and the counting-paths-on-a-grid section.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the combinatorial name for counting grid paths, the problem this lesson's DP solves with blocked cells added.",
+			},
+			{
+				Title:    "Wikipedia: Pascal's triangle",
+				URL:      "https://en.wikipedia.org/wiki/Pascal%27s_triangle",
+				Guidance: "Skim the construction rule.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Shows the same add-from-the-row-above recurrence that counts grid paths in this lesson's DP.",
 			},
 		}
 	case 65:
@@ -1484,6 +2537,15 @@ func lessonReadings(day int) []Reading {
 				Kind:     "reference",
 				Supports: "Defines triangle-path adjacency and contrasts exhaustive, greedy, and dynamic-programming approaches. It supports deriving predecessors from the allowed moves.",
 			},
+			{
+				Title:    "Wikipedia: Taxicab geometry",
+				URL:      "https://en.wikipedia.org/wiki/Taxicab_geometry",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the grid-distance model behind the local movement rules this lesson's DP states track.",
+			},
 		}
 	case 66:
 		return []Reading{
@@ -1505,6 +2567,24 @@ func lessonReadings(day int) []Reading {
 				Kind:     "paper",
 				Supports: "Supports the lesson's O(min(n,m)) length-space claim and its warning that reconstructing an actual common subsequence requires stored decisions or extra work.",
 			},
+			{
+				Title:    "Wikipedia: Longest common subsequence",
+				URL:      "https://en.wikipedia.org/wiki/Longest_common_subsequence",
+				Guidance: "Read the dynamic programming solution section.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the exact two-sequence alignment recurrence this lesson's problems implement.",
+			},
+			{
+				Title:    "Wikipedia: Sequence alignment",
+				URL:      "https://en.wikipedia.org/wiki/Sequence_alignment",
+				Guidance: "Skim the definition and the dynamic-programming section.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the general two-sequence alignment problem this lesson's longest-common-subsequence DP solves a special case of.",
+			},
 		}
 	case 67:
 		return []Reading{
@@ -1521,7 +2601,7 @@ func lessonReadings(day int) []Reading {
 				Title:    "Wagner and Fischer: The String-to-String Correction Problem",
 				URL:      "https://computingbiology.github.io/docs/wagner1974.pdf",
 				Guidance: "Read pages 168-171 through the dynamic-programming algorithm and complexity argument. Match each correction operation to a predecessor cell; stop before the later theorem details.",
-				Minutes:  13,
+				Minutes:  12,
 				Optional: true,
 				Kind:     "paper",
 				Supports: "Is the foundational paper for insertion, deletion, and substitution edit distance and supports the lesson's product-of-lengths running time.",
@@ -1534,6 +2614,15 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "reference",
 				Supports: "Directly supports the interval state, equal-endpoint recurrence, shorter-interval evaluation order, and the lesson's distinction between subsequence freedom and substring contiguity.",
+			},
+			{
+				Title:    "Wikipedia: Edit distance",
+				URL:      "https://en.wikipedia.org/wiki/Edit_distance",
+				Guidance: "Skim the definition and the Levenshtein distance section.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the formal name for the insert/delete/substitute recurrence this lesson's problems implement.",
 			},
 		}
 	case 68:
@@ -1565,6 +2654,15 @@ func lessonReadings(day int) []Reading {
 				Kind:     "reference",
 				Supports: "Directly scopes the lesson's other two string-table problems: contiguous common substring and order-preserving interleaving, with different combination rules from subsequence counting.",
 			},
+			{
+				Title:    "Wikipedia: Catalan number",
+				URL:      "https://en.wikipedia.org/wiki/Catalan_number",
+				Guidance: "Skim the definition and one counting example.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Illustrates counting the number of valid combinatorial arrangements, the same kind of count this lesson's DP produces.",
+			},
 		}
 	case 69:
 		return []Reading{
@@ -1595,6 +2693,15 @@ func lessonReadings(day int) []Reading {
 				Kind:     "reference",
 				Supports: "Directly supports the dice-count and total-sum state, addition of alternatives, and careful base cases for unreachable totals.",
 			},
+			{
+				Title:    "Wikipedia: Knapsack problem",
+				URL:      "https://en.wikipedia.org/wiki/Knapsack_problem",
+				Guidance: "Skim the multi-dimensional knapsack variant if present, otherwise the 0/1 section.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Generalises the single-resource knapsack recurrence to a second constrained resource.",
+			},
 		}
 	case 70:
 		return []Reading{
@@ -1611,7 +2718,7 @@ func lessonReadings(day int) []Reading {
 				Title:    "Hu and Shing: Computation of Matrix Chain Products",
 				URL:      "https://cic.tju.edu.cn/faculty/gongxj/course/algorithm/doc/1981-Computationofmatrixchainproducts.pdf",
 				Guidance: "Read the opening formulation and the standard interval recurrence before the faster algorithm. Identify how fixing the final split makes the two remaining intervals independent.",
-				Minutes:  12,
+				Minutes:  11,
 				Optional: true,
 				Kind:     "paper",
 				Supports: "Provides classic research context for interval dynamic programming and the lesson's technique of choosing a final structural action so boundary information becomes fixed.",
@@ -1624,6 +2731,15 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "reference",
 				Supports: "Supports the lesson's game-state viewpoint and the current-player score-difference recurrence; it does not prescribe the lesson's array example.",
+			},
+			{
+				Title:    "Wikipedia: Combinatorial game theory",
+				URL:      "https://en.wikipedia.org/wiki/Combinatorial_game_theory",
+				Guidance: "Skim the definition and the optimal-play framing.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Frames the two-player, perfect-information games in this lesson as the class this theory analyses.",
 			},
 		}
 	case 71:
@@ -1645,6 +2761,24 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "paper",
 				Supports: "Explains why greedy optimality requires structure and discusses the exchange property of matroids. The algebraic extension is not needed for the lesson's elementary exchange proofs.",
+			},
+			{
+				Title:    "Wikipedia: Proof by contradiction",
+				URL:      "https://en.wikipedia.org/wiki/Proof_by_contradiction",
+				Guidance: "Skim the definition and the general structure of the proof form.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the proof form behind an exchange argument: assume a better solution exists and derive a contradiction.",
+			},
+			{
+				Title:    "Wikipedia: Matroid",
+				URL:      "https://en.wikipedia.org/wiki/Matroid",
+				Guidance: "Skim the greedy algorithm section only.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Gives the structural reason greedy choices are provably optimal for a class of problems, beyond case-by-case proof.",
 			},
 		}
 	case 72:
@@ -1676,6 +2810,15 @@ func lessonReadings(day int) []Reading {
 				Kind:     "reference",
 				Supports: "Directly supports the lesson's decide-the-heaviest-item exchange argument and makes clear that the two-person capacity is what closes the greedy choice.",
 			},
+			{
+				Title:    "Wikipedia: Assignment problem",
+				URL:      "https://en.wikipedia.org/wiki/Assignment_problem",
+				Guidance: "Skim the definition, contrasting with the simpler sort-and-pair greedy used here.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Contrasts the general optimal-assignment problem with the sorted-order greedy that suffices under this lesson's constraints.",
+			},
 		}
 	case 73:
 		return []Reading{
@@ -1692,7 +2835,7 @@ func lessonReadings(day int) []Reading {
 				Title:    "Kolen et al.: Interval Scheduling, A Survey",
 				URL:      "https://ir.cwi.nl/pub/11585/11585B.pdf",
 				Guidance: "Read the abstract and introductory taxonomy of interval scheduling variants. Identify which assumptions produce the unweighted single-machine problem solved by earliest finish, then stop before the broader approximation survey.",
-				Minutes:  11,
+				Minutes:  10,
 				Optional: true,
 				Kind:     "paper",
 				Supports: "Provides research context for interval scheduling and explains why changing weights, machines, or compatibility rules changes the algorithm.",
@@ -1705,6 +2848,15 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "reference",
 				Supports: "Supplies concise implementation and complexity details while the scoped comparison covers the lesson's shared pattern of committing to a maintained interval boundary.",
+			},
+			{
+				Title:    "Wikipedia: Interval scheduling",
+				URL:      "https://en.wikipedia.org/wiki/Interval_scheduling",
+				Guidance: "Read the earliest-deadline-first section.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the classic interval-selection problem and its sort-by-end greedy proof.",
 			},
 		}
 	case 74:
@@ -1736,6 +2888,15 @@ func lessonReadings(day int) []Reading {
 				Kind:     "reference",
 				Supports: "Supports the intersection predicate and the endpoint-order fact behind advancing the earlier-ending interval in an O(n+m) two-list scan.",
 			},
+			{
+				Title:    "Wikipedia: Interval (mathematics)",
+				URL:      "https://en.wikipedia.org/wiki/Interval_(mathematics)",
+				Guidance: "Skim the definition and the overlap/containment notions.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Defines the interval notion the merge and intersect operations act on.",
+			},
 		}
 	case 75:
 		return []Reading{
@@ -1765,6 +2926,15 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "reference",
 				Supports: "Supplies a short proof that a greedy route choice eliminates a range of alternatives rather than only one candidate.",
+			},
+			{
+				Title:    "Wikipedia: Reachability",
+				URL:      "https://en.wikipedia.org/wiki/Reachability",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Names the property tracked by the furthest-reachable-index variable in this lesson's problems.",
 			},
 		}
 	case 76:
@@ -1796,6 +2966,15 @@ func lessonReadings(day int) []Reading {
 				Kind:     "reference",
 				Supports: "Justifies the lesson's O(n) total-time claim even though one iteration may contain a while loop that pops many entries.",
 			},
+			{
+				Title:    "cppreference: std::deque",
+				URL:      "https://en.cppreference.com/w/cpp/container/deque",
+				Guidance: "Skim the overview; note O(1) push/pop at both ends.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Backs the monotonic double-ended queue variant used for sliding-window-maximum-style problems.",
+			},
 		}
 	case 77:
 		return []Reading{
@@ -1825,6 +3004,15 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "reference",
 				Supports: "Supports the greedy lexicographic stack pattern behind digit removal while making clear that the exact pop guard depends on the problem's deletion constraints.",
+			},
+			{
+				Title:    "Wikipedia: Run-length encoding",
+				URL:      "https://en.wikipedia.org/wiki/Run-length_encoding",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the compression idea behind storing a stack entry as a value paired with a repeat count.",
 			},
 		}
 	case 78:
@@ -1856,6 +3044,15 @@ func lessonReadings(day int) []Reading {
 				Kind:     "reference",
 				Supports: "Directly supports the lowest-set-bit removal identity and the O(n) bit-count recurrence used in the lesson's third task.",
 			},
+			{
+				Title:    "Wikipedia: Amortized analysis",
+				URL:      "https://en.wikipedia.org/wiki/Amortized_analysis",
+				Guidance: "Skim the aggregate-method section.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Explains why visiting each bit or array slot a bounded number of times still totals linear time.",
+			},
 		}
 	case 79:
 		return []Reading{
@@ -1885,6 +3082,15 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "reference",
 				Supports: "Provides a worked atMost(K) sliding-window count. It supports the lesson's exact-count subtraction technique, not its boundary-search or prefix-sum topics.",
+			},
+			{
+				Title:    "Wikipedia: Parity (mathematics)",
+				URL:      "https://en.wikipedia.org/wiki/Parity_(mathematics)",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the even/odd count classification these subarray-counting problems key their prefix state on.",
 			},
 		}
 	case 80:
@@ -1955,6 +3161,15 @@ func lessonReadings(day int) []Reading {
 				Kind:     "reference",
 				Supports: "Supports explicit edge reversal, reverse reachability, adjacency-list complexity, and avoiding duplicate visits.",
 			},
+			{
+				Title:    "Wikipedia: Graph traversal",
+				URL:      "https://en.wikipedia.org/wiki/Graph_traversal",
+				Guidance: "Skim the breadth-first and depth-first sections.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Reviews the traversal choices reused here for graph cloning and finding minimum-height trees.",
+			},
 		}
 	case 82:
 		return []Reading{
@@ -2024,6 +3239,15 @@ func lessonReadings(day int) []Reading {
 				Kind:     "reference",
 				Supports: "Supports reasoning in sorted rank order; the scoped derivation applies that order to the lesson's claim that a minimum-range k-subset can be replaced by a contiguous sorted window.",
 			},
+			{
+				Title:    "Wikipedia: Zero-sum game",
+				URL:      "https://en.wikipedia.org/wiki/Zero-sum_game",
+				Guidance: "Skim the definition.",
+				Minutes:  3,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Frames the two-player optimal-play problem in this lesson as a zero-sum game.",
+			},
 		}
 	case 84:
 		return []Reading{
@@ -2040,7 +3264,7 @@ func lessonReadings(day int) []Reading {
 				Title:    "Mattson et al.: Evaluation Techniques for Storage Hierarchies",
 				URL:      "https://www.bitsavers.org/pdf/ibm/IBM_Systems_Journal/092/ibmsj0902B.pdf",
 				Guidance: "Read the abstract and the opening explanation of stack algorithms, including least-recently-used replacement. Stop before the trace-evaluation derivations.",
-				Minutes:  11,
+				Minutes:  7,
 				Optional: true,
 				Kind:     "paper",
 				Supports: "Provides the foundational research context for LRU as a stack replacement policy and explains why recency order is the state an implementation must maintain.",
@@ -2062,6 +3286,15 @@ func lessonReadings(day int) []Reading {
 				Optional: true,
 				Kind:     "reference",
 				Supports: "Supplies the linear adjacent-run scan that the lesson extends into a compressed (character, count) stack for threshold deletions and chain reactions.",
+			},
+			{
+				Title:    "Wikipedia: Cache replacement policies",
+				URL:      "https://en.wikipedia.org/wiki/Cache_replacement_policies",
+				Guidance: "Read the LRU section.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Is the eviction policy the LRU Cache problem implements directly.",
 			},
 		}
 	default:

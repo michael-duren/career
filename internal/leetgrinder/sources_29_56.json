@@ -19,6 +19,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "recursive subtree invocations, traversal order, call-stack state, and dependencies between visits"
+      },
+      {
+        "title": "Wikipedia: Binary tree",
+        "url": "https://en.wikipedia.org/wiki/Binary_tree",
+        "guidance": "Skim the definitions of height, depth, and traversal.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Defines the height and depth terms the recursive contracts are stated in."
+      },
+      {
+        "title": "Wikipedia: Recursive data type",
+        "url": "https://en.wikipedia.org/wiki/Recursive_data_type",
+        "guidance": "Skim the definition and the tree example.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names a tree as a value defined in terms of smaller values of the same type, the basis for the recursive contract."
       }
     ]
   },
@@ -42,6 +60,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "structural comparison and unambiguous subtree encodings, with an explicit unordered-tree extension beyond ordered binary equality"
+      },
+      {
+        "title": "Wikipedia: Tree traversal",
+        "url": "https://en.wikipedia.org/wiki/Tree_traversal",
+        "guidance": "Skim the depth-first section covering preorder, inorder, and postorder.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the traversal order used to walk both trees during a structural comparison."
+      },
+      {
+        "title": "Wikipedia: Graph isomorphism",
+        "url": "https://en.wikipedia.org/wiki/Graph_isomorphism",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Generalises structural tree comparison to the broader question of when two graphs have the same shape."
       }
     ]
   },
@@ -65,6 +101,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "ancestor paths, path aggregation and reporting, output-sensitive cost, and weighted tree paths"
+      },
+      {
+        "title": "Wikipedia: Tree (data structure)",
+        "url": "https://en.wikipedia.org/wiki/Tree_(data_structure)",
+        "guidance": "Skim the terminology section (root, leaf, path).",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Frames a root-to-leaf path as the state threaded through each recursive call."
+      },
+      {
+        "title": "Wikipedia: Depth-first search",
+        "url": "https://en.wikipedia.org/wiki/Depth-first_search",
+        "guidance": "Skim the algorithm section.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the traversal order that produces the root-to-leaf path this lesson threads through recursive calls."
       }
     ]
   },
@@ -88,6 +142,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "BFS frontiers, level-by-level discovery, linear traversal bounds, and frontier-width storage"
+      },
+      {
+        "title": "Wikipedia: Breadth-first search",
+        "url": "https://en.wikipedia.org/wiki/Breadth-first_search",
+        "guidance": "Read the algorithm section and the queue-based implementation.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the level-by-level traversal this lesson applies to a tree instead of a general graph."
+      },
+      {
+        "title": "Wikipedia: Queue (abstract data type)",
+        "url": "https://en.wikipedia.org/wiki/Queue_(abstract_data_type)",
+        "guidance": "Skim the operations list and the FIFO property.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "States the first-in-first-out contract the level-order traversal's queue depends on."
       }
     ]
   },
@@ -111,6 +183,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "ordered left and right subtrees, search paths, insertion order, distinct-key assumptions, and expected path length"
+      },
+      {
+        "title": "Wikipedia: Binary search tree",
+        "url": "https://en.wikipedia.org/wiki/Binary_search_tree",
+        "guidance": "Read the definition and the search-property invariant.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "States the left-less-than-right-greater-than invariant every BST problem this week checks or exploits."
+      },
+      {
+        "title": "Wikipedia: Self-balancing binary search tree",
+        "url": "https://en.wikipedia.org/wiki/Self-balancing_binary_search_tree",
+        "guidance": "Skim the definition and motivation section.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Explains why an unbalanced tree can degrade the height bound this lesson's problems assume."
       }
     ]
   },
@@ -134,6 +224,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "formal LCA semantics, rooted-tree queries, preprocessing tradeoffs, and constant-time query goals"
+      },
+      {
+        "title": "Wikipedia: Lowest common ancestor",
+        "url": "https://en.wikipedia.org/wiki/Lowest_common_ancestor",
+        "guidance": "Read the definition and the binary-tree example.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the ancestor relationship this lesson's traversal must identify."
+      },
+      {
+        "title": "Wikipedia: Total order",
+        "url": "https://en.wikipedia.org/wiki/Total_order",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Defines the ordering relation an inorder walk of a BST produces over its values."
       }
     ]
   },
@@ -157,6 +265,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "bottom-up tree dynamic programming, subtree aggregates, constant-size summaries, and diameter-sensitive complexity"
+      },
+      {
+        "title": "Wikipedia: Distance (graph theory)",
+        "url": "https://en.wikipedia.org/wiki/Distance_(graph_theory)",
+        "guidance": "Skim the eccentricity and diameter definitions.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Defines diameter as the longest shortest path, the quantity the height recursion computes as a byproduct."
+      },
+      {
+        "title": "Wikipedia: Mathematical optimization",
+        "url": "https://en.wikipedia.org/wiki/Mathematical_optimization",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Frames updating a running best-so-far value as the general pattern behind the local-fact recursion."
       }
     ]
   },
@@ -180,6 +306,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "reversible local updates, depth-first search, and constraint-guided choice points"
+      },
+      {
+        "title": "Wikipedia: Backtracking",
+        "url": "https://en.wikipedia.org/wiki/Backtracking",
+        "guidance": "Read the general method section.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "States the choose-explore-unchoose pattern every backtracking lesson this week follows."
+      },
+      {
+        "title": "Wikipedia: Decision tree",
+        "url": "https://en.wikipedia.org/wiki/Decision_tree",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the branching choice structure a backtracking search explores and can prune."
       }
     ]
   },
@@ -203,6 +347,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "enumeration as a tree of partial sequences, distinct choices, and exponential output"
+      },
+      {
+        "title": "Wikipedia: Combination",
+        "url": "https://en.wikipedia.org/wiki/Combination",
+        "guidance": "Skim the definition and the formula.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Defines the unordered-selection count the subset and combination enumerations must produce."
+      },
+      {
+        "title": "Wikipedia: Permutation",
+        "url": "https://en.wikipedia.org/wiki/Permutation",
+        "guidance": "Skim the definition and the counting formula.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Defines the ordered-arrangement count the permutation enumeration must produce."
       }
     ]
   },
@@ -226,6 +388,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "unique enumeration when input values repeat and the distinction between positions and values"
+      },
+      {
+        "title": "Wikipedia: Multiset",
+        "url": "https://en.wikipedia.org/wiki/Multiset",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the repeated-element structure this lesson must dedupe against during enumeration."
+      },
+      {
+        "title": "cppreference: std::next_permutation",
+        "url": "https://en.cppreference.com/w/cpp/algorithm/next_permutation",
+        "guidance": "Skim the summary and the duplicate-handling behavior.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Shows a standard-library permutation generator and how it steps over duplicate arrangements."
       }
     ]
   },
@@ -249,6 +429,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "subset-sum enumeration, duplicate removal, exponential search, and explicit complexity bounds"
+      },
+      {
+        "title": "Wikipedia: Combinatorial search",
+        "url": "https://en.wikipedia.org/wiki/Combinatorial_search",
+        "guidance": "Skim the definition and the pruning mention.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Frames pruning a branch once it cannot reach a valid total as combinatorial search with bounds."
+      },
+      {
+        "title": "Wikipedia: Branch and bound",
+        "url": "https://en.wikipedia.org/wiki/Branch_and_bound",
+        "guidance": "Skim the definition and the pruning-bound idea.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the general prune-when-a-bound-is-exceeded strategy this lesson applies to partial sums."
       }
     ]
   },
@@ -272,6 +470,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "whole-string consumption, palindromic factors, required piece counts, and repeated substring checks"
+      },
+      {
+        "title": "Wikipedia: Substring",
+        "url": "https://en.wikipedia.org/wiki/Substring",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Defines the contiguous-piece unit each partition of the string must be checked against."
+      },
+      {
+        "title": "Wikipedia: Partition of a set",
+        "url": "https://en.wikipedia.org/wiki/Partition_of_a_set",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Defines splitting a whole into non-overlapping pieces, the structure a valid partition of the string must form."
       }
     ]
   },
@@ -295,6 +511,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "grid word search, coupled board and dictionary state, branch pruning, and exhaustive solver structure"
+      },
+      {
+        "title": "Wikipedia: Constraint satisfaction problem",
+        "url": "https://en.wikipedia.org/wiki/Constraint_satisfaction_problem",
+        "guidance": "Read the definition and the backtracking-search section.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the coupled-constraint search model this lesson's backtracking must respect across multiple variables at once."
+      },
+      {
+        "title": "Wikipedia: Constraint propagation",
+        "url": "https://en.wikipedia.org/wiki/Constraint_propagation",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names tightening one variable's options because of another's choice, the coupling this lesson's constraints create."
       }
     ]
   },
@@ -318,6 +552,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "equivalent branches, value symmetry, canonical representatives, and avoiding repeated search"
+      },
+      {
+        "title": "Wikipedia: Symmetry",
+        "url": "https://en.wikipedia.org/wiki/Symmetry",
+        "guidance": "Skim the definition, focusing on symmetry under reflection or rotation.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Motivates pruning symmetric branches that would otherwise be explored twice."
+      },
+      {
+        "title": "Wikipedia: Eight queens puzzle",
+        "url": "https://en.wikipedia.org/wiki/Eight_queens_puzzle",
+        "guidance": "Skim the problem statement and the symmetry-reduction note if present.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the canonical constraint-first backtracking search this lesson's symmetry pruning is modeled on."
       }
     ]
   },
@@ -341,6 +593,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "depth-first traversal, discovery state, linear graph exploration, and component structure"
+      },
+      {
+        "title": "Wikipedia: Flood fill",
+        "url": "https://en.wikipedia.org/wiki/Flood_fill",
+        "guidance": "Read the algorithm description.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the exact grid-traversal technique this lesson uses to explore a connected region."
+      },
+      {
+        "title": "Wikipedia: Von Neumann neighborhood",
+        "url": "https://en.wikipedia.org/wiki/Von_Neumann_neighborhood",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the four-directional adjacency a grid's implicit graph is built from."
       }
     ]
   },
@@ -364,6 +634,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "linear-time DFS, component discovery, DFS forests, and traversal state"
+      },
+      {
+        "title": "Wikipedia: Connected-component labeling",
+        "url": "https://en.wikipedia.org/wiki/Connected-component_labeling",
+        "guidance": "Skim the algorithm section.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the technique for grouping cells into components, the structure boundary-reachability problems build on."
+      },
+      {
+        "title": "Wikipedia: Connectivity (graph theory)",
+        "url": "https://en.wikipedia.org/wiki/Connectivity_(graph_theory)",
+        "guidance": "Skim the definition of a connected component.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Defines the component a boundary-reachability flood fill must identify."
       }
     ]
   },
@@ -387,6 +675,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "multi-source BFS, shared frontier work, shortest unweighted distances, and avoiding repeated traversal"
+      },
+      {
+        "title": "Wikipedia: Shortest path problem",
+        "url": "https://en.wikipedia.org/wiki/Shortest_path_problem",
+        "guidance": "Skim the unweighted-graph (BFS) section if present.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Frames BFS distance as shortest-path-in-hops, extended here to multiple sources at once."
+      },
+      {
+        "title": "Wikipedia: Cellular automaton",
+        "url": "https://en.wikipedia.org/wiki/Cellular_automaton",
+        "guidance": "Skim the definition and a grid-update example.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is a related grid-update model where a change spreads outward from multiple active cells at once, as in a multi-source BFS."
       }
     ]
   },
@@ -410,6 +716,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "source-to-target path enumeration, depth-first generation, pruning constraints, and output-driven cost"
+      },
+      {
+        "title": "Wikipedia: Adjacency list",
+        "url": "https://en.wikipedia.org/wiki/Adjacency_list",
+        "guidance": "Read the definition and its trade-off against an adjacency matrix.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Contrasts the explicit edge-list representation with the implicit grid-neighbour adjacency used elsewhere this week."
+      },
+      {
+        "title": "Wikipedia: Adjacency matrix",
+        "url": "https://en.wikipedia.org/wiki/Adjacency_matrix",
+        "guidance": "Skim the definition and its trade-off against an adjacency list.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Contrasts the dense matrix representation with the explicit and implicit adjacency forms used this week."
       }
     ]
   },
@@ -433,6 +757,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "topological ordering, directed acyclic graphs, cycle-related applications, and time-space tradeoffs"
+      },
+      {
+        "title": "Wikipedia: Topological sorting",
+        "url": "https://en.wikipedia.org/wiki/Topological_sorting",
+        "guidance": "Read Kahn's algorithm section.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the in-degree-queue algorithm this lesson's dependency-ordering problems implement."
+      },
+      {
+        "title": "Python: graphlib module",
+        "url": "https://docs.python.org/3/library/graphlib.html",
+        "guidance": "Skim the TopologicalSorter overview and example.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Shows a standard-library topological sort for comparison with the hand-rolled Kahn's algorithm."
       }
     ]
   },
@@ -456,6 +798,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "disjoint-set partitions, representatives, path compression, and amortized nonconstant analysis"
+      },
+      {
+        "title": "Wikipedia: Disjoint-set data structure",
+        "url": "https://en.wikipedia.org/wiki/Disjoint-set_data_structure",
+        "guidance": "Read the union by rank and path compression sections.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Describes the two optimisations behind the near-constant-time union-find used for equivalence checks."
+      },
+      {
+        "title": "Wikipedia: Equivalence relation",
+        "url": "https://en.wikipedia.org/wiki/Equivalence_relation",
+        "guidance": "Skim the three defining properties.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "States the reflexive/symmetric/transitive properties the union-find structure's groups must satisfy."
       }
     ]
   },
@@ -479,6 +839,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "greedy shortest-path finalization, weighted routes, and the edge-weight precondition"
+      },
+      {
+        "title": "Wikipedia: Dijkstra's algorithm",
+        "url": "https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm",
+        "guidance": "Read the algorithm section and the priority-queue implementation.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the shortest-path algorithm this lesson extends with an extra state dimension."
+      },
+      {
+        "title": "Wikipedia: Bellman-Ford algorithm",
+        "url": "https://en.wikipedia.org/wiki/Bellman%E2%80%93Ford_algorithm",
+        "guidance": "Skim the algorithm section.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is an alternative shortest-path algorithm that tolerates negative edges, contrasted with Dijkstra's non-negative requirement."
       }
     ]
   },
@@ -502,6 +880,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "heap-ordered complete trees, array layout, heap construction, and partial rather than total order"
+      },
+      {
+        "title": "Wikipedia: Heap (data structure)",
+        "url": "https://en.wikipedia.org/wiki/Heap_(data_structure)",
+        "guidance": "Read the definition and the operations table.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "States the min/max-at-the-root invariant behind every heap problem this week."
+      },
+      {
+        "title": "Go: container/heap package",
+        "url": "https://pkg.go.dev/container/heap",
+        "guidance": "Skim the package overview and the Interface documentation.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Shows a standard-library binary heap interface for comparison with the hand-maintained top-k structure."
       }
     ]
   },
@@ -525,6 +921,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "top-k selection, heap-ordered candidates, output-sensitive cost, and ranked frontiers"
+      },
+      {
+        "title": "cppreference: std::priority_queue",
+        "url": "https://en.cppreference.com/w/cpp/container/priority_queue",
+        "guidance": "Skim the overview and the custom-comparator note.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Shows a heap parameterised by a custom ordering, the pattern used to rank by a derived key."
+      },
+      {
+        "title": "Wikipedia: Schwartzian transform",
+        "url": "https://en.wikipedia.org/wiki/Schwartzian_transform",
+        "guidance": "Skim the definition and the decorate-sort-undecorate steps.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the exact pattern of ranking items by a computed key instead of their natural order."
       }
     ]
   },
@@ -548,6 +962,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "maximum-weight greedy selection, descending priorities, exchange structure, and the boundary where greedy needs proof"
+      },
+      {
+        "title": "Wikipedia: Bucket sort",
+        "url": "https://en.wikipedia.org/wiki/Bucket_sort",
+        "guidance": "Skim the description.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the linear-time alternative to a heap when frequencies are bounded by array length."
+      },
+      {
+        "title": "Wikipedia: Huffman coding",
+        "url": "https://en.wikipedia.org/wiki/Huffman_coding",
+        "guidance": "Skim the algorithm section.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is a classic frequency-driven greedy algorithm built on the same repeatedly-remove-the-smallest idea."
       }
     ]
   },
@@ -571,6 +1003,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "k-way sorted frontiers, row-sorted selection, pair-sum selection, and output-sensitive bounds"
+      },
+      {
+        "title": "Wikipedia: K-way merge algorithm",
+        "url": "https://en.wikipedia.org/wiki/K-way_merge_algorithm",
+        "guidance": "Read the heap-based approach section.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the exact heap-driven multi-list merge this lesson's problems implement."
+      },
+      {
+        "title": "cppreference: std::merge",
+        "url": "https://en.cppreference.com/w/cpp/algorithm/merge",
+        "guidance": "Skim the summary.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the two-sorted-range merge this lesson extends to many ranges with a heap."
       }
     ]
   },
@@ -594,6 +1044,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "character-directed search, prefix sharing, string-key lookup, and space tradeoffs"
+      },
+      {
+        "title": "Wikipedia: Trie",
+        "url": "https://en.wikipedia.org/wiki/Trie",
+        "guidance": "Read the definition and the operations section.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "States the shared-prefix-node structure every trie problem this week builds and walks."
+      },
+      {
+        "title": "Wikipedia: Radix tree",
+        "url": "https://en.wikipedia.org/wiki/Radix_tree",
+        "guidance": "Skim the definition and its contrast with a plain trie.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Contrasts a space-optimised compressed trie with the plain per-character trie built in this lesson."
       }
     ]
   },
@@ -617,6 +1085,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "lexicographic string search, prefix descendants, wildcard branching, and ordered output"
+      },
+      {
+        "title": "Wikipedia: Lexicographic order",
+        "url": "https://en.wikipedia.org/wiki/Lexicographic_order",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Defines the ordering a trie's depth-first walk naturally produces."
+      },
+      {
+        "title": "cppreference: std::basic_string",
+        "url": "https://en.cppreference.com/w/cpp/string/basic_string",
+        "guidance": "Skim the overview and the comparison operators section.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Reviews how strings compare lexicographically, the ordering a trie's depth-first walk reproduces."
       }
     ]
   },
@@ -640,6 +1126,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "release times, eligible-job selection, scheduling priorities, and online idle-versus-work decisions"
+      },
+      {
+        "title": "Wikipedia: Greedy algorithm",
+        "url": "https://en.wikipedia.org/wiki/Greedy_algorithm",
+        "guidance": "Read the definition and the scheduling-problem example if present.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Introduces choosing the locally best available option, the strategy this lesson combines with a trie or heap."
+      },
+      {
+        "title": "Wikipedia: Scheduling (computing)",
+        "url": "https://en.wikipedia.org/wiki/Scheduling_(computing)",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Frames choosing among available ready tasks as a scheduling problem, here solved greedily with a heap or trie."
       }
     ]
   }

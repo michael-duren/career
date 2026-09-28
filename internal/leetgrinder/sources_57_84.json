@@ -19,6 +19,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Introduces the decomposition of a multistage optimization problem into smaller decision problems. The lesson applies that principle to finite cached subproblems."
+      },
+      {
+        "title": "Wikipedia: Dynamic programming",
+        "url": "https://en.wikipedia.org/wiki/Dynamic_programming",
+        "guidance": "Read the overlapping-subproblems and optimal-substructure sections.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "States the two properties, overlapping subproblems and optimal substructure, that justify caching here."
+      },
+      {
+        "title": "Wikipedia: Memoization",
+        "url": "https://en.wikipedia.org/wiki/Memoization",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the cache-the-result technique that turns exponential recursion into linear time."
       }
     ]
   },
@@ -42,6 +60,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Places the lesson's maximum-weight independent-set recurrence in its research problem family and distinguishes easy path structure from the harder graph structures studied by the paper."
+      },
+      {
+        "title": "Wikipedia: Independent set (graph theory)",
+        "url": "https://en.wikipedia.org/wiki/Independent_set_(graph_theory)",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "House Robber is maximum-weight independent set on a path graph, the structure behind the adjacency constraint."
+      },
+      {
+        "title": "Wikipedia: Recurrence relation",
+        "url": "https://en.wikipedia.org/wiki/Recurrence_relation",
+        "guidance": "Skim the definition and a linear-recurrence example.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the general form of the choose-or-skip step this lesson's DP transition is an instance of."
       }
     ]
   },
@@ -74,6 +110,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Directly supports the lesson's decoding prefix state, addition of valid one- and two-digit endings, O(n) evaluation, and zero-sensitive transition guards."
+      },
+      {
+        "title": "Wikipedia: Change-making problem",
+        "url": "https://en.wikipedia.org/wiki/Change-making_problem",
+        "guidance": "Skim the definition and the DP formulation.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the formal name for the coin-change problem and its dynamic-programming solution."
       }
     ]
   },
@@ -93,7 +138,7 @@
         "title": "He, Haffari, and Norouzi: Dynamic Programming Encoding for Subword Segmentation",
         "url": "https://aclanthology.org/2020.acl-main.275.pdf",
         "guidance": "Read the abstract, section 1, and section 3.1 through the dynamic-programming formulation. Focus on segmentation as a sequence of locally legal transitions over prefix positions; skip the neural architecture and experiments.",
-        "minutes": 13,
+        "minutes": 11,
         "optional": true,
         "kind": "paper",
         "supports": "Shows a research use of dynamic programming for string segmentation and reinforces the lesson's position-based feasibility state."
@@ -106,6 +151,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Provides a finite, known-price trading model with waiting periods and fees. It supports choosing state from permitted transitions, rather than a stochastic forecasting model."
+      },
+      {
+        "title": "Wikipedia: Finite-state machine",
+        "url": "https://en.wikipedia.org/wiki/Finite-state_machine",
+        "guidance": "Skim the definition and the state-transition-table example.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the states-and-transitions model this lesson's suffix-feasibility DP is framed as."
       }
     ]
   },
@@ -129,6 +183,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Explains how patience sorting relates to longest increasing subsequences. It is an optional faster-algorithm perspective on the sequence state used in the lesson."
+      },
+      {
+        "title": "Wikipedia: Longest increasing subsequence",
+        "url": "https://en.wikipedia.org/wiki/Longest_increasing_subsequence",
+        "guidance": "Read the problem statement and the O(n log n) patience-sorting method.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the exact problem and its faster-than-DP method, contrasted with the O(n^2) DP taught first."
+      },
+      {
+        "title": "Wikipedia: Patience sorting",
+        "url": "https://en.wikipedia.org/wiki/Patience_sorting",
+        "guidance": "Skim the algorithm section connecting it to longest increasing subsequence.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the card-game-derived method behind the O(n log n) longest-increasing-subsequence algorithm."
       }
     ]
   },
@@ -152,6 +224,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Provides the classic research context for subset sum, partition, and zero-or-one knapsack, including why algorithms polynomial in the target magnitude are pseudopolynomial."
+      },
+      {
+        "title": "Wikipedia: Subset sum problem",
+        "url": "https://en.wikipedia.org/wiki/Subset_sum_problem",
+        "guidance": "Read the problem statement and the pseudo-polynomial DP section.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the exact problem this lesson's boolean reachability DP solves."
+      },
+      {
+        "title": "Wikipedia: Pseudo-polynomial time",
+        "url": "https://en.wikipedia.org/wiki/Pseudo-polynomial_time",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Explains why the subset-sum DP's runtime depends on the target's magnitude, not just the input length."
       }
     ]
   },
@@ -175,6 +265,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Defines maximum-subarray optimization and places the one-dimensional problem within research on higher-dimensional arrays. The matrix algorithms are an extension, not the lesson's implementation."
+      },
+      {
+        "title": "Wikipedia: Maximum subarray problem",
+        "url": "https://en.wikipedia.org/wiki/Maximum_subarray_problem",
+        "guidance": "Skim Kadane's algorithm section.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the canonical local-ending-state-updates-global-optimum recurrence this lesson generalises."
+      },
+      {
+        "title": "Wikipedia: Divide-and-conquer algorithm",
+        "url": "https://en.wikipedia.org/wiki/Divide-and-conquer_algorithm",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Contrasts a split-the-array approach to the maximum-subarray problem with the linear local-state scan taught here."
       }
     ]
   },
@@ -198,6 +306,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Studies counting shortest paths on grid graphs. Its obstacle and movement assumptions differ from right/down-only DP, so it is an application extension, not a replacement for the lesson's acyclic recurrence."
+      },
+      {
+        "title": "Wikipedia: Lattice path",
+        "url": "https://en.wikipedia.org/wiki/Lattice_path",
+        "guidance": "Skim the definition and the counting-paths-on-a-grid section.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the combinatorial name for counting grid paths, the problem this lesson's DP solves with blocked cells added."
+      },
+      {
+        "title": "Wikipedia: Pascal's triangle",
+        "url": "https://en.wikipedia.org/wiki/Pascal%27s_triangle",
+        "guidance": "Skim the construction rule.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Shows the same add-from-the-row-above recurrence that counts grid paths in this lesson's DP."
       }
     ]
   },
@@ -230,6 +356,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Defines triangle-path adjacency and contrasts exhaustive, greedy, and dynamic-programming approaches. It supports deriving predecessors from the allowed moves."
+      },
+      {
+        "title": "Wikipedia: Taxicab geometry",
+        "url": "https://en.wikipedia.org/wiki/Taxicab_geometry",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the grid-distance model behind the local movement rules this lesson's DP states track."
       }
     ]
   },
@@ -253,6 +388,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Supports the lesson's O(min(n,m)) length-space claim and its warning that reconstructing an actual common subsequence requires stored decisions or extra work."
+      },
+      {
+        "title": "Wikipedia: Longest common subsequence",
+        "url": "https://en.wikipedia.org/wiki/Longest_common_subsequence",
+        "guidance": "Read the dynamic programming solution section.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the exact two-sequence alignment recurrence this lesson's problems implement."
+      },
+      {
+        "title": "Wikipedia: Sequence alignment",
+        "url": "https://en.wikipedia.org/wiki/Sequence_alignment",
+        "guidance": "Skim the definition and the dynamic-programming section.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the general two-sequence alignment problem this lesson's longest-common-subsequence DP solves a special case of."
       }
     ]
   },
@@ -272,7 +425,7 @@
         "title": "Wagner and Fischer: The String-to-String Correction Problem",
         "url": "https://computingbiology.github.io/docs/wagner1974.pdf",
         "guidance": "Read pages 168-171 through the dynamic-programming algorithm and complexity argument. Match each correction operation to a predecessor cell; stop before the later theorem details.",
-        "minutes": 13,
+        "minutes": 12,
         "optional": true,
         "kind": "paper",
         "supports": "Is the foundational paper for insertion, deletion, and substitution edit distance and supports the lesson's product-of-lengths running time."
@@ -285,6 +438,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Directly supports the interval state, equal-endpoint recurrence, shorter-interval evaluation order, and the lesson's distinction between subsequence freedom and substring contiguity."
+      },
+      {
+        "title": "Wikipedia: Edit distance",
+        "url": "https://en.wikipedia.org/wiki/Edit_distance",
+        "guidance": "Skim the definition and the Levenshtein distance section.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the formal name for the insert/delete/substitute recurrence this lesson's problems implement."
       }
     ]
   },
@@ -317,6 +479,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Directly scopes the lesson's other two string-table problems: contiguous common substring and order-preserving interleaving, with different combination rules from subsequence counting."
+      },
+      {
+        "title": "Wikipedia: Catalan number",
+        "url": "https://en.wikipedia.org/wiki/Catalan_number",
+        "guidance": "Skim the definition and one counting example.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Illustrates counting the number of valid combinatorial arrangements, the same kind of count this lesson's DP produces."
       }
     ]
   },
@@ -349,6 +520,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Directly supports the dice-count and total-sum state, addition of alternatives, and careful base cases for unreachable totals."
+      },
+      {
+        "title": "Wikipedia: Knapsack problem",
+        "url": "https://en.wikipedia.org/wiki/Knapsack_problem",
+        "guidance": "Skim the multi-dimensional knapsack variant if present, otherwise the 0/1 section.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Generalises the single-resource knapsack recurrence to a second constrained resource."
       }
     ]
   },
@@ -368,7 +548,7 @@
         "title": "Hu and Shing: Computation of Matrix Chain Products",
         "url": "https://cic.tju.edu.cn/faculty/gongxj/course/algorithm/doc/1981-Computationofmatrixchainproducts.pdf",
         "guidance": "Read the opening formulation and the standard interval recurrence before the faster algorithm. Identify how fixing the final split makes the two remaining intervals independent.",
-        "minutes": 12,
+        "minutes": 11,
         "optional": true,
         "kind": "paper",
         "supports": "Provides classic research context for interval dynamic programming and the lesson's technique of choosing a final structural action so boundary information becomes fixed."
@@ -381,6 +561,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Supports the lesson's game-state viewpoint and the current-player score-difference recurrence; it does not prescribe the lesson's array example."
+      },
+      {
+        "title": "Wikipedia: Combinatorial game theory",
+        "url": "https://en.wikipedia.org/wiki/Combinatorial_game_theory",
+        "guidance": "Skim the definition and the optimal-play framing.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Frames the two-player, perfect-information games in this lesson as the class this theory analyses."
       }
     ]
   },
@@ -404,6 +593,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Explains why greedy optimality requires structure and discusses the exchange property of matroids. The algebraic extension is not needed for the lesson's elementary exchange proofs."
+      },
+      {
+        "title": "Wikipedia: Proof by contradiction",
+        "url": "https://en.wikipedia.org/wiki/Proof_by_contradiction",
+        "guidance": "Skim the definition and the general structure of the proof form.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the proof form behind an exchange argument: assume a better solution exists and derive a contradiction."
+      },
+      {
+        "title": "Wikipedia: Matroid",
+        "url": "https://en.wikipedia.org/wiki/Matroid",
+        "guidance": "Skim the greedy algorithm section only.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Gives the structural reason greedy choices are provably optimal for a class of problems, beyond case-by-case proof."
       }
     ]
   },
@@ -436,6 +643,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Directly supports the lesson's decide-the-heaviest-item exchange argument and makes clear that the two-person capacity is what closes the greedy choice."
+      },
+      {
+        "title": "Wikipedia: Assignment problem",
+        "url": "https://en.wikipedia.org/wiki/Assignment_problem",
+        "guidance": "Skim the definition, contrasting with the simpler sort-and-pair greedy used here.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Contrasts the general optimal-assignment problem with the sorted-order greedy that suffices under this lesson's constraints."
       }
     ]
   },
@@ -455,7 +671,7 @@
         "title": "Kolen et al.: Interval Scheduling, A Survey",
         "url": "https://ir.cwi.nl/pub/11585/11585B.pdf",
         "guidance": "Read the abstract and introductory taxonomy of interval scheduling variants. Identify which assumptions produce the unweighted single-machine problem solved by earliest finish, then stop before the broader approximation survey.",
-        "minutes": 11,
+        "minutes": 10,
         "optional": true,
         "kind": "paper",
         "supports": "Provides research context for interval scheduling and explains why changing weights, machines, or compatibility rules changes the algorithm."
@@ -468,6 +684,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Supplies concise implementation and complexity details while the scoped comparison covers the lesson's shared pattern of committing to a maintained interval boundary."
+      },
+      {
+        "title": "Wikipedia: Interval scheduling",
+        "url": "https://en.wikipedia.org/wiki/Interval_scheduling",
+        "guidance": "Read the earliest-deadline-first section.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the classic interval-selection problem and its sort-by-end greedy proof."
       }
     ]
   },
@@ -500,6 +725,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Supports the intersection predicate and the endpoint-order fact behind advancing the earlier-ending interval in an O(n+m) two-list scan."
+      },
+      {
+        "title": "Wikipedia: Interval (mathematics)",
+        "url": "https://en.wikipedia.org/wiki/Interval_(mathematics)",
+        "guidance": "Skim the definition and the overlap/containment notions.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Defines the interval notion the merge and intersect operations act on."
       }
     ]
   },
@@ -532,6 +766,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Supplies a short proof that a greedy route choice eliminates a range of alternatives rather than only one candidate."
+      },
+      {
+        "title": "Wikipedia: Reachability",
+        "url": "https://en.wikipedia.org/wiki/Reachability",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the property tracked by the furthest-reachable-index variable in this lesson's problems."
       }
     ]
   },
@@ -564,6 +807,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Justifies the lesson's O(n) total-time claim even though one iteration may contain a while loop that pops many entries."
+      },
+      {
+        "title": "cppreference: std::deque",
+        "url": "https://en.cppreference.com/w/cpp/container/deque",
+        "guidance": "Skim the overview; note O(1) push/pop at both ends.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Backs the monotonic double-ended queue variant used for sliding-window-maximum-style problems."
       }
     ]
   },
@@ -596,6 +848,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Supports the greedy lexicographic stack pattern behind digit removal while making clear that the exact pop guard depends on the problem's deletion constraints."
+      },
+      {
+        "title": "Wikipedia: Run-length encoding",
+        "url": "https://en.wikipedia.org/wiki/Run-length_encoding",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the compression idea behind storing a stack entry as a value paired with a repeat count."
       }
     ]
   },
@@ -628,6 +889,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Directly supports the lowest-set-bit removal identity and the O(n) bit-count recurrence used in the lesson's third task."
+      },
+      {
+        "title": "Wikipedia: Amortized analysis",
+        "url": "https://en.wikipedia.org/wiki/Amortized_analysis",
+        "guidance": "Skim the aggregate-method section.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Explains why visiting each bit or array slot a bounded number of times still totals linear time."
       }
     ]
   },
@@ -660,6 +930,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Provides a worked atMost(K) sliding-window count. It supports the lesson's exact-count subtraction technique, not its boundary-search or prefix-sum topics."
+      },
+      {
+        "title": "Wikipedia: Parity (mathematics)",
+        "url": "https://en.wikipedia.org/wiki/Parity_(mathematics)",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the even/odd count classification these subarray-counting problems key their prefix state on."
       }
     ]
   },
@@ -733,6 +1012,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Supports explicit edge reversal, reverse reachability, adjacency-list complexity, and avoiding duplicate visits."
+      },
+      {
+        "title": "Wikipedia: Graph traversal",
+        "url": "https://en.wikipedia.org/wiki/Graph_traversal",
+        "guidance": "Skim the breadth-first and depth-first sections.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Reviews the traversal choices reused here for graph cloning and finding minimum-height trees."
       }
     ]
   },
@@ -806,6 +1094,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Supports reasoning in sorted rank order; the scoped derivation applies that order to the lesson's claim that a minimum-range k-subset can be replaced by a contiguous sorted window."
+      },
+      {
+        "title": "Wikipedia: Zero-sum game",
+        "url": "https://en.wikipedia.org/wiki/Zero-sum_game",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Frames the two-player optimal-play problem in this lesson as a zero-sum game."
       }
     ]
   },
@@ -825,7 +1122,7 @@
         "title": "Mattson et al.: Evaluation Techniques for Storage Hierarchies",
         "url": "https://www.bitsavers.org/pdf/ibm/IBM_Systems_Journal/092/ibmsj0902B.pdf",
         "guidance": "Read the abstract and the opening explanation of stack algorithms, including least-recently-used replacement. Stop before the trace-evaluation derivations.",
-        "minutes": 11,
+        "minutes": 7,
         "optional": true,
         "kind": "paper",
         "supports": "Provides the foundational research context for LRU as a stack replacement policy and explains why recency order is the state an implementation must maintain."
@@ -847,6 +1144,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Supplies the linear adjacent-run scan that the lesson extends into a compressed (character, count) stack for threshold deletions and chain reactions."
+      },
+      {
+        "title": "Wikipedia: Cache replacement policies",
+        "url": "https://en.wikipedia.org/wiki/Cache_replacement_policies",
+        "guidance": "Read the LRU section.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the eviction policy the LRU Cache problem implements directly."
       }
     ]
   }

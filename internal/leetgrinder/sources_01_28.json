@@ -19,6 +19,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Places membership lookup and key-associated values in a research-grade dictionary design with constant-time lookup; its cuckoo collision scheme is an extension beyond the lesson's chained table."
+      },
+      {
+        "title": "cppreference: std::unordered_map",
+        "url": "https://en.cppreference.com/w/cpp/container/unordered_map",
+        "guidance": "Skim the overview and the complexity table for insert/find/erase.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Shows a general-purpose hash map's O(1) expected lookup and insert, the operation the complement check depends on."
+      },
+      {
+        "title": "Wikipedia: Hash table",
+        "url": "https://en.wikipedia.org/wiki/Hash_table",
+        "guidance": "Skim the collision-resolution section (chaining vs. open addressing).",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Surveys collision handling behind the map used for the seen-before check."
       }
     ]
   },
@@ -42,6 +60,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Establishes the cancellation invariant behind majority-candidate algorithms and why a candidate must be verified when no majority is guaranteed."
+      },
+      {
+        "title": "Wikipedia: Boyer-Moore majority vote algorithm",
+        "url": "https://en.wikipedia.org/wiki/Boyer%E2%80%93Moore_majority_vote_algorithm",
+        "guidance": "Read the algorithm description and the correctness argument.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Explains why cancellation of unequal pairs finds a guaranteed majority element."
+      },
+      {
+        "title": "cppreference: std::count",
+        "url": "https://en.cppreference.com/w/cpp/algorithm/count",
+        "guidance": "Skim the summary and complexity.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Frames counting occurrences as a single linear pass, the baseline the frequency map improves on."
       }
     ]
   },
@@ -65,6 +101,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Formalizes symbol matching as a bijection, supporting the lesson's need for forward and reverse maps rather than a one-way association."
+      },
+      {
+        "title": "Wikipedia: Anagram",
+        "url": "https://en.wikipedia.org/wiki/Anagram",
+        "guidance": "Skim the definition and the algorithmic-detection section.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Defines the equivalence the sorted-letters key is built to detect."
+      },
+      {
+        "title": "Wikipedia: Bijection",
+        "url": "https://en.wikipedia.org/wiki/Bijection",
+        "guidance": "Read the definition and the one-line criterion for a function to be bijective.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Gives the formal two-directional mapping condition the pattern-matching check must enforce."
       }
     ]
   },
@@ -97,6 +151,24 @@
         "optional": true,
         "kind": "reference",
         "supports": "Distinguishes sets from multisets and explains storing multiplicities rather than one boolean per value."
+      },
+      {
+        "title": "cppreference: std::unordered_set",
+        "url": "https://en.cppreference.com/w/cpp/container/unordered_set",
+        "guidance": "Skim the overview and complexity table.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Shows the set interface used for membership and intersection checks."
+      },
+      {
+        "title": "Wikipedia: Cycle detection",
+        "url": "https://en.wikipedia.org/wiki/Cycle_detection",
+        "guidance": "Read the introduction and the Floyd's tortoise-and-hare section.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Surveys cycle-detection strategies beyond the visited-set approach used for the digit-square sequence."
       }
     ]
   },
@@ -120,6 +192,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Provides the original partition procedure and region-boundary reasoning that underlies in-place three-way partition variants."
+      },
+      {
+        "title": "cppreference: std::sort",
+        "url": "https://en.cppreference.com/w/cpp/algorithm/sort",
+        "guidance": "Skim the summary, complexity, and the in-place guarantee.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the comparison-sort contract the merge and partition logic must satisfy."
+      },
+      {
+        "title": "Wikipedia: Dutch national flag problem",
+        "url": "https://en.wikipedia.org/wiki/Dutch_national_flag_problem",
+        "guidance": "Read the problem statement and the three-way partition invariant.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the exact three-region invariant Sort Colors implements in one pass."
       }
     ]
   },
@@ -143,6 +233,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Connects carry propagation to prefix recurrences and makes explicit which state must be preserved while processing digits."
+      },
+      {
+        "title": "Wikipedia: Prefix sum",
+        "url": "https://en.wikipedia.org/wiki/Prefix_sum",
+        "guidance": "Read the definition and the sequential-computation section.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Defines the running-total structure built in the array pass."
+      },
+      {
+        "title": "Wikipedia: Multiplication algorithm",
+        "url": "https://en.wikipedia.org/wiki/Multiplication_algorithm",
+        "guidance": "Skim the grade-school long-multiplication section.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Describes the digit-by-digit, carry-resolved multiplication the digit-array accumulator implements."
       }
     ]
   },
@@ -175,6 +283,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Gives coordinate-rotation equations. Discrete array rotation additionally shifts coordinates into valid nonnegative indices; zero marking is a separate lesson derivation."
+      },
+      {
+        "title": "Wikipedia: In-place algorithm",
+        "url": "https://en.wikipedia.org/wiki/In-place_algorithm",
+        "guidance": "Read the definition and the auxiliary-space caveat.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Clarifies why writing into the same matrix still counts as O(1) auxiliary space."
       }
     ]
   },
@@ -198,6 +315,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Develops binary search from a loop invariant, making boundary preservation and off-by-one correctness explicit."
+      },
+      {
+        "title": "cppreference: std::lower_bound",
+        "url": "https://en.cppreference.com/w/cpp/algorithm/lower_bound",
+        "guidance": "Skim the summary and the complexity note.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the first-not-less-than search this lesson's loop computes by hand."
+      },
+      {
+        "title": "Wikipedia: Binary search algorithm",
+        "url": "https://en.wikipedia.org/wiki/Binary_search_algorithm",
+        "guidance": "Read the procedure section and the loop-invariant description.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "States the shrinking-range invariant every binary search in the week relies on."
       }
     ]
   },
@@ -221,6 +356,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Defines exact integer square root and remainder. The divide-and-conquer algorithm is a research extension, not the source of the lesson's binary-search predicate."
+      },
+      {
+        "title": "Wikipedia: Monotonic function",
+        "url": "https://en.wikipedia.org/wiki/Monotonic_function",
+        "guidance": "Read the definition and the one-variable examples.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Defines the monotone predicate property that lets binary search replace a linear scan."
+      },
+      {
+        "title": "cppreference: std::upper_bound",
+        "url": "https://en.cppreference.com/w/cpp/algorithm/upper_bound",
+        "guidance": "Skim the summary and the difference from lower_bound.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Contrasts the strict versus non-strict boundary the day's predicates must get right."
       }
     ]
   },
@@ -253,6 +406,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Develops the staircase-search invariant and linear row-plus-column probe bound used for sorted-matrix elimination."
+      },
+      {
+        "title": "cppreference: std::equal_range",
+        "url": "https://en.cppreference.com/w/cpp/algorithm/equal_range",
+        "guidance": "Skim the summary; note it returns both boundaries in one call.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the paired lower/upper boundary search this lesson builds from two binary searches."
       }
     ]
   },
@@ -285,6 +447,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Provides the distinct-key rotated-minimum algorithm and its midpoint/right-end boundary rule."
+      },
+      {
+        "title": "cppreference: std::rotate",
+        "url": "https://en.cppreference.com/w/cpp/algorithm/rotate",
+        "guidance": "Skim the summary and the in-place rotation guarantee.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Frames a rotated sorted array as a cyclic shift, the structure the search must exploit."
       }
     ]
   },
@@ -349,6 +520,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Formalizes optimization via repeated decision tests and separates feasibility from the search that finds the optimum."
+      },
+      {
+        "title": "Wikipedia: Bisection method",
+        "url": "https://en.wikipedia.org/wiki/Bisection_method",
+        "guidance": "Read the algorithm section for root-finding by halving an interval.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the continuous-domain ancestor of binary-searching the answer over a feasibility predicate."
+      },
+      {
+        "title": "cppreference: std::partition_point",
+        "url": "https://en.cppreference.com/w/cpp/algorithm/partition_point",
+        "guidance": "Skim the summary; note the precondition that the range is already partitioned.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Matches exactly the search-the-answer pattern: find the boundary of a monotone true/false predicate."
       }
     ]
   },
@@ -381,6 +570,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Explains searching a monotone feasibility predicate and choosing answer bounds, which the lesson applies to several different counting checks."
+      },
+      {
+        "title": "Wikipedia: Interpolation search",
+        "url": "https://en.wikipedia.org/wiki/Interpolation_search",
+        "guidance": "Skim the idea section contrasting it with plain binary search.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Reviews a related search strategy as contrast before applying plain binary search to paired arrays."
       }
     ]
   },
@@ -404,6 +602,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Defines palindrome recognition and its center-based string model in the algorithms literature; the lesson's whole-string normalization and two-pointer check are a simpler special case."
+      },
+      {
+        "title": "cppreference: std::equal",
+        "url": "https://en.cppreference.com/w/cpp/algorithm/equal",
+        "guidance": "Skim the summary.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the range-equality check two converging pointers perform one step at a time for a palindrome."
+      },
+      {
+        "title": "cppreference: std::reverse",
+        "url": "https://en.cppreference.com/w/cpp/algorithm/reverse",
+        "guidance": "Skim the summary and the in-place, linear-time guarantee.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the two-pointer swap-from-the-ends pattern applied to reversing a sequence."
       }
     ]
   },
@@ -427,6 +643,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Defines stable in-place partitioning and makes clear why preserving the relative order of retained values is a separate requirement."
+      },
+      {
+        "title": "cppreference: std::remove",
+        "url": "https://en.cppreference.com/w/cpp/algorithm/remove",
+        "guidance": "Skim the summary and the erase-remove idiom note.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Shows the same read/write pointer pattern used to compact an array in place."
+      },
+      {
+        "title": "cppreference: std::unique",
+        "url": "https://en.cppreference.com/w/cpp/algorithm/unique",
+        "guidance": "Skim the summary; note it removes consecutive duplicates in place.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the standard-library operation that matches Remove Duplicates from Sorted Array exactly."
       }
     ]
   },
@@ -459,6 +693,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Explains elimination of sorted pair candidates and extending the scan to triples. The container-height argument in the lesson is a separate application."
+      },
+      {
+        "title": "Wikipedia: 3SUM",
+        "url": "https://en.wikipedia.org/wiki/3SUM",
+        "guidance": "Read the problem statement and the sort-then-two-pointer algorithm section.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the exact problem and canonical O(n^2) approach this lesson's core problems implement."
       }
     ]
   },
@@ -482,6 +725,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Formalizes window boundaries and expiring observations, which underlie fixed-window sum and count invariants."
+      },
+      {
+        "title": "Wikipedia: Moving average",
+        "url": "https://en.wikipedia.org/wiki/Moving_average",
+        "guidance": "Skim the simple moving average section.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is a fixed-size window statistic recomputed incrementally, the same shape as this lesson's problems."
+      },
+      {
+        "title": "cppreference: std::accumulate",
+        "url": "https://en.cppreference.com/w/cpp/algorithm/accumulate",
+        "guidance": "Skim the summary.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the running-sum reduction the window's incremental update avoids recomputing."
       }
     ]
   },
@@ -505,6 +766,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Defines streaming sliding windows and explains why expiring old state is difficult; its approximate model differs from the lesson's exact in-memory windows."
+      },
+      {
+        "title": "Wikipedia: String (computer science)",
+        "url": "https://en.wikipedia.org/wiki/String_(computer_science)",
+        "guidance": "Skim the operations section covering substrings.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Defines the substring unit a variable window expands and shrinks over while tracking validity."
+      },
+      {
+        "title": "cppreference: std::map",
+        "url": "https://en.cppreference.com/w/cpp/container/map",
+        "guidance": "Skim the overview; note the ordered, logarithmic-time operations.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Contrasts an ordered map's O(log n) operations with the O(1) expected operations the window's frequency map relies on."
       }
     ]
   },
@@ -528,6 +807,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Defines scan as a general operation and shows how prefix state represents all earlier elements; the lesson adds a frequency map and the empty-prefix seed."
+      },
+      {
+        "title": "Wikipedia: Associative array",
+        "url": "https://en.wikipedia.org/wiki/Associative_array",
+        "guidance": "Skim the definition and operations.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Generalises the frequency map used to count prefix sums seen so far."
+      },
+      {
+        "title": "cppreference: std::partial_sum",
+        "url": "https://en.cppreference.com/w/cpp/algorithm/partial_sum",
+        "guidance": "Skim the summary.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the standard-library operation that computes exactly the prefix-sum array this lesson builds by hand."
       }
     ]
   },
@@ -560,6 +857,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Documents signed remainder behavior, explaining why modulo keys must be normalized before frequency-map lookup."
+      },
+      {
+        "title": "Wikipedia: Modular arithmetic",
+        "url": "https://en.wikipedia.org/wiki/Modular_arithmetic",
+        "guidance": "Read the definition and the congruence notation.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Explains the remainder classes a prefix-product-mod-k state tracks."
       }
     ]
   },
@@ -583,6 +889,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Models disjoint linked segments and local pointer mutation, the reasoning needed for reversal and merge without losing nodes."
+      },
+      {
+        "title": "Wikipedia: Linked list",
+        "url": "https://en.wikipedia.org/wiki/Linked_list",
+        "guidance": "Skim the singly linked list section and the reversal description.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Reviews the pointer-rewiring model this lesson's reversal and merge operations rely on."
+      },
+      {
+        "title": "cppreference: std::forward_list",
+        "url": "https://en.cppreference.com/w/cpp/container/forward_list",
+        "guidance": "Skim the overview.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Shows a standard-library singly linked list interface for comparison with the hand-rolled node struct."
       }
     ]
   },
@@ -606,6 +930,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "States and analyzes the two-speed tortoise-and-hare method used for constant-space linked-list cycle detection."
+      },
+      {
+        "title": "Wikipedia: Pointer (computer programming)",
+        "url": "https://en.wikipedia.org/wiki/Pointer_(computer_programming)",
+        "guidance": "Skim the definition and the traversal example.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Reviews the reference-following model behind advancing a fast pointer twice for every one step of a slow pointer."
+      },
+      {
+        "title": "cppreference: std::advance",
+        "url": "https://en.cppreference.com/w/cpp/iterator/advance",
+        "guidance": "Skim the summary.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Names the generic operation of moving a pointer forward by a fixed number of steps, done at two different rates here."
       }
     ]
   },
@@ -638,6 +980,15 @@
         "optional": true,
         "kind": "reference",
         "supports": "Explains the phase-reset step that locates a cycle entry after fast and slow pointers first meet."
+      },
+      {
+        "title": "Wikipedia: Palindrome",
+        "url": "https://en.wikipedia.org/wiki/Palindrome",
+        "guidance": "Skim the definition.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Defines the symmetry property the half-list comparison problem checks."
       }
     ]
   },
@@ -661,6 +1012,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Formalizes stable separation while preserving relative order, matching the lesson's tail-based linked-list partition invariant."
+      },
+      {
+        "title": "Wikipedia: Sentinel value",
+        "url": "https://en.wikipedia.org/wiki/Sentinel_value",
+        "guidance": "Read the definition and the dummy-node use case.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Is the general technique behind the dummy head node this lesson uses to avoid special-casing the list head."
+      },
+      {
+        "title": "Wikipedia: Doubly linked list",
+        "url": "https://en.wikipedia.org/wiki/Doubly_linked_list",
+        "guidance": "Skim the definition and the insertion/removal diagrams.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Shows the two-pointer node structure a stable partition must keep consistent while splicing nodes out."
       }
     ]
   },
@@ -684,6 +1053,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Provides the historical operator-stack technique behind stack-based expression parsing and postfix evaluation."
+      },
+      {
+        "title": "Wikipedia: Stack (abstract data type)",
+        "url": "https://en.wikipedia.org/wiki/Stack_(abstract_data_type)",
+        "guidance": "Skim the operations list and the LIFO property.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "States the last-in-first-out contract the day's stack-based problems depend on."
+      },
+      {
+        "title": "cppreference: std::stack",
+        "url": "https://en.cppreference.com/w/cpp/container/stack",
+        "guidance": "Skim the overview.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Shows a standard-library stack adaptor for comparison with a hand-rolled slice-backed stack."
       }
     ]
   },
@@ -707,6 +1094,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Develops queues from front and rear lists and explains the reversal cost that amortized two-stack queues distribute across operations."
+      },
+      {
+        "title": "cppreference: std::queue",
+        "url": "https://en.cppreference.com/w/cpp/container/queue",
+        "guidance": "Skim the overview and the underlying-container note.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Shows a standard queue adaptor, the interface being rebuilt on top of a different structure."
+      },
+      {
+        "title": "Go: container/list package",
+        "url": "https://pkg.go.dev/container/list",
+        "guidance": "Skim the package overview.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Shows a standard-library doubly linked list, a different underlying structure than the array-backed queue built here."
       }
     ]
   },
@@ -730,6 +1135,24 @@
         "optional": true,
         "kind": "paper",
         "supports": "Introduces memoization through Fibonacci and shows how caching changes repeated recursion into one computation per distinct state."
+      },
+      {
+        "title": "Wikipedia: Recursion (computer science)",
+        "url": "https://en.wikipedia.org/wiki/Recursion_(computer_science)",
+        "guidance": "Read the base case and recursive case section.",
+        "minutes": 4,
+        "optional": true,
+        "kind": "reference",
+        "supports": "States the base-case-plus-smaller-subproblem contract every recursive function in the day must satisfy."
+      },
+      {
+        "title": "Wikipedia: Recursion",
+        "url": "https://en.wikipedia.org/wiki/Recursion",
+        "guidance": "Skim the definition, outside the computer-science-specific section.",
+        "minutes": 3,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Gives the general self-reference concept before narrowing to recursive functions."
       }
     ]
   }
