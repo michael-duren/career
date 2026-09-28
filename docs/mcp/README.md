@@ -74,14 +74,14 @@ requested by kind. Prompt `career_conversation` offers a guided entry point.
 
 Write tools (need **Allow read and edit**):
 
-- `create_career_entry`: create a goal, company, note or book. IDs, slugs and timestamps
-  are generated as random UUIDs, like the website.
-- `update_career_entry`: patch a goal, company, note or book. Pass the `revision` from
-  `read_career_entry` and only changed fields. A stale revision is rejected instead of
-  overwriting newer edits. New steps, notes and todos may omit IDs.
-- `delete_career_entry`: delete a goal, company, note or book. Needs the `revision` from
-  `read_career_entry`; a stale revision is rejected instead of deleting the wrong version.
-  Cannot be undone.
+- `create_career_entry`: create a goal, company, note, book or connection. IDs, slugs and
+  timestamps are generated as random UUIDs, like the website.
+- `update_career_entry`: patch a goal, company, note, book or connection. Pass the
+  `revision` from `read_career_entry` and only changed fields. A stale revision is
+  rejected instead of overwriting newer edits. New steps, notes and todos may omit IDs.
+- `delete_career_entry`: delete a goal, company, note, book or connection. Needs the
+  `revision` from `read_career_entry`; a stale revision is rejected instead of deleting
+  the wrong version. Cannot be undone.
 - `add_companies_to_queue`: batch-add 1-50 companies to the companies board as
   `not_started` with the website's outreach checklist and an empty Log, so no reach-out
   date is recorded. Only `title` is required; `category` defaults to "From connections",

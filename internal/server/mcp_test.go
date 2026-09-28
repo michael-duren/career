@@ -503,6 +503,34 @@ func TestMCPWriteTools(t *testing.T) {
 		t.Fatal("page kind deletable", out)
 	}
 
+	conn, isErr := call("create_career_entry", map[string]any{"kind": "connection", "entry": map[string]any{"name": "Ada Lovelace", "role": "Staff Engineer", "companyName": "Acme", "email": "ada@example.com", "id": "ignored"}})
+	connID, _ := conn["id"].(string)
+	if isErr || connID == "ignored" || !database.ValidID("connection", connID) || conn["revision"] == "" {
+		t.Fatal(conn)
+	}
+	c, err := db.Detail(ctx, "connection", connID)
+	tags, _ := c.Entry["tags"].([]any)
+	if err != nil || c.Entry["queued"] != false || c.Entry["notes"] != "" || len(tags) != 0 {
+		t.Fatal(c, err)
+	}
+	updatedConn, isErr := call("update_career_entry", map[string]any{"kind": "connection", "id": connID, "revision": conn["revision"], "fields": map[string]any{"queued": true, "cadenceDays": 30}})
+	if isErr || updatedConn["revision"] == conn["revision"] {
+		t.Fatal(updatedConn)
+	}
+	if out, isErr := call("update_career_entry", map[string]any{"kind": "connection", "id": connID, "revision": updatedConn["revision"], "fields": map[string]any{"email": "not-an-email"}}); !isErr || !strings.Contains(out["error"].(string), "invalid connection email") {
+		t.Fatal("invalid email accepted", out)
+	}
+	if out, isErr := call("delete_career_entry", map[string]any{"kind": "connection", "id": connID, "revision": conn["revision"]}); !isErr || !strings.Contains(out["error"].(string), "changed since") {
+		t.Fatal("stale revision deleted", out)
+	}
+	deletedConn, isErr := call("delete_career_entry", map[string]any{"kind": "connection", "id": connID, "revision": updatedConn["revision"]})
+	if isErr || deletedConn["deleted"] != true {
+		t.Fatal(deletedConn)
+	}
+	if _, err := db.Detail(ctx, "connection", connID); !errors.Is(err, database.ErrNotFound) {
+		t.Fatal("connection not deleted", err)
+	}
+
 	// Refresh keeps the owner-chosen scope, whatever scope the client asks for.
 	status, refreshed := h.token(url.Values{"grant_type": {"refresh_token"}, "refresh_token": {tokens["refresh_token"].(string)}, "client_id": {clientID}, "scope": {"career:read"}})
 	if status != 200 || refreshed["scope"] != "career:read career:write" {
