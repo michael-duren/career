@@ -74,11 +74,14 @@ requested by kind. Prompt `career_conversation` offers a guided entry point.
 
 Write tools (need **Allow read and edit**):
 
-- `create_career_entry`: create a goal, company or note. IDs, slugs and timestamps are
-  generated as random UUIDs, like the website.
-- `update_career_entry`: patch a goal, company or note. Pass the `revision` from
+- `create_career_entry`: create a goal, company, note or book. IDs, slugs and timestamps
+  are generated as random UUIDs, like the website.
+- `update_career_entry`: patch a goal, company, note or book. Pass the `revision` from
   `read_career_entry` and only changed fields. A stale revision is rejected instead of
   overwriting newer edits. New steps, notes and todos may omit IDs.
+- `delete_career_entry`: delete a goal, company, note or book. Needs the `revision` from
+  `read_career_entry`; a stale revision is rejected instead of deleting the wrong version.
+  Cannot be undone.
 - `add_companies_to_queue`: batch-add 1-50 companies to the companies board as
   `not_started` with the website's outreach checklist and an empty Log, so no reach-out
   date is recorded. Only `title` is required; `category` defaults to "From connections",
@@ -96,7 +99,7 @@ Write tools (need **Allow read and edit**):
   `linkedConnections` and last-talked dates are not changed. The batch is all or nothing
   if any company fails validation.
 
-Saves use the website's validation. There is no delete tool. Claude clients ask before
+Saves and deletes use the website's validation. Claude clients ask before
 running write tools unless you allow them permanently. Request
 bodies are limited to 64 KiB.
 
