@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/michael-duren/career-strategy/internal/scheduler"
 	"io"
 	"strings"
+	"time"
 )
 
 type Source struct{ Store, Key, Revision, Checksum, Archive string }
@@ -46,6 +48,7 @@ func (s *Store) Import(ctx context.Context, r io.Reader, source Source, dry bool
 	if err != nil || token != json.Delim('{') {
 		return counts, fmt.Errorf("workspace object required")
 	}
+	var schedule *scheduler.Document
 	seen := map[string]bool{}
 	legacy := legacyContacts{urls: map[string]bool{}, ids: map[string]bool{}}
 	markers := map[string]any{}
@@ -97,6 +100,15 @@ func (s *Store) Import(ctx context.Context, r io.Reader, source Source, dry bool
 			if _, err = d.Token(); err != nil {
 				return counts, err
 			}
+		} else if key == "scheduler" {
+			var value scheduler.Document
+			if err = d.Decode(&value); err != nil {
+				return counts, err
+			}
+			if err = value.Validate(); err != nil {
+				return counts, err
+			}
+			schedule = &value
 		} else if allowed(key, "version|catalogVersion|journalsVersion") {
 			var v any
 			if err = d.Decode(&v); err != nil {
@@ -137,6 +149,16 @@ func (s *Store) Import(ctx context.Context, r io.Reader, source Source, dry bool
 	}
 	if _, err = tx.ExecContext(ctx, "INSERT INTO migration_imports(id,source_store,source_key,source_revision,source_checksum,archive_path,version,catalog_version,journals_version) VALUES($1,$2,$3,$4,$5,$6,2,$7,$8)", uuid.NewString(), source.Store, source.Key, revision, source.Checksum, source.Archive, markers["catalogVersion"], markers["journalsVersion"]); err != nil {
 		return counts, err
+	}
+	if schedule != nil {
+		schedule.Revision = uuid.NewString()
+		schedule.Busy = nil
+		if err = schedulerSave(ctx, tx, *schedule); err != nil {
+			return counts, err
+		}
+		if err = schedulerReconcileTx(ctx, tx, time.Now()); err != nil {
+			return counts, err
+		}
 	}
 	if dry {
 		return counts, nil
@@ -234,6 +256,23 @@ func (s *Store) Export(ctx context.Context, w io.Writer) error {
 		if err = write("]"); err != nil {
 			return err
 		}
+	}
+	var scheduleRaw []byte
+	if e := tx.QueryRowContext(ctx, "SELECT document FROM scheduler_state WHERE id=1").Scan(&scheduleRaw); e == nil {
+		var exportDoc scheduler.Document
+		if err = json.Unmarshal(scheduleRaw, &exportDoc); err != nil {
+			return err
+		}
+		exportDoc.Busy = nil
+		scheduleRaw, err = json.Marshal(exportDoc)
+		if err != nil {
+			return err
+		}
+		if err = write(`,"scheduler":` + string(scheduleRaw)); err != nil {
+			return err
+		}
+	} else if e != sql.ErrNoRows {
+		return e
 	}
 	if err = write("}\n"); err != nil {
 		return err

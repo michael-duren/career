@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"time"
 )
 
 // StepMove relocates one goal step (a "mini goal") within its goal or to
@@ -36,6 +37,9 @@ func (s *Store) MoveGoalStep(ctx context.Context, m StepMove) ([]Result, error) 
 	}
 	defer tx.Rollback()
 	if err = lockGoals(ctx, tx); err != nil {
+		return nil, err
+	}
+	if err = schedulerReconcileTx(ctx, tx, time.Now()); err != nil {
 		return nil, err
 	}
 	from, err := readOne(ctx, tx, "goal", m.From)
@@ -83,6 +87,9 @@ func (s *Store) MoveGoalStep(ctx context.Context, m StepMove) ([]Result, error) 
 		saved = append(saved, r)
 	}
 	if err = bump(ctx, tx, "goal"); err != nil {
+		return nil, err
+	}
+	if err = schedulerReconcileTx(ctx, tx, time.Now()); err != nil {
 		return nil, err
 	}
 	return saved, tx.Commit()

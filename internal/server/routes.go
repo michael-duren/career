@@ -8,6 +8,7 @@ import (
 	"github.com/michael-duren/career-strategy/internal/database"
 	otelchimetric "github.com/riandyrn/otelchi/metric"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -53,6 +54,8 @@ func failure(w http.ResponseWriter, err error) {
 	message := "Storage operation failed; please retry. Your draft is kept."
 	if code != 503 {
 		message = err.Error()
+	} else {
+		log.Printf("storage operation failed: %v", err)
 	}
 	respond(w, code, map[string]string{"error": message})
 }
@@ -120,6 +123,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 			}
 		})
 	})
+	s.registerScheduler(r)
+	s.registerSchedulerGoogle(r)
 	s.registerLeetgrinder(r)
 	s.registerLeetgrinderExtension(r)
 	s.registerStatic(r)

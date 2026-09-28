@@ -85,3 +85,6 @@ body:has(.goal-timeline) main > div { max-width: 1500px; }
 
 .goal-timeline [aria-label="Goal dependencies"] select { display: block; width: 100%; background: #09090b; border: 1px solid #52525b; border-radius: 6px; padding: 9px; margin-top: 5px; }
 .goal-timeline [aria-label="Goal dependencies"] option:disabled { color: #71717a; }
+.goal-schedule fieldset { border: 0; margin: 0 0 12px; padding: 0; }
+.goal-schedule fieldset legend { font-size: 13px; margin-bottom: 8px; }
+.goal-schedule fieldset .timeline-ranges label { align-items: center; display: inline-flex; gap: 4px; margin: 0; }

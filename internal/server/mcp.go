@@ -102,15 +102,16 @@ func resolveKind(name string, required bool) (string, error) {
 }
 
 type overviewGoal struct {
-	ID             string `json:"id"`
-	Title          string `json:"title"`
-	Status         string `json:"status"`
-	DependsOn      any    `json:"dependsOn"`
-	StartDate      string `json:"startDate"`
-	EndDate        string `json:"endDate"`
-	DailyHours     any    `json:"dailyHours,omitempty"`
-	CompletedSteps int    `json:"completedSteps"`
-	TotalSteps     int    `json:"totalSteps"`
+	ID               string `json:"id"`
+	Title            string `json:"title"`
+	Status           string `json:"status"`
+	DependsOn        any    `json:"dependsOn"`
+	StartDate        string `json:"startDate"`
+	EndDate          string `json:"endDate"`
+	DailyHours       any    `json:"dailyHours,omitempty"`
+	SelectedWeekdays any    `json:"selectedWeekdays"`
+	CompletedSteps   int    `json:"completedSteps"`
+	TotalSteps       int    `json:"totalSteps"`
 	// Steps are the goal's mini goals: ordered, dateless sub-goals.
 	Steps []overviewStep `json:"steps"`
 }
@@ -309,7 +310,7 @@ func (s *Server) addOverviewTool(server *mcp.Server) {
 }
 
 func summarizeGoal(e database.Entity) overviewGoal {
-	g := overviewGoal{DependsOn: e["dependsOn"], DailyHours: e["dailyHours"]}
+	g := overviewGoal{DependsOn: e["dependsOn"], DailyHours: e["dailyHours"], SelectedWeekdays: e["selectedWeekdays"]}
 	g.ID, _ = e["id"].(string)
 	g.Title, _ = e["title"].(string)
 	g.Status, _ = e["status"].(string)

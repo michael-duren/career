@@ -21,6 +21,7 @@ var staticPages = map[string]string{
 	"/journal/new": "journal/new/index.html", "/personal-journal": "personal-journal/index.html", "/notes": "notes/index.html", "/audio-thoughts": "audio-thoughts/index.html",
 	"/documents": "documents/index.html", "/manage/books": "manage/books/index.html",
 	"/manage/companies": "manage/companies/index.html",
+ "/weekly-scheduler": "weekly-scheduler/index.html",
 }
 
 var referenceAliases = map[string]string{

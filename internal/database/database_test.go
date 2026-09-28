@@ -67,13 +67,19 @@ func imported(t *testing.T) *Store {
 	return s
 }
 
-// withNoteCreatedAt is what an archive exports after import: notes that
-// predate createdAt take their updatedAt.
+// withNoteCreatedAt applies defaults that an archive gains when imported.
 func withNoteCreatedAt(workspace any) any {
-	for _, v := range workspace.(map[string]any)["notes"].([]any) {
+	data := workspace.(map[string]any)
+	for _, v := range data["notes"].([]any) {
 		n := v.(map[string]any)
 		if _, ok := n["createdAt"]; !ok && n["updatedAt"] != nil {
 			n["createdAt"] = n["updatedAt"]
+		}
+	}
+	for _, v := range data["goals"].([]any) {
+		goal := v.(map[string]any)
+		if _, ok := goal["selectedWeekdays"]; !ok {
+			goal["selectedWeekdays"] = []any{float64(1), float64(2), float64(3), float64(4), float64(5), float64(6), float64(7)}
 		}
 	}
 	return workspace

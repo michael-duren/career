@@ -177,6 +177,7 @@ func run() error {
 		go notifier.Run(ctx)
 		analyser := &analysis.Worker{Store: db, Key: c.AnthropicAPIKey.Reveal(), Model: c.AnalysisModel, DailyLimit: c.AnalysisDailyLimit}
 		go analyser.Run(ctx)
+		go server.RunScheduler(ctx, c, db)
 		srv := server.NewServer(c, db)
 		done := make(chan error, 1)
 		go func() { done <- srv.ListenAndServe() }()
