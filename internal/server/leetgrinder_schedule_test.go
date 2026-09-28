@@ -86,7 +86,7 @@ func TestLeetgrinderScheduleAndReviews(t *testing.T) {
 
 	// Day 10 is today; nothing is finished, so the overview reports 10 behind.
 	old := now.AddDate(0, 0, -20)
-	for _, slug := range []string{"contains-duplicate", "two-sum"} {
+	for _, slug := range []string{"isomorphic-strings", "two-sum"} {
 		if _, err := db.SaveLeetgrinderAttempt(ctx, leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: slug, Outcome: "struggled", Minutes: 30, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}, ""); err != nil {
 			t.Fatal(err)
 		}
@@ -96,13 +96,13 @@ func TestLeetgrinderScheduleAndReviews(t *testing.T) {
 	}
 	w = request("GET", "/leetgrinder", nil)
 	body := w.Body.String()
-	for _, want := range []string{"10 sessions behind", "Today is Day 10 of 84.", "Struggled 20 days ago", `id="review-contains-duplicate"`, `id="review-two-sum"`} {
+	for _, want := range []string{"10 sessions behind", "Today is Day 10 of 84.", "Struggled 20 days ago", `id="review-isomorphic-strings"`, `id="review-two-sum"`} {
 		if !strings.Contains(body, want) {
 			t.Errorf("overview missing %q", want)
 		}
 	}
 	w = request("GET", "/leetgrinder/day/10", nil)
-	if !strings.Contains(w.Body.String(), `id="review-contains-duplicate"`) {
+	if !strings.Contains(w.Body.String(), `id="review-isomorphic-strings"`) {
 		t.Fatal("today's session page has no review section")
 	}
 	if w = request("GET", "/leetgrinder/day/30", nil); strings.Contains(w.Body.String(), `id="reviews-title"`) {
@@ -127,8 +127,8 @@ func TestLeetgrinderScheduleAndReviews(t *testing.T) {
 	if body = w.Body.String(); w.Code != 200 || !strings.Contains(body, "Reviewed today") || !strings.Contains(body, "All cards") {
 		t.Fatalf("review queue: %d", w.Code)
 	}
-	w = request("POST", "/leetgrinder/problem/contains-duplicate/attempts", url.Values{"id": {uuid.NewString()}, "outcome": {"solved"}, "minutes": {"20"}, "timeComplexity": {"O(n)"}, "spaceComplexity": {"O(n)"}, "review": {"true"}, "return": {"https://evil.com"}, "returnDay": {"10"}})
-	if w.Code != 303 || w.Header().Get("Location") != "/leetgrinder/day/10#review-contains-duplicate" {
+	w = request("POST", "/leetgrinder/problem/isomorphic-strings/attempts", url.Values{"id": {uuid.NewString()}, "outcome": {"solved"}, "minutes": {"20"}, "timeComplexity": {"O(n)"}, "spaceComplexity": {"O(n)"}, "review": {"true"}, "return": {"https://evil.com"}, "returnDay": {"10"}})
+	if w.Code != 303 || w.Header().Get("Location") != "/leetgrinder/day/10#review-isomorphic-strings" {
 		t.Fatalf("review return: %s", w.Header().Get("Location"))
 	}
 

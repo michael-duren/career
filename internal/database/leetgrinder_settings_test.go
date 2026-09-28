@@ -173,7 +173,7 @@ func TestLeetgrinderTodayFreezesReviewPlan(t *testing.T) {
 	}
 	now := time.Date(2026, 10, 2, 12, 0, 0, 0, time.UTC)
 	old := now.AddDate(0, 0, -20)
-	for _, slug := range []string{"contains-duplicate", "binary-search", "two-sum"} {
+	for _, slug := range []string{"isomorphic-strings", "binary-search", "two-sum"} {
 		if _, err = s.SaveLeetgrinderAttempt(ctx, leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: slug, Outcome: "unfinished", Minutes: 25}, ""); err != nil {
 			t.Fatal(err)
 		}
@@ -202,7 +202,7 @@ func TestLeetgrinderTodayFreezesReviewPlan(t *testing.T) {
 	wg.Wait()
 	close(plans)
 	for plan := range plans {
-		if !reflect.DeepEqual(plan, []string{"contains-duplicate"}) {
+		if !reflect.DeepEqual(plan, []string{"isomorphic-strings"}) {
 			t.Fatalf("concurrent plans disagree: %v", plan)
 		}
 	}
@@ -211,11 +211,11 @@ func TestLeetgrinderTodayFreezesReviewPlan(t *testing.T) {
 		t.Fatal(err)
 	}
 	today, err := s.LeetgrinderToday(ctx, now)
-	if err != nil || len(today.Reviews) != 2 || today.Reviews[0].Problem.Slug != "contains-duplicate" || today.Reviews[1].Problem.Slug != "two-sum" || today.Session != 2 {
+	if err != nil || len(today.Reviews) != 2 || today.Reviews[0].Problem.Slug != "isomorphic-strings" || today.Reviews[1].Problem.Slug != "two-sum" || today.Session != 2 {
 		t.Fatalf("topped-up plan: %+v %v", today.Reviews, err)
 	}
 	// Logging the review marks it done and keeps the plan.
-	review := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "contains-duplicate", Outcome: "solved", Minutes: 20, IsReview: true, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}
+	review := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "isomorphic-strings", Outcome: "solved", Minutes: 20, IsReview: true, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}
 	if _, err = s.SaveLeetgrinderAttempt(ctx, review, ""); err != nil {
 		t.Fatal(err)
 	}
