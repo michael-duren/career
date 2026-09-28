@@ -160,7 +160,7 @@ var deleteAnnotations = &mcp.ToolAnnotations{Title: "Delete career entry", Destr
 const fieldGuide = "Fields — goal: title, status (planned|active|done|dropped), startDate, endDate (YYYY-MM-DD), color (#rrggbb), dailyHours, dependsOn (goal IDs), steps [{title, done}] (mini goals: ordered, dateless sub-goals), notes [{body}], metadata {string: string}. " +
 	"company: title, category, url, status (not_started|applied|interviewing|offer|rejected|passed), priority (high|medium|low), featured, tags, body (markdown). " +
 	"note: title, topic, description, tags, body (markdown), todos [{title, done}]. " +
-	"book: title, type (book|course), category (Computer Science|Networking|OS|Systems|Distributed Systems|Languages|Career|Online Course), status (backlog|reading|paused|completed|reference), priority (high|medium|low), authors [string], edition, isbn, url, cover, started, finished (YYYY-MM-DD), rating (1-5), featured, tags, body (markdown; chapter checklist)."
+	"book: title, type (book|course), category (Computer Science|Networking|OS|Systems|Distributed Systems|Languages|Career|Online Course), status (backlog|reading|paused|completed|reference), priority (high|medium|low), authors [string], edition, isbn, url, cover, started, finished (YYYY-MM-DD), rating (0-5), featured, tags, body (markdown; chapter checklist)."
 
 func (s *Server) addWriteTools(server *mcp.Server) {
 	mcp.AddTool(server, &mcp.Tool{
@@ -270,10 +270,6 @@ func (s *Server) saveFromMCP(ctx context.Context, name, kind string, entry datab
 	case err != nil:
 		return nil, nil, toolError(err)
 	}
-	key := "id"
-	if kind == "company" || kind == "book" {
-		key = "slug"
-	}
-	id, _ := saved.Entry[key].(string)
+	id, _ := saved.Entry[database.KeyField(kind)].(string)
 	return nil, map[string]any{"kind": name, "id": id, "revision": saved.Revision, "updatedAt": saved.Entry["updatedAt"]}, nil
 }
