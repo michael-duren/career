@@ -58,6 +58,22 @@ test('workload splits at boundaries instead of allocating a day for every date',
   assert.equal(shiftGoal({ ...goal, dailyHours: 2.5 }, 10, 'move').dailyHours, 2.5);
 });
 
+test('workload stays bounded by weekday patterns across centuries and many goals', async () => {
+  const { workloadFor } = await import('../src/lib/timeline.ts');
+  const draft = { ...goal, startDate: '1900-01-01', endDate: '2200-12-31', dailyHours: 1, selectedWeekdays: [1, 3, 5] };
+  const goals = Array.from({ length: 100 }, (_, index) => ({ ...draft, id: `goal-${index}` }));
+  assert.ok(workloadFor(goals, { ...draft, id: 'draft' }).segments.length <= 7);
+});
+
+test('workload groups selected and unselected weekdays without expanding dates', async () => {
+  const { workloadFor } = await import('../src/lib/timeline.ts');
+  const result = workloadFor([], { ...goal, startDate: '2026-09-07', endDate: '2026-09-13', dailyHours: 2, selectedWeekdays: [1, 3, 5] });
+  assert.deepEqual(result.segments.map(segment => ({ weekdays: segment.weekdays, count: segment.count, hours: segment.hours })), [
+    { weekdays: [1, 3, 5], count: 1, hours: 2 },
+    { weekdays: [2, 4, 6, 7], count: 0, hours: 0 },
+  ]);
+});
+
 
 test('timeline daily average clips goals to the view, adds overlapping hours and includes empty days', () => {
   const start = dayNumber('2026-09-01'), end = dayNumber('2026-09-11');
@@ -72,4 +88,33 @@ test('timeline daily average clips goals to the view, adds overlapping hours and
 test('timeline hours mark unestimated visible goals without treating zero-hour goals as unknown', () => {
   const start = dayNumber(goal.startDate), end = dayNumber(goal.endDate) + 1;
   assert.deepEqual(timelineHours([goal, { ...goal, id: 'zero', dailyHours: 0 }], start, end), { total: 0, average: 0, unknown: 1 });
+});
+
+test('timeline hours default missing weekdays to every day', () => {
+  const start = dayNumber('2026-09-07'), end = dayNumber('2026-09-14');
+  assert.deepEqual(timelineHours([{ ...goal, startDate: '2026-09-07', endDate: '2026-09-13', dailyHours: 2 }], start, end),
+    { total: 14, average: 2, unknown: 0 });
+});
+
+test('timeline hours count only selected weekdays and allow an empty selection', () => {
+  const start = dayNumber('2026-09-07'), end = dayNumber('2026-09-14');
+  assert.deepEqual(timelineHours([
+    { ...goal, startDate: '2026-09-07', endDate: '2026-09-13', dailyHours: 2, selectedWeekdays: [1, 3, 5] },
+    { ...goal, id: 'none', startDate: '2026-09-07', endDate: '2026-09-13', dailyHours: 8, selectedWeekdays: [] },
+  ], start, end), { total: 6, average: 6 / 7, unknown: 0 });
+});
+
+test('timeline hours clip selected weekdays to partial goal ranges', () => {
+  const start = dayNumber('2026-09-07'), end = dayNumber('2026-09-14');
+  assert.deepEqual(timelineHours([
+    { ...goal, startDate: '2026-09-10', endDate: '2026-09-13', dailyHours: 1, selectedWeekdays: [1, 4, 7] },
+  ], start, end), { total: 2, average: 2 / 7, unknown: 0 });
+});
+
+test('timeline calculations reject invalid and duplicate ISO weekdays', () => {
+  const start = dayNumber('2026-09-07'), end = dayNumber('2026-09-14');
+  for (const selectedWeekdays of [[0], [8], [1.5], [1, 1]]) {
+    assert.throws(() => timelineHours([{ ...goal, startDate: '2026-09-07', endDate: '2026-09-13', dailyHours: 1, selectedWeekdays }], start, end),
+      /selectedWeekdays/);
+  }
 });

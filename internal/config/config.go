@@ -14,6 +14,9 @@ import (
 )
 
 type Config struct {
+	SchedulerGoogleClientID                                                             string
+	SchedulerGoogleClientSecret                                                         Secret
+	SchedulerSecretKey                                                                  []byte
 	WhisperURL, WhisperModel                                                            string
 	RunningTranscribeEnabled                                                            bool
 	DatabaseURL, Username, PasswordHash, JWTSecret, PublicOrigin, ListenAddr, StaticDir string
@@ -50,7 +53,9 @@ var analysisModel = regexp.MustCompile(`^[a-z0-9][a-z0-9._:@-]{0,99}$`)
 
 func Load() (Config, error) {
 	c := Config{
-		WhisperURL: os.Getenv("WHISPER_URL"), WhisperModel: os.Getenv("WHISPER_MODEL"), RunningTranscribeEnabled: os.Getenv("RUNNING_TRANSCRIBE_ENABLED") == "true",
+		SchedulerGoogleClientID:     os.Getenv("SCHEDULER_GOOGLE_CLIENT_ID"),
+		SchedulerGoogleClientSecret: Secret(os.Getenv("SCHEDULER_GOOGLE_CLIENT_SECRET")),
+		WhisperURL:                  os.Getenv("WHISPER_URL"), WhisperModel: os.Getenv("WHISPER_MODEL"), RunningTranscribeEnabled: os.Getenv("RUNNING_TRANSCRIBE_ENABLED") == "true",
 		DatabaseURL:        os.Getenv("DATABASE_URL"),
 		Username:           os.Getenv("AUTH_USERNAME"),
 		PasswordHash:       os.Getenv("AUTH_PASSWORD_HASH"),
@@ -61,6 +66,17 @@ func Load() (Config, error) {
 		Production:         os.Getenv("APP_ENV") == "production",
 		OTelServiceName:    os.Getenv("OTEL_SERVICE_NAME"),
 		OTelExportInterval: 10 * time.Second,
+	}
+
+	if key := os.Getenv("SCHEDULER_SECRET_KEY"); key != "" {
+		decoded, err := base64.StdEncoding.DecodeString(key)
+		if err != nil || len(decoded) != 32 {
+			return c, fmt.Errorf("SCHEDULER_SECRET_KEY must be base64 encoding of 32 bytes")
+		}
+		c.SchedulerSecretKey = decoded
+	}
+	if (c.SchedulerGoogleClientID != "" || c.SchedulerGoogleClientSecret.Reveal() != "") && (c.SchedulerGoogleClientID == "" || c.SchedulerGoogleClientSecret.Reveal() == "" || len(c.SchedulerSecretKey) != 32) {
+		return c, fmt.Errorf("Google scheduler requires SCHEDULER_GOOGLE_CLIENT_ID, SCHEDULER_GOOGLE_CLIENT_SECRET and SCHEDULER_SECRET_KEY")
 	}
 
 	if c.WhisperURL == "" {

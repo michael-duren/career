@@ -54,7 +54,7 @@ func init() {
 	models["book"] = model{"books", "slug", "books", fields("slug:id " + cat + " edition?:string authors:array isbn?:string started?:date finished?:date rating?:number")}
 	models["company"] = model{"companies", "slug", "companies", fields("slug:id " + strings.Replace(cat, "url?:url", "url:url", 1))}
 	models["connection"] = model{"connections", "id", "connections", fields("id:uuid name:string role:string companyName:string:company_name companySlug?:id:company_slug email:string url?:url connectedOn?:date:connected_on lastContactedOn?:date:last_contacted_on cadenceDays?:int:cadence_days queued:bool notes:string tags:array updatedAt?:timestamp:updated_at")}
-	models["goal"] = model{"goals", "id", "goals", fields("id:uuid status:string title:string startDate:date:start_date endDate:date:end_date color:color dailyHours?:number:daily_hours createdAt:timestamp:created_at updatedAt:timestamp:updated_at")}
+	models["goal"] = model{"goals", "id", "goals", fields("id:uuid status:string title:string startDate:date:start_date endDate:date:end_date color:color dailyHours?:number:daily_hours selectedWeekdays?:weekdays:selected_weekdays createdAt:timestamp:created_at updatedAt:timestamp:updated_at")}
 }
 
 var idRE = regexp.MustCompile(`^[a-zA-Z0-9_/-]{1,200}$`)
@@ -156,6 +156,20 @@ func Validate(kind string, e Entity) error {
 				if !ok || size(s) > max || (f.Name == "tags" && strings.TrimSpace(s) == "") {
 					return fmt.Errorf("invalid %s item", f.Name)
 				}
+			}
+		case "weekdays":
+			days, ok := v.([]any)
+			if !ok || len(days) > 7 {
+				return fmt.Errorf("invalid selectedWeekdays")
+			}
+			seen := map[int]bool{}
+			for _, day := range days {
+				n, ok := number(day)
+				i := int(n)
+				if !ok || n != math.Trunc(n) || i < 1 || i > 7 || seen[i] {
+					return fmt.Errorf("invalid or duplicate selectedWeekdays")
+				}
+				seen[i] = true
 			}
 		default:
 			if !isstr {
@@ -557,5 +571,8 @@ func goalDefaults(kind string, e Entity) {
 	}
 	if _, ok := e["dependsOn"]; !ok {
 		e["dependsOn"] = []any{}
+	}
+	if _, ok := e["selectedWeekdays"]; !ok {
+		e["selectedWeekdays"] = []any{float64(1), float64(2), float64(3), float64(4), float64(5), float64(6), float64(7)}
 	}
 }

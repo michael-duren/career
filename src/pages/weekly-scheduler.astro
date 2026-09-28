@@ -1,0 +1,9 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import { WeeklyScheduler } from '../components/WeeklyScheduler';
+---
+<DocsLayout wide title="Weekly scheduler" description="Plan goal work around your week and record what actually happened">
+  <h1 class="text-3xl font-bold mb-2">Weekly scheduler</h1>
+  <p class="text-zinc-400 mb-6">Make room for your goals, keep a recurring routine, and record the work you did.</p>
+  <WeeklyScheduler client:load />
+</DocsLayout>

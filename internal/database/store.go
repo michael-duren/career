@@ -297,6 +297,11 @@ func (s *Store) Save(ctx context.Context, kind string, e Entity, revision *strin
 			return Result{}, err
 		}
 	}
+	if kind == "goal" {
+		if err = schedulerReconcileTx(ctx, tx, time.Now()); err != nil {
+			return Result{}, err
+		}
+	}
 	r, err := saveTx(ctx, tx, kind, e, revision, false)
 	if err != nil {
 		return r, dbError(err)
@@ -317,6 +322,11 @@ func (s *Store) Save(ctx context.Context, kind string, e Entity, revision *strin
 			if err = bump(ctx, tx, "connection"); err != nil {
 				return r, err
 			}
+		}
+	}
+	if kind == "goal" {
+		if err = schedulerReconcileTx(ctx, tx, time.Now()); err != nil {
+			return Result{}, err
 		}
 	}
 	return r, tx.Commit()
@@ -357,6 +367,11 @@ func saveTx(ctx context.Context, tx *sql.Tx, kind string, e Entity, revision *st
 			v = now
 		}
 		cast := ""
+		if f.Type == "weekdays" {
+			b, _ := json.Marshal(v)
+			v = string(b)
+			cast = "::jsonb"
+		}
 		if f.Type == "array" {
 			b, _ := json.Marshal(v)
 			v = string(b)
@@ -468,6 +483,9 @@ func (s *Store) Delete(ctx context.Context, kind, id string, revision *string) e
 		if err = lockGoals(ctx, tx); err != nil {
 			return err
 		}
+		if err = schedulerReconcileTx(ctx, tx, time.Now()); err != nil {
+			return err
+		}
 		// Removing incoming edges changes the dependent's revision too.
 		if _, err = tx.ExecContext(ctx, "DELETE FROM source_timestamps WHERE kind='goal' AND field='updatedAt' AND entity_id IN (SELECT goal_id::text FROM goal_dependencies WHERE depends_on_id=$1) AND EXISTS (SELECT 1 FROM goals WHERE id=$1 AND revision=$2)", id, *revision); err != nil {
 			return err
@@ -490,6 +508,11 @@ func (s *Store) Delete(ctx context.Context, kind, id string, revision *string) e
 	}
 	if err = bump(ctx, tx, kind); err != nil {
 		return err
+	}
+	if kind == "goal" {
+		if err = schedulerReconcileTx(ctx, tx, time.Now()); err != nil {
+			return err
+		}
 	}
 	return tx.Commit()
 }

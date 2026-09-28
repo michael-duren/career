@@ -106,6 +106,9 @@ func TestDependencyTransfer(t *testing.T) {
 	json.Unmarshal(exported.Bytes(), &got)
 	var want map[string]any
 	json.Unmarshal(raw, &want)
+	for _, item := range want["goals"].([]any) {
+		item.(map[string]any)["selectedWeekdays"] = []any{float64(1), float64(2), float64(3), float64(4), float64(5), float64(6), float64(7)}
+	}
 	if !reflect.DeepEqual(want, got) {
 		t.Fatalf("round trip differs: %s", exported.String())
 	}

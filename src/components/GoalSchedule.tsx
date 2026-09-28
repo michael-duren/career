@@ -2,6 +2,11 @@ import { useState } from 'react';
 import { dayNumber, dayString, monthOffset, shiftGoal, workloadFor, type Goal } from '../lib/timeline';
 
 const labelDate = (date: string) => new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+const weekdays = [{ value: 1, label: 'Monday', short: 'Mon' }, { value: 2, label: 'Tuesday', short: 'Tue' },
+  { value: 3, label: 'Wednesday', short: 'Wed' }, { value: 4, label: 'Thursday', short: 'Thu' },
+  { value: 5, label: 'Friday', short: 'Fri' }, { value: 6, label: 'Saturday', short: 'Sat' },
+  { value: 7, label: 'Sunday', short: 'Sun' }];
+const weekdayLabel = (selected: number[]) => selected.length === 7 ? 'Every day' : selected.map(value => weekdays[value - 1].short).join(', ') || 'No days';
 function Calendar({ label, value, startDate, endDate, onChange }: { label: string; value: string; startDate: string; endDate: string; onChange: (date: string) => void }) {
   const [month, setMonth] = useState(value.slice(0, 7) + '-01');
   const first = dayNumber(month);
@@ -42,7 +47,17 @@ export function GoalSchedule({ draft, goals, onChange }: { draft: Goal; goals: G
     <div className="goal-dates">
       <label>Expected hours per day<input type="number" required min="0" max="24" step="any" value={draft.dailyHours ?? ''} placeholder="Set an estimate" onChange={e => onChange({ ...draft, dailyHours: e.target.value === '' ? undefined : Number(e.target.value) })} /></label>
     </div>
-    <p className="timeline-help">Estimates apply every calendar day. The preview below shows combined expected hours across overlapping goals, including this goal.</p>
+    <fieldset aria-label="Required weekdays">
+      <legend>Required weekdays</legend>
+      <div className="timeline-ranges">{weekdays.map(day => {
+        const selected = (draft.selectedWeekdays ?? weekdays.map(item => item.value)).includes(day.value);
+        return <label key={day.value}><input type="checkbox" checked={selected} onChange={() => {
+          const current = draft.selectedWeekdays ?? weekdays.map(item => item.value);
+          onChange({ ...draft, selectedWeekdays: selected ? current.filter(value => value !== day.value) : [...current, day.value].sort((a, b) => a - b) });
+        }} /> {day.short}<span className="sr-only"> ({day.label})</span></label>;
+      })}</div>
+    </fieldset>
+    <p className="timeline-help">Expected hours apply only on selected weekdays. Selecting no days creates no required hours. The preview includes this goal and overlapping goals.</p>
     <h3>Schedule preview</h3>
     <div className="schedule-summary" role="status"><strong>{others.length} existing {others.length === 1 ? 'goal overlaps' : 'goals overlap'} these dates</strong><span>Including this goal: up to {peakCount} at once · {Number(peakHours.toFixed(2))} h/day estimated</span></div>
     {segments.some(s => s.unknown > 0) && <p className="timeline-help">Some goals have no hour estimate. Workload totals are incomplete.</p>}
@@ -51,14 +66,14 @@ export function GoalSchedule({ draft, goals, onChange }: { draft: Goal; goals: G
       {[draft, ...nearby].map(goal => {
         const from = Math.max(viewStart, dayNumber(goal.startDate)), to = Math.min(viewEnd, dayNumber(goal.endDate) + 1);
         return <div className="schedule-row" key={goal.id}>
-          <div className="schedule-row-label"><strong>{goal.id === draft.id ? 'This goal' : goal.title}</strong><span>{goal.dailyHours === undefined ? 'Hours not set' : `${goal.dailyHours} h/day`} · {labelDate(goal.startDate)} – {labelDate(goal.endDate)}</span></div>
+          <div className="schedule-row-label"><strong>{goal.id === draft.id ? 'This goal' : goal.title}</strong><span>{goal.dailyHours === undefined ? 'Hours not set' : `${goal.dailyHours} h/selected day`} · {labelDate(goal.startDate)} – {labelDate(goal.endDate)}</span></div>
           <div className="schedule-row-track"><div className="schedule-selection" style={{ left: position(start), width: width(start, end + 1) }} /><div className="schedule-bar" style={{ left: position(from), width: width(from, to), background: goal.color }} /></div>
           {goal.id !== draft.id && <button type="button" disabled={goal.endDate >= '2200-12-31' || dayNumber(goal.endDate) + 1 + end - start > dayNumber('2200-12-31')} onClick={() => onChange(shiftGoal(draft, dayNumber(goal.endDate) + 1 - start, 'move'))}>Start after this goal</button>}
         </div>;
       })}
     </div>
     <details className="workload-details" open><summary>Expected hours by date</summary>
-      <div className="workload-table"><table><thead><tr><th>Dates</th><th>Goals</th><th>Expected hours/day</th></tr></thead><tbody>{segments.map(segment => <tr key={segment.start}><td>{labelDate(dayString(segment.start))} – {labelDate(dayString(segment.end - 1))}</td><td>{segment.count}</td><td>{Number(segment.hours.toFixed(2))}{segment.unknown ? ' + unestimated' : ''}</td></tr>)}</tbody></table></div>
+      <div className="workload-table"><table><thead><tr><th>Dates and weekdays</th><th>Goals requiring time</th><th>Expected hours</th></tr></thead><tbody>{segments.map(segment => <tr key={`${segment.start}-${segment.weekdays.join('-')}`}><td>{labelDate(dayString(segment.start))} – {labelDate(dayString(segment.end - 1))} · {weekdayLabel(segment.weekdays)}</td><td>{segment.count}</td><td>{Number(segment.hours.toFixed(2))}{segment.unknown ? ' + unestimated' : ''}</td></tr>)}</tbody></table></div>
     </details>
   </section>;
 }

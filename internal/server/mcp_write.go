@@ -164,7 +164,7 @@ var updateAnnotations = &mcp.ToolAnnotations{Title: "Update career entry", OpenW
 var deleteIsDestructive = true
 var deleteAnnotations = &mcp.ToolAnnotations{Title: "Delete career entry", DestructiveHint: &deleteIsDestructive, OpenWorldHint: new(bool)}
 
-const fieldGuide = "Fields — goal: title, status (planned|active|done|dropped), startDate, endDate (YYYY-MM-DD), color (#rrggbb), dailyHours, dependsOn (goal IDs), steps [{title, done}] (mini goals: ordered, dateless sub-goals), notes [{body}], metadata {string: string}. " +
+const fieldGuide = "Fields — goal: title, status (planned|active|done|dropped), startDate, endDate (YYYY-MM-DD), color (#rrggbb), dailyHours, selectedWeekdays (ISO weekdays 1=Monday through 7=Sunday; omitted means every day), dependsOn (goal IDs), steps [{title, done}] (mini goals: ordered, dateless sub-goals), notes [{body}], metadata {string: string}. " +
 	"company: title, category, url, status (not_started|applied|interviewing|offer|rejected|passed), priority (high|medium|low), featured, tags, body (markdown). " +
 	"note: title, topic, description, tags, body (markdown), todos [{title, done}]. " +
 	"book: title, type (book|course), category (Computer Science|Networking|OS|Systems|Distributed Systems|Languages|Career|Online Course), status (backlog|reading|paused|completed|reference), priority (high|medium|low), authors [string], edition, isbn, url, cover, started, finished (YYYY-MM-DD), rating (0-5), featured, tags, body (markdown; chapter checklist). " +

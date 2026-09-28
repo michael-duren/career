@@ -124,7 +124,7 @@ export function GoalTimeline() {
     <p role="status" className="timeline-help">{status} · {visible.length} of {goals.length} goals in view</p>
     {loaded && <div className="schedule-summary timeline-hours">
       <strong>{hours.average.toLocaleString('en-US', { maximumFractionDigits: 2 })} expected h/day on average</strong>
-      <span>{hours.total.toLocaleString('en-US', { maximumFractionDigits: 2 })} total expected hours ÷ {days} calendar days in view, including days without goals.</span>
+      <span>{hours.total.toLocaleString('en-US', { maximumFractionDigits: 2 })} total expected hours on each goal's selected weekdays ÷ {days} calendar days in view.</span>
       {hours.unknown > 0 && <span>{hours.unknown} {hours.unknown === 1 ? 'goal has' : 'goals have'} no hour estimate; these totals are incomplete.</span>}
     </div>}
     {error && <div role="alert" className="timeline-error">{error} <button disabled={busy} onClick={() => void load()}>Load latest</button></div>}
@@ -146,7 +146,7 @@ export function GoalTimeline() {
             return <div data-goal key={goal.id} className="timeline-goal" style={{ top: index * 72 + 30, left: pct(left), width: `${Math.max(0, right - left) / days * 100}%`, background: goal.color }}>
               <button className="goal-handle" aria-label={`Resize start of ${goal.title}`} disabled={busy} onPointerDown={e => pointerDown(e, goal, 'start')} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={() => { drag.current = null; setPreview(null); }} onClick={() => { if (!suppressClick.current) open(goal); }}>‖</button>
               <button className="goal-body" disabled={busy} title={`${goal.title}: ${goal.startDate} to ${goal.endDate}`} onPointerDown={e => pointerDown(e, goal, 'move')} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={() => { drag.current = null; setPreview(null); }} onClick={() => { if (!suppressClick.current) open(goal); suppressClick.current = false; }}>
-                <strong>{goal.title}</strong><small>{goal.startDate} → {goal.endDate} · {goal.dailyHours === undefined ? 'Hours not set' : `${goal.dailyHours} h/day`}</small>
+                <strong>{goal.title}</strong><small>{goal.startDate} → {goal.endDate} · {goal.dailyHours === undefined ? 'Hours not set' : `${goal.dailyHours} h/selected day`}</small>
               </button>
               <button className="goal-handle" aria-label={`Resize end of ${goal.title}`} disabled={busy} onPointerDown={e => pointerDown(e, goal, 'end')} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={() => { drag.current = null; setPreview(null); }} onClick={() => { if (!suppressClick.current) open(goal); }}>‖</button>
             </div>;
