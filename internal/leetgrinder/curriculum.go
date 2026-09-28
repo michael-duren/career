@@ -6,12 +6,12 @@ func Curriculum() []Week {
 		{Number: 1, Title: "Fundamentals", Summary: "Recover array, hashing, sorting, and simulation skills. State loop invariants and account for time and space.", Days: []Day{
 			{Number: 1, Title: "Hash lookup and honest baselines", Lesson: "day-01", Readings: lessonReadings(1), Core: []Problem{
 				{ID: 1, Slug: "two-sum", Title: "Two Sum", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(n)"},
-				{ID: 217, Slug: "contains-duplicate", Title: "Contains Duplicate", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(n)"},
+				{ID: 1010, Slug: "pairs-of-songs-with-total-durations-divisible-by-60", Title: "Pairs of Songs With Total Durations Divisible by 60", Difficulty: "Medium", OptimalTime: "O(n)", OptimalSpace: "O(1)", OptimalNote: "n songs; 60 fixed remainder buckets. Look up the complementary remainder before recording the current one."},
 				{ID: 242, Slug: "valid-anagram", Title: "Valid Anagram", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(1)", OptimalNote: "Counts over a fixed 26-letter alphabet."},
 			}, Optional: []Problem{}},
 			{Number: 2, Title: "Counting as state", Lesson: "day-02", Readings: lessonReadings(2), Core: []Problem{
 				{ID: 383, Slug: "ransom-note", Title: "Ransom Note", Difficulty: "Easy", OptimalTime: "O(m + n)", OptimalSpace: "O(1)", OptimalNote: "m, n: ransomNote and magazine lengths; 26-letter counts."},
-				{ID: 387, Slug: "first-unique-character-in-a-string", Title: "First Unique Character in a String", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(1)", OptimalNote: "Counts over a fixed 26-letter alphabet."},
+				{ID: 554, Slug: "brick-wall", Title: "Brick Wall", Difficulty: "Medium", OptimalTime: "O(n)", OptimalSpace: "O(n)", OptimalNote: "n: total bricks across all rows; count cumulative offsets excluding the wall edges."},
 				{ID: 169, Slug: "majority-element", Title: "Majority Element", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(1)", OptimalNote: "Boyer–Moore voting."},
 			}, Optional: []Problem{}},
 			{Number: 3, Title: "Canonical forms and bijections", Lesson: "day-03", Readings: lessonReadings(3), Core: []Problem{
@@ -21,10 +21,10 @@ func Curriculum() []Week {
 			}, Optional: []Problem{}},
 			{Number: 4, Title: "Sets, multisets, and repeated states", Lesson: "day-04", Readings: lessonReadings(4), Core: []Problem{
 				{ID: 350, Slug: "intersection-of-two-arrays-ii", Title: "Intersection of Two Arrays II", Difficulty: "Easy", OptimalTime: "O(m + n)", OptimalSpace: "O(min(m, n))", OptimalNote: "m, n: array lengths; count the smaller array."},
-				{ID: 349, Slug: "intersection-of-two-arrays", Title: "Intersection of Two Arrays", Difficulty: "Easy", OptimalTime: "O(m + n)", OptimalSpace: "O(min(m, n))", OptimalNote: "m, n: array lengths; hash the smaller array."},
 				{ID: 202, Slug: "happy-number", Title: "Happy Number", Difficulty: "Easy", OptimalTime: "O(log n)", OptimalSpace: "O(1)", OptimalNote: "Floyd cycle detection on the digit-square sequence."},
-			}, Optional: []Problem{
 				{ID: 36, Slug: "valid-sudoku", Title: "Valid Sudoku", Difficulty: "Medium", OptimalTime: "O(1)", OptimalSpace: "O(1)", OptimalNote: "The board is a fixed 9×9 grid."},
+			}, Optional: []Problem{
+				{ID: 349, Slug: "intersection-of-two-arrays", Title: "Intersection of Two Arrays", Difficulty: "Easy", OptimalTime: "O(m + n)", OptimalSpace: "O(min(m, n))", OptimalNote: "m, n: array lengths; hash the smaller array."},
 			}},
 			{Number: 5, Title: "Sorting and loop invariants", Lesson: "day-05", Readings: lessonReadings(5), Core: []Problem{
 				{ID: 88, Slug: "merge-sorted-array", Title: "Merge Sorted Array", Difficulty: "Easy", OptimalTime: "O(m + n)", OptimalSpace: "O(1)", OptimalNote: "Merge from the back."},
@@ -32,7 +32,7 @@ func Curriculum() []Week {
 				{ID: 75, Slug: "sort-colors", Title: "Sort Colors", Difficulty: "Medium", OptimalTime: "O(n)", OptimalSpace: "O(1)", OptimalNote: "Dutch national flag partition."},
 			}, Optional: []Problem{}},
 			{Number: 6, Title: "Array transformations and carries", Lesson: "day-06", Readings: lessonReadings(6), Core: []Problem{
-				{ID: 1929, Slug: "concatenation-of-array", Title: "Concatenation of Array", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(1)"},
+				{ID: 43, Slug: "multiply-strings", Title: "Multiply Strings", Difficulty: "Medium", OptimalTime: "O(m·n)", OptimalSpace: "O(m + n)", OptimalNote: "m, n: lengths of num1 and num2; digit accumulator sized to the product length, carries resolved after the pass."},
 				{ID: 1480, Slug: "running-sum-of-1d-array", Title: "Running Sum of 1d Array", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(1)", OptimalNote: "Prefix sums in place."},
 				{ID: 66, Slug: "plus-one", Title: "Plus One", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(1)"},
 			}, Optional: []Problem{
@@ -51,11 +51,11 @@ func Curriculum() []Week {
 			{Number: 8, Title: "Binary search intervals", Lesson: "day-08", Readings: lessonReadings(8), Core: []Problem{
 				{ID: 704, Slug: "binary-search", Title: "Binary Search", Difficulty: "Easy", OptimalTime: "O(log n)", OptimalSpace: "O(1)"},
 				{ID: 35, Slug: "search-insert-position", Title: "Search Insert Position", Difficulty: "Easy", OptimalTime: "O(log n)", OptimalSpace: "O(1)"},
-				{ID: 374, Slug: "guess-number-higher-or-lower", Title: "Guess Number Higher or Lower", Difficulty: "Easy", OptimalTime: "O(log n)", OptimalSpace: "O(1)"},
+				{ID: 540, Slug: "single-element-in-a-sorted-array", Title: "Single Element in a Sorted Array", Difficulty: "Medium", OptimalTime: "O(log n)", OptimalSpace: "O(1)", OptimalNote: "Binary search on pair parity at even indices."},
 			}, Optional: []Problem{}},
 			{Number: 9, Title: "Monotone predicates on integers", Lesson: "day-09", Readings: lessonReadings(9), Core: []Problem{
 				{ID: 278, Slug: "first-bad-version", Title: "First Bad Version", Difficulty: "Easy", OptimalTime: "O(log n)", OptimalSpace: "O(1)"},
-				{ID: 367, Slug: "valid-perfect-square", Title: "Valid Perfect Square", Difficulty: "Easy", OptimalTime: "O(log n)", OptimalSpace: "O(1)", OptimalNote: "n: num."},
+				{ID: 1300, Slug: "sum-of-mutated-array-closest-to-target", Title: "Sum of Mutated Array Closest to Target", Difficulty: "Medium", OptimalTime: "O(n log m)", OptimalSpace: "O(1)", OptimalNote: "m: max value in arr; binary search the clamp value against the monotone summed result."},
 				{ID: 69, Slug: "sqrtx", Title: "Sqrt(x)", Difficulty: "Easy", OptimalTime: "O(log n)", OptimalSpace: "O(1)", OptimalNote: "n: x."},
 			}, Optional: []Problem{}},
 			{Number: 10, Title: "Lower and upper boundaries", Lesson: "day-10", Readings: lessonReadings(10), Core: []Problem{
@@ -99,7 +99,7 @@ func Curriculum() []Week {
 			}, Optional: []Problem{}},
 			{Number: 16, Title: "Read and write pointers", Lesson: "day-16", Readings: lessonReadings(16), Core: []Problem{
 				{ID: 26, Slug: "remove-duplicates-from-sorted-array", Title: "Remove Duplicates from Sorted Array", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(1)"},
-				{ID: 27, Slug: "remove-element", Title: "Remove Element", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(1)"},
+				{ID: 80, Slug: "remove-duplicates-from-sorted-array-ii", Title: "Remove Duplicates from Sorted Array II", Difficulty: "Medium", OptimalTime: "O(n)", OptimalSpace: "O(1)", OptimalNote: "Write pointer allows up to two of each value."},
 				{ID: 283, Slug: "move-zeroes", Title: "Move Zeroes", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(1)"},
 			}, Optional: []Problem{}},
 			{Number: 17, Title: "Eliminate pairs without skipping answers", Lesson: "day-17", Readings: lessonReadings(17), Core: []Problem{
@@ -139,12 +139,12 @@ func Curriculum() []Week {
 			{Number: 22, Title: "Linked nodes and local rewiring", Lesson: "day-22", Readings: lessonReadings(22), Core: []Problem{
 				{ID: 206, Slug: "reverse-linked-list", Title: "Reverse Linked List", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(1)", OptimalNote: "Iterative; recursion uses O(n) stack."},
 				{ID: 21, Slug: "merge-two-sorted-lists", Title: "Merge Two Sorted Lists", Difficulty: "Easy", OptimalTime: "O(m + n)", OptimalSpace: "O(1)", OptimalNote: "m, n: list lengths; splice existing nodes."},
-				{ID: 83, Slug: "remove-duplicates-from-sorted-list", Title: "Remove Duplicates from Sorted List", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(1)"},
+				{ID: 92, Slug: "reverse-linked-list-ii", Title: "Reverse Linked List II", Difficulty: "Medium", OptimalTime: "O(n)", OptimalSpace: "O(1)", OptimalNote: "Reverse only the bounded sublist, splicing it back with saved boundary nodes."},
 			}, Optional: []Problem{}},
 			{Number: 23, Title: "Fast and slow references", Lesson: "day-23", Readings: lessonReadings(23), Core: []Problem{
 				{ID: 876, Slug: "middle-of-the-linked-list", Title: "Middle of the Linked List", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(1)"},
 				{ID: 141, Slug: "linked-list-cycle", Title: "Linked List Cycle", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(1)", OptimalNote: "Floyd cycle detection."},
-				{ID: 160, Slug: "intersection-of-two-linked-lists", Title: "Intersection of Two Linked Lists", Difficulty: "Easy", OptimalTime: "O(m + n)", OptimalSpace: "O(1)", OptimalNote: "m, n: list lengths; switch heads at the end."},
+				{ID: 2095, Slug: "delete-the-middle-node-of-a-linked-list", Title: "Delete the Middle Node of a Linked List", Difficulty: "Medium", OptimalTime: "O(n)", OptimalSpace: "O(1)", OptimalNote: "Fast/slow pointers with a trailing pointer to unlink the middle."},
 			}, Optional: []Problem{}},
 			{Number: 24, Title: "Gaps, cycles, and half-list comparisons", Lesson: "day-24", Readings: lessonReadings(24), Core: []Problem{
 				{ID: 19, Slug: "remove-nth-node-from-end-of-list", Title: "Remove Nth Node From End of List", Difficulty: "Medium", OptimalTime: "O(L)", OptimalSpace: "O(1)", OptimalNote: "L: list length (the problem's n is the position from the end); one pass with a gap of n."},
@@ -170,7 +170,7 @@ func Curriculum() []Week {
 			{Number: 27, Title: "Implement one interface with another", Lesson: "day-27", Readings: lessonReadings(27), Core: []Problem{
 				{ID: 232, Slug: "implement-queue-using-stacks", Title: "Implement Queue using Stacks", Difficulty: "Easy", OptimalTime: "O(1)", OptimalSpace: "O(n)", OptimalNote: "Amortised per operation."},
 				{ID: 225, Slug: "implement-stack-using-queues", Title: "Implement Stack using Queues", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(n)", OptimalNote: "push is O(n) with one queue; pop, top, and empty are O(1)."},
-				{ID: 682, Slug: "baseball-game", Title: "Baseball Game", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(n)"},
+				{ID: 622, Slug: "design-circular-queue", Title: "Design Circular Queue", Difficulty: "Medium", OptimalTime: "O(1)", OptimalSpace: "O(k)", OptimalNote: "k: capacity; time is per operation over a fixed-size array."},
 			}, Optional: []Problem{}},
 			{Number: 28, Title: "Recursion and smaller subproblems", Lesson: "day-28", Readings: lessonReadings(28), Core: []Problem{
 				{ID: 509, Slug: "fibonacci-number", Title: "Fibonacci Number", Difficulty: "Easy", OptimalTime: "O(log n)", OptimalSpace: "O(1)", OptimalNote: "Matrix exponentiation or fast doubling; the iterative DP is O(n)."},
@@ -181,12 +181,12 @@ func Curriculum() []Week {
 		{Number: 5, Title: "Trees", Summary: "Build traversals from subtree contracts, then use ordering, levels, and path state to answer structural questions.", Days: []Day{
 			{Number: 29, Title: "Tree recursion contracts", Lesson: "day-29", Readings: lessonReadings(29), Core: []Problem{
 				{ID: 104, Slug: "maximum-depth-of-binary-tree", Title: "Maximum Depth of Binary Tree", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(h)", OptimalNote: "h: tree height."},
-				{ID: 111, Slug: "minimum-depth-of-binary-tree", Title: "Minimum Depth of Binary Tree", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(h)", OptimalNote: "h: tree height; BFS stops at the first leaf but uses O(w) for the widest level."},
+				{ID: 116, Slug: "populating-next-right-pointers-in-each-node", Title: "Populating Next Right Pointers in Each Node", Difficulty: "Medium", OptimalTime: "O(n)", OptimalSpace: "O(1)", OptimalNote: "Perfect binary tree; established next pointers serve as the traversal queue. Recursion instead costs O(h) stack."},
 				{ID: 226, Slug: "invert-binary-tree", Title: "Invert Binary Tree", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(h)", OptimalNote: "h: tree height."},
 			}, Optional: []Problem{}},
 			{Number: 30, Title: "Compare tree structure", Lesson: "day-30", Readings: lessonReadings(30), Core: []Problem{
 				{ID: 100, Slug: "same-tree", Title: "Same Tree", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(h)", OptimalNote: "n: nodes in the smaller tree; h: its height."},
-				{ID: 101, Slug: "symmetric-tree", Title: "Symmetric Tree", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(h)", OptimalNote: "h: tree height."},
+				{ID: 652, Slug: "find-duplicate-subtrees", Title: "Find Duplicate Subtrees", Difficulty: "Medium", OptimalTime: "O(n)", OptimalSpace: "O(n)", OptimalNote: "Expected, with hashmap-keyed subtree serialisations; string-key concatenation costs O(n²) total length."},
 				{ID: 572, Slug: "subtree-of-another-tree", Title: "Subtree of Another Tree", Difficulty: "Easy", OptimalTime: "O(m + n)", OptimalSpace: "O(m + n)", OptimalNote: "m, n: node counts; serialise and string-match (KMP) or hash subtrees. Direct comparison is O(m·n)."},
 			}, Optional: []Problem{}},
 			{Number: 31, Title: "Paths and branch-local state", Lesson: "day-31", Readings: lessonReadings(31), Core: []Problem{
@@ -214,7 +214,7 @@ func Curriculum() []Week {
 			{Number: 35, Title: "Return local facts, update global answers", Lesson: "day-35", Readings: lessonReadings(35), Core: []Problem{
 				{ID: 543, Slug: "diameter-of-binary-tree", Title: "Diameter of Binary Tree", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(h)", OptimalNote: "h: tree height."},
 				{ID: 110, Slug: "balanced-binary-tree", Title: "Balanced Binary Tree", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(h)", OptimalNote: "h: tree height; return height and balance together."},
-				{ID: 637, Slug: "average-of-levels-in-binary-tree", Title: "Average of Levels in Binary Tree", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(n)", OptimalNote: "DFS by depth uses O(h), BFS uses O(w) for the widest level; both are O(n) in the worst case."},
+				{ID: 437, Slug: "path-sum-iii", Title: "Path Sum III", Difficulty: "Medium", OptimalTime: "O(n)", OptimalSpace: "O(n)", OptimalNote: "Prefix path-sum counts in a hashmap; the O(n²) approach resums each downward path from every node."},
 			}, Optional: []Problem{
 				{ID: 105, Slug: "construct-binary-tree-from-preorder-and-inorder-traversal", Title: "Construct Binary Tree from Preorder and Inorder Traversal", Difficulty: "Medium", OptimalTime: "O(n)", OptimalSpace: "O(n)", OptimalNote: "Hash map of inorder positions."},
 				{ID: 106, Slug: "construct-binary-tree-from-inorder-and-postorder-traversal", Title: "Construct Binary Tree from Inorder and Postorder Traversal", Difficulty: "Medium", OptimalTime: "O(n)", OptimalSpace: "O(n)", OptimalNote: "Hash map of inorder positions."},
@@ -355,7 +355,7 @@ func Curriculum() []Week {
 		{Number: 9, Title: "Basic dynamic programming", Summary: "Define subproblems and transitions before compressing storage. Learn choice-or-skip, sequence, and knapsack states.", Days: []Day{
 			{Number: 57, Title: "Dynamic programming as cached contracts", Lesson: "day-57", Readings: lessonReadings(57), Core: []Problem{
 				{ID: 70, Slug: "climbing-stairs", Title: "Climbing Stairs", Difficulty: "Easy", OptimalTime: "O(log n)", OptimalSpace: "O(1)", OptimalNote: "Fibonacci by matrix exponentiation; the iterative DP is O(n)."},
-				{ID: 1137, Slug: "n-th-tribonacci-number", Title: "N-th Tribonacci Number", Difficulty: "Easy", OptimalTime: "O(log n)", OptimalSpace: "O(1)", OptimalNote: "3 × 3 matrix exponentiation; the iterative DP is O(n)."},
+				{ID: 96, Slug: "unique-binary-search-trees", Title: "Unique Binary Search Trees", Difficulty: "Medium", OptimalTime: "O(n²)", OptimalSpace: "O(n)", OptimalNote: "DP over split points; the closed-form Catalan number gives O(n)."},
 				{ID: 746, Slug: "min-cost-climbing-stairs", Title: "Min Cost Climbing Stairs", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(1)"},
 			}, Optional: []Problem{}},
 			{Number: 58, Title: "Choose or skip with adjacency constraints", Lesson: "day-58", Readings: lessonReadings(58), Core: []Problem{
@@ -443,7 +443,7 @@ func Curriculum() []Week {
 		{Number: 11, Title: "Greedy, intervals, and monotonic stacks", Summary: "Prove safe commitments, process interval order, and account for stack work over an entire scan.", Days: []Day{
 			{Number: 71, Title: "Greedy choices need exchange arguments", Lesson: "day-71", Readings: lessonReadings(71), Core: []Problem{
 				{ID: 455, Slug: "assign-cookies", Title: "Assign Cookies", Difficulty: "Easy", OptimalTime: "O(n log n + m log m)", OptimalSpace: "O(1)", OptimalNote: "n children, m cookies; sort both in place."},
-				{ID: 860, Slug: "lemonade-change", Title: "Lemonade Change", Difficulty: "Easy", OptimalTime: "O(n)", OptimalSpace: "O(1)"},
+				{ID: 861, Slug: "score-after-flipping-matrix", Title: "Score After Flipping Matrix", Difficulty: "Medium", OptimalTime: "O(m·n)", OptimalSpace: "O(1)", OptimalNote: "m × n matrix; flip rows so column 0 is all 1s, then flip each column only if it gains more 1s than it loses."},
 				{ID: 1710, Slug: "maximum-units-on-a-truck", Title: "Maximum Units on a Truck", Difficulty: "Easy", OptimalTime: "O(n log n)", OptimalSpace: "O(1)", OptimalNote: "n: box types; sort in place. Bucketing by units per box (at most 1000) gives O(n + r), r: value range."},
 			}, Optional: []Problem{}},
 			{Number: 72, Title: "Pairing and assignment by sorted order", Lesson: "day-72", Readings: lessonReadings(72), Core: []Problem{

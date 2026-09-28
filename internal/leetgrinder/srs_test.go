@@ -102,13 +102,13 @@ func TestPlanReviews(t *testing.T) {
 	cards := BuildCards([]Attempt{
 		attempt("two-sum", "solved", 10, false, old),                // week 1, easy: highest recall
 		attempt("binary-search", "unfinished", 25, false, old),      // week 2, again
-		attempt("contains-duplicate", "unfinished", 25, false, old), // week 1, again: ties binary-search
+		attempt("isomorphic-strings", "unfinished", 25, false, old), // week 1, again: ties binary-search
 		attempt("ransom-note", "struggled", 25, false, old),         // week 1, hard (day 2 assignment)
 		attempt("valid-anagram", "solved", 10, false, date),         // attempted today: not due
 	}, loc)
 	// Session 2 (optional reading only) at 3 hours: 1 base + 2 extra slots.
 	plan := PlanReviews(cards, date, loc, 2, 3, nil)
-	want := []string{"contains-duplicate", "binary-search", "two-sum"}
+	want := []string{"isomorphic-strings", "binary-search", "two-sum"}
 	if !reflect.DeepEqual(plan, want) {
 		t.Fatalf("plan = %v, want %v (ransom-note is assigned today)", plan, want)
 	}
@@ -120,7 +120,7 @@ func TestPlanReviews(t *testing.T) {
 	if got := PlanReviews(cards, date, loc, 2, 2, want[:1]); !reflect.DeepEqual(got, want[:1]) {
 		t.Fatalf("plan without new slots: %v", got)
 	}
-	if got := PlanReviews(cards, date, loc, 2, 4, []string{"two-sum"}); !reflect.DeepEqual(got, []string{"two-sum", "contains-duplicate", "binary-search"}) {
+	if got := PlanReviews(cards, date, loc, 2, 4, []string{"two-sum"}); !reflect.DeepEqual(got, []string{"two-sum", "isomorphic-strings", "binary-search"}) {
 		t.Fatalf("topped-up plan: %v", got)
 	}
 	// Reading day at 2 hours has no slots.

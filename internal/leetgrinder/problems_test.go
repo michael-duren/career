@@ -37,7 +37,7 @@ func TestProblemRowsAndFilters(t *testing.T) {
 	for query, want := range map[string]int{
 		"":                         300,
 		"difficulty=Hard":          20,
-		"difficulty=Easy":          78,
+		"difficulty=Easy":          64,
 		"kind=optional":            48,
 		"kind=core":                252,
 		"week=1&kind=core":         21,
