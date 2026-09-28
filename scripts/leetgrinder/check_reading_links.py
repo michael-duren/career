@@ -1,10 +1,15 @@
 import concurrent.futures, hashlib, html, json, re, sys, urllib.request
 from pathlib import Path
+# By default every URL is re-fetched live, so this catches link rot (a
+# previously-200 URL that now 404s or serves a captcha). Pass --resume to
+# reuse a prior run's HTTP 200 results instead, for iterating quickly on the
+# subset that was failing.
+resume='--resume' in sys.argv
 source=(Path(__file__).resolve().parents[2]/'internal/leetgrinder/readings.go').read_text()
 urls=sorted(set(json.loads(x) for x in re.findall(r'URL:\s*("(?:[^"\\]|\\.)*")',source)))
 cache=Path('/tmp/leetgrinder-link-check'); cache.mkdir(exist_ok=True)
 previous_path=Path('/tmp/leetgrinder-links.json')
-previous={r['url']:r for r in json.loads(previous_path.read_text())} if previous_path.exists() else {}
+previous={r['url']:r for r in json.loads(previous_path.read_text())} if resume and previous_path.exists() else {}
 def check(url):
  if previous.get(url,{}).get('status')==200: return previous[url]
  result={'url':url}

@@ -282,7 +282,7 @@ templ Session(page DayPage) {
 		<div class="session-grid">
 			<div>
 				<section class="lesson panel" aria-labelledby="lesson-title">
-					if page.Day.Number >= 78 {
+					if page.Day.MixedPractice() {
 						<p class="eyebrow">01 / CHOOSE AN APPROACH</p>
 						<h2 id="lesson-title">Attempt first, then review</h2>
 						<p class="muted">For mixed practice, choose a technique before opening the guidance. Explain your baseline and invariant before coding.</p>
@@ -301,7 +301,7 @@ templ Session(page DayPage) {
 						</div>
 					}
 				</section>
-				if page.Day.Number < 78 {
+				if !page.Day.MixedPractice() {
 					@readingPath(page.Day)
 				}
 				if page.ShowReviews() {
@@ -705,7 +705,7 @@ templ readingPath(day Day) {
 	if len(day.Readings) > 0 {
 		<section class="panel reading">
 			<h2>Reading path</h2>
-			<p class="muted">Start with the introductory excerpt. Deeper readings are optional; the estimates cover only the suggested sections, not whole papers. Keep reading and review within 30 minutes.</p>
+			<p class="muted">Read these in order. A reading marked optional does not draw from your review time budget for the day; the minute estimates cover only the suggested sections, not whole papers. Keep reading and review within 30 minutes.</p>
 			for _, reading := range day.Readings {
 				<article>
 					<a href={ templ.SafeURL(reading.URL) } target="_blank" rel="noopener noreferrer">{ reading.Title } <span aria-hidden="true">↗</span><span class="visually-hidden">(opens in a new tab)</span></a>
@@ -719,7 +719,7 @@ templ readingPath(day Day) {
 						} else if reading.Kind == "paper" {
 							Research paper or technical report ·
 						}
-						if day.Number >= 78 {
+						if day.MixedPractice() {
 							if reading.Optional {
 								Optional ·
 							}

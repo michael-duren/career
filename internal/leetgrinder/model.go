@@ -11,6 +11,11 @@ type Problem struct {
 
 func (p Problem) URL() string { return "https://leetcode.com/problems/" + p.Slug + "/" }
 
+// MixedPractice reports whether a day is a mixed-practice review day (78
+// through 84), where readings are read after attempting the problems rather
+// than before.
+func (d Day) MixedPractice() bool { return d.Number >= 78 }
+
 type Reading struct {
 	Title    string
 	URL      string
