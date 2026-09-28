@@ -15,8 +15,10 @@ templ layout(title string, active string) {
 			<a class="skip" href="#main">Skip to content</a>
 			<div class="shell">
 				<nav class="sidenav" aria-label="Leetgrinder">
-					<a class="sidenav-back" href="/">@icon("arrow-left") Career Strategy</a>
-					<p class="sidenav-brand">@icon("terminal") Leetgrinder</p>
+					<a class="sidenav-back" href="/">@icon("arrow-left")
+Career Strategy</a>
+					<p class="sidenav-brand">@icon("terminal")
+Leetgrinder</p>
 					<div class="sidenav-links">
 						@navLink("/leetgrinder", "Dashboard", "dashboard", active)
 						@navLink("/leetgrinder/problems", "Problems", "problems", active)
@@ -24,7 +26,8 @@ templ layout(title string, active string) {
 						@navLink("/leetgrinder/about", "About", "about", active)
 						@navLink("/leetgrinder/settings", "Settings", "settings", active)
 					</div>
-					<a class="sidenav-foot" href="/leetgrinder/export">@icon("download") Export history</a>
+					<a class="sidenav-foot" href="/leetgrinder/export">@icon("download")
+Export history</a>
 				</nav>
 				<main id="main">
 					{ children... }
@@ -37,9 +40,11 @@ templ layout(title string, active string) {
 
 templ navLink(href string, label string, key string, active string) {
 	if key == active {
-		<a href={ templ.SafeURL(href) } aria-current="page">@icon(key)<span>{ label }</span></a>
+		<a href={ templ.SafeURL(href) } aria-current="page">@icon(key)
+<span>{ label }</span></a>
 	} else {
-		<a href={ templ.SafeURL(href) }>@icon(key)<span>{ label }</span></a>
+		<a href={ templ.SafeURL(href) }>@icon(key)
+<span>{ label }</span></a>
 	}
 }
 
@@ -284,7 +289,7 @@ templ Session(page DayPage) {
 		<div class="session-grid">
 			<div>
 				<section class="lesson panel" aria-labelledby="lesson-title">
-					if page.Day.Number >= 78 {
+					if page.Day.MixedPractice() {
 						<p class="eyebrow">01 / CHOOSE AN APPROACH</p>
 						<h2 id="lesson-title">Attempt first, then review</h2>
 						<p class="muted">For mixed practice, choose a technique before opening the guidance. Explain your baseline and invariant before coding.</p>
@@ -293,6 +298,7 @@ templ Session(page DayPage) {
 							<div class="prose">
 								@Lesson(page.Day.Lesson)
 							</div>
+							@readingPath(page.Day)
 						</details>
 					} else {
 						<p class="eyebrow">01 / UNDERSTAND</p>
@@ -302,27 +308,8 @@ templ Session(page DayPage) {
 						</div>
 					}
 				</section>
-				if len(page.Day.Readings) > 0 {
-					<section class="panel reading">
-						<h2>Reading &amp; references</h2>
-						<p class="muted">Use these within your 30-minute reading and review budget.</p>
-						for _, reading := range page.Day.Readings {
-							<article>
-								<a href={ templ.SafeURL(reading.URL) } target="_blank" rel="noopener noreferrer">{ reading.Title } <span aria-hidden="true">↗</span><span class="visually-hidden">(opens in a new tab)</span></a>
-								<p>
-									{ reading.Guidance }
-								</p>
-								<span class="small muted">
-									{ Count(reading.Minutes) } min ·
-									if reading.Optional {
-										Optional reference
-									} else {
-										Read before practice
-									}
-								</span>
-							</article>
-						}
-					</section>
+				if !page.Day.MixedPractice() {
+					@readingPath(page.Day)
 				}
 				if page.ShowReviews() {
 					@todaysReviews(*page.Today, page.IDs, page.Day.Number, "")
@@ -630,9 +617,12 @@ templ scheduleCard(today Today) {
 				</p>
 			</div>
 			<dl>
-				<dt>Start</dt><dd>{ DateLabel(schedule.Start) }</dd>
-				<dt>End</dt><dd>{ DateLabel(schedule.End()) }</dd>
-				<dt>Daily time</dt><dd>{ HoursLabel(today.Settings.DailyHours) }</dd>
+				<dt>Start</dt>
+				<dd>{ DateLabel(schedule.Start) }</dd>
+				<dt>End</dt>
+				<dd>{ DateLabel(schedule.End()) }</dd>
+				<dt>Daily time</dt>
+				<dd>{ HoursLabel(today.Settings.DailyHours) }</dd>
 			</dl>
 			<a href="/leetgrinder/settings">Adjust schedule</a>
 		} else {
@@ -785,6 +775,41 @@ templ scheduleSettings(page SettingsPage) {
 			<button class="button primary" type="submit">Save schedule</button>
 		</form>
 	</section>
+}
+
+templ readingPath(day Day) {
+	if len(day.Readings) > 0 {
+		<section class="panel reading">
+			<h2>Reading path</h2>
+			<p class="muted">Read these in order. A reading marked optional does not draw from your review time budget for the day; the minute estimates cover only the suggested sections, not whole papers. Keep reading and review within 30 minutes.</p>
+			for _, reading := range day.Readings {
+				<article>
+					<a href={ templ.SafeURL(reading.URL) } target="_blank" rel="noopener noreferrer">{ reading.Title } <span aria-hidden="true">↗</span><span class="visually-hidden">(opens in a new tab)</span></a>
+					<p>
+						{ reading.Guidance }
+					</p>
+					<span class="small muted">
+						{ Count(reading.Minutes) } min excerpt ·
+						if reading.Kind == "introduction" {
+							Introduction ·
+						} else if reading.Kind == "paper" {
+							Research paper or technical report ·
+						}
+						if day.MixedPractice() {
+							if reading.Optional {
+								Optional ·
+							}
+							Read after your attempts
+						} else if reading.Optional {
+							Optional reading
+						} else {
+							Read before practice
+						}
+					</span>
+				</article>
+			}
+		</section>
+	}
 }
 
 templ Problems(page ProblemsPage) {

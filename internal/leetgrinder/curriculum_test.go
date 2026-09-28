@@ -3,10 +3,73 @@ package leetgrinder
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"html"
+	"net/url"
+	"os"
+	"path/filepath"
+	"reflect"
+	"sort"
 	"strings"
 	"testing"
 )
+
+func TestEveryLessonHasDistinctSourcesAndCitedReadings(t *testing.T) {
+	documents := map[string]int{}
+	for _, week := range Curriculum() {
+		for _, day := range week.Days {
+			t.Run(day.Lesson, func(t *testing.T) {
+				if len(day.Readings) < 2 {
+					t.Fatal("lesson needs an introduction and a deeper reading")
+				}
+				intro := day.Readings[0]
+				if intro.Kind != "introduction" || intro.Minutes > 10 {
+					t.Error("first reading must be an introduction of at most ten minutes")
+				}
+				var b bytes.Buffer
+				if err := Lesson(day.Lesson).Render(context.Background(), &b); err != nil {
+					t.Fatal(err)
+				}
+				body := b.String()
+				start := strings.Index(body, ">References</h3>")
+				if start < strings.Index(body, "Before you finish") || start < 0 {
+					t.Fatal("references must follow the lesson content")
+				}
+				papers := 0
+				for _, reading := range day.Readings {
+					document, err := url.Parse(reading.URL)
+					if err != nil {
+						t.Fatal(err)
+					}
+					document.Fragment = ""
+					if document.Scheme != "https" || document.Host == "" {
+						t.Errorf("reference must use an absolute HTTPS URL: %s", reading.URL)
+					}
+					if earlier, exists := documents[document.String()]; exists {
+						t.Errorf("reading document repeats day %d: %s", earlier, reading.URL)
+					}
+					documents[document.String()] = day.Number
+					if reading.Kind == "paper" {
+						papers++
+						if !reading.Optional {
+							t.Error("papers must be optional deeper reading")
+						}
+					}
+					if reading.Supports == "" || !strings.Contains(body[start:], html.EscapeString(reading.Supports)) {
+						t.Errorf("reference %q must explain which lesson concepts it supports", reading.Title)
+					}
+					if !strings.Contains(body[start:], `href="`+html.EscapeString(reading.URL)+`"`) {
+						t.Errorf("references omit %q", reading.Title)
+					}
+				}
+				if papers == 0 {
+					t.Error("lesson needs a research paper or technical report")
+				}
+			})
+		}
+	}
+}
 
 func TestCurriculumAssignments(t *testing.T) {
 	weeks := Curriculum()
@@ -99,6 +162,49 @@ func TestEveryLessonRendersInstruction(t *testing.T) {
 			if strings.Contains(html, "TODO") || strings.Contains(html, "placeholder") {
 				t.Errorf("unfinished lesson %d", day.Number)
 			}
+		}
+	}
+}
+
+// TestReadingsMatchSourceManifests guards against readings.go drifting from
+// the sources_*.json manifests it is generated from: a hand edit to one, or
+// forgetting to rerun the generator after editing the other, fails this test
+// even though every other test only exercises the compiled lessonReadings.
+func TestReadingsMatchSourceManifests(t *testing.T) {
+	type manifestDay struct {
+		Day      int       `json:"day"`
+		Readings []Reading `json:"readings"`
+	}
+	var manifest []manifestDay
+	paths, err := filepath.Glob("sources_*.json")
+	if err != nil || len(paths) == 0 {
+		t.Fatalf("no source manifests found: %v", err)
+	}
+	for _, path := range paths {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var rows []manifestDay
+		if err := json.Unmarshal(data, &rows); err != nil {
+			t.Fatalf("%s: %v", path, err)
+		}
+		manifest = append(manifest, rows...)
+	}
+	sort.Slice(manifest, func(i, j int) bool { return manifest[i].Day < manifest[j].Day })
+
+	validKinds := map[string]bool{"introduction": true, "paper": true, "reference": true}
+	for day := 1; day <= 84; day++ {
+		if manifest[day-1].Day != day {
+			t.Fatalf("manifests are missing or duplicate day %d", day)
+		}
+		for _, reading := range manifest[day-1].Readings {
+			if !validKinds[reading.Kind] {
+				t.Errorf("day %d: reading %q has unknown kind %q", day, reading.Title, reading.Kind)
+			}
+		}
+		if got, want := lessonReadings(day), manifest[day-1].Readings; !reflect.DeepEqual(got, want) {
+			t.Errorf("day %d: readings.go does not match its source manifest; rerun scripts/leetgrinder/integrate_readings.py\n got:  %+v\n want: %+v", day, got, want)
 		}
 	}
 }

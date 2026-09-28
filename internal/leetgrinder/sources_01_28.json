@@ -1,0 +1,736 @@
+[
+  {
+    "day": 1,
+    "readings": [
+      {
+        "title": "Open Data Structures: ChainedHashTable",
+        "url": "https://opendatastructures.org/ods-python/5_1_ChainedHashTable_Hashin.html",
+        "guidance": "Read the overview and find/add/remove pseudocode through Section 5.1.1; stop before resizing details.",
+        "minutes": 8,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Explains hash-table lookup and insertion order, collision chains, and expected constant-time operations used by the complement lookup pattern."
+      },
+      {
+        "title": "Pagh and Rodler: Cuckoo Hashing",
+        "url": "https://www.rasmuspagh.net/papers/cuckoo.pdf",
+        "guidance": "Read the abstract and Section 1 through the description of dictionary operations; stop before the graph analysis.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Places membership lookup and key-associated values in a research-grade dictionary design with constant-time lookup; its cuckoo collision scheme is an extension beyond the lesson's chained table."
+      }
+    ]
+  },
+  {
+    "day": 2,
+    "readings": [
+      {
+        "title": "Python documentation: Counter objects",
+        "url": "https://docs.python.org/3/library/collections.html",
+        "guidance": "Jump to Counter objects and read the opening description, examples, and common patterns; stop before deque.",
+        "minutes": 7,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Defines frequency maps, missing-count behavior, and multiset operations that motivate count-based array reasoning."
+      },
+      {
+        "title": "Misra and Gries: Finding Repeated Elements",
+        "url": "https://www.cs.utexas.edu/~misra/scannedPdf.dir/FindRepeatedElements.pdf",
+        "guidance": "Read the statement, algorithm, and invariant on pages 1–2; stop before the program-transformation derivation.",
+        "minutes": 10,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Establishes the cancellation invariant behind majority-candidate algorithms and why a candidate must be verified when no majority is guaranteed."
+      }
+    ]
+  },
+  {
+    "day": 3,
+    "readings": [
+      {
+        "title": "University of Chicago: Anagrams and canonical form",
+        "url": "https://classes.cs.uchicago.edu/archive/2000/fall/CS221-01/Current_Homeworks/asst8.html",
+        "guidance": "Read the problem statement through the sorted-letter representation; skip the assignment logistics and optional extensions.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Shows how one canonical representation turns anagram equivalence into ordinary key equality."
+      },
+      {
+        "title": "Parameterized Pattern Matching — Succinctly",
+        "url": "https://arxiv.org/abs/1603.07457",
+        "guidance": "Read the abstract and the first two pages of the introduction, focusing on the one-to-one correspondence definition.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Formalizes symbol matching as a bijection, supporting the lesson's need for forward and reverse maps rather than a one-way association."
+      }
+    ]
+  },
+  {
+    "day": 4,
+    "readings": [
+      {
+        "title": "Python documentation: Set types",
+        "url": "https://docs.python.org/3/library/stdtypes.html",
+        "guidance": "Jump to Set Types and read the overview plus membership and set-operation examples; stop before mappings.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Distinguishes membership-only sets from structures that preserve multiplicity."
+      },
+      {
+        "title": "Nivasch: Cycle Detection Using a Stack",
+        "url": "https://www.gabrielnivasch.org/fun/cycle-detection",
+        "guidance": "Read the author's explanation of storing visited states and the linked paper's introduction. Compare the simple stored-state detector with the proposed stack method; skip the average-case analysis.",
+        "minutes": 10,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Explains repeated-state cycle detection and links the author's research on a stack-based detector. The stack method is an extension to the lesson's visited-set simulation."
+      },
+      {
+        "title": "James Madison CS240: Multisets",
+        "url": "https://w3.cs.jmu.edu/cs240/sp26/hw/multiset/multiset/",
+        "guidance": "Read Introduction and A Better Data Structure. Compare a set's membership answer with a multiset's count for each value; skip the programming assignment.",
+        "minutes": 5,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Distinguishes sets from multisets and explains storing multiplicities rather than one boolean per value."
+      }
+    ]
+  },
+  {
+    "day": 5,
+    "readings": [
+      {
+        "title": "Princeton Algorithms: Mergesort",
+        "url": "https://algs4.cs.princeton.edu/22mergesort/",
+        "guidance": "Read top-down mergesort and the merge assertion; stop before improvements and exercises.",
+        "minutes": 8,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Introduces divide-and-conquer merge sort, its merge invariant, and its linearithmic running time."
+      },
+      {
+        "title": "Hoare: Algorithm 64 — Quicksort",
+        "url": "https://digital.library.unt.edu/ark%3A/67531/metadc1026054/m2/1/high_res_d/4610211.pdf",
+        "guidance": "Read the algorithm description and partition procedure on the first two pages; focus on the moving region boundaries.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Provides the original partition procedure and region-boundary reasoning that underlies in-place three-way partition variants."
+      }
+    ]
+  },
+  {
+    "day": 6,
+    "readings": [
+      {
+        "title": "Goucher College: Prefix computations",
+        "url": "https://phoenix.goucher.edu/~kelliher/cs315/mar03.html",
+        "guidance": "Read the prefix-computation definition and the first worked examples; stop before the machine-specific implementation.",
+        "minutes": 8,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Defines running prefix state and shows how each output summarizes all earlier inputs."
+      },
+      {
+        "title": "Kogge and Stone: A Parallel Algorithm for Recurrence Equations",
+        "url": "https://gwern.net/doc/cs/algorithm/1973-kogge.pdf",
+        "guidance": "Read pages 786–789, through the carry recurrence and parallel-prefix formulation; skip circuit-layout details.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Connects carry propagation to prefix recurrences and makes explicit which state must be preserved while processing digits."
+      }
+    ]
+  },
+  {
+    "day": 7,
+    "readings": [
+      {
+        "title": "Stanford CS106A: Two-Dimensional Arrays",
+        "url": "https://web.stanford.edu/class/archive/cs/cs106a/cs106a.1198/lectures/Lecture17/Lecture17.pdf",
+        "guidance": "Read slides 44–65 on two-dimensional arrays, row and column coordinates, and traversal. Focus on rectangular shape and index bounds; skip the earlier one-dimensional array exercises.",
+        "minutes": 8,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Explains row/column indexing, rectangular array shape, and nested traversal. These are the representation assumptions behind the lesson's matrix transformations."
+      },
+      {
+        "title": "Gustavson and Walker: Algorithms for In-Place Matrix Transposition",
+        "url": "https://www.ndl.ethernet.edu.et/bitstream/123456789/62423/1/43.pdf",
+        "guidance": "Read the abstract, introduction, and square-matrix algorithm; skip cache benchmarks and rectangular-matrix proofs.",
+        "minutes": 10,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Analyzes in-place matrix transposition, including the square-shape assumption and safe movement of entries."
+      },
+      {
+        "title": "UIC: Two-Dimensional Coordinate Transformations",
+        "url": "https://www.cs.uic.edu/~jbell/CourseNotes/ComputerGraphics/2DTransforms.html",
+        "guidance": "Read the rotation and translation equations only. Compare rotation about the origin with re-indexing a finite grid, where a translation is also needed. Skip homogeneous-coordinate composition.",
+        "minutes": 5,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Gives coordinate-rotation equations. Discrete array rotation additionally shifts coordinates into valid nonnegative indices; zero marking is a separate lesson derivation."
+      }
+    ]
+  },
+  {
+    "day": 8,
+    "readings": [
+      {
+        "title": "CP-Algorithms: Binary search",
+        "url": "https://cp-algorithms.com/num_methods/binary_search.html",
+        "guidance": "Read the half-open interval implementation and lower-bound invariant; stop before continuous search.",
+        "minutes": 8,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Explains half-open binary-search boundaries and the difference between finding equality and finding an insertion boundary."
+      },
+      {
+        "title": "Bentley: Writing Correct Programs",
+        "url": "https://www.cs.kzoo.edu/cs215/correct-programs.pdf",
+        "guidance": "Read pages 1–7 through the binary-search invariant and termination argument; skip the later testing discussion.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Develops binary search from a loop invariant, making boundary preservation and off-by-one correctness explicit."
+      }
+    ]
+  },
+  {
+    "day": 9,
+    "readings": [
+      {
+        "title": "USACO Guide: Binary search on monotonic functions",
+        "url": "https://usaco.guide/silver/binary-search",
+        "guidance": "Read Binary Search on Monotonic Functions and the first example; stop before the problem list.",
+        "minutes": 8,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Introduces searching a monotone predicate over integers and choosing the first feasible boundary."
+      },
+      {
+        "title": "Zimmermann: Karatsuba Square Root",
+        "url": "https://inria.hal.science/inria-00072854v1/file/RR-3805.pdf",
+        "guidance": "Read the abstract and introduction through the SqrtRem input/output contract. Stop before the correctness proof. Compare an exact integer root and remainder with the lesson's boundary-search result.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Defines exact integer square root and remainder. The divide-and-conquer algorithm is a research extension, not the source of the lesson's binary-search predicate."
+      }
+    ]
+  },
+  {
+    "day": 10,
+    "readings": [
+      {
+        "title": "Python documentation: Bisect",
+        "url": "https://docs.python.org/3/library/bisect.html",
+        "guidance": "Read the bisection functions and the performance notes; skip the long recipe section.",
+        "minutes": 7,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Defines left and right insertion points, including duplicate handling and successor queries."
+      },
+      {
+        "title": "Abrahams: Binary Search with Heterogeneous Comparison",
+        "url": "https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2001/n1313.html",
+        "guidance": "Read the introduction and the lower_bound, upper_bound, and equal_range table; stop before the proposed wording.",
+        "minutes": 9,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Defines the standard boundary-search operations that turn duplicate equality into a lower and upper insertion range."
+      },
+      {
+        "title": "UPC: Staircase Search in Sorted Matrices",
+        "url": "https://www.cs.upc.edu/~jordicf/Teaching/programming/pdf4/IP10_Matrices-4slides.pdf",
+        "guidance": "Read slides 18–24 on searching a row-and-column-sorted matrix. State which row or column a comparison excludes, then stop before later exercises.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Develops the staircase-search invariant and linear row-plus-column probe bound used for sorted-matrix elimination."
+      }
+    ]
+  },
+  {
+    "day": 11,
+    "readings": [
+      {
+        "title": "University of Washington: Arrays and sorted matrix search",
+        "url": "https://courses.cs.washington.edu/courses/cse331/24au/topics/topic09-arrays.pdf",
+        "guidance": "Read the row-major indexing and sorted-matrix search slides; skip Java array covariance.",
+        "minutes": 7,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Contrasts row-major flattening with row-and-column order and derives the staircase elimination step."
+      },
+      {
+        "title": "Dijkstra: The Saddleback Search",
+        "url": "https://www.cs.utexas.edu/users/EWD/ewd09xx/EWD934.PDF",
+        "guidance": "Read pages 1–4 through the invariant and guarded-command derivation; skip the final generalization.",
+        "minutes": 10,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Derives the sorted-grid staircase search from an invariant and proves why each comparison removes a row or column."
+      },
+      {
+        "title": "Princeton: Finding the Minimum of a Rotated Sorted Array",
+        "url": "https://algs4.cs.princeton.edu/14analysis/RotatedSortedArray.java.html",
+        "guidance": "Read the class description and findMinimumIndex method. Track the comparison with the right endpoint and explain why the midpoint remains a candidate on one branch.",
+        "minutes": 5,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Provides the distinct-key rotated-minimum algorithm and its midpoint/right-end boundary rule."
+      }
+    ]
+  },
+  {
+    "day": 12,
+    "readings": [
+      {
+        "title": "MIT 6.006: Peak finding",
+        "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/resources/lecture-1-algorithmic-thinking-peak-finding/",
+        "guidance": "Read the lecture summary and view the 1D peak-finding portion through the divide-and-conquer algorithm.",
+        "minutes": 7,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Introduces local peaks and explains why the neighboring slope identifies a half that still contains a peak."
+      },
+      {
+        "title": "MIT 6.006 Recitation 2: Peak Finding",
+        "url": "https://courses.csail.mit.edu/6.006/spring11/rec/rec02.pdf",
+        "guidance": "Read the 1D peak definition, algorithm, and correctness argument; skip the 2D extension.",
+        "minutes": 8,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Provides a compact proof of logarithmic peak finding by preserving existence in the retained interval."
+      },
+      {
+        "title": "Zhang: New Upper and Lower Bounds for Randomized and Quantum Local Search",
+        "url": "https://arxiv.org/abs/quant-ph/0603034",
+        "guidance": "Read the abstract and the opening definition of local search. View array positions as a path graph whose vertex values are the array entries; stop before the quantum bounds.",
+        "minutes": 10,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Formalizes finding a local optimum of a function on a graph, a research extension of the lesson's local-peak objective from an array path to broader graph families."
+      },
+      {
+        "title": "MIT 6.006: Rotated-Array Binary Search",
+        "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/27b552f0a585b81c9a3913549d3365b7_MIT6_006F11_rec11.pdf",
+        "guidance": "Read pages 5–6 on rotated arrays and which ordered half to retain. Stop after the elimination argument. Then consider why equal endpoints make that decision ambiguous.",
+        "minutes": 5,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Explains binary search on a rotated sorted array. The lesson adds the duplicate-heavy worst-case caveat."
+      }
+    ]
+  },
+  {
+    "day": 13,
+    "readings": [
+      {
+        "title": "Topcoder: Binary Search",
+        "url": "https://www.topcoder.com/thrive/articles/Binary%20Search",
+        "guidance": "Read the monotonic-function and binary-search-the-answer sections; skip the contest-problem catalog.",
+        "minutes": 8,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Shows how to turn an optimization problem into a monotone feasibility question over candidate answers."
+      },
+      {
+        "title": "Agarwal, Sharir, and Toledo: Applications of Parametric Searching",
+        "url": "https://www.cs.tau.ac.il/~stoledo/Pubs/soda92.pdf",
+        "guidance": "Read the abstract and introduction through the parametric-search outline; skip the geometry-specific algorithms.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Formalizes optimization via repeated decision tests and separates feasibility from the search that finds the optimum."
+      }
+    ]
+  },
+  {
+    "day": 14,
+    "readings": [
+      {
+        "title": "University of Toronto: Binary search",
+        "url": "https://www.teach.cs.toronto.edu/~ajr/104/diary/06/binarysearchslides/",
+        "guidance": "Read the illustrated trace and its loop invariant through the not-found example.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Reviews the ordered-boundary invariant used by all three lesson problems."
+      },
+      {
+        "title": "de Berg and Thite: Cache-Oblivious Selection in Sorted X+Y Matrices",
+        "url": "https://arxiv.org/abs/0804.0936",
+        "guidance": "Read the abstract and Section 1 through the definition of the sorted X+Y matrix; skip the cache analysis.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Studies rank and selection over pairwise combinations of sorted arrays, the research setting closest to the lesson's count-pairs boundary search."
+      },
+      {
+        "title": "Princeton Competitive Programming: Binary Search on the Answer",
+        "url": "https://competitive-programming.cs.princeton.edu/spring25/week2_learn",
+        "guidance": "Read the Problem C binary-search-the-answer discussion. Identify the candidate answer, feasibility predicate, and search bounds; skip the other problems.",
+        "minutes": 5,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Explains searching a monotone feasibility predicate and choosing answer bounds, which the lesson applies to several different counting checks."
+      }
+    ]
+  },
+  {
+    "day": 15,
+    "readings": [
+      {
+        "title": "USACO Guide: Two pointers",
+        "url": "https://usaco.guide/silver/two-pointers",
+        "guidance": "Read the opposite-end two-pointer explanation and Sum of Two Values trace; stop before the problem list.",
+        "minutes": 8,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Explains why sorted order makes it safe to discard one endpoint after each comparison."
+      },
+      {
+        "title": "Berenbrink et al.: Palindrome Recognition in the Streaming Model",
+        "url": "https://arxiv.org/abs/1308.3466",
+        "guidance": "Read the abstract and Section 1 through the definitions of the palindrome and longest-palindromic-substring problems; stop before the algorithmic results.",
+        "minutes": 10,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Defines palindrome recognition and its center-based string model in the algorithms literature; the lesson's whole-string normalization and two-pointer check are a simpler special case."
+      }
+    ]
+  },
+  {
+    "day": 16,
+    "readings": [
+      {
+        "title": "Open Data Structures: Array-based lists",
+        "url": "https://opendatastructures.org/ods-python/2_Array_Based_Lists.html",
+        "guidance": "Read the ArrayStack representation and get/set/add/remove overview; focus on how a valid prefix is stored.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Provides the array-prefix model needed to reason about separate read and write indices during in-place compaction."
+      },
+      {
+        "title": "Katajainen and Pasanen: Stable Minimum Space Partitioning",
+        "url": "https://hjemmesider.diku.dk/~jyrki/Paper/KP1992bJ.pdf",
+        "guidance": "Read the abstract, introduction, and definition of stability; skip the packed-word implementation.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Defines stable in-place partitioning and makes clear why preserving the relative order of retained values is a separate requirement."
+      }
+    ]
+  },
+  {
+    "day": 17,
+    "readings": [
+      {
+        "title": "Princeton Algorithms: Analysis of algorithms",
+        "url": "https://algs4.cs.princeton.edu/14analysis/",
+        "guidance": "Read the 3-sum discussion and doubling observations; stop before the memory model.",
+        "minutes": 7,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Introduces 3SUM, the cubic baseline, and why algorithm structure matters to running time."
+      },
+      {
+        "title": "Grønlund and Pettie: Threesomes, Degenerates, and Love Triangles",
+        "url": "https://arxiv.org/abs/1404.0799",
+        "guidance": "Read the abstract and first two pages of the introduction; stop before the decision-tree machinery.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Gives the formal 3SUM problem and its complexity context; the lesson uses the practical sorted two-pointer solution rather than the paper's advanced bounds."
+      },
+      {
+        "title": "Dartmouth CS31: Two-Pointer Technique",
+        "url": "https://www.cs.dartmouth.edu/~deepc/LecNotes/cs31/lec3-tptr.pdf",
+        "guidance": "Read pages 1–3 on ordered pair search and the 3SUM extension. State why moving an endpoint discards only impossible pairs.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Explains elimination of sorted pair candidates and extending the scan to triples. The container-height argument in the lesson is a separate application."
+      }
+    ]
+  },
+  {
+    "day": 18,
+    "readings": [
+      {
+        "title": "GNU Scientific Library: Moving-window statistics",
+        "url": "https://www.gnu.org/software/gsl/doc/html/movstat.html",
+        "guidance": "Read the introduction and fixed-endpoint moving-sum examples; skip C API details.",
+        "minutes": 7,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Introduces fixed-width windows and incremental aggregate updates as one value enters and one leaves."
+      },
+      {
+        "title": "Datar et al.: Maintaining Stream Statistics over Sliding Windows",
+        "url": "https://www.ceid.upatras.gr/webpages/faculty/vasilis/Courses/CIS750/Papers/streamstatistics-datar02.pdf",
+        "guidance": "Read the abstract and Sections 1–2 through the exact-window model; skip exponential histograms.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Formalizes window boundaries and expiring observations, which underlie fixed-window sum and count invariants."
+      }
+    ]
+  },
+  {
+    "day": 19,
+    "readings": [
+      {
+        "title": "OI Wiki: Two pointers",
+        "url": "https://oi-wiki.org/misc/two-pointer/",
+        "guidance": "Read the same-direction pointer pattern and its linear-time argument; skip unrelated practice problems.",
+        "minutes": 7,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Shows why a left boundary that only moves forward yields linear work in variable-window algorithms."
+      },
+      {
+        "title": "Braverman and Ostrovsky: Smooth Histograms for Sliding Windows",
+        "url": "https://www.cs.jhu.edu/~vova/papers/focs07.pdf",
+        "guidance": "Read the abstract and Section 1 through the sliding-window model; skip the approximation proofs.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Defines streaming sliding windows and explains why expiring old state is difficult; its approximate model differs from the lesson's exact in-memory windows."
+      }
+    ]
+  },
+  {
+    "day": 20,
+    "readings": [
+      {
+        "title": "USACO Guide: Prefix sums",
+        "url": "https://usaco.guide/silver/prefix-sums",
+        "guidance": "Read the prefix-sum definition and subarray-sum derivation; stop before two-dimensional sums.",
+        "minutes": 7,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Derives a subarray sum as the difference of two prefixes, the identity used by the target-sum frequency map."
+      },
+      {
+        "title": "Blelloch: Prefix Sums and Their Applications",
+        "url": "https://www.cs.cmu.edu/afs/cs/academic/class/15668-s11/www/lec/10/blelloch-prefix-sums.pdf",
+        "guidance": "Read Sections 1.1–1.3 through the scan definition and examples; skip the parallel implementation details.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Defines scan as a general operation and shows how prefix state represents all earlier elements; the lesson adds a frequency map and the empty-prefix seed."
+      }
+    ]
+  },
+  {
+    "day": 21,
+    "readings": [
+      {
+        "title": "Carnegie Mellon: Scan algorithms",
+        "url": "https://www.cs.cmu.edu/~scandal/alg/scan.html",
+        "guidance": "Read the scan definition and applications list, then inspect the prefix-products example; skip implementation links.",
+        "minutes": 7,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Shows that prefix aggregation works for associative operations beyond addition, including products."
+      },
+      {
+        "title": "Chatterjee, Blelloch, and Zagha: Scan Primitives for Vector Computers",
+        "url": "https://www.cs.cmu.edu/~guyb/papers/sc90.pdf",
+        "guidance": "Read the abstract and Sections 1–2 through the scan primitives; skip vector-machine performance results.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Formalizes inclusive and exclusive scans, supporting prefix/suffix product construction without division."
+      },
+      {
+        "title": "Go specification: Arithmetic operators",
+        "url": "https://go.dev/ref/spec#Arithmetic_operators",
+        "guidance": "Read integer quotient and remainder semantics, including the sign rule; stop before floating-point operators.",
+        "minutes": 5,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Documents signed remainder behavior, explaining why modulo keys must be normalized before frequency-map lookup."
+      }
+    ]
+  },
+  {
+    "day": 22,
+    "readings": [
+      {
+        "title": "Open Data Structures: Singly-linked lists",
+        "url": "https://opendatastructures.org/ods-python/3_1_SLList_Singly_Linked_Li.html",
+        "guidance": "Read the representation and add/remove pointer updates; stop before the queue analysis.",
+        "minutes": 7,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Introduces link rewiring and shows why the old next pointer must be saved before changing a node."
+      },
+      {
+        "title": "Reynolds: Separation Logic — A Logic for Shared Mutable Data Structures",
+        "url": "https://www.cs.cmu.edu/~jcr/seplogic.pdf",
+        "guidance": "Read the abstract and pages 1–2 through the in-place list-reversal example. Stop before the programming-language semantics. Track the saved next pointer and disjoint list segments.",
+        "minutes": 10,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Models disjoint linked segments and local pointer mutation, the reasoning needed for reversal and merge without losing nodes."
+      }
+    ]
+  },
+  {
+    "day": 23,
+    "readings": [
+      {
+        "title": "Cornell: Linked lists",
+        "url": "https://www.cs.cornell.edu/courses/JavaAndDS/files/linkedLists.pdf",
+        "guidance": "Read the node-identity, traversal, and pointer-diagram sections; stop before Java iterator details.",
+        "minutes": 7,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Establishes reference identity and traversal state, which distinguish intersecting nodes from merely equal values."
+      },
+      {
+        "title": "Sedgewick, Szymanski, and Yao: The Complexity of Finding Cycles in Periodic Functions",
+        "url": "https://sedgewick.io/wp-content/themes/sedgewick/papers/1982Cycles.pdf",
+        "guidance": "Read pages 376–379 through Floyd's algorithm and its cost analysis; skip the later lower-bound proofs.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "States and analyzes the two-speed tortoise-and-hare method used for constant-space linked-list cycle detection."
+      }
+    ]
+  },
+  {
+    "day": 24,
+    "readings": [
+      {
+        "title": "Princeton: Verifying linked-list reversal",
+        "url": "https://www.cs.princeton.edu/~appel/vc/vc-1.1.1/Verif_reverse.html",
+        "guidance": "Read the reversal code and diagram plus the informal invariant; skip the Coq proof commands.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Makes the reversed-prefix and unprocessed-suffix invariant visible during in-place list reversal."
+      },
+      {
+        "title": "Myreen: Separation Logic Adapted for Proofs by Rewriting",
+        "url": "https://www.cl.cam.ac.uk/~mom22/itp10-rewrite.pdf",
+        "guidance": "Read the abstract and linked-list reversal example in Sections 1–2; skip the proof-engine implementation.",
+        "minutes": 10,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Uses list reversal to show how ownership and segment invariants prevent pointer loss, relevant when reversing and restoring a palindrome half."
+      },
+      {
+        "title": "Competitive Programmer's Handbook: Floyd's algorithm",
+        "url": "https://cses.fi/book/book.pdf",
+        "guidance": "Read pages 104–105 on cycle detection and the cycle-entry argument only.",
+        "minutes": 5,
+        "optional": true,
+        "kind": "reference",
+        "supports": "Explains the phase-reset step that locates a cycle entry after fast and slow pointers first meet."
+      }
+    ]
+  },
+  {
+    "day": 25,
+    "readings": [
+      {
+        "title": "Cornell CS410: Linked-list implementation",
+        "url": "https://www.cs.cornell.edu/courses/cs410/1999fa/Lectures/lecture4.pdf",
+        "guidance": "Read the sentinel-node and insertion/deletion diagrams; skip the C++ template details.",
+        "minutes": 6,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Shows how sentinel nodes remove head special cases and how pointer rewiring preserves the rest of a list."
+      },
+      {
+        "title": "Salowe and Steiger: Stable Unmerging in Linear Time and Constant Space",
+        "url": "https://scholarship.libraries.rutgers.edu/esploro/outputs/technicalDocumentation/Stable-Unmerging-in-Linear-Time-and/991031549852304646",
+        "guidance": "Read the abstract and introductory definition of stable unmerging; stop before the block-rotation construction.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Formalizes stable separation while preserving relative order, matching the lesson's tail-based linked-list partition invariant."
+      }
+    ]
+  },
+  {
+    "day": 26,
+    "readings": [
+      {
+        "title": "Princeton Algorithms: Stacks",
+        "url": "https://algs4.cs.princeton.edu/13stacks/",
+        "guidance": "Read the stack API, delimiter matching, and Dijkstra two-stack evaluation; stop before resizing-array analysis.",
+        "minutes": 7,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Introduces LIFO state for delimiter validation and expression evaluation, including operand order."
+      },
+      {
+        "title": "Dijkstra: ALGOL 60 Translation",
+        "url": "https://ir.cwi.nl/pub/9251",
+        "guidance": "Open the report and read pages 8–11 on algebraic expressions and the accumulator stack; skip object-machine details.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Provides the historical operator-stack technique behind stack-based expression parsing and postfix evaluation."
+      }
+    ]
+  },
+  {
+    "day": 27,
+    "readings": [
+      {
+        "title": "Open Data Structures: DualArrayDeque",
+        "url": "https://opendatastructures.org/ods-python/2_5_DualArrayDeque_Building.html",
+        "guidance": "Read the two-array representation and rebalancing argument; focus on how reversing one side restores order.",
+        "minutes": 7,
+        "optional": true,
+        "kind": "introduction",
+        "supports": "Shows how two LIFO-oriented halves can represent FIFO order and why occasional bulk transfer can be amortized."
+      },
+      {
+        "title": "Hood and Melville: Real-Time Queue Operations in Pure LISP",
+        "url": "https://ecommons.cornell.edu/entities/publication/ddc7b5af-c5ea-43dc-889e-bab2a00278bc",
+        "guidance": "Read the abstract and Sections 1–2 through the two-list queue; skip the incremental scheduling construction.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Develops queues from front and rear lists and explains the reversal cost that amortized two-stack queues distribute across operations."
+      }
+    ]
+  },
+  {
+    "day": 28,
+    "readings": [
+      {
+        "title": "Jeff Erickson: Recursion",
+        "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/01-recursion.pdf",
+        "guidance": "Read the opening recurrence examples and fast exponentiation section; stop before exhaustive search.",
+        "minutes": 8,
+        "optional": false,
+        "kind": "introduction",
+        "supports": "Explains recursive contracts, base cases, decreasing measures, and exponentiation by squaring."
+      },
+      {
+        "title": "Michie: ‘Memo’ Functions and Machine Learning",
+        "url": "https://www.cs.utexas.edu/~hunt/research/hash-cons/hash-cons-papers/michie-memo-nature-1968.pdf",
+        "guidance": "Read the full two-page note, focusing on the memoized Fibonacci example and stored argument-result pairs.",
+        "minutes": 12,
+        "optional": true,
+        "kind": "paper",
+        "supports": "Introduces memoization through Fibonacci and shows how caching changes repeated recursion into one computation per distinct state."
+      }
+    ]
+  }
+]

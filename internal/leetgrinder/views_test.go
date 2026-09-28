@@ -76,4 +76,10 @@ func TestMockKeepsPatternGuidanceBehindReview(t *testing.T) {
 	if !strings.Contains(out.String(), `<details class="review-guidance"><summary>Review after your attempts</summary>`) {
 		t.Fatal("mock exposes pattern guidance before attempting")
 	}
+	body := out.String()
+	start := strings.Index(body, `<details class="review-guidance">`)
+	end := start + strings.Index(body[start:], "</details>")
+	if reading := strings.Index(body, "Reading path"); reading < start || reading > end {
+		t.Fatal("mixed-practice reading hints must stay inside the review disclosure")
+	}
 }

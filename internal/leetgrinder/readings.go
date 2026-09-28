@@ -1,0 +1,2070 @@
+package leetgrinder
+
+// lessonReadings returns the ordered excerpts and source attribution for one lesson.
+func lessonReadings(day int) []Reading {
+	switch day {
+	case 1:
+		return []Reading{
+			{
+				Title:    "Open Data Structures: ChainedHashTable",
+				URL:      "https://opendatastructures.org/ods-python/5_1_ChainedHashTable_Hashin.html",
+				Guidance: "Read the overview and find/add/remove pseudocode through Section 5.1.1; stop before resizing details.",
+				Minutes:  8,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Explains hash-table lookup and insertion order, collision chains, and expected constant-time operations used by the complement lookup pattern.",
+			},
+			{
+				Title:    "Pagh and Rodler: Cuckoo Hashing",
+				URL:      "https://www.rasmuspagh.net/papers/cuckoo.pdf",
+				Guidance: "Read the abstract and Section 1 through the description of dictionary operations; stop before the graph analysis.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Places membership lookup and key-associated values in a research-grade dictionary design with constant-time lookup; its cuckoo collision scheme is an extension beyond the lesson's chained table.",
+			},
+		}
+	case 2:
+		return []Reading{
+			{
+				Title:    "Python documentation: Counter objects",
+				URL:      "https://docs.python.org/3/library/collections.html",
+				Guidance: "Jump to Counter objects and read the opening description, examples, and common patterns; stop before deque.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Defines frequency maps, missing-count behavior, and multiset operations that motivate count-based array reasoning.",
+			},
+			{
+				Title:    "Misra and Gries: Finding Repeated Elements",
+				URL:      "https://www.cs.utexas.edu/~misra/scannedPdf.dir/FindRepeatedElements.pdf",
+				Guidance: "Read the statement, algorithm, and invariant on pages 1–2; stop before the program-transformation derivation.",
+				Minutes:  10,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Establishes the cancellation invariant behind majority-candidate algorithms and why a candidate must be verified when no majority is guaranteed.",
+			},
+		}
+	case 3:
+		return []Reading{
+			{
+				Title:    "University of Chicago: Anagrams and canonical form",
+				URL:      "https://classes.cs.uchicago.edu/archive/2000/fall/CS221-01/Current_Homeworks/asst8.html",
+				Guidance: "Read the problem statement through the sorted-letter representation; skip the assignment logistics and optional extensions.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Shows how one canonical representation turns anagram equivalence into ordinary key equality.",
+			},
+			{
+				Title:    "Parameterized Pattern Matching — Succinctly",
+				URL:      "https://arxiv.org/abs/1603.07457",
+				Guidance: "Read the abstract and the first two pages of the introduction, focusing on the one-to-one correspondence definition.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Formalizes symbol matching as a bijection, supporting the lesson's need for forward and reverse maps rather than a one-way association.",
+			},
+		}
+	case 4:
+		return []Reading{
+			{
+				Title:    "Python documentation: Set types",
+				URL:      "https://docs.python.org/3/library/stdtypes.html",
+				Guidance: "Jump to Set Types and read the overview plus membership and set-operation examples; stop before mappings.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Distinguishes membership-only sets from structures that preserve multiplicity.",
+			},
+			{
+				Title:    "Nivasch: Cycle Detection Using a Stack",
+				URL:      "https://www.gabrielnivasch.org/fun/cycle-detection",
+				Guidance: "Read the author's explanation of storing visited states and the linked paper's introduction. Compare the simple stored-state detector with the proposed stack method; skip the average-case analysis.",
+				Minutes:  10,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Explains repeated-state cycle detection and links the author's research on a stack-based detector. The stack method is an extension to the lesson's visited-set simulation.",
+			},
+			{
+				Title:    "James Madison CS240: Multisets",
+				URL:      "https://w3.cs.jmu.edu/cs240/sp26/hw/multiset/multiset/",
+				Guidance: "Read Introduction and A Better Data Structure. Compare a set's membership answer with a multiset's count for each value; skip the programming assignment.",
+				Minutes:  5,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Distinguishes sets from multisets and explains storing multiplicities rather than one boolean per value.",
+			},
+		}
+	case 5:
+		return []Reading{
+			{
+				Title:    "Princeton Algorithms: Mergesort",
+				URL:      "https://algs4.cs.princeton.edu/22mergesort/",
+				Guidance: "Read top-down mergesort and the merge assertion; stop before improvements and exercises.",
+				Minutes:  8,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Introduces divide-and-conquer merge sort, its merge invariant, and its linearithmic running time.",
+			},
+			{
+				Title:    "Hoare: Algorithm 64 — Quicksort",
+				URL:      "https://digital.library.unt.edu/ark%3A/67531/metadc1026054/m2/1/high_res_d/4610211.pdf",
+				Guidance: "Read the algorithm description and partition procedure on the first two pages; focus on the moving region boundaries.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Provides the original partition procedure and region-boundary reasoning that underlies in-place three-way partition variants.",
+			},
+		}
+	case 6:
+		return []Reading{
+			{
+				Title:    "Goucher College: Prefix computations",
+				URL:      "https://phoenix.goucher.edu/~kelliher/cs315/mar03.html",
+				Guidance: "Read the prefix-computation definition and the first worked examples; stop before the machine-specific implementation.",
+				Minutes:  8,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Defines running prefix state and shows how each output summarizes all earlier inputs.",
+			},
+			{
+				Title:    "Kogge and Stone: A Parallel Algorithm for Recurrence Equations",
+				URL:      "https://gwern.net/doc/cs/algorithm/1973-kogge.pdf",
+				Guidance: "Read pages 786–789, through the carry recurrence and parallel-prefix formulation; skip circuit-layout details.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Connects carry propagation to prefix recurrences and makes explicit which state must be preserved while processing digits.",
+			},
+		}
+	case 7:
+		return []Reading{
+			{
+				Title:    "Stanford CS106A: Two-Dimensional Arrays",
+				URL:      "https://web.stanford.edu/class/archive/cs/cs106a/cs106a.1198/lectures/Lecture17/Lecture17.pdf",
+				Guidance: "Read slides 44–65 on two-dimensional arrays, row and column coordinates, and traversal. Focus on rectangular shape and index bounds; skip the earlier one-dimensional array exercises.",
+				Minutes:  8,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Explains row/column indexing, rectangular array shape, and nested traversal. These are the representation assumptions behind the lesson's matrix transformations.",
+			},
+			{
+				Title:    "Gustavson and Walker: Algorithms for In-Place Matrix Transposition",
+				URL:      "https://www.ndl.ethernet.edu.et/bitstream/123456789/62423/1/43.pdf",
+				Guidance: "Read the abstract, introduction, and square-matrix algorithm; skip cache benchmarks and rectangular-matrix proofs.",
+				Minutes:  10,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Analyzes in-place matrix transposition, including the square-shape assumption and safe movement of entries.",
+			},
+			{
+				Title:    "UIC: Two-Dimensional Coordinate Transformations",
+				URL:      "https://www.cs.uic.edu/~jbell/CourseNotes/ComputerGraphics/2DTransforms.html",
+				Guidance: "Read the rotation and translation equations only. Compare rotation about the origin with re-indexing a finite grid, where a translation is also needed. Skip homogeneous-coordinate composition.",
+				Minutes:  5,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Gives coordinate-rotation equations. Discrete array rotation additionally shifts coordinates into valid nonnegative indices; zero marking is a separate lesson derivation.",
+			},
+		}
+	case 8:
+		return []Reading{
+			{
+				Title:    "CP-Algorithms: Binary search",
+				URL:      "https://cp-algorithms.com/num_methods/binary_search.html",
+				Guidance: "Read the half-open interval implementation and lower-bound invariant; stop before continuous search.",
+				Minutes:  8,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Explains half-open binary-search boundaries and the difference between finding equality and finding an insertion boundary.",
+			},
+			{
+				Title:    "Bentley: Writing Correct Programs",
+				URL:      "https://www.cs.kzoo.edu/cs215/correct-programs.pdf",
+				Guidance: "Read pages 1–7 through the binary-search invariant and termination argument; skip the later testing discussion.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Develops binary search from a loop invariant, making boundary preservation and off-by-one correctness explicit.",
+			},
+		}
+	case 9:
+		return []Reading{
+			{
+				Title:    "USACO Guide: Binary search on monotonic functions",
+				URL:      "https://usaco.guide/silver/binary-search",
+				Guidance: "Read Binary Search on Monotonic Functions and the first example; stop before the problem list.",
+				Minutes:  8,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Introduces searching a monotone predicate over integers and choosing the first feasible boundary.",
+			},
+			{
+				Title:    "Zimmermann: Karatsuba Square Root",
+				URL:      "https://inria.hal.science/inria-00072854v1/file/RR-3805.pdf",
+				Guidance: "Read the abstract and introduction through the SqrtRem input/output contract. Stop before the correctness proof. Compare an exact integer root and remainder with the lesson's boundary-search result.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Defines exact integer square root and remainder. The divide-and-conquer algorithm is a research extension, not the source of the lesson's binary-search predicate.",
+			},
+		}
+	case 10:
+		return []Reading{
+			{
+				Title:    "Python documentation: Bisect",
+				URL:      "https://docs.python.org/3/library/bisect.html",
+				Guidance: "Read the bisection functions and the performance notes; skip the long recipe section.",
+				Minutes:  7,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Defines left and right insertion points, including duplicate handling and successor queries.",
+			},
+			{
+				Title:    "Abrahams: Binary Search with Heterogeneous Comparison",
+				URL:      "https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2001/n1313.html",
+				Guidance: "Read the introduction and the lower_bound, upper_bound, and equal_range table; stop before the proposed wording.",
+				Minutes:  9,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Defines the standard boundary-search operations that turn duplicate equality into a lower and upper insertion range.",
+			},
+			{
+				Title:    "UPC: Staircase Search in Sorted Matrices",
+				URL:      "https://www.cs.upc.edu/~jordicf/Teaching/programming/pdf4/IP10_Matrices-4slides.pdf",
+				Guidance: "Read slides 18–24 on searching a row-and-column-sorted matrix. State which row or column a comparison excludes, then stop before later exercises.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Develops the staircase-search invariant and linear row-plus-column probe bound used for sorted-matrix elimination.",
+			},
+		}
+	case 11:
+		return []Reading{
+			{
+				Title:    "University of Washington: Arrays and sorted matrix search",
+				URL:      "https://courses.cs.washington.edu/courses/cse331/24au/topics/topic09-arrays.pdf",
+				Guidance: "Read the row-major indexing and sorted-matrix search slides; skip Java array covariance.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Contrasts row-major flattening with row-and-column order and derives the staircase elimination step.",
+			},
+			{
+				Title:    "Dijkstra: The Saddleback Search",
+				URL:      "https://www.cs.utexas.edu/users/EWD/ewd09xx/EWD934.PDF",
+				Guidance: "Read pages 1–4 through the invariant and guarded-command derivation; skip the final generalization.",
+				Minutes:  10,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Derives the sorted-grid staircase search from an invariant and proves why each comparison removes a row or column.",
+			},
+			{
+				Title:    "Princeton: Finding the Minimum of a Rotated Sorted Array",
+				URL:      "https://algs4.cs.princeton.edu/14analysis/RotatedSortedArray.java.html",
+				Guidance: "Read the class description and findMinimumIndex method. Track the comparison with the right endpoint and explain why the midpoint remains a candidate on one branch.",
+				Minutes:  5,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Provides the distinct-key rotated-minimum algorithm and its midpoint/right-end boundary rule.",
+			},
+		}
+	case 12:
+		return []Reading{
+			{
+				Title:    "MIT 6.006: Peak finding",
+				URL:      "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/resources/lecture-1-algorithmic-thinking-peak-finding/",
+				Guidance: "Read the lecture summary and view the 1D peak-finding portion through the divide-and-conquer algorithm.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Introduces local peaks and explains why the neighboring slope identifies a half that still contains a peak.",
+			},
+			{
+				Title:    "MIT 6.006 Recitation 2: Peak Finding",
+				URL:      "https://courses.csail.mit.edu/6.006/spring11/rec/rec02.pdf",
+				Guidance: "Read the 1D peak definition, algorithm, and correctness argument; skip the 2D extension.",
+				Minutes:  8,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Provides a compact proof of logarithmic peak finding by preserving existence in the retained interval.",
+			},
+			{
+				Title:    "Zhang: New Upper and Lower Bounds for Randomized and Quantum Local Search",
+				URL:      "https://arxiv.org/abs/quant-ph/0603034",
+				Guidance: "Read the abstract and the opening definition of local search. View array positions as a path graph whose vertex values are the array entries; stop before the quantum bounds.",
+				Minutes:  10,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Formalizes finding a local optimum of a function on a graph, a research extension of the lesson's local-peak objective from an array path to broader graph families.",
+			},
+			{
+				Title:    "MIT 6.006: Rotated-Array Binary Search",
+				URL:      "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/27b552f0a585b81c9a3913549d3365b7_MIT6_006F11_rec11.pdf",
+				Guidance: "Read pages 5–6 on rotated arrays and which ordered half to retain. Stop after the elimination argument. Then consider why equal endpoints make that decision ambiguous.",
+				Minutes:  5,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Explains binary search on a rotated sorted array. The lesson adds the duplicate-heavy worst-case caveat.",
+			},
+		}
+	case 13:
+		return []Reading{
+			{
+				Title:    "Topcoder: Binary Search",
+				URL:      "https://www.topcoder.com/thrive/articles/Binary%20Search",
+				Guidance: "Read the monotonic-function and binary-search-the-answer sections; skip the contest-problem catalog.",
+				Minutes:  8,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Shows how to turn an optimization problem into a monotone feasibility question over candidate answers.",
+			},
+			{
+				Title:    "Agarwal, Sharir, and Toledo: Applications of Parametric Searching",
+				URL:      "https://www.cs.tau.ac.il/~stoledo/Pubs/soda92.pdf",
+				Guidance: "Read the abstract and introduction through the parametric-search outline; skip the geometry-specific algorithms.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Formalizes optimization via repeated decision tests and separates feasibility from the search that finds the optimum.",
+			},
+		}
+	case 14:
+		return []Reading{
+			{
+				Title:    "University of Toronto: Binary search",
+				URL:      "https://www.teach.cs.toronto.edu/~ajr/104/diary/06/binarysearchslides/",
+				Guidance: "Read the illustrated trace and its loop invariant through the not-found example.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Reviews the ordered-boundary invariant used by all three lesson problems.",
+			},
+			{
+				Title:    "de Berg and Thite: Cache-Oblivious Selection in Sorted X+Y Matrices",
+				URL:      "https://arxiv.org/abs/0804.0936",
+				Guidance: "Read the abstract and Section 1 through the definition of the sorted X+Y matrix; skip the cache analysis.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Studies rank and selection over pairwise combinations of sorted arrays, the research setting closest to the lesson's count-pairs boundary search.",
+			},
+			{
+				Title:    "Princeton Competitive Programming: Binary Search on the Answer",
+				URL:      "https://competitive-programming.cs.princeton.edu/spring25/week2_learn",
+				Guidance: "Read the Problem C binary-search-the-answer discussion. Identify the candidate answer, feasibility predicate, and search bounds; skip the other problems.",
+				Minutes:  5,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Explains searching a monotone feasibility predicate and choosing answer bounds, which the lesson applies to several different counting checks.",
+			},
+		}
+	case 15:
+		return []Reading{
+			{
+				Title:    "USACO Guide: Two pointers",
+				URL:      "https://usaco.guide/silver/two-pointers",
+				Guidance: "Read the opposite-end two-pointer explanation and Sum of Two Values trace; stop before the problem list.",
+				Minutes:  8,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Explains why sorted order makes it safe to discard one endpoint after each comparison.",
+			},
+			{
+				Title:    "Berenbrink et al.: Palindrome Recognition in the Streaming Model",
+				URL:      "https://arxiv.org/abs/1308.3466",
+				Guidance: "Read the abstract and Section 1 through the definitions of the palindrome and longest-palindromic-substring problems; stop before the algorithmic results.",
+				Minutes:  10,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Defines palindrome recognition and its center-based string model in the algorithms literature; the lesson's whole-string normalization and two-pointer check are a simpler special case.",
+			},
+		}
+	case 16:
+		return []Reading{
+			{
+				Title:    "Open Data Structures: Array-based lists",
+				URL:      "https://opendatastructures.org/ods-python/2_Array_Based_Lists.html",
+				Guidance: "Read the ArrayStack representation and get/set/add/remove overview; focus on how a valid prefix is stored.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Provides the array-prefix model needed to reason about separate read and write indices during in-place compaction.",
+			},
+			{
+				Title:    "Katajainen and Pasanen: Stable Minimum Space Partitioning",
+				URL:      "https://hjemmesider.diku.dk/~jyrki/Paper/KP1992bJ.pdf",
+				Guidance: "Read the abstract, introduction, and definition of stability; skip the packed-word implementation.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Defines stable in-place partitioning and makes clear why preserving the relative order of retained values is a separate requirement.",
+			},
+		}
+	case 17:
+		return []Reading{
+			{
+				Title:    "Princeton Algorithms: Analysis of algorithms",
+				URL:      "https://algs4.cs.princeton.edu/14analysis/",
+				Guidance: "Read the 3-sum discussion and doubling observations; stop before the memory model.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Introduces 3SUM, the cubic baseline, and why algorithm structure matters to running time.",
+			},
+			{
+				Title:    "Grønlund and Pettie: Threesomes, Degenerates, and Love Triangles",
+				URL:      "https://arxiv.org/abs/1404.0799",
+				Guidance: "Read the abstract and first two pages of the introduction; stop before the decision-tree machinery.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Gives the formal 3SUM problem and its complexity context; the lesson uses the practical sorted two-pointer solution rather than the paper's advanced bounds.",
+			},
+			{
+				Title:    "Dartmouth CS31: Two-Pointer Technique",
+				URL:      "https://www.cs.dartmouth.edu/~deepc/LecNotes/cs31/lec3-tptr.pdf",
+				Guidance: "Read pages 1–3 on ordered pair search and the 3SUM extension. State why moving an endpoint discards only impossible pairs.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Explains elimination of sorted pair candidates and extending the scan to triples. The container-height argument in the lesson is a separate application.",
+			},
+		}
+	case 18:
+		return []Reading{
+			{
+				Title:    "GNU Scientific Library: Moving-window statistics",
+				URL:      "https://www.gnu.org/software/gsl/doc/html/movstat.html",
+				Guidance: "Read the introduction and fixed-endpoint moving-sum examples; skip C API details.",
+				Minutes:  7,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Introduces fixed-width windows and incremental aggregate updates as one value enters and one leaves.",
+			},
+			{
+				Title:    "Datar et al.: Maintaining Stream Statistics over Sliding Windows",
+				URL:      "https://www.ceid.upatras.gr/webpages/faculty/vasilis/Courses/CIS750/Papers/streamstatistics-datar02.pdf",
+				Guidance: "Read the abstract and Sections 1–2 through the exact-window model; skip exponential histograms.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Formalizes window boundaries and expiring observations, which underlie fixed-window sum and count invariants.",
+			},
+		}
+	case 19:
+		return []Reading{
+			{
+				Title:    "OI Wiki: Two pointers",
+				URL:      "https://oi-wiki.org/misc/two-pointer/",
+				Guidance: "Read the same-direction pointer pattern and its linear-time argument; skip unrelated practice problems.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Shows why a left boundary that only moves forward yields linear work in variable-window algorithms.",
+			},
+			{
+				Title:    "Braverman and Ostrovsky: Smooth Histograms for Sliding Windows",
+				URL:      "https://www.cs.jhu.edu/~vova/papers/focs07.pdf",
+				Guidance: "Read the abstract and Section 1 through the sliding-window model; skip the approximation proofs.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Defines streaming sliding windows and explains why expiring old state is difficult; its approximate model differs from the lesson's exact in-memory windows.",
+			},
+		}
+	case 20:
+		return []Reading{
+			{
+				Title:    "USACO Guide: Prefix sums",
+				URL:      "https://usaco.guide/silver/prefix-sums",
+				Guidance: "Read the prefix-sum definition and subarray-sum derivation; stop before two-dimensional sums.",
+				Minutes:  7,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Derives a subarray sum as the difference of two prefixes, the identity used by the target-sum frequency map.",
+			},
+			{
+				Title:    "Blelloch: Prefix Sums and Their Applications",
+				URL:      "https://www.cs.cmu.edu/afs/cs/academic/class/15668-s11/www/lec/10/blelloch-prefix-sums.pdf",
+				Guidance: "Read Sections 1.1–1.3 through the scan definition and examples; skip the parallel implementation details.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Defines scan as a general operation and shows how prefix state represents all earlier elements; the lesson adds a frequency map and the empty-prefix seed.",
+			},
+		}
+	case 21:
+		return []Reading{
+			{
+				Title:    "Carnegie Mellon: Scan algorithms",
+				URL:      "https://www.cs.cmu.edu/~scandal/alg/scan.html",
+				Guidance: "Read the scan definition and applications list, then inspect the prefix-products example; skip implementation links.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Shows that prefix aggregation works for associative operations beyond addition, including products.",
+			},
+			{
+				Title:    "Chatterjee, Blelloch, and Zagha: Scan Primitives for Vector Computers",
+				URL:      "https://www.cs.cmu.edu/~guyb/papers/sc90.pdf",
+				Guidance: "Read the abstract and Sections 1–2 through the scan primitives; skip vector-machine performance results.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Formalizes inclusive and exclusive scans, supporting prefix/suffix product construction without division.",
+			},
+			{
+				Title:    "Go specification: Arithmetic operators",
+				URL:      "https://go.dev/ref/spec#Arithmetic_operators",
+				Guidance: "Read integer quotient and remainder semantics, including the sign rule; stop before floating-point operators.",
+				Minutes:  5,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Documents signed remainder behavior, explaining why modulo keys must be normalized before frequency-map lookup.",
+			},
+		}
+	case 22:
+		return []Reading{
+			{
+				Title:    "Open Data Structures: Singly-linked lists",
+				URL:      "https://opendatastructures.org/ods-python/3_1_SLList_Singly_Linked_Li.html",
+				Guidance: "Read the representation and add/remove pointer updates; stop before the queue analysis.",
+				Minutes:  7,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Introduces link rewiring and shows why the old next pointer must be saved before changing a node.",
+			},
+			{
+				Title:    "Reynolds: Separation Logic — A Logic for Shared Mutable Data Structures",
+				URL:      "https://www.cs.cmu.edu/~jcr/seplogic.pdf",
+				Guidance: "Read the abstract and pages 1–2 through the in-place list-reversal example. Stop before the programming-language semantics. Track the saved next pointer and disjoint list segments.",
+				Minutes:  10,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Models disjoint linked segments and local pointer mutation, the reasoning needed for reversal and merge without losing nodes.",
+			},
+		}
+	case 23:
+		return []Reading{
+			{
+				Title:    "Cornell: Linked lists",
+				URL:      "https://www.cs.cornell.edu/courses/JavaAndDS/files/linkedLists.pdf",
+				Guidance: "Read the node-identity, traversal, and pointer-diagram sections; stop before Java iterator details.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Establishes reference identity and traversal state, which distinguish intersecting nodes from merely equal values.",
+			},
+			{
+				Title:    "Sedgewick, Szymanski, and Yao: The Complexity of Finding Cycles in Periodic Functions",
+				URL:      "https://sedgewick.io/wp-content/themes/sedgewick/papers/1982Cycles.pdf",
+				Guidance: "Read pages 376–379 through Floyd's algorithm and its cost analysis; skip the later lower-bound proofs.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "States and analyzes the two-speed tortoise-and-hare method used for constant-space linked-list cycle detection.",
+			},
+		}
+	case 24:
+		return []Reading{
+			{
+				Title:    "Princeton: Verifying linked-list reversal",
+				URL:      "https://www.cs.princeton.edu/~appel/vc/vc-1.1.1/Verif_reverse.html",
+				Guidance: "Read the reversal code and diagram plus the informal invariant; skip the Coq proof commands.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Makes the reversed-prefix and unprocessed-suffix invariant visible during in-place list reversal.",
+			},
+			{
+				Title:    "Myreen: Separation Logic Adapted for Proofs by Rewriting",
+				URL:      "https://www.cl.cam.ac.uk/~mom22/itp10-rewrite.pdf",
+				Guidance: "Read the abstract and linked-list reversal example in Sections 1–2; skip the proof-engine implementation.",
+				Minutes:  10,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Uses list reversal to show how ownership and segment invariants prevent pointer loss, relevant when reversing and restoring a palindrome half.",
+			},
+			{
+				Title:    "Competitive Programmer's Handbook: Floyd's algorithm",
+				URL:      "https://cses.fi/book/book.pdf",
+				Guidance: "Read pages 104–105 on cycle detection and the cycle-entry argument only.",
+				Minutes:  5,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Explains the phase-reset step that locates a cycle entry after fast and slow pointers first meet.",
+			},
+		}
+	case 25:
+		return []Reading{
+			{
+				Title:    "Cornell CS410: Linked-list implementation",
+				URL:      "https://www.cs.cornell.edu/courses/cs410/1999fa/Lectures/lecture4.pdf",
+				Guidance: "Read the sentinel-node and insertion/deletion diagrams; skip the C++ template details.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Shows how sentinel nodes remove head special cases and how pointer rewiring preserves the rest of a list.",
+			},
+			{
+				Title:    "Salowe and Steiger: Stable Unmerging in Linear Time and Constant Space",
+				URL:      "https://scholarship.libraries.rutgers.edu/esploro/outputs/technicalDocumentation/Stable-Unmerging-in-Linear-Time-and/991031549852304646",
+				Guidance: "Read the abstract and introductory definition of stable unmerging; stop before the block-rotation construction.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Formalizes stable separation while preserving relative order, matching the lesson's tail-based linked-list partition invariant.",
+			},
+		}
+	case 26:
+		return []Reading{
+			{
+				Title:    "Princeton Algorithms: Stacks",
+				URL:      "https://algs4.cs.princeton.edu/13stacks/",
+				Guidance: "Read the stack API, delimiter matching, and Dijkstra two-stack evaluation; stop before resizing-array analysis.",
+				Minutes:  7,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Introduces LIFO state for delimiter validation and expression evaluation, including operand order.",
+			},
+			{
+				Title:    "Dijkstra: ALGOL 60 Translation",
+				URL:      "https://ir.cwi.nl/pub/9251",
+				Guidance: "Open the report and read pages 8–11 on algebraic expressions and the accumulator stack; skip object-machine details.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Provides the historical operator-stack technique behind stack-based expression parsing and postfix evaluation.",
+			},
+		}
+	case 27:
+		return []Reading{
+			{
+				Title:    "Open Data Structures: DualArrayDeque",
+				URL:      "https://opendatastructures.org/ods-python/2_5_DualArrayDeque_Building.html",
+				Guidance: "Read the two-array representation and rebalancing argument; focus on how reversing one side restores order.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Shows how two LIFO-oriented halves can represent FIFO order and why occasional bulk transfer can be amortized.",
+			},
+			{
+				Title:    "Hood and Melville: Real-Time Queue Operations in Pure LISP",
+				URL:      "https://ecommons.cornell.edu/entities/publication/ddc7b5af-c5ea-43dc-889e-bab2a00278bc",
+				Guidance: "Read the abstract and Sections 1–2 through the two-list queue; skip the incremental scheduling construction.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Develops queues from front and rear lists and explains the reversal cost that amortized two-stack queues distribute across operations.",
+			},
+		}
+	case 28:
+		return []Reading{
+			{
+				Title:    "Jeff Erickson: Recursion",
+				URL:      "https://jeffe.cs.illinois.edu/teaching/algorithms/book/01-recursion.pdf",
+				Guidance: "Read the opening recurrence examples and fast exponentiation section; stop before exhaustive search.",
+				Minutes:  8,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Explains recursive contracts, base cases, decreasing measures, and exponentiation by squaring.",
+			},
+			{
+				Title:    "Michie: ‘Memo’ Functions and Machine Learning",
+				URL:      "https://www.cs.utexas.edu/~hunt/research/hash-cons/hash-cons-papers/michie-memo-nature-1968.pdf",
+				Guidance: "Read the full two-page note, focusing on the memoized Fibonacci example and stored argument-result pairs.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Introduces memoization through Fibonacci and shows how caching changes repeated recursion into one computation per distinct state.",
+			},
+		}
+	case 29:
+		return []Reading{
+			{
+				Title:    "Open Data Structures: A Basic Binary Tree",
+				URL:      "https://opendatastructures.org/ods-python/6_1_BinaryTree_Basic_Binary.html",
+				Guidance: "Read sections 6.1.1 and 6.1.2 through the recursive height and traversal discussion. Stop before the nonrecursive traversal. Write the empty-tree return value and the fact each recursive call returns to its parent.",
+				Minutes:  8,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "recursive subtree contracts, height, traversal cost, and call-stack depth",
+			},
+			{
+				Title:    "Reasoning About Recursive Tree Traversals",
+				URL:      "https://arxiv.org/abs/1910.09521",
+				Guidance: "Read the abstract, section 1, and section 2.1's traversal examples. Stop before the logical encoding. Track how recursive invocations and the call stack identify the current subtree.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "recursive subtree invocations, traversal order, call-stack state, and dependencies between visits",
+			},
+		}
+	case 30:
+		return []Reading{
+			{
+				Title:    "Stanford CS106B: Binary Trees, Binary Search Trees, and Tree Traversals",
+				URL:      "https://web.stanford.edu/class/archive/cs/cs106b/cs106b.1256/lectures/20-trees/",
+				Guidance: "Read Binary Trees and the TreeNode Struct, then open the linked tree notes and inspect the traversal preview. Focus on left and right child positions and explicit null links.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "binary-tree shape, ordered child positions, null structure, and recursive comparison",
+			},
+			{
+				Title:    "Revisiting Tree Isomorphism: An Algorithmic Bric-a-Brac",
+				URL:      "https://arxiv.org/abs/2309.14441",
+				Guidance: "Read the abstract, introduction, and the first formulation of rooted-tree comparison. This paper treats unordered rooted trees, where children may be permuted; the lesson's ordered binary trees keep left and right positions fixed. Use it as an extension of structural comparison, not as the lesson's equality rule.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "structural comparison and unambiguous subtree encodings, with an explicit unordered-tree extension beyond ordered binary equality",
+			},
+		}
+	case 31:
+		return []Reading{
+			{
+				Title:    "Nick Parlante: Binary Trees",
+				URL:      "https://cs.wmich.edu/gupta/teaching/cs3310/lectureNotes_cs3310/Binary%20Trees%20by%20Nick%20Parlante.pdf",
+				Guidance: "Read only hasPathSum and printPaths in Section 2, pages 8-10. Trace the root-to-leaf condition and note when a path buffer is copied or restored.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "root-to-leaf path semantics, accumulated state, and path output",
+			},
+			{
+				Title:    "Path and Ancestor Queries over Trees with Multidimensional Weight Vectors",
+				URL:      "https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ISAAC.2019.45",
+				Guidance: "Read the abstract, introduction, and the definitions of ancestor and path reporting queries. Stop before the data-structure constructions. Treat these queries as a deeper extension of accumulating and reporting values along a root path.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "ancestor paths, path aggregation and reporting, output-sensitive cost, and weighted tree paths",
+			},
+		}
+	case 32:
+		return []Reading{
+			{
+				Title:    "UC Irvine ICS 46: Tree Traversals",
+				URL:      "https://ics.uci.edu/~thornton/ics46/Notes/TreeTraversals/",
+				Guidance: "Read the breadth-first traversal section and its queue trace. Contrast it with preorder and postorder, and record why the queue holds the next level's work.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "level-order traversal, FIFO processing, and traversal space",
+			},
+			{
+				Title:    "Distributed Memory Breadth-First Search Revisited: Enabling Bottom-Up Search",
+				URL:      "https://www2.eecs.berkeley.edu/Pubs/TechRpts/2013/EECS-2013-2.html",
+				Guidance: "Read the report abstract and the conventional top-down BFS description in the introduction. Stop before the distributed decomposition. Relate a frontier to one tree level and its maximum size to queue storage.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "BFS frontiers, level-by-level discovery, linear traversal bounds, and frontier-width storage",
+			},
+		}
+	case 33:
+		return []Reading{
+			{
+				Title:    "Open Data Structures: An Unbalanced Binary Search Tree",
+				URL:      "https://opendatastructures.org/ods-python/6_2_BinarySearchTree_Unbala.html",
+				Guidance: "Read search and insertion through section 6.2.2. Track the full ancestor-imposed interval for each recursive descent, then stop before removal.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "BST ordering, one-branch search, insertion, height-sensitive cost, and duplicate policy",
+			},
+			{
+				Title:    "Some Combinatorial Properties of Certain Trees With Applications to Searching and Sorting",
+				URL:      "https://rtheunissen.github.io/bst/docs/references/1961_hibbard.pdf",
+				Guidance: "Read the introduction, the binary-search-tree definition on pages 13-14, and section 2.1's search application. Skip the deletion analysis. Note that the paper assumes distinct keys and compare that premise with an explicit duplicate policy.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "ordered left and right subtrees, search paths, insertion order, distinct-key assumptions, and expected path length",
+			},
+		}
+	case 34:
+		return []Reading{
+			{
+				Title:    "Stanford CS106B: Lowest Common Ancestor in a BST",
+				URL:      "https://web.stanford.edu/class/archive/cs/cs106b/cs106b.1136/handouts/250%20CS106B%20Midterm%202.pdf",
+				Guidance: "Read Problem Three on page 7 only. Use the diagram to check split-subtree and ancestor-as-target cases. Stop before the answer pages; the supplied contract is the reading, not a timed exam.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Defines lowest common ancestors in a binary search tree, including when a target is the ancestor. The ordering permits choosing one subtree until the targets split.",
+			},
+			{
+				Title:    "The LCA Problem Revisited",
+				URL:      "https://www3.cs.stonybrook.edu/~bender/newpub/BenderFa00-lca.pdf",
+				Guidance: "Read the abstract, introduction, and formal problem definition through page 2. Stop before the range-minimum reduction. Compare its preprocessed many-query model with the lesson's one-query recursive and BST-ordering methods.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "formal LCA semantics, rooted-tree queries, preprocessing tradeoffs, and constant-time query goals",
+			},
+		}
+	case 35:
+		return []Reading{
+			{
+				Title:    "Duke CPS100: Tree Problems",
+				URL:      "https://users.cs.duke.edu/~ola/courses/cps100spr96/tree/trees.html",
+				Guidance: "Read the Tree Diameter problem statement and its three-way recurrence. Write separately what a subtree returns and what contributes to the complete diameter.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "postorder height returns, diameter updates, edge counts, and linear traversal",
+			},
+			{
+				Title:    "Fast Dynamic Programming in Trees in the MPC Model",
+				URL:      "https://arxiv.org/abs/2305.03693",
+				Guidance: "Read the abstract and section 1's description of tree dynamic programming and accumulation tasks. Stop before the MPC framework. Use it as a broader extension of combining constant-size child summaries; the introductory reading supplies the exact diameter recurrence.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "bottom-up tree dynamic programming, subtree aggregates, constant-size summaries, and diameter-sensitive complexity",
+			},
+		}
+	case 36:
+		return []Reading{
+			{
+				Title:    "Jeff Erickson: Backtracking",
+				URL:      "https://jeffe.cs.illinois.edu/teaching/algorithms/book/02-backtracking.pdf",
+				Guidance: "Read section 2.1, N Queens, through the generic backtracking pattern. Identify the partial state, legal next choices, base case, and restoration step.",
+				Minutes:  9,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "decision trees, legal choices, recursive depth-first search, and reversible mutation",
+			},
+			{
+				Title:    "Donald Knuth: Dancing Links",
+				URL:      "https://arxiv.org/abs/cs/0011047",
+				Guidance: "Read the opening two pages and the remove-and-restore equations. Stop before the polyomino experiments. Relate the local undo operation to restoring state before a sibling branch.",
+				Minutes:  11,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "reversible local updates, depth-first search, and constraint-guided choice points",
+			},
+		}
+	case 37:
+		return []Reading{
+			{
+				Title:    "Stanford CS106B: More Recursion",
+				URL:      "https://web.stanford.edu/class/archive/cs/cs106b/cs106b.1258/lectures/09-recursion2/",
+				Guidance: "Read Recursive Sequence Generation and Recursive Permutation Generation. Compare the state for a position with the state for unused choices, and predict the output counts before tracing code.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "sequence and permutation generation, choice position, unused elements, and factorial output",
+			},
+			{
+				Title:    "Brendan McKay: Backtrack Programming",
+				URL:      "https://users.cecs.anu.edu.au/~bdm/papers/McKayMastersThesis.pdf",
+				Guidance: "Read chapter 6, sections 6.1-6.2, for the formal tree of partial sequences. Stop when the group-theoretic symmetry analysis begins.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "enumeration as a tree of partial sequences, distinct choices, and exponential output",
+			},
+		}
+	case 38:
+		return []Reading{
+			{
+				Title:    "Stanford CS106B: Recursion and Recursive Backtracking",
+				URL:      "https://web.stanford.edu/class/archive/cs/cs106b/cs106b.1214/sections/section4/",
+				Guidance: "Read the permutation-focused Barnstorming problem and its solution. Note why positions are distinct even when a route shares earlier choices, and how state is restored after each candidate.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "per-depth choices, used-position state, restoration, and permutation output",
+			},
+			{
+				Title:    "Generating Permutations of a Bag by Interchanges",
+				URL:      "https://ir.cwi.nl/pub/1996",
+				Guidance: "Open the free final-version PDF and read the introduction plus the definition of permutations of a bag. Focus on how repeated values change uniqueness; skip the minimal-change proofs.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "unique enumeration when input values repeat and the distinction between positions and values",
+			},
+		}
+	case 39:
+		return []Reading{
+			{
+				Title:    "Stanford CS106B: Recursive Backtracking",
+				URL:      "https://web.stanford.edu/class/archive/cs/cs106b/cs106b.1258/section/section4/",
+				Guidance: "Read Win some, lose sum and its recursive solution. Track the remaining choices and current target, then state why each branch either includes or skips one candidate.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "sum-search state, include-or-skip branching, termination, and failed-branch pruning",
+			},
+			{
+				Title:    "Subset Sum in Time 2^(n/2)/poly(n)",
+				URL:      "https://arxiv.org/pdf/2301.07134",
+				Guidance: "Read the folklore Sorted-Sum-Enumeration algorithm and Lemma 2 on page 5. Ignore the later randomized improvements. Compare duplicate removal with naive subset enumeration.",
+				Minutes:  11,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "subset-sum enumeration, duplicate removal, exponential search, and explicit complexity bounds",
+			},
+		}
+	case 40:
+		return []Reading{
+			{
+				Title:    "Hunter College: Recursion and Backtracking",
+				URL:      "https://www.cs.hunter.cuny.edu/~sweiss/course_materials/csci235/lecture_notes/chapter_05.pdf",
+				Guidance: "Read the backtracking template and the palindrome material only. Express a string partition state as a consumed prefix and a next boundary; skip grammar material not tied to the search.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "recursive string state, palindrome validation, base cases, and backtracking boundaries",
+			},
+			{
+				Title:    "Palindromic k-Factorization in Pure Linear Time",
+				URL:      "https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.MFCS.2020.81",
+				Guidance: "Read the abstract, introduction, and problem definition. Stop before the linear-time machinery. Compare complete factorization with accepting a locally palindromic next segment.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "whole-string consumption, palindromic factors, required piece counts, and repeated substring checks",
+			},
+		}
+	case 41:
+		return []Reading{
+			{
+				Title:    "Stanford CS106B: Boggle",
+				URL:      "https://web.stanford.edu/class/archive/cs/cs106b/cs106b.1176/assnFiles/backtracking/boggle-spec.html",
+				Guidance: "Read Problem Description and the human word-search requirements. Trace one word while enforcing adjacency and one-use-per-cube; skip the interface and submission sections.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "grid adjacency, path-local visited state, exhaustive search, and restoring cells between starts",
+			},
+			{
+				Title:    "A Computational Proof of the Highest-Scoring Boggle Board",
+				URL:      "https://arxiv.org/abs/2507.02117",
+				Guidance: "Read the abstract, introduction, and solver overview. Stop before the board-optimization proof. Focus on how a fast Boggle solver combines trie state, board position, and branch-and-bound search.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "grid word search, coupled board and dictionary state, branch pruning, and exhaustive solver structure",
+			},
+		}
+	case 42:
+		return []Reading{
+			{
+				Title:    "Stanford CS227: Constraint Reasoning",
+				URL:      "https://web.stanford.edu/class/cs227/Lectures/lec14.pdf",
+				Guidance: "Read the CSP definition and backtracking-search slides through variable and value ordering. Record which state facts determine future legal choices; skip local-search methods.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "constraint state, legal-choice filtering, search ordering, and pruning",
+			},
+			{
+				Title:    "Symmetry Breaking Constraints: Recent Results",
+				URL:      "https://arxiv.org/abs/1204.3348",
+				Guidance: "Read the abstract, introduction, and the opening value-symmetry example. Stop before row-and-column symmetry. Map interchangeable values to containers with equal current loads.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "equivalent branches, value symmetry, canonical representatives, and avoiding repeated search",
+			},
+		}
+	case 43:
+		return []Reading{
+			{
+				Title:    "Princeton Algorithms: Undirected Graphs",
+				URL:      "https://algs4.cs.princeton.edu/41graph/",
+				Guidance: "Read the graph representation and depth-first search sections. Treat a grid cell as a vertex and legal moves as edges, then identify when a cell becomes marked.",
+				Minutes:  9,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "graph modeling, adjacency, discovery-time marking, DFS, and connected components",
+			},
+			{
+				Title:    "Finding Strong Components Using Depth-First Search",
+				URL:      "https://arxiv.org/abs/2201.07197",
+				Guidance: "Read sections 1-2 for the DFS forest, preorder, and active search path. Stop before the strong-component algorithm comparisons.",
+				Minutes:  11,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "depth-first traversal, discovery state, linear graph exploration, and component structure",
+			},
+		}
+	case 44:
+		return []Reading{
+			{
+				Title:    "Princeton Algorithms: Connected Components Source",
+				URL:      "https://algs4.cs.princeton.edu/41graph/CC.java.html",
+				Guidance: "Read the class contract, constructor, and dfs method. Trace how one search labels a whole component and why later starts skip already marked vertices.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "component labeling, shared visited state, adjacency-list complexity, and repeated starts",
+			},
+			{
+				Title:    "Robert Tarjan: Depth-First Search and Linear Graph Algorithms",
+				URL:      "https://www.cs.cmu.edu/~cdm/resources/Tarjan1972-sccs.pdf",
+				Guidance: "Read the abstract and sections 1-2 through the DFS numbering framework. Stop before the biconnected-component proofs. Relate one DFS forest to complete component coverage.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "linear-time DFS, component discovery, DFS forests, and traversal state",
+			},
+		}
+	case 45:
+		return []Reading{
+			{
+				Title:    "Princeton Algorithms: Breadth-First Paths Source",
+				URL:      "https://algs4.cs.princeton.edu/41graph/BreadthFirstPaths.java.html",
+				Guidance: "Read the class contract and bfs method. Trace mark-on-enqueue, edgeTo, and distTo for one queue layer; skip the test client.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "FIFO shortest paths, mark-on-enqueue, distance sentinels, and O(V+E) cost",
+			},
+			{
+				Title:    "The More the Merrier: Efficient Multi-Source Graph Traversal",
+				URL:      "https://www.vldb.org/pvldb/vol8/p449-then.pdf",
+				Guidance: "Read the abstract, introduction, and the baseline multi-source BFS description. Stop before vectorized implementation details. Compare simultaneous sources with repeated independent searches.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "multi-source BFS, shared frontier work, shortest unweighted distances, and avoiding repeated traversal",
+			},
+		}
+	case 46:
+		return []Reading{
+			{
+				Title:    "Stanford CS106B: Graphs",
+				URL:      "https://web.stanford.edu/class/archive/cs/cs106b/cs106b.1256/lectures/24-graphs/",
+				Guidance: "Read the graph representation and traversal material. For each example, state whether adjacency is stored or generated and whether the goal is reachability or path output.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "explicit and implicit adjacency, reachability, traversal state, and path reconstruction",
+			},
+			{
+				Title:    "PathEnum: Towards Real-Time Hop-Constrained s-t Path Enumeration",
+				URL:      "https://arxiv.org/abs/2103.11137",
+				Guidance: "Read the abstract, introduction, and problem definition. Stop before the index construction. Distinguish outputting every source-to-target path from one-time reachability, and note that the paper adds a hop constraint beyond the lesson's DAG setting.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "source-to-target path enumeration, depth-first generation, pruning constraints, and output-driven cost",
+			},
+		}
+	case 47:
+		return []Reading{
+			{
+				Title:    "Princeton Algorithms: Directed Graphs",
+				URL:      "https://algs4.cs.princeton.edu/42digraph/",
+				Guidance: "Read Directed cycles and Topological sort. Compare an edge to an active vertex with an edge to a finished vertex, then trace one indegree-based ordering.",
+				Minutes:  9,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "directed cycles, active DFS state, topological order, and O(V+E) processing",
+			},
+			{
+				Title:    "Parameterized Streaming Algorithms for Topological Sorting",
+				URL:      "https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.WADS.2025.18",
+				Guidance: "Read the abstract, introduction, and preliminaries' definition of a topological ordering. Stop before the streaming algorithms. Compare the paper's restricted-memory setting with the lesson's in-memory indegree and DFS methods.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "topological ordering, directed acyclic graphs, cycle-related applications, and time-space tradeoffs",
+			},
+		}
+	case 48:
+		return []Reading{
+			{
+				Title:    "Princeton Algorithms: Union-Find",
+				URL:      "https://algs4.cs.princeton.edu/15uf/",
+				Guidance: "Read the connectivity API, weighted quick-union, and path-compression sections. Treat roots as mutable representatives rather than stable component names.",
+				Minutes:  9,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "set representatives, union, find, weighting, path compression, and connectivity",
+			},
+			{
+				Title:    "Robert Tarjan: On the Efficiency of a Good but Not Linear Set Union Algorithm",
+				URL:      "https://ecommons.cornell.edu/entities/publication/ac7021c6-50a8-4d66-8ff0-0c504033a3b6",
+				Guidance: "Read the repository abstract, then pages 1-3 of the attached technical report for the FIND and UNION model. Stop before the detailed bound proof.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "disjoint-set partitions, representatives, path compression, and amortized nonconstant analysis",
+			},
+		}
+	case 49:
+		return []Reading{
+			{
+				Title:    "Princeton Algorithms: Shortest Paths",
+				URL:      "https://algs4.cs.princeton.edu/44sp/",
+				Guidance: "Read edge relaxation and Dijkstra's algorithm. Stop before all-pairs shortest paths. Record the nonnegative-weight condition and what a priority-queue key means.",
+				Minutes:  9,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "weighted relaxation, Dijkstra's frontier, nonnegative weights, stale keys, and complexity",
+			},
+			{
+				Title:    "E. W. Dijkstra: A Note on Two Problems in Connexion with Graphs",
+				URL:      "https://jmvidal.cse.sc.edu/library/dijkstra59a.pdf",
+				Guidance: "Read the full three-page paper, focusing on Problem 2 and the permanently labeled nearest node. Translate its positive-length assumption to the lesson's nonnegative-edge condition.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "greedy shortest-path finalization, weighted routes, and the edge-weight precondition",
+			},
+		}
+	case 50:
+		return []Reading{
+			{
+				Title:    "Open Data Structures: BinaryHeap",
+				URL:      "https://opendatastructures.org/ods-python/10_1_BinaryHeap_Implicit_Bi.html",
+				Guidance: "Read the implicit array representation plus add and remove. Trace one bubble-up and one bubble-down, then stop before heapsort.",
+				Minutes:  9,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "heap order, array representation, root access, insertion, removal, and O(log n) updates",
+			},
+			{
+				Title:    "The Best Case of Heapsort",
+				URL:      "https://www.cs.princeton.edu/techreports/1990/293.pdf",
+				Guidance: "Read the abstract and opening description of the heap-ordered complete tree. Stop before the best-case comparison proofs. Note what heap order does and does not say about siblings.",
+				Minutes:  11,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "heap-ordered complete trees, array layout, heap construction, and partial rather than total order",
+			},
+		}
+	case 51:
+		return []Reading{
+			{
+				Title:    "Cornell CS2112: Priority Queues and Heaps",
+				URL:      "https://www.cs.cornell.edu/courses/cs2112/2020fa/lectures/heaps/",
+				Guidance: "Read the priority-queue abstraction and heap invariant through bubble up and bubble down. Write the priority as a comparison function over the full item, including ties.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "derived priorities, heap comparators, total ordering, and exposing the most extreme item",
+			},
+			{
+				Title:    "Fibonacci Heaps and Their Uses in Improved Network Optimization Algorithms",
+				URL:      "https://www.cs.princeton.edu/courses/archive/fall03/cs528/handouts/fibonacci%20heaps.pdf",
+				Guidance: "Read the abstract and section 1's heap interface. Stop before the Fibonacci-heap structure. Note that the queue orders items by keys and exposes only the minimum item.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "top-k selection, heap-ordered candidates, output-sensitive cost, and ranked frontiers",
+			},
+		}
+	case 52:
+		return []Reading{
+			{
+				Title:    "Jeff Erickson: Greedy Algorithms",
+				URL:      "https://jeffe.cs.illinois.edu/teaching/algorithms/book/04-greedy.pdf",
+				Guidance: "Read the opening greedy-framework discussion and its first exchange argument. Stop after ten minutes. State the exchange that replaces a chosen smaller frequency group with a larger one.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "greedy choice, exchange arguments, sorted priorities, and proof obligations",
+			},
+			{
+				Title:    "Greedy Algorithms and Poset Matroids",
+				URL:      "https://arxiv.org/abs/1306.3797",
+				Guidance: "Read the introduction, Algorithm 1, and Theorem 1.1 only. Treat choosing at most k frequency groups as the simple cardinality-constrained case, then specialize the maximum-weight choice to largest frequency first.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "maximum-weight greedy selection, descending priorities, exchange structure, and the boundary where greedy needs proof",
+			},
+		}
+	case 53:
+		return []Reading{
+			{
+				Title:    "Princeton Algorithms: Multiway Merge Source",
+				URL:      "https://algs4.cs.princeton.edu/24pq/Multiway.java.html",
+				Guidance: "Read the class contract and merge method. Track the source index stored with each heap item and explain why only that source advances after a deletion.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "one-candidate-per-stream frontiers, source advancement, and O(k log r) merging",
+			},
+			{
+				Title:    "Selection from Heaps, Row-Sorted Matrices and X+Y Using Soft Heaps",
+				URL:      "https://arxiv.org/abs/1802.07041",
+				Guidance: "Read the row-sorted-matrix and X+Y problem statements plus the collection-of-sorted-lists result. Stop before the soft-heap proof. Relate each active row to a frontier candidate.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "k-way sorted frontiers, row-sorted selection, pair-sum selection, and output-sensitive bounds",
+			},
+		}
+	case 54:
+		return []Reading{
+			{
+				Title:    "Carnegie Mellon 15-122: Multi-Way Tries",
+				URL:      "https://www.cs.cmu.edu/~wlovas/15122-r11/lectures/24-tries.pdf",
+				Guidance: "Read sections 2-3 on pages 1-3. Focus on character edges, terminal markers, lookup cost, and why a stored word may have descendants; skip binary and ternary tries.",
+				Minutes:  9,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "prefix nodes, terminal markers, exact lookup, prefix lookup, and O(L) operations",
+			},
+			{
+				Title:    "Fast Algorithms for Sorting and Searching Strings",
+				URL:      "https://sedgewick.io/wp-content/themes/sedgewick/papers/1997StringsSODA.pdf",
+				Guidance: "Read the abstract, introduction, and section 3 through the ternary-search-tree lookup description. Stop before experiments and advanced query types.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "character-directed search, prefix sharing, string-key lookup, and space tradeoffs",
+			},
+		}
+	case 55:
+		return []Reading{
+			{
+				Title:    "Princeton Algorithms: Tries",
+				URL:      "https://algs4.cs.princeton.edu/52trie/",
+				Guidance: "Read R-way tries, prefix matching, and ordered operations. Compare a trie walk with sorting keys and finding the contiguous prefix range; stop before substring search.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "prefix queries, lexicographic traversal, terminal-prefix stopping, and static alternatives",
+			},
+			{
+				Title:    "Efficient Trie-Based Sorting of Large Sets of Strings",
+				URL:      "https://people.eng.unimelb.edu.au/jzobel/fulltext/acsc03sz.pdf",
+				Guidance: "Read the introduction and the trie-based sorting description. Focus on how trie traversal emits lexicographic order and how child representation changes space use; skip the benchmark tables.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "lexicographic string search, prefix descendants, wildcard branching, and ordered output",
+			},
+		}
+	case 56:
+		return []Reading{
+			{
+				Title:    "University of Maryland: Heaps and Priority Queue",
+				URL:      "https://www.cs.umd.edu/class/summer2021/cmsc132/lectures/Heaps_and_Priority_Queue.pdf",
+				Guidance: "Read the scheduling example and the priority-queue operations through the heap representation. Separate a task's release or deadline from its comparator priority.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "task availability, scheduling priority, heap selection, and tie rules",
+			},
+			{
+				Title:    "On-line Scheduling to Minimize Average Completion Time Revisited",
+				URL:      "https://optimization-online.org/wp-content/uploads/2003/10/743.pdf",
+				Guidance: "Read the abstract and section 1 through the online scheduling model. Stop before the competitive analysis. Separate each job's release date from the priority ratio used after it becomes available.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "release times, eligible-job selection, scheduling priorities, and online idle-versus-work decisions",
+			},
+		}
+	case 57:
+		return []Reading{
+			{
+				Title:    "CMU 15-122: Dynamic Programming",
+				URL:      "https://www.cs.cmu.edu/~wlovas/15122-r11/lectures/dynprog.pdf",
+				Guidance: "Read pages 1-5, through the bottom-up Fibonacci program. Focus on the subproblem contract, repeated recursive calls, table order, and the two-value space reduction. Stop before the BDD application.",
+				Minutes:  9,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Supports the lesson's cached-subproblem model, dependency order, base cases, linear table, rolling-state optimization, and comparison with exponential recursion.",
+			},
+			{
+				Title:    "Bellman: On the Theory of Dynamic Programming",
+				URL:      "https://pmc.ncbi.nlm.nih.gov/articles/PMC1063639/",
+				Guidance: "Open the free four-page paper and read the opening multistage decision model and recurrence. Focus on how the remaining state determines the next subproblem; skip the later continuous optimization details.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Introduces the decomposition of a multistage optimization problem into smaller decision problems. The lesson applies that principle to finite cached subproblems.",
+			},
+		}
+	case 58:
+		return []Reading{
+			{
+				Title:    "Cornell CS 4820: Introduction to Dynamic Programming",
+				URL:      "https://courses.cs.cornell.edu/cs4820/2024sp/notes/08_WIS-reading.pdf",
+				Guidance: "Read sections 1 and 2 through the recurrence for maximum-weight independent set on a path. Translate include-or-exclude into take-or-skip, then write the two endpoint exclusions needed when the path closes into a cycle.",
+				Minutes:  9,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Directly supports nonadjacent choice recurrence, optimal substructure on a path, reconstruction, and the path-versus-cycle distinction used by House Robber variants.",
+			},
+			{
+				Title:    "Korhonen: Lower Bounds on Dynamic Programming for Maximum Weight Independent Set",
+				URL:      "https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.87",
+				Guidance: "Read the abstract and introduction through the max-plus circuit model. Treat this as an advanced extension: connect max and addition gates to the take-or-skip recurrence on a path, then stop before the lower-bound proofs for wider graph classes.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Places the lesson's maximum-weight independent-set recurrence in its research problem family and distinguishes easy path structure from the harder graph structures studied by the paper.",
+			},
+		}
+	case 59:
+		return []Reading{
+			{
+				Title:    "Carnegie Mellon 15-451: Coin Change",
+				URL:      "https://www.cs.cmu.edu/~ab/15-451F10/Dynamic%20Programming.pdf",
+				Guidance: "Read the Coin Change Problem slides on PDF pages 4 and 5. Trace the 1, 6, 10 denomination table and the choice between reusing a coin and excluding its denomination. Stop before knapsack.",
+				Minutes:  9,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Derives an unbounded coin-change recurrence and shows why arbitrary denominations can defeat a greedy choice.",
+			},
+			{
+				Title:    "Kozen and Zaks: Optimal Bounds for the Change-Making Problem",
+				URL:      "https://www.cs.cornell.edu/~kozen/Papers/change.pdf",
+				Guidance: "Read the abstract and sections 1-2 through the bounds on the smallest greedy counterexample. Use one noncanonical coin system to contrast a greedy representation with the optimal dynamic-programming value.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Establishes formally that greedy coin selection is denomination-dependent and motivates computing optimal values over all legal final coins.",
+			},
+			{
+				Title:    "Stanford CS161 Section 6 Solutions: Encoding",
+				URL:      "https://web.stanford.edu/class/archive/cs/cs161/cs161.1236/Sections/Section6/Section6_Solutions.pdf",
+				Guidance: "Read only the Encoding problem and solution. Trace its prefix recurrence on 101, checking the one-digit and two-digit conditions separately and identifying why zero cannot contribute by itself.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Directly supports the lesson's decoding prefix state, addition of valid one- and two-digit endings, O(n) evaluation, and zero-sensitive transition guards.",
+			},
+		}
+	case 60:
+		return []Reading{
+			{
+				Title:    "Jeff Erickson: Dynamic Programming",
+				URL:      "https://jeffe.cs.illinois.edu/teaching/algorithms/book/03-dynprog.pdf",
+				Guidance: "Read the text-segmentation example, from the problem statement through the recurrence and evaluation order. Track what the suffix index records and how dictionary membership controls legal transitions.",
+				Minutes:  10,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Directly supports suffix feasibility, Word Break's candidate split checks, quadratic candidate structure, and the rule that state must retain every fact needed by later choices.",
+			},
+			{
+				Title:    "He, Haffari, and Norouzi: Dynamic Programming Encoding for Subword Segmentation",
+				URL:      "https://aclanthology.org/2020.acl-main.275.pdf",
+				Guidance: "Read the abstract, section 1, and section 3.1 through the dynamic-programming formulation. Focus on segmentation as a sequence of locally legal transitions over prefix positions; skip the neural architecture and experiments.",
+				Minutes:  13,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Shows a research use of dynamic programming for string segmentation and reinforces the lesson's position-based feasibility state.",
+			},
+			{
+				Title:    "MIT 6.006: Winning the Stock Market",
+				URL:      "https://courses.csail.mit.edu/6.006/fall07/handouts/H09-ps3.pdf",
+				Guidance: "Read Problem 3 on pages 2 and 3, including the waiting-period and transaction-fee variants. Identify which state must record time since a trade. Do not download the stock dataset or complete the assignment.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Provides a finite, known-price trading model with waiting periods and fees. It supports choosing state from permitted transitions, rather than a stochastic forecasting model.",
+			},
+		}
+	case 61:
+		return []Reading{
+			{
+				Title:    "Stanford CS161: Guide to Dynamic Programming, Longest Increasing Subsequence",
+				URL:      "https://web.stanford.edu/class/archive/cs/cs161/cs161.1138/handouts/140%20Guide%20to%20Dynamic%20Programming.pdf",
+				Guidance: "Read the Longest Increasing Subsequence problem, recurrence, proof, and runtime analysis. Pay attention to the phrase 'ends at position i' and why the final answer takes a maximum over all ending positions.",
+				Minutes:  10,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Directly supports the exact-ending state, compatible predecessor scan, quadratic evaluation order, and separation between a local ending value and the global optimum.",
+			},
+			{
+				Title:    "Aldous and Diaconis: Patience Sorting and Longest Increasing Subsequences",
+				URL:      "https://www.stat.berkeley.edu/users/aldous/Research/OP/patience.pdf",
+				Guidance: "Read Section 1.1, the card-pile example, and the connection to increasing subsequences. Stop before the probabilistic analysis. Compare the pile-top summary with the lesson's quadratic predecessor recurrence.",
+				Minutes:  11,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Explains how patience sorting relates to longest increasing subsequences. It is an optional faster-algorithm perspective on the sequence state used in the lesson.",
+			},
+		}
+	case 62:
+		return []Reading{
+			{
+				Title:    "MIT 6.006 Recitation 21: Subset Sum",
+				URL:      "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/95e744ee64464cb6bc8f8264faeea080_MIT6_006F11_rec21.pdf",
+				Guidance: "Read pages 1-4 through the bottom-up subset-sum table. State the boolean subproblem in words, identify the take and skip predecessors, and note why the numeric target appears in the runtime.",
+				Minutes:  10,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Directly supports zero-or-one subset feasibility, the O(nS) pseudopolynomial bound, parity and range checks, and the source table that a descending one-dimensional update compresses.",
+			},
+			{
+				Title:    "Horowitz and Sahni: Computing Partitions with Applications to the Knapsack Problem",
+				URL:      "https://www.cise.ufl.edu/~sahni/papers/computingPartitions.pdf",
+				Guidance: "Read the abstract and sections 1-2 through the basic partition and knapsack formulations. Compare input bit length with dependence on the numeric sum, then stop before the empirical comparisons.",
+				Minutes:  13,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Provides the classic research context for subset sum, partition, and zero-or-one knapsack, including why algorithms polynomial in the target magnitude are pseudopolynomial.",
+			},
+		}
+	case 63:
+		return []Reading{
+			{
+				Title:    "Saint Louis University: Notes on the Maximum Subarray Problem",
+				URL:      "https://www.cs.slu.edu/~goldwamh/courses/slu/csci314/2012_Fall/lectures/maxsubarray/",
+				Guidance: "Read the problem statement and Algorithms 1-4, ending after the linear scan. Track the difference between the best sum ending at the current position and the best sum seen anywhere.",
+				Minutes:  9,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Directly supports the local-ending versus global-best split, the linear recurrence, actual-element initialization for nonempty answers, and the all-negative edge case.",
+			},
+			{
+				Title:    "Takaoka: Efficient Algorithms for the Maximum Subarray Problem by Distance Matrix Multiplication",
+				URL:      "https://theory.stanford.edu/~virgi/cs367/papers/maxsubarray.pdf",
+				Guidance: "Read the abstract and opening maximum-subarray definition, then the one-dimensional baseline discussion. Stop before distance-matrix multiplication. Distinguish the lesson's linear one-dimensional recurrence from the paper's multidimensional extension.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Defines maximum-subarray optimization and places the one-dimensional problem within research on higher-dimensional arrays. The matrix algorithms are an extension, not the lesson's implementation.",
+			},
+		}
+	case 64:
+		return []Reading{
+			{
+				Title:    "Princeton Competitive Programming: Dynamic Programming I",
+				URL:      "https://competitive-programming.cs.princeton.edu/files/lec_f22_w4.pdf",
+				Guidance: "Read the Paths on a Grid section through its recurrence and table fill. Compare addition for path counts with minimum-plus-cell-cost for a shortest grid path, then add a blocked-cell state that contributes zero paths.",
+				Minutes:  9,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Supports the acyclic grid dependency, permitted predecessors, path-count addition, minimum-cost combination, boundary initialization, and row compression.",
+			},
+			{
+				Title:    "Goldstein et al.: Path Counting for Grid-Based Navigation",
+				URL:      "https://damassets.autodesk.net/content/dam/autodesk/research/publications-assets/pdf/path-counting-for-grid-based-navigation.pdf",
+				Guidance: "Read section 3 through section 3.1. This is a navigation-graph extension, not the lesson's right-and-down grid: compare its Pascal-style addition of predecessor counts and unavailable regions with the simpler acyclic grid recurrence, then stop before the empirical results.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Studies counting shortest paths on grid graphs. Its obstacle and movement assumptions differ from right/down-only DP, so it is an application extension, not a replacement for the lesson's acyclic recurrence.",
+			},
+		}
+	case 65:
+		return []Reading{
+			{
+				Title:    "Florida State CIS4930: Dynamic Programming, Largest Square of All 1s",
+				URL:      "https://www.cs.fsu.edu/~tvhoang/classes/cis4930/scribe8_cis4930.pdf",
+				Guidance: "Read section 8.5.3. Draw the upper, left, and upper-left supporting squares for one cell, derive one plus their minimum, and distinguish stored side length from reported area.",
+				Minutes:  8,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Directly supports the three-neighbor maximal-square recurrence, the need for a minimum, quadratic grid time, and squaring the final side length.",
+			},
+			{
+				Title:    "Bhandari: An Efficient Frequency-Based Approach for Maximal Square Detection in Binary Matrices",
+				URL:      "https://arxiv.org/abs/2503.18974",
+				Guidance: "Read the abstract, introduction, and section 2.1 only. Verify that its standard-DP baseline uses the same three-neighbor minimum and O(mn) scan as the lesson; treat the proposed frequency method as a research extension and do not substitute it for the lesson exercise.",
+				Minutes:  11,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Documents the standard maximal-square recurrence and rolling-row space bound in a research comparison, then shows that the same contiguous-square problem can motivate a different representation.",
+			},
+			{
+				Title:    "UT Austin CS313E: Greatest Path Sum in a Triangle",
+				URL:      "https://www.cs.utexas.edu/~mitra/csSpring2018/cs313/assgn/assgn8.html",
+				Guidance: "Read the triangle example and the allowed adjacent-child moves. Sketch a bottom-up recurrence; skip the submission instructions. The assignment maximizes a sum, while a minimum-path task changes the combining operation.",
+				Minutes:  5,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Defines triangle-path adjacency and contrasts exhaustive, greedy, and dynamic-programming approaches. It supports deriving predecessors from the allowed moves.",
+			},
+		}
+	case 66:
+		return []Reading{
+			{
+				Title:    "MIT 6.006: Dynamic Programming II, Longest Common Subsequence",
+				URL:      "https://courses.csail.mit.edu/6.006/fall09/lecture_notes/lecture19.pdf",
+				Guidance: "Read the LCS definition, suffix-state recurrence, and evaluation order on pages 1-3. Separate a diagonal match from dropping one side, and note why a subsequence need not be contiguous.",
+				Minutes:  10,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Directly supports the two-sequence state, equal-symbol diagonal extension, skip transitions, O(nm) table, and distinction between subsequences and substrings.",
+			},
+			{
+				Title:    "Hirschberg: A Linear Space Algorithm for Computing Maximal Common Subsequences",
+				URL:      "https://ics.uci.edu/~dhirschb/pubs/p341-hirschberg.pdf",
+				Guidance: "Read the introduction and Algorithm B's space analysis. Identify which table information is sufficient to recover an LCS with linear working space; skip the detailed induction if time expires.",
+				Minutes:  13,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Supports the lesson's O(min(n,m)) length-space claim and its warning that reconstructing an actual common subsequence requires stored decisions or extra work.",
+			},
+		}
+	case 67:
+		return []Reading{
+			{
+				Title:    "MIT 6.006: Edit Distance Lecture Notes",
+				URL:      "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/06fe52fd13d711cb32dd0e5c6c8f0980_MIT6_006F11_lec21_orig.pdf",
+				Guidance: "Read the edit-distance pages that define the subproblem, insertion, deletion, and replacement transitions, base cases, and two-dimensional topological order. Draw the index change for each edit.",
+				Minutes:  10,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Directly supports the edit-distance recurrence, empty-prefix base cases, O(nm) evaluation, and the need to compute smaller prefixes before larger ones.",
+			},
+			{
+				Title:    "Wagner and Fischer: The String-to-String Correction Problem",
+				URL:      "https://computingbiology.github.io/docs/wagner1974.pdf",
+				Guidance: "Read pages 168-171 through the dynamic-programming algorithm and complexity argument. Match each correction operation to a predecessor cell; stop before the later theorem details.",
+				Minutes:  13,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Is the foundational paper for insertion, deletion, and substitution edit distance and supports the lesson's product-of-lengths running time.",
+			},
+			{
+				Title:    "MIT 6.046J: Longest Palindromic Subsequence",
+				URL:      "https://ocw.mit.edu/courses/6-046j-design-and-analysis-of-algorithms-spring-2015/6144f2dfbe515abfbeb32f99a6907af7_MIT6_046JS15_lec10.pdf",
+				Guidance: "Read the longest-palindromic-subsequence state and recurrence only. Contrast its freedom to discard an endpoint with a palindromic-substring check, which must keep every interior character; stop before optimal binary search trees.",
+				Minutes:  5,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Directly supports the interval state, equal-endpoint recurrence, shorter-interval evaluation order, and the lesson's distinction between subsequence freedom and substring contiguity.",
+			},
+		}
+	case 68:
+		return []Reading{
+			{
+				Title:    "CMU Notes on the Distinct Sequence Problem",
+				URL:      "https://www.cs.cmu.edu/~yandongl/distinctseq.html",
+				Guidance: "Read the problem, subproblem definition, recurrence, and empty-string initialization. Trace source 'aab' and target 'ab', identifying the skip and use-current-character contributions.",
+				Minutes:  8,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Directly supports counting index-distinct target subsequences, adding alternative predecessors, and the separate empty-target and empty-source base cases.",
+			},
+			{
+				Title:    "Collins: The Number of Distinct Subsequences of a Random Binary String",
+				URL:      "https://arxiv.org/pdf/1310.7288",
+				Guidance: "Read the abstract, introduction, and section 1.1 through equation (1), the recurrence for the number of distinct m-subsequences. Focus on why a subsequence count splits by its starting run rather than by a single character; skip the probabilistic expectation analysis.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Gives an open, author-hosted treatment of a distinct-subsequence-counting recurrence and reinforces why counting alternatives uses addition rather than a maximum.",
+			},
+			{
+				Title:    "Stony Brook CSE 373: String Dynamic Programming Exercises",
+				URL:      "https://www3.cs.stonybrook.edu/~skiena/373/hw/hw.pdf",
+				Guidance: "Read Chapter 5 exercises 1 and 4 only. Derive the repeated-substring table so a mismatch resets the current matching suffix, then derive the Boolean shuffle table in which each step consumes one character from exactly one source.",
+				Minutes:  5,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Directly scopes the lesson's other two string-table problems: contiguous common substring and order-preserving interleaving, with different combination rules from subsequence counting.",
+			},
+		}
+	case 69:
+		return []Reading{
+			{
+				Title:    "Oregon State: 0-1 Knapsack as a Two-Dimensional State Graph",
+				URL:      "https://web.engr.oregonstate.edu/~huanlian/algorithms_course/2-DP/knapsack.html",
+				Guidance: "Read the 0-1 knapsack subproblem, graph interpretation, base cases, and bottom-up order. Generalize the capacity coordinate to two resources and state why both coordinates scan downward during compression.",
+				Minutes:  9,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Supports multiple state dimensions, take-or-skip transitions, capacity-dependent complexity, and downward updates that prevent selecting one item twice.",
+			},
+			{
+				Title:    "Boussier et al.: Solving the 0-1 Multidimensional Knapsack Problem with Resolution Search",
+				URL:      "https://arxiv.org/abs/0905.0848",
+				Guidance: "Read the abstract and opening mathematical model of items constrained by several resources. Stop before resolution search. Compare its resource vector with the lesson's two-capacity DP; the paper uses a different exact solver.",
+				Minutes:  11,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Formalizes zero-or-one choices under several simultaneous resource constraints. Resolution search is optional research context; it does not establish the lesson's DP update order.",
+			},
+			{
+				Title:    "University of Colorado: Dice-Sum Recurrence",
+				URL:      "https://home.cs.colorado.edu/~srirams/courses/csci2824-spr14/recursiveCounting-27.html",
+				Guidance: "Read Example 4 only. Derive the last-roll recurrence and its impossible base cases, then compare its two coordinates with the lesson's dice-count and target-total state.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Directly supports the dice-count and total-sum state, addition of alternatives, and careful base cases for unreachable totals.",
+			},
+		}
+	case 70:
+		return []Reading{
+			{
+				Title:    "CMU 15-210: Dynamic Programming, Optimal Binary Search Trees",
+				URL:      "https://www.cs.cmu.edu/afs/cs/academic/class/15210-s15/www/lectures/dp-notes.pdf",
+				Guidance: "Read the optimal-binary-search-tree section from its interval definition through the recurrence. Track how choosing one root splits a contiguous range into two smaller independent ranges and why table order follows interval length.",
+				Minutes:  10,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Supports interval states, trying every split or last action, increasing-length evaluation, O(n squared) states, and O(n cubed) split enumeration.",
+			},
+			{
+				Title:    "Hu and Shing: Computation of Matrix Chain Products",
+				URL:      "https://cic.tju.edu.cn/faculty/gongxj/course/algorithm/doc/1981-Computationofmatrixchainproducts.pdf",
+				Guidance: "Read the opening formulation and the standard interval recurrence before the faster algorithm. Identify how fixing the final split makes the two remaining intervals independent.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Provides classic research context for interval dynamic programming and the lesson's technique of choosing a final structural action so boundary information becomes fixed.",
+			},
+			{
+				Title:    "University of Iowa: Nim and Deterministic Dynamic Programming",
+				URL:      "https://user.engineering.uiowa.edu/~dbricker/or_lectures.html",
+				Guidance: "Open the Nim lecture under Deterministic Dynamic Programming and read the state-value recurrence. Recast the value as the current player's advantage and note why the opponent's best future value is subtracted.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Supports the lesson's game-state viewpoint and the current-player score-difference recurrence; it does not prescribe the lesson's array example.",
+			},
+		}
+	case 71:
+		return []Reading{
+			{
+				Title:    "University of Washington CSE417: Introduction to Greedy Algorithms",
+				URL:      "https://courses.cs.washington.edu/courses/cse417/25au/readings/introgreedy.html",
+				Guidance: "Read through section 3, Exchange Arguments. Write the five-part proof template in your own words, then identify the feasibility-preserving swap needed for matching the smallest adequate resource to the smallest demand.",
+				Minutes:  9,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Supports the lesson's core claim that a greedy rule needs a proof, especially a swap that preserves feasibility and does not worsen the objective.",
+			},
+			{
+				Title:    "Arratia: The Greedy Algorithm and the Cohen-Macaulay Property",
+				URL:      "https://www.cs.upc.edu/~argimiro/mypapers/Journals/2018/Argimiro4AC65rev.pdf",
+				Guidance: "Read the first two pages through the discussion of Edmonds' exchange condition. Stop before the algebraic definitions in Section 2. Contrast a proved structural condition with assuming that any locally best choice works.",
+				Minutes:  11,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Explains why greedy optimality requires structure and discusses the exchange property of matroids. The algebraic extension is not needed for the lesson's elementary exchange proofs.",
+			},
+		}
+	case 72:
+		return []Reading{
+			{
+				Title:    "Middlebury CS302: Scheduling and Exchange Arguments",
+				URL:      "https://www.cs.middlebury.edu/~skimmel/Courses/302/site/Scheduling.html",
+				Guidance: "Read sections 5-6 on swapping adjacent out-of-order choices. Use the same two-item comparison to derive the ordering by A-cost minus B-cost for two-city assignment.",
+				Minutes:  9,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Supports deriving a sorted greedy order with a local exchange calculation rather than memorizing a direction, including the cost-difference baseline used by two-city assignment.",
+			},
+			{
+				Title:    "Dragan: On Greedy Matching Ordering and Greedy Matchable Graphs",
+				URL:      "https://www.cs.kent.edu/~dragan/greedymatching.pdf",
+				Guidance: "Read the introduction, matching definition, and greedy algorithm on the first two pages. Notice that correctness depends on the vertex ordering and graph class. Do not apply this general-graph algorithm as the proof for sorted numeric pairing.",
+				Minutes:  11,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Studies when an ordering makes greedy pairing correct. It extends the lesson's ordering principle to graph matching under additional structural assumptions.",
+			},
+			{
+				Title:    "UC Riverside CS141: Rowing Pair Exchange Proof",
+				URL:      "https://www.cs.ucr.edu/~yihans/teaching/141/f20/141F20/discussion/discussion5.pdf",
+				Guidance: "Read Midterm Problem 4's rowing algorithm and greedy-choice proof. Compare its chosen feasible partner with the lesson's two-pointer boat rule, keeping the at-most-two-people capacity assumption explicit.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Directly supports the lesson's decide-the-heaviest-item exchange argument and makes clear that the two-person capacity is what closes the greedy choice.",
+			},
+		}
+	case 73:
+		return []Reading{
+			{
+				Title:    "MIT 6.046J: Interval Scheduling",
+				URL:      "https://people.csail.mit.edu/rmwu/static/files/notes/6-046-notes.pdf",
+				Guidance: "Read section 1.4 through the earliest-finish-time theorem and proof. Compare earliest finish with shortest interval and earliest start, and record the notes' endpoint compatibility convention.",
+				Minutes:  10,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Directly supports earliest-finish interval selection, its exchange argument, counterexamples to tempting alternatives, O(n log n) sorting, and endpoint conventions.",
+			},
+			{
+				Title:    "Kolen et al.: Interval Scheduling, A Survey",
+				URL:      "https://ir.cwi.nl/pub/11585/11585B.pdf",
+				Guidance: "Read the abstract and introductory taxonomy of interval scheduling variants. Identify which assumptions produce the unweighted single-machine problem solved by earliest finish, then stop before the broader approximation survey.",
+				Minutes:  11,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Provides research context for interval scheduling and explains why changing weights, machines, or compatibility rules changes the algorithm.",
+			},
+			{
+				Title:    "UT Austin: Classical Greedy Interval Scheduling",
+				URL:      "https://users.ece.utexas.edu/~garg/publicCompanion/chapter6-classical.html",
+				Guidance: "Use the IntervalScheduling section as pseudocode reference. For balloon hitting, reinterpret overlap under closed endpoints; for partition labels, write the analogous maintained right boundary from last occurrences.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Supplies concise implementation and complexity details while the scoped comparison covers the lesson's shared pattern of committing to a maintained interval boundary.",
+			},
+		}
+	case 74:
+		return []Reading{
+			{
+				Title:    "UC Irvine: Allen's Interval Algebra",
+				URL:      "https://ics.uci.edu/~alspaugh/cls/shr/allen.html",
+				Guidance: "Read the thirteen basic interval relations and the endpoint definitions for before, meets, overlaps, starts, during, and finishes. Translate those relations into the lesson's overlap test before tracing merge and intersection scans.",
+				Minutes:  9,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Supports precise interval overlap and containment semantics, including endpoint equality, which the merge and intersection algorithms rely on.",
+			},
+			{
+				Title:    "Allen: Maintaining Knowledge about Temporal Intervals",
+				URL:      "https://cse.unl.edu/~choueiry/Documents/Allen-CACM1983.pdf",
+				Guidance: "Read sections 1-2 through the definition of interval relations. Concentrate on overlap, containment, and endpoint order; skip the constraint-propagation algorithm.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Is the primary research source for the interval relations used to reason about containment, partial overlap, disjointness, and touching endpoints.",
+			},
+			{
+				Title:    "Princeton COS226: Geometric Search and Interval Intersection",
+				URL:      "https://www.cs.princeton.edu/courses/archive/spr07/cos226/lectures/17GeometricSearch.pdf",
+				Guidance: "Read the interval-intersection definition and examples, not the interval-tree implementation. For two already sorted disjoint lists, prove that the interval with the earlier end cannot meet a later interval in the other list.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Supports the intersection predicate and the endpoint-order fact behind advancing the earlier-ending interval in an O(n+m) two-list scan.",
+			},
+		}
+	case 75:
+		return []Reading{
+			{
+				Title:    "Stanford CS161: Greedy Algorithms",
+				URL:      "https://web.stanford.edu/class/archive/cs/cs161/cs161.1138/lectures/13/Slides13.pdf",
+				Guidance: "Read the farthest-feasible-jump example and its stays-ahead proof. Convert each jump layer into a reachable index range, and state separately whether the task asks only for reachability or for the minimum number of jumps.",
+				Minutes:  9,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Supports greedy maintenance of a reachable prefix, farthest progress, stays-ahead reasoning, and the distinction between feasibility and minimizing the number of jumps.",
+			},
+			{
+				Title:    "Khuller, Malekian, and Mestre: To Fill or Not to Fill, The Gas Station Problem",
+				URL:      "https://www.cs.umd.edu/users/samir/grant/gas-j.pdf",
+				Guidance: "Read the introduction and the fixed-path problem statement. Focus on what a failed or dominated prefix lets an algorithm discard; skip the tour approximation analysis.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Provides a formal gas-station optimization setting and supports reasoning about route prefixes, feasibility, and eliminating candidate stops or starts.",
+			},
+			{
+				Title:    "WPI CS2223: Greedy Gas-Station Proof",
+				URL:      "https://web.cs.wpi.edu/~cs2223/b05/Exams/Quiz2/",
+				Guidance: "Read Problem I and Alternate Solution 1. Adapt the stays-ahead proof to the lesson's rule that every start inside a segment whose running balance fails can be discarded together.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Supplies a short proof that a greedy route choice eliminates a range of alternatives rather than only one candidate.",
+			},
+		}
+	case 76:
+		return []Reading{
+			{
+				Title:    "Cornell CS2110: Monotonic Stacks",
+				URL:      "https://www.cs.cornell.edu/courses/cs2110/2026sp/lectures/lec15/",
+				Guidance: "Read Exercise 15.10. State the stack-order invariant for next-greater values, explain why a dominated candidate can be removed, and trace equal values under strict and non-strict comparisons.",
+				Minutes:  9,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Directly supports unresolved next-greater queries, stack monotonicity, candidate removal, equal-value behavior, and storing positions when answers require distances.",
+			},
+			{
+				Title:    "Sitchinava and Svenning: The All Nearest Smaller Values Problem Revisited in Practice, Parallel and External Memory",
+				URL:      "https://par.nsf.gov/servlets/purl/10590978",
+				Guidance: "Read the abstract, problem definition, and sequential stack baseline. Stop before parallel and external-memory algorithms. Relate each pop to an index whose nearest-smaller question is now resolved.",
+				Minutes:  11,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Connects nearest-smaller queries to a monotonic-stack baseline and examines faster execution in other computational models.",
+			},
+			{
+				Title:    "University of Hawaii: Aggregate Analysis of Stack Operations",
+				URL:      "https://algoparc.ics.hawaii.edu/~nodari/teaching/s15/Notes/Topic-15.html",
+				Guidance: "Read Aggregate Analysis and the stack example. Replace ordinary pops with monotonic-stack candidate pops and charge every pop to the unique earlier push that created it.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Justifies the lesson's O(n) total-time claim even though one iteration may contain a while loop that pops many entries.",
+			},
+		}
+	case 77:
+		return []Reading{
+			{
+				Title:    "University of Chicago: Stacks and the Stock Span Problem",
+				URL:      "https://classes.cs.uchicago.edu/archive/2019/fall/30121-1/lecture-examples/Stacks_and_Stock_Span.html",
+				Guidance: "Read the stock-span definition, quadratic baseline, and stack implementation. For each stack entry, write the exact earlier range it summarizes and why that range never needs to be split again.",
+				Minutes:  9,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Directly supports stock spans, compressed stack blocks, the no-greater-than comparison, and the linear total number of pushes and pops.",
+			},
+			{
+				Title:    "Tarjan: Amortized Computational Complexity",
+				URL:      "https://courses.cs.duke.edu/fall11/cps234/reading/Tarjan85_AmortizedComplexity.pdf",
+				Guidance: "Read the introduction and section 2's accounting view. Apply its credits to an entry that absorbs earlier entries, and distinguish one expensive operation from the total cost of the full scan.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Provides the formal analysis method behind compressed-stack algorithms in which each element is inserted and removed at most once.",
+			},
+			{
+				Title:    "Rensselaer: Remove Duplicate Letters with a Greedy Stack",
+				URL:      "https://www.cs.rpi.edu/~xiaoj8/ds/animations/stack/p316/",
+				Guidance: "Read the two-scan stack construction and step through cbacdcbc. Compare its safe removal of a larger earlier character with removing a larger earlier digit while budget remains; record which future-occurrence condition is specific to duplicate-letter removal.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Supports the greedy lexicographic stack pattern behind digit removal while making clear that the exact pop guard depends on the problem's deletion constraints.",
+			},
+		}
+	case 78:
+		return []Reading{
+			{
+				Title:    "CMU 15-122: Linked Lists and Tortoise-and-Hare Cycle Detection",
+				URL:      "https://www.cs.cmu.edu/~15122-archive/n19/handouts/10-linkedlist.pdf",
+				Guidance: "After the core attempts, read the cyclic-list and tortoise-and-hare discussion. Trace node identity and the two speeds; stop before the proof exercises.",
+				Minutes:  8,
+				Optional: false,
+				Kind:     "introduction",
+				Supports: "Explains cycle detection with two references moving at different speeds. The lesson separately chooses among cycle, set, and bit-count models.",
+			},
+			{
+				Title:    "Brent: An Improved Monte Carlo Factorization Algorithm",
+				URL:      "https://maths-people.anu.edu.au/brent/pd/rpb051i.pdf",
+				Guidance: "Read the introduction's review of Floyd cycle finding and section 2's cycle model. Ignore factorization details; compare the number of function evaluations with the familiar two-speed method.",
+				Minutes:  11,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Provides a primary research analysis of constant-memory cycle finding in iterated functions, the abstraction used by the duplicate-number pointer method.",
+			},
+			{
+				Title:    "CP-Algorithms: Bit Manipulation",
+				URL:      "https://cp-algorithms.com/algebra/bit-manipulation.html",
+				Guidance: "After the core attempts, read Binary Representation and Clear the Right-Most Set Bit. Trace 12 AND 11, then write count(n) as count(n AND (n-1)) plus one with count(0)=0.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Directly supports the lowest-set-bit removal identity and the O(n) bit-count recurrence used in the lesson's third task.",
+			},
+		}
+	case 79:
+		return []Reading{
+			{
+				Title:    "Cornell CS2110: Binary Search and Prefix Sums",
+				URL:      "https://www.cs.cornell.edu/courses/cs2110/2026sp/lectures/lec05/",
+				Guidance: "After the core attempts, read the binary-search and prefix-sum portions. Name the monotone boundary searched in the k-closest window problem, then state what a prefix-frequency key represents for an exact subarray sum.",
+				Minutes:  9,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Supports sorted-order elimination for binary search, prefix precomputation, and the need for a precise invariant before choosing either method.",
+			},
+			{
+				Title:    "Fenwick: A New Data Structure for Cumulative Probability Tables",
+				URL:      "https://www.cs.auckland.ac.nz/~peter-f/FTPfiles/TechRep110.pdf",
+				Guidance: "Read the abstract and section 1. Treat this as a research extension beyond the lesson's static prefix-frequency map: identify what changes when cumulative frequencies must support both updates and inverse lookup, then stop before the implementation details.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Shows how cumulative-frequency queries lead to a richer indexed representation when updates are allowed; it does not replace the lesson's simpler exact-sum prefix map.",
+			},
+			{
+				Title:    "Xianwei Zhang: Map-Based String and Window Algorithms",
+				URL:      "https://people.cs.pitt.edu/~xianeizhang/notes/alg/MapSum_Xianwei.html",
+				Guidance: "After the core attempts, read only the Longest Substring with At Most K Distinct Characters discussion (LC159/340). Track how the window shrinks once the distinct count exceeds K, then compare that atMost(K) count with the lesson's atMost(k) minus atMost(k-1) subtraction for an exact count.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Provides a worked atMost(K) sliding-window count. It supports the lesson's exact-count subtraction technique, not its boundary-search or prefix-sum topics.",
+			},
+		}
+	case 80:
+		return []Reading{
+			{
+				Title:    "NYU CSCI-UA 102: Iterative Inorder Traversal",
+				URL:      "https://cs.nyu.edu/~joannakl/cs102_s17/notes/lecture04_TreesAndBST.pdf",
+				Guidance: "After the core attempts, read section 7.1.2 and trace its explicit stack. For every saved node, state which subtree is complete and which work remains after the node returns to the top.",
+				Minutes:  8,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Directly supports iterative inorder traversal, O(h) explicit stack space, and the interpretation of each stack entry as an unfinished ancestor.",
+			},
+			{
+				Title:    "A Formal Derivation of a Constant-Space Tree Traversal Algorithm",
+				URL:      "https://ipsj.ixsq.nii.ac.jp/record/74122/files/IPSJ-SE11171026.pdf",
+				Guidance: "After the core attempts, read the introduction and traversal invariant. Compare how pending work is represented with the lesson's explicit inorder stack. Skip the formal derivation on the first pass.",
+				Minutes:  10,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Examines correctness of tree traversal without an explicit stack. This is an alternative to, not the implementation of, the lesson's stack-based traversal.",
+			},
+			{
+				Title:    "Open Data Structures: Doubly Linked Lists",
+				URL:      "https://opendatastructures.org/ods-python/3_2_DLList_Doubly_Linked_Li.html",
+				Guidance: "After the core attempts, read the node and add/remove pointer updates. Draw prev and next links before and after splicing a child list, including the head and tail nil endpoints.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Supports the bidirectional pointer invariants required when flattening a multilevel doubly linked list and the need to update both directions together.",
+			},
+			{
+				Title:    "University of Pittsburgh: Rotate List",
+				URL:      "https://people.cs.pitt.edu/~xianeizhang/notes/alg/ListSum_Xianwei.html",
+				Guidance: "After the core attempts, read only LC61: Rotate List. Trace the temporary ring, k modulo length, new-tail position, and final cut; check the empty-list guard before the modulo operation.",
+				Minutes:  5,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Directly supports the lesson's constant-space ring-and-cut rotation, modulo reduction, O(n) traversal, and empty-list edge case.",
+			},
+		}
+	case 81:
+		return []Reading{
+			{
+				Title:    "MIT 6.006: Breadth-First Search",
+				URL:      "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/resources/lecture-13-breadth-first-search-bfs/",
+				Guidance: "After the core attempts, read the typed lecture notes on adjacency lists, discovery marks, and breadth-first traversal. Explain why marking at discovery prevents a two-node cycle from allocating or enqueueing a second copy.",
+				Minutes:  9,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Supports O(V+E) adjacency-list traversal, visited identity maps for cycles and cloning, and frontier expansion used for reverse grid reachability and leaf layers.",
+			},
+			{
+				Title:    "Hedetniemi, Cockayne, and Hedetniemi: Linear Algorithms for Finding Tree Centers",
+				URL:      "https://www.cs.kent.edu/~dragan/ST/papers/HEDETNIEMI-COCKAYNE-HEDETNIEMIR-83.pdf",
+				Guidance: "Read the introduction and the Jordan-center algorithm. Focus on why deleting outer structure preserves the center and why a tree has one center or two adjacent centers; skip weighted variants.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Provides a primary research algorithm for tree centers and supports the lesson's layer-by-layer leaf removal and one-or-two-center stopping condition.",
+			},
+			{
+				Title:    "University of Washington CSE417: Graph Search",
+				URL:      "https://courses.cs.washington.edu/courses/cse417/25au/readings/bfsdfs.html",
+				Guidance: "After the core attempts, read the in-neighbor and out-neighbor definitions plus BFS runtime. Reverse every water-flow edge and state why searching outward from each ocean answers the original can-reach-ocean question.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Supports explicit edge reversal, reverse reachability, adjacency-list complexity, and avoiding duplicate visits.",
+			},
+		}
+	case 82:
+		return []Reading{
+			{
+				Title:    "Stanford CS106B: Binary Search over a Function Parameter",
+				URL:      "https://web.stanford.edu/class/archive/cs/cs106b/cs106b.1242/lectures/28-wrap/",
+				Guidance: "After the core attempts, read the Crystal Etching section. Identify the monotone decision predicate and write which side of the numeric range remains after a feasible or infeasible midpoint.",
+				Minutes:  8,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Supports binary search over an answer space and the requirement that feasibility change monotonically, which underlies maximizing a minimum placement distance.",
+			},
+			{
+				Title:    "Megiddo: Applying Parallel Computation Algorithms in the Design of Serial Algorithms",
+				URL:      "https://theory.stanford.edu/~megiddo/pdf/applying.pdf",
+				Guidance: "Read the introduction and the decision-oracle description of parametric search. Relate its unknown optimum and monotone comparisons to the simpler discrete binary search used in the lesson; skip the parallel simulation details.",
+				Minutes:  12,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Provides the foundational research framework for turning a monotone feasibility test into an optimization algorithm.",
+			},
+			{
+				Title:    "MIT 6.042J: Diagonal Arguments",
+				URL:      "https://courses.csail.mit.edu/6.042/spring15/cantor.pdf",
+				Guidance: "After the core attempts, read the binary-sequence diagonal construction. For the finite n-by-n input, choose the opposite of row i at position i and state the known position where the result differs from every row.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Directly supports the constructive diagonal proof for producing a missing binary string without enumeration.",
+			},
+			{
+				Title:    "Kansas State CC315: Min-Heaps and Priority Queues",
+				URL:      "https://textbooks.cs.ksu.edu/cc315/iv-priority-queues/10-heaps-and-priority-queues/1-introduction/tele.html",
+				Guidance: "After the core attempts, review the min-heap root and replacement operations. Use a heap of ladder-covered climbs: when its size exceeds the ladder count, eject the smallest climb and pay that one with bricks.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Supports the bounded min-heap mechanics used to retain the largest climbs; the lesson's exchange argument supplies why those climbs should receive the ladders.",
+			},
+		}
+	case 83:
+		return []Reading{
+			{
+				Title:    "University of Washington CSE421: Interval Covering",
+				URL:      "https://courses.cs.washington.edu/courses/cse421/24wi/lectures/Section03/section03-solns.pdf",
+				Guidance: "After the core attempts, read Problem 2.5 and its farthest-right covering rule. Translate the chosen interval into the video clip that extends coverage farthest among clips already available at the current boundary.",
+				Minutes:  8,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Supports greedily extending a covered target interval, sorted scanning, and the proof obligation that every chosen interval makes the farthest feasible progress.",
+			},
+			{
+				Title:    "Holshouser, Rudzinski, and Reiter: Two-Pile Move-Size Dynamic Nim",
+				URL:      "https://dmtcs.episciences.org/355",
+				Guidance: "Read the abstract and problem definition, especially how the maximum legal take changes during play. Compare its game position with a state containing both a suffix position and the current move limit.",
+				Minutes:  11,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Provides research context for take-away games whose legal future moves depend on a changing limit, supporting the lesson's need to keep that limit in the memoized state.",
+			},
+			{
+				Title:    "CMU 15-451: Selection and Sorted Order",
+				URL:      "https://www.cs.cmu.edu/~15451-f23/lectures/lecture01-selection.pdf",
+				Guidance: "After the core attempts, read section 3.1's select-k formulation. For the lesson's different range objective, use the resulting sorted order to prove that any chosen minimum and maximum bracket at least one contiguous k-element window whose range is no larger.",
+				Minutes:  6,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Supports reasoning in sorted rank order; the scoped derivation applies that order to the lesson's claim that a minimum-range k-subset can be replaced by a contiguous sorted window.",
+			},
+		}
+	case 84:
+		return []Reading{
+			{
+				Title:    "Princeton COS226: LRU Cache Exam Solution",
+				URL:      "https://www.cs.princeton.edu/courses/archive/fall20/cos226/exams/mid-f12-sol.pdf",
+				Guidance: "After the mock attempts, read problem 7. Trace a hit, an insertion, and an eviction through both the symbol table and doubly linked list, checking that every key maps to exactly one list node.",
+				Minutes:  8,
+				Optional: true,
+				Kind:     "introduction",
+				Supports: "Directly supports expected O(1) LRU lookup and update, the recency-list ordering, and the invariant that cache membership and list membership stay synchronized.",
+			},
+			{
+				Title:    "Mattson et al.: Evaluation Techniques for Storage Hierarchies",
+				URL:      "https://www.bitsavers.org/pdf/ibm/IBM_Systems_Journal/092/ibmsj0902B.pdf",
+				Guidance: "Read the abstract and the opening explanation of stack algorithms, including least-recently-used replacement. Stop before the trace-evaluation derivations.",
+				Minutes:  11,
+				Optional: true,
+				Kind:     "paper",
+				Supports: "Provides the foundational research context for LRU as a stack replacement policy and explains why recency order is the state an implementation must maintain.",
+			},
+			{
+				Title:    "Penn CIS1210: Bipartiteness by Breadth-First Search",
+				URL:      "https://www.cis.upenn.edu/~cis1210/current/lectures/notes.pdf",
+				Guidance: "After the mock attempts, read section 17. Color one disconnected example component by component and identify the edge that certifies failure on an odd cycle. Then review your run-compression stack invariant separately.",
+				Minutes:  7,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Supports two-coloring by traversal, the O(V+E) bound, odd-cycle conflicts, and the need to start a traversal in every disconnected component.",
+			},
+			{
+				Title:    "UPC: Removing Adjacent Duplicates",
+				URL:      "https://www.cs.upc.edu/~tonis/inf1/how-to-think/list_algorithms.html",
+				Guidance: "After the mock attempts, read section 14.5 only. Contrast its one-item memory with threshold run removal: store a character and count together so deleting one run can expose and continue the preceding run.",
+				Minutes:  4,
+				Optional: true,
+				Kind:     "reference",
+				Supports: "Supplies the linear adjacent-run scan that the lesson extends into a compressed (character, count) stack for threshold deletions and chain reactions.",
+			},
+		}
+	default:
+		return nil
+	}
+}
