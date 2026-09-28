@@ -510,6 +510,12 @@ func NormalizeForSave(kind string, input Entity) Entity {
 	return e
 }
 
+// KeyField names the entity field an entry of this kind is identified by
+// ("id" or "slug"), so callers don't have to hard-code which kinds use which.
+func KeyField(kind string) string {
+	return models[kind].Key
+}
+
 func ValidID(kind, id string) bool {
 	if _, ok := models[kind]; !ok {
 		return false

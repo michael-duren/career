@@ -13,7 +13,7 @@ import (
 )
 
 // mcpWritableKinds are the entry kinds MCP clients with career:write may edit.
-var mcpWritableKinds = map[string]bool{"goal": true, "company": true, "note": true}
+var mcpWritableKinds = map[string]bool{"goal": true, "company": true, "note": true, "book": true}
 
 // managedFields are set by the server and cannot be written through MCP.
 var managedFields = map[string]bool{"id": true, "slug": true, "createdAt": true, "updatedAt": true}
@@ -26,7 +26,7 @@ func canWrite(req *mcp.CallToolRequest) bool {
 
 func writableKind(name string) (string, error) {
 	if !mcpWritableKinds[name] {
-		return "", invalidInput("kind must be goal, company or note")
+		return "", invalidInput("kind must be goal, company, note or book")
 	}
 	return mcpKinds[name], nil
 }
@@ -113,6 +113,14 @@ func newEntry(kind string, input map[string]any) (database.Entity, error) {
 		setDefault(e, "priority", "medium")
 		setDefault(e, "status", "not_started")
 		setDefault(e, "body", "")
+	case "book":
+		e["slug"] = uuid.NewString()
+		setDefault(e, "type", "book")
+		setDefault(e, "featured", false)
+		setDefault(e, "priority", "medium")
+		setDefault(e, "status", "backlog")
+		setDefault(e, "authors", []any{})
+		setDefault(e, "body", "")
 	}
 	if err := fillChildren(kind, e, nil); err != nil {
 		return nil, err
@@ -121,34 +129,43 @@ func newEntry(kind string, input map[string]any) (database.Entity, error) {
 }
 
 type createInput struct {
-	Kind  string         `json:"kind" jsonschema:"goal, company or note"`
+	Kind  string         `json:"kind" jsonschema:"goal, company, note or book"`
 	Entry map[string]any `json:"entry" jsonschema:"fields of the new entry; IDs, slugs and timestamps are generated"`
 }
 
 type updateInput struct {
-	Kind     string         `json:"kind" jsonschema:"goal, company or note"`
+	Kind     string         `json:"kind" jsonschema:"goal, company, note or book"`
 	ID       string         `json:"id" jsonschema:"entry ID or slug"`
 	Revision string         `json:"revision" jsonschema:"revision returned by read_career_entry; the save fails if the entry changed since"`
 	Fields   map[string]any `json:"fields" jsonschema:"only the fields to change; arrays such as steps, notes, todos, tags and dependsOn replace the whole array; null removes an optional field"`
 }
 
+type deleteInput struct {
+	Kind     string `json:"kind" jsonschema:"goal, company, note or book"`
+	ID       string `json:"id" jsonschema:"entry ID or slug"`
+	Revision string `json:"revision" jsonschema:"revision returned by read_career_entry; the delete fails if the entry changed since"`
+}
+
 func writeSchema[T any]() any {
 	schema := inputSchema[T]()
-	schema.Properties["kind"].Enum = []any{"company", "goal", "note"}
+	schema.Properties["kind"].Enum = []any{"book", "company", "goal", "note"}
 	return schema
 }
 
 var createAnnotations = &mcp.ToolAnnotations{Title: "Create career entry", DestructiveHint: new(bool), OpenWorldHint: new(bool)}
 var updateAnnotations = &mcp.ToolAnnotations{Title: "Update career entry", OpenWorldHint: new(bool)}
+var deleteIsDestructive = true
+var deleteAnnotations = &mcp.ToolAnnotations{Title: "Delete career entry", DestructiveHint: &deleteIsDestructive, OpenWorldHint: new(bool)}
 
 const fieldGuide = "Fields — goal: title, status (planned|active|done|dropped), startDate, endDate (YYYY-MM-DD), color (#rrggbb), dailyHours, dependsOn (goal IDs), steps [{title, done}] (mini goals: ordered, dateless sub-goals), notes [{body}], metadata {string: string}. " +
 	"company: title, category, url, status (not_started|applied|interviewing|offer|rejected|passed), priority (high|medium|low), featured, tags, body (markdown). " +
-	"note: title, topic, description, tags, body (markdown), todos [{title, done}]."
+	"note: title, topic, description, tags, body (markdown), todos [{title, done}]. " +
+	"book: title, type (book|course), category (Computer Science|Networking|OS|Systems|Distributed Systems|Languages|Career|Online Course), status (backlog|reading|paused|completed|reference), priority (high|medium|low), authors [string], edition, isbn, url, cover, started, finished (YYYY-MM-DD), rating (0-5), featured, tags, body (markdown; chapter checklist)."
 
 func (s *Server) addWriteTools(server *mcp.Server) {
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "create_career_entry",
-		Description: "Create a goal, company or note. Confirm with the user first. " + fieldGuide + " Returns the new ID and revision.",
+		Description: "Create a goal, company, note or book. Confirm with the user first. " + fieldGuide + " Returns the new ID and revision.",
 		InputSchema: writeSchema[createInput](),
 		Annotations: createAnnotations,
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in createInput) (*mcp.CallToolResult, any, error) {
@@ -168,7 +185,7 @@ func (s *Server) addWriteTools(server *mcp.Server) {
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "update_career_entry",
-		Description: "Change fields of a goal, company or note. Confirm the change with the user first. Call read_career_entry first and pass its revision; send only changed fields. Existing steps, notes and todos keep their IDs; new ones may omit IDs. " + fieldGuide,
+		Description: "Change fields of a goal, company, note or book. Confirm the change with the user first. Call read_career_entry first and pass its revision; send only changed fields. Existing steps, notes and todos keep their IDs; new ones may omit IDs. " + fieldGuide,
 		InputSchema: writeSchema[updateInput](),
 		Annotations: updateAnnotations,
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in updateInput) (*mcp.CallToolResult, any, error) {
@@ -206,6 +223,35 @@ func (s *Server) addWriteTools(server *mcp.Server) {
 		}
 		return s.saveFromMCP(ctx, in.Kind, kind, entry, &in.Revision)
 	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "delete_career_entry",
+		Description: "Delete a goal, company, note or book. Confirm with the user first; this cannot be undone. Call read_career_entry first and pass its revision.",
+		InputSchema: writeSchema[deleteInput](),
+		Annotations: deleteAnnotations,
+	}, func(ctx context.Context, req *mcp.CallToolRequest, in deleteInput) (*mcp.CallToolResult, any, error) {
+		if !canWrite(req) {
+			return nil, nil, errNeedsWrite
+		}
+		kind, err := writableKind(in.Kind)
+		if err != nil {
+			return nil, nil, err
+		}
+		if !database.ValidID(kind, in.ID) || in.Revision == "" {
+			return nil, nil, invalidInput("valid id and revision are required")
+		}
+		if err := s.db.Delete(ctx, kind, in.ID, &in.Revision); err != nil {
+			switch {
+			case errors.Is(err, database.ErrCore):
+				return nil, nil, invalidInput("this is a core page; edit it instead of deleting it")
+			case errors.Is(err, database.ErrConflict):
+				return nil, nil, invalidInput("the entry changed since it was read; read it again and retry with the new revision")
+			default:
+				return nil, nil, toolError(err)
+			}
+		}
+		return nil, map[string]any{"kind": in.Kind, "id": in.ID, "deleted": true}, nil
+	})
 }
 
 // saveFromMCP validates like the website and saves with an optimistic
@@ -224,10 +270,6 @@ func (s *Server) saveFromMCP(ctx context.Context, name, kind string, entry datab
 	case err != nil:
 		return nil, nil, toolError(err)
 	}
-	key := "id"
-	if kind == "company" {
-		key = "slug"
-	}
-	id, _ := saved.Entry[key].(string)
+	id, _ := saved.Entry[database.KeyField(kind)].(string)
 	return nil, map[string]any{"kind": name, "id": id, "revision": saved.Revision, "updatedAt": saved.Entry["updatedAt"]}, nil
 }
