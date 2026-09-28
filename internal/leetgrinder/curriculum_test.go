@@ -20,8 +20,8 @@ func TestEveryLessonHasDistinctSourcesAndCitedReadings(t *testing.T) {
 	for _, week := range Curriculum() {
 		for _, day := range week.Days {
 			t.Run(day.Lesson, func(t *testing.T) {
-				if len(day.Readings) < 2 {
-					t.Fatal("lesson needs an introduction and a deeper reading")
+				if len(day.Readings) < 4 {
+					t.Fatal("lesson needs an introduction plus at least three more readings")
 				}
 				intro := day.Readings[0]
 				if intro.Kind != "introduction" || intro.Minutes > 10 {

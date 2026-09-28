@@ -1095,13 +1095,13 @@ func lessonReadings(day int) []Reading {
 				Supports: "States the base-case-plus-smaller-subproblem contract every recursive function in the day must satisfy.",
 			},
 			{
-				Title:    "Wikipedia: Recursion",
-				URL:      "https://en.wikipedia.org/wiki/Recursion",
-				Guidance: "Skim the definition, outside the computer-science-specific section.",
+				Title:    "Wikipedia: Exponentiation by squaring",
+				URL:      "https://en.wikipedia.org/wiki/Exponentiation_by_squaring",
+				Guidance: "Read the algorithm section.",
 				Minutes:  3,
 				Optional: true,
 				Kind:     "reference",
-				Supports: "Gives the general self-reference concept before narrowing to recursive functions.",
+				Supports: "Is the exact halve-the-exponent, square-the-result recurrence this lesson's worked example computes.",
 			},
 		}
 	case 29:
@@ -2184,7 +2184,7 @@ func lessonReadings(day int) []Reading {
 				Minutes:  4,
 				Optional: true,
 				Kind:     "reference",
-				Supports: "Introduces choosing the locally best available option, the strategy this lesson combines with a trie or heap.",
+				Supports: "Introduces choosing the locally best available option, the strategy this lesson combines with a heap.",
 			},
 			{
 				Title:    "Wikipedia: Scheduling (computing)",
@@ -2193,7 +2193,7 @@ func lessonReadings(day int) []Reading {
 				Minutes:  3,
 				Optional: true,
 				Kind:     "reference",
-				Supports: "Frames choosing among available ready tasks as a scheduling problem, here solved greedily with a heap or trie.",
+				Supports: "Frames choosing among available ready tasks as a scheduling problem, here solved greedily with a heap.",
 			},
 		}
 	case 57:
@@ -2538,13 +2538,13 @@ func lessonReadings(day int) []Reading {
 				Supports: "Defines triangle-path adjacency and contrasts exhaustive, greedy, and dynamic-programming approaches. It supports deriving predecessors from the allowed moves.",
 			},
 			{
-				Title:    "Wikipedia: Taxicab geometry",
-				URL:      "https://en.wikipedia.org/wiki/Taxicab_geometry",
-				Guidance: "Skim the definition.",
+				Title:    "cppreference: std::min",
+				URL:      "https://en.cppreference.com/w/cpp/algorithm/min",
+				Guidance: "Skim the summary.",
 				Minutes:  3,
 				Optional: true,
 				Kind:     "reference",
-				Supports: "Names the grid-distance model behind the local movement rules this lesson's DP states track.",
+				Supports: "Is the operation this lesson's largest-square DP applies to three neighboring square sizes before adding one.",
 			},
 		}
 	case 66:

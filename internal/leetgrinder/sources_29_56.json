@@ -1134,7 +1134,7 @@
         "minutes": 4,
         "optional": true,
         "kind": "reference",
-        "supports": "Introduces choosing the locally best available option, the strategy this lesson combines with a trie or heap."
+        "supports": "Introduces choosing the locally best available option, the strategy this lesson combines with a heap."
       },
       {
         "title": "Wikipedia: Scheduling (computing)",
@@ -1143,7 +1143,7 @@
         "minutes": 3,
         "optional": true,
         "kind": "reference",
-        "supports": "Frames choosing among available ready tasks as a scheduling problem, here solved greedily with a heap or trie."
+        "supports": "Frames choosing among available ready tasks as a scheduling problem, here solved greedily with a heap."
       }
     ]
   }

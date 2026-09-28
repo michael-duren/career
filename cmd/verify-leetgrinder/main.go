@@ -93,7 +93,7 @@ func verify() error {
 			failures++
 			continue
 		}
-		request.Header.Set("User-Agent", "leetgrinder-link-verifier/1.0 (https://github.com/michael-duren/career-strategy)")
+		request.Header.Set("User-Agent", "leetgrinder-link-verifier/1.0 (https://github.com/michael-duren/career)")
 		response, err := client.Do(request)
 		if err != nil {
 			fmt.Printf("FAIL %s: %v\n", u, err)

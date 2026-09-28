@@ -1146,13 +1146,13 @@
         "supports": "States the base-case-plus-smaller-subproblem contract every recursive function in the day must satisfy."
       },
       {
-        "title": "Wikipedia: Recursion",
-        "url": "https://en.wikipedia.org/wiki/Recursion",
-        "guidance": "Skim the definition, outside the computer-science-specific section.",
+        "title": "Wikipedia: Exponentiation by squaring",
+        "url": "https://en.wikipedia.org/wiki/Exponentiation_by_squaring",
+        "guidance": "Read the algorithm section.",
         "minutes": 3,
         "optional": true,
         "kind": "reference",
-        "supports": "Gives the general self-reference concept before narrowing to recursive functions."
+        "supports": "Is the exact halve-the-exponent, square-the-result recurrence this lesson's worked example computes."
       }
     ]
   }

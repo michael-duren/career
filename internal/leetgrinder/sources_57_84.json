@@ -358,13 +358,13 @@
         "supports": "Defines triangle-path adjacency and contrasts exhaustive, greedy, and dynamic-programming approaches. It supports deriving predecessors from the allowed moves."
       },
       {
-        "title": "Wikipedia: Taxicab geometry",
-        "url": "https://en.wikipedia.org/wiki/Taxicab_geometry",
-        "guidance": "Skim the definition.",
+        "title": "cppreference: std::min",
+        "url": "https://en.cppreference.com/w/cpp/algorithm/min",
+        "guidance": "Skim the summary.",
         "minutes": 3,
         "optional": true,
         "kind": "reference",
-        "supports": "Names the grid-distance model behind the local movement rules this lesson's DP states track."
+        "supports": "Is the operation this lesson's largest-square DP applies to three neighboring square sizes before adding one."
       }
     ]
   },
