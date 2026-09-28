@@ -305,6 +305,7 @@ func (d *Document) Reconcile(goals []Goal, now time.Time) {
 		}
 	}
 	d.LastDate = today
+	d.LastReconciledAt = now
 	d.Finalize(now)
 	next := map[string]Goal{}
 	stepParents := map[string]string{}
@@ -365,13 +366,16 @@ func (d *Document) Reconcile(goals []Goal, now time.Time) {
 	}
 }
 // Generate creates sessions for each active rule occurrence between from and
-// to. sinceDate is the date this document was last reconciled through; a rule
-// occurrence with no existing session is skipped when its date is earlier
-// than sinceDate, so a goal or subgoal becoming eligible again (an extended
-// end date, an unfinished subgoal) never fabricates sessions, and actuals,
-// in weeks already closed out. An empty sinceDate (never reconciled) leaves
-// the full range unrestricted.
-func (d *Document) Generate(from, to string, now time.Time, busy []Busy, sinceDate string) {
+// to. sinceInstant is the instant this document was last reconciled; a rule
+// occurrence with no existing session and a computed start at or before that
+// instant is skipped, so a goal or subgoal becoming eligible again (an
+// extended end date, an unfinished subgoal, even mid-day today) never
+// fabricates a session, and Finalize never invents assumed actual time for
+// it. A genuinely missed occurrence (its start falls after sinceInstant, even
+// if now has since moved past it) still generates normally, so downtime
+// catch-up keeps working. A zero sinceInstant (never reconciled) leaves the
+// full range unrestricted.
+func (d *Document) Generate(from, to string, now time.Time, busy []Busy, sinceInstant time.Time) {
 	loc, _ := time.LoadLocation(d.Settings.TimeZone)
 	rules := []string{}
 	for id := range d.Rules {
@@ -401,9 +405,6 @@ func (d *Document) Generate(from, to string, now time.Time, busy []Busy, sinceDa
 			if exists && (old.Exception || old.Plan != nil && !old.Plan.Start.After(now)) {
 				continue
 			}
-			if !exists && sinceDate != "" && date < sinceDate {
-				continue
-			}
 			a, e := d.assignment(r.Assignment, date)
 			if e != nil {
 				continue
@@ -421,6 +422,8 @@ func (d *Document) Generate(from, to string, now time.Time, busy []Busy, sinceDa
 			if e != nil {
 				s.State = "attention"
 				s.Attention = e.Error()
+			} else if !exists && !sinceInstant.IsZero() && !start.After(sinceInstant) {
+				continue
 			} else {
 				s.Plan = &Plan{Start: start, End: start.Add(time.Duration(r.DurationMinutes) * time.Minute)}
 			}
@@ -524,6 +527,11 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 				}
 			}
 		}
+		assignment, ae := d.assignment(r.Assignment, r.EffectiveFrom)
+		if ae != nil {
+			return ae
+		}
+		r.Assignment = assignment
 		loc, _ := time.LoadLocation(d.Settings.TimeZone)
 		if r.EffectiveFrom < now.In(loc).Format(dateLayout) {
 			return fmt.Errorf("recurrence cannot invent earlier occurrences")
@@ -573,6 +581,12 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 			s.RuleID = old.RuleID
 			s.OccurrenceDate = old.OccurrenceDate
 			s.Exception = old.RuleID != ""
+		} else {
+			// A new session has no recurring identity of its own; only Generate
+			// assigns these, so a client-supplied value here is never trusted.
+			s.RuleID = ""
+			s.OccurrenceDate = ""
+			s.Exception = false
 		}
 		if s.Plan == nil || !s.Plan.Start.After(now) {
 			return fmt.Errorf("plans must start in the future; record actual work for the past")

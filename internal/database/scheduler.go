@@ -93,8 +93,9 @@ func schedulerReconcileTx(ctx context.Context, tx *sql.Tx, now time.Time) error 
 	loc, _ := time.LoadLocation(d.Settings.TimeZone)
 	week := scheduler.Monday(now.In(loc).Format("2006-01-02"))
 	sinceDate := d.LastDate
+	sinceInstant := d.LastReconciledAt
 	from, to := schedulerRange(d, week, sinceDate)
-	d.Generate(from, to, now, d.Busy, sinceDate)
+	d.Generate(from, to, now, d.Busy, sinceInstant)
 	d.Reconcile(goals, now)
 	d.Revalidate(now, d.Busy)
 	after, e := json.Marshal(d)
@@ -158,6 +159,7 @@ func (s *Store) schedulerUpdate(ctx context.Context, w string, m *scheduler.Muta
 		return scheduler.Week{}, e
 	}
 	sinceDate := d.LastDate
+	sinceInstant := d.LastReconciledAt
 	d.Reconcile(goals, now)
 	if m != nil && m.Revision != d.Revision {
 		return d.Week(w, now, busy), ErrConflict
@@ -183,7 +185,7 @@ func (s *Store) schedulerUpdate(ctx context.Context, w string, m *scheduler.Muta
 		}
 	}
 	from, to := schedulerRange(d, w, sinceDate)
-	d.Generate(from, to, now, busy, sinceDate)
+	d.Generate(from, to, now, busy, sinceInstant)
 	if m != nil && m.Action == "rule" {
 		dates := []string{}
 		ids := []string{}

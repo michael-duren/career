@@ -388,7 +388,9 @@ func (s *Server) schedulerPlanningAvailability(ctx context.Context, week string)
 	c.LastRefresh = &now
 	c.Error = ""
 	if err = s.db.UpdateSchedulerGoogleHealth(ctx, &c); err != nil {
-		return nil, err
+		// Fresh busy data is already in hand; a lost race against the
+		// background worker's own health write shouldn't fail planning.
+		log.Printf("scheduler Google: failed to persist refreshed availability: %v", err)
 	}
 	return googleBusy(c), nil
 }

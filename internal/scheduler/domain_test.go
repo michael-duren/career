@@ -74,8 +74,8 @@ func TestRecurrenceIdentityExceptionAndCatchup(t *testing.T) {
 	d := testDocument()
 	now := instant("2026-09-28T00:00:00Z")
 	d.Rules["r"] = Rule{ID: "r", Weekday: 1, LocalStart: "06:00", DurationMinutes: 60, EffectiveFrom: "2026-09-28", Assignment: Assignment{GoalID: "goal"}}
-	d.Generate("2026-09-28", "2026-10-05", now, nil, "")
-	d.Generate("2026-09-28", "2026-10-05", now, nil, "")
+	d.Generate("2026-09-28", "2026-10-05", now, nil, time.Time{})
+	d.Generate("2026-09-28", "2026-10-05", now, nil, time.Time{})
 	if len(d.Sessions) != 2 {
 		t.Fatal("duplicate occurrences")
 	}
@@ -84,11 +84,11 @@ func TestRecurrenceIdentityExceptionAndCatchup(t *testing.T) {
 	if e := d.Apply(Mutation{Action: "session", ID: s.ID, Session: &s}, now, nil); e != nil {
 		t.Fatal(e)
 	}
-	d.Generate("2026-09-28", "2026-10-05", now, nil, "")
+	d.Generate("2026-09-28", "2026-10-05", now, nil, time.Time{})
 	if d.Sessions[s.ID].Plan.End.Sub(d.Sessions[s.ID].Plan.Start) != 2*time.Hour {
 		t.Fatal("exception overwritten")
 	}
-	d.Generate("2026-09-28", "2026-10-05", instant("2026-10-06T00:00:00Z"), nil, "")
+	d.Generate("2026-09-28", "2026-10-05", instant("2026-10-06T00:00:00Z"), nil, time.Time{})
 	if d.Sessions[s.ID].Actual == nil {
 		t.Fatal("catchup did not assume actual")
 	}
@@ -100,8 +100,8 @@ func TestGenerateDoesNotReviveSessionsBeforeLastReconcile(t *testing.T) {
 	d.Goals["goal"] = g
 	d.Rules["r"] = Rule{ID: "r", Weekday: 1, LocalStart: "06:00", DurationMinutes: 60, EffectiveFrom: "2026-09-28", Assignment: Assignment{GoalID: "goal"}}
 	now := instant("2026-10-06T00:00:00Z")
-	sinceDate := "2026-10-01"
-	d.Generate("2026-09-28", "2026-10-05", now, nil, sinceDate)
+	sinceInstant := instant("2026-10-01T00:00:00Z")
+	d.Generate("2026-09-28", "2026-10-05", now, nil, sinceInstant)
 	if _, ok := d.Sessions["r:2026-10-05"]; !ok {
 		t.Fatal("occurrence on or after the watermark was not generated")
 	}
@@ -110,9 +110,26 @@ func TestGenerateDoesNotReviveSessionsBeforeLastReconcile(t *testing.T) {
 	}
 	g.StartDate = "2026-09-01"
 	d.Goals["goal"] = g
-	d.Generate("2026-09-28", "2026-10-05", now, nil, sinceDate)
+	d.Generate("2026-09-28", "2026-10-05", now, nil, sinceInstant)
 	if _, ok := d.Sessions["r:2026-09-28"]; ok {
 		t.Fatal("retroactive eligibility fabricated a session before the reconciled watermark")
+	}
+}
+func TestGenerateDoesNotReviveSameDayEligibilityChange(t *testing.T) {
+	d := testDocument()
+	g := d.Goals["goal"]
+	g.StartDate = "2026-10-01"
+	d.Goals["goal"] = g
+	d.Rules["r"] = Rule{ID: "r", Weekday: 1, LocalStart: "09:00", DurationMinutes: 60, EffectiveFrom: "2026-09-28", Assignment: Assignment{GoalID: "goal"}}
+	// A reconcile already ran this morning, after the rule's 09:00 start, while
+	// the goal was still ineligible: nothing was generated for it then.
+	sinceInstant := instant("2026-09-28T10:00:00Z")
+	now := instant("2026-09-28T15:00:00Z")
+	g.StartDate = "2026-09-01"
+	d.Goals["goal"] = g
+	d.Generate("2026-09-28", "2026-09-28", now, nil, sinceInstant)
+	if s, ok := d.Sessions["r:2026-09-28"]; ok {
+		t.Fatalf("same-day eligibility change fabricated a missed occurrence: %+v", s)
 	}
 }
 func TestDayOvernightAndConflicts(t *testing.T) {
@@ -154,7 +171,7 @@ func TestEffectiveRuleEditPreservesException(t *testing.T) {
 	now := instant("2026-09-28T00:00:00Z")
 	r := Rule{ID: "r", Weekday: 1, LocalStart: "06:00", DurationMinutes: 60, EffectiveFrom: "2026-09-28", Assignment: Assignment{GoalID: "goal"}}
 	d.Rules[r.ID] = r
-	d.Generate("2026-09-28", "2026-10-12", now, nil, "")
+	d.Generate("2026-09-28", "2026-10-12", now, nil, time.Time{})
 	s := d.Sessions["r:2026-10-05"]
 	s.Plan.End = s.Plan.End.Add(time.Hour)
 	if e := d.Apply(Mutation{Action: "session", ID: s.ID, Session: &s}, now, nil); e != nil {
@@ -164,7 +181,7 @@ func TestEffectiveRuleEditPreservesException(t *testing.T) {
 	if e := d.Apply(Mutation{Action: "rule", ID: "r", EffectiveFrom: "2026-10-05", Rule: &r}, now, nil); e != nil {
 		t.Fatal(e)
 	}
-	d.Generate("2026-09-28", "2026-10-12", now, nil, "")
+	d.Generate("2026-09-28", "2026-10-12", now, nil, time.Time{})
 	count := 0
 	for _, session := range d.Sessions {
 		if session.Date == "2026-10-05" {
@@ -225,7 +242,7 @@ func TestSubgoalMoveRetainsHistoricalParent(t *testing.T) {
 	next.Title = "Next"
 	d.Goals[next.ID] = next
 	d.Rules["r"] = Rule{ID: "r", Weekday: 1, LocalStart: "06:00", DurationMinutes: 60, EffectiveFrom: "2026-09-28", Assignment: Assignment{GoalID: old.ID, StepID: "step"}}
-	d.Generate("2026-09-28", "2026-10-05", instant("2026-09-28T00:00:00Z"), nil, "")
+	d.Generate("2026-09-28", "2026-10-05", instant("2026-09-28T00:00:00Z"), nil, time.Time{})
 	old.Steps = nil
 	d.Reconcile([]Goal{old, next}, instant("2026-09-29T00:00:00Z"))
 	if d.Sessions["r:2026-09-28"].Assignment.GoalID != old.ID || d.Sessions["r:2026-10-05"].Assignment.GoalID != next.ID || d.Rules["r"].Assignment.GoalID != next.ID {
@@ -293,5 +310,33 @@ func TestAssumedActualRejectedBeforePlannedEnd(t *testing.T) {
 	}
 	if e := d.Apply(Mutation{Action: "actual", ID: "s", Actual: &a}, instant("2026-09-28T08:00:01Z"), nil); e != nil {
 		t.Fatalf("assumed actual rejected after the planned session ended: %v", e)
+	}
+}
+func TestNewSessionIgnoresClientSuppliedRecurringIdentity(t *testing.T) {
+	d := testDocument()
+	now := instant("2026-09-28T00:00:00Z")
+	s := Session{Assignment: Assignment{GoalID: "goal"}, Date: "2026-09-29", Plan: &Plan{Start: instant("2026-09-29T06:00:00Z"), End: instant("2026-09-29T07:00:00Z")}, RuleID: "not-a-real-rule", OccurrenceDate: "2026-09-29", Exception: true}
+	if e := d.Apply(Mutation{Action: "session", Session: &s}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	for _, saved := range d.Sessions {
+		if saved.RuleID != "" || saved.OccurrenceDate != "" || saved.Exception {
+			t.Fatalf("client-supplied recurring identity was trusted: %+v", saved)
+		}
+	}
+	if e := d.Validate(); e != nil {
+		t.Fatalf("session with a bogus rule id should not have been accepted: %v", e)
+	}
+}
+func TestRuleActionRejectsInvalidAssignment(t *testing.T) {
+	d := testDocument()
+	now := instant("2026-09-28T00:00:00Z")
+	r := Rule{Weekday: 1, LocalStart: "06:00", DurationMinutes: 60, EffectiveFrom: "2026-09-28"}
+	if e := d.Apply(Mutation{Action: "rule", Rule: &r}, now, nil); e == nil {
+		t.Fatal("rule with no goal and no title was accepted")
+	}
+	r.Assignment = Assignment{GoalID: "missing-goal"}
+	if e := d.Apply(Mutation{Action: "rule", Rule: &r}, now, nil); e == nil {
+		t.Fatal("rule referencing a nonexistent goal was accepted")
 	}
 }
