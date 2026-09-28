@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { addDays, mondayOf, snapMinutes, zonedDate, localInstant, localFields, clockLabel } from '../src/lib/scheduler.ts';
+import { addDays, mondayOf, snapMinutes, zonedDate, localInstant, localFields, clockLabel, displayClock } from '../src/lib/scheduler.ts';
 
 test('Monday weeks cross month/year and leap-day boundaries without browser timezone', () => {
   assert.equal(mondayOf('2027-01-03'), '2026-12-28');
@@ -11,6 +11,14 @@ test('drag positions snap to quarter hours while labels preserve manual minute p
   assert.equal(snapMinutes(68), 75);
   assert.equal(snapMinutes(66), 60);
   assert.equal(clockLabel(1505), '01:05 +1d');
+});
+test('displayClock shows 12-hour times with no leading zero on the hour', () => {
+  assert.equal(displayClock(0), '12:00 AM');
+  assert.equal(displayClock(9 * 60), '9:00 AM');
+  assert.equal(displayClock(12 * 60), '12:00 PM');
+  assert.equal(displayClock(13 * 60 + 5), '1:05 PM');
+  assert.equal(displayClock(23 * 60 + 59), '11:59 PM');
+  assert.equal(displayClock(1505), '1:05 AM +1d');
 });
 test('calendar today follows saved scheduler timezone', () => {
   assert.equal(zonedDate(new Date('2026-09-28T02:00:00Z'), 'America/Chicago'), '2026-09-27');
