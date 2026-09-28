@@ -87,7 +87,14 @@ func verify() error {
 	sort.Strings(urls)
 	failures := 0
 	for _, u := range urls {
-		response, err := client.Get(u)
+		request, err := http.NewRequest(http.MethodGet, u, nil)
+		if err != nil {
+			fmt.Printf("FAIL %s: %v\n", u, err)
+			failures++
+			continue
+		}
+		request.Header.Set("User-Agent", "leetgrinder-link-verifier/1.0 (https://github.com/michael-duren/career)")
+		response, err := client.Do(request)
 		if err != nil {
 			fmt.Printf("FAIL %s: %v\n", u, err)
 			failures++
