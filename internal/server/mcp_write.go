@@ -16,7 +16,7 @@ import (
 var mcpWritableKinds = map[string]bool{"goal": true, "company": true, "note": true, "book": true, "connection": true}
 
 // managedFields are set by the server and cannot be written through MCP.
-var managedFields = map[string]bool{"id": true, "slug": true, "createdAt": true, "updatedAt": true}
+var managedFields = map[string]bool{"id": true, "slug": true, "createdAt": true, "updatedAt": true, "photo": true}
 
 var errNeedsWrite = errors.New("this connection is read-only; reconnect the connector and choose \"Allow read and edit\" to change saved data")
 
@@ -168,7 +168,7 @@ const fieldGuide = "Fields — goal: title, status (planned|active|done|dropped)
 	"company: title, category, url, status (not_started|applied|interviewing|offer|rejected|passed), priority (high|medium|low), featured, tags, body (markdown). " +
 	"note: title, topic, description, tags, body (markdown), todos [{title, done}]. " +
 	"book: title, type (book|course), category (Computer Science|Networking|OS|Systems|Distributed Systems|Languages|Career|Online Course), status (backlog|reading|paused|completed|reference), priority (high|medium|low), authors [string], edition, isbn, url, cover, started, finished (YYYY-MM-DD), rating (0-5), featured, tags, body (markdown; chapter checklist). " +
-	"connection: name, role, companyName, companySlug (linked company's ID from list_connection_companies or search_career_context), email, url, connectedOn, lastContactedOn (YYYY-MM-DD), cadenceDays (check-in reminder interval), queued (in the outreach queue), notes, tags."
+	"connection: name, role, companyName, companySlug (linked company's ID: the trackedSlug from list_connection_companies, or a company's ID from search_career_context), email, url, connectedOn, lastContactedOn (YYYY-MM-DD), cadenceDays (check-in reminder interval), queued (in the outreach queue), notes, tags."
 
 func (s *Server) addWriteTools(server *mcp.Server) {
 	mcp.AddTool(server, &mcp.Tool{
