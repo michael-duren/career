@@ -305,7 +305,6 @@ func (d *Document) Reconcile(goals []Goal, now time.Time) {
 		}
 	}
 	d.LastDate = today
-	d.LastReconciledAt = now
 	d.Finalize(now)
 	next := map[string]Goal{}
 	stepParents := map[string]string{}

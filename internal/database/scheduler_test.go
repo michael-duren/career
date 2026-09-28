@@ -58,6 +58,36 @@ func TestSchedulerConcurrentReservationsAndStaleDraft(t *testing.T) {
 		t.Fatalf("overlapping fresh save: %v", err)
 	}
 }
+func TestSchedulerIdleTickDoesNotRotateRevisionOrDirtyOutbox(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	now := time.Date(2030, 1, 7, 0, 0, 0, 0, time.UTC)
+	w, err := s.SchedulerWeek(ctx, "2030-01-07", now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var generationBefore int64
+	if err = s.DB.QueryRowContext(ctx, "SELECT generation FROM scheduler_google_outbox WHERE id=1").Scan(&generationBefore); err != nil {
+		t.Fatal(err)
+	}
+	// An idle worker tick a minute later, with nothing else having changed,
+	// must not rotate the revision (open scheduler tabs would spuriously
+	// conflict) or dirty the Google export outbox (a full resync every tick).
+	if err = s.SchedulerTick(ctx, now.Add(time.Minute)); err != nil {
+		t.Fatal(err)
+	}
+	var generationAfter int64
+	if err = s.DB.QueryRowContext(ctx, "SELECT generation FROM scheduler_google_outbox WHERE id=1").Scan(&generationAfter); err != nil {
+		t.Fatal(err)
+	}
+	if generationAfter != generationBefore {
+		t.Fatalf("idle tick dirtied the Google outbox: %d -> %d", generationBefore, generationAfter)
+	}
+	session := scheduler.Session{Date: "2030-01-07", Assignment: scheduler.Assignment{Title: "Work"}, Plan: &scheduler.Plan{Start: now.Add(9 * time.Hour), End: now.Add(10 * time.Hour)}}
+	if _, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "session", Session: &session}, now.Add(time.Minute), nil); err != nil {
+		t.Fatalf("idle tick stale-revisioned an open draft: %v", err)
+	}
+}
 func TestSchedulerBackupRoundtripAndInitialTimeZone(t *testing.T) {
 	s := imported(t)
 	ctx := context.Background()

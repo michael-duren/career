@@ -121,12 +121,6 @@ type Document struct {
 	// ClosedWeeks and LastDate track reconciliation for closed-week snapshots.
 	ClosedWeeks map[string][]Goal `json:"closedWeeks"`
 	LastDate    string            `json:"lastDate"`
-	// LastReconciledAt is the instant of the last successful Reconcile. Generate
-	// uses it, not LastDate, to decide whether a newly-eligible rule occurrence
-	// is a legitimate catch-up or a retroactive fabrication: LastDate alone has
-	// only day granularity, so it cannot tell a same-day eligibility change
-	// (already reconciled once today) from a genuine missed occurrence.
-	LastReconciledAt time.Time `json:"lastReconciledAt,omitempty"`
 }
 
 // All writes use POST /api/scheduler/mutate, including settings, rule, session,

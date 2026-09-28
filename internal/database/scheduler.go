@@ -66,12 +66,35 @@ func schedulerGoals(ctx context.Context, q queryer) ([]scheduler.Goal, error) {
 	}
 	return goals, nil
 }
-func schedulerSave(ctx context.Context, tx *sql.Tx, d scheduler.Document) error {
+// schedulerReconciledAt reads the instant of the last successful reconcile,
+// kept in its own column so it can be updated without touching document and
+// firing the Google-dirty trigger or invalidating open clients' revisions.
+func schedulerReconciledAt(ctx context.Context, q queryer) (time.Time, error) {
+	var t sql.NullTime
+	e := q.QueryRowContext(ctx, "SELECT reconciled_at FROM scheduler_state WHERE id=1").Scan(&t)
+	if errors.Is(e, sql.ErrNoRows) {
+		return time.Time{}, nil
+	}
+	if e != nil {
+		return time.Time{}, e
+	}
+	return t.Time, nil
+}
+
+// schedulerTouchReconciledAt persists the reconcile watermark alone, when
+// Generate/Reconcile/Revalidate produced no change worth saving or rotating
+// the revision for. It only updates an existing row: a document that has
+// never been saved has nothing to reconcile a watermark against yet.
+func schedulerTouchReconciledAt(ctx context.Context, tx *sql.Tx, now time.Time) error {
+	_, e := tx.ExecContext(ctx, "UPDATE scheduler_state SET reconciled_at=$1 WHERE id=1", now)
+	return e
+}
+func schedulerSave(ctx context.Context, tx *sql.Tx, d scheduler.Document, reconciledAt time.Time) error {
 	raw, e := json.Marshal(d)
 	if e != nil {
 		return e
 	}
-	_, e = tx.ExecContext(ctx, "INSERT INTO scheduler_state(id,document) VALUES(1,$1::jsonb) ON CONFLICT(id) DO UPDATE SET document=EXCLUDED.document", raw)
+	_, e = tx.ExecContext(ctx, "INSERT INTO scheduler_state(id,document,reconciled_at) VALUES(1,$1::jsonb,$2) ON CONFLICT(id) DO UPDATE SET document=EXCLUDED.document, reconciled_at=EXCLUDED.reconciled_at", raw, reconciledAt)
 	return e
 }
 func schedulerReconcileTx(ctx context.Context, tx *sql.Tx, now time.Time) error {
@@ -79,6 +102,10 @@ func schedulerReconcileTx(ctx context.Context, tx *sql.Tx, now time.Time) error 
 		return e
 	}
 	d, e := schedulerLoad(ctx, tx)
+	if e != nil {
+		return e
+	}
+	sinceInstant, e := schedulerReconciledAt(ctx, tx)
 	if e != nil {
 		return e
 	}
@@ -93,7 +120,6 @@ func schedulerReconcileTx(ctx context.Context, tx *sql.Tx, now time.Time) error 
 	loc, _ := time.LoadLocation(d.Settings.TimeZone)
 	week := scheduler.Monday(now.In(loc).Format("2006-01-02"))
 	sinceDate := d.LastDate
-	sinceInstant := d.LastReconciledAt
 	from, to := schedulerRange(d, week, sinceDate)
 	d.Generate(from, to, now, d.Busy, sinceInstant)
 	d.Reconcile(goals, now)
@@ -103,10 +129,10 @@ func schedulerReconcileTx(ctx context.Context, tx *sql.Tx, now time.Time) error 
 		return e
 	}
 	if string(before) == string(after) {
-		return nil
+		return schedulerTouchReconciledAt(ctx, tx, now)
 	}
 	d.Revision = uuid.NewString()
-	return schedulerSave(ctx, tx, d)
+	return schedulerSave(ctx, tx, d, now)
 }
 func (s *Store) SchedulerDocument(ctx context.Context) (scheduler.Document, error) {
 	return schedulerLoad(ctx, s.DB)
@@ -145,6 +171,10 @@ func (s *Store) schedulerUpdate(ctx context.Context, w string, m *scheduler.Muta
 	if e != nil {
 		return scheduler.Week{}, e
 	}
+	sinceInstant, e := schedulerReconciledAt(ctx, tx)
+	if e != nil {
+		return scheduler.Week{}, e
+	}
 	before, e := json.Marshal(d)
 	if e != nil {
 		return scheduler.Week{}, e
@@ -159,7 +189,6 @@ func (s *Store) schedulerUpdate(ctx context.Context, w string, m *scheduler.Muta
 		return scheduler.Week{}, e
 	}
 	sinceDate := d.LastDate
-	sinceInstant := d.LastReconciledAt
 	d.Reconcile(goals, now)
 	if m != nil && m.Revision != d.Revision {
 		return d.Week(w, now, busy), ErrConflict
@@ -209,9 +238,11 @@ func (s *Store) schedulerUpdate(ctx context.Context, w string, m *scheduler.Muta
 	}
 	if string(before) != string(after) {
 		d.Revision = uuid.NewString()
-		if e = schedulerSave(ctx, tx, d); e != nil {
+		if e = schedulerSave(ctx, tx, d, now); e != nil {
 			return scheduler.Week{}, e
 		}
+	} else if e = schedulerTouchReconciledAt(ctx, tx, now); e != nil {
+		return scheduler.Week{}, e
 	}
 	out := d.Week(w, now, busy)
 	return out, tx.Commit()
@@ -254,10 +285,14 @@ func (s *Store) SchedulerInitializeTimeZone(ctx context.Context, zone string) er
 		return e
 	}
 	if !d.Settings.Initialized {
+		reconciledAt, e := schedulerReconciledAt(ctx, tx)
+		if e != nil {
+			return e
+		}
 		d.Settings.TimeZone = zone
 		d.Settings.Initialized = true
 		d.Revision = uuid.NewString()
-		if e = schedulerSave(ctx, tx, d); e != nil {
+		if e = schedulerSave(ctx, tx, d, reconciledAt); e != nil {
 			return e
 		}
 	}

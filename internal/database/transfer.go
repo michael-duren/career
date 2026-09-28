@@ -153,7 +153,7 @@ func (s *Store) Import(ctx context.Context, r io.Reader, source Source, dry bool
 	if schedule != nil {
 		schedule.Revision = uuid.NewString()
 		schedule.Busy = nil
-		if err = schedulerSave(ctx, tx, *schedule); err != nil {
+		if err = schedulerSave(ctx, tx, *schedule, time.Time{}); err != nil {
 			return counts, err
 		}
 		if err = schedulerReconcileTx(ctx, tx, time.Now()); err != nil {
