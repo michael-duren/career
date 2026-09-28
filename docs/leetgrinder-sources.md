@@ -18,7 +18,7 @@ Every lesson ends with a References section. Each linked citation states which c
 
 The existing required/optional status of each day's introduction is preserved because it also determines the base spaced-review allowance. Optional introductions are still listed first. Deeper research readings are always optional.
 
-`internal/leetgrinder/readings.go` is the source of truth for the bibliography. Per-lesson Sol review records are in:
+`internal/leetgrinder/sources_01_28.json`, `sources_29_56.json`, and `sources_57_84.json` are the source of truth for the bibliography. `internal/leetgrinder/readings.go` is generated from them by `scripts/leetgrinder/integrate_readings.py` and must never be hand-edited; `TestReadingsMatchSourceManifests` in `curriculum_test.go` fails the build if the two drift apart. Per-lesson Sol review records are in:
 
 - [Lessons 1–28](leetgrinder-review-01-28.md)
 - [Lessons 29–56](leetgrinder-review-29-56.md)

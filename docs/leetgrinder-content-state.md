@@ -18,7 +18,7 @@ Update all 84 lessons in `internal/leetgrinder`: unique educational pages and re
 
 ## Source of truth while editing
 
-`internal/leetgrinder/sources_01_28.json`, `sources_29_56.json`, `sources_57_84.json` are working manifests, kept alongside the generator rather than deleted: they are the readable record of why each URL was chosen and let future edits regenerate `readings.go` instead of hand-editing generated Go. Run `python3 scripts/leetgrinder/integrate_readings.py` then `gofmt -w internal/leetgrinder/readings.go` after any manifest edit.
+`internal/leetgrinder/sources_01_28.json`, `sources_29_56.json`, `sources_57_84.json` are the source of truth, kept alongside the generator rather than deleted: they are the readable record of why each URL was chosen and let future edits regenerate `readings.go` instead of hand-editing generated Go. Run `python3 scripts/leetgrinder/integrate_readings.py` after any manifest edit; it gofmt's `readings.go` itself. `TestReadingsMatchSourceManifests` in `curriculum_test.go` fails the suite if a manifest edit isn't regenerated, or if `readings.go` is hand-edited out of sync.
 
 ## Final verification (this pass)
 
@@ -26,7 +26,7 @@ Update all 84 lessons in `internal/leetgrinder`: unique educational pages and re
 - `GOCACHE=/tmp/leetgrinder-go-cache go test ./internal/leetgrinder -count=1` passed, including the global duplicate-source URL-uniqueness test.
 - `GOCACHE=/tmp/leetgrinder-go-cache go test ./... -count=1` passed in full (sandbox escalation used for local httptest sockets).
 - `git diff --check` reported no whitespace errors.
-- Live GET audit: `python3 scripts/leetgrinder/check_reading_links.py`. Of 201 readings, 199 return HTTP 200 under strict TLS validation with content verified against each citation's claimed title/topic (not status code alone — this caught paywalls, JSON denials, unrelated PDFs, wrong-paper mismatches, and generic redirect pages in earlier passes). Report: `/tmp/leetgrinder-links.json`; cached documents: `/tmp/leetgrinder-link-check`.
+- Live GET audit: `python3 scripts/leetgrinder/check_reading_links.py` (re-fetches every URL; pass `--resume` to reuse a prior run's cached 200s while iterating on known failures). Of 201 readings, 199 return HTTP 200 under strict TLS validation with content verified against each citation's claimed title/topic (not status code alone — this caught paywalls, JSON denials, unrelated PDFs, wrong-paper mismatches, and generic redirect pages in earlier passes). The script writes its report and cached documents under `/tmp/` on the machine it runs on; rerun it to get a current copy rather than relying on this pass's paths.
 - The remaining 2 (day 69's Colorado dice-recurrence page, day 74's `cse.unl.edu` Allen manuscript) fail Python's strict certificate-chain validation because each server omits an intermediate certificate (`openssl s_client` return code 21, "unable to verify the first certificate"). Both were independently confirmed, via a certificate-insecure fetch, to serve the correct, on-topic document. No independently hosted equivalent was found for either after a genuine search, so both are kept with the caveat recorded in `docs/leetgrinder-review-57-84.md` rather than traded for a weaker or off-topic source with a clean handshake.
 
 ## Fixes applied this pass (days 68, 76, 79 in `sources_57_84.json`)
@@ -51,4 +51,4 @@ Per-day review records exist for all 84 lessons:
 - [x] Reintegrate final manifests; run `make generate`; global content tests; full Go suite with escalation.
 - [x] Update `docs/leetgrinder-sources.md` and review docs to reflect final URLs/status.
 - [x] Update this state file with final status and exact test outcomes.
-- No commits/push requested or made.
+- Landed on branch `leetgrinder-content-sources`, PR #23.
