@@ -25,18 +25,18 @@ async function createGoal(request: APIRequestContext, origin: string, overrides:
   return goal;
 }
 async function goToNextWeek(page: Page) {
-  // The week heading updates synchronously with the click (it just formats
-  // local state), before the new week's data has necessarily loaded - unlike
-  // aria-busy, which can still read "false" from *before* the click if we
-  // check it too early, since the load only flips it to "true" on the next
-  // render pass. Waiting for the heading to actually change first avoids
-  // reading stale (pre-navigation) day/session data below.
-  const heading = page.locator('.scheduler-toolbar h2');
-  const before = await heading.textContent();
+  // The heading text (and aria-busy) update from local state as soon as the
+  // click handler runs, ahead of the fetch that actually repopulates the
+  // grid - waiting on either of those, then reading [data-scheduler-date]
+  // (which comes from the *fetched* week, not local state), can still race
+  // and return the previous week's date. Wait on the one attribute this
+  // function actually hands back instead.
+  const firstDay = page.locator('[data-scheduler-date]').first();
+  const before = await firstDay.getAttribute('data-scheduler-date');
   await page.getByRole('button', { name: 'Next week' }).click();
-  await expect(heading).not.toHaveText(before ?? '');
+  await expect(firstDay).not.toHaveAttribute('data-scheduler-date', before ?? '');
   await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
-  return page.locator('[data-scheduler-date]').first().getAttribute('data-scheduler-date');
+  return firstDay.getAttribute('data-scheduler-date');
 }
 function sessionFor(page: Page, title: string) {
   return page.locator('[data-session-id]').filter({ hasText: title });
@@ -94,13 +94,28 @@ test('dragging a session to another day saves without flashing the editor or err
   // input, not JS-dispatched events, and dispatching directly on the element
   // sidesteps that entirely). Dispatching PointerEvents straight at the
   // element is what actually drives it.
+  //
+  // Checking dialog.toBeHidden() only *after* the drag settles wouldn't catch
+  // a flash regression - it's a retrying assertion, and the dialog reliably
+  // ends up closed again by the time it's checked whether or not it flashed
+  // open in between (setDraft(proposal) opening it, then setDraft(null)
+  // closing it once the save resolved). A MutationObserver records every
+  // "open" the attribute actually took during the gesture, independent of
+  // when this test happens to look.
+  await page.evaluate(() => {
+    const w = window as unknown as { __dialogFlashed?: boolean };
+    w.__dialogFlashed = false;
+    const el = document.querySelector('.scheduler-editor-dialog')!;
+    new MutationObserver(() => { if (el.hasAttribute('open')) w.__dialogFlashed = true; }).observe(el, { attributes: true, attributeFilter: ['open'] });
+  });
   await dispatchPointerDrag(page, handleSelector, { x: source.x + source.width / 2, y: source.y + source.height / 2 }, { x: target.x + target.width / 2, y: target.y + 80 }, 10);
+  await expect(page.locator('.scheduler-status')).toContainText('Saved.');
+  expect(await page.evaluate(() => (window as unknown as { __dialogFlashed?: boolean }).__dialogFlashed)).toBe(false);
 
   // The dialog must never appear for a successful drag save - it used to
   // flash open (setDraft before the async save resolved) even on success.
   await expect(dialog).toBeHidden();
   await expect(page.locator('[role="alert"]')).toHaveCount(0);
-  await expect(page.locator('.scheduler-status')).toContainText('Saved.');
 
   const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
   const moved = state.sessions.find((s: { assignment: { goalId: string } }) => s.assignment.goalId === goal.id);
@@ -231,6 +246,46 @@ test('deleting a single planned session removes it', async ({ page, request, bas
   const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
   const session = state.sessions.find((s: { assignment: { goalId: string } }) => s.assignment.goalId === goal.id);
   expect(session?.state).toBe('canceled');
+});
+
+test('the block\'s delete icon on a recurring session cascades to future occurrences too', async ({ page, request, baseURL }) => {
+  // The dialog's "Remove this session" + "Apply change to" selector is one
+  // delete path; the block's own "x" icon (a window.confirm, not the dialog)
+  // is the other and more immediately visible one - it needs its own
+  // coverage since it builds the mutation differently (see deleteSession in
+  // WeeklyScheduler.tsx, which always sends scope: 'future' for a recurring
+  // session from this icon, with no "this date only" option here).
+  const goal = await createGoal(request, baseURL!);
+  const date = await goToNextWeek(page);
+  const dialog = page.locator('.scheduler-editor-dialog');
+
+  await page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`).click();
+  await dialog.getByLabel('Scheduling date').fill(date!);
+  await dialog.getByLabel('Start time').fill('16:00');
+  await dialog.getByLabel('End time').fill('17:00');
+  await dialog.getByLabel('Repeat weekly from this date').check();
+  await dialog.getByRole('button', { name: 'Save session' }).click();
+  await expect(dialog).toBeHidden();
+
+  const laterWeek = await goToNextWeek(page);
+
+  // The delete icon is a hover-reveal control (opacity/pointer-events only
+  // switch on via .scheduler-block:hover in CSS) - Playwright's actionability
+  // check evaluates hittability before it moves the mouse, so it never
+  // becomes clickable on its own; hovering the block first is what actually
+  // triggers the CSS that makes it interactive.
+  const block = sessionFor(page, goal.title).first();
+  await block.hover();
+  page.once('dialog', d => { expect(d.message()).toContain('future occurrences'); void d.accept(); });
+  await block.getByRole('button', { name: `Delete ${goal.title}` }).click();
+  await expect(page.locator('[role="alert"]')).toHaveCount(0);
+  await expect(sessionFor(page, goal.title)).toHaveCount(0);
+
+  const state = await (await request.get(`/api/scheduler/week?week=${laterWeek}`)).json();
+  expect(state.sessions.some((s: { assignment: { goalId: string } }) => s.assignment.goalId === goal.id)).toBe(false);
+  const rule = state.rules.find((r: { assignment: { goalId: string } }) => r.assignment.goalId === goal.id);
+  expect(rule?.effectiveTo).toBeDefined();
+  expect(rule.effectiveTo < laterWeek!).toBe(true);
 });
 
 test('resizing a session by its bottom edge extends its duration', async ({ page, request, baseURL }) => {
