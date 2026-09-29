@@ -1,0 +1,74 @@
+package leetgrinder
+
+import "fmt"
+
+templ lessonContent(content LessonContent) {
+	<article class="leetgrinder-lesson">
+		<h2>{ LessonTitle(content.Day) }</h2>
+		<h3>Learning goals</h3>
+		<ul>
+			for _, goal := range content.Objectives {
+				<li>{ goal }</li>
+			}
+		</ul>
+		if len(content.Prerequisites) > 0 {
+			<p>Earlier lessons:
+				for _, n := range content.Prerequisites {
+					<a href={ templ.SafeURL(DayURL(n)) }>{ DayLabel(n) }</a>
+				}
+			</p>
+		}
+		for _, section := range content.Sections {
+			<section id={ section.ID }>
+				<h3>{ section.Heading }</h3>
+				for _, paragraph := range section.Paragraphs {
+					<p>{ paragraph }</p>
+				}
+				if len(section.Bullets) > 0 {
+					<ul>
+						for _, bullet := range section.Bullets {
+							<li>{ bullet }</li>
+						}
+					</ul>
+				}
+				if section.Diagram != nil {
+					@lessonDiagram(*section.Diagram)
+				}
+				for _, id := range section.ExampleIDs {
+					if example, ok := LookupExampleContent(id); ok {
+						@lessonExample(example)
+					}
+				}
+				for _, check := range section.Checks {
+					<details><summary>{ check.Prompt }</summary><p>{ check.Answer }</p></details>
+				}
+			</section>
+		}
+		@lessonReferences(content.Day)
+	</article>
+}
+
+templ lessonDiagram(scene Scene) {
+	<figure class="lesson-diagram">
+		<svg viewBox={ fmt.Sprintf("0 0 %d %d", scene.Width, scene.Height) } role="img" aria-label={ scene.Description }>
+			<title>{ scene.Description }</title>
+			for _, edge := range scene.Edges {
+				<line x1={ Count(sceneCenterX(scene,edge.From)) } y1={ Count(sceneCenterY(scene,edge.From)) } x2={ Count(sceneCenterX(scene,edge.To)) } y2={ Count(sceneCenterY(scene,edge.To)) } class={ "scene-edge scene-"+edge.Role }/>
+				<text x={ Count((sceneCenterX(scene,edge.From)+sceneCenterX(scene,edge.To))/2) } y={ Count((sceneCenterY(scene,edge.From)+sceneCenterY(scene,edge.To))/2-6) }>{ edge.Label }</text>
+			}
+			for _, node := range scene.Nodes {
+				if node.Shape == "rect" {
+					<rect x={ Count(node.X) } y={ Count(node.Y) } width={ Count(node.Width) } height={ Count(node.Height) } class={ "scene-"+node.Role }/>
+				}
+				if node.Shape == "circle" {
+					<circle cx={ Count(node.X+node.Width/2) } cy={ Count(node.Y+node.Height/2) } r={ Count(node.Width/2) } class={ "scene-"+node.Role }/>
+				}
+				<text x={ Count(node.X+node.Width/2) } y={ Count(node.Y+node.Height/2) } text-anchor="middle" dominant-baseline="middle">{ node.Text }</text>
+			}
+			for _, label := range scene.Labels {
+				<text x={ Count(label.X) } y={ Count(label.Y) }>{ label.Text }</text>
+			}
+		</svg>
+		<figcaption>{ scene.Description }</figcaption>
+	</figure>
+}

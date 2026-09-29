@@ -1,0 +1,1735 @@
+{
+  "id": "day-66-lcs-table",
+  "title": "LCS prefix table",
+  "invariant": "dp[i][j] is the LCS length of a[:i] and b[:j].",
+  "variants": [
+    {
+      "language": "python",
+      "file": "main.py",
+      "algorithmStart": 10,
+      "algorithmEnd": 20
+    },
+    {
+      "language": "cpp",
+      "file": "main.cpp",
+      "algorithmStart": 26,
+      "algorithmEnd": 36
+    },
+    {
+      "language": "java",
+      "file": "Main.java",
+      "algorithmStart": 25,
+      "algorithmEnd": 35
+    },
+    {
+      "language": "go",
+      "file": "main.go.txt",
+      "algorithmStart": 27,
+      "algorithmEnd": 38
+    }
+  ],
+  "cases": [
+    {
+      "id": "normal",
+      "label": "Crossing choices",
+      "input": "cab\nacb\n",
+      "expectedOutput": "2",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "python": [
+              10
+            ],
+            "cpp": [
+              26
+            ],
+            "java": [
+              25
+            ],
+            "go": [
+              27
+            ]
+          },
+          "explanation": "The two input rows are ready. Empty prefixes have LCS length zero.",
+          "variables": [
+            {
+              "name": "a",
+              "value": "cab"
+            },
+            {
+              "name": "b",
+              "value": "acb"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Input: a=cab; b=acb",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Input: a=cab; b=acb"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "python": [
+              12
+            ],
+            "cpp": [
+              28
+            ],
+            "java": [
+              27
+            ],
+            "go": [
+              30
+            ]
+          },
+          "explanation": "Row 1 now gives the LCS length for each prefix of b against this prefix of a. Matches use the diagonal; mismatches use the larger skip.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "row",
+              "value": "0,0,1,1"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Completed row i=1",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "d0",
+                "shape": "rect",
+                "x": 88,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "visited"
+              },
+              {
+                "id": "d1",
+                "shape": "rect",
+                "x": 130,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "visited"
+              },
+              {
+                "id": "d2",
+                "shape": "rect",
+                "x": 172,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "d3",
+                "shape": "rect",
+                "x": 214,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "1",
+                "role": "visited"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Completed row i=1"
+              },
+              {
+                "id": "rowlabel",
+                "x": 8,
+                "y": 174,
+                "text": "dp row 1; columns 0..3"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "python": [
+              12
+            ],
+            "cpp": [
+              28
+            ],
+            "java": [
+              27
+            ],
+            "go": [
+              30
+            ]
+          },
+          "explanation": "Row 2 now gives the LCS length for each prefix of b against this prefix of a. Matches use the diagonal; mismatches use the larger skip.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "row",
+              "value": "0,1,1,1"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Completed row i=2",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "d0",
+                "shape": "rect",
+                "x": 88,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "visited"
+              },
+              {
+                "id": "d1",
+                "shape": "rect",
+                "x": 130,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "d2",
+                "shape": "rect",
+                "x": 172,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "d3",
+                "shape": "rect",
+                "x": 214,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "1",
+                "role": "visited"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Completed row i=2"
+              },
+              {
+                "id": "rowlabel",
+                "x": 8,
+                "y": 174,
+                "text": "dp row 2; columns 0..3"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "python": [
+              12
+            ],
+            "cpp": [
+              28
+            ],
+            "java": [
+              27
+            ],
+            "go": [
+              30
+            ]
+          },
+          "explanation": "Row 3 now gives the LCS length for each prefix of b against this prefix of a. Matches use the diagonal; mismatches use the larger skip.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "row",
+              "value": "0,1,1,2"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Completed row i=3",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "d0",
+                "shape": "rect",
+                "x": 88,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "visited"
+              },
+              {
+                "id": "d1",
+                "shape": "rect",
+                "x": 130,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "d2",
+                "shape": "rect",
+                "x": 172,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "d3",
+                "shape": "rect",
+                "x": 214,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "2",
+                "role": "visited"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Completed row i=3"
+              },
+              {
+                "id": "rowlabel",
+                "x": 8,
+                "y": 174,
+                "text": "dp row 3; columns 0..3"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "python": [
+              19
+            ],
+            "cpp": [
+              35
+            ],
+            "java": [
+              34
+            ],
+            "go": [
+              37
+            ]
+          },
+          "explanation": "The bottom-right cell gives LCS length 2.",
+          "variables": [
+            {
+              "name": "answer",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Result: 2",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Result: 2"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "disjoint",
+      "label": "No common symbol",
+      "input": "a\nb\n",
+      "expectedOutput": "0",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "python": [
+              10
+            ],
+            "cpp": [
+              26
+            ],
+            "java": [
+              25
+            ],
+            "go": [
+              27
+            ]
+          },
+          "explanation": "The two input rows are ready. Empty prefixes have LCS length zero.",
+          "variables": [
+            {
+              "name": "a",
+              "value": "a"
+            },
+            {
+              "name": "b",
+              "value": "b"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Input: a=a; b=b",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Input: a=a; b=b"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "python": [
+              12
+            ],
+            "cpp": [
+              28
+            ],
+            "java": [
+              27
+            ],
+            "go": [
+              30
+            ]
+          },
+          "explanation": "Row 1 now gives the LCS length for each prefix of b against this prefix of a. Matches use the diagonal; mismatches use the larger skip.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "row",
+              "value": "0,0"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Completed row i=1",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "d0",
+                "shape": "rect",
+                "x": 88,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "visited"
+              },
+              {
+                "id": "d1",
+                "shape": "rect",
+                "x": 130,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "visited"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Completed row i=1"
+              },
+              {
+                "id": "rowlabel",
+                "x": 8,
+                "y": 174,
+                "text": "dp row 1; columns 0..1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "python": [
+              19
+            ],
+            "cpp": [
+              35
+            ],
+            "java": [
+              34
+            ],
+            "go": [
+              37
+            ]
+          },
+          "explanation": "The bottom-right cell gives LCS length 0.",
+          "variables": [
+            {
+              "name": "answer",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Result: 0",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Result: 0"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "repeated",
+      "label": "Repeated symbols allow alternate alignments",
+      "input": "aab\naba\n",
+      "expectedOutput": "2",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "python": [
+              10
+            ],
+            "cpp": [
+              26
+            ],
+            "java": [
+              25
+            ],
+            "go": [
+              27
+            ]
+          },
+          "explanation": "The two input rows are ready. Empty prefixes have LCS length zero.",
+          "variables": [
+            {
+              "name": "a",
+              "value": "aab"
+            },
+            {
+              "name": "b",
+              "value": "aba"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Input: a=aab; b=aba",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Input: a=aab; b=aba"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "python": [
+              12
+            ],
+            "cpp": [
+              28
+            ],
+            "java": [
+              27
+            ],
+            "go": [
+              30
+            ]
+          },
+          "explanation": "Row 1 now gives the LCS length for each prefix of b against this prefix of a. Matches use the diagonal; mismatches use the larger skip.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "row",
+              "value": "0,1,1,1"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Completed row i=1",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "d0",
+                "shape": "rect",
+                "x": 88,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "visited"
+              },
+              {
+                "id": "d1",
+                "shape": "rect",
+                "x": 130,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "d2",
+                "shape": "rect",
+                "x": 172,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "d3",
+                "shape": "rect",
+                "x": 214,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "1",
+                "role": "visited"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Completed row i=1"
+              },
+              {
+                "id": "rowlabel",
+                "x": 8,
+                "y": 174,
+                "text": "dp row 1; columns 0..3"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "python": [
+              12
+            ],
+            "cpp": [
+              28
+            ],
+            "java": [
+              27
+            ],
+            "go": [
+              30
+            ]
+          },
+          "explanation": "Row 2 now gives the LCS length for each prefix of b against this prefix of a. Matches use the diagonal; mismatches use the larger skip.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "row",
+              "value": "0,1,1,2"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Completed row i=2",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "d0",
+                "shape": "rect",
+                "x": 88,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "visited"
+              },
+              {
+                "id": "d1",
+                "shape": "rect",
+                "x": 130,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "d2",
+                "shape": "rect",
+                "x": 172,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "d3",
+                "shape": "rect",
+                "x": 214,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "2",
+                "role": "visited"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Completed row i=2"
+              },
+              {
+                "id": "rowlabel",
+                "x": 8,
+                "y": 174,
+                "text": "dp row 2; columns 0..3"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "python": [
+              12
+            ],
+            "cpp": [
+              28
+            ],
+            "java": [
+              27
+            ],
+            "go": [
+              30
+            ]
+          },
+          "explanation": "Row 3 now gives the LCS length for each prefix of b against this prefix of a. Matches use the diagonal; mismatches use the larger skip.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "row",
+              "value": "0,1,2,2"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Completed row i=3",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "d0",
+                "shape": "rect",
+                "x": 88,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "visited"
+              },
+              {
+                "id": "d1",
+                "shape": "rect",
+                "x": 130,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "d2",
+                "shape": "rect",
+                "x": 172,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "2",
+                "role": "visited"
+              },
+              {
+                "id": "d3",
+                "shape": "rect",
+                "x": 214,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "2",
+                "role": "visited"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Completed row i=3"
+              },
+              {
+                "id": "rowlabel",
+                "x": 8,
+                "y": 174,
+                "text": "dp row 3; columns 0..3"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "python": [
+              19
+            ],
+            "cpp": [
+              35
+            ],
+            "java": [
+              34
+            ],
+            "go": [
+              37
+            ]
+          },
+          "explanation": "The bottom-right cell gives LCS length 2.",
+          "variables": [
+            {
+              "name": "answer",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Result: 2",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Result: 2"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1839 @@
+{
+  "id": "day-01-complement-lookup",
+  "title": "Find a pair by looking up the missing value",
+  "invariant": "Before position i is inserted, the map contains only values from positions earlier than i.",
+  "variants": [
+    {
+      "language": "cpp",
+      "file": "main.cpp",
+      "algorithmStart": 36,
+      "algorithmEnd": 59
+    },
+    {
+      "language": "python",
+      "file": "main.py",
+      "algorithmStart": 19,
+      "algorithmEnd": 37
+    },
+    {
+      "language": "java",
+      "file": "Main.java",
+      "algorithmStart": 35,
+      "algorithmEnd": 58
+    },
+    {
+      "language": "go",
+      "file": "main.go.txt",
+      "algorithmStart": 37,
+      "algorithmEnd": 57
+    }
+  ],
+  "cases": [
+    {
+      "id": "normal",
+      "label": "Pair after two misses",
+      "input": "3 9\n8 3 6\n",
+      "expectedOutput": "[1,2]",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              42
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              42
+            ],
+            "go": [
+              43
+            ]
+          },
+          "explanation": "The map is empty. It will contain only indices before the current one.",
+          "variables": [
+            {
+              "name": "values",
+              "value": "[8,3,6]"
+            },
+            {
+              "name": "target",
+              "value": "9"
+            },
+            {
+              "name": "seen",
+              "value": "{}"
+            }
+          ],
+          "scene": {
+            "width": 300,
+            "height": 225,
+            "description": "Input values and an empty map before the scan.",
+            "nodes": [
+              {
+                "id": "v0",
+                "shape": "rect",
+                "x": 12,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "8",
+                "role": "neutral"
+              },
+              {
+                "id": "v1",
+                "shape": "rect",
+                "x": 84,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "v2",
+                "shape": "rect",
+                "x": 156,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "6",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "target",
+                "x": 12,
+                "y": 24,
+                "text": "target = 9"
+              },
+              {
+                "id": "map-heading",
+                "x": 12,
+                "y": 145,
+                "text": "Earlier values → indices"
+              },
+              {
+                "id": "index0",
+                "x": 30,
+                "y": 116,
+                "text": "index 0"
+              },
+              {
+                "id": "index1",
+                "x": 102,
+                "y": 116,
+                "text": "index 1"
+              },
+              {
+                "id": "index2",
+                "x": 174,
+                "y": 116,
+                "text": "index 2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "lookup",
+          "lines": {
+            "cpp": [
+              47
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              47
+            ],
+            "go": [
+              47
+            ]
+          },
+          "explanation": "At index 0, compute 9 − 8 = 1 and inspect the earlier-value map.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "value",
+              "value": "8"
+            },
+            {
+              "name": "need",
+              "value": "1"
+            },
+            {
+              "name": "seen",
+              "value": "{}"
+            }
+          ],
+          "scene": {
+            "width": 300,
+            "height": 225,
+            "description": "At index 0, seek complement 1 among earlier values.",
+            "nodes": [
+              {
+                "id": "v0",
+                "shape": "rect",
+                "x": 12,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "8",
+                "role": "active"
+              },
+              {
+                "id": "v1",
+                "shape": "rect",
+                "x": 84,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "v2",
+                "shape": "rect",
+                "x": 156,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "6",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "target",
+                "x": 12,
+                "y": 24,
+                "text": "target = 9"
+              },
+              {
+                "id": "map-heading",
+                "x": 12,
+                "y": 145,
+                "text": "Earlier values → indices"
+              },
+              {
+                "id": "index0",
+                "x": 30,
+                "y": 116,
+                "text": "index 0"
+              },
+              {
+                "id": "index1",
+                "x": 102,
+                "y": 116,
+                "text": "index 1"
+              },
+              {
+                "id": "index2",
+                "x": 174,
+                "y": 116,
+                "text": "index 2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "insert",
+          "lines": {
+            "cpp": [
+              55
+            ],
+            "python": [
+              35
+            ],
+            "java": [
+              55
+            ],
+            "go": [
+              54
+            ]
+          },
+          "explanation": "No earlier complement was found. Save value 8 at index 0 for later lookups.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "seen",
+              "value": "{8:0}"
+            }
+          ],
+          "scene": {
+            "width": 300,
+            "height": 225,
+            "description": "Value 8 at index 0 is now available for later positions.",
+            "nodes": [
+              {
+                "id": "v0",
+                "shape": "rect",
+                "x": 12,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "8",
+                "role": "active"
+              },
+              {
+                "id": "v1",
+                "shape": "rect",
+                "x": 84,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "v2",
+                "shape": "rect",
+                "x": 156,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "6",
+                "role": "neutral"
+              },
+              {
+                "id": "m8",
+                "shape": "rect",
+                "x": 12,
+                "y": 163,
+                "width": 82,
+                "height": 42,
+                "text": "8 → 0",
+                "role": "visited"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "target",
+                "x": 12,
+                "y": 24,
+                "text": "target = 9"
+              },
+              {
+                "id": "map-heading",
+                "x": 12,
+                "y": 145,
+                "text": "Earlier values → indices"
+              },
+              {
+                "id": "index0",
+                "x": 30,
+                "y": 116,
+                "text": "index 0"
+              },
+              {
+                "id": "index1",
+                "x": 102,
+                "y": 116,
+                "text": "index 1"
+              },
+              {
+                "id": "index2",
+                "x": 174,
+                "y": 116,
+                "text": "index 2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "lookup",
+          "lines": {
+            "cpp": [
+              47
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              47
+            ],
+            "go": [
+              47
+            ]
+          },
+          "explanation": "At index 1, compute 9 − 3 = 6 and inspect the earlier-value map.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "value",
+              "value": "3"
+            },
+            {
+              "name": "need",
+              "value": "6"
+            },
+            {
+              "name": "seen",
+              "value": "{8:0}"
+            }
+          ],
+          "scene": {
+            "width": 300,
+            "height": 225,
+            "description": "At index 1, seek complement 6 among earlier values.",
+            "nodes": [
+              {
+                "id": "v0",
+                "shape": "rect",
+                "x": 12,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "8",
+                "role": "visited"
+              },
+              {
+                "id": "v1",
+                "shape": "rect",
+                "x": 84,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "3",
+                "role": "active"
+              },
+              {
+                "id": "v2",
+                "shape": "rect",
+                "x": 156,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "6",
+                "role": "neutral"
+              },
+              {
+                "id": "m8",
+                "shape": "rect",
+                "x": 12,
+                "y": 163,
+                "width": 82,
+                "height": 42,
+                "text": "8 → 0",
+                "role": "visited"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "target",
+                "x": 12,
+                "y": 24,
+                "text": "target = 9"
+              },
+              {
+                "id": "map-heading",
+                "x": 12,
+                "y": 145,
+                "text": "Earlier values → indices"
+              },
+              {
+                "id": "index0",
+                "x": 30,
+                "y": 116,
+                "text": "index 0"
+              },
+              {
+                "id": "index1",
+                "x": 102,
+                "y": 116,
+                "text": "index 1"
+              },
+              {
+                "id": "index2",
+                "x": 174,
+                "y": 116,
+                "text": "index 2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "insert",
+          "lines": {
+            "cpp": [
+              55
+            ],
+            "python": [
+              35
+            ],
+            "java": [
+              55
+            ],
+            "go": [
+              54
+            ]
+          },
+          "explanation": "No earlier complement was found. Save value 3 at index 1 for later lookups.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "seen",
+              "value": "{3:1,8:0}"
+            }
+          ],
+          "scene": {
+            "width": 300,
+            "height": 225,
+            "description": "Value 3 at index 1 is now available for later positions.",
+            "nodes": [
+              {
+                "id": "v0",
+                "shape": "rect",
+                "x": 12,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "8",
+                "role": "visited"
+              },
+              {
+                "id": "v1",
+                "shape": "rect",
+                "x": 84,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "3",
+                "role": "active"
+              },
+              {
+                "id": "v2",
+                "shape": "rect",
+                "x": 156,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "6",
+                "role": "neutral"
+              },
+              {
+                "id": "m3",
+                "shape": "rect",
+                "x": 12,
+                "y": 163,
+                "width": 82,
+                "height": 42,
+                "text": "3 → 1",
+                "role": "visited"
+              },
+              {
+                "id": "m8",
+                "shape": "rect",
+                "x": 103,
+                "y": 163,
+                "width": 82,
+                "height": 42,
+                "text": "8 → 0",
+                "role": "visited"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "target",
+                "x": 12,
+                "y": 24,
+                "text": "target = 9"
+              },
+              {
+                "id": "map-heading",
+                "x": 12,
+                "y": 145,
+                "text": "Earlier values → indices"
+              },
+              {
+                "id": "index0",
+                "x": 30,
+                "y": 116,
+                "text": "index 0"
+              },
+              {
+                "id": "index1",
+                "x": 102,
+                "y": 116,
+                "text": "index 1"
+              },
+              {
+                "id": "index2",
+                "x": 174,
+                "y": 116,
+                "text": "index 2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "lookup",
+          "lines": {
+            "cpp": [
+              47
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              47
+            ],
+            "go": [
+              47
+            ]
+          },
+          "explanation": "At index 2, compute 9 − 6 = 3 and inspect the earlier-value map.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "value",
+              "value": "6"
+            },
+            {
+              "name": "need",
+              "value": "3"
+            },
+            {
+              "name": "seen",
+              "value": "{3:1,8:0}"
+            }
+          ],
+          "scene": {
+            "width": 300,
+            "height": 225,
+            "description": "At index 2, seek complement 3 among earlier values.",
+            "nodes": [
+              {
+                "id": "v0",
+                "shape": "rect",
+                "x": 12,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "8",
+                "role": "visited"
+              },
+              {
+                "id": "v1",
+                "shape": "rect",
+                "x": 84,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "3",
+                "role": "visited"
+              },
+              {
+                "id": "v2",
+                "shape": "rect",
+                "x": 156,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "6",
+                "role": "active"
+              },
+              {
+                "id": "m3",
+                "shape": "rect",
+                "x": 12,
+                "y": 163,
+                "width": 82,
+                "height": 42,
+                "text": "3 → 1",
+                "role": "visited"
+              },
+              {
+                "id": "m8",
+                "shape": "rect",
+                "x": 103,
+                "y": 163,
+                "width": 82,
+                "height": 42,
+                "text": "8 → 0",
+                "role": "visited"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "target",
+                "x": 12,
+                "y": 24,
+                "text": "target = 9"
+              },
+              {
+                "id": "map-heading",
+                "x": 12,
+                "y": 145,
+                "text": "Earlier values → indices"
+              },
+              {
+                "id": "index0",
+                "x": 30,
+                "y": 116,
+                "text": "index 0"
+              },
+              {
+                "id": "index1",
+                "x": 102,
+                "y": 116,
+                "text": "index 1"
+              },
+              {
+                "id": "index2",
+                "x": 174,
+                "y": 116,
+                "text": "index 2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "match",
+          "lines": {
+            "cpp": [
+              50
+            ],
+            "python": [
+              31
+            ],
+            "java": [
+              50
+            ],
+            "go": [
+              49
+            ]
+          },
+          "explanation": "The map recorded complement 3 at earlier index 1, so the indices are distinct.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "need",
+              "value": "3"
+            },
+            {
+              "name": "earlier",
+              "value": "1"
+            },
+            {
+              "name": "seen",
+              "value": "{3:1,8:0}"
+            }
+          ],
+          "scene": {
+            "width": 300,
+            "height": 225,
+            "description": "Complement 3 came from index 1; pair it with index 2.",
+            "nodes": [
+              {
+                "id": "v0",
+                "shape": "rect",
+                "x": 12,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "8",
+                "role": "visited"
+              },
+              {
+                "id": "v1",
+                "shape": "rect",
+                "x": 84,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "3",
+                "role": "visited"
+              },
+              {
+                "id": "v2",
+                "shape": "rect",
+                "x": 156,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "6",
+                "role": "active"
+              },
+              {
+                "id": "m3",
+                "shape": "rect",
+                "x": 12,
+                "y": 163,
+                "width": 82,
+                "height": 42,
+                "text": "3 → 1",
+                "role": "result"
+              },
+              {
+                "id": "m8",
+                "shape": "rect",
+                "x": 103,
+                "y": 163,
+                "width": 82,
+                "height": 42,
+                "text": "8 → 0",
+                "role": "visited"
+              }
+            ],
+            "edges": [
+              {
+                "id": "pair",
+                "from": "v1",
+                "to": "v2",
+                "label": "pair",
+                "directed": true,
+                "role": "result"
+              }
+            ],
+            "labels": [
+              {
+                "id": "target",
+                "x": 12,
+                "y": 24,
+                "text": "target = 9"
+              },
+              {
+                "id": "map-heading",
+                "x": 12,
+                "y": 145,
+                "text": "Earlier values → indices"
+              },
+              {
+                "id": "index0",
+                "x": 30,
+                "y": 116,
+                "text": "index 0"
+              },
+              {
+                "id": "index1",
+                "x": 102,
+                "y": 116,
+                "text": "index 1"
+              },
+              {
+                "id": "index2",
+                "x": 174,
+                "y": 116,
+                "text": "index 2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              57
+            ],
+            "python": [
+              36
+            ],
+            "java": [
+              57
+            ],
+            "go": [
+              56
+            ]
+          },
+          "explanation": "Return [1,2].",
+          "variables": [
+            {
+              "name": "result",
+              "value": "[1,2]"
+            }
+          ],
+          "scene": {
+            "width": 300,
+            "height": 225,
+            "description": "Scan finished with indices [1,2].",
+            "nodes": [
+              {
+                "id": "v0",
+                "shape": "rect",
+                "x": 12,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "8",
+                "role": "visited"
+              },
+              {
+                "id": "v1",
+                "shape": "rect",
+                "x": 84,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "3",
+                "role": "result"
+              },
+              {
+                "id": "v2",
+                "shape": "rect",
+                "x": 156,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "6",
+                "role": "result"
+              },
+              {
+                "id": "m3",
+                "shape": "rect",
+                "x": 12,
+                "y": 163,
+                "width": 82,
+                "height": 42,
+                "text": "3 → 1",
+                "role": "visited"
+              },
+              {
+                "id": "m8",
+                "shape": "rect",
+                "x": 103,
+                "y": 163,
+                "width": 82,
+                "height": 42,
+                "text": "8 → 0",
+                "role": "visited"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "target",
+                "x": 12,
+                "y": 24,
+                "text": "target = 9"
+              },
+              {
+                "id": "map-heading",
+                "x": 12,
+                "y": 145,
+                "text": "Earlier values → indices"
+              },
+              {
+                "id": "index0",
+                "x": 30,
+                "y": 116,
+                "text": "index 0"
+              },
+              {
+                "id": "index1",
+                "x": 102,
+                "y": 116,
+                "text": "index 1"
+              },
+              {
+                "id": "index2",
+                "x": 174,
+                "y": 116,
+                "text": "index 2"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "duplicate",
+      "label": "Equal values at distinct indices",
+      "input": "2 8\n4 4\n",
+      "expectedOutput": "[0,1]",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              42
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              42
+            ],
+            "go": [
+              43
+            ]
+          },
+          "explanation": "The map is empty. It will contain only indices before the current one.",
+          "variables": [
+            {
+              "name": "values",
+              "value": "[4,4]"
+            },
+            {
+              "name": "target",
+              "value": "8"
+            },
+            {
+              "name": "seen",
+              "value": "{}"
+            }
+          ],
+          "scene": {
+            "width": 300,
+            "height": 225,
+            "description": "Input values and an empty map before the scan.",
+            "nodes": [
+              {
+                "id": "v0",
+                "shape": "rect",
+                "x": 12,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "v1",
+                "shape": "rect",
+                "x": 84,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "4",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "target",
+                "x": 12,
+                "y": 24,
+                "text": "target = 8"
+              },
+              {
+                "id": "map-heading",
+                "x": 12,
+                "y": 145,
+                "text": "Earlier values → indices"
+              },
+              {
+                "id": "index0",
+                "x": 30,
+                "y": 116,
+                "text": "index 0"
+              },
+              {
+                "id": "index1",
+                "x": 102,
+                "y": 116,
+                "text": "index 1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "lookup",
+          "lines": {
+            "cpp": [
+              47
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              47
+            ],
+            "go": [
+              47
+            ]
+          },
+          "explanation": "At index 0, compute 8 − 4 = 4 and inspect the earlier-value map.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "value",
+              "value": "4"
+            },
+            {
+              "name": "need",
+              "value": "4"
+            },
+            {
+              "name": "seen",
+              "value": "{}"
+            }
+          ],
+          "scene": {
+            "width": 300,
+            "height": 225,
+            "description": "At index 0, seek complement 4 among earlier values.",
+            "nodes": [
+              {
+                "id": "v0",
+                "shape": "rect",
+                "x": 12,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "v1",
+                "shape": "rect",
+                "x": 84,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "4",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "target",
+                "x": 12,
+                "y": 24,
+                "text": "target = 8"
+              },
+              {
+                "id": "map-heading",
+                "x": 12,
+                "y": 145,
+                "text": "Earlier values → indices"
+              },
+              {
+                "id": "index0",
+                "x": 30,
+                "y": 116,
+                "text": "index 0"
+              },
+              {
+                "id": "index1",
+                "x": 102,
+                "y": 116,
+                "text": "index 1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "insert",
+          "lines": {
+            "cpp": [
+              55
+            ],
+            "python": [
+              35
+            ],
+            "java": [
+              55
+            ],
+            "go": [
+              54
+            ]
+          },
+          "explanation": "No earlier complement was found. Save value 4 at index 0 for later lookups.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "seen",
+              "value": "{4:0}"
+            }
+          ],
+          "scene": {
+            "width": 300,
+            "height": 225,
+            "description": "Value 4 at index 0 is now available for later positions.",
+            "nodes": [
+              {
+                "id": "v0",
+                "shape": "rect",
+                "x": 12,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "v1",
+                "shape": "rect",
+                "x": 84,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "m4",
+                "shape": "rect",
+                "x": 12,
+                "y": 163,
+                "width": 82,
+                "height": 42,
+                "text": "4 → 0",
+                "role": "visited"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "target",
+                "x": 12,
+                "y": 24,
+                "text": "target = 8"
+              },
+              {
+                "id": "map-heading",
+                "x": 12,
+                "y": 145,
+                "text": "Earlier values → indices"
+              },
+              {
+                "id": "index0",
+                "x": 30,
+                "y": 116,
+                "text": "index 0"
+              },
+              {
+                "id": "index1",
+                "x": 102,
+                "y": 116,
+                "text": "index 1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "lookup",
+          "lines": {
+            "cpp": [
+              47
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              47
+            ],
+            "go": [
+              47
+            ]
+          },
+          "explanation": "At index 1, compute 8 − 4 = 4 and inspect the earlier-value map.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "value",
+              "value": "4"
+            },
+            {
+              "name": "need",
+              "value": "4"
+            },
+            {
+              "name": "seen",
+              "value": "{4:0}"
+            }
+          ],
+          "scene": {
+            "width": 300,
+            "height": 225,
+            "description": "At index 1, seek complement 4 among earlier values.",
+            "nodes": [
+              {
+                "id": "v0",
+                "shape": "rect",
+                "x": 12,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "4",
+                "role": "visited"
+              },
+              {
+                "id": "v1",
+                "shape": "rect",
+                "x": 84,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "m4",
+                "shape": "rect",
+                "x": 12,
+                "y": 163,
+                "width": 82,
+                "height": 42,
+                "text": "4 → 0",
+                "role": "visited"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "target",
+                "x": 12,
+                "y": 24,
+                "text": "target = 8"
+              },
+              {
+                "id": "map-heading",
+                "x": 12,
+                "y": 145,
+                "text": "Earlier values → indices"
+              },
+              {
+                "id": "index0",
+                "x": 30,
+                "y": 116,
+                "text": "index 0"
+              },
+              {
+                "id": "index1",
+                "x": 102,
+                "y": 116,
+                "text": "index 1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "match",
+          "lines": {
+            "cpp": [
+              50
+            ],
+            "python": [
+              31
+            ],
+            "java": [
+              50
+            ],
+            "go": [
+              49
+            ]
+          },
+          "explanation": "The map recorded complement 4 at earlier index 0, so the indices are distinct.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "need",
+              "value": "4"
+            },
+            {
+              "name": "earlier",
+              "value": "0"
+            },
+            {
+              "name": "seen",
+              "value": "{4:0}"
+            }
+          ],
+          "scene": {
+            "width": 300,
+            "height": 225,
+            "description": "Complement 4 came from index 0; pair it with index 1.",
+            "nodes": [
+              {
+                "id": "v0",
+                "shape": "rect",
+                "x": 12,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "4",
+                "role": "visited"
+              },
+              {
+                "id": "v1",
+                "shape": "rect",
+                "x": 84,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "m4",
+                "shape": "rect",
+                "x": 12,
+                "y": 163,
+                "width": 82,
+                "height": 42,
+                "text": "4 → 0",
+                "role": "result"
+              }
+            ],
+            "edges": [
+              {
+                "id": "pair",
+                "from": "v0",
+                "to": "v1",
+                "label": "pair",
+                "directed": true,
+                "role": "result"
+              }
+            ],
+            "labels": [
+              {
+                "id": "target",
+                "x": 12,
+                "y": 24,
+                "text": "target = 8"
+              },
+              {
+                "id": "map-heading",
+                "x": 12,
+                "y": 145,
+                "text": "Earlier values → indices"
+              },
+              {
+                "id": "index0",
+                "x": 30,
+                "y": 116,
+                "text": "index 0"
+              },
+              {
+                "id": "index1",
+                "x": 102,
+                "y": 116,
+                "text": "index 1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              57
+            ],
+            "python": [
+              36
+            ],
+            "java": [
+              57
+            ],
+            "go": [
+              56
+            ]
+          },
+          "explanation": "Return [0,1].",
+          "variables": [
+            {
+              "name": "result",
+              "value": "[0,1]"
+            }
+          ],
+          "scene": {
+            "width": 300,
+            "height": 225,
+            "description": "Scan finished with indices [0,1].",
+            "nodes": [
+              {
+                "id": "v0",
+                "shape": "rect",
+                "x": 12,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "4",
+                "role": "result"
+              },
+              {
+                "id": "v1",
+                "shape": "rect",
+                "x": 84,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "4",
+                "role": "result"
+              },
+              {
+                "id": "m4",
+                "shape": "rect",
+                "x": 12,
+                "y": 163,
+                "width": 82,
+                "height": 42,
+                "text": "4 → 0",
+                "role": "visited"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "target",
+                "x": 12,
+                "y": 24,
+                "text": "target = 8"
+              },
+              {
+                "id": "map-heading",
+                "x": 12,
+                "y": 145,
+                "text": "Earlier values → indices"
+              },
+              {
+                "id": "index0",
+                "x": 30,
+                "y": 116,
+                "text": "index 0"
+              },
+              {
+                "id": "index1",
+                "x": 102,
+                "y": 116,
+                "text": "index 1"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "single",
+      "label": "A lone value cannot pair with itself",
+      "input": "1 8\n4\n",
+      "expectedOutput": "[]",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              42
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              42
+            ],
+            "go": [
+              43
+            ]
+          },
+          "explanation": "The map is empty. It will contain only indices before the current one.",
+          "variables": [
+            {
+              "name": "values",
+              "value": "[4]"
+            },
+            {
+              "name": "target",
+              "value": "8"
+            },
+            {
+              "name": "seen",
+              "value": "{}"
+            }
+          ],
+          "scene": {
+            "width": 300,
+            "height": 225,
+            "description": "Input values and an empty map before the scan.",
+            "nodes": [
+              {
+                "id": "v0",
+                "shape": "rect",
+                "x": 12,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "4",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "target",
+                "x": 12,
+                "y": 24,
+                "text": "target = 8"
+              },
+              {
+                "id": "map-heading",
+                "x": 12,
+                "y": 145,
+                "text": "Earlier values → indices"
+              },
+              {
+                "id": "index0",
+                "x": 30,
+                "y": 116,
+                "text": "index 0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "lookup",
+          "lines": {
+            "cpp": [
+              47
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              47
+            ],
+            "go": [
+              47
+            ]
+          },
+          "explanation": "At index 0, compute 8 − 4 = 4 and inspect the earlier-value map.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "value",
+              "value": "4"
+            },
+            {
+              "name": "need",
+              "value": "4"
+            },
+            {
+              "name": "seen",
+              "value": "{}"
+            }
+          ],
+          "scene": {
+            "width": 300,
+            "height": 225,
+            "description": "At index 0, seek complement 4 among earlier values.",
+            "nodes": [
+              {
+                "id": "v0",
+                "shape": "rect",
+                "x": 12,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "4",
+                "role": "active"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "target",
+                "x": 12,
+                "y": 24,
+                "text": "target = 8"
+              },
+              {
+                "id": "map-heading",
+                "x": 12,
+                "y": 145,
+                "text": "Earlier values → indices"
+              },
+              {
+                "id": "index0",
+                "x": 30,
+                "y": 116,
+                "text": "index 0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "insert",
+          "lines": {
+            "cpp": [
+              55
+            ],
+            "python": [
+              35
+            ],
+            "java": [
+              55
+            ],
+            "go": [
+              54
+            ]
+          },
+          "explanation": "No earlier complement was found. Save value 4 at index 0 for later lookups.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "seen",
+              "value": "{4:0}"
+            }
+          ],
+          "scene": {
+            "width": 300,
+            "height": 225,
+            "description": "Value 4 at index 0 is now available for later positions.",
+            "nodes": [
+              {
+                "id": "v0",
+                "shape": "rect",
+                "x": 12,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "m4",
+                "shape": "rect",
+                "x": 12,
+                "y": 163,
+                "width": 82,
+                "height": 42,
+                "text": "4 → 0",
+                "role": "visited"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "target",
+                "x": 12,
+                "y": 24,
+                "text": "target = 8"
+              },
+              {
+                "id": "map-heading",
+                "x": 12,
+                "y": 145,
+                "text": "Earlier values → indices"
+              },
+              {
+                "id": "index0",
+                "x": 30,
+                "y": 116,
+                "text": "index 0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              57
+            ],
+            "python": [
+              36
+            ],
+            "java": [
+              57
+            ],
+            "go": [
+              56
+            ]
+          },
+          "explanation": "Return an empty list because no pair exists.",
+          "variables": [
+            {
+              "name": "result",
+              "value": "[]"
+            }
+          ],
+          "scene": {
+            "width": 300,
+            "height": 225,
+            "description": "Scan finished with no pair.",
+            "nodes": [
+              {
+                "id": "v0",
+                "shape": "rect",
+                "x": 12,
+                "y": 53,
+                "width": 62,
+                "height": 47,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "m4",
+                "shape": "rect",
+                "x": 12,
+                "y": 163,
+                "width": 82,
+                "height": 42,
+                "text": "4 → 0",
+                "role": "visited"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "target",
+                "x": 12,
+                "y": 24,
+                "text": "target = 8"
+              },
+              {
+                "id": "map-heading",
+                "x": 12,
+                "y": 145,
+                "text": "Earlier values → indices"
+              },
+              {
+                "id": "index0",
+                "x": 30,
+                "y": 116,
+                "text": "index 0"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

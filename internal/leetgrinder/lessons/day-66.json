@@ -1,0 +1,205 @@
+{
+  "day": 66,
+  "objectives": [
+    "Define a two-prefix DP state and fill an LCS table.",
+    "Recover an LCS and merge a shortest common supersequence.",
+    "Distinguish a subsequence from a contiguous substring and explain mismatch reset.",
+    "Relate LCS length to uncrossed lines and deletion count."
+  ],
+  "prerequisites": [
+    61,
+    64
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "heading": "Intuition",
+      "paragraphs": [
+        "A subsequence keeps the order of symbols but may delete symbols between them. A substring must stay contiguous. For two strings, choose a boundary in each string. The pair of prefix lengths (i, j) is enough to describe what has been considered.",
+        "Let dp[i][j] be the length of a longest common subsequence of a[:i] and b[:j]. An empty prefix has length zero. If the last symbols agree, they can extend an optimal answer for both shorter prefixes. If they disagree, an optimal answer omits at least one of them, so compare the two ways to skip.",
+        "For a=\"cab\" and b=\"acb\", the final b matches and extends a length-one answer for \"ca\" and \"ac\". The result is length two. Depending on a tie, the recovered sequence can be \"cb\" or \"ab\"."
+      ],
+      "bullets": [
+        "Equal symbols: dp[i][j] = 1 + dp[i-1][j-1].",
+        "Different symbols: dp[i][j] = max(dp[i-1][j], dp[i][j-1]).",
+        "Fill rows from top to bottom and each row from left to right so all predecessors already exist."
+      ],
+      "diagram": {
+        "width": 360,
+        "height": 190,
+        "description": "The LCS state for a prefix pair reads the diagonal cell when final symbols match. When they differ it compares the upper and left cells.",
+        "nodes": [
+          {
+            "id": "diag",
+            "shape": "rect",
+            "x": 22,
+            "y": 24,
+            "width": 66,
+            "height": 46,
+            "text": "i-1,j-1",
+            "role": "visited"
+          },
+          {
+            "id": "up",
+            "shape": "rect",
+            "x": 130,
+            "y": 24,
+            "width": 66,
+            "height": 46,
+            "text": "i-1,j",
+            "role": "visited"
+          },
+          {
+            "id": "left",
+            "shape": "rect",
+            "x": 22,
+            "y": 100,
+            "width": 66,
+            "height": 46,
+            "text": "i,j-1",
+            "role": "visited"
+          },
+          {
+            "id": "cell",
+            "shape": "rect",
+            "x": 130,
+            "y": 100,
+            "width": 66,
+            "height": 46,
+            "text": "i,j",
+            "role": "active"
+          }
+        ],
+        "edges": [
+          {
+            "id": "match",
+            "from": "diag",
+            "to": "cell",
+            "label": "equal: +1",
+            "directed": true,
+            "role": "result"
+          },
+          {
+            "id": "skipA",
+            "from": "up",
+            "to": "cell",
+            "label": "skip a",
+            "directed": true,
+            "role": "neutral"
+          },
+          {
+            "id": "skipB",
+            "from": "left",
+            "to": "cell",
+            "label": "skip b",
+            "directed": true,
+            "role": "neutral"
+          }
+        ],
+        "labels": [
+          {
+            "id": "head",
+            "x": 22,
+            "y": 170,
+            "text": "One cell describes two prefixes, not two positions."
+          }
+        ]
+      }
+    },
+    {
+      "id": "recognize",
+      "heading": "State, inputs, and recognition",
+      "paragraphs": [
+        "The runnable examples read exactly two newline-terminated lines of lowercase ASCII letters. A blank line is an empty string. Indices and slices in the four programs therefore refer to the same symbols. The recurrence also applies to arrays of comparable values.",
+        "Use this two-prefix state when a decision depends on the current symbols and smaller prefixes. Uncrossed lines is LCS on two arrays: drawing a match uses one equal pair and leaves both earlier prefixes. To make two strings equal by deleting characters, retain an LCS of length L and delete the other m+n-2L characters.",
+        "Do not use the LCS recurrence for contiguous matches. The mismatch transition in that problem resets the local run to zero. Nor does this state by itself solve arbitrary edit costs; insertion, deletion, and replacement require their own transitions."
+      ]
+    },
+    {
+      "id": "baseline",
+      "heading": "A recursive baseline",
+      "paragraphs": [
+        "Start at (m,n). If either prefix is empty, return zero. A match takes the diagonal and adds one. A mismatch asks both smaller-prefix questions and returns the larger answer. This is correct because every common subsequence either uses the matching final pair or excludes at least one unmatched final symbol.",
+        "Without memoization, different paths ask the same prefix question again. For example, two skip branches can both reach (i-1,j-1). The recursion has O(2^(m+n)) time as a loose upper bound and O(m+n) call-stack space. The trace shows each call, including repeated states."
+      ],
+      "exampleIds": [
+        "day-66-baseline"
+      ]
+    },
+    {
+      "id": "worked",
+      "heading": "Worked example",
+      "paragraphs": [
+        "Fill the LCS table for \"cab\" and \"acb\". The first row and column are zero. After processing c, the row is [0,0,1,1]; after a, it is [0,1,1,1]; after b, it is [0,1,1,2]. The bottom-right value is two.",
+        "The table replaces repeated recursive calls with one constant-time calculation per cell. Its invariant is that every filled cell gives the optimal LCS length for its two prefixes. A match can be appended to an optimal shorter-prefix answer; a mismatch forces one of the two skip choices."
+      ],
+      "exampleIds": [
+        "day-66-lcs-table"
+      ]
+    },
+    {
+      "id": "recover",
+      "heading": "Recover an actual subsequence",
+      "paragraphs": [
+        "Start at the bottom-right cell of the completed table. On equal symbols, append that symbol to a backward buffer and move diagonally. On a mismatch, move toward a predecessor with the same optimal value. This lesson chooses the upper predecessor on a tie. Reverse the buffer at the end.",
+        "For \"cab\" and \"acb\", the chosen path collects b, then c, and returns \"cb\". A different valid tie rule can return \"ab\". The path never discards a better prefix value, so its collected matches form an optimal sequence."
+      ],
+      "exampleIds": [
+        "day-66-reconstruct"
+      ]
+    },
+    {
+      "id": "contiguous",
+      "heading": "When matches must be contiguous",
+      "paragraphs": [
+        "For longest common substring, let dp[i][j] be the length of the equal suffix ending at a[i-1] and b[j-1]. Equal symbols extend the diagonal by one. Unequal symbols end the run, so dp[i][j] becomes zero. Keep the largest value and its end position in a.",
+        "For \"abc\" and \"ace\", the LCS is \"ac\" of length two, but the longest common substring has length one. The c match cannot extend the earlier a match through different middle symbols. The trace shows the reset that prevents this error."
+      ],
+      "exampleIds": [
+        "day-66-substring"
+      ]
+    },
+    {
+      "id": "merge",
+      "heading": "Build a shortest common supersequence",
+      "paragraphs": [
+        "A supersequence contains each input as a subsequence. Concatenating the inputs is valid but can repeat shared symbols. First fill the LCS table. Then walk backward: write one copy of an equal pair and move diagonally; on a mismatch, write the symbol from the chosen skip direction. After one prefix ends, write the rest of the other prefix. Reverse the collected symbols.",
+        "Every unmatched symbol must appear in the result, while each LCS match can be shared once. The result length is m+n-L where L is the LCS length. On a tie, this implementation chooses the upper predecessor and therefore has a deterministic answer. For \"ab\" and \"ba\", it returns \"bab\"."
+      ],
+      "exampleIds": [
+        "day-66-supersequence"
+      ]
+    },
+    {
+      "id": "complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Let m and n be the lengths of a and b. Filling any of the three tables here visits m*n cells with constant work per cell, so time is O(mn) and table space is O(mn). Reconstructing an LCS or supersequence adds at most m+n backward moves. The output itself uses O(L) or O(m+n) space respectively, separate from the table.",
+        "For LCS length alone, retain just the previous row and current row. That uses O(min(m,n)) auxiliary space after choosing the shorter string as columns. The full-table programs intentionally keep all rows so the trace shows state and the reconstruction can follow predecessor values. The substring length also admits rolling rows, but its result extraction still needs the best end position.",
+        "Do not read a diagonal cell after a mismatch as a substring continuation. Do not reverse a backtrack buffer twice. At an empty input, LCS and substring answers are empty or zero; the shortest supersequence is the other input."
+      ]
+    },
+    {
+      "id": "finish",
+      "heading": "Before you finish",
+      "checks": [
+        {
+          "prompt": "Why is dp[0][j] zero for every j?",
+          "answer": "An empty first prefix has no symbols to share with any second prefix."
+        },
+        {
+          "prompt": "Predict the LCS length and longest common substring length of \"abc\" and \"ace\".",
+          "answer": "The LCS is \"ac\" with length two. The longest common substring length is one because b and c break contiguity."
+        },
+        {
+          "prompt": "If an LCS has length L, how many deletions make strings of lengths m and n equal?",
+          "answer": "Delete every symbol outside one shared LCS, for m+n-2L deletions."
+        },
+        {
+          "prompt": "Why can a shortest common supersequence write an equal pair once?",
+          "answer": "One copy can satisfy both input subsequences at that position, so a second copy cannot shorten the result."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+package main
+
+import (
+    "fmt"
+    "sort"
+    "strings"
+)
+
+type field struct { name, value string }
+
+func emit(event string, fields ...field) {
+    fmt.Printf("{\"event\":\"%s\",\"variables\":[", event)
+    for j, f := range fields {
+        if j > 0 { fmt.Print(",") }
+        fmt.Printf("{\"name\":\"%s\",\"value\":\"%s\"}", f.name, f.value)
+    }
+    fmt.Println("]}")
+}
+
+func number(n int) string { return fmt.Sprint(n) }
+
+func listText(values []int) string {
+    parts := make([]string, len(values))
+    for j, value := range values { parts[j] = number(value) }
+    return "[" + strings.Join(parts, ",") + "]"
+}
+
+func shown(seen map[int]int) string {
+    keys := make([]int, 0, len(seen))
+    for value := range seen { keys = append(keys, value) }
+    sort.Ints(keys)
+    parts := make([]string, 0, len(keys))
+    for _, value := range keys { parts = append(parts, number(value)+":"+number(seen[value])) }
+    return "{" + strings.Join(parts, ",") + "}"
+}
+
+func main() {
+    var count, target int
+    if _, err := fmt.Scan(&count, &target); err != nil { panic(err) }
+    values := make([]int, count)
+    for j := range values { fmt.Scan(&values[j]) }
+    seen := make(map[int]int)
+    emit("start", field{"values", listText(values)}, field{"target", number(target)}, field{"seen", shown(seen)})
+    answer := []int{}
+    for i, value := range values {
+        need := target - value
+        emit("lookup", field{"i", number(i)}, field{"value", number(value)}, field{"need", number(need)}, field{"seen", shown(seen)})
+        if earlier, found := seen[need]; found {
+            emit("match", field{"i", number(i)}, field{"need", number(need)}, field{"earlier", number(earlier)}, field{"seen", shown(seen)})
+            answer = []int{earlier, i}
+            break
+        }
+        seen[value] = i
+        emit("insert", field{"i", number(i)}, field{"seen", shown(seen)})
+    }
+    emit("done", field{"result", listText(answer)})
+    fmt.Printf("{\"result\":\"%s\"}\n", listText(answer))
+}

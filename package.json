@@ -14,7 +14,9 @@
     "test": "node --test tests/goal-dependencies.test.ts tests/mini-goals.test.ts tests/workspace.test.ts tests/timeline.test.ts tests/scheduler.test.ts tests/search.test.ts tests/journals.test.ts tests/companies.test.ts tests/connections.test.ts tests/running.test.ts tests/tag-colors.test.ts extension/leetgrinder/test/lib.test.js",
     "test:mcp:deferred": "node --test tests/mcp.test.ts tests/mcp-oauth.test.ts tests/mcp-bridge.test.mjs",
     "mcp": "node scripts/career-mcp.mjs",
-    "check:mcp-oauth": "node scripts/check-mcp-oauth.mjs"
+    "check:mcp-oauth": "node scripts/check-mcp-oauth.mjs",
+    "test:leetgrinder:player": "node --test tests/leetgrinder-player.test.mjs",
+    "test:leetgrinder:browser": "node --test tests/leetgrinder-lessons.browser.test.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.8",
@@ -54,6 +56,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie": "^0.6.0",
     "@types/jsonwebtoken": "^9.0.10",
-    "fake-indexeddb": "^6.2.5"
+    "fake-indexeddb": "^6.2.5",
+    "playwright": "^1.63.0"
   }
 }

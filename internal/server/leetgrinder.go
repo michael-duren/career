@@ -35,6 +35,10 @@ func (s *Server) registerLeetgrinder(r chi.Router) {
 			w.Header().Set("Content-Type", "text/css; charset=utf-8")
 			_, _ = w.Write([]byte(leetgrinder.Styles))
 		})
+		r.Get("/leetgrinder/lesson-player.js", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+			_, _ = w.Write([]byte(leetgrinder.LessonPlayerJS))
+		})
 		r.Get("/leetgrinder/day/{day}", s.leetgrinderDay)
 		r.Post("/leetgrinder/day/{day}/complete", s.leetgrinderComplete)
 		r.Get("/leetgrinder/problem/{slug}", s.leetgrinderProblem)

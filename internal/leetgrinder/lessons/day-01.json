@@ -1,0 +1,135 @@
+{
+  "day": 1,
+  "objectives": [
+    "Explain what each hash-map entry represents at every step",
+    "Compare exhaustive pair search with a one-pass complement lookup",
+    "Use lookup-before-insert to avoid pairing one position with itself"
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "heading": "Intuition",
+      "paragraphs": [
+        "A pair adds to a target when its second value is the first value's complement. If the target is 9 and the current value is 6, the needed complement is 3. The problem becomes a question about earlier values: have we already passed a 3?",
+        "A hash map can answer that question while we scan. Its key is a value seen at an earlier index. Its value is that index. This exact meaning matters. If we store the current index before looking up the complement, a target of 8 and a single 4 could appear to have a pair, although there is only one position."
+      ],
+      "diagram": {
+        "width": 300,
+        "height": 100,
+        "description": "Three values in index order. Value 6 is active, and it needs the earlier value 3 to reach target 9.",
+        "nodes": [
+          {
+            "id": "v0",
+            "shape": "rect",
+            "x": 10,
+            "y": 20,
+            "width": 70,
+            "height": 50,
+            "text": "8",
+            "role": "neutral"
+          },
+          {
+            "id": "v1",
+            "shape": "rect",
+            "x": 105,
+            "y": 20,
+            "width": 70,
+            "height": 50,
+            "text": "3",
+            "role": "result"
+          },
+          {
+            "id": "v2",
+            "shape": "rect",
+            "x": 200,
+            "y": 20,
+            "width": 70,
+            "height": 50,
+            "text": "6",
+            "role": "active"
+          }
+        ],
+        "labels": [
+          {
+            "id": "i0",
+            "x": 35,
+            "y": 90,
+            "text": "index 0"
+          },
+          {
+            "id": "i1",
+            "x": 130,
+            "y": 90,
+            "text": "index 1"
+          },
+          {
+            "id": "i2",
+            "x": 225,
+            "y": 90,
+            "text": "index 2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "heading": "A correct baseline",
+      "paragraphs": [
+        "Choose the first index. Try each later index and check whether the two values add to the target. When a pair matches, return those two indices. Restricting the second index to positions after the first proves that the two indices differ and prevents duplicate examination of the same unordered pair.",
+        "The nested loops do as many as n(n−1)/2 comparisons, so time is O(n²). They use O(1) extra space. This is a good correctness baseline: before changing the algorithm, state exactly what its comparison checks and why no pair is skipped."
+      ],
+      "exampleIds": [
+        "day-01-baseline"
+      ]
+    },
+    {
+      "id": "improved",
+      "heading": "Worked example: one-pass complement lookup",
+      "paragraphs": [
+        "Scan the values from left to right. At index i, the map contains indices strictly smaller than i. Compute target minus the current value and look up that complement. If it is present, return its recorded index and i. Otherwise record the current value with i and continue.",
+        "The map's invariant is the proof. Before processing i, every stored index is earlier than i. A successful lookup therefore uses two different positions. If no lookup succeeds, each possible pair was considered when its later index was processed.",
+        "For values [8, 3, 6] and target 9, index 0 records 8. Index 1 needs 6, does not find it, and records 3. Index 2 needs 3 and finds the index 1 entry. For [4, 4] and target 8, the first 4 is recorded before the second 4 is examined, so the two distinct indices form a valid pair."
+      ],
+      "exampleIds": [
+        "day-01-complement-lookup"
+      ]
+    },
+    {
+      "id": "variants",
+      "heading": "Choose the right map",
+      "paragraphs": [
+        "A set answers whether a value exists. A value-to-index map tells you where an earlier value occurred. A value-to-count map tracks how many occurrences are available. Those are different summaries, even when all three use hashing.",
+        "For a fixed set of 60 remainders, a count array can replace a map. Before adding a song's remainder to the counts, ask how many earlier songs have the complementary remainder. Treat remainder zero carefully: its complement is zero. This order counts each pair once. For an anagram with a guaranteed 26-letter alphabet, a fixed count array can compare letter multiplicities without sorting. If the alphabet can include other characters, the representation must change."
+      ],
+      "exampleIds": [
+        "day-01-remainder-frequency"
+      ]
+    },
+    {
+      "id": "complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "With expected constant-time hashing, the complement algorithm takes expected O(n) time. The map stores at most n entries, so auxiliary space is O(n). A collision-heavy hash table can make individual operations slower; the expected bound is not a worst-case guarantee.",
+        "Do not confuse a position with a value. Returning values when the task asks for indices is incorrect. Define what happens when no pair exists in a standalone example; the course example returns an empty result. LeetCode's Two Sum statement guarantees a solution, but the general pattern does not require one."
+      ]
+    },
+    {
+      "id": "check",
+      "heading": "Before you finish",
+      "checks": [
+        {
+          "prompt": "Why does lookup come before insertion?",
+          "answer": "The map then contains only earlier positions, so a successful pair uses two different indices."
+        },
+        {
+          "prompt": "What changes if the task asks for the number of equal-value pairs?",
+          "answer": "An index map is no longer enough. Keep a frequency for each value and add the number of earlier complementary values before recording the current value."
+        },
+        {
+          "prompt": "What does expected O(n) assume?",
+          "answer": "It assumes that a hash lookup or insertion takes expected constant time."
+        }
+      ]
+    }
+  ]
+}
