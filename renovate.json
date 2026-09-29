@@ -1,0 +1,118 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommitTypeAll(chore)",
+    "helpers:pinGitHubActionDigestsToSemver"
+  ],
+  "timezone": "America/Chicago",
+  "schedule": ["before 6am on monday"],
+  "prConcurrentLimit": 5,
+  "labels": ["dependencies"],
+  "rangeStrategy": "bump",
+  "postUpdateOptions": ["gomodTidy"],
+  "automerge": true,
+  "automergeType": "pr",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true,
+    "schedule": ["before 6am on the first day of the month"]
+  },
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["dependencies", "security"],
+    "schedule": ["at any time"]
+  },
+  "packageRules": [
+    {
+      "description": "Astro, its integrations, and the Vite toolchain must move together: a mismatch leaves two Vite copies and breaks the app.",
+      "groupName": "astro ecosystem",
+      "matchManagers": ["npm"],
+      "matchPackageNames": [
+        "astro",
+        "@astrojs/**",
+        "vite",
+        "@vitejs/**",
+        "tailwindcss",
+        "@tailwindcss/**"
+      ]
+    },
+    {
+      "description": "Major Astro-ecosystem upgrades need manual migration work, so wait for approval on the dependency dashboard.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": [
+        "astro",
+        "@astrojs/**",
+        "vite",
+        "@vitejs/**",
+        "tailwindcss",
+        "@tailwindcss/**"
+      ],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "groupName": "react",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"]
+    },
+    {
+      "groupName": "markdown pipeline",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["remark-**", "rehype-**", "react-markdown", "unified"]
+    },
+    {
+      "groupName": "npm non-major",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchPackageNames": [
+        "!astro",
+        "!@astrojs/**",
+        "!vite",
+        "!@vitejs/**",
+        "!tailwindcss",
+        "!@tailwindcss/**",
+        "!react",
+        "!react-dom",
+        "!@types/react",
+        "!@types/react-dom",
+        "!remark-**",
+        "!rehype-**",
+        "!react-markdown",
+        "!unified"
+      ]
+    },
+    {
+      "groupName": "go modules non-major",
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["minor", "patch", "digest"]
+    },
+    {
+      "description": "Keep the Go toolchain in go.mod and the Docker golang image in sync.",
+      "groupName": "go toolchain",
+      "matchDepNames": ["go", "golang"]
+    },
+    {
+      "description": "Node runtime majors in the Docker image should be chosen deliberately.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["node"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "groupName": "docker base images",
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "matchUpdateTypes": ["minor", "patch", "digest"]
+    },
+    {
+      "groupName": "github actions",
+      "matchManagers": ["github-actions"]
+    },
+    {
+      "description": "Major updates always need a human review before merging.",
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    }
+  ]
+}
