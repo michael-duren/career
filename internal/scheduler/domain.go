@@ -621,6 +621,27 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 			delete(d.Sessions, m.ID)
 			return nil
 		}
+		if m.Scope == "future" && s.RuleID != "" {
+			occurrence := s.OccurrenceDate
+			if occurrence == "" {
+				occurrence = s.Date
+			}
+			if r, ok := d.Rules[s.RuleID]; ok {
+				r.EffectiveTo = DateAdd(occurrence, -1)
+				d.Rules[s.RuleID] = r
+			}
+			for id, other := range d.Sessions {
+				occ := other.OccurrenceDate
+				if occ == "" {
+					occ = other.Date
+				}
+				started := other.Plan != nil && !other.Plan.Start.After(now)
+				if other.RuleID == s.RuleID && occ >= occurrence && !started && other.Actual == nil {
+					delete(d.Sessions, id)
+				}
+			}
+			return nil
+		}
 		s.State = "canceled"
 		s.Exception = true
 		d.Sessions[m.ID] = s

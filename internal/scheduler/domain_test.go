@@ -300,6 +300,33 @@ func TestCancelRemovesUnplannedActualButPreservesRecurringHistory(t *testing.T) 
 		t.Fatal("recorded recurring actual work should not be cancelable")
 	}
 }
+func TestCancelFutureScopeEndsRuleAndRemovesLaterOccurrences(t *testing.T) {
+	d := testDocument()
+	now := instant("2026-09-27T00:00:00Z")
+	d.Rules["r"] = Rule{ID: "r", Weekday: 1, LocalStart: "09:00", DurationMinutes: 60, EffectiveFrom: "2026-09-21", Assignment: Assignment{GoalID: "goal"}}
+	d.Sessions["past"] = Session{ID: "past", RuleID: "r", OccurrenceDate: "2026-09-21", Date: "2026-09-21", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-09-21T09:00:00Z"), End: instant("2026-09-21T10:00:00Z")}}
+	d.Sessions["r:2026-09-28"] = Session{ID: "r:2026-09-28", RuleID: "r", OccurrenceDate: "2026-09-28", Date: "2026-09-28", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-09-28T09:00:00Z"), End: instant("2026-09-28T10:00:00Z")}}
+	d.Sessions["r:2026-10-05"] = Session{ID: "r:2026-10-05", RuleID: "r", OccurrenceDate: "2026-10-05", Date: "2026-10-05", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-10-05T09:00:00Z"), End: instant("2026-10-05T10:00:00Z")}}
+	d.Sessions["logged"] = Session{ID: "logged", RuleID: "r", OccurrenceDate: "2026-10-12", Date: "2026-10-12", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Actual: &Actual{Status: "explicit", Date: "2026-10-12", Start: instant("2026-10-12T09:00:00Z"), End: instant("2026-10-12T10:00:00Z")}}
+	if e := d.Apply(Mutation{Action: "cancel", ID: "r:2026-09-28", Scope: "future"}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	if d.Rules["r"].EffectiveTo != "2026-09-27" {
+		t.Fatalf("rule not ended before occurrence: %+v", d.Rules["r"])
+	}
+	if _, ok := d.Sessions["r:2026-09-28"]; ok {
+		t.Fatal("targeted occurrence still present")
+	}
+	if _, ok := d.Sessions["r:2026-10-05"]; ok {
+		t.Fatal("later occurrence still present")
+	}
+	if _, ok := d.Sessions["past"]; !ok {
+		t.Fatal("earlier occurrence should be preserved")
+	}
+	if _, ok := d.Sessions["logged"]; !ok {
+		t.Fatal("occurrence with recorded actual should be preserved")
+	}
+}
 func TestAssumedActualRejectedBeforePlannedEnd(t *testing.T) {
 	d := testDocument()
 	now := instant("2026-09-28T06:30:00Z")
