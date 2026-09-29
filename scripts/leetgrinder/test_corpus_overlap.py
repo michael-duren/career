@@ -41,6 +41,18 @@ class CorpusOverlapTests(unittest.TestCase):
                 [(Path("internal/leetgrinder/examples/day-01/demo/main.py"), Path("research.md"))],
             )
 
+    def test_ignores_shared_go_import_block(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "repo"
+            corpus = Path(directory) / "corpus"
+            program = root / "internal/leetgrinder/examples/day-01/demo/main.go.txt"
+            program.parent.mkdir(parents=True)
+            corpus.mkdir()
+            imports = 'import (\n\t"bufio"\n\t"fmt"\n\t"os"\n\t"strconv"\n\t"strings"\n)'
+            (corpus / "research.md").write_text("```go\n" + imports + "\n```\n")
+            program.write_text("package main\n\n" + imports + "\n\nfunc main() {}\n")
+            self.assertEqual(find_code_overlaps(root, corpus), [])
+
 
 if __name__ == "__main__":
     unittest.main()

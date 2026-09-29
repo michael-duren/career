@@ -25,6 +25,14 @@ def code_lines(value: str) -> list[str]:
     return [" ".join(line.split()) for line in value.splitlines() if line.strip()]
 
 
+IMPORT_LINE = re.compile(r'^(import \($|\)$|"[\w./]+"$)')
+
+
+def is_import_boilerplate(window: tuple[str, ...]) -> bool:
+    """A window made only of Go import-block lines is shared boilerplate, not copied code."""
+    return all(IMPORT_LINE.match(line) for line in window)
+
+
 def find_code_overlaps(root: Path, corpus: Path, width: int = 5) -> list[tuple[Path, Path]]:
     fingerprints = {}
     for article in corpus.rglob("*.md"):
@@ -40,8 +48,9 @@ def find_code_overlaps(root: Path, corpus: Path, width: int = 5) -> list[tuple[P
             continue
         lines = code_lines(file.read_text())
         for index in range(len(lines) - width + 1):
-            article = fingerprints.get(tuple(lines[index:index + width]))
-            if article:
+            window = tuple(lines[index:index + width])
+            article = fingerprints.get(window)
+            if article and not is_import_boilerplate(window):
                 matches.add((file.relative_to(root), article.relative_to(corpus)))
     return sorted(matches)
 
