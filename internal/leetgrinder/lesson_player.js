@@ -235,7 +235,6 @@ export function mountExample(element) {
       const line = make(doc, 'span', highlighted.has(i + 1) ? 'lesson-code-line is-active' : 'lesson-code-line', code);
       line.setAttribute('data-line', String(i + 1));
       line.textContent = `${i + 1}  ${lines[i]}`;
-      code.append(doc.createTextNode('\n'));
     }
   }
   function renderTranscript() {
