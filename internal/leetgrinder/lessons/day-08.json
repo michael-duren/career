@@ -1,0 +1,217 @@
+{
+  "day": 8,
+  "objectives": [
+    "Explain why binary search can throw away half the list after one comparison.",
+    "Write binary search with both ends included, and with the right end excluded, without off-by-one mistakes.",
+    "Say what lo and hi mean when the target isn't in the list."
+  ],
+  "prerequisites": [
+    5
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: throw away half with one question",
+      "paragraphs": [
+        "Think of guessing a number between 1 and 100 when someone tells you \"higher\" or \"lower\". Guessing 50 first means one answer rules out half the numbers, whichever way it goes. Seven guesses are enough for 100 numbers.",
+        "A sorted list works the same way. Look at the middle value. If it's smaller than the target, the target can't be anywhere to its left, because everything there is even smaller. So one comparison discards half the list."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "Binary search needs one thing: a way to look at a middle item and know, for sure, which half the answer can't be in."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Sorted values 2, 6, 11, 15, 20. The middle checked is 6, which is less than the target 11, so 2 and 6 are discarded.",
+        "nodes": [
+          {
+            "id": "v0",
+            "shape": "rect",
+            "x": 12,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "2",
+            "role": "discarded"
+          },
+          {
+            "id": "v1",
+            "shape": "rect",
+            "x": 72,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "6",
+            "role": "active"
+          },
+          {
+            "id": "v2",
+            "shape": "rect",
+            "x": 132,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "11",
+            "role": "neutral"
+          },
+          {
+            "id": "v3",
+            "shape": "rect",
+            "x": 192,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "15",
+            "role": "neutral"
+          },
+          {
+            "id": "v4",
+            "shape": "rect",
+            "x": 252,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "20",
+            "role": "neutral"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "title",
+            "x": 12,
+            "y": 28,
+            "text": "looking for 11"
+          },
+          {
+            "id": "l0",
+            "x": 12,
+            "y": 110,
+            "text": "6 < 11, so drop it and"
+          },
+          {
+            "id": "l1",
+            "x": 12,
+            "y": 128,
+            "text": "everything to its left"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Check every value",
+      "heading": "Baseline: check every value",
+      "paragraphs": [
+        "Walking the list from the start and stopping at the target is always correct and needs no sorting. It takes O(n) time: a million values means up to a million checks.",
+        "Binary search takes O(log n): about 20 checks for a million values. The price is that the list must be sorted, and the loop bounds must be exactly right."
+      ]
+    },
+    {
+      "id": "closed",
+      "navLabel": "Both ends included",
+      "heading": "Worked example: search with both ends included",
+      "paragraphs": [
+        "Keep two indexes, lo and hi, and promise one thing: if the target is in the list, its index is between lo and hi, including both. Start with lo = 0 and hi = n - 1.",
+        "Look at mid, halfway between them. If it's the target, you're done. If it's too small, the target must be right of mid, so set lo = mid + 1. If it's too big, set hi = mid - 1. Keep going while lo ≤ hi.",
+        "When lo passes hi, no candidates are left and the target isn't there. Compute mid as lo + (hi - lo) / 2. The shorter (lo + hi) / 2 can overflow in C++, Java, and Go when both indexes are large."
+      ],
+      "exampleIds": [
+        "day-08-closed-interval"
+      ]
+    },
+    {
+      "id": "half-open",
+      "navLabel": "hi excluded",
+      "heading": "Worked example: search with hi excluded",
+      "paragraphs": [
+        "Another common convention keeps hi one past the last candidate: the candidates are lo up to, but not including, hi. Start with hi = n and loop while lo < hi.",
+        "Only the \"too big\" step changes: set hi = mid, not mid - 1. Because hi is already excluded, setting hi = mid drops mid itself. Mixing the two conventions is the most common binary search bug: a loop condition from one style with an update from the other either skips the answer or never ends.",
+        "The half-open style is handy for questions like \"where would this value go?\", because lo and hi can end up equal to n, one past the end."
+      ],
+      "callout": {
+        "kind": "watch",
+        "text": "Pick one convention per loop and check three things together: the starting hi, the loop condition, and how hi moves."
+      },
+      "exampleIds": [
+        "day-08-half-open"
+      ]
+    },
+    {
+      "id": "your-turn-binary-search",
+      "navLabel": "Your turn: Binary Search",
+      "heading": "Your turn: Binary Search",
+      "paragraphs": [
+        "Given a sorted array and a target, return the target's index, or -1 if it isn't there. This one is close to the examples; write it from memory without looking."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Close this page and write it cold. Then test an empty array, a one-element array, and a target smaller than everything.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-insert",
+      "navLabel": "Your turn: Search Insert Position",
+      "heading": "Your turn: Search Insert Position",
+      "paragraphs": [
+        "Given a sorted array of distinct values and a target, return the target's index if it's there. If not, return the index where it would be inserted to keep the array sorted."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Work [1, 3, 5, 6] with target 2 and target 7 by hand. When the loop ends without finding the target, what do lo and hi mean?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-single",
+      "navLabel": "Your turn: Single Element in a Sorted Array",
+      "heading": "Your turn: Single Element in a Sorted Array",
+      "paragraphs": [
+        "Today's medium. A sorted array has every value twice except one value that appears once, like [1, 1, 2, 3, 3, 4, 4]. Find the single value in O(log n) time and O(1) memory."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Binary search needs a yes/no question about an index that is false on one side of the answer and true on the other. Look at a few examples and find one.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Each step halves the candidates, so binary search takes O(log n) steps and O(1) extra memory. It only works on data where one comparison really rules out half, which for a plain list means sorted order."
+      ],
+      "bullets": [
+        "Linear scan: O(n) time, works on any list.",
+        "Binary search: O(log n) time, needs sorted data.",
+        "Sorting first costs O(n log n), so for a single search on unsorted data, a scan is faster."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "In the both-ends-included style, why does the loop run while lo ≤ hi and not lo < hi?",
+          "answer": "When lo = hi, one candidate is left and it still needs checking."
+        },
+        {
+          "prompt": "In the hi-excluded style, why is the update hi = mid and not hi = mid - 1?",
+          "answer": "hi is already excluded, so hi = mid drops mid. Using mid - 1 would also drop the value just left of mid, which might be the target."
+        },
+        {
+          "prompt": "Why compute mid as lo + (hi - lo) / 2?",
+          "answer": "lo + hi can overflow a 32-bit integer when both are large. The difference can't."
+        }
+      ]
+    }
+  ]
+}

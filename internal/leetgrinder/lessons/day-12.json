@@ -1,0 +1,196 @@
+{
+  "day": 12,
+  "objectives": [
+    "Use binary search on data that isn't sorted, by finding a comparison that still rules out half.",
+    "Find the top of a mountain-shaped array by checking which way is uphill.",
+    "Recognize when duplicates make a comparison useless."
+  ],
+  "prerequisites": [
+    8,
+    9,
+    11
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: rule out half, even without sorted order",
+      "paragraphs": [
+        "Binary search isn't really about sorted lists. It's about finding a check at mid that tells you, for certain, that the answer isn't on one side. Sorted order is just the most common reason such a check exists.",
+        "A mountain-shaped array goes strictly up and then strictly down, like [1, 3, 7, 4, 2]. It isn't sorted, but look at any index and its right neighbor: if the next value is higher, you're on the way up and the top is to the right. If it's lower, you're on the way down and the top is here or to the left."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "Ask: what can I learn from mid and one or two other values that tells me which half can't contain the answer? If you can answer that, you can binary search."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Mountain values 1, 3, 7, 4, 2. At index 1 the next value is higher, so the peak, 7, is to the right.",
+        "nodes": [
+          {
+            "id": "v0",
+            "shape": "rect",
+            "x": 12,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "1",
+            "role": "neutral"
+          },
+          {
+            "id": "v1",
+            "shape": "rect",
+            "x": 72,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "3",
+            "role": "active"
+          },
+          {
+            "id": "v2",
+            "shape": "rect",
+            "x": 132,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "7",
+            "role": "result"
+          },
+          {
+            "id": "v3",
+            "shape": "rect",
+            "x": 192,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "4",
+            "role": "neutral"
+          },
+          {
+            "id": "v4",
+            "shape": "rect",
+            "x": 252,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "2",
+            "role": "neutral"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "title",
+            "x": 12,
+            "y": 28,
+            "text": "a mountain"
+          },
+          {
+            "id": "l0",
+            "x": 12,
+            "y": 110,
+            "text": "3 < 7: still climbing,"
+          },
+          {
+            "id": "l1",
+            "x": 12,
+            "y": 128,
+            "text": "so the top is to the right"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Scan for the top",
+      "heading": "Baseline: scan for the largest value",
+      "paragraphs": [
+        "Walking the whole array and keeping the largest value finds the top in O(n). The mountain shape lets you do it in O(log n)."
+      ]
+    },
+    {
+      "id": "mountain",
+      "navLabel": "Mountain peak",
+      "heading": "Worked example: find the top of a mountain",
+      "paragraphs": [
+        "Keep lo and hi around the peak. Compare values[mid] with values[mid + 1]. If mid is lower, it's on the way up and the peak is after it: lo = mid + 1. Otherwise mid is on the way down or is the peak itself: hi = mid.",
+        "mid + 1 is always a valid index here, because the loop runs only while lo < hi, so mid < hi. When lo = hi, that's the peak."
+      ],
+      "exampleIds": [
+        "day-12-mountain-peak"
+      ]
+    },
+    {
+      "id": "your-turn-rotated",
+      "navLabel": "Your turn: Search in Rotated Sorted Array",
+      "heading": "Your turn: Search in Rotated Sorted Array",
+      "paragraphs": [
+        "Today's first medium. A sorted array of distinct values was rotated at an unknown point, like [4, 5, 6, 7, 0, 1, 2]. Find a target's index, or -1, in O(log n)."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Pick any mid in a rotated array and look at the two halves on either side of it. What can you always say about at least one of them?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-rotated-two",
+      "navLabel": "Your turn: Search in Rotated Sorted Array II",
+      "heading": "Your turn: Search in Rotated Sorted Array II",
+      "paragraphs": [
+        "Today's second medium. Same as above, but the array may contain duplicates. Return whether the target is present."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Solve the version without duplicates first. Then find an input, like [1, 0, 1, 1, 1], where your check can't tell which half is which. What's the safest small step in that case?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-peak",
+      "navLabel": "Your turn: Find Peak Element",
+      "heading": "Your turn: Find Peak Element",
+      "paragraphs": [
+        "Today's third medium. Find any index whose value is larger than both neighbors, treating positions outside the array as minus infinity. The array can have many peaks and isn't a single mountain. Run in O(log n)."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "The mountain example assumed exactly one top. Convince yourself that walking uphill from anywhere must still reach some peak, then see whether the same check works.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Each of these searches is O(log n) as long as every step discards a constant fraction. When duplicates make a comparison ambiguous, you may only be able to discard one element, and the worst case becomes O(n).",
+        "Always check that indexes like mid + 1 stay inside the array for every possible lo and hi."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "Why is values[mid + 1] always a valid index in the mountain search?",
+          "answer": "The loop runs only while lo < hi, so mid is less than hi and mid + 1 ≤ hi."
+        },
+        {
+          "prompt": "In the mountain search, why does equal-or-lower set hi = mid instead of hi = mid - 1?",
+          "answer": "mid itself could be the peak, so it must stay a candidate."
+        },
+        {
+          "prompt": "Why can duplicates slow a rotated search down to O(n)?",
+          "answer": "If mid, lo, and hi hold the same value, you can't tell which side is sorted, so you can only drop one element safely."
+        }
+      ]
+    }
+  ]
+}

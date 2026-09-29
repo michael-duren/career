@@ -1,0 +1,1047 @@
+{
+ "id": "day-13-minimum-time",
+ "title": "Search for the smallest time that is enough",
+ "invariant": "Any time ≥ hi is enough; any time < lo is not.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 31,
+   "algorithmEnd": 48
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 22,
+   "algorithmEnd": 36
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 29,
+   "algorithmEnd": 46
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 54,
+   "algorithmEnd": 75
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Buses taking 1, 2, 3 minutes; 5 trips",
+   "input": "3 5\n1 2 3\n",
+   "expectedOutput": "3",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       32
+      ],
+      "python": [
+       23
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       55,
+       56,
+       57,
+       59
+      ]
+     },
+     "explanation": "Buses take 1, 2, 3 minutes per trip and all run at once. What is the least time to finish 5 trips in total? Instead of searching a list, search the answer itself: it's between 1 and 5 (the fastest bus alone could do all trips by then).",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "5"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      },
+      {
+       "name": "trips",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Minimum time normal: start, lo 1, hi 5, mid -, trips -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "trips",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 190,
+        "height": 40,
+        "text": "trips by mid: -",
+        "role": "neutral"
+       },
+       {
+        "id": "need",
+        "shape": "rect",
+        "x": 218,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "need 5",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "candidate times (minutes)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "too short | ... | enough: one switch, so binary search works"
+       }
+      ]
+     }
+    },
+    {
+     "event": "enough",
+     "lines": {
+      "cpp": [
+       38
+      ],
+      "python": [
+       29
+      ],
+      "java": [
+       36
+      ],
+      "go": [
+       65
+      ]
+     },
+     "explanation": "In 3 minutes each bus finishes 3 ÷ its trip time, rounded down: 3 + 1 + 1 = 5 trips. That's enough, and more time is never worse, so the answer is 3 or less: hi = 3.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "3"
+      },
+      {
+       "name": "mid",
+       "value": "3"
+      },
+      {
+       "name": "trips",
+       "value": "5"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Minimum time normal: enough, lo 1, hi 3, mid 3, trips 5.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "trips",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 190,
+        "height": 40,
+        "text": "trips by mid: 5",
+        "role": "result"
+       },
+       {
+        "id": "need",
+        "shape": "rect",
+        "x": 218,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "need 5",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "candidate times (minutes)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "mid"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "too short | ... | enough: one switch, so binary search works"
+       }
+      ]
+     }
+    },
+    {
+     "event": "short",
+     "lines": {
+      "cpp": [
+       41
+      ],
+      "python": [
+       32
+      ],
+      "java": [
+       39
+      ],
+      "go": [
+       68
+      ]
+     },
+     "explanation": "In 2 minutes each bus finishes 2 ÷ its trip time, rounded down: 2 + 1 + 0 = 3 trips. Not enough, and less time is never better, so the answer is more than 2: lo = 3.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "3"
+      },
+      {
+       "name": "hi",
+       "value": "3"
+      },
+      {
+       "name": "mid",
+       "value": "2"
+      },
+      {
+       "name": "trips",
+       "value": "3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Minimum time normal: short, lo 3, hi 3, mid 2, trips 3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "trips",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 190,
+        "height": 40,
+        "text": "trips by mid: 3",
+        "role": "discarded"
+       },
+       {
+        "id": "need",
+        "shape": "rect",
+        "x": 218,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "need 5",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "candidate times (minutes)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "mid"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "too short | ... | enough: one switch, so binary search works"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       46
+      ],
+      "python": [
+       35
+      ],
+      "java": [
+       44
+      ],
+      "go": [
+       73
+      ]
+     },
+     "explanation": "lo = hi = 3: the least time that finishes 5 trips (5 trips by then).",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "3"
+      },
+      {
+       "name": "hi",
+       "value": "3"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      },
+      {
+       "name": "trips",
+       "value": "5"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Minimum time normal: done, lo 3, hi 3, mid -, trips 5.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "trips",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 190,
+        "height": 40,
+        "text": "trips by mid: 5",
+        "role": "neutral"
+       },
+       {
+        "id": "need",
+        "shape": "rect",
+        "x": 218,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "need 5",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "candidate times (minutes)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "answer"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "too short | ... | enough: one switch, so binary search works"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-one-bus",
+   "label": "One bus",
+   "input": "1 1\n2\n",
+   "expectedOutput": "2",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       32
+      ],
+      "python": [
+       23
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       55,
+       56,
+       57,
+       59
+      ]
+     },
+     "explanation": "Buses take 2 minutes per trip and all run at once. What is the least time to finish 1 trips in total? Instead of searching a list, search the answer itself: it's between 1 and 2 (the fastest bus alone could do all trips by then).",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "2"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      },
+      {
+       "name": "trips",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Minimum time edge-one-bus: start, lo 1, hi 2, mid -, trips -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "trips",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 190,
+        "height": 40,
+        "text": "trips by mid: -",
+        "role": "neutral"
+       },
+       {
+        "id": "need",
+        "shape": "rect",
+        "x": 218,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "need 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "candidate times (minutes)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "too short | ... | enough: one switch, so binary search works"
+       }
+      ]
+     }
+    },
+    {
+     "event": "short",
+     "lines": {
+      "cpp": [
+       41
+      ],
+      "python": [
+       32
+      ],
+      "java": [
+       39
+      ],
+      "go": [
+       68
+      ]
+     },
+     "explanation": "In 1 minutes each bus finishes 1 ÷ its trip time, rounded down: 0 = 0 trips. Not enough, and less time is never better, so the answer is more than 1: lo = 2.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "2"
+      },
+      {
+       "name": "hi",
+       "value": "2"
+      },
+      {
+       "name": "mid",
+       "value": "1"
+      },
+      {
+       "name": "trips",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Minimum time edge-one-bus: short, lo 2, hi 2, mid 1, trips 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "trips",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 190,
+        "height": 40,
+        "text": "trips by mid: 0",
+        "role": "discarded"
+       },
+       {
+        "id": "need",
+        "shape": "rect",
+        "x": 218,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "need 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "candidate times (minutes)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "mid"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "too short | ... | enough: one switch, so binary search works"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       46
+      ],
+      "python": [
+       35
+      ],
+      "java": [
+       44
+      ],
+      "go": [
+       73
+      ]
+     },
+     "explanation": "lo = hi = 2: the least time that finishes 1 trips (1 trips by then).",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "2"
+      },
+      {
+       "name": "hi",
+       "value": "2"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      },
+      {
+       "name": "trips",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Minimum time edge-one-bus: done, lo 2, hi 2, mid -, trips 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "trips",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 190,
+        "height": 40,
+        "text": "trips by mid: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "need",
+        "shape": "rect",
+        "x": 218,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "need 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "candidate times (minutes)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "answer"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "too short | ... | enough: one switch, so binary search works"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

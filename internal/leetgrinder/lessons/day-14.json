@@ -1,0 +1,202 @@
+{
+  "day": 14,
+  "objectives": [
+    "Pick the right binary search template for a new problem.",
+    "Count pairs in a sorted array with one binary search per element.",
+    "Combine search on the answer with a greedy check."
+  ],
+  "prerequisites": [
+    8,
+    9,
+    10,
+    13
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: three templates cover almost everything",
+      "paragraphs": [
+        "This week used three binary searches. Exact search asks \"is it here?\" and stops when found. Lower bound asks \"where does the first value ≥ x start?\" First-true asks \"what is the smallest k where the check says yes?\", even when k isn't an index into anything.",
+        "The lower bound and first-true are really the same loop: lo = mid + 1 on no, hi = mid on yes. Most new problems come down to choosing the yes/no question and the starting range."
+      ],
+      "bullets": [
+        "Exact match in sorted data: day 8.",
+        "First position with value ≥ x, or counting values below x: day 10.",
+        "Smallest amount that is enough: day 13."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "Before coding, write down three things: the yes/no question, why every no comes before every yes, and a starting range that surely contains the answer."
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Check every pair",
+      "heading": "Baseline: check every pair",
+      "paragraphs": [
+        "Counting pairs i < j with values[i] + values[j] ≤ T by trying every pair takes O(n²). For 100,000 values that's about five billion checks."
+      ]
+    },
+    {
+      "id": "pairs",
+      "navLabel": "Counting pairs",
+      "heading": "Worked example: count pairs with a small enough sum",
+      "paragraphs": [
+        "Sort the values. For a fixed i, partners j that work are all at the start of the part after i, because the values only grow. So binary search for the first j where values[i] + values[j] > T. Every index between i + 1 and that j is a partner.",
+        "For [1, 2, 4, 5, 7] and T = 6: from 1, the first partner that's too big is 7 at index 4, giving 3 pairs. From 2, it's 5 at index 3, giving 1 pair. From 4 on, there are none. Total 4. Counting only j > i means each pair is counted once."
+      ],
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Sorted values 1, 2, 4, 5, 7. For the 1, the partners 2, 4, 5 form one block; 7 is too big.",
+        "nodes": [
+          {
+            "id": "v0",
+            "shape": "rect",
+            "x": 12,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "1",
+            "role": "active"
+          },
+          {
+            "id": "v1",
+            "shape": "rect",
+            "x": 72,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "2",
+            "role": "result"
+          },
+          {
+            "id": "v2",
+            "shape": "rect",
+            "x": 132,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "4",
+            "role": "result"
+          },
+          {
+            "id": "v3",
+            "shape": "rect",
+            "x": 192,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "5",
+            "role": "result"
+          },
+          {
+            "id": "v4",
+            "shape": "rect",
+            "x": 252,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "7",
+            "role": "discarded"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "title",
+            "x": 12,
+            "y": 28,
+            "text": "partners of 1"
+          },
+          {
+            "id": "l0",
+            "x": 12,
+            "y": 110,
+            "text": "partners of 1 with sum ≤ 6:"
+          },
+          {
+            "id": "l1",
+            "x": 12,
+            "y": 130,
+            "text": "one block, then too big"
+          }
+        ]
+      },
+      "exampleIds": [
+        "day-14-pairs-at-most"
+      ]
+    },
+    {
+      "id": "your-turn-potions",
+      "navLabel": "Your turn: Successful Pairs of Spells and Potions",
+      "heading": "Your turn: Successful Pairs of Spells and Potions",
+      "paragraphs": [
+        "For each spell, count the potions whose product with the spell is at least success. Return one count per spell."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Which side should you sort, and what are you searching for once it's sorted? Watch the product's size.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-bouquets",
+      "navLabel": "Your turn: Minimum Number of Days to Make m Bouquets",
+      "heading": "Your turn: Minimum Number of Days to Make m Bouquets",
+      "paragraphs": [
+        "Today's first medium. Each flower blooms on a given day. A bouquet needs k adjacent bloomed flowers. Return the minimum number of days to make m bouquets, or -1 if impossible."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "What becomes easier as the number of days grows? Write a check for one day count first.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-distance",
+      "navLabel": "Your turn: Maximum Distance Between a Pair of Values",
+      "heading": "Your turn: Maximum Distance Between a Pair of Values",
+      "paragraphs": [
+        "Today's second medium. Two arrays are both non-increasing. A pair (i, j) is valid if i ≤ j and nums1[i] ≤ nums2[j]; its distance is j - i. Return the largest distance."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Fix an i. Which j values are valid, and do they form one block? Then consider whether you even need binary search.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Pair counting with binary search: O(n log n) for the sort plus O(n log n) for the searches. Next week you'll count the same pairs with two pointers in O(n) after sorting.",
+        "Products and sums of two large values can overflow 32-bit integers; use 64-bit math."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "Why does counting only j > i avoid double counting?",
+          "answer": "Each unordered pair has exactly one smaller index, so it's counted once, from there."
+        },
+        {
+          "prompt": "Why do the good partners of i form one block?",
+          "answer": "The array is sorted, so values[i] + values[j] only grows as j grows. Once a sum is too big, every later one is too."
+        },
+        {
+          "prompt": "Which template fits \"the fewest days until something is possible\"?",
+          "answer": "First-true search on the answer, with a check for a given number of days."
+        }
+      ]
+    }
+  ]
+}

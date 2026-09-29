@@ -1,0 +1,220 @@
+{
+  "day": 9,
+  "objectives": [
+    "Turn a search into a yes/no question that is false up to some point and true after it.",
+    "Find the first value where that question turns true.",
+    "Avoid integer overflow when the question involves multiplying."
+  ],
+  "prerequisites": [
+    8
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: search a question, not a list",
+      "paragraphs": [
+        "Binary search doesn't need a list. It needs a yes/no question about a number k where every no comes before every yes: no, no, no, yes, yes, yes. Then you can look at the middle k and throw away half, just like with a sorted list.",
+        "Here's an example: a staircase with k steps uses 1 + 2 + ... + k = k(k+1)/2 blocks. \"Does a k-step staircase use at least 11 blocks?\" is no for k = 1 to 4 and yes from k = 5 on, because more steps always use more blocks. Finding the first yes answers \"how many steps do I need?\""
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "When you see \"find the smallest k such that ...\" or \"the largest k such that ...\", check whether the condition flips only once as k grows. If it does, binary search it."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "The answers for k = 1 to 7: no, no, no, no, yes, yes, yes. The first yes, at k = 5, is highlighted.",
+        "nodes": [
+          {
+            "id": "v0",
+            "shape": "rect",
+            "x": 12,
+            "y": 44,
+            "width": 37,
+            "height": 44,
+            "text": "no",
+            "role": "discarded"
+          },
+          {
+            "id": "v1",
+            "shape": "rect",
+            "x": 55,
+            "y": 44,
+            "width": 37,
+            "height": 44,
+            "text": "no",
+            "role": "discarded"
+          },
+          {
+            "id": "v2",
+            "shape": "rect",
+            "x": 98,
+            "y": 44,
+            "width": 37,
+            "height": 44,
+            "text": "no",
+            "role": "discarded"
+          },
+          {
+            "id": "v3",
+            "shape": "rect",
+            "x": 141,
+            "y": 44,
+            "width": 37,
+            "height": 44,
+            "text": "no",
+            "role": "discarded"
+          },
+          {
+            "id": "v4",
+            "shape": "rect",
+            "x": 184,
+            "y": 44,
+            "width": 37,
+            "height": 44,
+            "text": "yes",
+            "role": "result"
+          },
+          {
+            "id": "v5",
+            "shape": "rect",
+            "x": 227,
+            "y": 44,
+            "width": 37,
+            "height": 44,
+            "text": "yes",
+            "role": "visited"
+          },
+          {
+            "id": "v6",
+            "shape": "rect",
+            "x": 270,
+            "y": 44,
+            "width": 37,
+            "height": 44,
+            "text": "yes",
+            "role": "visited"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "title",
+            "x": 12,
+            "y": 28,
+            "text": "at least 11 blocks?"
+          },
+          {
+            "id": "l0",
+            "x": 12,
+            "y": 110,
+            "text": "k = 1 ... 7"
+          },
+          {
+            "id": "l1",
+            "x": 12,
+            "y": 132,
+            "text": "the first yes is the answer"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Try every k",
+      "heading": "Baseline: try k = 1, 2, 3, ...",
+      "paragraphs": [
+        "Checking k = 1, then 2, then 3 until the answer is yes is simple and correct. For the staircase it takes about √(2n) checks, and for many problems it takes as many checks as the answer is large, which can be billions.",
+        "Binary search on k takes about log₂ of the range. For a range of two billion, that's 31 checks."
+      ]
+    },
+    {
+      "id": "first-true",
+      "navLabel": "Finding the first yes",
+      "heading": "Worked example: the first k that is enough",
+      "paragraphs": [
+        "Keep a range lo..hi that always contains the answer. For the staircase with n blocks, lo = 1 and hi = n, because k = n steps always use at least n blocks.",
+        "Check mid. If the answer at mid is yes, the first yes is mid or earlier, so set hi = mid. Keep mid, because it might be the first. If it's no, the first yes is later, so set lo = mid + 1. Stop when lo = hi: that's the answer.",
+        "The update pair hi = mid and lo = mid + 1 is what makes the loop finish. If you set lo = mid instead, a range of two values could pick the same mid forever."
+      ],
+      "callout": {
+        "kind": "watch",
+        "text": "k(k+1)/2 for k near two billion is about 2·10¹⁸, far more than a 32-bit int holds. Use a 64-bit type (long long, long, int64) for the multiplication. The large edge case in the player needs it. Python's integers never overflow."
+      },
+      "exampleIds": [
+        "day-09-first-true"
+      ]
+    },
+    {
+      "id": "your-turn-first-bad",
+      "navLabel": "Your turn: First Bad Version",
+      "heading": "Your turn: First Bad Version",
+      "paragraphs": [
+        "Versions 1 to n of a product were released in order, and at some point one version broke everything after it. Given isBadVersion(v), find the first bad version while calling it as few times as possible."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Match it to the staircase example: what is the yes/no question, and what are lo and hi?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-sqrt",
+      "navLabel": "Your turn: Sqrt(x)",
+      "heading": "Your turn: Sqrt(x)",
+      "paragraphs": [
+        "Return the square root of a non-negative integer x, rounded down, without using a built-in power or square-root function. The square root of 8 is 2.82..., so return 2."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Is this the first k where something becomes true, or the last k where something is still true? Decide before writing the loop, and check how large k·k can get.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-mutated",
+      "navLabel": "Your turn: Sum of Mutated Array Closest to Target",
+      "heading": "Your turn: Sum of Mutated Array Closest to Target",
+      "paragraphs": [
+        "Today's medium. Given an array and a target, pick an integer value. Every array element larger than value is replaced by value. Return the value that makes the array's sum as close as possible to target, choosing the smaller value on a tie. For [4, 9, 3] and target 10, the answer is 3."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Try several values on [4, 9, 3] by hand and write down each sum. How does the sum change as value grows?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Binary search on the answer takes O(log R) checks for a range of R candidates, times the cost of one check. For the staircase a check is O(1); in later problems a check may scan an array, giving O(n log R).",
+        "The whole method depends on the question flipping only once. If yes and no alternate, halving throws away answers."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "Why does the loop set hi = mid, not hi = mid - 1, when mid is a yes?",
+          "answer": "mid might be the first yes. Setting hi = mid - 1 could throw the answer away."
+        },
+        {
+          "prompt": "What goes wrong with lo = mid when mid is a no?",
+          "answer": "When lo and hi are next to each other, mid equals lo, so lo never moves and the loop never ends."
+        },
+        {
+          "prompt": "Why can the staircase check overflow, and how do you avoid it?",
+          "answer": "k(k+1) grows like k², which passes 32-bit limits long before k does. Compute it in a 64-bit integer."
+        }
+      ]
+    }
+  ]
+}

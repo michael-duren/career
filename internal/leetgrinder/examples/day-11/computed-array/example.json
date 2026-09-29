@@ -1,0 +1,3641 @@
+{
+ "id": "day-11-computed-array",
+ "title": "Binary search over values you compute",
+ "invariant": "If target is some i², then lo ≤ i ≤ hi.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 23,
+   "algorithmEnd": 44
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 35
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 23,
+   "algorithmEnd": 44
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 46,
+   "algorithmEnd": 67
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Is 49 a square (up to 10²)?",
+   "input": "10 49\n",
+   "expectedOutput": "7",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "Search the list 0², 1², ..., 10² for 49 without building it. value(i) = i·i is all binary search needs: a way to read the value at an index, and values that increase.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "10"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      },
+      {
+       "name": "value",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Computed array normal: start, lo 0, hi 10, mid -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 61,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 106,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 151,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 196,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "16",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 241,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "25",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 286,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "36",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 331,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "49",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 376,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "64",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 421,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "81",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-10",
+        "shape": "rect",
+        "x": 466,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "100",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "value(i) = i², computed only when read; target 49"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 30,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 75,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 120,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 165,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 210,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 255,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 300,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 345,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 390,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 435,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "cell-index-10",
+        "x": 480,
+        "y": 96,
+        "text": "10"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the list is drawn here, but the program never stores it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "go-right",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       34
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "value(5) = 25 is less than 49, so look right: lo = 6.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "6"
+      },
+      {
+       "name": "hi",
+       "value": "10"
+      },
+      {
+       "name": "mid",
+       "value": "5"
+      },
+      {
+       "name": "value",
+       "value": "25"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Computed array normal: go-right, lo 6, hi 10, mid 5.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "0",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 61,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 106,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 151,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "9",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 196,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "16",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 241,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "25",
+        "role": "active"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 286,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "36",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 331,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "49",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 376,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "64",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 421,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "81",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-10",
+        "shape": "rect",
+        "x": 466,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "100",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "value(i) = i², computed only when read; target 49"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 30,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 75,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 120,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 165,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 210,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 255,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 300,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 345,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 390,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 435,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "cell-index-10",
+        "x": 480,
+        "y": 96,
+        "text": "10"
+       },
+       {
+        "id": "pointer-5",
+        "x": 243,
+        "y": 116,
+        "text": "mid"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the list is drawn here, but the program never stores it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "go-left",
+     "lines": {
+      "cpp": [
+       37
+      ],
+      "python": [
+       31
+      ],
+      "java": [
+       37
+      ],
+      "go": [
+       60
+      ]
+     },
+     "explanation": "value(8) = 64 is greater than 49, so look left: hi = 7.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "6"
+      },
+      {
+       "name": "hi",
+       "value": "7"
+      },
+      {
+       "name": "mid",
+       "value": "8"
+      },
+      {
+       "name": "value",
+       "value": "64"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Computed array normal: go-left, lo 6, hi 7, mid 8.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "0",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 61,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 106,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 151,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "9",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 196,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "16",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 241,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "25",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 286,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "36",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 331,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "49",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 376,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "64",
+        "role": "active"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 421,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "81",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-10",
+        "shape": "rect",
+        "x": 466,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "100",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "value(i) = i², computed only when read; target 49"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 30,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 75,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 120,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 165,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 210,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 255,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 300,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 345,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 390,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 435,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "cell-index-10",
+        "x": 480,
+        "y": 96,
+        "text": "10"
+       },
+       {
+        "id": "pointer-8",
+        "x": 378,
+        "y": 116,
+        "text": "mid"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the list is drawn here, but the program never stores it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "go-right",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       34
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "value(6) = 36 is less than 49, so look right: lo = 7.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "7"
+      },
+      {
+       "name": "hi",
+       "value": "7"
+      },
+      {
+       "name": "mid",
+       "value": "6"
+      },
+      {
+       "name": "value",
+       "value": "36"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Computed array normal: go-right, lo 7, hi 7, mid 6.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "0",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 61,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 106,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 151,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "9",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 196,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "16",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 241,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "25",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 286,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "36",
+        "role": "active"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 331,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "49",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 376,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "64",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 421,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "81",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-10",
+        "shape": "rect",
+        "x": 466,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "100",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "value(i) = i², computed only when read; target 49"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 30,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 75,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 120,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 165,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 210,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 255,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 300,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 345,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 390,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 435,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "cell-index-10",
+        "x": 480,
+        "y": 96,
+        "text": "10"
+       },
+       {
+        "id": "pointer-6",
+        "x": 288,
+        "y": 116,
+        "text": "mid"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the list is drawn here, but the program never stores it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "found",
+     "lines": {
+      "cpp": [
+       29,
+       30
+      ],
+      "python": [
+       24,
+       25
+      ],
+      "java": [
+       29,
+       30
+      ],
+      "go": [
+       52,
+       53
+      ]
+     },
+     "explanation": "value(7) = 7² = 49. Found it at index 7.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "7"
+      },
+      {
+       "name": "hi",
+       "value": "7"
+      },
+      {
+       "name": "mid",
+       "value": "7"
+      },
+      {
+       "name": "value",
+       "value": "49"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Computed array normal: found, lo 7, hi 7, mid 7.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "0",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 61,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 106,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 151,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "9",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 196,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "16",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 241,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "25",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 286,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "36",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 331,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "49",
+        "role": "result"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 376,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "64",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 421,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "81",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-10",
+        "shape": "rect",
+        "x": 466,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "100",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "value(i) = i², computed only when read; target 49"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 30,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 75,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 120,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 165,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 210,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 255,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 300,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 345,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 390,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 435,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "cell-index-10",
+        "x": 480,
+        "y": 96,
+        "text": "10"
+       },
+       {
+        "id": "pointer-7",
+        "x": 333,
+        "y": 116,
+        "text": "mid"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the list is drawn here, but the program never stores it"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-absent",
+   "label": "50 is not a square",
+   "input": "10 50\n",
+   "expectedOutput": "-1",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "Search the list 0², 1², ..., 10² for 50 without building it. value(i) = i·i is all binary search needs: a way to read the value at an index, and values that increase.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "10"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      },
+      {
+       "name": "value",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Computed array edge-absent: start, lo 0, hi 10, mid -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 61,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 106,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 151,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 196,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "16",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 241,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "25",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 286,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "36",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 331,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "49",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 376,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "64",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 421,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "81",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-10",
+        "shape": "rect",
+        "x": 466,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "100",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "value(i) = i², computed only when read; target 50"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 30,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 75,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 120,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 165,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 210,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 255,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 300,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 345,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 390,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 435,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "cell-index-10",
+        "x": 480,
+        "y": 96,
+        "text": "10"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the list is drawn here, but the program never stores it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "go-right",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       34
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "value(5) = 25 is less than 50, so look right: lo = 6.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "6"
+      },
+      {
+       "name": "hi",
+       "value": "10"
+      },
+      {
+       "name": "mid",
+       "value": "5"
+      },
+      {
+       "name": "value",
+       "value": "25"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Computed array edge-absent: go-right, lo 6, hi 10, mid 5.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "0",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 61,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 106,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 151,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "9",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 196,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "16",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 241,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "25",
+        "role": "active"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 286,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "36",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 331,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "49",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 376,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "64",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 421,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "81",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-10",
+        "shape": "rect",
+        "x": 466,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "100",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "value(i) = i², computed only when read; target 50"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 30,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 75,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 120,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 165,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 210,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 255,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 300,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 345,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 390,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 435,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "cell-index-10",
+        "x": 480,
+        "y": 96,
+        "text": "10"
+       },
+       {
+        "id": "pointer-5",
+        "x": 243,
+        "y": 116,
+        "text": "mid"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the list is drawn here, but the program never stores it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "go-left",
+     "lines": {
+      "cpp": [
+       37
+      ],
+      "python": [
+       31
+      ],
+      "java": [
+       37
+      ],
+      "go": [
+       60
+      ]
+     },
+     "explanation": "value(8) = 64 is greater than 50, so look left: hi = 7.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "6"
+      },
+      {
+       "name": "hi",
+       "value": "7"
+      },
+      {
+       "name": "mid",
+       "value": "8"
+      },
+      {
+       "name": "value",
+       "value": "64"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Computed array edge-absent: go-left, lo 6, hi 7, mid 8.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "0",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 61,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 106,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 151,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "9",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 196,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "16",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 241,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "25",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 286,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "36",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 331,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "49",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 376,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "64",
+        "role": "active"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 421,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "81",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-10",
+        "shape": "rect",
+        "x": 466,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "100",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "value(i) = i², computed only when read; target 50"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 30,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 75,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 120,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 165,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 210,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 255,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 300,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 345,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 390,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 435,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "cell-index-10",
+        "x": 480,
+        "y": 96,
+        "text": "10"
+       },
+       {
+        "id": "pointer-8",
+        "x": 378,
+        "y": 116,
+        "text": "mid"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the list is drawn here, but the program never stores it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "go-right",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       34
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "value(6) = 36 is less than 50, so look right: lo = 7.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "7"
+      },
+      {
+       "name": "hi",
+       "value": "7"
+      },
+      {
+       "name": "mid",
+       "value": "6"
+      },
+      {
+       "name": "value",
+       "value": "36"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Computed array edge-absent: go-right, lo 7, hi 7, mid 6.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "0",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 61,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 106,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 151,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "9",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 196,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "16",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 241,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "25",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 286,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "36",
+        "role": "active"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 331,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "49",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 376,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "64",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 421,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "81",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-10",
+        "shape": "rect",
+        "x": 466,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "100",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "value(i) = i², computed only when read; target 50"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 30,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 75,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 120,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 165,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 210,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 255,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 300,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 345,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 390,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 435,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "cell-index-10",
+        "x": 480,
+        "y": 96,
+        "text": "10"
+       },
+       {
+        "id": "pointer-6",
+        "x": 288,
+        "y": 116,
+        "text": "mid"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the list is drawn here, but the program never stores it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "go-right",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       34
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "value(7) = 49 is less than 50, so look right: lo = 8.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "8"
+      },
+      {
+       "name": "hi",
+       "value": "7"
+      },
+      {
+       "name": "mid",
+       "value": "7"
+      },
+      {
+       "name": "value",
+       "value": "49"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Computed array edge-absent: go-right, lo 8, hi 7, mid 7.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "0",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 61,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 106,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 151,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "9",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 196,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "16",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 241,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "25",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 286,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "36",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 331,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "49",
+        "role": "active"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 376,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "64",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 421,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "81",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-10",
+        "shape": "rect",
+        "x": 466,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "100",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "value(i) = i², computed only when read; target 50"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 30,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 75,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 120,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 165,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 210,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 255,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 300,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 345,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 390,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 435,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "cell-index-10",
+        "x": 480,
+        "y": 96,
+        "text": "10"
+       },
+       {
+        "id": "pointer-7",
+        "x": 333,
+        "y": 116,
+        "text": "mid"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the list is drawn here, but the program never stores it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "absent",
+     "lines": {
+      "cpp": [
+       42
+      ],
+      "python": [
+       34
+      ],
+      "java": [
+       42
+      ],
+      "go": [
+       65
+      ]
+     },
+     "explanation": "lo passed hi. 50 isn't a perfect square, so it isn't in the list.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "8"
+      },
+      {
+       "name": "hi",
+       "value": "7"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      },
+      {
+       "name": "value",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Computed array edge-absent: absent, lo 8, hi 7, mid -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "0",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 61,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 106,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 151,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "9",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 196,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "16",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 241,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "25",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 286,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "36",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 331,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "49",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 376,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "64",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 421,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "81",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-10",
+        "shape": "rect",
+        "x": 466,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "100",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "value(i) = i², computed only when read; target 50"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 30,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 75,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 120,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 165,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 210,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 255,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 300,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 345,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 390,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 435,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "cell-index-10",
+        "x": 480,
+        "y": 96,
+        "text": "10"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the list is drawn here, but the program never stores it"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-zero",
+   "label": "0 is 0²",
+   "input": "10 0\n",
+   "expectedOutput": "0",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "Search the list 0², 1², ..., 10² for 0 without building it. value(i) = i·i is all binary search needs: a way to read the value at an index, and values that increase.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "10"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      },
+      {
+       "name": "value",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Computed array edge-zero: start, lo 0, hi 10, mid -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 61,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 106,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 151,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 196,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "16",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 241,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "25",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 286,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "36",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 331,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "49",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 376,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "64",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 421,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "81",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-10",
+        "shape": "rect",
+        "x": 466,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "100",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "value(i) = i², computed only when read; target 0"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 30,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 75,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 120,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 165,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 210,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 255,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 300,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 345,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 390,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 435,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "cell-index-10",
+        "x": 480,
+        "y": 96,
+        "text": "10"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the list is drawn here, but the program never stores it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "go-left",
+     "lines": {
+      "cpp": [
+       37
+      ],
+      "python": [
+       31
+      ],
+      "java": [
+       37
+      ],
+      "go": [
+       60
+      ]
+     },
+     "explanation": "value(5) = 25 is greater than 0, so look left: hi = 4.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "4"
+      },
+      {
+       "name": "mid",
+       "value": "5"
+      },
+      {
+       "name": "value",
+       "value": "25"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Computed array edge-zero: go-left, lo 0, hi 4, mid 5.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 61,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 106,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 151,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 196,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "16",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 241,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "25",
+        "role": "active"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 286,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "36",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 331,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "49",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 376,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "64",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 421,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "81",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-10",
+        "shape": "rect",
+        "x": 466,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "100",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "value(i) = i², computed only when read; target 0"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 30,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 75,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 120,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 165,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 210,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 255,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 300,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 345,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 390,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 435,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "cell-index-10",
+        "x": 480,
+        "y": 96,
+        "text": "10"
+       },
+       {
+        "id": "pointer-5",
+        "x": 243,
+        "y": 116,
+        "text": "mid"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the list is drawn here, but the program never stores it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "go-left",
+     "lines": {
+      "cpp": [
+       37
+      ],
+      "python": [
+       31
+      ],
+      "java": [
+       37
+      ],
+      "go": [
+       60
+      ]
+     },
+     "explanation": "value(2) = 4 is greater than 0, so look left: hi = 1.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "1"
+      },
+      {
+       "name": "mid",
+       "value": "2"
+      },
+      {
+       "name": "value",
+       "value": "4"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Computed array edge-zero: go-left, lo 0, hi 1, mid 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 61,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 106,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "4",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 151,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "9",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 196,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "16",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 241,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "25",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 286,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "36",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 331,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "49",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 376,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "64",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 421,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "81",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-10",
+        "shape": "rect",
+        "x": 466,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "100",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "value(i) = i², computed only when read; target 0"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 30,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 75,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 120,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 165,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 210,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 255,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 300,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 345,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 390,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 435,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "cell-index-10",
+        "x": 480,
+        "y": 96,
+        "text": "10"
+       },
+       {
+        "id": "pointer-2",
+        "x": 108,
+        "y": 116,
+        "text": "mid"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the list is drawn here, but the program never stores it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "found",
+     "lines": {
+      "cpp": [
+       29,
+       30
+      ],
+      "python": [
+       24,
+       25
+      ],
+      "java": [
+       29,
+       30
+      ],
+      "go": [
+       52,
+       53
+      ]
+     },
+     "explanation": "value(0) = 0² = 0. Found it at index 0.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "1"
+      },
+      {
+       "name": "mid",
+       "value": "0"
+      },
+      {
+       "name": "value",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Computed array edge-zero: found, lo 0, hi 1, mid 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "0",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 61,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 106,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 151,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "9",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 196,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "16",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 241,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "25",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 286,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "36",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 331,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "49",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 376,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "64",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 421,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "81",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-10",
+        "shape": "rect",
+        "x": 466,
+        "y": 36,
+        "width": 37,
+        "height": 42,
+        "text": "100",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "value(i) = i², computed only when read; target 0"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 30,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 75,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 120,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 165,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 210,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 255,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 300,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 345,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 390,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 435,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "cell-index-10",
+        "x": 480,
+        "y": 96,
+        "text": "10"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "mid"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the list is drawn here, but the program never stores it"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

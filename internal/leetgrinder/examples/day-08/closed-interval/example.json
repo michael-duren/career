@@ -1,0 +1,1123 @@
+{
+ "id": "day-08-closed-interval",
+ "title": "Binary search with both ends included",
+ "invariant": "If the target is in the list, its index is between lo and hi, inclusive.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 23,
+   "algorithmEnd": 43
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 34
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 23,
+   "algorithmEnd": 43
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 46,
+   "algorithmEnd": 66
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Find 11 in [2, 6, 11, 15]",
+   "input": "4 11\n2 6 11 15\n",
+   "expectedOutput": "2",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "Look for 11. The candidates are indexes [0, 3], both ends included. hi starts at the last index, 3.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "3"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "values normal: start, lo 0, hi 3, mid -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "15",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "lo"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = ruled out"
+       }
+      ]
+     }
+    },
+    {
+     "event": "go-right",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       27
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       56
+      ]
+     },
+     "explanation": "values[1] = 6 is less than 11, so 11 can only be to the right. Drop index 1 and everything left of it: lo = 2. Candidates now [2, 3].",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "2"
+      },
+      {
+       "name": "hi",
+       "value": "3"
+      },
+      {
+       "name": "mid",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "values normal: go-right, lo 2, hi 3, mid 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "15",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "mid"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "lo"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = ruled out"
+       }
+      ]
+     }
+    },
+    {
+     "event": "found",
+     "lines": {
+      "cpp": [
+       28,
+       29
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       28,
+       29
+      ],
+      "go": [
+       51,
+       52
+      ]
+     },
+     "explanation": "values[2] = 11. Found 11 at index 2.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "2"
+      },
+      {
+       "name": "hi",
+       "value": "3"
+      },
+      {
+       "name": "mid",
+       "value": "2"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "values normal: found, lo 2, hi 3, mid 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "11",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "15",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "mid lo"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = ruled out"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-absent",
+   "label": "8 is not in the list",
+   "input": "4 8\n2 6 11 15\n",
+   "expectedOutput": "-1",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "Look for 8. The candidates are indexes [0, 3], both ends included. hi starts at the last index, 3.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "3"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "values edge-absent: start, lo 0, hi 3, mid -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "15",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "lo"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = ruled out"
+       }
+      ]
+     }
+    },
+    {
+     "event": "go-right",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       27
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       56
+      ]
+     },
+     "explanation": "values[1] = 6 is less than 8, so 8 can only be to the right. Drop index 1 and everything left of it: lo = 2. Candidates now [2, 3].",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "2"
+      },
+      {
+       "name": "hi",
+       "value": "3"
+      },
+      {
+       "name": "mid",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "values edge-absent: go-right, lo 2, hi 3, mid 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "15",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "mid"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "lo"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = ruled out"
+       }
+      ]
+     }
+    },
+    {
+     "event": "go-left",
+     "lines": {
+      "cpp": [
+       36
+      ],
+      "python": [
+       30
+      ],
+      "java": [
+       36
+      ],
+      "go": [
+       59
+      ]
+     },
+     "explanation": "values[2] = 11 is greater than 8, so 8 can only be to the left. hi = 1. Candidates now [2, 1].",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "2"
+      },
+      {
+       "name": "hi",
+       "value": "1"
+      },
+      {
+       "name": "mid",
+       "value": "2"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "values edge-absent: go-left, lo 2, hi 1, mid 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "11",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "15",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "mid lo"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = ruled out"
+       }
+      ]
+     }
+    },
+    {
+     "event": "absent",
+     "lines": {
+      "cpp": [
+       41
+      ],
+      "python": [
+       33
+      ],
+      "java": [
+       41
+      ],
+      "go": [
+       64
+      ]
+     },
+     "explanation": "lo = 2 and hi = 1, so the range is empty. No candidates are left, so 8 isn't in the list. Return -1.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "2"
+      },
+      {
+       "name": "hi",
+       "value": "1"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "values edge-absent: absent, lo 2, hi 1, mid -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "11",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "15",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "lo"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = ruled out"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-empty",
+   "label": "Empty list",
+   "input": "0 5\n\n",
+   "expectedOutput": "-1",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "Look for 5. The candidates are indexes [0, -1], both ends included. hi starts at the last index, -1.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "-1"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "values edge-empty: start, lo 0, hi -1, mid -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "(empty)",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = ruled out"
+       }
+      ]
+     }
+    },
+    {
+     "event": "absent",
+     "lines": {
+      "cpp": [
+       41
+      ],
+      "python": [
+       33
+      ],
+      "java": [
+       41
+      ],
+      "go": [
+       64
+      ]
+     },
+     "explanation": "lo = 0 and hi = -1, so the range is empty. No candidates are left, so 5 isn't in the list. Return -1.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "-1"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "values edge-empty: absent, lo 0, hi -1, mid -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "(empty)",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = ruled out"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

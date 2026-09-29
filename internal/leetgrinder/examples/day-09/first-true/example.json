@@ -1,0 +1,5016 @@
+{
+ "id": "day-09-first-true",
+ "title": "Find the first k where a yes/no question turns true",
+ "invariant": "k = hi is always enough and k = lo - 1 never is, so the first enough k is between lo and hi.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 23,
+   "algorithmEnd": 40
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 32
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 23,
+   "algorithmEnd": 40
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 46,
+   "algorithmEnd": 64
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "At least 11 blocks",
+   "input": "11\n",
+   "expectedOutput": "5",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47,
+       48
+      ]
+     },
+     "explanation": "A staircase with k steps uses 1 + 2 + ... + k = k(k+1)/2 blocks. Find the smallest k that uses at least 11 blocks. The answer is between lo = 1 and hi = 11 (k = 11 always has enough).",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "11"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      },
+      {
+       "name": "blocks",
+       "value": "-"
+      },
+      {
+       "name": "enough",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true normal: start, lo 1, hi 11, mid -, blocks -.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "1..11",
+        "role": "active"
+       },
+       {
+        "id": "answer",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 200,
+        "height": 40,
+        "text": "answer range 1..11",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 11?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "11"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 6 uses 21 blocks, which is enough. Every bigger k is enough too, so the answer is 6 or smaller: hi = 6.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "6"
+      },
+      {
+       "name": "mid",
+       "value": "6"
+      },
+      {
+       "name": "blocks",
+       "value": "21"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true normal: yes, lo 1, hi 6, mid 6, blocks 21.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 259,
+        "height": 30,
+        "text": "1..6",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 6",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 21",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 11?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "11"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 3 uses only 6 blocks. Every smaller k is short too, so the answer is bigger: lo = 4.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "4"
+      },
+      {
+       "name": "hi",
+       "value": "6"
+      },
+      {
+       "name": "mid",
+       "value": "3"
+      },
+      {
+       "name": "blocks",
+       "value": "6"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true normal: no, lo 4, hi 6, mid 3, blocks 6.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 153,
+        "y": 50,
+        "width": 122,
+        "height": 30,
+        "text": "4..6",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 3",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 6",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 11?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "11"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 5 uses 15 blocks, which is enough. Every bigger k is enough too, so the answer is 5 or smaller: hi = 5.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "4"
+      },
+      {
+       "name": "hi",
+       "value": "5"
+      },
+      {
+       "name": "mid",
+       "value": "5"
+      },
+      {
+       "name": "blocks",
+       "value": "15"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true normal: yes, lo 4, hi 5, mid 5, blocks 15.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 153,
+        "y": 50,
+        "width": 76,
+        "height": 30,
+        "text": "4..5",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 5",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 15",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 11?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "11"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 4 uses only 10 blocks. Every smaller k is short too, so the answer is bigger: lo = 5.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "5"
+      },
+      {
+       "name": "hi",
+       "value": "5"
+      },
+      {
+       "name": "mid",
+       "value": "4"
+      },
+      {
+       "name": "blocks",
+       "value": "10"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true normal: no, lo 5, hi 5, mid 4, blocks 10.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 199,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "5..5",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 4",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 10",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 11?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "11"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       38
+      ],
+      "python": [
+       31
+      ],
+      "java": [
+       38
+      ],
+      "go": [
+       62
+      ]
+     },
+     "explanation": "lo and hi met at 5: the first k that is enough. It uses 15 blocks.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "5"
+      },
+      {
+       "name": "hi",
+       "value": "5"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      },
+      {
+       "name": "blocks",
+       "value": "15"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true normal: done, lo 5, hi 5, mid -, blocks 15.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 199,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "5..5",
+        "role": "result"
+       },
+       {
+        "id": "answer",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 200,
+        "height": 40,
+        "text": "answer range 5..5",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 11?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "11"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-exact",
+   "label": "Exactly 10 blocks",
+   "input": "10\n",
+   "expectedOutput": "4",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47,
+       48
+      ]
+     },
+     "explanation": "A staircase with k steps uses 1 + 2 + ... + k = k(k+1)/2 blocks. Find the smallest k that uses at least 10 blocks. The answer is between lo = 1 and hi = 10 (k = 10 always has enough).",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "10"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      },
+      {
+       "name": "blocks",
+       "value": "-"
+      },
+      {
+       "name": "enough",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-exact: start, lo 1, hi 10, mid -, blocks -.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "1..10",
+        "role": "active"
+       },
+       {
+        "id": "answer",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 200,
+        "height": 40,
+        "text": "answer range 1..10",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 10?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "10"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 5 uses 15 blocks, which is enough. Every bigger k is enough too, so the answer is 5 or smaller: hi = 5.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "5"
+      },
+      {
+       "name": "mid",
+       "value": "5"
+      },
+      {
+       "name": "blocks",
+       "value": "15"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-exact: yes, lo 1, hi 5, mid 5, blocks 15.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 233,
+        "height": 30,
+        "text": "1..5",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 5",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 15",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 10?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "10"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 3 uses only 6 blocks. Every smaller k is short too, so the answer is bigger: lo = 4.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "4"
+      },
+      {
+       "name": "hi",
+       "value": "5"
+      },
+      {
+       "name": "mid",
+       "value": "3"
+      },
+      {
+       "name": "blocks",
+       "value": "6"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-exact: no, lo 4, hi 5, mid 3, blocks 6.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 168,
+        "y": 50,
+        "width": 81,
+        "height": 30,
+        "text": "4..5",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 3",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 6",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 10?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "10"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 4 uses 10 blocks, which is enough. Every bigger k is enough too, so the answer is 4 or smaller: hi = 4.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "4"
+      },
+      {
+       "name": "hi",
+       "value": "4"
+      },
+      {
+       "name": "mid",
+       "value": "4"
+      },
+      {
+       "name": "blocks",
+       "value": "10"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-exact: yes, lo 4, hi 4, mid 4, blocks 10.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 168,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "4..4",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 4",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 10",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 10?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "10"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       38
+      ],
+      "python": [
+       31
+      ],
+      "java": [
+       38
+      ],
+      "go": [
+       62
+      ]
+     },
+     "explanation": "lo and hi met at 4: the first k that is enough. It uses 10 blocks.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "4"
+      },
+      {
+       "name": "hi",
+       "value": "4"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      },
+      {
+       "name": "blocks",
+       "value": "10"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-exact: done, lo 4, hi 4, mid -, blocks 10.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 168,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "4..4",
+        "role": "result"
+       },
+       {
+        "id": "answer",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 200,
+        "height": 40,
+        "text": "answer range 4..4",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 10?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "10"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-large",
+   "label": "2147483647 blocks: needs 64-bit math",
+   "input": "2147483647\n",
+   "expectedOutput": "65536",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47,
+       48
+      ]
+     },
+     "explanation": "A staircase with k steps uses 1 + 2 + ... + k = k(k+1)/2 blocks. Find the smallest k that uses at least 2147483647 blocks. The answer is between lo = 1 and hi = 2147483647 (k = 2147483647 always has enough).",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "2147483647"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      },
+      {
+       "name": "blocks",
+       "value": "-"
+      },
+      {
+       "name": "enough",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: start, lo 1, hi 2147483647, mid -, blocks -.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "1..2147483647",
+        "role": "active"
+       },
+       {
+        "id": "answer",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 200,
+        "height": 40,
+        "text": "answer range 1..2147483647",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 1073741824 uses 576460752840294400 blocks, which is enough. Every bigger k is enough too, so the answer is 1073741824 or smaller: hi = 1073741824.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "1073741824"
+      },
+      {
+       "name": "mid",
+       "value": "1073741824"
+      },
+      {
+       "name": "blocks",
+       "value": "576460752840294400"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: yes, lo 1, hi 1073741824, mid 1073741824, blocks 576460752840294400.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 259,
+        "height": 30,
+        "text": "1..1073741824",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 1073741824",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 576460752840294400",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 536870912 uses 144115188344291328 blocks, which is enough. Every bigger k is enough too, so the answer is 536870912 or smaller: hi = 536870912.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "536870912"
+      },
+      {
+       "name": "mid",
+       "value": "536870912"
+      },
+      {
+       "name": "blocks",
+       "value": "144115188344291328"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: yes, lo 1, hi 536870912, mid 536870912, blocks 144115188344291328.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 144,
+        "height": 30,
+        "text": "1..536870912",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 536870912",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 144115188344291328",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 268435456 uses 36028797153181696 blocks, which is enough. Every bigger k is enough too, so the answer is 268435456 or smaller: hi = 268435456.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "268435456"
+      },
+      {
+       "name": "mid",
+       "value": "268435456"
+      },
+      {
+       "name": "blocks",
+       "value": "36028797153181696"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: yes, lo 1, hi 268435456, mid 268435456, blocks 36028797153181696.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 87,
+        "height": 30,
+        "text": "1..268435456",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 268435456",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 36028797153181696",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 134217728 uses 9007199321849856 blocks, which is enough. Every bigger k is enough too, so the answer is 134217728 or smaller: hi = 134217728.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "134217728"
+      },
+      {
+       "name": "mid",
+       "value": "134217728"
+      },
+      {
+       "name": "blocks",
+       "value": "9007199321849856"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: yes, lo 1, hi 134217728, mid 134217728, blocks 9007199321849856.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 58,
+        "height": 30,
+        "text": "1..134217728",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 134217728",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 9007199321849856",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 67108864 uses 2251799847239680 blocks, which is enough. Every bigger k is enough too, so the answer is 67108864 or smaller: hi = 67108864.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "67108864"
+      },
+      {
+       "name": "mid",
+       "value": "67108864"
+      },
+      {
+       "name": "blocks",
+       "value": "2251799847239680"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: yes, lo 1, hi 67108864, mid 67108864, blocks 2251799847239680.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 44,
+        "height": 30,
+        "text": "1..67108864",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 67108864",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 2251799847239680",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 33554432 uses 562949970198528 blocks, which is enough. Every bigger k is enough too, so the answer is 33554432 or smaller: hi = 33554432.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "33554432"
+      },
+      {
+       "name": "mid",
+       "value": "33554432"
+      },
+      {
+       "name": "blocks",
+       "value": "562949970198528"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: yes, lo 1, hi 33554432, mid 33554432, blocks 562949970198528.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 37,
+        "height": 30,
+        "text": "1..33554432",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 33554432",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 562949970198528",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 16777216 uses 140737496743936 blocks, which is enough. Every bigger k is enough too, so the answer is 16777216 or smaller: hi = 16777216.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "16777216"
+      },
+      {
+       "name": "mid",
+       "value": "16777216"
+      },
+      {
+       "name": "blocks",
+       "value": "140737496743936"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: yes, lo 1, hi 16777216, mid 16777216, blocks 140737496743936.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 33,
+        "height": 30,
+        "text": "1..16777216",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 16777216",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 140737496743936",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 8388608 uses 35184376283136 blocks, which is enough. Every bigger k is enough too, so the answer is 8388608 or smaller: hi = 8388608.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "8388608"
+      },
+      {
+       "name": "mid",
+       "value": "8388608"
+      },
+      {
+       "name": "blocks",
+       "value": "35184376283136"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: yes, lo 1, hi 8388608, mid 8388608, blocks 35184376283136.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 31,
+        "height": 30,
+        "text": "1..8388608",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 8388608",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 35184376283136",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 4194304 uses 8796095119360 blocks, which is enough. Every bigger k is enough too, so the answer is 4194304 or smaller: hi = 4194304.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "4194304"
+      },
+      {
+       "name": "mid",
+       "value": "4194304"
+      },
+      {
+       "name": "blocks",
+       "value": "8796095119360"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: yes, lo 1, hi 4194304, mid 4194304, blocks 8796095119360.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "1..4194304",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 4194304",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 8796095119360",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 2097152 uses 2199024304128 blocks, which is enough. Every bigger k is enough too, so the answer is 2097152 or smaller: hi = 2097152.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "2097152"
+      },
+      {
+       "name": "mid",
+       "value": "2097152"
+      },
+      {
+       "name": "blocks",
+       "value": "2199024304128"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: yes, lo 1, hi 2097152, mid 2097152, blocks 2199024304128.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "1..2097152",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 2097152",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 2199024304128",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 1048576 uses 549756338176 blocks, which is enough. Every bigger k is enough too, so the answer is 1048576 or smaller: hi = 1048576.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "1048576"
+      },
+      {
+       "name": "mid",
+       "value": "1048576"
+      },
+      {
+       "name": "blocks",
+       "value": "549756338176"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: yes, lo 1, hi 1048576, mid 1048576, blocks 549756338176.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "1..1048576",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 1048576",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 549756338176",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 524288 uses 137439215616 blocks, which is enough. Every bigger k is enough too, so the answer is 524288 or smaller: hi = 524288.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "524288"
+      },
+      {
+       "name": "mid",
+       "value": "524288"
+      },
+      {
+       "name": "blocks",
+       "value": "137439215616"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: yes, lo 1, hi 524288, mid 524288, blocks 137439215616.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "1..524288",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 524288",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 137439215616",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 262144 uses 34359869440 blocks, which is enough. Every bigger k is enough too, so the answer is 262144 or smaller: hi = 262144.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "262144"
+      },
+      {
+       "name": "mid",
+       "value": "262144"
+      },
+      {
+       "name": "blocks",
+       "value": "34359869440"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: yes, lo 1, hi 262144, mid 262144, blocks 34359869440.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "1..262144",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 262144",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 34359869440",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 131072 uses 8590000128 blocks, which is enough. Every bigger k is enough too, so the answer is 131072 or smaller: hi = 131072.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "131072"
+      },
+      {
+       "name": "mid",
+       "value": "131072"
+      },
+      {
+       "name": "blocks",
+       "value": "8590000128"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: yes, lo 1, hi 131072, mid 131072, blocks 8590000128.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "1..131072",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 131072",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 8590000128",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "yes",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       54
+      ]
+     },
+     "explanation": "k = 65536 uses 2147516416 blocks, which is enough. Every bigger k is enough too, so the answer is 65536 or smaller: hi = 65536.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "65536"
+      },
+      {
+       "name": "mid",
+       "value": "65536"
+      },
+      {
+       "name": "blocks",
+       "value": "2147516416"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: yes, lo 1, hi 65536, mid 65536, blocks 2147516416.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "1..65536",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 65536",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 2147516416",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 32768 uses only 536887296 blocks. Every smaller k is short too, so the answer is bigger: lo = 32769.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "32769"
+      },
+      {
+       "name": "hi",
+       "value": "65536"
+      },
+      {
+       "name": "mid",
+       "value": "32768"
+      },
+      {
+       "name": "blocks",
+       "value": "536887296"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: no, lo 32769, hi 65536, mid 32768, blocks 536887296.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "32769..65536",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 32768",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 536887296",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 49152 uses only 1207984128 blocks. Every smaller k is short too, so the answer is bigger: lo = 49153.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "49153"
+      },
+      {
+       "name": "hi",
+       "value": "65536"
+      },
+      {
+       "name": "mid",
+       "value": "49152"
+      },
+      {
+       "name": "blocks",
+       "value": "1207984128"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: no, lo 49153, hi 65536, mid 49152, blocks 1207984128.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "49153..65536",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 49152",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 1207984128",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 57344 uses only 1644195840 blocks. Every smaller k is short too, so the answer is bigger: lo = 57345.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "57345"
+      },
+      {
+       "name": "hi",
+       "value": "65536"
+      },
+      {
+       "name": "mid",
+       "value": "57344"
+      },
+      {
+       "name": "blocks",
+       "value": "1644195840"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: no, lo 57345, hi 65536, mid 57344, blocks 1644195840.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "57345..65536",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 57344",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 1644195840",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 61440 uses only 1887467520 blocks. Every smaller k is short too, so the answer is bigger: lo = 61441.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "61441"
+      },
+      {
+       "name": "hi",
+       "value": "65536"
+      },
+      {
+       "name": "mid",
+       "value": "61440"
+      },
+      {
+       "name": "blocks",
+       "value": "1887467520"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: no, lo 61441, hi 65536, mid 61440, blocks 1887467520.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "61441..65536",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 61440",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 1887467520",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 63488 uses only 2015394816 blocks. Every smaller k is short too, so the answer is bigger: lo = 63489.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "63489"
+      },
+      {
+       "name": "hi",
+       "value": "65536"
+      },
+      {
+       "name": "mid",
+       "value": "63488"
+      },
+      {
+       "name": "blocks",
+       "value": "2015394816"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: no, lo 63489, hi 65536, mid 63488, blocks 2015394816.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "63489..65536",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 63488",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 2015394816",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 64512 uses only 2080931328 blocks. Every smaller k is short too, so the answer is bigger: lo = 64513.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "64513"
+      },
+      {
+       "name": "hi",
+       "value": "65536"
+      },
+      {
+       "name": "mid",
+       "value": "64512"
+      },
+      {
+       "name": "blocks",
+       "value": "2080931328"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: no, lo 64513, hi 65536, mid 64512, blocks 2080931328.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "64513..65536",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 64512",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 2080931328",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 65024 uses only 2114092800 blocks. Every smaller k is short too, so the answer is bigger: lo = 65025.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "65025"
+      },
+      {
+       "name": "hi",
+       "value": "65536"
+      },
+      {
+       "name": "mid",
+       "value": "65024"
+      },
+      {
+       "name": "blocks",
+       "value": "2114092800"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: no, lo 65025, hi 65536, mid 65024, blocks 2114092800.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "65025..65536",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 65024",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 2114092800",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 65280 uses only 2130771840 blocks. Every smaller k is short too, so the answer is bigger: lo = 65281.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "65281"
+      },
+      {
+       "name": "hi",
+       "value": "65536"
+      },
+      {
+       "name": "mid",
+       "value": "65280"
+      },
+      {
+       "name": "blocks",
+       "value": "2130771840"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: no, lo 65281, hi 65536, mid 65280, blocks 2130771840.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "65281..65536",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 65280",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 2130771840",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 65408 uses only 2139135936 blocks. Every smaller k is short too, so the answer is bigger: lo = 65409.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "65409"
+      },
+      {
+       "name": "hi",
+       "value": "65536"
+      },
+      {
+       "name": "mid",
+       "value": "65408"
+      },
+      {
+       "name": "blocks",
+       "value": "2139135936"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: no, lo 65409, hi 65536, mid 65408, blocks 2139135936.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "65409..65536",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 65408",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 2139135936",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 65472 uses only 2143324128 blocks. Every smaller k is short too, so the answer is bigger: lo = 65473.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "65473"
+      },
+      {
+       "name": "hi",
+       "value": "65536"
+      },
+      {
+       "name": "mid",
+       "value": "65472"
+      },
+      {
+       "name": "blocks",
+       "value": "2143324128"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: no, lo 65473, hi 65536, mid 65472, blocks 2143324128.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "65473..65536",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 65472",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 2143324128",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 65504 uses only 2145419760 blocks. Every smaller k is short too, so the answer is bigger: lo = 65505.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "65505"
+      },
+      {
+       "name": "hi",
+       "value": "65536"
+      },
+      {
+       "name": "mid",
+       "value": "65504"
+      },
+      {
+       "name": "blocks",
+       "value": "2145419760"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: no, lo 65505, hi 65536, mid 65504, blocks 2145419760.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "65505..65536",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 65504",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 2145419760",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 65520 uses only 2146467960 blocks. Every smaller k is short too, so the answer is bigger: lo = 65521.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "65521"
+      },
+      {
+       "name": "hi",
+       "value": "65536"
+      },
+      {
+       "name": "mid",
+       "value": "65520"
+      },
+      {
+       "name": "blocks",
+       "value": "2146467960"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: no, lo 65521, hi 65536, mid 65520, blocks 2146467960.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "65521..65536",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 65520",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 2146467960",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 65528 uses only 2146992156 blocks. Every smaller k is short too, so the answer is bigger: lo = 65529.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "65529"
+      },
+      {
+       "name": "hi",
+       "value": "65536"
+      },
+      {
+       "name": "mid",
+       "value": "65528"
+      },
+      {
+       "name": "blocks",
+       "value": "2146992156"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: no, lo 65529, hi 65536, mid 65528, blocks 2146992156.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "65529..65536",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 65528",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 2146992156",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 65532 uses only 2147254278 blocks. Every smaller k is short too, so the answer is bigger: lo = 65533.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "65533"
+      },
+      {
+       "name": "hi",
+       "value": "65536"
+      },
+      {
+       "name": "mid",
+       "value": "65532"
+      },
+      {
+       "name": "blocks",
+       "value": "2147254278"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: no, lo 65533, hi 65536, mid 65532, blocks 2147254278.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "65533..65536",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 65532",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 2147254278",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 65534 uses only 2147385345 blocks. Every smaller k is short too, so the answer is bigger: lo = 65535.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "65535"
+      },
+      {
+       "name": "hi",
+       "value": "65536"
+      },
+      {
+       "name": "mid",
+       "value": "65534"
+      },
+      {
+       "name": "blocks",
+       "value": "2147385345"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: no, lo 65535, hi 65536, mid 65534, blocks 2147385345.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "65535..65536",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 65534",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 2147385345",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "no",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "k = 65535 uses only 2147450880 blocks. Every smaller k is short too, so the answer is bigger: lo = 65536.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "65536"
+      },
+      {
+       "name": "hi",
+       "value": "65536"
+      },
+      {
+       "name": "mid",
+       "value": "65535"
+      },
+      {
+       "name": "blocks",
+       "value": "2147450880"
+      },
+      {
+       "name": "enough",
+       "value": "false"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: no, lo 65536, hi 65536, mid 65535, blocks 2147450880.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "65536..65536",
+        "role": "active"
+       },
+       {
+        "id": "mid",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 160,
+        "height": 40,
+        "text": "k = 65535",
+        "role": "active"
+       },
+       {
+        "id": "blocks",
+        "shape": "rect",
+        "x": 190,
+        "y": 130,
+        "width": 180,
+        "height": 40,
+        "text": "blocks 2147450880",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       38
+      ],
+      "python": [
+       31
+      ],
+      "java": [
+       38
+      ],
+      "go": [
+       62
+      ]
+     },
+     "explanation": "lo and hi met at 65536: the first k that is enough. It uses 2147516416 blocks.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "65536"
+      },
+      {
+       "name": "hi",
+       "value": "65536"
+      },
+      {
+       "name": "mid",
+       "value": "-"
+      },
+      {
+       "name": "blocks",
+       "value": "2147516416"
+      },
+      {
+       "name": "enough",
+       "value": "true"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "First true edge-large: done, lo 65536, hi 65536, mid -, blocks 2147516416.",
+      "nodes": [
+       {
+        "id": "bar",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 488,
+        "height": 30,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "range",
+        "shape": "rect",
+        "x": 16,
+        "y": 50,
+        "width": 30,
+        "height": 30,
+        "text": "65536..65536",
+        "role": "result"
+       },
+       {
+        "id": "answer",
+        "shape": "rect",
+        "x": 16,
+        "y": 130,
+        "width": 200,
+        "height": 40,
+        "text": "answer range 65536..65536",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "is k(k+1)/2 ≥ 2147483647?  no … no | yes … yes"
+       },
+       {
+        "id": "one",
+        "x": 16,
+        "y": 100,
+        "text": "1"
+       },
+       {
+        "id": "n",
+        "x": 468,
+        "y": 100,
+        "text": "2147483647"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the answer is always inside lo..hi"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

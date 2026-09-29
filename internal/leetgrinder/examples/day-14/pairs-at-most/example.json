@@ -1,0 +1,2413 @@
+{
+ "id": "day-14-pairs-at-most",
+ "title": "Count pairs with a small enough sum",
+ "invariant": "count holds every good pair whose smaller index is below i.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 23,
+   "algorithmEnd": 39
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 33
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 23,
+   "algorithmEnd": 39
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 46,
+   "algorithmEnd": 65
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Sum ≤ 6 in [1, 2, 4, 5, 7]",
+   "input": "5 6\n1 2 4 5 7\n",
+   "expectedOutput": "4",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "Count pairs i < j with values[i] + values[j] ≤ 6. The list is sorted, so for each i the good partners j form one block right after i.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "j",
+       "value": "-"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Pairs at most normal: start, i -, j -, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 6"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = partners of i; gray = too big"
+       }
+      ]
+     }
+    },
+    {
+     "event": "row",
+     "lines": {
+      "cpp": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "python": [
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29
+      ],
+      "java": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "go": [
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       59
+      ]
+     },
+     "explanation": "i = 0 (1): binary search finds the first j where the sum is too big, j = 4. Partners 2, 4, 5: 3 pairs. Total 3.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "0"
+      },
+      {
+       "name": "j",
+       "value": "4"
+      },
+      {
+       "name": "count",
+       "value": "3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Pairs at most normal: row, i 0, j 4, count 3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "result"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 3",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 6"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "i"
+       },
+       {
+        "id": "pointer-4",
+        "x": 282,
+        "y": 116,
+        "text": "first too big"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = partners of i; gray = too big"
+       }
+      ]
+     }
+    },
+    {
+     "event": "row",
+     "lines": {
+      "cpp": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "python": [
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29
+      ],
+      "java": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "go": [
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       59
+      ]
+     },
+     "explanation": "i = 1 (2): binary search finds the first j where the sum is too big, j = 3. Partners 4: 1 pair. Total 4.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "1"
+      },
+      {
+       "name": "j",
+       "value": "3"
+      },
+      {
+       "name": "count",
+       "value": "4"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Pairs at most normal: row, i 1, j 3, count 4.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 4",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 6"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "i"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "first too big"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = partners of i; gray = too big"
+       }
+      ]
+     }
+    },
+    {
+     "event": "row",
+     "lines": {
+      "cpp": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "python": [
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29
+      ],
+      "java": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "go": [
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       59
+      ]
+     },
+     "explanation": "i = 2 (4): binary search finds that even the next value is too big. No partners. Total 4.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "2"
+      },
+      {
+       "name": "j",
+       "value": "3"
+      },
+      {
+       "name": "count",
+       "value": "4"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Pairs at most normal: row, i 2, j 3, count 4.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 4",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 6"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "i"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "first too big"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = partners of i; gray = too big"
+       }
+      ]
+     }
+    },
+    {
+     "event": "row",
+     "lines": {
+      "cpp": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "python": [
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29
+      ],
+      "java": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "go": [
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       59
+      ]
+     },
+     "explanation": "i = 3 (5): binary search finds that even the next value is too big. No partners. Total 4.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "3"
+      },
+      {
+       "name": "j",
+       "value": "4"
+      },
+      {
+       "name": "count",
+       "value": "4"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Pairs at most normal: row, i 3, j 4, count 4.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "active"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 4",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 6"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "i"
+       },
+       {
+        "id": "pointer-4",
+        "x": 282,
+        "y": 116,
+        "text": "first too big"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = partners of i; gray = too big"
+       }
+      ]
+     }
+    },
+    {
+     "event": "row",
+     "lines": {
+      "cpp": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "python": [
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29
+      ],
+      "java": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "go": [
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       59
+      ]
+     },
+     "explanation": "i = 4 (7): binary search finds that even the next value is too big. No partners. Total 4.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "4"
+      },
+      {
+       "name": "j",
+       "value": "5"
+      },
+      {
+       "name": "count",
+       "value": "4"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Pairs at most normal: row, i 4, j 5, count 4.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "active"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 4",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 6"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-4",
+        "x": 282,
+        "y": 116,
+        "text": "i"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = partners of i; gray = too big"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       37
+      ],
+      "python": [
+       32
+      ],
+      "java": [
+       37
+      ],
+      "go": [
+       63
+      ]
+     },
+     "explanation": "4 pairs. Each pair was counted once, from its smaller index i.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "j",
+       "value": "-"
+      },
+      {
+       "name": "count",
+       "value": "4"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Pairs at most normal: done, i -, j -, count 4.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 4",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 6"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = partners of i; gray = too big"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-none",
+   "label": "Nothing fits",
+   "input": "5 2\n1 2 4 5 7\n",
+   "expectedOutput": "0",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "Count pairs i < j with values[i] + values[j] ≤ 2. The list is sorted, so for each i the good partners j form one block right after i.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "j",
+       "value": "-"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Pairs at most edge-none: start, i -, j -, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 2"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = partners of i; gray = too big"
+       }
+      ]
+     }
+    },
+    {
+     "event": "row",
+     "lines": {
+      "cpp": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "python": [
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29
+      ],
+      "java": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "go": [
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       59
+      ]
+     },
+     "explanation": "i = 0 (1): binary search finds that even the next value is too big. No partners. Total 0.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "0"
+      },
+      {
+       "name": "j",
+       "value": "1"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Pairs at most edge-none: row, i 0, j 1, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 2"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "i"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "first too big"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = partners of i; gray = too big"
+       }
+      ]
+     }
+    },
+    {
+     "event": "row",
+     "lines": {
+      "cpp": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "python": [
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29
+      ],
+      "java": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "go": [
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       59
+      ]
+     },
+     "explanation": "i = 1 (2): binary search finds that even the next value is too big. No partners. Total 0.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "1"
+      },
+      {
+       "name": "j",
+       "value": "2"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Pairs at most edge-none: row, i 1, j 2, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 2"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "i"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "first too big"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = partners of i; gray = too big"
+       }
+      ]
+     }
+    },
+    {
+     "event": "row",
+     "lines": {
+      "cpp": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "python": [
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29
+      ],
+      "java": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "go": [
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       59
+      ]
+     },
+     "explanation": "i = 2 (4): binary search finds that even the next value is too big. No partners. Total 0.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "2"
+      },
+      {
+       "name": "j",
+       "value": "3"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Pairs at most edge-none: row, i 2, j 3, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 2"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "i"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "first too big"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = partners of i; gray = too big"
+       }
+      ]
+     }
+    },
+    {
+     "event": "row",
+     "lines": {
+      "cpp": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "python": [
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29
+      ],
+      "java": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "go": [
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       59
+      ]
+     },
+     "explanation": "i = 3 (5): binary search finds that even the next value is too big. No partners. Total 0.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "3"
+      },
+      {
+       "name": "j",
+       "value": "4"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Pairs at most edge-none: row, i 3, j 4, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "active"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 2"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "i"
+       },
+       {
+        "id": "pointer-4",
+        "x": 282,
+        "y": 116,
+        "text": "first too big"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = partners of i; gray = too big"
+       }
+      ]
+     }
+    },
+    {
+     "event": "row",
+     "lines": {
+      "cpp": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "python": [
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29
+      ],
+      "java": [
+       27,
+       28,
+       29,
+       30,
+       31,
+       33
+      ],
+      "go": [
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       59
+      ]
+     },
+     "explanation": "i = 4 (7): binary search finds that even the next value is too big. No partners. Total 0.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "4"
+      },
+      {
+       "name": "j",
+       "value": "5"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Pairs at most edge-none: row, i 4, j 5, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "active"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 2"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-4",
+        "x": 282,
+        "y": 116,
+        "text": "i"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = partners of i; gray = too big"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       37
+      ],
+      "python": [
+       32
+      ],
+      "java": [
+       37
+      ],
+      "go": [
+       63
+      ]
+     },
+     "explanation": "0 pairs. Each pair was counted once, from its smaller index i.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "j",
+       "value": "-"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Pairs at most edge-none: done, i -, j -, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 2"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = partners of i; gray = too big"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}
