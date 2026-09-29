@@ -177,7 +177,7 @@
       "navLabel": "Complexity",
       "heading": "Complexity and cautions",
       "paragraphs": [
-        "The clock scan is O(n) time with at most m remembered remainders. Two passes, one from each side, are O(n) time and O(n) memory, or O(1) extra if you build the answer in the output array.",
+        "The clock scan is O(n) time with at most m remembered remainders. A pass from each side adds O(n) time and O(n) memory for the second summary.",
         "Normalize remainders before using them as keys: -5 and 7 are the same position on a 12-hour clock, but they're different map keys."
       ]
     },
