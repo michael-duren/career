@@ -13,13 +13,75 @@ jobs:
       matrix:
         task: [build, test]
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
-          go-version: "1.27"
+          go-version: "1.27.1"
+      - if: matrix.task == 'test'
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22.23.3'
+          cache: npm
       - name: Generate templ components
         run: go tool templ generate
       - if: matrix.task == 'build'
         run: go build ./cmd/api/
       - if: matrix.task == 'test'
         run: go test -v ./...
+      - if: matrix.task == 'test'
+        run: npm ci
+      - if: matrix.task == 'test'
+        run: npm test
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: career_dev
+          POSTGRES_PASSWORD: career_dev_local
+          POSTGRES_DB: career_dev
+        ports: ['5433:5432']
+        options: >-
+          --health-cmd "pg_isready -U career_dev -d career_dev"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      APP_ENV: development
+      STATIC_DIR: dist
+      DATABASE_URL: postgres://career_dev:career_dev_local@127.0.0.1:5433/career_dev?sslmode=disable
+      LISTEN_ADDR: 127.0.0.1:8080
+      PUBLIC_ORIGIN: http://127.0.0.1:8080
+      AUTH_USERNAME: playwright-ci
+      # Test-only credential, not a real secret: bcrypt hash of TEST_AUTH_PASSWORD below.
+      AUTH_PASSWORD_HASH: $2b$10$NQWS/GEO7rCTPyMmHf.PLOpECklQNGzl7oAiMHqF47xVBJdwMM4P2
+      JWT_SECRET: disposable-ci-only-secret-32-characters-long
+      TEST_BASE_URL: http://127.0.0.1:8080
+      TEST_AUTH_PASSWORD: playwright-ci-password
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22.23.3'
+          cache: npm
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: go.mod
+      - run: go tool templ generate
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: go run ./cmd/api migrate
+      - name: Start server
+        run: nohup go run ./cmd/api serve > server.log 2>&1 &
+      - name: Wait for server
+        run: for i in $(seq 1 30); do curl -fsS "$PUBLIC_ORIGIN/healthz" && exit 0; sleep 1; done; cat server.log; exit 1
+      - run: npm run test:e2e
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            server.log
+          retention-days: 7
