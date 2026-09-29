@@ -1,0 +1,1465 @@
+{
+  "id": "day-02-majority-baseline",
+  "title": "Count each proposed majority",
+  "invariant": "After testing each value, every earlier tested value was counted in the entire array and failed to exceed half the length.",
+  "variants": [
+    {
+      "language": "cpp",
+      "file": "main.cpp",
+      "algorithmStart": 33,
+      "algorithmEnd": 58
+    },
+    {
+      "language": "python",
+      "file": "main.py",
+      "algorithmStart": 12,
+      "algorithmEnd": 27
+    },
+    {
+      "language": "java",
+      "file": "Main.java",
+      "algorithmStart": 27,
+      "algorithmEnd": 47
+    },
+    {
+      "language": "go",
+      "file": "main.go.txt",
+      "algorithmStart": 33,
+      "algorithmEnd": 54
+    }
+  ],
+  "cases": [
+    {
+      "id": "normal",
+      "label": "Three 2s out of five",
+      "input": "5\n2 1 2 3 2\n",
+      "expectedOutput": "2",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              36
+            ],
+            "python": [
+              13
+            ],
+            "java": [
+              30
+            ],
+            "go": [
+              37
+            ]
+          },
+          "explanation": "No candidate has been counted. Each test will scan the complete input array.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "-1"
+            },
+            {
+              "name": "candidate",
+              "value": "-"
+            },
+            {
+              "name": "tally",
+              "value": "0"
+            },
+            {
+              "name": "answer",
+              "value": "none"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Full-array majority tally after start: tested -, count 0, answer none.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-4",
+                "shape": "rect",
+                "x": 296,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "tested -",
+                "role": "active"
+              },
+              {
+                "id": "tally",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "full count 0",
+                "role": "neutral"
+              },
+              {
+                "id": "answer",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "answer none",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "index-4",
+                "x": 305,
+                "y": 104,
+                "text": "i=4"
+              },
+              {
+                "id": "rule",
+                "x": 16,
+                "y": 203,
+                "text": "Compare the full count with n/2; stop at the first majority."
+              }
+            ]
+          }
+        },
+        {
+          "event": "test",
+          "lines": {
+            "cpp": [
+              45
+            ],
+            "python": [
+              22
+            ],
+            "java": [
+              38
+            ],
+            "go": [
+              47
+            ]
+          },
+          "explanation": "Count 2 across the full array: 3 copies. It qualifies only if that count exceeds half of 5.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "candidate",
+              "value": "2"
+            },
+            {
+              "name": "tally",
+              "value": "3"
+            },
+            {
+              "name": "answer",
+              "value": "none"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Full-array majority tally after test: tested 2, count 3, answer none.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "active"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-4",
+                "shape": "rect",
+                "x": 296,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "tested 2",
+                "role": "active"
+              },
+              {
+                "id": "tally",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "full count 3",
+                "role": "neutral"
+              },
+              {
+                "id": "answer",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "answer none",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "index-4",
+                "x": 305,
+                "y": 104,
+                "text": "i=4"
+              },
+              {
+                "id": "rule",
+                "x": 16,
+                "y": 203,
+                "text": "Compare the full count with n/2; stop at the first majority."
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              54
+            ],
+            "python": [
+              26
+            ],
+            "java": [
+              45
+            ],
+            "go": [
+              53
+            ]
+          },
+          "explanation": "The full-array tally is 3. The result is 2.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "5"
+            },
+            {
+              "name": "candidate",
+              "value": "2"
+            },
+            {
+              "name": "tally",
+              "value": "3"
+            },
+            {
+              "name": "answer",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Full-array majority tally after done: tested 2, count 3, answer 2.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-4",
+                "shape": "rect",
+                "x": 296,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "tested 2",
+                "role": "active"
+              },
+              {
+                "id": "tally",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "full count 3",
+                "role": "neutral"
+              },
+              {
+                "id": "answer",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "answer 2",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "index-4",
+                "x": 305,
+                "y": 104,
+                "text": "i=4"
+              },
+              {
+                "id": "rule",
+                "x": 16,
+                "y": 203,
+                "text": "Compare the full count with n/2; stop at the first majority."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-no-majority",
+      "label": "All values differ",
+      "input": "4\n1 2 3 4\n",
+      "expectedOutput": "none",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              36
+            ],
+            "python": [
+              13
+            ],
+            "java": [
+              30
+            ],
+            "go": [
+              37
+            ]
+          },
+          "explanation": "No candidate has been counted. Each test will scan the complete input array.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "-1"
+            },
+            {
+              "name": "candidate",
+              "value": "-"
+            },
+            {
+              "name": "tally",
+              "value": "0"
+            },
+            {
+              "name": "answer",
+              "value": "none"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Full-array majority tally after start: tested -, count 0, answer none.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "tested -",
+                "role": "active"
+              },
+              {
+                "id": "tally",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "full count 0",
+                "role": "neutral"
+              },
+              {
+                "id": "answer",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "answer none",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "rule",
+                "x": 16,
+                "y": 203,
+                "text": "Compare the full count with n/2; stop at the first majority."
+              }
+            ]
+          }
+        },
+        {
+          "event": "test",
+          "lines": {
+            "cpp": [
+              45
+            ],
+            "python": [
+              22
+            ],
+            "java": [
+              38
+            ],
+            "go": [
+              47
+            ]
+          },
+          "explanation": "Count 1 across the full array: 1 copies. It qualifies only if that count exceeds half of 4.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "candidate",
+              "value": "1"
+            },
+            {
+              "name": "tally",
+              "value": "1"
+            },
+            {
+              "name": "answer",
+              "value": "none"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Full-array majority tally after test: tested 1, count 1, answer none.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "active"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "tested 1",
+                "role": "active"
+              },
+              {
+                "id": "tally",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "full count 1",
+                "role": "neutral"
+              },
+              {
+                "id": "answer",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "answer none",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "rule",
+                "x": 16,
+                "y": 203,
+                "text": "Compare the full count with n/2; stop at the first majority."
+              }
+            ]
+          }
+        },
+        {
+          "event": "test",
+          "lines": {
+            "cpp": [
+              45
+            ],
+            "python": [
+              22
+            ],
+            "java": [
+              38
+            ],
+            "go": [
+              47
+            ]
+          },
+          "explanation": "Count 2 across the full array: 1 copies. It qualifies only if that count exceeds half of 4.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "candidate",
+              "value": "2"
+            },
+            {
+              "name": "tally",
+              "value": "1"
+            },
+            {
+              "name": "answer",
+              "value": "none"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Full-array majority tally after test: tested 2, count 1, answer none.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "active"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "tested 2",
+                "role": "active"
+              },
+              {
+                "id": "tally",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "full count 1",
+                "role": "neutral"
+              },
+              {
+                "id": "answer",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "answer none",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "rule",
+                "x": 16,
+                "y": 203,
+                "text": "Compare the full count with n/2; stop at the first majority."
+              }
+            ]
+          }
+        },
+        {
+          "event": "test",
+          "lines": {
+            "cpp": [
+              45
+            ],
+            "python": [
+              22
+            ],
+            "java": [
+              38
+            ],
+            "go": [
+              47
+            ]
+          },
+          "explanation": "Count 3 across the full array: 1 copies. It qualifies only if that count exceeds half of 4.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "candidate",
+              "value": "3"
+            },
+            {
+              "name": "tally",
+              "value": "1"
+            },
+            {
+              "name": "answer",
+              "value": "none"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Full-array majority tally after test: tested 3, count 1, answer none.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "active"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "tested 3",
+                "role": "active"
+              },
+              {
+                "id": "tally",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "full count 1",
+                "role": "neutral"
+              },
+              {
+                "id": "answer",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "answer none",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "rule",
+                "x": 16,
+                "y": 203,
+                "text": "Compare the full count with n/2; stop at the first majority."
+              }
+            ]
+          }
+        },
+        {
+          "event": "test",
+          "lines": {
+            "cpp": [
+              45
+            ],
+            "python": [
+              22
+            ],
+            "java": [
+              38
+            ],
+            "go": [
+              47
+            ]
+          },
+          "explanation": "Count 4 across the full array: 1 copies. It qualifies only if that count exceeds half of 4.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "candidate",
+              "value": "4"
+            },
+            {
+              "name": "tally",
+              "value": "1"
+            },
+            {
+              "name": "answer",
+              "value": "none"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Full-array majority tally after test: tested 4, count 1, answer none.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "tested 4",
+                "role": "active"
+              },
+              {
+                "id": "tally",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "full count 1",
+                "role": "neutral"
+              },
+              {
+                "id": "answer",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "answer none",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "rule",
+                "x": 16,
+                "y": 203,
+                "text": "Compare the full count with n/2; stop at the first majority."
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              54
+            ],
+            "python": [
+              26
+            ],
+            "java": [
+              45
+            ],
+            "go": [
+              53
+            ]
+          },
+          "explanation": "The full-array tally is 1. The result is none.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "4"
+            },
+            {
+              "name": "candidate",
+              "value": "4"
+            },
+            {
+              "name": "tally",
+              "value": "1"
+            },
+            {
+              "name": "answer",
+              "value": "none"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Full-array majority tally after done: tested 4, count 1, answer none.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "tested 4",
+                "role": "active"
+              },
+              {
+                "id": "tally",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "full count 1",
+                "role": "neutral"
+              },
+              {
+                "id": "answer",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "answer none",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "rule",
+                "x": 16,
+                "y": 203,
+                "text": "Compare the full count with n/2; stop at the first majority."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,528 @@
+{
+  "day": 2,
+  "objectives": [
+    "State exactly what a counter means before and after each processed item.",
+    "Choose between a fixed 26-letter array, a map of internal wall edges, and a constant-space vote balance.",
+    "Explain why a negative letter count, an excluded wall end, and a second majority pass decide correctness."
+  ],
+  "prerequisites": [
+    1
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "heading": "Intuition",
+      "paragraphs": [
+        "A count is useful only when its meaning matches the question. A letter bucket can mean unused supply. A wall-coordinate bucket can mean how many rows have a seam there. A vote balance can mean how many equal values remain after unequal pairs have been removed. The same integer operation does different work in each problem.",
+        "Presence alone cannot make a note with repeated letters. A first-occurrence index cannot tell how many wall rows share a boundary. A surviving vote candidate is not yet proof that it appears more than half the time."
+      ],
+      "diagram": {
+        "width": 520,
+        "height": 225,
+        "description": "Three count states: letter supply, internal wall-edge frequency, and uncanceled votes.",
+        "nodes": [
+          {
+            "id": "supply",
+            "shape": "rect",
+            "x": 15,
+            "y": 35,
+            "width": 145,
+            "height": 50,
+            "text": "o supply: 1",
+            "role": "neutral"
+          },
+          {
+            "id": "spend",
+            "shape": "rect",
+            "x": 184,
+            "y": 35,
+            "width": 145,
+            "height": 50,
+            "text": "o needed: 2",
+            "role": "active"
+          },
+          {
+            "id": "deficit",
+            "shape": "rect",
+            "x": 353,
+            "y": 35,
+            "width": 145,
+            "height": 50,
+            "text": "balance: -1",
+            "role": "discarded"
+          },
+          {
+            "id": "row1",
+            "shape": "rect",
+            "x": 15,
+            "y": 116,
+            "width": 145,
+            "height": 50,
+            "text": "row 1 edge: 2",
+            "role": "neutral"
+          },
+          {
+            "id": "row2",
+            "shape": "rect",
+            "x": 184,
+            "y": 116,
+            "width": 145,
+            "height": 50,
+            "text": "row 2 edge: 2",
+            "role": "neutral"
+          },
+          {
+            "id": "edges",
+            "shape": "rect",
+            "x": 353,
+            "y": 116,
+            "width": 145,
+            "height": 50,
+            "text": "edge 2: 2",
+            "role": "result"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "letters",
+            "x": 15,
+            "y": 25,
+            "text": "Ransom Note: supply minus requests"
+          },
+          {
+            "id": "wall",
+            "x": 15,
+            "y": 107,
+            "text": "Brick Wall: count rows aligned at an interior coordinate"
+          },
+          {
+            "id": "vote",
+            "x": 15,
+            "y": 206,
+            "text": "Majority: unequal pairs cancel; the survivor still needs a full count"
+          }
+        ]
+      }
+    },
+    {
+      "id": "definitions",
+      "heading": "Definitions and recognition cues",
+      "paragraphs": [
+        "Ransom Note asks whether every lowercase ASCII letter of a note can be taken from a magazine, each magazine position at most once. Its 26 possible keys justify a fixed array. If the input alphabet included arbitrary Unicode characters, byte indexing into 26 slots would be wrong; use a map keyed by characters under a stated normalization rule.",
+        "Brick Wall asks for a vertical line strictly between the two outer sides of a wall whose rows have equal total width and positive integer brick widths. Crossing a boundary between adjacent bricks avoids crossing a brick. Coordinate 0 and the full wall width are outside boundaries, so they are not candidates.",
+        "A majority element occurs strictly more than n/2 times. LeetCode 169 promises one, but these runnable examples also accept arrays without one. Cancellation finds a candidate; a second pass checks that stronger condition. A plurality, which merely leads all other values, is different."
+      ]
+    },
+    {
+      "id": "ransom-baseline",
+      "heading": "A correct baseline: assign magazine copies",
+      "paragraphs": [
+        "For each note letter, scan the magazine for a matching position that has not been used. Mark it and move to the next letter. If none exists, answer false. The invariant is that every marked position supplies exactly one earlier note letter; no copy is reused.",
+        "For note length m and magazine length n, this performs at most mn comparisons and uses n marks. The repeated scan of the same magazine positions is the work the count array will remove."
+      ],
+      "exampleIds": [
+        "day-02-ransom-baseline"
+      ]
+    },
+    {
+      "id": "ransom-counts",
+      "heading": "Worked example: spend from fixed letter counts",
+      "paragraphs": [
+        "Scan the magazine once and add one to its letter bucket. Then scan the note, subtracting one from the requested bucket. After any note prefix, each bucket is magazine supply minus that prefix’s demand. A negative bucket means this note cannot be built; returning immediately is safe because later requests cannot replenish the magazine.",
+        "For magazine cacao, the buckets start with c=2, a=2, o=1. Note cocoa spends c, o, c, then a second o. Its o bucket becomes -1. This is the same multiplicity idea introduced by the anagram example on day 1, now with asymmetric supply and demand.",
+        "The four programs assume lowercase ASCII, so each letter has index letter minus a. An empty note would succeed immediately under the problem contract; the token-based teaching input uses nonempty strings."
+      ],
+      "diagram": {
+        "width": 500,
+        "height": 190,
+        "description": "Magazine cacao supplies one o, but note cocoa requests two. The o counter reaches minus one.",
+        "nodes": [
+          {
+            "id": "mag",
+            "shape": "rect",
+            "x": 20,
+            "y": 43,
+            "width": 130,
+            "height": 44,
+            "text": "mag: cacao",
+            "role": "neutral"
+          },
+          {
+            "id": "note",
+            "shape": "rect",
+            "x": 185,
+            "y": 43,
+            "width": 130,
+            "height": 44,
+            "text": "note: cocoa",
+            "role": "active"
+          },
+          {
+            "id": "before",
+            "shape": "rect",
+            "x": 20,
+            "y": 116,
+            "width": 130,
+            "height": 44,
+            "text": "o starts: 1",
+            "role": "neutral"
+          },
+          {
+            "id": "after",
+            "shape": "rect",
+            "x": 185,
+            "y": 116,
+            "width": 130,
+            "height": 44,
+            "text": "after two: -1",
+            "role": "discarded"
+          },
+          {
+            "id": "answer",
+            "shape": "rect",
+            "x": 350,
+            "y": 116,
+            "width": 130,
+            "height": 44,
+            "text": "false",
+            "role": "result"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "top",
+            "x": 20,
+            "y": 26,
+            "text": "One bucket per lowercase letter"
+          },
+          {
+            "id": "bottom",
+            "x": 20,
+            "y": 180,
+            "text": "A negative bucket is a proof of shortage, not just a warning."
+          }
+        ]
+      },
+      "exampleIds": [
+        "day-02-ransom-counts"
+      ]
+    },
+    {
+      "id": "brick-baseline",
+      "heading": "A correct baseline: test every interior cut",
+      "paragraphs": [
+        "Try each integer coordinate x from 1 through width minus 1. For each row, add brick widths until an internal edge equals x or the row is exhausted. Count a crossing when no internal edge occurs there. Keep the smallest crossed count.",
+        "The invariant after checking a prefix of rows is that crossed counts precisely the rows whose bricks cover x. Since every legal integer cut is tried, the smallest recorded value is correct. Repeatedly rebuilding row prefix sums costs O(WB) time for wall width W and B bricks, with O(1) auxiliary space."
+      ],
+      "exampleIds": [
+        "day-02-brick-baseline"
+      ]
+    },
+    {
+      "id": "brick-edges",
+      "heading": "Worked example: count internal brick edges",
+      "paragraphs": [
+        "For each row, accumulate widths of all bricks except its last brick. Increment edges[x] at each resulting coordinate x. The last brick would end at the full wall width, which is forbidden. After any number of rows, edges[x] is exactly the number of those rows with an internal boundary at x.",
+        "At a legal coordinate x, every row either has one boundary there or contributes one crossed brick. Thus crossed(x) equals row count minus edges[x]. The largest edge count gives the fewest crossed bricks. If the map stays empty, every row is a single brick and the answer is the row count.",
+        "The example wall has three internal edges at x=2, so a cut there crosses zero bricks. Hash-map operations are expected O(1), giving expected O(B) time and O(B) auxiliary space. An ordered map gives O(B log B) worst-case time. Real implementations should use an integer width large enough for cumulative sums."
+      ],
+      "diagram": {
+        "width": 500,
+        "height": 250,
+        "description": "Three rows of width four. Coordinate two is an internal edge in all three rows; the outer ends at zero and four cannot be chosen.",
+        "nodes": [
+          {
+            "id": "a0",
+            "shape": "rect",
+            "x": 50,
+            "y": 38,
+            "width": 60,
+            "height": 40,
+            "text": "1",
+            "role": "neutral"
+          },
+          {
+            "id": "a1",
+            "shape": "rect",
+            "x": 112,
+            "y": 38,
+            "width": 60,
+            "height": 40,
+            "text": "1",
+            "role": "neutral"
+          },
+          {
+            "id": "a2",
+            "shape": "rect",
+            "x": 174,
+            "y": 38,
+            "width": 120,
+            "height": 40,
+            "text": "2",
+            "role": "neutral"
+          },
+          {
+            "id": "b0",
+            "shape": "rect",
+            "x": 50,
+            "y": 94,
+            "width": 120,
+            "height": 40,
+            "text": "2",
+            "role": "neutral"
+          },
+          {
+            "id": "b1",
+            "shape": "rect",
+            "x": 172,
+            "y": 94,
+            "width": 60,
+            "height": 40,
+            "text": "1",
+            "role": "neutral"
+          },
+          {
+            "id": "b2",
+            "shape": "rect",
+            "x": 234,
+            "y": 94,
+            "width": 60,
+            "height": 40,
+            "text": "1",
+            "role": "neutral"
+          },
+          {
+            "id": "c0",
+            "shape": "rect",
+            "x": 50,
+            "y": 150,
+            "width": 60,
+            "height": 40,
+            "text": "1",
+            "role": "neutral"
+          },
+          {
+            "id": "c1",
+            "shape": "rect",
+            "x": 112,
+            "y": 150,
+            "width": 60,
+            "height": 40,
+            "text": "1",
+            "role": "neutral"
+          },
+          {
+            "id": "c2",
+            "shape": "rect",
+            "x": 174,
+            "y": 150,
+            "width": 120,
+            "height": 40,
+            "text": "2",
+            "role": "neutral"
+          },
+          {
+            "id": "cut",
+            "shape": "rect",
+            "x": 171,
+            "y": 30,
+            "width": 3,
+            "height": 168,
+            "text": "",
+            "role": "result"
+          },
+          {
+            "id": "score",
+            "shape": "rect",
+            "x": 338,
+            "y": 95,
+            "width": 142,
+            "height": 50,
+            "text": "edge 2: 3",
+            "role": "result"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "axis",
+            "x": 50,
+            "y": 24,
+            "text": "0      1      2      3      4"
+          },
+          {
+            "id": "rows",
+            "x": 4,
+            "y": 70,
+            "text": "r0"
+          },
+          {
+            "id": "rows1",
+            "x": 4,
+            "y": 126,
+            "text": "r1"
+          },
+          {
+            "id": "rows2",
+            "x": 4,
+            "y": 182,
+            "text": "r2"
+          },
+          {
+            "id": "rule",
+            "x": 15,
+            "y": 229,
+            "text": "Crossed = row count minus aligned internal edges."
+          }
+        ]
+      },
+      "exampleIds": [
+        "day-02-brick-edges"
+      ]
+    },
+    {
+      "id": "majority-baseline",
+      "heading": "A correct baseline: count each candidate",
+      "paragraphs": [
+        "Take a value from the array and count it across the whole array. Return the first value with a count strictly above n/2. If no tested value qualifies, return none. Every possible majority appears as an input value, so the exhaustive count cannot miss it.",
+        "A full scan for each of n candidates costs O(n²) time and O(1) auxiliary space. Duplicate candidates can repeat the same scan. A frequency map would remove that repeated work in expected O(n) time but need O(n) space for arbitrary integers."
+      ],
+      "exampleIds": [
+        "day-02-majority-baseline"
+      ]
+    },
+    {
+      "id": "majority-vote",
+      "heading": "Worked example: cancellation and verification",
+      "paragraphs": [
+        "Walk left to right with candidate and balance. If balance is zero, adopt the current value with balance one. A matching value adds one vote; a different value removes one. Each removal pairs one candidate copy with one different copy, so neither member of that pair can change whether a strict majority exists among the unpaired values.",
+        "After the first pass, any true majority must be the surviving candidate: more than half of all values cannot be completely paired with different values. But an array such as [1, 2, 3, 4] leaves no majority. Count the candidate in a second pass and return it only when the count exceeds n/2.",
+        "For [2, 1, 2, 3, 2], the first 2 cancels with 1, and the next 2 cancels with 3. The final 2 survives. Verification finds three copies out of five. Both passes use O(n) time; candidate, balance, and count use O(1) auxiliary space."
+      ],
+      "diagram": {
+        "width": 520,
+        "height": 190,
+        "description": "Cancel unequal values from 2, 1, 2, 3, 2. One unpaired 2 remains, and a second pass counts three 2s out of five.",
+        "nodes": [
+          {
+            "id": "a",
+            "shape": "rect",
+            "x": 15,
+            "y": 45,
+            "width": 62,
+            "height": 45,
+            "text": "2",
+            "role": "discarded"
+          },
+          {
+            "id": "b",
+            "shape": "rect",
+            "x": 95,
+            "y": 45,
+            "width": 62,
+            "height": 45,
+            "text": "1",
+            "role": "discarded"
+          },
+          {
+            "id": "c",
+            "shape": "rect",
+            "x": 175,
+            "y": 45,
+            "width": 62,
+            "height": 45,
+            "text": "2",
+            "role": "discarded"
+          },
+          {
+            "id": "d",
+            "shape": "rect",
+            "x": 255,
+            "y": 45,
+            "width": 62,
+            "height": 45,
+            "text": "3",
+            "role": "discarded"
+          },
+          {
+            "id": "e",
+            "shape": "rect",
+            "x": 335,
+            "y": 45,
+            "width": 62,
+            "height": 45,
+            "text": "2",
+            "role": "result"
+          },
+          {
+            "id": "proof",
+            "shape": "rect",
+            "x": 142,
+            "y": 120,
+            "width": 200,
+            "height": 48,
+            "text": "3 of 5 > half",
+            "role": "result"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "row",
+            "x": 15,
+            "y": 26,
+            "text": "Two unequal pairs cancel"
+          },
+          {
+            "id": "survivor",
+            "x": 15,
+            "y": 110,
+            "text": "Survivor is a candidate"
+          },
+          {
+            "id": "second",
+            "x": 15,
+            "y": 181,
+            "text": "Verify against the original array, including canceled positions."
+          }
+        ]
+      },
+      "exampleIds": [
+        "day-02-majority-vote"
+      ]
+    },
+    {
+      "id": "complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Let m be note length, n be magazine length, B be total bricks, W be integer wall width, r be row count, and q be majority-array length. Ransom assignment uses O(mn) time and O(n) marks; 26 buckets use O(m+n) time and O(1) auxiliary space. Neither bound includes input storage or emitted trace records.",
+        "Testing every wall coordinate and every brick costs O(WB) time and O(1) auxiliary space. Counting internal edges uses expected O(B) time and O(B) map space, with at most B-r inserted boundaries. The answer is r when no internal boundary exists. Never count the wall end: that would falsely permit a zero-crossing line along the outside.",
+        "Full-array majority recounts take O(q²) time and O(1) auxiliary space. Cancellation plus verification takes O(q) time and O(1) auxiliary space. Do not return the vote candidate without verification when existence is unknown. Use a wider type if a count or cumulative width could exceed the language’s ordinary integer range."
+      ]
+    },
+    {
+      "id": "checks",
+      "heading": "Before you finish",
+      "checks": [
+        {
+          "prompt": "Why can a note with two o letters fail when the magazine contains an o?",
+          "answer": "Presence records only that an o exists. The supply bucket must hold at least two; after the second request it becomes negative if only one was available."
+        },
+        {
+          "prompt": "Why do we skip the final brick of every wall row?",
+          "answer": "Adding its width reaches the outer wall end. A cut there is not an interior line, so it cannot reduce the number of crossed bricks."
+        },
+        {
+          "prompt": "What does the Boyer-Moore balance count, and why is a second pass needed?",
+          "answer": "It counts unpaired copies of the current candidate after unequal pairs cancel. A survivor may still occur at most half the time, so a full occurrence count checks the majority condition."
+        },
+        {
+          "prompt": "Would an array of 26 counters work for arbitrary Unicode text?",
+          "answer": "No. The index calculation assumes lowercase ASCII a through z. A different alphabet needs a representation and normalization rule suited to its characters."
+        }
+      ]
+    }
+  ]
+}

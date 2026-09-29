@@ -1,0 +1,4873 @@
+{
+  "id": "day-02-brick-baseline",
+  "title": "Test every interior coordinate",
+  "invariant": "After testing coordinate x against a prefix of rows, crossed equals the number of those rows without an internal edge at x; best is the minimum from completed coordinates.",
+  "variants": [
+    {
+      "language": "cpp",
+      "file": "main.cpp",
+      "algorithmStart": 42,
+      "algorithmEnd": 91
+    },
+    {
+      "language": "python",
+      "file": "main.py",
+      "algorithmStart": 15,
+      "algorithmEnd": 37
+    },
+    {
+      "language": "java",
+      "file": "Main.java",
+      "algorithmStart": 33,
+      "algorithmEnd": 68
+    },
+    {
+      "language": "go",
+      "file": "main.go.txt",
+      "algorithmStart": 47,
+      "algorithmEnd": 84
+    }
+  ],
+  "cases": [
+    {
+      "id": "normal",
+      "label": "Three aligned interior edges",
+      "input": "3\n3 1 1 2\n3 2 1 1\n3 1 1 2\n",
+      "expectedOutput": "0",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              48
+            ],
+            "python": [
+              18
+            ],
+            "java": [
+              39
+            ],
+            "go": [
+              54
+            ]
+          },
+          "explanation": "The line must lie strictly inside the wall; both outside boundaries are excluded.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "0"
+            },
+            {
+              "name": "row",
+              "value": "-1"
+            },
+            {
+              "name": "state",
+              "value": "outside"
+            },
+            {
+              "name": "best",
+              "value": "3"
+            },
+            {
+              "name": "crossed",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 325,
+            "description": "Brick Wall start. Coordinate 0, row -1; outside; best 3, crossed 0. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 40,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-1",
+                "shape": "rect",
+                "x": 185,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-2",
+                "shape": "rect",
+                "x": 255,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 160,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "row-label-2",
+                "x": 4,
+                "y": 188,
+                "text": "r2"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 255,
+                "text": "Current test: outside"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 278,
+                "text": "best=3; crossed=0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "probe",
+          "lines": {
+            "cpp": [
+              55
+            ],
+            "python": [
+              21
+            ],
+            "java": [
+              43
+            ],
+            "go": [
+              57
+            ]
+          },
+          "explanation": "Begin testing interior coordinate 1 against every row.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "1"
+            },
+            {
+              "name": "row",
+              "value": "-1"
+            },
+            {
+              "name": "state",
+              "value": "testing"
+            },
+            {
+              "name": "best",
+              "value": "3"
+            },
+            {
+              "name": "crossed",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 325,
+            "description": "Brick Wall probe. Coordinate 1, row -1; testing; best 3, crossed 0. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 40,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-1",
+                "shape": "rect",
+                "x": 185,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-2",
+                "shape": "rect",
+                "x": 255,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 160,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 113,
+                "y": 35,
+                "width": 4,
+                "height": 180,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "row-label-2",
+                "x": 4,
+                "y": 188,
+                "text": "r2"
+              },
+              {
+                "id": "cut-label",
+                "x": 101,
+                "y": 233,
+                "text": "x=1"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 255,
+                "text": "Current test: testing"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 278,
+                "text": "best=3; crossed=0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "cpp": [
+              72
+            ],
+            "python": [
+              32
+            ],
+            "java": [
+              58
+            ],
+            "go": [
+              75
+            ]
+          },
+          "explanation": "Row 0 has an internal boundary at coordinate 1; crossed rows in this trial are 0.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "1"
+            },
+            {
+              "name": "row",
+              "value": "0"
+            },
+            {
+              "name": "state",
+              "value": "edge"
+            },
+            {
+              "name": "best",
+              "value": "3"
+            },
+            {
+              "name": "crossed",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 325,
+            "description": "Brick Wall row. Coordinate 1, row 0; edge; best 3, crossed 0. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 40,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-1",
+                "shape": "rect",
+                "x": 185,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-2",
+                "shape": "rect",
+                "x": 255,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 160,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 113,
+                "y": 35,
+                "width": 4,
+                "height": 180,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "row-label-2",
+                "x": 4,
+                "y": 188,
+                "text": "r2"
+              },
+              {
+                "id": "cut-label",
+                "x": 101,
+                "y": 233,
+                "text": "x=1"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 255,
+                "text": "Current test: edge"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 278,
+                "text": "best=3; crossed=0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "cpp": [
+              72
+            ],
+            "python": [
+              32
+            ],
+            "java": [
+              58
+            ],
+            "go": [
+              75
+            ]
+          },
+          "explanation": "Row 1 has a brick at coordinate 1; crossed rows in this trial are 1.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "1"
+            },
+            {
+              "name": "row",
+              "value": "1"
+            },
+            {
+              "name": "state",
+              "value": "brick"
+            },
+            {
+              "name": "best",
+              "value": "3"
+            },
+            {
+              "name": "crossed",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 325,
+            "description": "Brick Wall row. Coordinate 1, row 1; brick; best 3, crossed 1. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 40,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "active"
+              },
+              {
+                "id": "brick-1-1",
+                "shape": "rect",
+                "x": 185,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-2",
+                "shape": "rect",
+                "x": 255,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 160,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 113,
+                "y": 35,
+                "width": 4,
+                "height": 180,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "row-label-2",
+                "x": 4,
+                "y": 188,
+                "text": "r2"
+              },
+              {
+                "id": "cut-label",
+                "x": 101,
+                "y": 233,
+                "text": "x=1"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 255,
+                "text": "Current test: brick"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 278,
+                "text": "best=3; crossed=1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "cpp": [
+              72
+            ],
+            "python": [
+              32
+            ],
+            "java": [
+              58
+            ],
+            "go": [
+              75
+            ]
+          },
+          "explanation": "Row 2 has an internal boundary at coordinate 1; crossed rows in this trial are 1.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "1"
+            },
+            {
+              "name": "row",
+              "value": "2"
+            },
+            {
+              "name": "state",
+              "value": "edge"
+            },
+            {
+              "name": "best",
+              "value": "3"
+            },
+            {
+              "name": "crossed",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 325,
+            "description": "Brick Wall row. Coordinate 1, row 2; edge; best 3, crossed 1. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 40,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-1",
+                "shape": "rect",
+                "x": 185,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-2",
+                "shape": "rect",
+                "x": 255,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 160,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 113,
+                "y": 35,
+                "width": 4,
+                "height": 180,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "row-label-2",
+                "x": 4,
+                "y": 188,
+                "text": "r2"
+              },
+              {
+                "id": "cut-label",
+                "x": 101,
+                "y": 233,
+                "text": "x=1"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 255,
+                "text": "Current test: edge"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 278,
+                "text": "best=3; crossed=1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "commit",
+          "lines": {
+            "cpp": [
+              79
+            ],
+            "python": [
+              34
+            ],
+            "java": [
+              62
+            ],
+            "go": [
+              80
+            ]
+          },
+          "explanation": "All rows were tested at 1. Keep the smallest crossed count so far: 1.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "1"
+            },
+            {
+              "name": "row",
+              "value": "-1"
+            },
+            {
+              "name": "state",
+              "value": "completed"
+            },
+            {
+              "name": "best",
+              "value": "1"
+            },
+            {
+              "name": "crossed",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 325,
+            "description": "Brick Wall commit. Coordinate 1, row -1; completed; best 1, crossed 1. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 40,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-1",
+                "shape": "rect",
+                "x": 185,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-2",
+                "shape": "rect",
+                "x": 255,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 160,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 113,
+                "y": 35,
+                "width": 4,
+                "height": 180,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "row-label-2",
+                "x": 4,
+                "y": 188,
+                "text": "r2"
+              },
+              {
+                "id": "cut-label",
+                "x": 101,
+                "y": 233,
+                "text": "x=1"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 255,
+                "text": "Current test: completed"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 278,
+                "text": "best=1; crossed=1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "probe",
+          "lines": {
+            "cpp": [
+              55
+            ],
+            "python": [
+              21
+            ],
+            "java": [
+              43
+            ],
+            "go": [
+              57
+            ]
+          },
+          "explanation": "Begin testing interior coordinate 2 against every row.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "2"
+            },
+            {
+              "name": "row",
+              "value": "-1"
+            },
+            {
+              "name": "state",
+              "value": "testing"
+            },
+            {
+              "name": "best",
+              "value": "1"
+            },
+            {
+              "name": "crossed",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 325,
+            "description": "Brick Wall probe. Coordinate 2, row -1; testing; best 1, crossed 0. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 40,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-1",
+                "shape": "rect",
+                "x": 185,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-2",
+                "shape": "rect",
+                "x": 255,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 160,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 183,
+                "y": 35,
+                "width": 4,
+                "height": 180,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "row-label-2",
+                "x": 4,
+                "y": 188,
+                "text": "r2"
+              },
+              {
+                "id": "cut-label",
+                "x": 171,
+                "y": 233,
+                "text": "x=2"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 255,
+                "text": "Current test: testing"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 278,
+                "text": "best=1; crossed=0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "cpp": [
+              72
+            ],
+            "python": [
+              32
+            ],
+            "java": [
+              58
+            ],
+            "go": [
+              75
+            ]
+          },
+          "explanation": "Row 0 has an internal boundary at coordinate 2; crossed rows in this trial are 0.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "2"
+            },
+            {
+              "name": "row",
+              "value": "0"
+            },
+            {
+              "name": "state",
+              "value": "edge"
+            },
+            {
+              "name": "best",
+              "value": "1"
+            },
+            {
+              "name": "crossed",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 325,
+            "description": "Brick Wall row. Coordinate 2, row 0; edge; best 1, crossed 0. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 40,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-1",
+                "shape": "rect",
+                "x": 185,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-2",
+                "shape": "rect",
+                "x": 255,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 160,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 183,
+                "y": 35,
+                "width": 4,
+                "height": 180,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "row-label-2",
+                "x": 4,
+                "y": 188,
+                "text": "r2"
+              },
+              {
+                "id": "cut-label",
+                "x": 171,
+                "y": 233,
+                "text": "x=2"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 255,
+                "text": "Current test: edge"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 278,
+                "text": "best=1; crossed=0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "cpp": [
+              72
+            ],
+            "python": [
+              32
+            ],
+            "java": [
+              58
+            ],
+            "go": [
+              75
+            ]
+          },
+          "explanation": "Row 1 has an internal boundary at coordinate 2; crossed rows in this trial are 0.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "2"
+            },
+            {
+              "name": "row",
+              "value": "1"
+            },
+            {
+              "name": "state",
+              "value": "edge"
+            },
+            {
+              "name": "best",
+              "value": "1"
+            },
+            {
+              "name": "crossed",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 325,
+            "description": "Brick Wall row. Coordinate 2, row 1; edge; best 1, crossed 0. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 40,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-1",
+                "shape": "rect",
+                "x": 185,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-2",
+                "shape": "rect",
+                "x": 255,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 160,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 183,
+                "y": 35,
+                "width": 4,
+                "height": 180,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "row-label-2",
+                "x": 4,
+                "y": 188,
+                "text": "r2"
+              },
+              {
+                "id": "cut-label",
+                "x": 171,
+                "y": 233,
+                "text": "x=2"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 255,
+                "text": "Current test: edge"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 278,
+                "text": "best=1; crossed=0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "cpp": [
+              72
+            ],
+            "python": [
+              32
+            ],
+            "java": [
+              58
+            ],
+            "go": [
+              75
+            ]
+          },
+          "explanation": "Row 2 has an internal boundary at coordinate 2; crossed rows in this trial are 0.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "2"
+            },
+            {
+              "name": "row",
+              "value": "2"
+            },
+            {
+              "name": "state",
+              "value": "edge"
+            },
+            {
+              "name": "best",
+              "value": "1"
+            },
+            {
+              "name": "crossed",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 325,
+            "description": "Brick Wall row. Coordinate 2, row 2; edge; best 1, crossed 0. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 40,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-1",
+                "shape": "rect",
+                "x": 185,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-2",
+                "shape": "rect",
+                "x": 255,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 160,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 183,
+                "y": 35,
+                "width": 4,
+                "height": 180,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "row-label-2",
+                "x": 4,
+                "y": 188,
+                "text": "r2"
+              },
+              {
+                "id": "cut-label",
+                "x": 171,
+                "y": 233,
+                "text": "x=2"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 255,
+                "text": "Current test: edge"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 278,
+                "text": "best=1; crossed=0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "commit",
+          "lines": {
+            "cpp": [
+              79
+            ],
+            "python": [
+              34
+            ],
+            "java": [
+              62
+            ],
+            "go": [
+              80
+            ]
+          },
+          "explanation": "All rows were tested at 2. Keep the smallest crossed count so far: 0.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "2"
+            },
+            {
+              "name": "row",
+              "value": "-1"
+            },
+            {
+              "name": "state",
+              "value": "completed"
+            },
+            {
+              "name": "best",
+              "value": "0"
+            },
+            {
+              "name": "crossed",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 325,
+            "description": "Brick Wall commit. Coordinate 2, row -1; completed; best 0, crossed 0. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 40,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-1",
+                "shape": "rect",
+                "x": 185,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-2",
+                "shape": "rect",
+                "x": 255,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 160,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 183,
+                "y": 35,
+                "width": 4,
+                "height": 180,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "row-label-2",
+                "x": 4,
+                "y": 188,
+                "text": "r2"
+              },
+              {
+                "id": "cut-label",
+                "x": 171,
+                "y": 233,
+                "text": "x=2"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 255,
+                "text": "Current test: completed"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 278,
+                "text": "best=0; crossed=0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "probe",
+          "lines": {
+            "cpp": [
+              55
+            ],
+            "python": [
+              21
+            ],
+            "java": [
+              43
+            ],
+            "go": [
+              57
+            ]
+          },
+          "explanation": "Begin testing interior coordinate 3 against every row.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "3"
+            },
+            {
+              "name": "row",
+              "value": "-1"
+            },
+            {
+              "name": "state",
+              "value": "testing"
+            },
+            {
+              "name": "best",
+              "value": "0"
+            },
+            {
+              "name": "crossed",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 325,
+            "description": "Brick Wall probe. Coordinate 3, row -1; testing; best 0, crossed 0. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 40,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-1",
+                "shape": "rect",
+                "x": 185,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-2",
+                "shape": "rect",
+                "x": 255,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 160,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 253,
+                "y": 35,
+                "width": 4,
+                "height": 180,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "row-label-2",
+                "x": 4,
+                "y": 188,
+                "text": "r2"
+              },
+              {
+                "id": "cut-label",
+                "x": 241,
+                "y": 233,
+                "text": "x=3"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 255,
+                "text": "Current test: testing"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 278,
+                "text": "best=0; crossed=0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "cpp": [
+              72
+            ],
+            "python": [
+              32
+            ],
+            "java": [
+              58
+            ],
+            "go": [
+              75
+            ]
+          },
+          "explanation": "Row 0 has a brick at coordinate 3; crossed rows in this trial are 1.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "3"
+            },
+            {
+              "name": "row",
+              "value": "0"
+            },
+            {
+              "name": "state",
+              "value": "brick"
+            },
+            {
+              "name": "best",
+              "value": "0"
+            },
+            {
+              "name": "crossed",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 325,
+            "description": "Brick Wall row. Coordinate 3, row 0; brick; best 0, crossed 1. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 40,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "active"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-1",
+                "shape": "rect",
+                "x": 185,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-2",
+                "shape": "rect",
+                "x": 255,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 160,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 253,
+                "y": 35,
+                "width": 4,
+                "height": 180,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "row-label-2",
+                "x": 4,
+                "y": 188,
+                "text": "r2"
+              },
+              {
+                "id": "cut-label",
+                "x": 241,
+                "y": 233,
+                "text": "x=3"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 255,
+                "text": "Current test: brick"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 278,
+                "text": "best=0; crossed=1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "cpp": [
+              72
+            ],
+            "python": [
+              32
+            ],
+            "java": [
+              58
+            ],
+            "go": [
+              75
+            ]
+          },
+          "explanation": "Row 1 has an internal boundary at coordinate 3; crossed rows in this trial are 1.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "3"
+            },
+            {
+              "name": "row",
+              "value": "1"
+            },
+            {
+              "name": "state",
+              "value": "edge"
+            },
+            {
+              "name": "best",
+              "value": "0"
+            },
+            {
+              "name": "crossed",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 325,
+            "description": "Brick Wall row. Coordinate 3, row 1; edge; best 0, crossed 1. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 40,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-1",
+                "shape": "rect",
+                "x": 185,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-2",
+                "shape": "rect",
+                "x": 255,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 160,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 253,
+                "y": 35,
+                "width": 4,
+                "height": 180,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "row-label-2",
+                "x": 4,
+                "y": 188,
+                "text": "r2"
+              },
+              {
+                "id": "cut-label",
+                "x": 241,
+                "y": 233,
+                "text": "x=3"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 255,
+                "text": "Current test: edge"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 278,
+                "text": "best=0; crossed=1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "cpp": [
+              72
+            ],
+            "python": [
+              32
+            ],
+            "java": [
+              58
+            ],
+            "go": [
+              75
+            ]
+          },
+          "explanation": "Row 2 has a brick at coordinate 3; crossed rows in this trial are 2.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "3"
+            },
+            {
+              "name": "row",
+              "value": "2"
+            },
+            {
+              "name": "state",
+              "value": "brick"
+            },
+            {
+              "name": "best",
+              "value": "0"
+            },
+            {
+              "name": "crossed",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 325,
+            "description": "Brick Wall row. Coordinate 3, row 2; brick; best 0, crossed 2. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 40,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-1",
+                "shape": "rect",
+                "x": 185,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-2",
+                "shape": "rect",
+                "x": 255,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 160,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "active"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 253,
+                "y": 35,
+                "width": 4,
+                "height": 180,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "row-label-2",
+                "x": 4,
+                "y": 188,
+                "text": "r2"
+              },
+              {
+                "id": "cut-label",
+                "x": 241,
+                "y": 233,
+                "text": "x=3"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 255,
+                "text": "Current test: brick"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 278,
+                "text": "best=0; crossed=2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "commit",
+          "lines": {
+            "cpp": [
+              79
+            ],
+            "python": [
+              34
+            ],
+            "java": [
+              62
+            ],
+            "go": [
+              80
+            ]
+          },
+          "explanation": "All rows were tested at 3. Keep the smallest crossed count so far: 0.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "3"
+            },
+            {
+              "name": "row",
+              "value": "-1"
+            },
+            {
+              "name": "state",
+              "value": "completed"
+            },
+            {
+              "name": "best",
+              "value": "0"
+            },
+            {
+              "name": "crossed",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 325,
+            "description": "Brick Wall commit. Coordinate 3, row -1; completed; best 0, crossed 2. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 40,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-1",
+                "shape": "rect",
+                "x": 185,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-2",
+                "shape": "rect",
+                "x": 255,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 160,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 253,
+                "y": 35,
+                "width": 4,
+                "height": 180,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "row-label-2",
+                "x": 4,
+                "y": 188,
+                "text": "r2"
+              },
+              {
+                "id": "cut-label",
+                "x": 241,
+                "y": 233,
+                "text": "x=3"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 255,
+                "text": "Current test: completed"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 278,
+                "text": "best=0; crossed=2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              85
+            ],
+            "python": [
+              35
+            ],
+            "java": [
+              65
+            ],
+            "go": [
+              82
+            ]
+          },
+          "explanation": "The best interior line crosses 0 bricks. A wall with no internal edges crosses every row.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "4"
+            },
+            {
+              "name": "row",
+              "value": "-1"
+            },
+            {
+              "name": "state",
+              "value": "outside"
+            },
+            {
+              "name": "best",
+              "value": "0"
+            },
+            {
+              "name": "crossed",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 325,
+            "description": "Brick Wall done. Coordinate 4, row -1; outside; best 0, crossed 0. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 40,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-0-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 40,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-1",
+                "shape": "rect",
+                "x": 185,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-2",
+                "shape": "rect",
+                "x": 255,
+                "y": 100,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-1",
+                "shape": "rect",
+                "x": 115,
+                "y": 160,
+                "width": 68,
+                "height": 40,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-2-2",
+                "shape": "rect",
+                "x": 185,
+                "y": 160,
+                "width": 138,
+                "height": 40,
+                "text": "2",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "row-label-2",
+                "x": 4,
+                "y": 188,
+                "text": "r2"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 255,
+                "text": "Current test: outside"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 278,
+                "text": "best=0; crossed=0"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-no-gaps",
+      "label": "Two solid rows",
+      "input": "2\n1 4\n1 4\n",
+      "expectedOutput": "2",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              48
+            ],
+            "python": [
+              18
+            ],
+            "java": [
+              39
+            ],
+            "go": [
+              54
+            ]
+          },
+          "explanation": "The line must lie strictly inside the wall; both outside boundaries are excluded.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "0"
+            },
+            {
+              "name": "row",
+              "value": "-1"
+            },
+            {
+              "name": "state",
+              "value": "outside"
+            },
+            {
+              "name": "best",
+              "value": "2"
+            },
+            {
+              "name": "crossed",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 265,
+            "description": "Brick Wall start. Coordinate 0, row -1; outside; best 2, crossed 0. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 195,
+                "text": "Current test: outside"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 218,
+                "text": "best=2; crossed=0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "probe",
+          "lines": {
+            "cpp": [
+              55
+            ],
+            "python": [
+              21
+            ],
+            "java": [
+              43
+            ],
+            "go": [
+              57
+            ]
+          },
+          "explanation": "Begin testing interior coordinate 1 against every row.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "1"
+            },
+            {
+              "name": "row",
+              "value": "-1"
+            },
+            {
+              "name": "state",
+              "value": "testing"
+            },
+            {
+              "name": "best",
+              "value": "2"
+            },
+            {
+              "name": "crossed",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 265,
+            "description": "Brick Wall probe. Coordinate 1, row -1; testing; best 2, crossed 0. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 113,
+                "y": 35,
+                "width": 4,
+                "height": 120,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "cut-label",
+                "x": 101,
+                "y": 173,
+                "text": "x=1"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 195,
+                "text": "Current test: testing"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 218,
+                "text": "best=2; crossed=0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "cpp": [
+              72
+            ],
+            "python": [
+              32
+            ],
+            "java": [
+              58
+            ],
+            "go": [
+              75
+            ]
+          },
+          "explanation": "Row 0 has a brick at coordinate 1; crossed rows in this trial are 1.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "1"
+            },
+            {
+              "name": "row",
+              "value": "0"
+            },
+            {
+              "name": "state",
+              "value": "brick"
+            },
+            {
+              "name": "best",
+              "value": "2"
+            },
+            {
+              "name": "crossed",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 265,
+            "description": "Brick Wall row. Coordinate 1, row 0; brick; best 2, crossed 1. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 113,
+                "y": 35,
+                "width": 4,
+                "height": 120,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "cut-label",
+                "x": 101,
+                "y": 173,
+                "text": "x=1"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 195,
+                "text": "Current test: brick"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 218,
+                "text": "best=2; crossed=1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "cpp": [
+              72
+            ],
+            "python": [
+              32
+            ],
+            "java": [
+              58
+            ],
+            "go": [
+              75
+            ]
+          },
+          "explanation": "Row 1 has a brick at coordinate 1; crossed rows in this trial are 2.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "1"
+            },
+            {
+              "name": "row",
+              "value": "1"
+            },
+            {
+              "name": "state",
+              "value": "brick"
+            },
+            {
+              "name": "best",
+              "value": "2"
+            },
+            {
+              "name": "crossed",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 265,
+            "description": "Brick Wall row. Coordinate 1, row 1; brick; best 2, crossed 2. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 113,
+                "y": 35,
+                "width": 4,
+                "height": 120,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "cut-label",
+                "x": 101,
+                "y": 173,
+                "text": "x=1"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 195,
+                "text": "Current test: brick"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 218,
+                "text": "best=2; crossed=2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "commit",
+          "lines": {
+            "cpp": [
+              79
+            ],
+            "python": [
+              34
+            ],
+            "java": [
+              62
+            ],
+            "go": [
+              80
+            ]
+          },
+          "explanation": "All rows were tested at 1. Keep the smallest crossed count so far: 2.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "1"
+            },
+            {
+              "name": "row",
+              "value": "-1"
+            },
+            {
+              "name": "state",
+              "value": "completed"
+            },
+            {
+              "name": "best",
+              "value": "2"
+            },
+            {
+              "name": "crossed",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 265,
+            "description": "Brick Wall commit. Coordinate 1, row -1; completed; best 2, crossed 2. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 113,
+                "y": 35,
+                "width": 4,
+                "height": 120,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "cut-label",
+                "x": 101,
+                "y": 173,
+                "text": "x=1"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 195,
+                "text": "Current test: completed"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 218,
+                "text": "best=2; crossed=2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "probe",
+          "lines": {
+            "cpp": [
+              55
+            ],
+            "python": [
+              21
+            ],
+            "java": [
+              43
+            ],
+            "go": [
+              57
+            ]
+          },
+          "explanation": "Begin testing interior coordinate 2 against every row.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "2"
+            },
+            {
+              "name": "row",
+              "value": "-1"
+            },
+            {
+              "name": "state",
+              "value": "testing"
+            },
+            {
+              "name": "best",
+              "value": "2"
+            },
+            {
+              "name": "crossed",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 265,
+            "description": "Brick Wall probe. Coordinate 2, row -1; testing; best 2, crossed 0. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 183,
+                "y": 35,
+                "width": 4,
+                "height": 120,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "cut-label",
+                "x": 171,
+                "y": 173,
+                "text": "x=2"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 195,
+                "text": "Current test: testing"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 218,
+                "text": "best=2; crossed=0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "cpp": [
+              72
+            ],
+            "python": [
+              32
+            ],
+            "java": [
+              58
+            ],
+            "go": [
+              75
+            ]
+          },
+          "explanation": "Row 0 has a brick at coordinate 2; crossed rows in this trial are 1.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "2"
+            },
+            {
+              "name": "row",
+              "value": "0"
+            },
+            {
+              "name": "state",
+              "value": "brick"
+            },
+            {
+              "name": "best",
+              "value": "2"
+            },
+            {
+              "name": "crossed",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 265,
+            "description": "Brick Wall row. Coordinate 2, row 0; brick; best 2, crossed 1. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 183,
+                "y": 35,
+                "width": 4,
+                "height": 120,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "cut-label",
+                "x": 171,
+                "y": 173,
+                "text": "x=2"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 195,
+                "text": "Current test: brick"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 218,
+                "text": "best=2; crossed=1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "cpp": [
+              72
+            ],
+            "python": [
+              32
+            ],
+            "java": [
+              58
+            ],
+            "go": [
+              75
+            ]
+          },
+          "explanation": "Row 1 has a brick at coordinate 2; crossed rows in this trial are 2.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "2"
+            },
+            {
+              "name": "row",
+              "value": "1"
+            },
+            {
+              "name": "state",
+              "value": "brick"
+            },
+            {
+              "name": "best",
+              "value": "2"
+            },
+            {
+              "name": "crossed",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 265,
+            "description": "Brick Wall row. Coordinate 2, row 1; brick; best 2, crossed 2. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 183,
+                "y": 35,
+                "width": 4,
+                "height": 120,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "cut-label",
+                "x": 171,
+                "y": 173,
+                "text": "x=2"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 195,
+                "text": "Current test: brick"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 218,
+                "text": "best=2; crossed=2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "commit",
+          "lines": {
+            "cpp": [
+              79
+            ],
+            "python": [
+              34
+            ],
+            "java": [
+              62
+            ],
+            "go": [
+              80
+            ]
+          },
+          "explanation": "All rows were tested at 2. Keep the smallest crossed count so far: 2.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "2"
+            },
+            {
+              "name": "row",
+              "value": "-1"
+            },
+            {
+              "name": "state",
+              "value": "completed"
+            },
+            {
+              "name": "best",
+              "value": "2"
+            },
+            {
+              "name": "crossed",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 265,
+            "description": "Brick Wall commit. Coordinate 2, row -1; completed; best 2, crossed 2. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 183,
+                "y": 35,
+                "width": 4,
+                "height": 120,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "cut-label",
+                "x": 171,
+                "y": 173,
+                "text": "x=2"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 195,
+                "text": "Current test: completed"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 218,
+                "text": "best=2; crossed=2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "probe",
+          "lines": {
+            "cpp": [
+              55
+            ],
+            "python": [
+              21
+            ],
+            "java": [
+              43
+            ],
+            "go": [
+              57
+            ]
+          },
+          "explanation": "Begin testing interior coordinate 3 against every row.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "3"
+            },
+            {
+              "name": "row",
+              "value": "-1"
+            },
+            {
+              "name": "state",
+              "value": "testing"
+            },
+            {
+              "name": "best",
+              "value": "2"
+            },
+            {
+              "name": "crossed",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 265,
+            "description": "Brick Wall probe. Coordinate 3, row -1; testing; best 2, crossed 0. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 253,
+                "y": 35,
+                "width": 4,
+                "height": 120,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "cut-label",
+                "x": 241,
+                "y": 173,
+                "text": "x=3"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 195,
+                "text": "Current test: testing"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 218,
+                "text": "best=2; crossed=0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "cpp": [
+              72
+            ],
+            "python": [
+              32
+            ],
+            "java": [
+              58
+            ],
+            "go": [
+              75
+            ]
+          },
+          "explanation": "Row 0 has a brick at coordinate 3; crossed rows in this trial are 1.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "3"
+            },
+            {
+              "name": "row",
+              "value": "0"
+            },
+            {
+              "name": "state",
+              "value": "brick"
+            },
+            {
+              "name": "best",
+              "value": "2"
+            },
+            {
+              "name": "crossed",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 265,
+            "description": "Brick Wall row. Coordinate 3, row 0; brick; best 2, crossed 1. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 253,
+                "y": 35,
+                "width": 4,
+                "height": 120,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "cut-label",
+                "x": 241,
+                "y": 173,
+                "text": "x=3"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 195,
+                "text": "Current test: brick"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 218,
+                "text": "best=2; crossed=1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "cpp": [
+              72
+            ],
+            "python": [
+              32
+            ],
+            "java": [
+              58
+            ],
+            "go": [
+              75
+            ]
+          },
+          "explanation": "Row 1 has a brick at coordinate 3; crossed rows in this trial are 2.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "3"
+            },
+            {
+              "name": "row",
+              "value": "1"
+            },
+            {
+              "name": "state",
+              "value": "brick"
+            },
+            {
+              "name": "best",
+              "value": "2"
+            },
+            {
+              "name": "crossed",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 265,
+            "description": "Brick Wall row. Coordinate 3, row 1; brick; best 2, crossed 2. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 253,
+                "y": 35,
+                "width": 4,
+                "height": 120,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "cut-label",
+                "x": 241,
+                "y": 173,
+                "text": "x=3"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 195,
+                "text": "Current test: brick"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 218,
+                "text": "best=2; crossed=2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "commit",
+          "lines": {
+            "cpp": [
+              79
+            ],
+            "python": [
+              34
+            ],
+            "java": [
+              62
+            ],
+            "go": [
+              80
+            ]
+          },
+          "explanation": "All rows were tested at 3. Keep the smallest crossed count so far: 2.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "3"
+            },
+            {
+              "name": "row",
+              "value": "-1"
+            },
+            {
+              "name": "state",
+              "value": "completed"
+            },
+            {
+              "name": "best",
+              "value": "2"
+            },
+            {
+              "name": "crossed",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 265,
+            "description": "Brick Wall commit. Coordinate 3, row -1; completed; best 2, crossed 2. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "cut",
+                "shape": "rect",
+                "x": 253,
+                "y": 35,
+                "width": 4,
+                "height": 120,
+                "text": "",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "cut-label",
+                "x": 241,
+                "y": 173,
+                "text": "x=3"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 195,
+                "text": "Current test: completed"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 218,
+                "text": "best=2; crossed=2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              85
+            ],
+            "python": [
+              35
+            ],
+            "java": [
+              65
+            ],
+            "go": [
+              82
+            ]
+          },
+          "explanation": "The best interior line crosses 2 bricks. A wall with no internal edges crosses every row.",
+          "variables": [
+            {
+              "name": "x",
+              "value": "4"
+            },
+            {
+              "name": "row",
+              "value": "-1"
+            },
+            {
+              "name": "state",
+              "value": "outside"
+            },
+            {
+              "name": "best",
+              "value": "2"
+            },
+            {
+              "name": "crossed",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 420,
+            "height": 265,
+            "description": "Brick Wall done. Coordinate 4, row -1; outside; best 2, crossed 2. Wall ends are excluded.",
+            "nodes": [
+              {
+                "id": "brick-0-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 40,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "brick-1-0",
+                "shape": "rect",
+                "x": 45,
+                "y": 100,
+                "width": 278,
+                "height": 40,
+                "text": "4",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "axis",
+                "x": 16,
+                "y": 25,
+                "text": "Interior coordinates: 1, 2, 3"
+              },
+              {
+                "id": "row-label-0",
+                "x": 4,
+                "y": 68,
+                "text": "r0"
+              },
+              {
+                "id": "row-label-1",
+                "x": 4,
+                "y": 128,
+                "text": "r1"
+              },
+              {
+                "id": "state-label",
+                "x": 16,
+                "y": 195,
+                "text": "Current test: outside"
+              },
+              {
+                "id": "score",
+                "x": 16,
+                "y": 218,
+                "text": "best=2; crossed=2"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"sort"
+	"strconv"
+	"strings"
+)
+
+type variable struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func emit(event string, fields ...string) {
+	variables := make([]variable, 0, len(fields)/2)
+	for i := 0; i < len(fields); i += 2 {
+		variables = append(variables, variable{fields[i], fields[i+1]})
+	}
+	data, _ := json.Marshal(struct {
+		Event     string     `json:"event"`
+		Variables []variable `json:"variables"`
+	}{event, variables})
+	fmt.Println(string(data))
+}
+func result(value string) {
+	data, _ := json.Marshal(map[string]string{"result": value})
+	fmt.Println(string(data))
+}
+func s(n int) string { return strconv.Itoa(n) }
+
+func edgeState(edges map[int]int) string {
+	keys := make([]int, 0, len(edges))
+	for x := range edges {
+		keys = append(keys, x)
+	}
+	sort.Ints(keys)
+	parts := []string{}
+	for _, x := range keys {
+		parts = append(parts, s(x)+":"+s(edges[x]))
+	}
+	return "{" + strings.Join(parts, ",") + "}"
+}
+func solve(rows [][]int) {
+	width := 0
+	for _, b := range rows[0] {
+		width += b
+	}
+	answer := 0
+	edges := map[int]int{}
+	best := 0
+	emit("start", "x", "0", "row", "-1", "state", "{}", "best", "0", "crossed", s(len(rows)))
+	for r, bricks := range rows {
+		x := 0
+		for _, brick := range bricks[:len(bricks)-1] {
+			x += brick
+			edges[x]++
+			if edges[x] > best {
+				best = edges[x]
+			}
+			emit("edge", "x", s(x), "row", s(r), "state", edgeState(edges), "best", s(best), "crossed", s(len(rows)-best))
+		}
+	}
+	emit("done", "x", s(width), "row", "-1", "state", edgeState(edges), "best", s(best), "crossed", s(len(rows)-best))
+	answer = len(rows) - best
+	result(s(answer))
+}
+func main() {
+	in := bufio.NewReader(os.Stdin)
+	var n int
+	fmt.Fscan(in, &n)
+	rows := make([][]int, n)
+	for r := range rows {
+		var k int
+		fmt.Fscan(in, &k)
+		rows[r] = make([]int, k)
+		for j := range rows[r] {
+			fmt.Fscan(in, &rows[r][j])
+		}
+	}
+	solve(rows)
+}

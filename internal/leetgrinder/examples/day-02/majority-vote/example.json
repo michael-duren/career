@@ -1,0 +1,3673 @@
+{
+  "id": "day-02-majority-vote",
+  "title": "Cancel unequal pairs, then verify",
+  "invariant": "After each vote, discarded elements form unequal pairs and balance unpaired copies of candidate remain. A second pass proves whether the candidate actually exceeds half.",
+  "variants": [
+    {
+      "language": "cpp",
+      "file": "main.cpp",
+      "algorithmStart": 33,
+      "algorithmEnd": 74
+    },
+    {
+      "language": "python",
+      "file": "main.py",
+      "algorithmStart": 12,
+      "algorithmEnd": 32
+    },
+    {
+      "language": "java",
+      "file": "Main.java",
+      "algorithmStart": 27,
+      "algorithmEnd": 56
+    },
+    {
+      "language": "go",
+      "file": "main.go.txt",
+      "algorithmStart": 33,
+      "algorithmEnd": 59
+    }
+  ],
+  "cases": [
+    {
+      "id": "normal",
+      "label": "Two survives cancellation",
+      "input": "5\n2 1 2 3 2\n",
+      "expectedOutput": "2",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              36
+            ],
+            "python": [
+              15
+            ],
+            "java": [
+              30
+            ],
+            "go": [
+              36
+            ]
+          },
+          "explanation": "No value has been tested. The candidate and vote balance are empty.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "-1"
+            },
+            {
+              "name": "value",
+              "value": "-"
+            },
+            {
+              "name": "candidate",
+              "value": "-"
+            },
+            {
+              "name": "balance",
+              "value": "0"
+            },
+            {
+              "name": "seen",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority start. Values [2, 1, 2, 3, 2]; candidate -, vote balance 0, verified count 0.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-4",
+                "shape": "rect",
+                "x": 296,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate -",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 0",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "index-4",
+                "x": 305,
+                "y": 104,
+                "text": "i=4"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "Full-array count tests each proposed value."
+              }
+            ]
+          }
+        },
+        {
+          "event": "vote",
+          "lines": {
+            "cpp": [
+              50
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              46
+            ]
+          },
+          "explanation": "Process 2: candidate 2 has 1 unpaired votes after unequal pairs cancel.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "value",
+              "value": "2"
+            },
+            {
+              "name": "candidate",
+              "value": "2"
+            },
+            {
+              "name": "balance",
+              "value": "1"
+            },
+            {
+              "name": "seen",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority vote. Values [2, 1, 2, 3, 2]; candidate 2, vote balance 1, verified count 0.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "active"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-4",
+                "shape": "rect",
+                "x": 296,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 2",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 1",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "index-4",
+                "x": 305,
+                "y": 104,
+                "text": "i=4"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "0 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        },
+        {
+          "event": "vote",
+          "lines": {
+            "cpp": [
+              50
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              46
+            ]
+          },
+          "explanation": "Process 1: candidate 2 has 0 unpaired votes after unequal pairs cancel.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "value",
+              "value": "1"
+            },
+            {
+              "name": "candidate",
+              "value": "2"
+            },
+            {
+              "name": "balance",
+              "value": "0"
+            },
+            {
+              "name": "seen",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority vote. Values [2, 1, 2, 3, 2]; candidate 2, vote balance 0, verified count 0.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "visited"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "active"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-4",
+                "shape": "rect",
+                "x": 296,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 2",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 0",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "index-4",
+                "x": 305,
+                "y": 104,
+                "text": "i=4"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "1 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        },
+        {
+          "event": "vote",
+          "lines": {
+            "cpp": [
+              50
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              46
+            ]
+          },
+          "explanation": "Process 2: candidate 2 has 1 unpaired votes after unequal pairs cancel.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "value",
+              "value": "2"
+            },
+            {
+              "name": "candidate",
+              "value": "2"
+            },
+            {
+              "name": "balance",
+              "value": "1"
+            },
+            {
+              "name": "seen",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority vote. Values [2, 1, 2, 3, 2]; candidate 2, vote balance 1, verified count 0.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "visited"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "active"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-4",
+                "shape": "rect",
+                "x": 296,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 2",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 1",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "index-4",
+                "x": 305,
+                "y": 104,
+                "text": "i=4"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "1 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        },
+        {
+          "event": "vote",
+          "lines": {
+            "cpp": [
+              50
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              46
+            ]
+          },
+          "explanation": "Process 3: candidate 2 has 0 unpaired votes after unequal pairs cancel.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "value",
+              "value": "3"
+            },
+            {
+              "name": "candidate",
+              "value": "2"
+            },
+            {
+              "name": "balance",
+              "value": "0"
+            },
+            {
+              "name": "seen",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority vote. Values [2, 1, 2, 3, 2]; candidate 2, vote balance 0, verified count 0.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "visited"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "visited"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "active"
+              },
+              {
+                "id": "value-4",
+                "shape": "rect",
+                "x": 296,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 2",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 0",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "index-4",
+                "x": 305,
+                "y": 104,
+                "text": "i=4"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "2 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        },
+        {
+          "event": "vote",
+          "lines": {
+            "cpp": [
+              50
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              46
+            ]
+          },
+          "explanation": "Process 2: candidate 2 has 1 unpaired votes after unequal pairs cancel.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "4"
+            },
+            {
+              "name": "value",
+              "value": "2"
+            },
+            {
+              "name": "candidate",
+              "value": "2"
+            },
+            {
+              "name": "balance",
+              "value": "1"
+            },
+            {
+              "name": "seen",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority vote. Values [2, 1, 2, 3, 2]; candidate 2, vote balance 1, verified count 0.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "visited"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "visited"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "visited"
+              },
+              {
+                "id": "value-4",
+                "shape": "rect",
+                "x": 296,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "active"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 2",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 1",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "index-4",
+                "x": 305,
+                "y": 104,
+                "text": "i=4"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "2 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        },
+        {
+          "event": "verify",
+          "lines": {
+            "cpp": [
+              61
+            ],
+            "python": [
+              29
+            ],
+            "java": [
+              49
+            ],
+            "go": [
+              53
+            ]
+          },
+          "explanation": "Check input position 0 against candidate 2; the actual occurrence count is now 1.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "value",
+              "value": "2"
+            },
+            {
+              "name": "candidate",
+              "value": "2"
+            },
+            {
+              "name": "balance",
+              "value": "1"
+            },
+            {
+              "name": "seen",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority verify. Values [2, 1, 2, 3, 2]; candidate 2, vote balance 1, verified count 1.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "active"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-4",
+                "shape": "rect",
+                "x": 296,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 2",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 1",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 1",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "index-4",
+                "x": 305,
+                "y": 104,
+                "text": "i=4"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "2 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        },
+        {
+          "event": "verify",
+          "lines": {
+            "cpp": [
+              61
+            ],
+            "python": [
+              29
+            ],
+            "java": [
+              49
+            ],
+            "go": [
+              53
+            ]
+          },
+          "explanation": "Check input position 1 against candidate 2; the actual occurrence count is now 1.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "value",
+              "value": "1"
+            },
+            {
+              "name": "candidate",
+              "value": "2"
+            },
+            {
+              "name": "balance",
+              "value": "1"
+            },
+            {
+              "name": "seen",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority verify. Values [2, 1, 2, 3, 2]; candidate 2, vote balance 1, verified count 1.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "visited"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "active"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-4",
+                "shape": "rect",
+                "x": 296,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 2",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 1",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 1",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "index-4",
+                "x": 305,
+                "y": 104,
+                "text": "i=4"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "2 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        },
+        {
+          "event": "verify",
+          "lines": {
+            "cpp": [
+              61
+            ],
+            "python": [
+              29
+            ],
+            "java": [
+              49
+            ],
+            "go": [
+              53
+            ]
+          },
+          "explanation": "Check input position 2 against candidate 2; the actual occurrence count is now 2.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "value",
+              "value": "2"
+            },
+            {
+              "name": "candidate",
+              "value": "2"
+            },
+            {
+              "name": "balance",
+              "value": "1"
+            },
+            {
+              "name": "seen",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority verify. Values [2, 1, 2, 3, 2]; candidate 2, vote balance 1, verified count 2.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "visited"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "active"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-4",
+                "shape": "rect",
+                "x": 296,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 2",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 1",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 2",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "index-4",
+                "x": 305,
+                "y": 104,
+                "text": "i=4"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "2 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        },
+        {
+          "event": "verify",
+          "lines": {
+            "cpp": [
+              61
+            ],
+            "python": [
+              29
+            ],
+            "java": [
+              49
+            ],
+            "go": [
+              53
+            ]
+          },
+          "explanation": "Check input position 3 against candidate 2; the actual occurrence count is now 2.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "value",
+              "value": "3"
+            },
+            {
+              "name": "candidate",
+              "value": "2"
+            },
+            {
+              "name": "balance",
+              "value": "1"
+            },
+            {
+              "name": "seen",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority verify. Values [2, 1, 2, 3, 2]; candidate 2, vote balance 1, verified count 2.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "visited"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "visited"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "active"
+              },
+              {
+                "id": "value-4",
+                "shape": "rect",
+                "x": 296,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 2",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 1",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 2",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "index-4",
+                "x": 305,
+                "y": 104,
+                "text": "i=4"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "2 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        },
+        {
+          "event": "verify",
+          "lines": {
+            "cpp": [
+              61
+            ],
+            "python": [
+              29
+            ],
+            "java": [
+              49
+            ],
+            "go": [
+              53
+            ]
+          },
+          "explanation": "Check input position 4 against candidate 2; the actual occurrence count is now 3.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "4"
+            },
+            {
+              "name": "value",
+              "value": "2"
+            },
+            {
+              "name": "candidate",
+              "value": "2"
+            },
+            {
+              "name": "balance",
+              "value": "1"
+            },
+            {
+              "name": "seen",
+              "value": "3"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority verify. Values [2, 1, 2, 3, 2]; candidate 2, vote balance 1, verified count 3.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "visited"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "visited"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "visited"
+              },
+              {
+                "id": "value-4",
+                "shape": "rect",
+                "x": 296,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "active"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 2",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 1",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 3",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "index-4",
+                "x": 305,
+                "y": 104,
+                "text": "i=4"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "2 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              69
+            ],
+            "python": [
+              31
+            ],
+            "java": [
+              54
+            ],
+            "go": [
+              58
+            ]
+          },
+          "explanation": "Return a value only if its full-array count exceeds half; otherwise return none.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "5"
+            },
+            {
+              "name": "value",
+              "value": "-"
+            },
+            {
+              "name": "candidate",
+              "value": "2"
+            },
+            {
+              "name": "balance",
+              "value": "1"
+            },
+            {
+              "name": "seen",
+              "value": "3"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority done. Values [2, 1, 2, 3, 2]; candidate 2, vote balance 1, verified count 3.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-4",
+                "shape": "rect",
+                "x": 296,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 2",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 1",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 3",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "index-4",
+                "x": 305,
+                "y": 104,
+                "text": "i=4"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "2 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-no-majority",
+      "label": "All values differ",
+      "input": "4\n1 2 3 4\n",
+      "expectedOutput": "none",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              36
+            ],
+            "python": [
+              15
+            ],
+            "java": [
+              30
+            ],
+            "go": [
+              36
+            ]
+          },
+          "explanation": "No value has been tested. The candidate and vote balance are empty.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "-1"
+            },
+            {
+              "name": "value",
+              "value": "-"
+            },
+            {
+              "name": "candidate",
+              "value": "-"
+            },
+            {
+              "name": "balance",
+              "value": "0"
+            },
+            {
+              "name": "seen",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority start. Values [1, 2, 3, 4]; candidate -, vote balance 0, verified count 0.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate -",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 0",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "Full-array count tests each proposed value."
+              }
+            ]
+          }
+        },
+        {
+          "event": "vote",
+          "lines": {
+            "cpp": [
+              50
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              46
+            ]
+          },
+          "explanation": "Process 1: candidate 1 has 1 unpaired votes after unequal pairs cancel.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "value",
+              "value": "1"
+            },
+            {
+              "name": "candidate",
+              "value": "1"
+            },
+            {
+              "name": "balance",
+              "value": "1"
+            },
+            {
+              "name": "seen",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority vote. Values [1, 2, 3, 4]; candidate 1, vote balance 1, verified count 0.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "active"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 1",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 1",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "0 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        },
+        {
+          "event": "vote",
+          "lines": {
+            "cpp": [
+              50
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              46
+            ]
+          },
+          "explanation": "Process 2: candidate 1 has 0 unpaired votes after unequal pairs cancel.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "value",
+              "value": "2"
+            },
+            {
+              "name": "candidate",
+              "value": "1"
+            },
+            {
+              "name": "balance",
+              "value": "0"
+            },
+            {
+              "name": "seen",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority vote. Values [1, 2, 3, 4]; candidate 1, vote balance 0, verified count 0.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "active"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 1",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 0",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "1 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        },
+        {
+          "event": "vote",
+          "lines": {
+            "cpp": [
+              50
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              46
+            ]
+          },
+          "explanation": "Process 3: candidate 3 has 1 unpaired votes after unequal pairs cancel.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "value",
+              "value": "3"
+            },
+            {
+              "name": "candidate",
+              "value": "3"
+            },
+            {
+              "name": "balance",
+              "value": "1"
+            },
+            {
+              "name": "seen",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority vote. Values [1, 2, 3, 4]; candidate 3, vote balance 1, verified count 0.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "visited"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "active"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 3",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 1",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "1 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        },
+        {
+          "event": "vote",
+          "lines": {
+            "cpp": [
+              50
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              46
+            ]
+          },
+          "explanation": "Process 4: candidate 3 has 0 unpaired votes after unequal pairs cancel.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "value",
+              "value": "4"
+            },
+            {
+              "name": "candidate",
+              "value": "3"
+            },
+            {
+              "name": "balance",
+              "value": "0"
+            },
+            {
+              "name": "seen",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority vote. Values [1, 2, 3, 4]; candidate 3, vote balance 0, verified count 0.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "visited"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "visited"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 3",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 0",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "2 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        },
+        {
+          "event": "verify",
+          "lines": {
+            "cpp": [
+              61
+            ],
+            "python": [
+              29
+            ],
+            "java": [
+              49
+            ],
+            "go": [
+              53
+            ]
+          },
+          "explanation": "Check input position 0 against candidate 3; the actual occurrence count is now 0.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "value",
+              "value": "1"
+            },
+            {
+              "name": "candidate",
+              "value": "3"
+            },
+            {
+              "name": "balance",
+              "value": "0"
+            },
+            {
+              "name": "seen",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority verify. Values [1, 2, 3, 4]; candidate 3, vote balance 0, verified count 0.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "active"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 3",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 0",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "2 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        },
+        {
+          "event": "verify",
+          "lines": {
+            "cpp": [
+              61
+            ],
+            "python": [
+              29
+            ],
+            "java": [
+              49
+            ],
+            "go": [
+              53
+            ]
+          },
+          "explanation": "Check input position 1 against candidate 3; the actual occurrence count is now 0.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "value",
+              "value": "2"
+            },
+            {
+              "name": "candidate",
+              "value": "3"
+            },
+            {
+              "name": "balance",
+              "value": "0"
+            },
+            {
+              "name": "seen",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority verify. Values [1, 2, 3, 4]; candidate 3, vote balance 0, verified count 0.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "active"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 3",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 0",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "2 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        },
+        {
+          "event": "verify",
+          "lines": {
+            "cpp": [
+              61
+            ],
+            "python": [
+              29
+            ],
+            "java": [
+              49
+            ],
+            "go": [
+              53
+            ]
+          },
+          "explanation": "Check input position 2 against candidate 3; the actual occurrence count is now 1.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "value",
+              "value": "3"
+            },
+            {
+              "name": "candidate",
+              "value": "3"
+            },
+            {
+              "name": "balance",
+              "value": "0"
+            },
+            {
+              "name": "seen",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority verify. Values [1, 2, 3, 4]; candidate 3, vote balance 0, verified count 1.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "visited"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "active"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 3",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 0",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 1",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "2 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        },
+        {
+          "event": "verify",
+          "lines": {
+            "cpp": [
+              61
+            ],
+            "python": [
+              29
+            ],
+            "java": [
+              49
+            ],
+            "go": [
+              53
+            ]
+          },
+          "explanation": "Check input position 3 against candidate 3; the actual occurrence count is now 1.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "value",
+              "value": "4"
+            },
+            {
+              "name": "candidate",
+              "value": "3"
+            },
+            {
+              "name": "balance",
+              "value": "0"
+            },
+            {
+              "name": "seen",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority verify. Values [1, 2, 3, 4]; candidate 3, vote balance 0, verified count 1.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "visited"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "visited"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 3",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 0",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 1",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "2 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              69
+            ],
+            "python": [
+              31
+            ],
+            "java": [
+              54
+            ],
+            "go": [
+              58
+            ]
+          },
+          "explanation": "Return a value only if its full-array count exceeds half; otherwise return none.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "4"
+            },
+            {
+              "name": "value",
+              "value": "-"
+            },
+            {
+              "name": "candidate",
+              "value": "3"
+            },
+            {
+              "name": "balance",
+              "value": "0"
+            },
+            {
+              "name": "seen",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 480,
+            "height": 220,
+            "description": "Majority done. Values [1, 2, 3, 4]; candidate 3, vote balance 0, verified count 1.",
+            "nodes": [
+              {
+                "id": "value-0",
+                "shape": "rect",
+                "x": 16,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "value-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "value-2",
+                "shape": "rect",
+                "x": 156,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "value-3",
+                "shape": "rect",
+                "x": 226,
+                "y": 40,
+                "width": 58,
+                "height": 43,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "candidate",
+                "shape": "rect",
+                "x": 16,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "candidate 3",
+                "role": "result"
+              },
+              {
+                "id": "balance",
+                "shape": "rect",
+                "x": 164,
+                "y": 125,
+                "width": 120,
+                "height": 45,
+                "text": "votes 0",
+                "role": "active"
+              },
+              {
+                "id": "seen",
+                "shape": "rect",
+                "x": 302,
+                "y": 125,
+                "width": 130,
+                "height": 45,
+                "text": "seen 1",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "values",
+                "x": 16,
+                "y": 26,
+                "text": "Input positions"
+              },
+              {
+                "id": "index-0",
+                "x": 25,
+                "y": 104,
+                "text": "i=0"
+              },
+              {
+                "id": "index-1",
+                "x": 95,
+                "y": 104,
+                "text": "i=1"
+              },
+              {
+                "id": "index-2",
+                "x": 165,
+                "y": 104,
+                "text": "i=2"
+              },
+              {
+                "id": "index-3",
+                "x": 235,
+                "y": 104,
+                "text": "i=3"
+              },
+              {
+                "id": "pairs",
+                "x": 16,
+                "y": 203,
+                "text": "2 unequal pairs canceled; verification count is independent."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
