@@ -1,0 +1,106 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
+type variable struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func emit(event string, pairs ...string) {
+	variables := []variable{}
+	for k := 0; k+1 < len(pairs); k += 2 {
+		variables = append(variables, variable{pairs[k], pairs[k+1]})
+	}
+	data, _ := json.Marshal(struct {
+		Event     string     `json:"event"`
+		Variables []variable `json:"variables"`
+	}{event, variables})
+	fmt.Println(string(data))
+}
+
+func result(answer string) {
+	data, _ := json.Marshal(struct {
+		Result string `json:"result"`
+	}{answer})
+	fmt.Println(string(data))
+}
+
+func itoa(value int) string { return strconv.Itoa(value) }
+
+func show(values []int) string {
+	parts := make([]string, len(values))
+	for k, value := range values {
+		parts[k] = strconv.Itoa(value)
+	}
+	return "[" + strings.Join(parts, ",") + "]"
+}
+
+type Node struct {
+	Value int
+	Next  *Node
+}
+
+func build(values []int) *Node {
+	var head *Node
+	for k := len(values) - 1; k >= 0; k-- {
+		head = &Node{values[k], head}
+	}
+	return head
+}
+
+func render(node *Node) string {
+	parts := []string{}
+	for ; node != nil; node = node.Next {
+		parts = append(parts, itoa(node.Value))
+	}
+	if len(parts) == 0 {
+		return "empty"
+	}
+	return strings.Join(parts, "->")
+}
+
+func solve(values []int, target int) string {
+	head := build(values)
+	slow, fast := head, head.Next
+	for fast.Next != nil {
+		slow = slow.Next
+		fast = fast.Next.Next
+	}
+	second := slow.Next
+	slow.Next = nil
+	var prev *Node
+	for second != nil {
+		following := second.Next
+		second.Next = prev
+		prev = second
+		second = following
+	}
+	emit("halves", "first", render(head), "second", render(prev), "best", "-")
+	best := 0
+	for a, b := head, prev; a != nil; a, b = a.Next, b.Next {
+		best = max(best, a.Value+b.Value)
+		emit("pair", "first", itoa(a.Value), "second", itoa(b.Value), "best", itoa(best))
+	}
+
+	emit("done", "first", "-", "second", "-", "best", itoa(best))
+	return itoa(best)
+}
+
+func main() {
+	in := bufio.NewReader(os.Stdin)
+	var n, target int
+	fmt.Fscan(in, &n, &target)
+	values := make([]int, n)
+	for k := range values {
+		fmt.Fscan(in, &values[k])
+	}
+	result(solve(values, target))
+}

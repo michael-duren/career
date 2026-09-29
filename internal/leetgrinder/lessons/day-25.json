@@ -1,0 +1,191 @@
+{
+  "day": 25,
+  "objectives": [
+    "Use a dummy node so the head has a node before it like every other node.",
+    "Delete nodes while walking, keeping a reference to the node before.",
+    "Keep relinking code simple enough to check by drawing arrows."
+  ],
+  "prerequisites": [
+    22
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: give the head a node before it",
+      "paragraphs": [
+        "To remove a node, you change the next of the node before it. Every node has one, except the head. That's why list code is full of \"if we're removing the head\" special cases.",
+        "A dummy node fixes that. Put an extra node in front of the head. Now every real node, including the first, has a node before it. When you're done, the answer is dummy.next."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "When the head itself might change, start with a dummy node in front of it and return dummy.next."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "A dummy node D in front of 9 and 1. The 9 can be removed by changing the dummy's next.",
+        "nodes": [
+          {
+            "id": "n0",
+            "shape": "rect",
+            "x": 12,
+            "y": 50,
+            "width": 48,
+            "height": 40,
+            "text": "D",
+            "role": "discarded"
+          },
+          {
+            "id": "n1",
+            "shape": "rect",
+            "x": 88,
+            "y": 50,
+            "width": 48,
+            "height": 40,
+            "text": "9",
+            "role": "active"
+          },
+          {
+            "id": "n2",
+            "shape": "rect",
+            "x": 164,
+            "y": 50,
+            "width": 48,
+            "height": 40,
+            "text": "1",
+            "role": "neutral"
+          }
+        ],
+        "edges": [
+          {
+            "id": "e1",
+            "from": "n0",
+            "to": "n1",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          },
+          {
+            "id": "e2",
+            "from": "n1",
+            "to": "n2",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          }
+        ],
+        "labels": [
+          {
+            "id": "title",
+            "x": 12,
+            "y": 30,
+            "text": "dummy in front"
+          },
+          {
+            "id": "l0",
+            "x": 12,
+            "y": 120,
+            "text": "dummy"
+          },
+          {
+            "id": "l1",
+            "x": 12,
+            "y": 140,
+            "text": "removing 9 needs no special case"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Special-case the head",
+      "heading": "Baseline: handle the head separately",
+      "paragraphs": [
+        "Without a dummy, first remove matching nodes from the front by moving head forward, then walk the rest with a prev reference. It works, but it's two loops that must agree, and bugs hide in the handoff between them."
+      ]
+    },
+    {
+      "id": "drop",
+      "navLabel": "Deleting with a dummy",
+      "heading": "Worked example: remove every node above a limit",
+      "paragraphs": [
+        "Start prev at the dummy. While prev.next exists: if prev.next should go, skip it by setting prev.next = prev.next.next, and don't move prev. Otherwise move prev forward.",
+        "Not moving prev after a removal matters: the node that just became prev.next hasn't been checked. The edge case removes the first two nodes, which only works cleanly because of the dummy."
+      ],
+      "exampleIds": [
+        "day-25-drop-large"
+      ]
+    },
+    {
+      "id": "your-turn-remove-elements",
+      "navLabel": "Your turn: Remove Linked List Elements",
+      "heading": "Your turn: Remove Linked List Elements",
+      "paragraphs": [
+        "Remove every node whose value equals val, and return the new head."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Which line of the example changes?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-odd-even",
+      "navLabel": "Your turn: Odd Even Linked List",
+      "heading": "Your turn: Odd Even Linked List",
+      "paragraphs": [
+        "Today's first medium. Group the nodes at odd positions (1st, 3rd, 5th, ...) followed by the nodes at even positions, keeping the order within each group. Use O(1) extra memory."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Picture building two separate chains as you walk, then joining them. What references do you need to keep, and when does the loop stop?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-swap-pairs",
+      "navLabel": "Your turn: Swap Nodes in Pairs",
+      "heading": "Your turn: Swap Nodes in Pairs",
+      "paragraphs": [
+        "Today's second medium. Swap every two adjacent nodes (1->2->3->4 becomes 2->1->4->3) by relinking nodes, not by swapping values."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Draw one swap with the node before the pair included. Count how many next references change, and which node is \"the node before\" for the following pair.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Walking with prev and a dummy node is O(n) time and O(1) extra memory.",
+        "Draw the arrows before and after each operation on paper. If the drawing is right and each line of code matches one arrow change, the code is right."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "Why return dummy.next instead of head?",
+          "answer": "The original head may have been removed. dummy.next is always the current first node."
+        },
+        {
+          "prompt": "Why doesn't prev move after a removal?",
+          "answer": "The node that just became prev.next hasn't been checked yet."
+        },
+        {
+          "prompt": "What special case does the dummy remove?",
+          "answer": "Removing or changing the first node, which otherwise has no node before it."
+        }
+      ]
+    }
+  ]
+}

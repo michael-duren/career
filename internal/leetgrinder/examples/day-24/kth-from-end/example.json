@@ -1,0 +1,1061 @@
+{
+ "id": "day-24-kth-from-end",
+ "title": "Keep a fixed gap to find the k-th node from the end",
+ "invariant": "lead is always exactly k nodes ahead of trail.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 40,
+   "algorithmEnd": 54
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 38,
+   "algorithmEnd": 50
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 41,
+   "algorithmEnd": 54
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 70,
+   "algorithmEnd": 91
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "2nd from the end of 1->2->3->4->5",
+   "input": "5 2\n1 2 3 4 5\n",
+   "expectedOutput": "4",
+   "frames": [
+    {
+     "event": "gap",
+     "lines": {
+      "cpp": [
+       41,
+       42,
+       43,
+       44
+      ],
+      "python": [
+       39,
+       40,
+       41,
+       42
+      ],
+      "java": [
+       42,
+       43,
+       44
+      ],
+      "go": [
+       71,
+       72,
+       73,
+       74,
+       75,
+       77,
+       79,
+       80
+      ]
+     },
+     "explanation": "Find the 2nd node from the end without knowing the length. Move lead 2 steps ahead first; it's now at 3, and trail is at the head. They stay exactly 2 apart from now on.",
+     "variables": [
+      {
+       "name": "lead",
+       "value": "3"
+      },
+      {
+       "name": "trail",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Kth from end normal: gap, lead 3, trail 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "lead stays 2 ahead of trail"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "trail"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "lead"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "when lead falls off the end, trail is the answer"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       47,
+       48
+      ],
+      "python": [
+       45,
+       46
+      ],
+      "java": [
+       47,
+       48
+      ],
+      "go": [
+       84,
+       85
+      ]
+     },
+     "explanation": "Move both one step: lead = 4, trail = 2.",
+     "variables": [
+      {
+       "name": "lead",
+       "value": "4"
+      },
+      {
+       "name": "trail",
+       "value": "2"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Kth from end normal: move, lead 4, trail 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "visited"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "lead stays 2 ahead of trail"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "trail"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "lead"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "when lead falls off the end, trail is the answer"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       47,
+       48
+      ],
+      "python": [
+       45,
+       46
+      ],
+      "java": [
+       47,
+       48
+      ],
+      "go": [
+       84,
+       85
+      ]
+     },
+     "explanation": "Move both one step: lead = 5, trail = 3.",
+     "variables": [
+      {
+       "name": "lead",
+       "value": "5"
+      },
+      {
+       "name": "trail",
+       "value": "3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Kth from end normal: move, lead 5, trail 3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "lead stays 2 ahead of trail"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "trail"
+       },
+       {
+        "id": "pointer-4",
+        "x": 282,
+        "y": 116,
+        "text": "lead"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "when lead falls off the end, trail is the answer"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       47,
+       48
+      ],
+      "python": [
+       45,
+       46
+      ],
+      "java": [
+       47,
+       48
+      ],
+      "go": [
+       84,
+       85
+      ]
+     },
+     "explanation": "Move both one step: lead fell off the end, trail = 4.",
+     "variables": [
+      {
+       "name": "lead",
+       "value": "-"
+      },
+      {
+       "name": "trail",
+       "value": "4"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Kth from end normal: move, lead -, trail 4.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "active"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "lead stays 2 ahead of trail"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "trail"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "when lead falls off the end, trail is the answer"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       52
+      ],
+      "python": [
+       49
+      ],
+      "java": [
+       52
+      ],
+      "go": [
+       89
+      ]
+     },
+     "explanation": "lead is past the last node, so trail is exactly 2 nodes from the end: 4.",
+     "variables": [
+      {
+       "name": "lead",
+       "value": "-"
+      },
+      {
+       "name": "trail",
+       "value": "4"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Kth from end normal: done, lead -, trail 4.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "lead stays 2 ahead of trail"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "trail"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "when lead falls off the end, trail is the answer"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-whole",
+   "label": "k equals the length",
+   "input": "5 5\n1 2 3 4 5\n",
+   "expectedOutput": "1",
+   "frames": [
+    {
+     "event": "gap",
+     "lines": {
+      "cpp": [
+       41,
+       42,
+       43,
+       44
+      ],
+      "python": [
+       39,
+       40,
+       41,
+       42
+      ],
+      "java": [
+       42,
+       43,
+       44
+      ],
+      "go": [
+       71,
+       72,
+       73,
+       74,
+       75,
+       77,
+       79,
+       80
+      ]
+     },
+     "explanation": "Find the 5th node from the end without knowing the length. Move lead 5 steps ahead first; it's now past the end, and trail is at the head. They stay exactly 5 apart from now on.",
+     "variables": [
+      {
+       "name": "lead",
+       "value": "-"
+      },
+      {
+       "name": "trail",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Kth from end edge-whole: gap, lead -, trail 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "lead stays 5 ahead of trail"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "trail"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "when lead falls off the end, trail is the answer"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       52
+      ],
+      "python": [
+       49
+      ],
+      "java": [
+       52
+      ],
+      "go": [
+       89
+      ]
+     },
+     "explanation": "lead is past the last node, so trail is exactly 5 nodes from the end: 1.",
+     "variables": [
+      {
+       "name": "lead",
+       "value": "-"
+      },
+      {
+       "name": "trail",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Kth from end edge-whole: done, lead -, trail 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "lead stays 5 ahead of trail"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "trail"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "when lead falls off the end, trail is the answer"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1447 @@
+{
+ "id": "day-26-folder-path",
+ "title": "Track the current folder with a stack",
+ "invariant": "The stack lists the folders from the root down to where you are now.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 29,
+   "algorithmEnd": 48
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 21,
+   "algorithmEnd": 36
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 27,
+   "algorithmEnd": 44
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 50,
+   "algorithmEnd": 70
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "a b .. c .",
+   "input": "a b .. c .\n",
+   "expectedOutput": "/a/c",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       22
+      ],
+      "java": [
+       28
+      ],
+      "go": [
+       51
+      ]
+     },
+     "explanation": "Follow the steps a b .. c . starting at the root folder. A name goes into that folder, .. goes up one level, and . stays put. The stack is the current path.",
+     "variables": [
+      {
+       "name": "token",
+       "value": "-"
+      },
+      {
+       "name": "stack",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "steps normal: start, token -, stack [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "..",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": ".",
+        "role": "neutral"
+       },
+       {
+        "id": "empty",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "stack empty",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "steps"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = the folder you're in"
+       }
+      ]
+     }
+    },
+    {
+     "event": "enter",
+     "lines": {
+      "cpp": [
+       39
+      ],
+      "python": [
+       32
+      ],
+      "java": [
+       37
+      ],
+      "go": [
+       63
+      ]
+     },
+     "explanation": "Go into folder a: push it. Path [a].",
+     "variables": [
+      {
+       "name": "token",
+       "value": "a"
+      },
+      {
+       "name": "stack",
+       "value": "[a]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "steps normal: enter, token a, stack [a].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "..",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": ".",
+        "role": "neutral"
+       },
+       {
+        "id": "s0",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "a",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "steps"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = the folder you're in"
+       }
+      ]
+     }
+    },
+    {
+     "event": "enter",
+     "lines": {
+      "cpp": [
+       39
+      ],
+      "python": [
+       32
+      ],
+      "java": [
+       37
+      ],
+      "go": [
+       63
+      ]
+     },
+     "explanation": "Go into folder b: push it. Path [a,b].",
+     "variables": [
+      {
+       "name": "token",
+       "value": "b"
+      },
+      {
+       "name": "stack",
+       "value": "[a,b]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "steps normal: enter, token b, stack [a,b].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "..",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": ".",
+        "role": "neutral"
+       },
+       {
+        "id": "s0",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "s1",
+        "shape": "rect",
+        "x": 92,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "b",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "steps"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = the folder you're in"
+       }
+      ]
+     }
+    },
+    {
+     "event": "up",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       26,
+       27
+      ],
+      "java": [
+       32
+      ],
+      "go": [
+       56,
+       57
+      ]
+     },
+     "explanation": ".. goes up one level: pop b. Path [a].",
+     "variables": [
+      {
+       "name": "token",
+       "value": ".."
+      },
+      {
+       "name": "stack",
+       "value": "[a]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "steps normal: up, token .., stack [a].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "..",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": ".",
+        "role": "neutral"
+       },
+       {
+        "id": "s0",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "a",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "steps"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = the folder you're in"
+       }
+      ]
+     }
+    },
+    {
+     "event": "enter",
+     "lines": {
+      "cpp": [
+       39
+      ],
+      "python": [
+       32
+      ],
+      "java": [
+       37
+      ],
+      "go": [
+       63
+      ]
+     },
+     "explanation": "Go into folder c: push it. Path [a,c].",
+     "variables": [
+      {
+       "name": "token",
+       "value": "c"
+      },
+      {
+       "name": "stack",
+       "value": "[a,c]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "steps normal: enter, token c, stack [a,c].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "..",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "active"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": ".",
+        "role": "neutral"
+       },
+       {
+        "id": "s0",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "s1",
+        "shape": "rect",
+        "x": 92,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "c",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "steps"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = the folder you're in"
+       }
+      ]
+     }
+    },
+    {
+     "event": "stay",
+     "lines": {
+      "cpp": [
+       36,
+       37
+      ],
+      "python": [
+       29,
+       30
+      ],
+      "java": [
+       34,
+       35
+      ],
+      "go": [
+       60,
+       61
+      ]
+     },
+     "explanation": ". means \"this folder\", so nothing changes.",
+     "variables": [
+      {
+       "name": "token",
+       "value": "."
+      },
+      {
+       "name": "stack",
+       "value": "[a,c]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "steps normal: stay, token ., stack [a,c].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "..",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "visited"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": ".",
+        "role": "active"
+       },
+       {
+        "id": "s0",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "s1",
+        "shape": "rect",
+        "x": 92,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "c",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "steps"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = the folder you're in"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       44
+      ],
+      "python": [
+       35
+      ],
+      "java": [
+       42
+      ],
+      "go": [
+       68
+      ]
+     },
+     "explanation": "Join the stack with slashes: /a/c.",
+     "variables": [
+      {
+       "name": "token",
+       "value": "-"
+      },
+      {
+       "name": "stack",
+       "value": "[a,c]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "steps normal: done, token -, stack [a,c].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "..",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "visited"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": ".",
+        "role": "visited"
+       },
+       {
+        "id": "s0",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "s1",
+        "shape": "rect",
+        "x": 92,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "c",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "steps"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = the folder you're in"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-above-root",
+   "label": ".. at the root",
+   "input": ".. ..\n",
+   "expectedOutput": "/",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       22
+      ],
+      "java": [
+       28
+      ],
+      "go": [
+       51
+      ]
+     },
+     "explanation": "Follow the steps .. .. starting at the root folder. A name goes into that folder, .. goes up one level, and . stays put. The stack is the current path.",
+     "variables": [
+      {
+       "name": "token",
+       "value": "-"
+      },
+      {
+       "name": "stack",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "steps edge-above-root: start, token -, stack [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "..",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "..",
+        "role": "neutral"
+       },
+       {
+        "id": "empty",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "stack empty",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "steps"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = the folder you're in"
+       }
+      ]
+     }
+    },
+    {
+     "event": "up",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       26,
+       27
+      ],
+      "java": [
+       32
+      ],
+      "go": [
+       56,
+       57
+      ]
+     },
+     "explanation": ".. at the root has nowhere to go, so nothing changes.",
+     "variables": [
+      {
+       "name": "token",
+       "value": ".."
+      },
+      {
+       "name": "stack",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "steps edge-above-root: up, token .., stack [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "..",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "..",
+        "role": "neutral"
+       },
+       {
+        "id": "empty",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "stack empty",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "steps"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = the folder you're in"
+       }
+      ]
+     }
+    },
+    {
+     "event": "up",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       26,
+       27
+      ],
+      "java": [
+       32
+      ],
+      "go": [
+       56,
+       57
+      ]
+     },
+     "explanation": ".. at the root has nowhere to go, so nothing changes.",
+     "variables": [
+      {
+       "name": "token",
+       "value": ".."
+      },
+      {
+       "name": "stack",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "steps edge-above-root: up, token .., stack [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "..",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "..",
+        "role": "active"
+       },
+       {
+        "id": "empty",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "stack empty",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "steps"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = the folder you're in"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       44
+      ],
+      "python": [
+       35
+      ],
+      "java": [
+       42
+      ],
+      "go": [
+       68
+      ]
+     },
+     "explanation": "Join the stack with slashes: /.",
+     "variables": [
+      {
+       "name": "token",
+       "value": "-"
+      },
+      {
+       "name": "stack",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "steps edge-above-root: done, token -, stack [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "..",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "..",
+        "role": "visited"
+       },
+       {
+        "id": "empty",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "stack empty",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "steps"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = the folder you're in"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

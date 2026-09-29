@@ -1,0 +1,166 @@
+{
+  "day": 27,
+  "objectives": [
+    "Build one data structure's behavior out of another's operations.",
+    "Move items between two stacks and reason about their order.",
+    "Explain amortized cost: occasional expensive steps that average out."
+  ],
+  "prerequisites": [
+    26
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: pouring one stack into another reverses it",
+      "paragraphs": [
+        "If you pop everything from one stack and push it onto another, the order flips: the item that was on the bottom ends up on top. That single fact lets two stacks do things one stack can't.",
+        "Undo and redo in an editor work this way. Undo takes the last letter from the text stack and pushes it on a redo stack. Redo moves it back. The letter that was undone most recently is the first one redone."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "When implementing one structure with another, write down the order items must come out in, then check it after every move between containers."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Two stacks: text holds a, redo holds b. Undo moves the top of text to redo; redo moves it back.",
+        "nodes": [
+          {
+            "id": "t",
+            "shape": "rect",
+            "x": 20,
+            "y": 70,
+            "width": 110,
+            "height": 40,
+            "text": "text: a",
+            "role": "result"
+          },
+          {
+            "id": "r",
+            "shape": "rect",
+            "x": 190,
+            "y": 70,
+            "width": 110,
+            "height": 40,
+            "text": "redo: b",
+            "role": "visited"
+          }
+        ],
+        "edges": [
+          {
+            "id": "u",
+            "from": "t",
+            "to": "r",
+            "label": "undo",
+            "directed": true,
+            "role": "neutral"
+          }
+        ],
+        "labels": [
+          {
+            "id": "l",
+            "x": 20,
+            "y": 40,
+            "text": "undo moves the top across"
+          },
+          {
+            "id": "l2",
+            "x": 20,
+            "y": 150,
+            "text": "redo moves it back"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "One list",
+      "heading": "Baseline: one list and a history log",
+      "paragraphs": [
+        "You could keep the text as one list plus a log of every action, and replay the log to answer undo. That's simple and slow: each undo could replay everything. Two stacks make every operation O(1)."
+      ]
+    },
+    {
+      "id": "undo",
+      "navLabel": "Two stacks",
+      "heading": "Worked example: undo and redo",
+      "paragraphs": [
+        "Typing pushes a letter on text and clears redo, because redoing an old letter after new typing would put things in the wrong order. Undo pops text and pushes the letter on redo. Redo pops redo and pushes the letter back on text.",
+        "Both undo and redo do nothing when their source stack is empty. That's a rule you choose; the edge case shows it."
+      ],
+      "exampleIds": [
+        "day-27-undo-redo"
+      ]
+    },
+    {
+      "id": "your-turn-queue-stacks",
+      "navLabel": "Your turn: Implement Queue using Stacks",
+      "heading": "Your turn: Implement Queue using Stacks",
+      "paragraphs": [
+        "Implement a first-in, first-out queue (push, pop, peek, empty) using only stack operations. Each operation should take O(1) time on average."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Two stacks, and one of them reverses order when you pour into it. When do you pour, and why doesn't that make every operation slow?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-stack-queues",
+      "navLabel": "Your turn: Implement Stack using Queues",
+      "heading": "Your turn: Implement Stack using Queues",
+      "paragraphs": [
+        "Implement a last-in, first-out stack using only queue operations: add to the back, remove from the front, peek at the front, size."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "A queue gives you the oldest item. After you add a new item, how could you move the items so the newest one ends up at the front?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-circular",
+      "navLabel": "Your turn: Design Circular Queue",
+      "heading": "Your turn: Design Circular Queue",
+      "paragraphs": [
+        "Today's medium. Design a queue with a fixed capacity k stored in an array, where the space freed at the front is reused. Support enQueue, deQueue, Front, Rear, isEmpty, and isFull, all in O(1)."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "What should you store besides the array so every operation is O(1)? Test your design with k = 3 by enqueuing 3, dequeuing 2, and enqueuing 2 more.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Each undo or redo is O(1). Some designs have an occasional expensive step, like pouring a whole stack. If each item is poured at most once, the total work over n operations is still O(n), so the average per operation is O(1). That's called amortized O(1)."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "Why does typing clear the redo stack?",
+          "answer": "The undone letters belonged after text that no longer exists. Redoing them after new typing would put them in the wrong place."
+        },
+        {
+          "prompt": "What happens to the order of items when you pour one stack into another?",
+          "answer": "It reverses: the bottom item ends up on top."
+        },
+        {
+          "prompt": "What does amortized O(1) mean?",
+          "answer": "Some operations may be slow, but the total over n operations is O(n), so the average per operation is O(1)."
+        }
+      ]
+    }
+  ]
+}

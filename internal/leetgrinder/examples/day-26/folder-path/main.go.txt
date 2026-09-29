@@ -1,0 +1,83 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
+type variable struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func emit(event string, pairs ...string) {
+	variables := []variable{}
+	for k := 0; k+1 < len(pairs); k += 2 {
+		variables = append(variables, variable{pairs[k], pairs[k+1]})
+	}
+	data, _ := json.Marshal(struct {
+		Event     string     `json:"event"`
+		Variables []variable `json:"variables"`
+	}{event, variables})
+	fmt.Println(string(data))
+}
+
+func result(answer string) {
+	data, _ := json.Marshal(struct {
+		Result string `json:"result"`
+	}{answer})
+	fmt.Println(string(data))
+}
+
+func itoa(value int) string { return strconv.Itoa(value) }
+
+func show(values []int) string {
+	parts := make([]string, len(values))
+	for k, value := range values {
+		parts[k] = strconv.Itoa(value)
+	}
+	return "[" + strings.Join(parts, ",") + "]"
+}
+
+func showStack(stack []string) string {
+	return "[" + strings.Join(stack, ",") + "]"
+}
+
+func solve(tokens []string) string {
+	stack := []string{}
+	emit("start", "token", "-", "stack", showStack(stack))
+	for _, token := range tokens {
+		switch token {
+		case "..":
+			if len(stack) > 0 {
+				stack = stack[:len(stack)-1]
+			}
+			emit("up", "token", token, "stack", showStack(stack))
+		case ".":
+			emit("stay", "token", token, "stack", showStack(stack))
+		default:
+			stack = append(stack, token)
+			emit("enter", "token", token, "stack", showStack(stack))
+		}
+	}
+
+	emit("done", "token", "-", "stack", showStack(stack))
+	return "/" + strings.Join(stack, "/")
+}
+
+func main() {
+	in := bufio.NewReader(os.Stdin)
+	tokens := []string{}
+	for {
+		var token string
+		if _, err := fmt.Fscan(in, &token); err != nil {
+			break
+		}
+		tokens = append(tokens, token)
+	}
+	result(solve(tokens))
+}

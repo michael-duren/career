@@ -27,19 +27,86 @@
         "height": 170,
         "description": "Three plates, AB-12, ab12 and A-B12, all turn into the key ab12.",
         "nodes": [
-          {"id": "p1", "shape": "rect", "x": 12, "y": 20, "width": 92, "height": 36, "text": "AB-12", "role": "neutral"},
-          {"id": "p2", "shape": "rect", "x": 12, "y": 66, "width": 92, "height": 36, "text": "ab12", "role": "neutral"},
-          {"id": "p3", "shape": "rect", "x": 12, "y": 112, "width": 92, "height": 36, "text": "A-B12", "role": "neutral"},
-          {"id": "key", "shape": "rect", "x": 200, "y": 64, "width": 104, "height": 40, "text": "key: ab12", "role": "result"}
+          {
+            "id": "p1",
+            "shape": "rect",
+            "x": 12,
+            "y": 20,
+            "width": 92,
+            "height": 36,
+            "text": "AB-12",
+            "role": "neutral"
+          },
+          {
+            "id": "p2",
+            "shape": "rect",
+            "x": 12,
+            "y": 66,
+            "width": 92,
+            "height": 36,
+            "text": "ab12",
+            "role": "neutral"
+          },
+          {
+            "id": "p3",
+            "shape": "rect",
+            "x": 12,
+            "y": 112,
+            "width": 92,
+            "height": 36,
+            "text": "A-B12",
+            "role": "neutral"
+          },
+          {
+            "id": "key",
+            "shape": "rect",
+            "x": 200,
+            "y": 64,
+            "width": 104,
+            "height": 40,
+            "text": "key: ab12",
+            "role": "result"
+          }
         ],
         "edges": [
-          {"id": "e1", "from": "p1", "to": "key", "label": "", "directed": true, "role": "neutral"},
-          {"id": "e2", "from": "p2", "to": "key", "label": "", "directed": true, "role": "neutral"},
-          {"id": "e3", "from": "p3", "to": "key", "label": "", "directed": true, "role": "neutral"}
+          {
+            "id": "e1",
+            "from": "p1",
+            "to": "key",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          },
+          {
+            "id": "e2",
+            "from": "p2",
+            "to": "key",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          },
+          {
+            "id": "e3",
+            "from": "p3",
+            "to": "key",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          }
         ],
         "labels": [
-          {"id": "rule", "x": 200, "y": 136, "text": "lowercase,"},
-          {"id": "rule2", "x": 200, "y": 154, "text": "drop dashes"}
+          {
+            "id": "rule",
+            "x": 200,
+            "y": 136,
+            "text": "lowercase,"
+          },
+          {
+            "id": "rule2",
+            "x": 200,
+            "y": 154,
+            "text": "drop dashes"
+          }
         ]
       }
     },
@@ -106,7 +173,7 @@
       "callout": {
         "kind": "try",
         "title": "Where to start",
-        "text": "Line the two strings up position by position. What plays the role of the student, and what plays the locker?"
+        "text": "Test your idea on \"badc\" and \"baba\" before coding. Many first attempts say yes to that pair; the answer is no."
       }
     },
     {

@@ -1,0 +1,1481 @@
+{
+ "id": "day-25-drop-large",
+ "title": "Delete nodes with a dummy head",
+ "invariant": "Every node from the dummy through prev is kept and checked; prev.next is the next node to check.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 40,
+   "algorithmEnd": 56
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 38,
+   "algorithmEnd": 51
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 41,
+   "algorithmEnd": 57
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 70,
+   "algorithmEnd": 90
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Remove values above 5 from 1->6->2->7->3",
+   "input": "5 5\n1 6 2 7 3\n",
+   "expectedOutput": "1->2->3",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       41,
+       42
+      ],
+      "python": [
+       39,
+       40
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       71,
+       72
+      ]
+     },
+     "explanation": "Remove every node larger than 5 from 1->6->2->7->3. A dummy node sits in front of the head, so even the first node has a node before it. prev starts at the dummy.",
+     "variables": [
+      {
+       "name": "prev",
+       "value": "dummy"
+      },
+      {
+       "name": "list",
+       "value": "1->6->2->7->3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Drop large normal: start, prev dummy, list 1->6->2->7->3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "D",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "D = dummy; remove values above 5"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "prev"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "prev always points at a node that stays"
+       }
+      ]
+     }
+    },
+    {
+     "event": "keep",
+     "lines": {
+      "cpp": [
+       49
+      ],
+      "python": [
+       47
+      ],
+      "java": [
+       50
+      ],
+      "go": [
+       83
+      ]
+     },
+     "explanation": "1 is at most 5, so keep it and move prev onto it.",
+     "variables": [
+      {
+       "name": "prev",
+       "value": "1"
+      },
+      {
+       "name": "list",
+       "value": "1->6->2->7->3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Drop large normal: keep, prev 1, list 1->6->2->7->3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "D",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "D = dummy; remove values above 5"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "prev"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "prev always points at a node that stays"
+       }
+      ]
+     }
+    },
+    {
+     "event": "remove",
+     "lines": {
+      "cpp": [
+       46
+      ],
+      "python": [
+       44
+      ],
+      "java": [
+       47
+      ],
+      "go": [
+       76,
+       77,
+       78,
+       79
+      ]
+     },
+     "explanation": "The node after node 1 holds 6, which is larger than 5. Skip it: point node 1 at the node after it. prev stays put, because the new next node hasn't been checked yet. List: 1->2->7->3.",
+     "variables": [
+      {
+       "name": "prev",
+       "value": "1"
+      },
+      {
+       "name": "list",
+       "value": "1->2->7->3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Drop large normal: remove, prev 1, list 1->2->7->3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "D",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "D = dummy; remove values above 5"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "prev"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "prev always points at a node that stays"
+       }
+      ]
+     }
+    },
+    {
+     "event": "keep",
+     "lines": {
+      "cpp": [
+       49
+      ],
+      "python": [
+       47
+      ],
+      "java": [
+       50
+      ],
+      "go": [
+       83
+      ]
+     },
+     "explanation": "2 is at most 5, so keep it and move prev onto it.",
+     "variables": [
+      {
+       "name": "prev",
+       "value": "2"
+      },
+      {
+       "name": "list",
+       "value": "1->2->7->3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Drop large normal: keep, prev 2, list 1->2->7->3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "D",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "D = dummy; remove values above 5"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "prev"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "prev always points at a node that stays"
+       }
+      ]
+     }
+    },
+    {
+     "event": "remove",
+     "lines": {
+      "cpp": [
+       46
+      ],
+      "python": [
+       44
+      ],
+      "java": [
+       47
+      ],
+      "go": [
+       76,
+       77,
+       78,
+       79
+      ]
+     },
+     "explanation": "The node after node 2 holds 7, which is larger than 5. Skip it: point node 2 at the node after it. prev stays put, because the new next node hasn't been checked yet. List: 1->2->3.",
+     "variables": [
+      {
+       "name": "prev",
+       "value": "2"
+      },
+      {
+       "name": "list",
+       "value": "1->2->3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Drop large normal: remove, prev 2, list 1->2->3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "D",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "D = dummy; remove values above 5"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "prev"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "prev always points at a node that stays"
+       }
+      ]
+     }
+    },
+    {
+     "event": "keep",
+     "lines": {
+      "cpp": [
+       49
+      ],
+      "python": [
+       47
+      ],
+      "java": [
+       50
+      ],
+      "go": [
+       83
+      ]
+     },
+     "explanation": "3 is at most 5, so keep it and move prev onto it.",
+     "variables": [
+      {
+       "name": "prev",
+       "value": "3"
+      },
+      {
+       "name": "list",
+       "value": "1->2->3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Drop large normal: keep, prev 3, list 1->2->3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "D",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "D = dummy; remove values above 5"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "prev"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "prev always points at a node that stays"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       54
+      ],
+      "python": [
+       50
+      ],
+      "java": [
+       55
+      ],
+      "go": [
+       88
+      ]
+     },
+     "explanation": "The answer starts at dummy.next: 1->2->3. Because of the dummy, removing the original head needed no special case.",
+     "variables": [
+      {
+       "name": "prev",
+       "value": "-"
+      },
+      {
+       "name": "list",
+       "value": "1->2->3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Drop large normal: done, prev -, list 1->2->3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "D",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "D = dummy; remove values above 5"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "prev always points at a node that stays"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-head",
+   "label": "The first nodes are removed",
+   "input": "3 5\n9 9 1\n",
+   "expectedOutput": "1",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       41,
+       42
+      ],
+      "python": [
+       39,
+       40
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       71,
+       72
+      ]
+     },
+     "explanation": "Remove every node larger than 5 from 9->9->1. A dummy node sits in front of the head, so even the first node has a node before it. prev starts at the dummy.",
+     "variables": [
+      {
+       "name": "prev",
+       "value": "dummy"
+      },
+      {
+       "name": "list",
+       "value": "9->9->1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Drop large edge-head: start, prev dummy, list 9->9->1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "D",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "D = dummy; remove values above 5"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "prev"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "prev always points at a node that stays"
+       }
+      ]
+     }
+    },
+    {
+     "event": "remove",
+     "lines": {
+      "cpp": [
+       46
+      ],
+      "python": [
+       44
+      ],
+      "java": [
+       47
+      ],
+      "go": [
+       76,
+       77,
+       78,
+       79
+      ]
+     },
+     "explanation": "The node after the dummy holds 9, which is larger than 5. Skip it: point the dummy at the node after it. prev stays put, because the new next node hasn't been checked yet. List: 9->1.",
+     "variables": [
+      {
+       "name": "prev",
+       "value": "dummy"
+      },
+      {
+       "name": "list",
+       "value": "9->1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Drop large edge-head: remove, prev dummy, list 9->1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "D",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "D = dummy; remove values above 5"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "prev"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "prev always points at a node that stays"
+       }
+      ]
+     }
+    },
+    {
+     "event": "remove",
+     "lines": {
+      "cpp": [
+       46
+      ],
+      "python": [
+       44
+      ],
+      "java": [
+       47
+      ],
+      "go": [
+       76,
+       77,
+       78,
+       79
+      ]
+     },
+     "explanation": "The node after the dummy holds 9, which is larger than 5. Skip it: point the dummy at the node after it. prev stays put, because the new next node hasn't been checked yet. List: 1.",
+     "variables": [
+      {
+       "name": "prev",
+       "value": "dummy"
+      },
+      {
+       "name": "list",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Drop large edge-head: remove, prev dummy, list 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "D",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "D = dummy; remove values above 5"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "prev"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "prev always points at a node that stays"
+       }
+      ]
+     }
+    },
+    {
+     "event": "keep",
+     "lines": {
+      "cpp": [
+       49
+      ],
+      "python": [
+       47
+      ],
+      "java": [
+       50
+      ],
+      "go": [
+       83
+      ]
+     },
+     "explanation": "1 is at most 5, so keep it and move prev onto it.",
+     "variables": [
+      {
+       "name": "prev",
+       "value": "1"
+      },
+      {
+       "name": "list",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Drop large edge-head: keep, prev 1, list 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "D",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "D = dummy; remove values above 5"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "prev"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "prev always points at a node that stays"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       54
+      ],
+      "python": [
+       50
+      ],
+      "java": [
+       55
+      ],
+      "go": [
+       88
+      ]
+     },
+     "explanation": "The answer starts at dummy.next: 1. Because of the dummy, removing the original head needed no special case.",
+     "variables": [
+      {
+       "name": "prev",
+       "value": "-"
+      },
+      {
+       "name": "list",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Drop large edge-head: done, prev -, list 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "D",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "D = dummy; remove values above 5"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "prev always points at a node that stays"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

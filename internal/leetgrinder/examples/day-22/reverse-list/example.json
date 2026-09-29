@@ -1,0 +1,1191 @@
+{
+ "id": "day-22-reverse-list",
+ "title": "Reverse a linked list, one arrow at a time",
+ "invariant": "prev heads the already-reversed part and cur heads the untouched part; together they hold every node.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 40,
+   "algorithmEnd": 54
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 38,
+   "algorithmEnd": 49
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 41,
+   "algorithmEnd": 54
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 70,
+   "algorithmEnd": 84
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "1->2->3",
+   "input": "3 0\n1 2 3\n",
+   "expectedOutput": "3->2->1",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       41,
+       42
+      ],
+      "python": [
+       39
+      ],
+      "java": [
+       42
+      ],
+      "go": [
+       71,
+       72
+      ]
+     },
+     "explanation": "The list is 1->2->3. prev is empty (nothing reversed yet) and cur is the first node. Each step points one arrow backward.",
+     "variables": [
+      {
+       "name": "reversed",
+       "value": "empty"
+      },
+      {
+       "name": "rest",
+       "value": "1->2->3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reverse normal: start, reversed empty, rest 1->2->3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "rev",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 220,
+        "height": 40,
+        "text": "reversed empty",
+        "role": "result"
+       },
+       {
+        "id": "rest",
+        "shape": "rect",
+        "x": 248,
+        "y": 132,
+        "width": 200,
+        "height": 40,
+        "text": "rest 1->2->3",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = reversed part (reads backward); plain = not yet"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "cur"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "save next, point back, advance"
+       }
+      ]
+     }
+    },
+    {
+     "event": "flip",
+     "lines": {
+      "cpp": [
+       45,
+       46,
+       47,
+       48
+      ],
+      "python": [
+       42,
+       43,
+       44,
+       45
+      ],
+      "java": [
+       45,
+       46,
+       47,
+       48
+      ],
+      "go": [
+       75,
+       76,
+       77,
+       78
+      ]
+     },
+     "explanation": "Save cur.next (2) first, because the next line overwrites it. Point node 1 back at prev. Now prev = 1 heads the reversed part 1, and cur moves to the saved node.",
+     "variables": [
+      {
+       "name": "reversed",
+       "value": "1"
+      },
+      {
+       "name": "rest",
+       "value": "2->3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reverse normal: flip, reversed 1, rest 2->3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "rev",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 220,
+        "height": 40,
+        "text": "reversed 1",
+        "role": "result"
+       },
+       {
+        "id": "rest",
+        "shape": "rect",
+        "x": 248,
+        "y": 132,
+        "width": 200,
+        "height": 40,
+        "text": "rest 2->3",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = reversed part (reads backward); plain = not yet"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "prev"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "cur"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "save next, point back, advance"
+       }
+      ]
+     }
+    },
+    {
+     "event": "flip",
+     "lines": {
+      "cpp": [
+       45,
+       46,
+       47,
+       48
+      ],
+      "python": [
+       42,
+       43,
+       44,
+       45
+      ],
+      "java": [
+       45,
+       46,
+       47,
+       48
+      ],
+      "go": [
+       75,
+       76,
+       77,
+       78
+      ]
+     },
+     "explanation": "Save cur.next (3) first, because the next line overwrites it. Point node 2 back at prev. Now prev = 2 heads the reversed part 2->1, and cur moves to the saved node.",
+     "variables": [
+      {
+       "name": "reversed",
+       "value": "2->1"
+      },
+      {
+       "name": "rest",
+       "value": "3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reverse normal: flip, reversed 2->1, rest 3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "rev",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 220,
+        "height": 40,
+        "text": "reversed 2->1",
+        "role": "result"
+       },
+       {
+        "id": "rest",
+        "shape": "rect",
+        "x": 248,
+        "y": 132,
+        "width": 200,
+        "height": 40,
+        "text": "rest 3",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = reversed part (reads backward); plain = not yet"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "prev"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "cur"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "save next, point back, advance"
+       }
+      ]
+     }
+    },
+    {
+     "event": "flip",
+     "lines": {
+      "cpp": [
+       45,
+       46,
+       47,
+       48
+      ],
+      "python": [
+       42,
+       43,
+       44,
+       45
+      ],
+      "java": [
+       45,
+       46,
+       47,
+       48
+      ],
+      "go": [
+       75,
+       76,
+       77,
+       78
+      ]
+     },
+     "explanation": "Save cur.next (nothing left), because the next line overwrites it. Point node 3 back at prev. Now prev = 3 heads the reversed part 3->2->1, and cur moves to the saved node.",
+     "variables": [
+      {
+       "name": "reversed",
+       "value": "3->2->1"
+      },
+      {
+       "name": "rest",
+       "value": "empty"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reverse normal: flip, reversed 3->2->1, rest empty.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "rev",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 220,
+        "height": 40,
+        "text": "reversed 3->2->1",
+        "role": "result"
+       },
+       {
+        "id": "rest",
+        "shape": "rect",
+        "x": 248,
+        "y": 132,
+        "width": 200,
+        "height": 40,
+        "text": "rest empty",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = reversed part (reads backward); plain = not yet"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "prev"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "save next, point back, advance"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       52
+      ],
+      "python": [
+       48
+      ],
+      "java": [
+       52
+      ],
+      "go": [
+       82
+      ]
+     },
+     "explanation": "cur is empty: every arrow now points backward. The new head is prev: 3->2->1.",
+     "variables": [
+      {
+       "name": "reversed",
+       "value": "3->2->1"
+      },
+      {
+       "name": "rest",
+       "value": "empty"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reverse normal: done, reversed 3->2->1, rest empty.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "rev",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 220,
+        "height": 40,
+        "text": "reversed 3->2->1",
+        "role": "result"
+       },
+       {
+        "id": "rest",
+        "shape": "rect",
+        "x": 248,
+        "y": 132,
+        "width": 200,
+        "height": 40,
+        "text": "rest empty",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = reversed part (reads backward); plain = not yet"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "prev"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "save next, point back, advance"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-single",
+   "label": "One node",
+   "input": "1 0\n7\n",
+   "expectedOutput": "7",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       41,
+       42
+      ],
+      "python": [
+       39
+      ],
+      "java": [
+       42
+      ],
+      "go": [
+       71,
+       72
+      ]
+     },
+     "explanation": "The list is 7. prev is empty (nothing reversed yet) and cur is the first node. Each step points one arrow backward.",
+     "variables": [
+      {
+       "name": "reversed",
+       "value": "empty"
+      },
+      {
+       "name": "rest",
+       "value": "7"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reverse edge-single: start, reversed empty, rest 7.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "rev",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 220,
+        "height": 40,
+        "text": "reversed empty",
+        "role": "result"
+       },
+       {
+        "id": "rest",
+        "shape": "rect",
+        "x": 248,
+        "y": 132,
+        "width": 200,
+        "height": 40,
+        "text": "rest 7",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = reversed part (reads backward); plain = not yet"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "cur"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "save next, point back, advance"
+       }
+      ]
+     }
+    },
+    {
+     "event": "flip",
+     "lines": {
+      "cpp": [
+       45,
+       46,
+       47,
+       48
+      ],
+      "python": [
+       42,
+       43,
+       44,
+       45
+      ],
+      "java": [
+       45,
+       46,
+       47,
+       48
+      ],
+      "go": [
+       75,
+       76,
+       77,
+       78
+      ]
+     },
+     "explanation": "Save cur.next (nothing left), because the next line overwrites it. Point node 7 back at prev. Now prev = 7 heads the reversed part 7, and cur moves to the saved node.",
+     "variables": [
+      {
+       "name": "reversed",
+       "value": "7"
+      },
+      {
+       "name": "rest",
+       "value": "empty"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reverse edge-single: flip, reversed 7, rest empty.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "result"
+       },
+       {
+        "id": "rev",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 220,
+        "height": 40,
+        "text": "reversed 7",
+        "role": "result"
+       },
+       {
+        "id": "rest",
+        "shape": "rect",
+        "x": 248,
+        "y": 132,
+        "width": 200,
+        "height": 40,
+        "text": "rest empty",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = reversed part (reads backward); plain = not yet"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "prev"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "save next, point back, advance"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       52
+      ],
+      "python": [
+       48
+      ],
+      "java": [
+       52
+      ],
+      "go": [
+       82
+      ]
+     },
+     "explanation": "cur is empty: every arrow now points backward. The new head is prev: 7.",
+     "variables": [
+      {
+       "name": "reversed",
+       "value": "7"
+      },
+      {
+       "name": "rest",
+       "value": "empty"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reverse edge-single: done, reversed 7, rest empty.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "result"
+       },
+       {
+        "id": "rev",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 220,
+        "height": 40,
+        "text": "reversed 7",
+        "role": "result"
+       },
+       {
+        "id": "rest",
+        "shape": "rect",
+        "x": 248,
+        "y": 132,
+        "width": 200,
+        "height": 40,
+        "text": "rest empty",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = reversed part (reads backward); plain = not yet"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "prev"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "save next, point back, advance"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-empty",
+   "label": "Empty list",
+   "input": "0 0\n\n",
+   "expectedOutput": "empty",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       41,
+       42
+      ],
+      "python": [
+       39
+      ],
+      "java": [
+       42
+      ],
+      "go": [
+       71,
+       72
+      ]
+     },
+     "explanation": "The list is empty. cur starts as nothing, so there are no arrows to flip.",
+     "variables": [
+      {
+       "name": "reversed",
+       "value": "empty"
+      },
+      {
+       "name": "rest",
+       "value": "empty"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reverse edge-empty: start, reversed empty, rest empty.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "(empty)",
+        "role": "neutral"
+       },
+       {
+        "id": "rev",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 220,
+        "height": 40,
+        "text": "reversed empty",
+        "role": "result"
+       },
+       {
+        "id": "rest",
+        "shape": "rect",
+        "x": 248,
+        "y": 132,
+        "width": 200,
+        "height": 40,
+        "text": "rest empty",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = reversed part (reads backward); plain = not yet"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "save next, point back, advance"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       52
+      ],
+      "python": [
+       48
+      ],
+      "java": [
+       52
+      ],
+      "go": [
+       82
+      ]
+     },
+     "explanation": "cur is empty: every arrow now points backward. The new head is prev: empty.",
+     "variables": [
+      {
+       "name": "reversed",
+       "value": "empty"
+      },
+      {
+       "name": "rest",
+       "value": "empty"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reverse edge-empty: done, reversed empty, rest empty.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "(empty)",
+        "role": "neutral"
+       },
+       {
+        "id": "rev",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 220,
+        "height": 40,
+        "text": "reversed empty",
+        "role": "result"
+       },
+       {
+        "id": "rest",
+        "shape": "rect",
+        "x": 248,
+        "y": 132,
+        "width": 200,
+        "height": 40,
+        "text": "rest empty",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = reversed part (reads backward); plain = not yet"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "save next, point back, advance"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}
