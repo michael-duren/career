@@ -344,5 +344,33 @@ test('codeView hides emit calls and moves their highlight to the traced statemen
   ];
   const view = codeView(lines, 1, lines.length, [3, 6, 9]);
   assert.deepEqual(view.map(entry => entry.number), [1, 2, 4, 5, 8, 10]);
-  assert.deepEqual(view.filter(entry => entry.active).map(entry => entry.number), [2, 5, 10]);
+  assert.deepEqual(view.filter(entry => entry.active).map(entry => entry.number), [2, 4, 5]);
+});
+
+test('codeView maps each hidden emit to the statement it reports on', async () => {
+  const { codeView } = await import('../internal/leetgrinder/lesson_player.js');
+  const lines = [
+    'def solve(values):',
+    '    emit("start")',
+    '    total = 0',
+    '    for value in values:',
+    '        if value:',
+    '            total += value',
+    '        emit("step")',
+    '',
+    '    emit("done")',
+  ];
+  const active = highlighted => codeView(lines, 1, lines.length, highlighted).filter(entry => entry.active).map(entry => entry.number);
+  assert.deepEqual(active([2]), [1], 'emit at the start of a block maps to its header');
+  assert.deepEqual(active([7]), [5], 'emit after a nested block maps to the statement at its own level, not inside the block');
+  assert.deepEqual(active([9]), [4], 'emit after the loop maps to the loop, not into its body');
+  assert.deepEqual(codeView(lines, 2, 3, [2]).filter(entry => entry.active).map(entry => entry.number), [3], 'emit at the start of the shown range maps forward');
+  assert.deepEqual(codeView(lines, 3, 9, [9]).filter(entry => entry.active).map(entry => entry.number), [4], 'emit at the end of the shown range maps back');
+});
+
+test('codeView ignores parentheses inside strings and never hides past an unbalanced emit', async () => {
+  const { codeView } = await import('../internal/leetgrinder/lesson_player.js');
+  const lines = ['x = 1', 'emit("open (", x=x)', 'y = 2', 'emit(', 'z = 3'];
+  const numbers = codeView(lines, 1, lines.length, []).map(entry => entry.number);
+  assert.deepEqual(numbers, [1, 3, 5]);
 });

@@ -32,8 +32,8 @@ templ lessonContent(content LessonContent) {
 					for _, section := range content.Sections {
 						<li><a href={ templ.SafeURL("#" + section.ID) }>{ section.Nav() }</a></li>
 					}
-					<li><a href="#practice-title">Practice problems</a></li>
 					<li><a href="#lesson-references">References</a></li>
+					<li><a href="#practice-title">Practice problems</a></li>
 				</ol>
 			</nav>
 		</div>

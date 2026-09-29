@@ -137,12 +137,26 @@ export function codeView(lines, first, last, highlighted) {
   for (let i = first - 1; i < end; i++) {
     if (!/^\s*emit\(/.test(lines[i])) continue;
     let depth = 0;
+    let quote = null;
     let j = i;
-    for (; j < lines.length; j++) {
-      for (const ch of lines[j]) depth += ch === '(' ? 1 : ch === ')' ? -1 : 0;
-      hidden.add(j + 1);
+    for (; j < end; j++) {
+      const text = lines[j];
+      for (let k = 0; k < text.length; k++) {
+        const ch = text[k];
+        if (quote) {
+          if (ch === '\\') k++;
+          else if (ch === quote) quote = null;
+        } else if (ch === '"' || ch === "'" || ch === '`') quote = ch;
+        else if (ch === '(') depth++;
+        else if (ch === ')') depth--;
+      }
       if (depth <= 0) break;
     }
+    if (depth > 0) {
+      hidden.add(i + 1);
+      continue;
+    }
+    for (let k = i; k <= j; k++) hidden.add(k + 1);
     i = j;
   }
   const indent = n => lines[n - 1].match(/^\s*/)[0].replace(/\t/g, '    ').length;
@@ -153,11 +167,11 @@ export function codeView(lines, first, last, highlighted) {
   for (const n of highlighted) {
     if (!hidden.has(n)) { active.add(n); continue; }
     const depth = indent(n);
-    const before = visible.filter(v => v < n && !blank(v)).pop();
+    const before = visible.filter(v => v < n && !blank(v) && indent(v) <= depth).pop();
     const after = visible.find(v => v > n && !blank(v) && indent(v) <= depth);
-    if (before !== undefined && indent(before) <= depth) active.add(before);
-    else if (after !== undefined) active.add(after);
-    else if (before !== undefined) active.add(before);
+    const fallback = visible.filter(v => !blank(v)).find(v => v > n) ?? visible.filter(v => !blank(v)).pop();
+    const target = before ?? after ?? fallback;
+    if (target !== undefined) active.add(target);
   }
   return visible.map(number => ({ number, active: active.has(number) }));
 }
@@ -382,7 +396,14 @@ export function mountLessonExamples(root = document) {
   if (root.getAttribute?.('data-lesson-example') != null) {
     elements.unshift(root);
   }
-  const controllers = elements.map(mountExample);
+  const controllers = [];
+  for (const element of elements) {
+    try {
+      controllers.push(mountExample(element));
+    } catch (error) {
+      console.error('Lesson example failed to mount; showing its static fallback.', error);
+    }
+  }
   return () => { for (const controller of controllers) controller.destroy(); };
 }
 
@@ -424,7 +445,7 @@ export function mountLessonNav(root = document) {
 }
 
 if (typeof document !== 'undefined') {
-  const start = () => { mountLessonExamples(); mountLessonNav(document); };
+  const start = () => { mountLessonNav(document); mountLessonExamples(); };
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', start, { once: true });
   } else {

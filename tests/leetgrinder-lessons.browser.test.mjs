@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { spawn, execFileSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { readdirSync } from 'node:fs';
+import { codeView } from '../internal/leetgrinder/lesson_player.js';
 
 const port = 18097;
 const origin = `http://127.0.0.1:${port}`;
@@ -80,9 +81,11 @@ test('authored lessons render and the SVG player controls real page content', { 
             await tab.click();
             assert.equal(await tab.getAttribute('aria-selected'), 'true');
             const activeLines = await example.locator('.lesson-player-code .is-active').evaluateAll(lines => lines.map(line => Number(line.dataset.line)));
-            const sourceLines = payload.sources[language].split('\n');
-            const traced = frame.lines[language].filter(n => !/^\s*emit\(/.test(sourceLines[n - 1]));
-            assert.ok(traced.every(n => activeLines.includes(n)) && activeLines.length > 0, `${payload.id}/${traceCase.id}/${language} lines at frame ${frameIndex}: ${activeLines} vs ${frame.lines[language]}`);
+            const sourceLines = payload.sources[language].replace(/\n$/, '').split('\n');
+            const variant = payload.variants.find(item => item.language === language);
+            const expected = codeView(sourceLines, variant.algorithmStart, variant.algorithmEnd, frame.lines[language]).filter(entry => entry.active).map(entry => entry.number);
+            assert.ok(expected.length > 0, `${payload.id}/${traceCase.id}/${language} frame ${frameIndex} highlights nothing`);
+            assert.deepEqual(activeLines, expected, `${payload.id}/${traceCase.id}/${language} lines at frame ${frameIndex}`);
             assert.ok(activeLines.every(n => !/^\s*emit\(/.test(sourceLines[n - 1])), `${payload.id}/${traceCase.id}/${language} highlights trace output at frame ${frameIndex}`);
           }
         }
