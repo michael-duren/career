@@ -80,7 +80,10 @@ test('authored lessons render and the SVG player controls real page content', { 
             await tab.click();
             assert.equal(await tab.getAttribute('aria-selected'), 'true');
             const activeLines = await example.locator('.lesson-player-code .is-active').evaluateAll(lines => lines.map(line => Number(line.dataset.line)));
-            assert.deepEqual(activeLines, frame.lines[language], `${payload.id}/${traceCase.id}/${language} lines at frame ${frameIndex}`);
+            const sourceLines = payload.sources[language].split('\n');
+            const traced = frame.lines[language].filter(n => !/^\s*emit\(/.test(sourceLines[n - 1]));
+            assert.ok(traced.every(n => activeLines.includes(n)) && activeLines.length > 0, `${payload.id}/${traceCase.id}/${language} lines at frame ${frameIndex}: ${activeLines} vs ${frame.lines[language]}`);
+            assert.ok(activeLines.every(n => !/^\s*emit\(/.test(sourceLines[n - 1])), `${payload.id}/${traceCase.id}/${language} highlights trace output at frame ${frameIndex}`);
           }
         }
         assert.equal(await example.getByRole('button', { name: 'Next' }).isDisabled(), true);

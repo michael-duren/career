@@ -129,6 +129,39 @@ function rememberLanguage(win, language) {
   try { win.localStorage.setItem(STORAGE_KEY, language); } catch { /* Storage is optional. */ }
 }
 
+// Trace instrumentation (emit calls) is hidden from the displayed algorithm. A highlight on a hidden
+// line moves to the statement it reports on: the previous line in the same block, or the block header.
+export function codeView(lines, first, last, highlighted) {
+  const end = Math.min(last, lines.length);
+  const hidden = new Set();
+  for (let i = first - 1; i < end; i++) {
+    if (!/^\s*emit\(/.test(lines[i])) continue;
+    let depth = 0;
+    let j = i;
+    for (; j < lines.length; j++) {
+      for (const ch of lines[j]) depth += ch === '(' ? 1 : ch === ')' ? -1 : 0;
+      hidden.add(j + 1);
+      if (depth <= 0) break;
+    }
+    i = j;
+  }
+  const indent = n => lines[n - 1].match(/^\s*/)[0].replace(/\t/g, '    ').length;
+  const blank = n => !lines[n - 1].trim() || /^[})\]]+;?$/.test(lines[n - 1].trim());
+  const visible = [];
+  for (let n = first; n <= end; n++) if (!hidden.has(n)) visible.push(n);
+  const active = new Set();
+  for (const n of highlighted) {
+    if (!hidden.has(n)) { active.add(n); continue; }
+    const depth = indent(n);
+    const before = visible.filter(v => v < n && !blank(v)).pop();
+    const after = visible.find(v => v > n && !blank(v) && indent(v) <= depth);
+    if (before !== undefined && indent(before) <= depth) active.add(before);
+    else if (after !== undefined) active.add(after);
+    else if (before !== undefined) active.add(before);
+  }
+  return visible.map(number => ({ number, active: active.has(number) }));
+}
+
 export function mountExample(element) {
   if (mounted.has(element)) return mounted.get(element);
   const doc = element.ownerDocument;
@@ -146,32 +179,35 @@ export function mountExample(element) {
   if (!example.variants.some(v => v.language === language)) language = example.variants[0].language;
   let playback = createPlayback(example.cases[0].frames.length);
   const ui = make(doc, 'div', 'lesson-player', element);
-  const caseLabel = make(doc, 'label', 'lesson-player-case-label', ui, 'Case');
+  const toolbar = make(doc, 'div', 'lesson-player-toolbar', ui);
+  const caseLabel = make(doc, 'label', 'lesson-player-case-label', toolbar, 'Case');
   const caseSelect = make(doc, 'select', 'lesson-player-case', caseLabel);
   for (const traceCase of example.cases) {
     const option = make(doc, 'option', '', caseSelect, traceCase.label);
     option.value = traceCase.id;
   }
-  const region = make(doc, 'div', 'lesson-player-diagram-region', ui);
+  const controls = make(doc, 'div', 'lesson-player-controls', toolbar);
+  const stage = make(doc, 'div', 'lesson-player-stage', ui);
+  const region = make(doc, 'div', 'lesson-player-diagram-region', stage);
   region.setAttribute('role', 'region');
   region.setAttribute('aria-label', 'Algorithm diagram, scrollable when needed');
   region.tabIndex = 0;
   const svg = svgNode(doc, 'svg', { role: 'img', class: 'lesson-player-svg' }, region);
-  make(doc, 'p', 'lesson-player-diagram-hint', ui, 'Swipe diagram to see the rest.');
-  const legend = make(doc, 'div', 'lesson-player-legend', ui);
+  make(doc, 'p', 'lesson-player-diagram-hint', stage, 'Swipe diagram to see the rest.');
+  const legend = make(doc, 'div', 'lesson-player-legend', stage);
   legend.setAttribute('aria-label', 'Diagram color and outline key');
   for (const role of ['neutral', 'active', 'visited', 'discarded', 'result']) {
     make(doc, 'span', `scene-${role}`, legend, role[0].toUpperCase() + role.slice(1));
   }
-  const explanation = make(doc, 'p', 'lesson-player-explanation', ui);
+  const explanation = make(doc, 'p', 'lesson-player-explanation', stage);
   explanation.setAttribute('aria-live', 'off');
-  const variables = make(doc, 'table', 'lesson-player-variables', ui);
-  const caption = make(doc, 'caption', '', variables, 'Current variables');
+  const variables = make(doc, 'table', 'lesson-player-variables', stage);
+  make(doc, 'caption', '', variables, 'Current variables');
   const tbody = make(doc, 'tbody', '', variables);
-  const status = make(doc, 'span', 'lesson-player-status', ui);
+  const status = make(doc, 'span', 'lesson-player-status visually-hidden', stage);
   status.setAttribute('aria-live', 'polite');
   status.setAttribute('aria-atomic', 'true');
-  const controls = make(doc, 'div', 'lesson-player-controls', ui);
+  const source = make(doc, 'div', 'lesson-player-source', ui);
   const buttons = {};
   for (const [action, label] of Object.entries({ start: 'Start', previous: 'Previous', play: 'Play', stop: 'Stop', next: 'Next' })) {
     buttons[action] = make(doc, 'button', `lesson-player-${action}`, controls, label);
@@ -183,10 +219,10 @@ export function mountExample(element) {
     const option = make(doc, 'option', '', speedSelect, `${value}×`);
     option.value = String(value);
   }
-  const tablist = make(doc, 'div', 'lesson-player-tabs', ui);
+  const tablist = make(doc, 'div', 'lesson-player-tabs', source);
   tablist.setAttribute('role', 'tablist');
   tablist.setAttribute('aria-label', 'Programming language');
-  const codePanel = make(doc, 'div', 'lesson-player-code-panel', ui);
+  const codePanel = make(doc, 'div', 'lesson-player-code-panel', source);
   codePanel.id = `${prefix}-panel`;
   codePanel.setAttribute('role', 'tabpanel');
   codePanel.tabIndex = 0;
@@ -225,18 +261,17 @@ export function mountExample(element) {
   }
   function renderCode(frame) {
     code.replaceChildren();
-    const highlighted = new Set(frame.lines[language] || []);
     const source = example.sources?.[language] || '';
     const lines = source.replace(/\n$/, '').split('\n');
     const variant = example.variants.find(item => item.language === language);
-    const first = variant?.algorithmStart || 1;
-    const last = variant?.algorithmEnd || lines.length;
+    const view = codeView(lines, variant?.algorithmStart || 1, variant?.algorithmEnd || lines.length, frame.lines[language] || []);
     fullCode.textContent = source;
-    for (let i = first - 1; i < Math.min(last, lines.length); i++) {
-      const line = make(doc, 'span', highlighted.has(i + 1) ? 'lesson-code-line is-active' : 'lesson-code-line', code);
-      line.setAttribute('data-line', String(i + 1));
-      line.textContent = `${i + 1}  ${lines[i]}`;
-    }
+    const width = String(view.length).length;
+    view.forEach((entry, index) => {
+      const line = make(doc, 'span', entry.active ? 'lesson-code-line is-active' : 'lesson-code-line', code);
+      line.setAttribute('data-line', String(entry.number));
+      line.textContent = `${String(index + 1).padStart(width)}  ${lines[entry.number - 1]}`;
+    });
   }
   function renderTranscript() {
     transcriptBody.replaceChildren();
@@ -351,10 +386,48 @@ export function mountLessonExamples(root = document) {
   return () => { for (const controller of controllers) controller.destroy(); };
 }
 
+// Highlights the "On this page" link for the section currently at the top of the viewport.
+export function mountLessonNav(root = document) {
+  const nav = root.querySelector('.lesson-toc');
+  if (!nav) return () => {};
+  const win = root.defaultView || root.ownerDocument?.defaultView;
+  const links = [...nav.querySelectorAll('a[href^="#"]')]
+    .map(link => ({ link, target: root.getElementById?.(link.getAttribute('href').slice(1)) || root.ownerDocument?.getElementById(link.getAttribute('href').slice(1)) }))
+    .filter(entry => entry.target);
+  let frame = 0;
+  let shown = null;
+  function update() {
+    frame = 0;
+    let current = links[0];
+    for (const entry of links) {
+      if (entry.target.getBoundingClientRect().top <= win.innerHeight * 0.3) current = entry;
+    }
+    for (const entry of links) entry.link.setAttribute('aria-current', String(entry === current));
+    const list = current?.link.closest('ol');
+    if (current && current !== shown && list && list.scrollWidth > list.clientWidth) {
+      const item = current.link;
+      if (item.offsetLeft < list.scrollLeft || item.offsetLeft + item.offsetWidth > list.scrollLeft + list.clientWidth) {
+        list.scrollTo({ left: item.offsetLeft - 24, behavior: 'smooth' });
+      }
+    }
+    shown = current;
+  }
+  function schedule() { if (!frame) frame = win.requestAnimationFrame(update); }
+  win.addEventListener('scroll', schedule, { passive: true });
+  win.addEventListener('resize', schedule);
+  update();
+  return () => {
+    win.removeEventListener('scroll', schedule);
+    win.removeEventListener('resize', schedule);
+    if (frame) win.cancelAnimationFrame(frame);
+  };
+}
+
 if (typeof document !== 'undefined') {
+  const start = () => { mountLessonExamples(); mountLessonNav(document); };
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => mountLessonExamples(), { once: true });
+    document.addEventListener('DOMContentLoaded', start, { once: true });
   } else {
-    mountLessonExamples();
+    start();
   }
 }

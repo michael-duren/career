@@ -3,7 +3,7 @@ package leetgrinder
 templ lessonExample(example ExampleContent) {
 	<section class="lesson-example" data-lesson-example={ example.ID }>
 		<h4>{ example.Title }</h4>
-		<p class="example-invariant">{ example.Invariant }</p>
+		<p class="example-invariant"><span>What stays true</span> { example.Invariant }</p>
 		<template class="trace-payload" data-player-data>{ exampleJSON(example) }</template>
 		<div data-player-fallback>
 			<p>Initial state for the first case: { example.Cases[0].Label }</p>

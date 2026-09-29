@@ -18,12 +18,55 @@ type LessonContent struct {
 type LessonSection struct {
 	ID         string           `json:"id"`
 	Heading    string           `json:"heading"`
+	NavLabel   string           `json:"navLabel"`
 	Paragraphs []string         `json:"paragraphs"`
 	Bullets    []string         `json:"bullets"`
 	Diagram    *Scene           `json:"diagram"`
 	ExampleIDs []string         `json:"exampleIds"`
 	Checks     []KnowledgeCheck `json:"checks"`
+	Callout    *Callout         `json:"callout"`
 	Optional   bool             `json:"optional"`
+}
+
+// Callout kinds: "key" (core idea), "watch" (common mistake), "try" (something to do in the player).
+type Callout struct {
+	Kind  string `json:"kind"`
+	Title string `json:"title"`
+	Text  string `json:"text"`
+}
+
+func calloutTitle(c Callout) string {
+	if c.Title != "" {
+		return c.Title
+	}
+	return map[string]string{"key": "Key idea", "watch": "Watch out", "try": "Try it"}[c.Kind]
+}
+
+func (s LessonSection) Nav() string {
+	if s.NavLabel != "" {
+		return s.NavLabel
+	}
+	return s.Heading
+}
+
+type inlinePart struct {
+	Text string
+	Code bool
+}
+
+// inlineParts splits authored text on backticks so `x` renders as code.
+func inlineParts(text string) []inlinePart {
+	pieces := strings.Split(text, "`")
+	if len(pieces)%2 == 0 {
+		return []inlinePart{{Text: text}}
+	}
+	parts := make([]inlinePart, 0, len(pieces))
+	for i, piece := range pieces {
+		if piece != "" {
+			parts = append(parts, inlinePart{Text: piece, Code: i%2 == 1})
+		}
+	}
+	return parts
 }
 type KnowledgeCheck struct {
 	Prompt string `json:"prompt"`
@@ -189,6 +232,9 @@ func ValidateLessonContent(lesson LessonContent) error {
 			return fmt.Errorf("day %d invalid section %q", lesson.Day, s.ID)
 		}
 		seen[s.ID] = true
+		if c := s.Callout; c != nil && (c.Text == "" || (c.Kind != "key" && c.Kind != "watch" && c.Kind != "try")) {
+			return fmt.Errorf("day %d section %s: callout needs text and kind key, watch, or try", lesson.Day, s.ID)
+		}
 		if s.Diagram != nil {
 			if err := validateScene(*s.Diagram); err != nil {
 				return fmt.Errorf("day %d section %s: %w", lesson.Day, s.ID, err)

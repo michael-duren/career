@@ -82,7 +82,7 @@ func TestMockKeepsPatternGuidanceBehindReview(t *testing.T) {
 	if strings.Contains(body, "Reading path") {
 		t.Fatal("duplicate reading panel remains")
 	}
-	if references := strings.Index(body, `<footer class="lesson-references">`); references < start || references > end {
+	if references := strings.Index(body, `<footer class="lesson-references"`); references < start || references > end {
 		t.Fatal("mixed-practice references must stay inside the review disclosure")
 	}
 }

@@ -323,7 +323,26 @@ test('player shows algorithm lines and folds the complete runnable source', () =
   const { root } = host(document, data);
   mountExample(root);
   assert.equal(root.querySelector('.lesson-player-code').querySelectorAll('.lesson-code-line').length, 1);
-  assert.match(root.querySelector('.lesson-player-code').textContent, /2  two/);
+  assert.match(root.querySelector('.lesson-player-code').textContent, /1  two/);
   assert.equal(Boolean(root.querySelector('.lesson-player-full-source').open), false);
   assert.match(root.querySelector('.lesson-player-full-source').textContent, /one/);
+});
+
+test('codeView hides emit calls and moves their highlight to the traced statement', async () => {
+  const { codeView } = await import('../internal/leetgrinder/lesson_player.js');
+  const lines = [
+    'def solve(values):',
+    '    total = 0',
+    '    emit("start", total=total)',
+    '    for value in values:',
+    '        total += value',
+    '        emit("add",',
+    '             total=total)',
+    '',
+    '    emit("done", total=total)',
+    '    return total',
+  ];
+  const view = codeView(lines, 1, lines.length, [3, 6, 9]);
+  assert.deepEqual(view.map(entry => entry.number), [1, 2, 4, 5, 8, 10]);
+  assert.deepEqual(view.filter(entry => entry.active).map(entry => entry.number), [2, 5, 10]);
 });

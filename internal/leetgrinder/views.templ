@@ -287,27 +287,27 @@ templ Session(page DayPage) {
 				{ page.Error }
 			</p>
 		}
+		<section class="lesson panel" aria-labelledby="lesson-title">
+			if page.Day.MixedPractice() {
+				<p class="eyebrow">01 / CHOOSE AN APPROACH</p>
+				<h2 id="lesson-title">Attempt first, then review</h2>
+				<p class="muted">For mixed practice, choose a technique before opening the guidance. Explain your baseline and invariant before coding.</p>
+				<details class="review-guidance">
+					<summary>Review after your attempts</summary>
+					<div class="prose">
+						@Lesson(page.Day.Lesson)
+					</div>
+				</details>
+			} else {
+				<p class="eyebrow">01 / UNDERSTAND</p>
+				<h2 id="lesson-title">Before you start</h2>
+				<div class="prose">
+					@Lesson(page.Day.Lesson)
+				</div>
+			}
+		</section>
 		<div class="session-grid">
 			<div>
-				<section class="lesson panel" aria-labelledby="lesson-title">
-					if page.Day.MixedPractice() {
-						<p class="eyebrow">01 / CHOOSE AN APPROACH</p>
-						<h2 id="lesson-title">Attempt first, then review</h2>
-						<p class="muted">For mixed practice, choose a technique before opening the guidance. Explain your baseline and invariant before coding.</p>
-						<details class="review-guidance">
-							<summary>Review after your attempts</summary>
-							<div class="prose">
-								@Lesson(page.Day.Lesson)
-							</div>
-						</details>
-					} else {
-						<p class="eyebrow">01 / UNDERSTAND</p>
-						<h2 id="lesson-title">Before you start</h2>
-						<div class="prose">
-							@Lesson(page.Day.Lesson)
-						</div>
-					}
-				</section>
 				if page.ShowReviews() {
 					@todaysReviews(*page.Today, page.IDs, page.Day.Number, "")
 				}
