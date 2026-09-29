@@ -1,0 +1,30 @@
+import json
+import sys
+
+def emit(event, i, current, state, answer):
+    values = [('i', i), ('current', current), ('state', state), ('answer', answer)]
+    print(json.dumps({'event': event, 'variables': [{'name': name, 'value': str(value)} for name, value in values]}, separators=(',', ':')))
+
+def result(answer):
+    print(json.dumps({'result': answer}, separators=(',', ':')))
+
+def show(values):
+    return ','.join(map(str, values)) if values else 'empty'
+
+tokens = list(map(int, sys.stdin.read().split()))
+n = tokens[0]
+first = tokens[1:1+n]
+m = tokens[1+n]
+second = tokens[2+n:2+n+m]
+source = set(first)
+emitted = set()
+out = []
+emit("start", -1, '-', 'emitted=empty', 'empty')
+for i, value in enumerate(second):
+    if value in source and value not in emitted:
+        emitted.add(value)
+        out.append(value)
+    emit("step", i, value, 'emitted='+show(out), show(out))
+answer = show(out)
+emit("done", len(second), '-', 'emitted='+show(out), answer)
+result(answer)

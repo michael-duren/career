@@ -1,0 +1,1248 @@
+{
+  "id": "day-04-multiset-counts",
+  "title": "Spend from a frequency map",
+  "invariant": "Before each request, remaining[x] equals first-array copies of x not yet emitted.",
+  "variants": [
+    {
+      "language": "cpp",
+      "file": "main.cpp",
+      "algorithmStart": 34,
+      "algorithmEnd": 42
+    },
+    {
+      "language": "python",
+      "file": "main.py",
+      "algorithmStart": 23,
+      "algorithmEnd": 31
+    },
+    {
+      "language": "java",
+      "file": "Main.java",
+      "algorithmStart": 22,
+      "algorithmEnd": 30
+    },
+    {
+      "language": "go",
+      "file": "main.go.txt",
+      "algorithmStart": 30,
+      "algorithmEnd": 38
+    }
+  ],
+  "cases": [
+    {
+      "id": "repeated",
+      "label": "Two copies among three requests",
+      "input": "3\n4 4 7\n4\n4 4 4 9\n",
+      "expectedOutput": "4,4",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              34
+            ],
+            "python": [
+              23
+            ],
+            "java": [
+              22
+            ],
+            "go": [
+              30
+            ]
+          },
+          "explanation": "The frequency table contains every available first-array copy before requests begin.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "-1"
+            },
+            {
+              "name": "current",
+              "value": "-"
+            },
+            {
+              "name": "state",
+              "value": "remaining4=2"
+            },
+            {
+              "name": "answer",
+              "value": "empty"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection repeated: consume second-array value -; remaining4=2; output empty.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "-",
+                "role": "neutral"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "remaining4=2",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "empty",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "start \u2022 step -1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              38
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              26
+            ],
+            "go": [
+              34
+            ]
+          },
+          "explanation": "Request 4 checks its positive balance before matching. remaining4=1; result 4. A zero balance forbids another copy.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "current",
+              "value": "4"
+            },
+            {
+              "name": "state",
+              "value": "remaining4=1"
+            },
+            {
+              "name": "answer",
+              "value": "4"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection repeated: consume second-array value 4; remaining4=1; output 4.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "remaining4=1",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              38
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              26
+            ],
+            "go": [
+              34
+            ]
+          },
+          "explanation": "Request 4 checks its positive balance before matching. remaining4=0; result 4,4. A zero balance forbids another copy.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "current",
+              "value": "4"
+            },
+            {
+              "name": "state",
+              "value": "remaining4=0"
+            },
+            {
+              "name": "answer",
+              "value": "4,4"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection repeated: consume second-array value 4; remaining4=0; output 4,4.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "remaining4=0",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4,4",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              38
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              26
+            ],
+            "go": [
+              34
+            ]
+          },
+          "explanation": "Request 4 checks its positive balance before matching. remaining4=0; result 4,4. A zero balance forbids another copy.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "current",
+              "value": "4"
+            },
+            {
+              "name": "state",
+              "value": "remaining4=0"
+            },
+            {
+              "name": "answer",
+              "value": "4,4"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection repeated: consume second-array value 4; remaining4=0; output 4,4.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "remaining4=0",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4,4",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              38
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              26
+            ],
+            "go": [
+              34
+            ]
+          },
+          "explanation": "Request 9 checks its positive balance before matching. remaining4=0; result 4,4. A zero balance forbids another copy.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "current",
+              "value": "9"
+            },
+            {
+              "name": "state",
+              "value": "remaining4=0"
+            },
+            {
+              "name": "answer",
+              "value": "4,4"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection repeated: consume second-array value 9; remaining4=0; output 4,4.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "9",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "remaining4=0",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4,4",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 3"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              41
+            ],
+            "python": [
+              30
+            ],
+            "java": [
+              29
+            ],
+            "go": [
+              37
+            ]
+          },
+          "explanation": "The second array is exhausted. The stable-order intersection is 4,4.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "4"
+            },
+            {
+              "name": "current",
+              "value": "-"
+            },
+            {
+              "name": "state",
+              "value": "remaining4=0"
+            },
+            {
+              "name": "answer",
+              "value": "4,4"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection repeated: consume second-array value -; remaining4=0; output 4,4.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "-",
+                "role": "neutral"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "remaining4=0",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4,4",
+                "role": "result"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "done \u2022 step 4"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-exhausted",
+      "label": "Zero balance prevents a third match",
+      "input": "2\n4 4\n3\n4 4 4\n",
+      "expectedOutput": "4,4",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              34
+            ],
+            "python": [
+              23
+            ],
+            "java": [
+              22
+            ],
+            "go": [
+              30
+            ]
+          },
+          "explanation": "The frequency table contains every available first-array copy before requests begin.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "-1"
+            },
+            {
+              "name": "current",
+              "value": "-"
+            },
+            {
+              "name": "state",
+              "value": "remaining4=2"
+            },
+            {
+              "name": "answer",
+              "value": "empty"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection edge-exhausted: consume second-array value -; remaining4=2; output empty.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "-",
+                "role": "neutral"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "remaining4=2",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "empty",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "start \u2022 step -1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              38
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              26
+            ],
+            "go": [
+              34
+            ]
+          },
+          "explanation": "Request 4 checks its positive balance before matching. remaining4=1; result 4. A zero balance forbids another copy.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "current",
+              "value": "4"
+            },
+            {
+              "name": "state",
+              "value": "remaining4=1"
+            },
+            {
+              "name": "answer",
+              "value": "4"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection edge-exhausted: consume second-array value 4; remaining4=1; output 4.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "remaining4=1",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              38
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              26
+            ],
+            "go": [
+              34
+            ]
+          },
+          "explanation": "Request 4 checks its positive balance before matching. remaining4=0; result 4,4. A zero balance forbids another copy.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "current",
+              "value": "4"
+            },
+            {
+              "name": "state",
+              "value": "remaining4=0"
+            },
+            {
+              "name": "answer",
+              "value": "4,4"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection edge-exhausted: consume second-array value 4; remaining4=0; output 4,4.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "remaining4=0",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4,4",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              38
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              26
+            ],
+            "go": [
+              34
+            ]
+          },
+          "explanation": "Request 4 checks its positive balance before matching. remaining4=0; result 4,4. A zero balance forbids another copy.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "current",
+              "value": "4"
+            },
+            {
+              "name": "state",
+              "value": "remaining4=0"
+            },
+            {
+              "name": "answer",
+              "value": "4,4"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection edge-exhausted: consume second-array value 4; remaining4=0; output 4,4.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "remaining4=0",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4,4",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              41
+            ],
+            "python": [
+              30
+            ],
+            "java": [
+              29
+            ],
+            "go": [
+              37
+            ]
+          },
+          "explanation": "The second array is exhausted. The stable-order intersection is 4,4.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "current",
+              "value": "-"
+            },
+            {
+              "name": "state",
+              "value": "remaining4=0"
+            },
+            {
+              "name": "answer",
+              "value": "4,4"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection edge-exhausted: consume second-array value -; remaining4=0; output 4,4.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "-",
+                "role": "neutral"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "remaining4=0",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4,4",
+                "role": "result"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "done \u2022 step 3"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

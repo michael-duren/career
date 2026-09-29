@@ -1,0 +1,38 @@
+package main
+
+import (
+    "bufio"
+    "encoding/json"
+    "fmt"
+    "os"
+    "strconv"
+    "strings"
+)
+
+type variable struct { Name string `json:"name"`; Value string `json:"value"` }
+type eventRecord struct { Event string `json:"event"`; Variables []variable `json:"variables"` }
+type resultRecord struct { Result string `json:"result"` }
+func emit(event string, i int, current, state, answer string) {
+    record := eventRecord{event, []variable{{"i",strconv.Itoa(i)},{"current",current},{"state",state},{"answer",answer}}}
+    data, _ := json.Marshal(record); fmt.Println(string(data))
+}
+func result(answer string) { data,_:=json.Marshal(resultRecord{answer});fmt.Println(string(data)) }
+func show(values []int) string {
+    if len(values)==0 {return "empty"}
+    parts:=make([]string,len(values));for i,value:=range values {parts[i]=strconv.Itoa(value)}
+    return strings.Join(parts,",")
+}
+func main() {
+    in:=bufio.NewReader(os.Stdin)
+    var n,m int;fmt.Fscan(in,&n);first:=make([]int,n);for i:=range first {fmt.Fscan(in,&first[i])}
+    fmt.Fscan(in,&m);used:=make([]bool,n);usedCount:=0;out:=[]int{}
+    emit("start",-1,"-","used=0","empty")
+    for i:=0;i<m;i++ {
+        var value int;fmt.Fscan(in,&value)
+        for j,candidate:=range first {if !used[j] && candidate==value {used[j]=true;usedCount++;out=append(out,value);break}}
+        emit("step",i,strconv.Itoa(value),"used="+strconv.Itoa(usedCount),show(out))
+    }
+    answer:=show(out)
+    emit("done",m,"-","used="+strconv.Itoa(usedCount),answer)
+    result(answer)
+}

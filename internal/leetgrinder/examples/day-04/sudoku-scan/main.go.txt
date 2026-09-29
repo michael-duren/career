@@ -1,0 +1,35 @@
+package main
+
+import (
+    "bufio"
+    "encoding/json"
+    "fmt"
+    "os"
+    "strconv"
+)
+
+type variable struct { Name string `json:"name"`; Value string `json:"value"` }
+type eventRecord struct { Event string `json:"event"`; Variables []variable `json:"variables"` }
+type resultRecord struct { Result string `json:"result"` }
+func emit(event string, i int, current, state, answer string) {
+    record := eventRecord{event, []variable{{"i",strconv.Itoa(i)},{"current",current},{"state",state},{"answer",answer}}}
+    data, _ := json.Marshal(record); fmt.Println(string(data))
+}
+func result(answer string) { data,_:=json.Marshal(resultRecord{answer});fmt.Println(string(data)) }
+func main() {
+    in:=bufio.NewReader(os.Stdin)
+    board:=make([]string,9);for i:=range board {fmt.Fscan(in,&board[i])}
+    type clue struct{r,c int;digit byte};clues:=[]clue{};step:=0;answer:="true"
+    emit("start",-1,"-","checked=0","pending")
+    for r:=0;r<9 && answer=="true";r++ {for c:=0;c<9;c++ {
+        digit:=board[r][c];if digit=='.' {continue}
+        for _,old:=range clues {if old.digit==digit && (old.r==r || old.c==c || (old.r/3==r/3 && old.c/3==c/3)) {answer="false";break}}
+        current:=string(digit)+"@"+strconv.Itoa(r)+","+strconv.Itoa(c)
+        if answer=="false" {emit("conflict",step,current,"checked="+strconv.Itoa(len(clues)),answer);break}
+        clues=append(clues,clue{r,c,digit})
+        emit("check",step,current,"checked="+strconv.Itoa(len(clues)),"pending")
+        step++
+    }}
+    emit("done",step,"-","checked="+strconv.Itoa(len(clues)),answer)
+    result(answer)
+}

@@ -21,6 +21,31 @@ def strings(value):
             yield from strings(item)
 
 
+def code_lines(value: str) -> list[str]:
+    return [" ".join(line.split()) for line in value.splitlines() if line.strip()]
+
+
+def find_code_overlaps(root: Path, corpus: Path, width: int = 5) -> list[tuple[Path, Path]]:
+    fingerprints = {}
+    for article in corpus.rglob("*.md"):
+        for block in re.findall(r"```[^\n]*\n(.*?)\n```", article.read_text(errors="replace"), re.DOTALL):
+            lines = code_lines(block)
+            for index in range(len(lines) - width + 1):
+                fingerprints.setdefault(tuple(lines[index:index + width]), article)
+
+    examples = root / "internal/leetgrinder/examples"
+    matches = set()
+    for file in examples.glob("day-*/*/*"):
+        if not file.is_file() or file.name not in {"main.cpp", "main.py", "Main.java", "main.go.txt"}:
+            continue
+        lines = code_lines(file.read_text())
+        for index in range(len(lines) - width + 1):
+            article = fingerprints.get(tuple(lines[index:index + width]))
+            if article:
+                matches.add((file.relative_to(root), article.relative_to(corpus)))
+    return sorted(matches)
+
+
 def find_overlaps(root: Path, corpus: Path, width: int = 15) -> list[tuple[Path, Path]]:
     fingerprints = {}
     for article in corpus.rglob("*.md"):
@@ -53,7 +78,11 @@ def main():
     for authored, article in matches:
         print(f"{authored}: 15-word exact overlap with {article}")
     print(f"{len(matches)} authored/source file pairs with long exact prose overlap")
-    raise SystemExit(bool(matches))
+    code_matches = find_code_overlaps(args.root, args.corpus)
+    for authored, article in code_matches:
+        print(f"{authored}: five-line exact code overlap with {article}")
+    print(f"{len(code_matches)} program/source file pairs with five-line exact code overlap")
+    raise SystemExit(bool(matches or code_matches))
 
 
 if __name__ == "__main__":

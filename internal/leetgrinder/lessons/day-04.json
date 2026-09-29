@@ -1,0 +1,210 @@
+{
+  "day": 4,
+  "objectives": [
+    "Choose a set or count map based on whether copies matter.",
+    "Prove cycle termination using complete visited states or Floyd slow and fast pointers.",
+    "Validate Sudoku clues with separate row, column, and box constraints."
+  ],
+  "prerequisites": [
+    1,
+    2,
+    3
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "heading": "Intuition: one value, three kinds of memory",
+      "paragraphs": [
+        "A set remembers whether a value has appeared. A frequency map remembers how many copies are still available. A visited-state set remembers which complete states a deterministic transition has produced. These questions sound similar but require different information.",
+        "For [4,4,7] and [4,4,4,9], distinct intersection is [4]. Multiset intersection is [4,4]. The third request for 4 has no unused source copy. In Happy Number, seeing the same state twice means the future sequence is trapped in the same loop."
+      ],
+      "diagram": {
+        "width": 520,
+        "height": 220,
+        "description": "A 4 is present as a set member, appears twice as a multiset supply, and can recur as a digit-square state.",
+        "nodes": [
+          {
+            "id": "set",
+            "shape": "rect",
+            "x": 15,
+            "y": 65,
+            "width": 145,
+            "height": 58,
+            "text": "set: {4}",
+            "role": "neutral"
+          },
+          {
+            "id": "count",
+            "shape": "rect",
+            "x": 187,
+            "y": 65,
+            "width": 145,
+            "height": 58,
+            "text": "count[4]: 2",
+            "role": "neutral"
+          },
+          {
+            "id": "visited",
+            "shape": "rect",
+            "x": 359,
+            "y": 65,
+            "width": 145,
+            "height": 58,
+            "text": "seen: {4}",
+            "role": "neutral"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "set-l",
+            "x": 15,
+            "y": 45,
+            "text": "membership only"
+          },
+          {
+            "id": "count-l",
+            "x": 187,
+            "y": 45,
+            "text": "copies available"
+          },
+          {
+            "id": "visited-l",
+            "x": 359,
+            "y": 45,
+            "text": "state history"
+          },
+          {
+            "id": "meaning",
+            "x": 15,
+            "y": 165,
+            "text": "Pick the stored fact from the question, then write its invariant."
+          }
+        ]
+      }
+    },
+    {
+      "id": "definitions",
+      "heading": "Definitions and recognition cues",
+      "paragraphs": [
+        "A mathematical set has one copy of each value. A multiset records multiplicity. Hash tables give expected constant-time membership and updates; the key itself is still compared for equality when hashes collide.",
+        "For Happy Number, f(n) adds the squares of the decimal digits. For example f(19)=1\u00b2+9\u00b2=82, f(82)=68, f(68)=100, and f(100)=1. The transition is deterministic. Reaching 1 succeeds; revisiting any non-1 value fails.",
+        "Sudoku validation inspects only filled clues. A digit may appear at most once in each row, column, and 3x3 box. A box is indexed by (row/3)*3+column/3 using zero-based integer division. A valid partial board need not be solvable."
+      ],
+      "bullets": [
+        "Use a membership set when duplicates are irrelevant.",
+        "Use counts or consumed positions when each copy may be spent once.",
+        "Use visited states or Floyd pointers when a deterministic process may repeat.",
+        "Use separate region sets when one item participates in several independent uniqueness constraints."
+      ]
+    },
+    {
+      "id": "distinct",
+      "heading": "Worked example: distinct intersection",
+      "paragraphs": [
+        "Build a set from the first array. Traverse the second array. Emit a value only if it belongs to the first set and has not already been emitted. The emitted set prevents a second 4 from becoming another result.",
+        "After each second-array position, emitted contains exactly the common values encountered so far, each once. A disjoint edge case leaves both the result and emitted set empty."
+      ],
+      "exampleIds": [
+        "day-04-distinct"
+      ]
+    },
+    {
+      "id": "multiset-baseline",
+      "heading": "A correct baseline: scan and consume positions",
+      "paragraphs": [
+        "Mark every source position unused. For each request in the second array, scan source positions until one equal unused value appears. Mark that one position used and append the value. If none appears, do not append.",
+        "The used flag belongs to a position, not a value. Two source positions holding 4 can satisfy two requests. A third request cannot reuse either position. The nested scan performs up to n checks for each of m requests."
+      ],
+      "exampleIds": [
+        "day-04-multiset-baseline"
+      ]
+    },
+    {
+      "id": "multiset-counts",
+      "heading": "Worked example: spend counts instead of rescanning",
+      "paragraphs": [
+        "Count all values in the first array. For each requested value in the second array, append it only if its count is positive, then decrease that count. The map entry is remaining supply, not the number already emitted.",
+        "The demo counts the first array to keep its output in second-array order. Since the problem accepts any order, production code can count the shorter array and traverse the longer one to use O(min(n,m)) map entries. This change also changes the order of emitted values."
+      ],
+      "exampleIds": [
+        "day-04-multiset-counts"
+      ]
+    },
+    {
+      "id": "happy-baseline",
+      "heading": "A correct baseline: remember digit-square states",
+      "paragraphs": [
+        "Start with the positive input. Before transforming it, check whether it is 1 or already in seen. If neither holds, record it and compute the next digit-square value. No arbitrary iteration limit is needed.",
+        "On input 2, the sequence eventually repeats a non-1 value. The repeated value has the same next value as before, so every subsequent value repeats too. Storing only the final digit or another incomplete state would not justify stopping."
+      ],
+      "exampleIds": [
+        "day-04-happy-visited"
+      ]
+    },
+    {
+      "id": "happy-floyd",
+      "heading": "Worked example: detect the cycle with two pointers",
+      "paragraphs": [
+        "The digit-square function defines a one-way graph in which every state has exactly one outgoing edge. Advance slow by one transition and fast by two. Once they have moved, a meeting away from 1 proves both pointers are inside a cycle. If either reaches 1, the input is happy.",
+        "The initial equality of slow and fast is not a cycle proof because neither moved. On 19, a pointer reaches 1. On 2, they eventually meet in the loop outside 1. The pointers store two integers, so auxiliary space is O(1)."
+      ],
+      "exampleIds": [
+        "day-04-happy-floyd"
+      ]
+    },
+    {
+      "id": "sudoku-baseline",
+      "heading": "A correct baseline: compare each clue with earlier clues",
+      "paragraphs": [
+        "Scan the board in row-major order. For each filled cell, compare it with every earlier filled cell. Equal digits conflict if their rows match, columns match, or both lie in the same 3x3 box. Dots are empty and do not enter the comparison.",
+        "If the current clue passes, all processed clue pairs are valid. The edge board places a 5 at (0,0) and another at (1,1). Their rows and columns differ, but both are in box 0."
+      ],
+      "exampleIds": [
+        "day-04-sudoku-scan"
+      ]
+    },
+    {
+      "id": "sudoku-sets",
+      "heading": "Worked example: separate row, column, and box sets",
+      "paragraphs": [
+        "Maintain nine row sets, nine column sets, and nine box sets. For a filled cell, check its digit in all three of its regions before insertion. A hit in any one region rejects the board. Otherwise add the digit to all three sets.",
+        "The sets must be separate. A global digit set would reject a 5 in unrelated regions. A row-only or column-only check misses the (0,0) and (1,1) box conflict. The box formula groups exactly three neighboring rows and columns."
+      ],
+      "exampleIds": [
+        "day-04-sudoku-sets"
+      ]
+    },
+    {
+      "id": "complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Let n and m be the two array lengths, k the number of output values, and d the number of distinct values counted. Distinct intersection and count-based multiset intersection use expected O(n+m) hash operations. The shown count demo uses O(d) auxiliary map space because it counts the first array; counting the shorter side reduces that to O(min(n,m)). Output storage adds O(k). The scan-and-consume baseline uses O(nm) time and O(n) used flags.",
+        "For Happy Number, each digit-square transition processes the digits of its current value. The visited-set method stores s sequence states; Floyd uses two values and O(1) auxiliary space. Once values fall into a bounded region, both stop after a finite number of transitions. Do not call Floyd on an arbitrary nondeterministic process: a state must have one reproducible next state.",
+        "For Sudoku, the fixed 9x9 board makes all asymptotic costs constant under the problem contract. Descriptively, pairwise comparison uses up to O(c\u00b2) checks for c clues, while region sets inspect each of 81 cells once and store at most 81 clue memberships per region family. Validate clue ranges and board dimensions when accepting untrusted input; these examples use the stated 9x9 contract."
+      ]
+    },
+    {
+      "id": "checks",
+      "heading": "Before you finish",
+      "checks": [
+        {
+          "prompt": "Why does a set give the wrong answer for Intersection of Two Arrays II when both arrays contain repeated 4s?",
+          "answer": "A set records only existence. Intersection II must spend each source copy at most once, so use a count or a consumed-position flag."
+        },
+        {
+          "prompt": "Why must Floyd pointers move before their equality is tested?",
+          "answer": "They start equal by construction. After one and two transitions, meeting outside 1 shows the two positions entered a cycle."
+        },
+        {
+          "prompt": "Can a valid Sudoku board have two 5s in different rows and columns?",
+          "answer": "Yes, if they are also in different 3x3 boxes. The second example puts them in the same box, so it is invalid."
+        },
+        {
+          "prompt": "What changes if a Happy Number state is represented only by its last decimal digit?",
+          "answer": "That projection loses digits that affect the next digit-square sum. Repeating the projection does not prove the full state repeats."
+        }
+      ]
+    }
+  ]
+}

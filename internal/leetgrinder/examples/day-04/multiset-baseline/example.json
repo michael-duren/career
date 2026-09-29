@@ -1,0 +1,1248 @@
+{
+  "id": "day-04-multiset-baseline",
+  "title": "Scan and consume one copy",
+  "invariant": "An unused first-array index is one available copy; used indices never match again.",
+  "variants": [
+    {
+      "language": "cpp",
+      "file": "main.cpp",
+      "algorithmStart": 32,
+      "algorithmEnd": 40
+    },
+    {
+      "language": "python",
+      "file": "main.py",
+      "algorithmStart": 21,
+      "algorithmEnd": 31
+    },
+    {
+      "language": "java",
+      "file": "Main.java",
+      "algorithmStart": 21,
+      "algorithmEnd": 29
+    },
+    {
+      "language": "go",
+      "file": "main.go.txt",
+      "algorithmStart": 29,
+      "algorithmEnd": 37
+    }
+  ],
+  "cases": [
+    {
+      "id": "repeated",
+      "label": "Two copies among three requests",
+      "input": "3\n4 4 7\n4\n4 4 4 9\n",
+      "expectedOutput": "4,4",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              32
+            ],
+            "python": [
+              21
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              29
+            ]
+          },
+          "explanation": "Every first-array position is available before scanning the requests.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "-1"
+            },
+            {
+              "name": "current",
+              "value": "-"
+            },
+            {
+              "name": "state",
+              "value": "used=0"
+            },
+            {
+              "name": "answer",
+              "value": "empty"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection repeated: consume second-array value -; used=0; output empty.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "-",
+                "role": "neutral"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "used=0",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "empty",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "start \u2022 step -1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              36
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              25
+            ],
+            "go": [
+              33
+            ]
+          },
+          "explanation": "Request 4 scans unused source positions. used=1; result 4. Each match consumes one position.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "current",
+              "value": "4"
+            },
+            {
+              "name": "state",
+              "value": "used=1"
+            },
+            {
+              "name": "answer",
+              "value": "4"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection repeated: consume second-array value 4; used=1; output 4.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "used=1",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              36
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              25
+            ],
+            "go": [
+              33
+            ]
+          },
+          "explanation": "Request 4 scans unused source positions. used=2; result 4,4. Each match consumes one position.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "current",
+              "value": "4"
+            },
+            {
+              "name": "state",
+              "value": "used=2"
+            },
+            {
+              "name": "answer",
+              "value": "4,4"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection repeated: consume second-array value 4; used=2; output 4,4.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "used=2",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4,4",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              36
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              25
+            ],
+            "go": [
+              33
+            ]
+          },
+          "explanation": "Request 4 scans unused source positions. used=2; result 4,4. Each match consumes one position.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "current",
+              "value": "4"
+            },
+            {
+              "name": "state",
+              "value": "used=2"
+            },
+            {
+              "name": "answer",
+              "value": "4,4"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection repeated: consume second-array value 4; used=2; output 4,4.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "used=2",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4,4",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              36
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              25
+            ],
+            "go": [
+              33
+            ]
+          },
+          "explanation": "Request 9 scans unused source positions. used=2; result 4,4. Each match consumes one position.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "current",
+              "value": "9"
+            },
+            {
+              "name": "state",
+              "value": "used=2"
+            },
+            {
+              "name": "answer",
+              "value": "4,4"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection repeated: consume second-array value 9; used=2; output 4,4.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "9",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "used=2",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4,4",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 3"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              39
+            ],
+            "python": [
+              30
+            ],
+            "java": [
+              28
+            ],
+            "go": [
+              36
+            ]
+          },
+          "explanation": "The second array is exhausted. The stable-order intersection is 4,4.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "4"
+            },
+            {
+              "name": "current",
+              "value": "-"
+            },
+            {
+              "name": "state",
+              "value": "used=2"
+            },
+            {
+              "name": "answer",
+              "value": "4,4"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection repeated: consume second-array value -; used=2; output 4,4.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "-",
+                "role": "neutral"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "used=2",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4,4",
+                "role": "result"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "done \u2022 step 4"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-exhausted",
+      "label": "A third request finds no unused copy",
+      "input": "2\n4 4\n3\n4 4 4\n",
+      "expectedOutput": "4,4",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              32
+            ],
+            "python": [
+              21
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              29
+            ]
+          },
+          "explanation": "Every first-array position is available before scanning the requests.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "-1"
+            },
+            {
+              "name": "current",
+              "value": "-"
+            },
+            {
+              "name": "state",
+              "value": "used=0"
+            },
+            {
+              "name": "answer",
+              "value": "empty"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection edge-exhausted: consume second-array value -; used=0; output empty.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "-",
+                "role": "neutral"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "used=0",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "empty",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "start \u2022 step -1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              36
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              25
+            ],
+            "go": [
+              33
+            ]
+          },
+          "explanation": "Request 4 scans unused source positions. used=1; result 4. Each match consumes one position.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "current",
+              "value": "4"
+            },
+            {
+              "name": "state",
+              "value": "used=1"
+            },
+            {
+              "name": "answer",
+              "value": "4"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection edge-exhausted: consume second-array value 4; used=1; output 4.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "used=1",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              36
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              25
+            ],
+            "go": [
+              33
+            ]
+          },
+          "explanation": "Request 4 scans unused source positions. used=2; result 4,4. Each match consumes one position.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "current",
+              "value": "4"
+            },
+            {
+              "name": "state",
+              "value": "used=2"
+            },
+            {
+              "name": "answer",
+              "value": "4,4"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection edge-exhausted: consume second-array value 4; used=2; output 4,4.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "used=2",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4,4",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              36
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              25
+            ],
+            "go": [
+              33
+            ]
+          },
+          "explanation": "Request 4 scans unused source positions. used=2; result 4,4. Each match consumes one position.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "current",
+              "value": "4"
+            },
+            {
+              "name": "state",
+              "value": "used=2"
+            },
+            {
+              "name": "answer",
+              "value": "4,4"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection edge-exhausted: consume second-array value 4; used=2; output 4,4.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "used=2",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4,4",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              39
+            ],
+            "python": [
+              30
+            ],
+            "java": [
+              28
+            ],
+            "go": [
+              36
+            ]
+          },
+          "explanation": "The second array is exhausted. The stable-order intersection is 4,4.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "current",
+              "value": "-"
+            },
+            {
+              "name": "state",
+              "value": "used=2"
+            },
+            {
+              "name": "answer",
+              "value": "4,4"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Intersection edge-exhausted: consume second-array value -; used=2; output 4,4.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "-",
+                "role": "neutral"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "used=2",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4,4",
+                "role": "result"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "second-array value"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "available or emitted state"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "output so far"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "done \u2022 step 3"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

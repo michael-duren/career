@@ -1,0 +1,1902 @@
+{
+  "id": "day-04-happy-visited",
+  "title": "Remember each digit-square state",
+  "invariant": "Before each transition, seen contains exactly the previously visited values.",
+  "variants": [
+    {
+      "language": "cpp",
+      "file": "main.cpp",
+      "algorithmStart": 29,
+      "algorithmEnd": 37
+    },
+    {
+      "language": "python",
+      "file": "main.py",
+      "algorithmStart": 21,
+      "algorithmEnd": 29
+    },
+    {
+      "language": "java",
+      "file": "Main.java",
+      "algorithmStart": 19,
+      "algorithmEnd": 27
+    },
+    {
+      "language": "go",
+      "file": "main.go.txt",
+      "algorithmStart": 23,
+      "algorithmEnd": 31
+    }
+  ],
+  "cases": [
+    {
+      "id": "reaches-one",
+      "label": "19 reaches 1",
+      "input": "19\n",
+      "expectedOutput": "true",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              29
+            ],
+            "python": [
+              21
+            ],
+            "java": [
+              19
+            ],
+            "go": [
+              23
+            ]
+          },
+          "explanation": "The first digit-square state has not been visited. Repetition is tested before each transition.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "-1"
+            },
+            {
+              "name": "current",
+              "value": "19"
+            },
+            {
+              "name": "state",
+              "value": "seen=0"
+            },
+            {
+              "name": "answer",
+              "value": "pending"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Happy Number reaches-one: transition at step -1 reaches 19; seen=0; decision pending.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "19",
+                "role": "neutral"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "seen=0",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "pending",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "digit-square state"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "visited count"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "decision"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "start \u2022 step -1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              32
+            ],
+            "python": [
+              25
+            ],
+            "java": [
+              22
+            ],
+            "go": [
+              26
+            ]
+          },
+          "explanation": "The previous value was recorded, then one digit-square transition produced 82. seen=1; the next loop test detects 1 or repetition.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "current",
+              "value": "82"
+            },
+            {
+              "name": "state",
+              "value": "seen=1"
+            },
+            {
+              "name": "answer",
+              "value": "pending"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Happy Number reaches-one: transition at step 0 reaches 82; seen=1; decision pending.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "82",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "seen=1",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "pending",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "digit-square state"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "visited count"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "decision"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              32
+            ],
+            "python": [
+              25
+            ],
+            "java": [
+              22
+            ],
+            "go": [
+              26
+            ]
+          },
+          "explanation": "The previous value was recorded, then one digit-square transition produced 68. seen=2; the next loop test detects 1 or repetition.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "current",
+              "value": "68"
+            },
+            {
+              "name": "state",
+              "value": "seen=2"
+            },
+            {
+              "name": "answer",
+              "value": "pending"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Happy Number reaches-one: transition at step 1 reaches 68; seen=2; decision pending.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "68",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "seen=2",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "pending",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "digit-square state"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "visited count"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "decision"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              32
+            ],
+            "python": [
+              25
+            ],
+            "java": [
+              22
+            ],
+            "go": [
+              26
+            ]
+          },
+          "explanation": "The previous value was recorded, then one digit-square transition produced 100. seen=3; the next loop test detects 1 or repetition.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "current",
+              "value": "100"
+            },
+            {
+              "name": "state",
+              "value": "seen=3"
+            },
+            {
+              "name": "answer",
+              "value": "pending"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Happy Number reaches-one: transition at step 2 reaches 100; seen=3; decision pending.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "100",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "seen=3",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "pending",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "digit-square state"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "visited count"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "decision"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              32
+            ],
+            "python": [
+              25
+            ],
+            "java": [
+              22
+            ],
+            "go": [
+              26
+            ]
+          },
+          "explanation": "The previous value was recorded, then one digit-square transition produced 1. seen=4; the next loop test detects 1 or repetition.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "current",
+              "value": "1"
+            },
+            {
+              "name": "state",
+              "value": "seen=4"
+            },
+            {
+              "name": "answer",
+              "value": "pending"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Happy Number reaches-one: transition at step 3 reaches 1; seen=4; decision pending.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "1",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "seen=4",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "pending",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "digit-square state"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "visited count"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "decision"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 3"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              36
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              26
+            ],
+            "go": [
+              30
+            ]
+          },
+          "explanation": "The transition process ends at 1. A pointer reached 1; the answer is true.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "4"
+            },
+            {
+              "name": "current",
+              "value": "1"
+            },
+            {
+              "name": "state",
+              "value": "seen=4"
+            },
+            {
+              "name": "answer",
+              "value": "true"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Happy Number reaches-one: transition at step 4 reaches 1; seen=4; decision true.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "seen=4",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "true",
+                "role": "result"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "digit-square state"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "visited count"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "decision"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "done \u2022 step 4"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-cycle",
+      "label": "2 enters a repeated-state cycle",
+      "input": "2\n",
+      "expectedOutput": "false",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              29
+            ],
+            "python": [
+              21
+            ],
+            "java": [
+              19
+            ],
+            "go": [
+              23
+            ]
+          },
+          "explanation": "The first digit-square state has not been visited. Repetition is tested before each transition.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "-1"
+            },
+            {
+              "name": "current",
+              "value": "2"
+            },
+            {
+              "name": "state",
+              "value": "seen=0"
+            },
+            {
+              "name": "answer",
+              "value": "pending"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Happy Number edge-cycle: transition at step -1 reaches 2; seen=0; decision pending.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "2",
+                "role": "neutral"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "seen=0",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "pending",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "digit-square state"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "visited count"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "decision"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "start \u2022 step -1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              32
+            ],
+            "python": [
+              25
+            ],
+            "java": [
+              22
+            ],
+            "go": [
+              26
+            ]
+          },
+          "explanation": "The previous value was recorded, then one digit-square transition produced 4. seen=1; the next loop test detects 1 or repetition.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "current",
+              "value": "4"
+            },
+            {
+              "name": "state",
+              "value": "seen=1"
+            },
+            {
+              "name": "answer",
+              "value": "pending"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Happy Number edge-cycle: transition at step 0 reaches 4; seen=1; decision pending.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "seen=1",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "pending",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "digit-square state"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "visited count"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "decision"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 0"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              32
+            ],
+            "python": [
+              25
+            ],
+            "java": [
+              22
+            ],
+            "go": [
+              26
+            ]
+          },
+          "explanation": "The previous value was recorded, then one digit-square transition produced 16. seen=2; the next loop test detects 1 or repetition.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "current",
+              "value": "16"
+            },
+            {
+              "name": "state",
+              "value": "seen=2"
+            },
+            {
+              "name": "answer",
+              "value": "pending"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Happy Number edge-cycle: transition at step 1 reaches 16; seen=2; decision pending.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "16",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "seen=2",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "pending",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "digit-square state"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "visited count"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "decision"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 1"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              32
+            ],
+            "python": [
+              25
+            ],
+            "java": [
+              22
+            ],
+            "go": [
+              26
+            ]
+          },
+          "explanation": "The previous value was recorded, then one digit-square transition produced 37. seen=3; the next loop test detects 1 or repetition.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "current",
+              "value": "37"
+            },
+            {
+              "name": "state",
+              "value": "seen=3"
+            },
+            {
+              "name": "answer",
+              "value": "pending"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Happy Number edge-cycle: transition at step 2 reaches 37; seen=3; decision pending.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "37",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "seen=3",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "pending",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "digit-square state"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "visited count"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "decision"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 2"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              32
+            ],
+            "python": [
+              25
+            ],
+            "java": [
+              22
+            ],
+            "go": [
+              26
+            ]
+          },
+          "explanation": "The previous value was recorded, then one digit-square transition produced 58. seen=4; the next loop test detects 1 or repetition.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "current",
+              "value": "58"
+            },
+            {
+              "name": "state",
+              "value": "seen=4"
+            },
+            {
+              "name": "answer",
+              "value": "pending"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Happy Number edge-cycle: transition at step 3 reaches 58; seen=4; decision pending.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "58",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "seen=4",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "pending",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "digit-square state"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "visited count"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "decision"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 3"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              32
+            ],
+            "python": [
+              25
+            ],
+            "java": [
+              22
+            ],
+            "go": [
+              26
+            ]
+          },
+          "explanation": "The previous value was recorded, then one digit-square transition produced 89. seen=5; the next loop test detects 1 or repetition.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "4"
+            },
+            {
+              "name": "current",
+              "value": "89"
+            },
+            {
+              "name": "state",
+              "value": "seen=5"
+            },
+            {
+              "name": "answer",
+              "value": "pending"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Happy Number edge-cycle: transition at step 4 reaches 89; seen=5; decision pending.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "89",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "seen=5",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "pending",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "digit-square state"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "visited count"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "decision"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 4"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              32
+            ],
+            "python": [
+              25
+            ],
+            "java": [
+              22
+            ],
+            "go": [
+              26
+            ]
+          },
+          "explanation": "The previous value was recorded, then one digit-square transition produced 145. seen=6; the next loop test detects 1 or repetition.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "5"
+            },
+            {
+              "name": "current",
+              "value": "145"
+            },
+            {
+              "name": "state",
+              "value": "seen=6"
+            },
+            {
+              "name": "answer",
+              "value": "pending"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Happy Number edge-cycle: transition at step 5 reaches 145; seen=6; decision pending.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "145",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "seen=6",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "pending",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "digit-square state"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "visited count"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "decision"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 5"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              32
+            ],
+            "python": [
+              25
+            ],
+            "java": [
+              22
+            ],
+            "go": [
+              26
+            ]
+          },
+          "explanation": "The previous value was recorded, then one digit-square transition produced 42. seen=7; the next loop test detects 1 or repetition.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "6"
+            },
+            {
+              "name": "current",
+              "value": "42"
+            },
+            {
+              "name": "state",
+              "value": "seen=7"
+            },
+            {
+              "name": "answer",
+              "value": "pending"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Happy Number edge-cycle: transition at step 6 reaches 42; seen=7; decision pending.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "42",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "seen=7",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "pending",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "digit-square state"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "visited count"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "decision"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 6"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              32
+            ],
+            "python": [
+              25
+            ],
+            "java": [
+              22
+            ],
+            "go": [
+              26
+            ]
+          },
+          "explanation": "The previous value was recorded, then one digit-square transition produced 20. seen=8; the next loop test detects 1 or repetition.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "7"
+            },
+            {
+              "name": "current",
+              "value": "20"
+            },
+            {
+              "name": "state",
+              "value": "seen=8"
+            },
+            {
+              "name": "answer",
+              "value": "pending"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Happy Number edge-cycle: transition at step 7 reaches 20; seen=8; decision pending.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "20",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "seen=8",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "pending",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "digit-square state"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "visited count"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "decision"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 7"
+              }
+            ]
+          }
+        },
+        {
+          "event": "step",
+          "lines": {
+            "cpp": [
+              32
+            ],
+            "python": [
+              25
+            ],
+            "java": [
+              22
+            ],
+            "go": [
+              26
+            ]
+          },
+          "explanation": "The previous value was recorded, then one digit-square transition produced 4. seen=9; the next loop test detects 1 or repetition.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "8"
+            },
+            {
+              "name": "current",
+              "value": "4"
+            },
+            {
+              "name": "state",
+              "value": "seen=9"
+            },
+            {
+              "name": "answer",
+              "value": "pending"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Happy Number edge-cycle: transition at step 8 reaches 4; seen=9; decision pending.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "active"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "seen=9",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "pending",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "digit-square state"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "visited count"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "decision"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "step \u2022 step 8"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              36
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              26
+            ],
+            "go": [
+              30
+            ]
+          },
+          "explanation": "The transition process ends at 4. A repeated state proves a loop outside 1; the answer is false.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "9"
+            },
+            {
+              "name": "current",
+              "value": "4"
+            },
+            {
+              "name": "state",
+              "value": "seen=9"
+            },
+            {
+              "name": "answer",
+              "value": "false"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 205,
+            "description": "Happy Number edge-cycle: transition at step 9 reaches 4; seen=9; decision false.",
+            "nodes": [
+              {
+                "id": "input",
+                "shape": "rect",
+                "x": 14,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "4",
+                "role": "neutral"
+              },
+              {
+                "id": "state",
+                "shape": "rect",
+                "x": 183,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "seen=9",
+                "role": "neutral"
+              },
+              {
+                "id": "output",
+                "shape": "rect",
+                "x": 352,
+                "y": 53,
+                "width": 153,
+                "height": 58,
+                "text": "false",
+                "role": "discarded"
+              }
+            ],
+            "edges": [
+              {
+                "id": "state-to-output",
+                "from": "state",
+                "to": "output",
+                "label": "decides",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 14,
+                "y": 37,
+                "text": "digit-square state"
+              },
+              {
+                "id": "label-1",
+                "x": 183,
+                "y": 37,
+                "text": "visited count"
+              },
+              {
+                "id": "label-2",
+                "x": 352,
+                "y": 37,
+                "text": "decision"
+              },
+              {
+                "id": "step-label",
+                "x": 14,
+                "y": 160,
+                "text": "done \u2022 step 9"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
