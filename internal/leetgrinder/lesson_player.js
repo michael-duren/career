@@ -157,6 +157,7 @@ export function mountExample(element) {
   region.setAttribute('aria-label', 'Algorithm diagram, scrollable when needed');
   region.tabIndex = 0;
   const svg = svgNode(doc, 'svg', { role: 'img', class: 'lesson-player-svg' }, region);
+  make(doc, 'p', 'lesson-player-diagram-hint', ui, 'Swipe diagram to see the rest.');
   const legend = make(doc, 'div', 'lesson-player-legend', ui);
   legend.setAttribute('aria-label', 'Diagram color and outline key');
   for (const role of ['neutral', 'active', 'visited', 'discarded', 'result']) {
