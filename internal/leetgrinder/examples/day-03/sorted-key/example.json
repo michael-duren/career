@@ -1,0 +1,1149 @@
+{
+  "id": "day-03-sorted-key",
+  "title": "Group anagrams by sorted-letter keys",
+  "invariant": "After every processed word, the key-to-group map places exactly the visited words with equal sorted-letter strings in one group.",
+  "variants": [
+    {
+      "language": "cpp",
+      "file": "main.cpp",
+      "algorithmStart": 21,
+      "algorithmEnd": 30
+    },
+    {
+      "language": "python",
+      "file": "main.py",
+      "algorithmStart": 15,
+      "algorithmEnd": 24
+    },
+    {
+      "language": "java",
+      "file": "Main.java",
+      "algorithmStart": 15,
+      "algorithmEnd": 24
+    },
+    {
+      "language": "go",
+      "file": "main.go.txt",
+      "algorithmStart": 16,
+      "algorithmEnd": 24
+    }
+  ],
+  "cases": [
+    {
+      "id": "normal",
+      "label": "Shared sorted letters",
+      "input": "4\nstone\ntones\nnote\neat\n",
+      "expectedOutput": "stone,tones|note|eat",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              21
+            ],
+            "python": [
+              15
+            ],
+            "java": [
+              15
+            ],
+            "go": [
+              16
+            ]
+          },
+          "explanation": "No words have been assigned to a group.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "-1"
+            },
+            {
+              "name": "word",
+              "value": "-"
+            },
+            {
+              "name": "key",
+              "value": "-"
+            },
+            {
+              "name": "groups",
+              "value": "-"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 188,
+            "description": "The current word - has key - and accumulated groups -",
+            "nodes": [
+              {
+                "id": "word",
+                "shape": "rect",
+                "x": 16,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "-",
+                "role": "neutral"
+              },
+              {
+                "id": "canonical-key",
+                "shape": "rect",
+                "x": 182,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "-",
+                "role": "neutral"
+              },
+              {
+                "id": "groups",
+                "shape": "rect",
+                "x": 348,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "no groups yet",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 16,
+                "y": 49,
+                "text": "word"
+              },
+              {
+                "id": "label-1",
+                "x": 182,
+                "y": 49,
+                "text": "canonical key"
+              },
+              {
+                "id": "label-2",
+                "x": 348,
+                "y": 49,
+                "text": "groups"
+              },
+              {
+                "id": "status",
+                "x": 16,
+                "y": 165,
+                "text": "step -1 \u2022 start"
+              }
+            ]
+          }
+        },
+        {
+          "event": "group",
+          "lines": {
+            "cpp": [
+              27
+            ],
+            "python": [
+              22
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              21
+            ]
+          },
+          "explanation": "stone produces the canonical key enost. The key identifies its anagram class; the groups now contain stone.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "word",
+              "value": "stone"
+            },
+            {
+              "name": "key",
+              "value": "enost"
+            },
+            {
+              "name": "groups",
+              "value": "stone"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 188,
+            "description": "The current word stone has key enost and accumulated groups stone",
+            "nodes": [
+              {
+                "id": "word",
+                "shape": "rect",
+                "x": 16,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "stone",
+                "role": "active"
+              },
+              {
+                "id": "canonical-key",
+                "shape": "rect",
+                "x": 182,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "enost",
+                "role": "active"
+              },
+              {
+                "id": "groups",
+                "shape": "rect",
+                "x": 348,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "stone",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 16,
+                "y": 49,
+                "text": "word"
+              },
+              {
+                "id": "label-1",
+                "x": 182,
+                "y": 49,
+                "text": "canonical key"
+              },
+              {
+                "id": "label-2",
+                "x": 348,
+                "y": 49,
+                "text": "groups"
+              },
+              {
+                "id": "status",
+                "x": 16,
+                "y": 165,
+                "text": "step 0 \u2022 group"
+              }
+            ]
+          }
+        },
+        {
+          "event": "group",
+          "lines": {
+            "cpp": [
+              27
+            ],
+            "python": [
+              22
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              21
+            ]
+          },
+          "explanation": "tones produces the canonical key enost. The key identifies its anagram class; the groups now contain stone,tones.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "word",
+              "value": "tones"
+            },
+            {
+              "name": "key",
+              "value": "enost"
+            },
+            {
+              "name": "groups",
+              "value": "stone,tones"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 188,
+            "description": "The current word tones has key enost and accumulated groups stone,tones",
+            "nodes": [
+              {
+                "id": "word",
+                "shape": "rect",
+                "x": 16,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "tones",
+                "role": "active"
+              },
+              {
+                "id": "canonical-key",
+                "shape": "rect",
+                "x": 182,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "enost",
+                "role": "active"
+              },
+              {
+                "id": "groups",
+                "shape": "rect",
+                "x": 348,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "stone,tones",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 16,
+                "y": 49,
+                "text": "word"
+              },
+              {
+                "id": "label-1",
+                "x": 182,
+                "y": 49,
+                "text": "canonical key"
+              },
+              {
+                "id": "label-2",
+                "x": 348,
+                "y": 49,
+                "text": "groups"
+              },
+              {
+                "id": "status",
+                "x": 16,
+                "y": 165,
+                "text": "step 1 \u2022 group"
+              }
+            ]
+          }
+        },
+        {
+          "event": "group",
+          "lines": {
+            "cpp": [
+              27
+            ],
+            "python": [
+              22
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              21
+            ]
+          },
+          "explanation": "note produces the canonical key enot. The key identifies its anagram class; the groups now contain stone,tones|note.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "word",
+              "value": "note"
+            },
+            {
+              "name": "key",
+              "value": "enot"
+            },
+            {
+              "name": "groups",
+              "value": "stone,tones|note"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 188,
+            "description": "The current word note has key enot and accumulated groups stone,tones|note",
+            "nodes": [
+              {
+                "id": "word",
+                "shape": "rect",
+                "x": 16,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "note",
+                "role": "active"
+              },
+              {
+                "id": "canonical-key",
+                "shape": "rect",
+                "x": 182,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "enot",
+                "role": "active"
+              },
+              {
+                "id": "groups",
+                "shape": "rect",
+                "x": 348,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "stone,tones|note",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 16,
+                "y": 49,
+                "text": "word"
+              },
+              {
+                "id": "label-1",
+                "x": 182,
+                "y": 49,
+                "text": "canonical key"
+              },
+              {
+                "id": "label-2",
+                "x": 348,
+                "y": 49,
+                "text": "groups"
+              },
+              {
+                "id": "status",
+                "x": 16,
+                "y": 165,
+                "text": "step 2 \u2022 group"
+              }
+            ]
+          }
+        },
+        {
+          "event": "group",
+          "lines": {
+            "cpp": [
+              27
+            ],
+            "python": [
+              22
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              21
+            ]
+          },
+          "explanation": "eat produces the canonical key aet. The key identifies its anagram class; the groups now contain stone,tones|note|eat.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "word",
+              "value": "eat"
+            },
+            {
+              "name": "key",
+              "value": "aet"
+            },
+            {
+              "name": "groups",
+              "value": "stone,tones|note|eat"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 188,
+            "description": "The current word eat has key aet and accumulated groups stone,tones|note|eat",
+            "nodes": [
+              {
+                "id": "word",
+                "shape": "rect",
+                "x": 16,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "eat",
+                "role": "active"
+              },
+              {
+                "id": "canonical-key",
+                "shape": "rect",
+                "x": 182,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "aet",
+                "role": "active"
+              },
+              {
+                "id": "groups",
+                "shape": "rect",
+                "x": 348,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "stone,tones|note|eat",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 16,
+                "y": 49,
+                "text": "word"
+              },
+              {
+                "id": "label-1",
+                "x": 182,
+                "y": 49,
+                "text": "canonical key"
+              },
+              {
+                "id": "label-2",
+                "x": 348,
+                "y": 49,
+                "text": "groups"
+              },
+              {
+                "id": "status",
+                "x": 16,
+                "y": 165,
+                "text": "step 3 \u2022 group"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              30
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              24
+            ],
+            "go": [
+              24
+            ]
+          },
+          "explanation": "All words were processed in input order. The resulting groups are stone,tones|note|eat.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "4"
+            },
+            {
+              "name": "word",
+              "value": "-"
+            },
+            {
+              "name": "key",
+              "value": "-"
+            },
+            {
+              "name": "groups",
+              "value": "stone,tones|note|eat"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 188,
+            "description": "The current word - has key - and accumulated groups stone,tones|note|eat",
+            "nodes": [
+              {
+                "id": "word",
+                "shape": "rect",
+                "x": 16,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "-",
+                "role": "neutral"
+              },
+              {
+                "id": "canonical-key",
+                "shape": "rect",
+                "x": 182,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "-",
+                "role": "neutral"
+              },
+              {
+                "id": "groups",
+                "shape": "rect",
+                "x": 348,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "stone,tones|note|eat",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 16,
+                "y": 49,
+                "text": "word"
+              },
+              {
+                "id": "label-1",
+                "x": 182,
+                "y": 49,
+                "text": "canonical key"
+              },
+              {
+                "id": "label-2",
+                "x": 348,
+                "y": 49,
+                "text": "groups"
+              },
+              {
+                "id": "status",
+                "x": 16,
+                "y": 165,
+                "text": "result: stone,tones|note|eat"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge",
+      "label": "Same length is insufficient",
+      "input": "3\nab\nba\naa\n",
+      "expectedOutput": "ab,ba|aa",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              21
+            ],
+            "python": [
+              15
+            ],
+            "java": [
+              15
+            ],
+            "go": [
+              16
+            ]
+          },
+          "explanation": "No words have been assigned to a group.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "-1"
+            },
+            {
+              "name": "word",
+              "value": "-"
+            },
+            {
+              "name": "key",
+              "value": "-"
+            },
+            {
+              "name": "groups",
+              "value": "-"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 188,
+            "description": "The current word - has key - and accumulated groups -",
+            "nodes": [
+              {
+                "id": "word",
+                "shape": "rect",
+                "x": 16,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "-",
+                "role": "neutral"
+              },
+              {
+                "id": "canonical-key",
+                "shape": "rect",
+                "x": 182,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "-",
+                "role": "neutral"
+              },
+              {
+                "id": "groups",
+                "shape": "rect",
+                "x": 348,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "no groups yet",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 16,
+                "y": 49,
+                "text": "word"
+              },
+              {
+                "id": "label-1",
+                "x": 182,
+                "y": 49,
+                "text": "canonical key"
+              },
+              {
+                "id": "label-2",
+                "x": 348,
+                "y": 49,
+                "text": "groups"
+              },
+              {
+                "id": "status",
+                "x": 16,
+                "y": 165,
+                "text": "step -1 \u2022 start"
+              }
+            ]
+          }
+        },
+        {
+          "event": "group",
+          "lines": {
+            "cpp": [
+              27
+            ],
+            "python": [
+              22
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              21
+            ]
+          },
+          "explanation": "ab produces the canonical key ab. The key identifies its anagram class; the groups now contain ab.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "word",
+              "value": "ab"
+            },
+            {
+              "name": "key",
+              "value": "ab"
+            },
+            {
+              "name": "groups",
+              "value": "ab"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 188,
+            "description": "The current word ab has key ab and accumulated groups ab",
+            "nodes": [
+              {
+                "id": "word",
+                "shape": "rect",
+                "x": 16,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "ab",
+                "role": "active"
+              },
+              {
+                "id": "canonical-key",
+                "shape": "rect",
+                "x": 182,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "ab",
+                "role": "active"
+              },
+              {
+                "id": "groups",
+                "shape": "rect",
+                "x": 348,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "ab",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 16,
+                "y": 49,
+                "text": "word"
+              },
+              {
+                "id": "label-1",
+                "x": 182,
+                "y": 49,
+                "text": "canonical key"
+              },
+              {
+                "id": "label-2",
+                "x": 348,
+                "y": 49,
+                "text": "groups"
+              },
+              {
+                "id": "status",
+                "x": 16,
+                "y": 165,
+                "text": "step 0 \u2022 group"
+              }
+            ]
+          }
+        },
+        {
+          "event": "group",
+          "lines": {
+            "cpp": [
+              27
+            ],
+            "python": [
+              22
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              21
+            ]
+          },
+          "explanation": "ba produces the canonical key ab. The key identifies its anagram class; the groups now contain ab,ba.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "word",
+              "value": "ba"
+            },
+            {
+              "name": "key",
+              "value": "ab"
+            },
+            {
+              "name": "groups",
+              "value": "ab,ba"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 188,
+            "description": "The current word ba has key ab and accumulated groups ab,ba",
+            "nodes": [
+              {
+                "id": "word",
+                "shape": "rect",
+                "x": 16,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "ba",
+                "role": "active"
+              },
+              {
+                "id": "canonical-key",
+                "shape": "rect",
+                "x": 182,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "ab",
+                "role": "active"
+              },
+              {
+                "id": "groups",
+                "shape": "rect",
+                "x": 348,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "ab,ba",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 16,
+                "y": 49,
+                "text": "word"
+              },
+              {
+                "id": "label-1",
+                "x": 182,
+                "y": 49,
+                "text": "canonical key"
+              },
+              {
+                "id": "label-2",
+                "x": 348,
+                "y": 49,
+                "text": "groups"
+              },
+              {
+                "id": "status",
+                "x": 16,
+                "y": 165,
+                "text": "step 1 \u2022 group"
+              }
+            ]
+          }
+        },
+        {
+          "event": "group",
+          "lines": {
+            "cpp": [
+              27
+            ],
+            "python": [
+              22
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              21
+            ]
+          },
+          "explanation": "aa produces the canonical key aa. The key identifies its anagram class; the groups now contain ab,ba|aa.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "word",
+              "value": "aa"
+            },
+            {
+              "name": "key",
+              "value": "aa"
+            },
+            {
+              "name": "groups",
+              "value": "ab,ba|aa"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 188,
+            "description": "The current word aa has key aa and accumulated groups ab,ba|aa",
+            "nodes": [
+              {
+                "id": "word",
+                "shape": "rect",
+                "x": 16,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "aa",
+                "role": "active"
+              },
+              {
+                "id": "canonical-key",
+                "shape": "rect",
+                "x": 182,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "aa",
+                "role": "active"
+              },
+              {
+                "id": "groups",
+                "shape": "rect",
+                "x": 348,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "ab,ba|aa",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 16,
+                "y": 49,
+                "text": "word"
+              },
+              {
+                "id": "label-1",
+                "x": 182,
+                "y": 49,
+                "text": "canonical key"
+              },
+              {
+                "id": "label-2",
+                "x": 348,
+                "y": 49,
+                "text": "groups"
+              },
+              {
+                "id": "status",
+                "x": 16,
+                "y": 165,
+                "text": "step 2 \u2022 group"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              30
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              24
+            ],
+            "go": [
+              24
+            ]
+          },
+          "explanation": "All words were processed in input order. The resulting groups are ab,ba|aa.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "word",
+              "value": "-"
+            },
+            {
+              "name": "key",
+              "value": "-"
+            },
+            {
+              "name": "groups",
+              "value": "ab,ba|aa"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 188,
+            "description": "The current word - has key - and accumulated groups ab,ba|aa",
+            "nodes": [
+              {
+                "id": "word",
+                "shape": "rect",
+                "x": 16,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "-",
+                "role": "neutral"
+              },
+              {
+                "id": "canonical-key",
+                "shape": "rect",
+                "x": 182,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "-",
+                "role": "neutral"
+              },
+              {
+                "id": "groups",
+                "shape": "rect",
+                "x": 348,
+                "y": 63,
+                "width": 150,
+                "height": 67,
+                "text": "ab,ba|aa",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "label-0",
+                "x": 16,
+                "y": 49,
+                "text": "word"
+              },
+              {
+                "id": "label-1",
+                "x": 182,
+                "y": 49,
+                "text": "canonical key"
+              },
+              {
+                "id": "label-2",
+                "x": 348,
+                "y": 49,
+                "text": "groups"
+              },
+              {
+                "id": "status",
+                "x": 16,
+                "y": 165,
+                "text": "result: ab,ba|aa"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+package main
+import (
+    "fmt"
+    "os"
+    "strings"
+)
+func emit(event string, i int, word,key,groups string) {
+    fmt.Printf("{\"event\":\"%s\",\"variables\":[{\"name\":\"i\",\"value\":\"%d\"},{\"name\":\"word\",\"value\":\"%s\"},{\"name\":\"key\",\"value\":\"%s\"},{\"name\":\"groups\",\"value\":\"%s\"}]}\n", event,i,word,key,groups)
+}
+func result(value string) { fmt.Printf("{\"result\":\"%s\"}\n",value) }
+func render(groups [][]string) string { parts:=[]string{}; for _,group:=range groups { parts=append(parts, strings.Join(group,",")) }; return strings.Join(parts,"|") }
+func main() {
+    var n int; fmt.Fscan(os.Stdin,&n); words:=make([]string,n); for i:=range words { fmt.Fscan(os.Stdin,&words[i]) }
+    keys:=map[string]int{}; groups:=[][]string{}
+    emit("start",-1,"-","-","-")
+    for i,word:=range words {
+        var counts [26]int; for _, c := range []byte(word) { counts[c-'a']++ }; parts:=[]string{}; for j,n:=range counts { if n>0 { parts=append(parts, fmt.Sprintf("%c:%d", byte('a'+j), n)) } }; key:=strings.Join(parts, ",")
+        index,exists:=keys[key]; if !exists { index=len(groups); keys[key]=index; groups=append(groups,[]string{}) }
+        groups[index]=append(groups[index],word)
+        emit("group",i,word,key,render(groups))
+    }
+    answer:=render(groups)
+    emit("done",n,"-","-",answer)
+    result(answer)
+}

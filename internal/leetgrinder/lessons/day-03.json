@@ -1,0 +1,236 @@
+{
+  "day": 3,
+  "objectives": [
+    "Build an exact canonical key for anagram groups and explain why key equality matters.",
+    "Compare sorting and fixed-alphabet counts, including their input assumptions and costs.",
+    "Use forward and reverse maps to verify a bijection for characters and words."
+  ],
+  "prerequisites": [
+    1,
+    2
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "heading": "Intuition: keys for groups, inverses for patterns",
+      "paragraphs": [
+        "For a grouping task, first decide what makes two inputs equivalent. Anagrams have the same number of each letter, regardless of order. A canonical key turns every member of one equivalence class into the same comparable value. Sorting letters produces such a key; a fixed vector of letter counts does too.",
+        "For a pattern task, positions matter. Each source symbol must always identify one target, and each target must identify one source. Think of the mappings as two directions of the same reversible table. A single forward table can enforce consistency while still letting two different source symbols collapse onto one target.",
+        "A dictionary uses a hash to find a likely bucket, but it still compares keys for equality. Equal hash codes do not prove two words are anagrams. The canonical representation, rather than the hash value alone, is the actual grouping rule."
+      ],
+      "diagram": {
+        "width": 520,
+        "height": 245,
+        "description": "Stone and tones each sort to enost, so they share a group. Note sorts to enot and starts another group.",
+        "nodes": [
+          {
+            "id": "word0",
+            "shape": "rect",
+            "x": 20,
+            "y": 40,
+            "width": 145,
+            "height": 46,
+            "text": "stone",
+            "role": "neutral"
+          },
+          {
+            "id": "key0",
+            "shape": "rect",
+            "x": 20,
+            "y": 130,
+            "width": 145,
+            "height": 46,
+            "text": "enost",
+            "role": "result"
+          },
+          {
+            "id": "word1",
+            "shape": "rect",
+            "x": 186,
+            "y": 40,
+            "width": 145,
+            "height": 46,
+            "text": "tones",
+            "role": "neutral"
+          },
+          {
+            "id": "key1",
+            "shape": "rect",
+            "x": 186,
+            "y": 130,
+            "width": 145,
+            "height": 46,
+            "text": "enost",
+            "role": "result"
+          },
+          {
+            "id": "word2",
+            "shape": "rect",
+            "x": 352,
+            "y": 40,
+            "width": 145,
+            "height": 46,
+            "text": "note",
+            "role": "neutral"
+          },
+          {
+            "id": "key2",
+            "shape": "rect",
+            "x": 352,
+            "y": 130,
+            "width": 145,
+            "height": 46,
+            "text": "enot",
+            "role": "neutral"
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge0",
+            "from": "word0",
+            "to": "key0",
+            "directed": true,
+            "role": "neutral"
+          },
+          {
+            "id": "edge1",
+            "from": "word1",
+            "to": "key1",
+            "directed": true,
+            "role": "neutral"
+          },
+          {
+            "id": "edge2",
+            "from": "word2",
+            "to": "key2",
+            "directed": true,
+            "role": "neutral"
+          }
+        ],
+        "labels": [
+          {
+            "id": "label0",
+            "x": 20,
+            "y": 119,
+            "text": "sorted key"
+          },
+          {
+            "id": "label1",
+            "x": 186,
+            "y": 119,
+            "text": "sorted key"
+          },
+          {
+            "id": "label2",
+            "x": 352,
+            "y": 119,
+            "text": "sorted key"
+          },
+          {
+            "id": "rule",
+            "x": 20,
+            "y": 220,
+            "text": "Same key \u21d2 same letter multiset \u21d2 same anagram group."
+          }
+        ]
+      }
+    },
+    {
+      "id": "definitions",
+      "heading": "Definitions, assumptions, and recognition cues",
+      "paragraphs": [
+        "Group Anagrams takes a list of lowercase ASCII words and returns groups whose members have identical letter multiplicities. Input order does not affect membership. The demo emits groups in first-seen order to give its trace a deterministic result, although the problem does not require this order.",
+        "Isomorphic Strings asks whether two equal-length strings admit a one-to-one symbol substitution at aligned positions. Word Pattern asks the same question between pattern characters and whole whitespace-delimited words. In this lesson, characters are ASCII bytes; a different Unicode or tokenization contract would need corresponding code changes.",
+        "Use canonical keys when order within an item should be ignored. Use two-direction maps when order of positions stays fixed but symbolic names may change. A count key only fits a stated alphabet; using letter-minus-a on arbitrary text is invalid."
+      ]
+    },
+    {
+      "id": "baseline",
+      "heading": "A correct baseline and its repeated work",
+      "paragraphs": [
+        "For grouping, sort a fresh copy of each word and use the sorted string as a dictionary key. This is already a correct, practical baseline. It costs O(k log k) per length-k word because of the sort; repeated visits to each word letter during comparisons are the work the fixed count vector removes.",
+        "For either bijection problem, a map-free baseline compares every pair of earlier positions. For positions i and j, require that the source symbols are equal exactly when their targets are equal. If one side agrees and the other differs, no bijection exists. This costs O(n\u00b2) pair comparisons but O(1) auxiliary mapping space. The two-map version remembers those equalities and reduces the expected work to one pass."
+      ],
+      "exampleIds": [
+        "day-03-pairwise-baseline"
+      ]
+    },
+    {
+      "id": "sorted",
+      "heading": "Worked example: sort each word into a canonical key",
+      "paragraphs": [
+        "The sorted-key demonstration groups stone with tones because both keys are enost. It places note and eat elsewhere. Before processing word i, the map contains exactly the groups formed from words before i. Looking up the new key either locates its existing equivalence class or creates it. Appending the word therefore never splits anagrams or merges different letter multisets.",
+        "The edge case ab, ba, aa shows why equal length is insufficient: the first two sort to ab, while aa remains aa. This example uses a copy for sorting, so the original word remains available in the output."
+      ],
+      "exampleIds": [
+        "day-03-sorted-key"
+      ]
+    },
+    {
+      "id": "count",
+      "heading": "Worked example: use a 26-slot count vector",
+      "paragraphs": [
+        "Scan each word once, incrementing the bucket indexed by its lowercase letter. The complete 26-count vector is a canonical form: two words have the same vector if and only if each letter appears the same number of times. The demonstration serializes nonzero entries as letter:count pairs with commas, preserving this equality. Its edge case groups abbbbbbbbbbb and aaaaaaaaaaab separately: their keys are a:1,b:11 and a:11,b:1.",
+        "An ambiguous stream of digits would break the proof. Counts of a=1, b=11 and a=11, b=1 both produce 111 if separators are dropped. In C++ and Java an array or tuple key can also work, but it needs value-based equality and hashing. A new count vector is built for every word; reusing and mutating a map key would corrupt lookup semantics.",
+        "For n words of maximum length k, key construction is O(nk) time because the alphabet size is fixed at 26. Stored group text and key material are O(nk) in total. The expected dictionary lookup cost assumes a reasonable hash distribution."
+      ],
+      "exampleIds": [
+        "day-03-count-key"
+      ]
+    },
+    {
+      "id": "bijection",
+      "heading": "Worked example: map string characters in both directions",
+      "paragraphs": [
+        "For each aligned pair x and y, check any earlier x\u2192y assignment and any earlier y\u2192x assignment. If either disagrees, stop with false. Otherwise insert both directions. After an accepted prefix, the two maps are inverses over exactly the symbols seen in that prefix. Every next pair is either a consistent reuse or a new one-to-one assignment.",
+        "Paper and title fit: p\u2192t, a\u2192i, e\u2192l, r\u2192e, with repeated p and repeated t aligned. For ab and aa, the second pair attempts b\u2192a after a\u2192a; the reverse map already reserves a for a. A forward-only map would wrongly accept it. Unequal lengths cannot align position by position and fail before any mapping.",
+        "The ASCII alphabet bounds map entries by a constant; with length n, the program takes expected O(n) time and O(1) auxiliary map space. Java and C++ use string keys here for a common trace format, while byte-indexed arrays could also serve a fixed alphabet."
+      ],
+      "exampleIds": [
+        "day-03-isomorphic"
+      ]
+    },
+    {
+      "id": "word",
+      "heading": "Worked example: match symbols to whole words",
+      "paragraphs": [
+        "Split the sentence into words, then require the number of words to equal the pattern length. Process aligned pairs with the same two-direction invariant. For aba and red blue red, a\u2192red is reused at the last position while b\u2192blue stays distinct.",
+        "The edge case abb with red red red fails on its second pair: b is new but red already belongs to a. A length-mismatch case fails before any pair can be considered. Whitespace-separated words are treated as exact strings, so punctuation or case differences remain significant unless the input contract says otherwise.",
+        "For n pattern symbols and total word bytes L, splitting takes O(L) time and memory; map operations take expected O(n) time, and the maps store at most O(L+n) character data. The reverse map is essential even when the forward map looks consistent."
+      ],
+      "exampleIds": [
+        "day-03-word-pattern"
+      ]
+    },
+    {
+      "id": "complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Let n be the number of words, k their maximum length, m the number of aligned positions, and L the total bytes in a sentence. Sorted grouping builds n keys in O(nk log k) time. Count-vector grouping takes O(nk) time for a fixed 26-letter alphabet. Both retain O(nk) output characters; temporary sorting uses O(k) storage and temporary counts use O(1). Actual dictionary behavior depends on hashing and equality checks.",
+        "Pairwise position checking is O(m\u00b2) time with O(1) auxiliary mapping state. The two-map scan is expected O(m) time. Isomorphic ASCII keys give O(1) map capacity; word keys can occupy O(L) bytes. Always check sequence lengths first, enforce both directions, and keep canonical count keys unambiguous. Sorting may have different library memory costs across languages; these demo bounds count a copied word and exclude JSONL trace output."
+      ]
+    },
+    {
+      "id": "checks",
+      "heading": "Before you finish",
+      "checks": [
+        {
+          "prompt": "Why do stone and tones share a group while note does not?",
+          "answer": "Their sorted keys are both enost, meaning each letter count matches. Note has a different length and sorted key enot."
+        },
+        {
+          "prompt": "Give two different count vectors that collide if counts are joined as bare decimal digits.",
+          "answer": "Counts [1,11] and [11,1] both become 111 without separators or fixed-width encoding."
+        },
+        {
+          "prompt": "Why does ab \u2192 aa fail despite each source letter having a consistent forward target?",
+          "answer": "The reverse direction would map target a to both source a and source b, so the substitution is not one-to-one."
+        },
+        {
+          "prompt": "How would the Word Pattern check handle three pattern symbols but only two words?",
+          "answer": "It returns false before building maps, because no aligned target exists for the third pattern position."
+        }
+      ]
+    }
+  ]
+}
