@@ -14,7 +14,7 @@ Each lesson has its own introductory document, followed by optional deeper readi
 
 The source selection favors free textbooks, university course notes, author-hosted articles, and open research papers or technical reports. A paper is useful when it explains an algorithm's origin, proof, limitations, or application. It is not a prerequisite for the day's practice. A shared foundational source can support more than one lesson, but the introductory documents must be distinct and the reading directions must match the day's concepts.
 
-Every lesson ends with a References section. Each linked citation states which concepts or analysis it supports. Worked examples and practice prompts remain original instructional material. The Reading path panel gives the reading order and excerpt instructions. For mixed practice, both the lesson and its readings stay inside the review disclosure so they do not reveal the intended technique before an attempt.
+Every lesson ends with a References section. Each linked citation states which concepts or analysis it supports. Worked examples and practice prompts remain original instructional material. The lesson contains one References footer for optional background. For mixed practice, the lesson and references stay inside the review disclosure so they do not reveal the intended technique before an attempt.
 
 The existing required/optional status of each day's introduction is preserved because it also determines the base spaced-review allowance. Optional introductions are still listed first. Deeper research readings are always optional.
 

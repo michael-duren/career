@@ -1,0 +1,235 @@
+{
+  "day": 4,
+  "objectives": [
+    "Choose between a set (is it here?) and counts (how many are here?).",
+    "Spot a repeating process and stop it with a visited set, or with slow and fast pointers.",
+    "Check several \"no repeats\" rules at once with one set per group."
+  ],
+  "prerequisites": [
+    1,
+    2,
+    3
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: what exactly do you need to remember?",
+      "paragraphs": [
+        "Sets and counts look similar, but they answer different questions. A set says whether something has appeared. A count says how many copies are available. If duplicates matter, a set quietly throws information away: it can't tell one red sock from three.",
+        "Sets are also good for spotting repeats in a process. If a rule always turns x into the same next value, then the first time you revisit a value you know the process will loop forever. Remember every value you've seen, and a repeat tells you everything."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "Ask yourself before coding: do I need \"have I seen it?\" or \"how many are left?\" The answer decides between a set and a count map."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Three red socks. A set holds red once; a count map holds red: 3.",
+        "nodes": [
+          {
+            "id": "s1",
+            "shape": "rect",
+            "x": 12,
+            "y": 36,
+            "width": 60,
+            "height": 40,
+            "text": "red",
+            "role": "neutral"
+          },
+          {
+            "id": "s2",
+            "shape": "rect",
+            "x": 80,
+            "y": 36,
+            "width": 60,
+            "height": 40,
+            "text": "red",
+            "role": "neutral"
+          },
+          {
+            "id": "s3",
+            "shape": "rect",
+            "x": 148,
+            "y": 36,
+            "width": 60,
+            "height": 40,
+            "text": "red",
+            "role": "neutral"
+          },
+          {
+            "id": "set",
+            "shape": "rect",
+            "x": 12,
+            "y": 108,
+            "width": 130,
+            "height": 40,
+            "text": "set {red}",
+            "role": "discarded"
+          },
+          {
+            "id": "count",
+            "shape": "rect",
+            "x": 160,
+            "y": 108,
+            "width": 140,
+            "height": 40,
+            "text": "counts {red: 3}",
+            "role": "result"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "title",
+            "x": 12,
+            "y": 24,
+            "text": "three socks in the drawer"
+          },
+          {
+            "id": "lost",
+            "x": 12,
+            "y": 164,
+            "text": "the set forgets how many"
+          }
+        ]
+      }
+    },
+    {
+      "id": "socks",
+      "navLabel": "Counting copies",
+      "heading": "Worked example: match socks into pairs",
+      "paragraphs": [
+        "Pull socks out of a drawer one at a time. How many complete pairs can you make? Keep a count map: waiting[color] is how many socks of that color are sitting unmatched.",
+        "When a sock arrives and one of its color is already waiting, use both: add a pair and set that color back to 0. Otherwise it waits. Spending the waiting sock is what stops it from being used in two pairs.",
+        "For red, blue, red, red, blue, green you get 2 pairs (red and blue) and have a red and a green left over. Here a set you add to and remove from would also work, because at most one sock of a color is ever waiting. Counts matter when several copies can be waiting and each is spent once."
+      ],
+      "exampleIds": [
+        "day-04-sock-pairs"
+      ]
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Remember every value",
+      "heading": "Baseline: remember every value you visit",
+      "paragraphs": [
+        "Here's a made-up rule: next(x) = (x·x + 1) % 10. Starting from 3, it goes 3, 0, 1, 2, 5, 6, 7, 0, ... and keeps circling through 0, 1, 2, 5, 6, 7. Every starting point ends up looping, because there are only 10 possible values.",
+        "The simplest way to detect the loop is to keep a set of every value you've visited. Before stepping from x, check whether x is already in the set. The first repeat proves a loop: the rule sends x to the same next value every time, so everything after it repeats too.",
+        "This costs memory for every value visited. When there could be many values, that set can get large."
+      ],
+      "exampleIds": [
+        "day-04-cycle-visited"
+      ]
+    },
+    {
+      "id": "floyd",
+      "navLabel": "Slow and fast pointers",
+      "heading": "Worked example: slow and fast pointers",
+      "paragraphs": [
+        "You can detect the same loop while storing only two numbers. Start two walkers at the same value. Each round, slow takes one step and fast takes two. If the process never loops, fast just runs ahead. If it does loop, fast eventually laps slow and they land on the same value.",
+        "Only compare them after they've moved: at the start they're equal because nothing has happened yet. Starting from 3, they meet at 7. That meeting point is somewhere inside the loop, not necessarily where the loop begins, which is why this example returns 7 while the visited-set version returns 0."
+      ],
+      "callout": {
+        "kind": "watch",
+        "text": "This only works when each value has exactly one next value. If the rule could send x to different places at different times, a repeat wouldn't prove a loop."
+      },
+      "exampleIds": [
+        "day-04-cycle-floyd"
+      ]
+    },
+    {
+      "id": "grid",
+      "navLabel": "One set per group",
+      "heading": "Worked example: no repeats in any row or column",
+      "paragraphs": [
+        "A grid of letters is valid if no letter repeats within a row, and no letter repeats within a column. Dots are empty and don't count. One cell belongs to two groups at once, its row and its column, so you need to check both.",
+        "Keep one set per row and one set per column. For each filled cell, check its letter against its row's set and its column's set. If either already has it, the grid is invalid. Otherwise add the letter to both sets.",
+        "The edge case puts two a's in column 0 on different rows. Every row looks fine; only the column sets catch it. A single set for the whole grid would be wrong in the other direction: it would reject the same letter appearing in two unrelated rows."
+      ],
+      "exampleIds": [
+        "day-04-distinct-grid"
+      ]
+    },
+    {
+      "id": "your-turn-intersection",
+      "navLabel": "Your turn: Intersection II",
+      "heading": "Your turn: Intersection of Two Arrays II",
+      "paragraphs": [
+        "Given two arrays, return their intersection, where each value appears as many times as it shows up in both. [1, 2, 2, 1] and [2, 2] give [2, 2]. The optional Intersection of Two Arrays asks for each common value only once."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Decide which one each problem needs: a set or counts. Work [1, 2, 2, 1] and [2, 2] by hand first."
+      }
+    },
+    {
+      "id": "your-turn-happy",
+      "navLabel": "Your turn: Happy Number",
+      "heading": "Your turn: Happy Number",
+      "paragraphs": [
+        "Replace a positive number with the sum of the squares of its digits, and repeat. If you eventually reach 1, the number is happy. If you loop forever without reaching 1, it isn't. 19 is happy: 1 + 81 = 82, 64 + 4 = 68, 36 + 64 = 100, 1 + 0 + 0 = 1."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Write the \"next number\" function first and test it on 19. Then compare it with next(x) from the examples above: what's different about reaching 1?"
+      }
+    },
+    {
+      "id": "your-turn-sudoku",
+      "navLabel": "Your turn: Valid Sudoku",
+      "heading": "Your turn: Valid Sudoku",
+      "paragraphs": [
+        "Today's medium. Check whether a partly filled 9 × 9 Sudoku board breaks any rule: no digit may repeat in a row, in a column, or in any of the nine 3 × 3 boxes. Empty cells are dots. You don't need to solve the puzzle, only check the digits already there."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "List every rule a digit must follow and decide what you need to remember for each one. Test your code on a board where two 5s share a 3 × 3 box but no row or column."
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "bullets": [
+        "Sock pairs with a count map: O(n) time on average, memory for one counter per color.",
+        "Loop detection with a visited set: time and memory proportional to the number of values visited.",
+        "Loop detection with slow and fast pointers: about the same number of steps, but O(1) memory.",
+        "Grid check with row and column sets: every cell once, so O(n²) for an n × n grid, and O(n²) memory for the sets."
+      ],
+      "paragraphs": [
+        "A fixed-size board like 9 × 9 Sudoku has constant size, so its check is O(1) by the usual convention. Describing the work as \"every cell once\" is still more useful when you explain your solution.",
+        "Hash sets compare keys for equality, not just hash values, so collisions slow things down but never give wrong answers."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "When do you need counts instead of a set?",
+          "answer": "When several copies of a value can be available at once and each copy may be used only once."
+        },
+        {
+          "prompt": "Why does seeing a value twice prove the process loops forever?",
+          "answer": "The rule always sends a value to the same next value. From the repeat onward, the process retraces the same steps."
+        },
+        {
+          "prompt": "Why must slow and fast move before you compare them?",
+          "answer": "They start on the same value, so they're equal before anything happens. Only a meeting after moving means fast has lapped slow."
+        },
+        {
+          "prompt": "Why is one set for the whole grid the wrong tool?",
+          "answer": "It would reject a letter that appears once in two different rows and columns, which is allowed. Each rule needs its own group of sets."
+        }
+      ]
+    }
+  ]
+}

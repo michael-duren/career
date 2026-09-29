@@ -1,0 +1,633 @@
+{
+ "id": "day-22-insert-copies",
+ "title": "Insert after each node without losing the rest",
+ "invariant": "Every node before cur already has its copy right after it; from cur on, the list is untouched.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 40,
+   "algorithmEnd": 53
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 38,
+   "algorithmEnd": 49
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 41,
+   "algorithmEnd": 54
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 70,
+   "algorithmEnd": 89
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "1->2",
+   "input": "2 0\n1 2\n",
+   "expectedOutput": "1->1->2->2",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       41,
+       42
+      ],
+      "python": [
+       39,
+       40
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       71,
+       72,
+       73,
+       74,
+       75,
+       77
+      ]
+     },
+     "explanation": "Insert a copy after every node of 1->2. cur starts at the first node.",
+     "variables": [
+      {
+       "name": "cur",
+       "value": "1"
+      },
+      {
+       "name": "list",
+       "value": "1->2"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insert copies normal: start, cur 1, list 1->2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "gold = original, green = its copy"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "cur"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the copy is built pointing at the old next"
+       }
+      ]
+     }
+    },
+    {
+     "event": "insert",
+     "lines": {
+      "cpp": [
+       45,
+       46,
+       47
+      ],
+      "python": [
+       43,
+       44,
+       45
+      ],
+      "java": [
+       46,
+       47,
+       48
+      ],
+      "go": [
+       81,
+       82,
+       83
+      ]
+     },
+     "explanation": "Make a copy of 1 whose next is cur.next, then point cur.next at the copy. The copy was created holding the old next, so nothing got lost. Jump cur past the copy to the original 2. List: 1->1->2.",
+     "variables": [
+      {
+       "name": "cur",
+       "value": "2"
+      },
+      {
+       "name": "list",
+       "value": "1->1->2"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insert copies normal: insert, cur 2, list 1->1->2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "gold = original, green = its copy"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "cur"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the copy is built pointing at the old next"
+       }
+      ]
+     }
+    },
+    {
+     "event": "insert",
+     "lines": {
+      "cpp": [
+       45,
+       46,
+       47
+      ],
+      "python": [
+       43,
+       44,
+       45
+      ],
+      "java": [
+       46,
+       47,
+       48
+      ],
+      "go": [
+       81,
+       82,
+       83
+      ]
+     },
+     "explanation": "Make a copy of 2 whose next is cur.next, then point cur.next at the copy. The copy was created holding the old next, so nothing got lost. Jump cur past the copy to the end. List: 1->1->2->2.",
+     "variables": [
+      {
+       "name": "cur",
+       "value": "-"
+      },
+      {
+       "name": "list",
+       "value": "1->1->2->2"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insert copies normal: insert, cur -, list 1->1->2->2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "gold = original, green = its copy"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the copy is built pointing at the old next"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       51
+      ],
+      "python": [
+       48
+      ],
+      "java": [
+       52
+      ],
+      "go": [
+       87
+      ]
+     },
+     "explanation": "Every node has its copy right after it: 1->1->2->2.",
+     "variables": [
+      {
+       "name": "cur",
+       "value": "-"
+      },
+      {
+       "name": "list",
+       "value": "1->1->2->2"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insert copies normal: done, cur -, list 1->1->2->2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "gold = original, green = its copy"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the copy is built pointing at the old next"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-empty",
+   "label": "Empty list",
+   "input": "0 0\n\n",
+   "expectedOutput": "empty",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       41,
+       42
+      ],
+      "python": [
+       39,
+       40
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       71,
+       72,
+       73,
+       74,
+       75,
+       77
+      ]
+     },
+     "explanation": "The list is empty, so there's nothing to copy.",
+     "variables": [
+      {
+       "name": "cur",
+       "value": "-"
+      },
+      {
+       "name": "list",
+       "value": "empty"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insert copies edge-empty: start, cur -, list empty.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "(empty)",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "gold = original, green = its copy"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the copy is built pointing at the old next"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       51
+      ],
+      "python": [
+       48
+      ],
+      "java": [
+       52
+      ],
+      "go": [
+       87
+      ]
+     },
+     "explanation": "Still empty: cur started as nothing, so the loop never ran.",
+     "variables": [
+      {
+       "name": "cur",
+       "value": "-"
+      },
+      {
+       "name": "list",
+       "value": "empty"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insert copies edge-empty: done, cur -, list empty.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "(empty)",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "gold = original, green = its copy"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "the copy is built pointing at the old next"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

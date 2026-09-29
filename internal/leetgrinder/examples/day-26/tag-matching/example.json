@@ -1,0 +1,1559 @@
+{
+ "id": "day-26-tag-matching",
+ "title": "Match opening and closing tags with a stack",
+ "invariant": "The stack holds the tags opened but not yet closed, innermost on top.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 29,
+   "algorithmEnd": 49
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 21,
+   "algorithmEnd": 37
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 27,
+   "algorithmEnd": 47
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 50,
+   "algorithmEnd": 73
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "<a> <b> </b> </a>",
+   "input": "<a> <b> </b> </a>\n",
+   "expectedOutput": "true",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       22
+      ],
+      "java": [
+       28
+      ],
+      "go": [
+       51
+      ]
+     },
+     "explanation": "Check that the tags <a> <b> </b> </a> nest properly: every tag that opens must close, and the most recently opened one must close first. Keep the open tags on a stack.",
+     "variables": [
+      {
+       "name": "token",
+       "value": "-"
+      },
+      {
+       "name": "stack",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "tags normal: start, token -, stack [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<a>",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<b>",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</b>",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</a>",
+        "role": "neutral"
+       },
+       {
+        "id": "empty",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "stack empty",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "tags"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = top of the stack"
+       }
+      ]
+     }
+    },
+    {
+     "event": "open",
+     "lines": {
+      "cpp": [
+       42
+      ],
+      "python": [
+       33
+      ],
+      "java": [
+       40
+      ],
+      "go": [
+       63
+      ]
+     },
+     "explanation": "<a> opens a tag. Push its name: it's now the innermost unfinished tag. Stack [a].",
+     "variables": [
+      {
+       "name": "token",
+       "value": "<a>"
+      },
+      {
+       "name": "stack",
+       "value": "[a]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "tags normal: open, token <a>, stack [a].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<a>",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<b>",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</b>",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</a>",
+        "role": "neutral"
+       },
+       {
+        "id": "s0",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "a",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "tags"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = top of the stack"
+       }
+      ]
+     }
+    },
+    {
+     "event": "open",
+     "lines": {
+      "cpp": [
+       42
+      ],
+      "python": [
+       33
+      ],
+      "java": [
+       40
+      ],
+      "go": [
+       63
+      ]
+     },
+     "explanation": "<b> opens a tag. Push its name: it's now the innermost unfinished tag. Stack [a,b].",
+     "variables": [
+      {
+       "name": "token",
+       "value": "<b>"
+      },
+      {
+       "name": "stack",
+       "value": "[a,b]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "tags normal: open, token <b>, stack [a,b].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<a>",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<b>",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</b>",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</a>",
+        "role": "neutral"
+       },
+       {
+        "id": "s0",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "s1",
+        "shape": "rect",
+        "x": 92,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "b",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "tags"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = top of the stack"
+       }
+      ]
+     }
+    },
+    {
+     "event": "close",
+     "lines": {
+      "cpp": [
+       39
+      ],
+      "python": [
+       30
+      ],
+      "java": [
+       37
+      ],
+      "go": [
+       60
+      ]
+     },
+     "explanation": "</b> closes the tag on top of the stack, the most recent one still open. Pop it. Stack [a].",
+     "variables": [
+      {
+       "name": "token",
+       "value": "</b>"
+      },
+      {
+       "name": "stack",
+       "value": "[a]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "tags normal: close, token </b>, stack [a].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<a>",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<b>",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</b>",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</a>",
+        "role": "neutral"
+       },
+       {
+        "id": "s0",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "a",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "tags"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = top of the stack"
+       }
+      ]
+     }
+    },
+    {
+     "event": "close",
+     "lines": {
+      "cpp": [
+       39
+      ],
+      "python": [
+       30
+      ],
+      "java": [
+       37
+      ],
+      "go": [
+       60
+      ]
+     },
+     "explanation": "</a> closes the tag on top of the stack, the most recent one still open. Pop it. Stack [].",
+     "variables": [
+      {
+       "name": "token",
+       "value": "</a>"
+      },
+      {
+       "name": "stack",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "tags normal: close, token </a>, stack [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<a>",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<b>",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</b>",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</a>",
+        "role": "result"
+       },
+       {
+        "id": "empty",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "stack empty",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "tags"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = top of the stack"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       47
+      ],
+      "python": [
+       36
+      ],
+      "java": [
+       45
+      ],
+      "go": [
+       68
+      ]
+     },
+     "explanation": "Every tag closed in order and the stack is empty, so the tags nest properly.",
+     "variables": [
+      {
+       "name": "token",
+       "value": "-"
+      },
+      {
+       "name": "stack",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "tags normal: done, token -, stack [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<a>",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<b>",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</b>",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</a>",
+        "role": "visited"
+       },
+       {
+        "id": "empty",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "stack empty",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "tags"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = top of the stack"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-crossed",
+   "label": "Tags close in the wrong order",
+   "input": "<a> <b> </a> </b>\n",
+   "expectedOutput": "false",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       22
+      ],
+      "java": [
+       28
+      ],
+      "go": [
+       51
+      ]
+     },
+     "explanation": "Check that the tags <a> <b> </a> </b> nest properly: every tag that opens must close, and the most recently opened one must close first. Keep the open tags on a stack.",
+     "variables": [
+      {
+       "name": "token",
+       "value": "-"
+      },
+      {
+       "name": "stack",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "tags edge-crossed: start, token -, stack [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<a>",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<b>",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</a>",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</b>",
+        "role": "neutral"
+       },
+       {
+        "id": "empty",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "stack empty",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "tags"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = top of the stack"
+       }
+      ]
+     }
+    },
+    {
+     "event": "open",
+     "lines": {
+      "cpp": [
+       42
+      ],
+      "python": [
+       33
+      ],
+      "java": [
+       40
+      ],
+      "go": [
+       63
+      ]
+     },
+     "explanation": "<a> opens a tag. Push its name: it's now the innermost unfinished tag. Stack [a].",
+     "variables": [
+      {
+       "name": "token",
+       "value": "<a>"
+      },
+      {
+       "name": "stack",
+       "value": "[a]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "tags edge-crossed: open, token <a>, stack [a].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<a>",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<b>",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</a>",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</b>",
+        "role": "neutral"
+       },
+       {
+        "id": "s0",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "a",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "tags"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = top of the stack"
+       }
+      ]
+     }
+    },
+    {
+     "event": "open",
+     "lines": {
+      "cpp": [
+       42
+      ],
+      "python": [
+       33
+      ],
+      "java": [
+       40
+      ],
+      "go": [
+       63
+      ]
+     },
+     "explanation": "<b> opens a tag. Push its name: it's now the innermost unfinished tag. Stack [a,b].",
+     "variables": [
+      {
+       "name": "token",
+       "value": "<b>"
+      },
+      {
+       "name": "stack",
+       "value": "[a,b]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "tags edge-crossed: open, token <b>, stack [a,b].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<a>",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<b>",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</a>",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</b>",
+        "role": "neutral"
+       },
+       {
+        "id": "s0",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "s1",
+        "shape": "rect",
+        "x": 92,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "b",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "tags"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = top of the stack"
+       }
+      ]
+     }
+    },
+    {
+     "event": "mismatch",
+     "lines": {
+      "cpp": [
+       35,
+       36
+      ],
+      "python": [
+       27,
+       28
+      ],
+      "java": [
+       33,
+       34
+      ],
+      "go": [
+       56,
+       57
+      ]
+     },
+     "explanation": "</a> tries to close, but the innermost open tag is b, not a. The tags don't nest, so stop.",
+     "variables": [
+      {
+       "name": "token",
+       "value": "</a>"
+      },
+      {
+       "name": "stack",
+       "value": "[a,b]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "tags edge-crossed: mismatch, token </a>, stack [a,b].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<a>",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<b>",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</a>",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "</b>",
+        "role": "neutral"
+       },
+       {
+        "id": "s0",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "s1",
+        "shape": "rect",
+        "x": 92,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "b",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "tags"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = top of the stack"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-unclosed",
+   "label": "A tag never closes",
+   "input": "<a>\n",
+   "expectedOutput": "false",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       22
+      ],
+      "java": [
+       28
+      ],
+      "go": [
+       51
+      ]
+     },
+     "explanation": "Check that the tags <a> nest properly: every tag that opens must close, and the most recently opened one must close first. Keep the open tags on a stack.",
+     "variables": [
+      {
+       "name": "token",
+       "value": "-"
+      },
+      {
+       "name": "stack",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "tags edge-unclosed: start, token -, stack [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<a>",
+        "role": "neutral"
+       },
+       {
+        "id": "empty",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "stack empty",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "tags"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = top of the stack"
+       }
+      ]
+     }
+    },
+    {
+     "event": "open",
+     "lines": {
+      "cpp": [
+       42
+      ],
+      "python": [
+       33
+      ],
+      "java": [
+       40
+      ],
+      "go": [
+       63
+      ]
+     },
+     "explanation": "<a> opens a tag. Push its name: it's now the innermost unfinished tag. Stack [a].",
+     "variables": [
+      {
+       "name": "token",
+       "value": "<a>"
+      },
+      {
+       "name": "stack",
+       "value": "[a]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "tags edge-unclosed: open, token <a>, stack [a].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<a>",
+        "role": "active"
+       },
+       {
+        "id": "s0",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "a",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "tags"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = top of the stack"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       47
+      ],
+      "python": [
+       36
+      ],
+      "java": [
+       45
+      ],
+      "go": [
+       68
+      ]
+     },
+     "explanation": "The input ended with [a] still open, so it's not properly closed.",
+     "variables": [
+      {
+       "name": "token",
+       "value": "-"
+      },
+      {
+       "name": "stack",
+       "value": "[a]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "tags edge-unclosed: done, token -, stack [a].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "<a>",
+        "role": "visited"
+       },
+       {
+        "id": "s0",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 64,
+        "height": 40,
+        "text": "a",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "tags"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right box = top of the stack"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

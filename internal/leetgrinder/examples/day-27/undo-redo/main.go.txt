@@ -1,0 +1,92 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
+type variable struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func emit(event string, pairs ...string) {
+	variables := []variable{}
+	for k := 0; k+1 < len(pairs); k += 2 {
+		variables = append(variables, variable{pairs[k], pairs[k+1]})
+	}
+	data, _ := json.Marshal(struct {
+		Event     string     `json:"event"`
+		Variables []variable `json:"variables"`
+	}{event, variables})
+	fmt.Println(string(data))
+}
+
+func result(answer string) {
+	data, _ := json.Marshal(struct {
+		Result string `json:"result"`
+	}{answer})
+	fmt.Println(string(data))
+}
+
+func itoa(value int) string { return strconv.Itoa(value) }
+
+func show(values []int) string {
+	parts := make([]string, len(values))
+	for k, value := range values {
+		parts[k] = strconv.Itoa(value)
+	}
+	return "[" + strings.Join(parts, ",") + "]"
+}
+
+func showStack(stack []string) string {
+	return "[" + strings.Join(stack, ",") + "]"
+}
+
+func solve(tokens []string) string {
+	text, redo := []string{}, []string{}
+	emit("start", "token", "-", "text", showStack(text), "redo", showStack(redo))
+	for _, token := range tokens {
+		switch token {
+		case "undo":
+			if len(text) > 0 {
+				redo = append(redo, text[len(text)-1])
+				text = text[:len(text)-1]
+			}
+			emit("undo", "token", token, "text", showStack(text), "redo", showStack(redo))
+		case "redo":
+			if len(redo) > 0 {
+				text = append(text, redo[len(redo)-1])
+				redo = redo[:len(redo)-1]
+			}
+			emit("redo", "token", token, "text", showStack(text), "redo", showStack(redo))
+		default:
+			text = append(text, token)
+			redo = redo[:0]
+			emit("type", "token", token, "text", showStack(text), "redo", showStack(redo))
+		}
+	}
+
+	emit("done", "token", "-", "text", showStack(text), "redo", showStack(redo))
+	if len(text) == 0 {
+		return "(empty)"
+	}
+	return strings.Join(text, "")
+}
+
+func main() {
+	in := bufio.NewReader(os.Stdin)
+	tokens := []string{}
+	for {
+		var token string
+		if _, err := fmt.Fscan(in, &token); err != nil {
+			break
+		}
+		tokens = append(tokens, token)
+	}
+	result(solve(tokens))
+}

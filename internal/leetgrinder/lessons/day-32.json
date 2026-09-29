@@ -1,0 +1,228 @@
+{
+  "day": 32,
+  "objectives": [
+    "Explain why FIFO processing visits tree depths in order.",
+    "Use a saved queue length to delimit one level.",
+    "Compute level order, right-side view, and minimum leaf depth, including sparse and empty trees."
+  ],
+  "prerequisites": [
+    29,
+    30
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "heading": "Intuition",
+      "paragraphs": [
+        "Breadth-first search (BFS) removes the oldest queued tree node first. Every child is one edge farther from the root than its parent. A FIFO queue therefore reaches all nodes at a shallow depth before nodes at a deeper depth.",
+        "In the diagram, process 7, then 3 and 8, then 1 and 5. Values inside circles identify nodes; a missing child has no circle and never enters the queue. The queue is ordered from its front to its back."
+      ],
+      "diagram": {
+        "width": 440,
+        "height": 265,
+        "description": "Tree with root 7, children 3 and 8, and children 1 and 5 under 3. Levels are [7], [3,8], [1,5].",
+        "nodes": [
+          {
+            "id": "root",
+            "shape": "circle",
+            "x": 190,
+            "y": 15,
+            "width": 48,
+            "height": 48,
+            "text": "7",
+            "role": "active"
+          },
+          {
+            "id": "left",
+            "shape": "circle",
+            "x": 90,
+            "y": 95,
+            "width": 48,
+            "height": 48,
+            "text": "3",
+            "role": "neutral"
+          },
+          {
+            "id": "right",
+            "shape": "circle",
+            "x": 290,
+            "y": 95,
+            "width": 48,
+            "height": 48,
+            "text": "8",
+            "role": "neutral"
+          },
+          {
+            "id": "leaf1",
+            "shape": "circle",
+            "x": 35,
+            "y": 170,
+            "width": 48,
+            "height": 48,
+            "text": "1",
+            "role": "neutral"
+          },
+          {
+            "id": "leaf5",
+            "shape": "circle",
+            "x": 155,
+            "y": 170,
+            "width": 48,
+            "height": 48,
+            "text": "5",
+            "role": "neutral"
+          }
+        ],
+        "edges": [
+          {
+            "id": "e1",
+            "from": "root",
+            "to": "left",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          },
+          {
+            "id": "e2",
+            "from": "root",
+            "to": "right",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          },
+          {
+            "id": "e3",
+            "from": "left",
+            "to": "leaf1",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          },
+          {
+            "id": "e4",
+            "from": "left",
+            "to": "leaf5",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          }
+        ],
+        "labels": [
+          {
+            "id": "l1",
+            "x": 5,
+            "y": 43,
+            "text": "depth 1"
+          },
+          {
+            "id": "l2",
+            "x": 5,
+            "y": 123,
+            "text": "depth 2"
+          },
+          {
+            "id": "l3",
+            "x": 5,
+            "y": 198,
+            "text": "depth 3"
+          }
+        ]
+      }
+    },
+    {
+      "id": "recognize",
+      "heading": "When to use a tree queue",
+      "paragraphs": [
+        "Use this pattern when the answer depends on a whole depth, the first qualifying node at the shallowest depth, or a left-to-right position within each depth. A tree has one parent path per node, so a valid tree traversal does not need a visited set. A graph with cycles does.",
+        "The runnable examples use a compact input format: the first integer is the node count n. Each of the next n rows gives value, left-child index, and right-child index. Index 0 is the root. A child index of -1 means no child. The row format is a demonstration input, not the usual interview function signature. For n=0, there are no rows."
+      ],
+      "bullets": [
+        "Level order returns one list per depth; bottom-up level order reverses that list of levels after traversal.",
+        "Right-side view returns one value per depth.",
+        "Minimum depth counts nodes on the shortest root-to-leaf path: an empty tree has depth 0 and a root leaf has depth 1."
+      ]
+    },
+    {
+      "id": "baseline",
+      "heading": "Baseline and repeated work",
+      "paragraphs": [
+        "A direct baseline asks, for each depth d from 1 through the tree height h, which nodes live at depth d. A recursive scan from the root answers one depth at a time. It revisits upper nodes for every requested depth, taking O(nh) time in a worst-case chain. It also uses O(h) call-stack space and O(n) space if it stores the grouped output.",
+        "The baseline program counts visits during collection passes. On the branching tree it visits upper nodes again at each requested depth. BFS removes each node once and adds each existing child once. Capturing queue length before a level separates current nodes from children appended during that level."
+      ],
+      "exampleIds": [
+        "day-32-depth-rescan"
+      ]
+    },
+    {
+      "id": "worked",
+      "heading": "Worked example",
+      "paragraphs": [
+        "The input tree has root 7, children 3 and 8, and children 1 and 5 under 3. At depth 1, the queue starts [0]. Removing 0 appends 1 and 2, but the saved count is one, so depth 1 ends as [7]. At depth 2, the saved count is two. Removing 1 appends 3 and 4; removing 2 appends nothing. The level is [3,8], and the queue now holds [3,4].",
+        "The level result is [[7],[3,8],[1,5]]. The rightmost values are [7,8,5]. Minimum depth is 2 because node 8 is a leaf; finding it stops the search even though deeper nodes remain queued."
+      ]
+    },
+    {
+      "id": "level",
+      "heading": "Level boundary queue",
+      "paragraphs": [
+        "At each loop entrance, the queue begins with exactly the current level. Save its length as count. Remove exactly count nodes, collect their values, and append only existing children in left-to-right order. The queue may contain next-level nodes during the loop, but count does not change.",
+        "After those count removals, the collected level is complete. Append it to the answer. For bottom-up traversal, reverse the completed outer list once at the end; reversing each level would change left-to-right order."
+      ],
+      "exampleIds": [
+        "day-32-level-boundary"
+      ]
+    },
+    {
+      "id": "view",
+      "heading": "Rightmost node",
+      "paragraphs": [
+        "Run the same fixed-count loop and enqueue left before right. The last value removed among the count current-level nodes is the rightmost visible value at that depth. A missing right child does not make a node invisible: the rightmost existing node wins.",
+        "Do not take the last element of the queue after the loop. That queue now holds children at the next depth. Take the last value from the level just completed."
+      ],
+      "exampleIds": [
+        "day-32-rightmost-node"
+      ]
+    },
+    {
+      "id": "minimum",
+      "heading": "First-leaf minimum depth",
+      "paragraphs": [
+        "Depth is measured in nodes here. Increase depth when starting a nonempty level. After removing a node, test whether both children are absent. If so, return the current depth. Otherwise append its existing children. The first leaf removed is shallowest because FIFO order completes shallower levels before deeper ones.",
+        "A node with one missing child is not a leaf. The single-child edge trace follows two turns before reaching the actual leaf at depth 3. Returning when either child is missing would incorrectly answer 1 or 2."
+      ],
+      "exampleIds": [
+        "day-32-first-leaf-depth"
+      ]
+    },
+    {
+      "id": "complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Let n be the number of nodes, w the largest number of nodes in a level, and h the height in nodes. Each BFS version visits at most n nodes and tests at most two child links per node, so time is O(n). The live queue uses O(w) space. The level-order output itself uses O(n) space; the right view uses O(h) output space. Minimum depth uses O(w) queue space and O(1) output space. A full binary tree can have w proportional to n.",
+        "These programs use dequeues with constant-time front removal: deque in Python and Java, queue in C++, and a slice head advance in Go. Repeatedly removing index 0 from a Python list or shifting a Java array list can add O(n) work per removal. In a tree with no cycles, each child is enqueued once; graph BFS needs a visited rule at enqueue time."
+      ]
+    },
+    {
+      "id": "check",
+      "heading": "Before you finish",
+      "checks": [
+        {
+          "prompt": "After removing node 7, why does depth 1 end although the queue contains [1,2]?",
+          "answer": "The loop saved count=1 before removing 7. The new queue entries are its children and belong to depth 2."
+        },
+        {
+          "prompt": "If a level is [3,8] and children are queued left before right, which value enters the right-side view?",
+          "answer": "8, the last value processed among the two current-level nodes."
+        },
+        {
+          "prompt": "Does a root with one child have minimum depth 1?",
+          "answer": "No. The root is not a leaf. Continue until reaching a node with neither child."
+        },
+        {
+          "prompt": "How do you obtain bottom-up level order without changing node order within each level?",
+          "answer": "Reverse only the outer list of completed levels."
+        }
+      ]
+    }
+  ]
+}

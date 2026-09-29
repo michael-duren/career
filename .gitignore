@@ -69,3 +69,6 @@ main
 Basic_LinkedInDataExport*
 Complete_LinkedInDataExport*
 /*.csv
+
+# Python test bytecode
+__pycache__/

@@ -1,0 +1,75 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
+type variable struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func emit(event string, pairs ...string) {
+	variables := []variable{}
+	for k := 0; k+1 < len(pairs); k += 2 {
+		variables = append(variables, variable{pairs[k], pairs[k+1]})
+	}
+	data, _ := json.Marshal(struct {
+		Event     string     `json:"event"`
+		Variables []variable `json:"variables"`
+	}{event, variables})
+	fmt.Println(string(data))
+}
+
+func result(answer string) {
+	data, _ := json.Marshal(struct {
+		Result string `json:"result"`
+	}{answer})
+	fmt.Println(string(data))
+}
+
+func itoa(value int) string { return strconv.Itoa(value) }
+
+func show(values []int) string {
+	parts := make([]string, len(values))
+	for k, value := range values {
+		parts[k] = strconv.Itoa(value)
+	}
+	return "[" + strings.Join(parts, ",") + "]"
+}
+
+func solve(values []int, queries [][2]int) []int {
+	prefix := []int{0}
+	for _, value := range values {
+		prefix = append(prefix, prefix[len(prefix)-1]+value)
+	}
+	emit("prefix", "l", "-", "r", "-", "answer", "-", "prefix", show(prefix))
+	answers := []int{}
+	for _, query := range queries {
+		l, r := query[0], query[1]
+		answers = append(answers, prefix[r+1]-prefix[l])
+		emit("query", "l", itoa(l), "r", itoa(r), "answer", itoa(answers[len(answers)-1]), "prefix", show(prefix))
+	}
+	return answers
+}
+
+func main() {
+	in := bufio.NewReader(os.Stdin)
+	var n, q int
+	fmt.Fscan(in, &n)
+	values := make([]int, n)
+	for k := range values {
+		fmt.Fscan(in, &values[k])
+	}
+	fmt.Fscan(in, &q)
+	queries := make([][2]int, q)
+	for k := range queries {
+		fmt.Fscan(in, &queries[k][0], &queries[k][1])
+	}
+	result(show(solve(values, queries)))
+}

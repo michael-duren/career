@@ -1,0 +1,204 @@
+{
+  "day": 13,
+  "objectives": [
+    "Recognize \"find the smallest amount that is enough\" problems.",
+    "Binary search over possible answers with a feasibility check.",
+    "Prove the check flips only once before relying on it."
+  ],
+  "prerequisites": [
+    9
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: guess an answer, then check it",
+      "paragraphs": [
+        "Some problems ask for the smallest amount of something that is enough: time, speed, capacity. Computing that amount directly is hard. Checking a guess is often easy: \"if I had t minutes, could I finish?\"",
+        "If more of the resource never hurts, the answers look like no, no, no, yes, yes as the guess grows. That's the day 9 pattern, so binary search the guess and call the check at each mid."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "Two pieces: a check that answers \"is this amount enough?\", and a proof that a bigger amount is always at least as good. Without the proof, binary search can skip the answer."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Guesses 1 to 5 minutes: no, no, yes, yes, yes. The first yes is the answer.",
+        "nodes": [
+          {
+            "id": "v0",
+            "shape": "rect",
+            "x": 12,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "no",
+            "role": "discarded"
+          },
+          {
+            "id": "v1",
+            "shape": "rect",
+            "x": 72,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "no",
+            "role": "discarded"
+          },
+          {
+            "id": "v2",
+            "shape": "rect",
+            "x": 132,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "yes",
+            "role": "result"
+          },
+          {
+            "id": "v3",
+            "shape": "rect",
+            "x": 192,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "yes",
+            "role": "visited"
+          },
+          {
+            "id": "v4",
+            "shape": "rect",
+            "x": 252,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "yes",
+            "role": "visited"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "title",
+            "x": 12,
+            "y": 28,
+            "text": "is t minutes enough?"
+          },
+          {
+            "id": "l0",
+            "x": 12,
+            "y": 110,
+            "text": "guesses t = 1 ... 5"
+          },
+          {
+            "id": "l1",
+            "x": 12,
+            "y": 130,
+            "text": "answer: the first yes"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Try every amount",
+      "heading": "Baseline: try every amount from the smallest up",
+      "paragraphs": [
+        "Trying t = 1, 2, 3, ... until the check passes is correct but can take as many checks as the answer is large. With answers in the billions, that's too slow. Binary search needs about 31 checks for a range of two billion."
+      ]
+    },
+    {
+      "id": "trips",
+      "navLabel": "Search the answer",
+      "heading": "Worked example: least time to finish the trips",
+      "paragraphs": [
+        "Several buses run at once. Bus i takes rates[i] minutes per trip. What is the least time t in which they finish at least P trips in total?",
+        "Check a guess t: each bus finishes t / rates[i] trips, rounded down, so add those up and compare with P. More time never means fewer trips, so the check flips once. The answer is between 1 and (fastest bus's trip time) × P, because the fastest bus alone finishes P trips by then.",
+        "Then run the first-true search from day 9 on t, calling the check at each mid."
+      ],
+      "exampleIds": [
+        "day-13-minimum-time"
+      ]
+    },
+    {
+      "id": "counterexample",
+      "navLabel": "When it breaks",
+      "heading": "When the check doesn't flip once",
+      "paragraphs": [
+        "The method depends on monotonicity: once an amount is enough, every bigger amount is enough too. Suppose a machine jams when it runs faster than 10 units per hour, so speed 12 finishes slower than speed 9. Then the answers might be no, yes, no, yes, and a binary search could land on the wrong side and miss the real smallest speed.",
+        "Before coding, say out loud why a bigger amount can't make things worse. If you can't, binary search isn't safe."
+      ]
+    },
+    {
+      "id": "your-turn-koko",
+      "navLabel": "Your turn: Koko Eating Bananas",
+      "heading": "Your turn: Koko Eating Bananas",
+      "paragraphs": [
+        "Today's first medium. Koko has piles of bananas and h hours. At speed k she eats up to k bananas from one pile per hour; if a pile has fewer, she finishes it and waits for the next hour. Find the smallest k that lets her finish in h hours."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Write the check first: given k, how many hours does it take? Then decide the smallest and largest k worth trying.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-ship",
+      "navLabel": "Your turn: Capacity To Ship Packages Within D Days",
+      "heading": "Your turn: Capacity To Ship Packages Within D Days",
+      "paragraphs": [
+        "Today's second medium. Packages must ship in the given order. Each day a ship carries packages until adding the next one would pass its capacity. Find the smallest capacity that ships everything within D days."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Given a capacity, how do you count the days needed? What is the smallest capacity that could possibly work?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-divisor",
+      "navLabel": "Your turn: Find the Smallest Divisor Given a Threshold",
+      "heading": "Your turn: Find the Smallest Divisor Given a Threshold",
+      "paragraphs": [
+        "Today's third medium. Choose a positive divisor. Divide every number by it, rounding up, and add the results. Find the smallest divisor whose sum is at most the threshold."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "As the divisor grows, what happens to the sum? Confirm that before you search.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Search on the answer costs O(log R) checks for an answer range of size R, times the cost of one check. For the buses a check is O(number of buses), so the total is O(n log R).",
+        "Totals inside the check can get large. In C++, Java, and Go, sum in a 64-bit type."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "For buses taking 1, 2, and 3 minutes, how many trips finish in 3 minutes?",
+          "answer": "3 + 1 + 1 = 5."
+        },
+        {
+          "prompt": "Why is (fastest trip time) × P a safe upper bound?",
+          "answer": "The fastest bus alone finishes P trips in that time, so the total is at least P."
+        },
+        {
+          "prompt": "What must be true about the check for this method to work?",
+          "answer": "Once an amount is enough, every larger amount is also enough."
+        }
+      ]
+    }
+  ]
+}

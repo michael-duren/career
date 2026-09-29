@@ -1,0 +1,2561 @@
+{
+ "id": "day-07-border",
+ "title": "Walk the border of a grid",
+ "invariant": "Each border cell is visited exactly once; each corner belongs to the first side that reaches it.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 29,
+   "algorithmEnd": 48
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 22,
+   "algorithmEnd": 42
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 29,
+   "algorithmEnd": 52
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 54,
+   "algorithmEnd": 81
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "3 × 4 grid",
+   "input": "3 4\n1 2 3 4\n5 6 7 8\n9 10 11 12\n",
+   "expectedOutput": "[1,2,3,4,8,12,11,10,9,5]",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       30,
+       31
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       30,
+       31
+      ],
+      "go": [
+       55,
+       56
+      ]
+     },
+     "explanation": "Walk the outside edge of this 3 × 4 grid clockwise, visiting each border cell exactly once.",
+     "variables": [
+      {
+       "name": "side",
+       "value": "-"
+      },
+      {
+       "name": "order",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Border normal: start, order [].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-3",
+        "shape": "rect",
+        "x": 196,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-3",
+        "shape": "rect",
+        "x": 196,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "10",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-3",
+        "shape": "rect",
+        "x": 196,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "12",
+        "role": "neutral"
+       },
+       {
+        "id": "order",
+        "shape": "rect",
+        "x": 264,
+        "y": 44,
+        "width": 240,
+        "height": 38,
+        "text": "order (empty)",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "blue = walked this step; gold = earlier"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "col-3",
+        "x": 215,
+        "y": 38,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "corners belong to exactly one side"
+       }
+      ]
+     }
+    },
+    {
+     "event": "top",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       26,
+       27
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       58,
+       59
+      ]
+     },
+     "explanation": "Walk the top row, left to right: 1, 2, 3, 4.",
+     "variables": [
+      {
+       "name": "side",
+       "value": "top"
+      },
+      {
+       "name": "order",
+       "value": "[1,2,3,4]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Border normal: top, order [1,2,3,4].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "active"
+       },
+       {
+        "id": "cell-0-3",
+        "shape": "rect",
+        "x": 196,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "active"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-3",
+        "shape": "rect",
+        "x": 196,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "10",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-3",
+        "shape": "rect",
+        "x": 196,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "12",
+        "role": "neutral"
+       },
+       {
+        "id": "order",
+        "shape": "rect",
+        "x": 264,
+        "y": 44,
+        "width": 240,
+        "height": 38,
+        "text": "order 1,2,3,4",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "blue = walked this step; gold = earlier"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "col-3",
+        "x": 215,
+        "y": 38,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "corners belong to exactly one side"
+       }
+      ]
+     }
+    },
+    {
+     "event": "right",
+     "lines": {
+      "cpp": [
+       35
+      ],
+      "python": [
+       29,
+       30
+      ],
+      "java": [
+       35
+      ],
+      "go": [
+       62,
+       63
+      ]
+     },
+     "explanation": "Walk the right column, going down: 8, 12. Start one row down, because the top-right corner was already visited.",
+     "variables": [
+      {
+       "name": "side",
+       "value": "right"
+      },
+      {
+       "name": "order",
+       "value": "[1,2,3,4,8,12]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Border normal: right, order [1,2,3,4,8,12].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-3",
+        "shape": "rect",
+        "x": 196,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-3",
+        "shape": "rect",
+        "x": 196,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "active"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "10",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-3",
+        "shape": "rect",
+        "x": 196,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "12",
+        "role": "active"
+       },
+       {
+        "id": "order",
+        "shape": "rect",
+        "x": 264,
+        "y": 44,
+        "width": 240,
+        "height": 38,
+        "text": "order 1,2,3,4,8,12",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "blue = walked this step; gold = earlier"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "col-3",
+        "x": 215,
+        "y": 38,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "corners belong to exactly one side"
+       }
+      ]
+     }
+    },
+    {
+     "event": "bottom",
+     "lines": {
+      "cpp": [
+       38
+      ],
+      "python": [
+       33,
+       34
+      ],
+      "java": [
+       38
+      ],
+      "go": [
+       67,
+       68
+      ]
+     },
+     "explanation": "Walk the bottom row, right to left: 11, 10, 9. This side only runs when there's more than one row; otherwise it would re-walk the top row backward.",
+     "variables": [
+      {
+       "name": "side",
+       "value": "bottom"
+      },
+      {
+       "name": "order",
+       "value": "[1,2,3,4,8,12,11,10,9]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Border normal: bottom, order [1,2,3,4,8,12,11,10,9].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-3",
+        "shape": "rect",
+        "x": 196,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-3",
+        "shape": "rect",
+        "x": 196,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "active"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "10",
+        "role": "active"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "11",
+        "role": "active"
+       },
+       {
+        "id": "cell-2-3",
+        "shape": "rect",
+        "x": 196,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "12",
+        "role": "visited"
+       },
+       {
+        "id": "order",
+        "shape": "rect",
+        "x": 264,
+        "y": 44,
+        "width": 240,
+        "height": 38,
+        "text": "order 1,2,3,4,8,12,11,10,9",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "blue = walked this step; gold = earlier"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "col-3",
+        "x": 215,
+        "y": 38,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "corners belong to exactly one side"
+       }
+      ]
+     }
+    },
+    {
+     "event": "left",
+     "lines": {
+      "cpp": [
+       42
+      ],
+      "python": [
+       37,
+       38
+      ],
+      "java": [
+       42
+      ],
+      "go": [
+       73,
+       74
+      ]
+     },
+     "explanation": "Walk the left column, going up: 5. Stop before the top row, so the top-left corner isn't visited twice.",
+     "variables": [
+      {
+       "name": "side",
+       "value": "left"
+      },
+      {
+       "name": "order",
+       "value": "[1,2,3,4,8,12,11,10,9,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Border normal: left, order [1,2,3,4,8,12,11,10,9,5].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-3",
+        "shape": "rect",
+        "x": 196,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "active"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-3",
+        "shape": "rect",
+        "x": 196,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "10",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "11",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2-3",
+        "shape": "rect",
+        "x": 196,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "12",
+        "role": "visited"
+       },
+       {
+        "id": "order",
+        "shape": "rect",
+        "x": 264,
+        "y": 44,
+        "width": 240,
+        "height": 38,
+        "text": "order 1,2,3,4,8,12,11,10,9,5",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "blue = walked this step; gold = earlier"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "col-3",
+        "x": 215,
+        "y": 38,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "corners belong to exactly one side"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       46
+      ],
+      "python": [
+       41
+      ],
+      "java": [
+       46
+      ],
+      "go": [
+       79
+      ]
+     },
+     "explanation": "Border in clockwise order: [1,2,3,4,8,12,11,10,9,5].",
+     "variables": [
+      {
+       "name": "side",
+       "value": "-"
+      },
+      {
+       "name": "order",
+       "value": "[1,2,3,4,8,12,11,10,9,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Border normal: done, order [1,2,3,4,8,12,11,10,9,5].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-3",
+        "shape": "rect",
+        "x": 196,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-3",
+        "shape": "rect",
+        "x": 196,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "result"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "result"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "10",
+        "role": "result"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "11",
+        "role": "result"
+       },
+       {
+        "id": "cell-2-3",
+        "shape": "rect",
+        "x": 196,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "12",
+        "role": "result"
+       },
+       {
+        "id": "order",
+        "shape": "rect",
+        "x": 264,
+        "y": 44,
+        "width": 240,
+        "height": 38,
+        "text": "order 1,2,3,4,8,12,11,10,9,5",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "blue = walked this step; gold = earlier"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "col-3",
+        "x": 215,
+        "y": 38,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "corners belong to exactly one side"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-one-row",
+   "label": "One row",
+   "input": "1 3\n1 2 3\n",
+   "expectedOutput": "[1,2,3]",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       30,
+       31
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       30,
+       31
+      ],
+      "go": [
+       55,
+       56
+      ]
+     },
+     "explanation": "Walk the outside edge of this 1 × 3 grid clockwise, visiting each border cell exactly once.",
+     "variables": [
+      {
+       "name": "side",
+       "value": "-"
+      },
+      {
+       "name": "order",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Border edge-one-row: start, order [].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "order",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "order (empty)",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "blue = walked this step; gold = earlier"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 188,
+        "text": "corners belong to exactly one side"
+       }
+      ]
+     }
+    },
+    {
+     "event": "top",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       26,
+       27
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       58,
+       59
+      ]
+     },
+     "explanation": "Walk the top row, left to right: 1, 2, 3.",
+     "variables": [
+      {
+       "name": "side",
+       "value": "top"
+      },
+      {
+       "name": "order",
+       "value": "[1,2,3]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Border edge-one-row: top, order [1,2,3].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "active"
+       },
+       {
+        "id": "order",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "order 1,2,3",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "blue = walked this step; gold = earlier"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 188,
+        "text": "corners belong to exactly one side"
+       }
+      ]
+     }
+    },
+    {
+     "event": "right",
+     "lines": {
+      "cpp": [
+       35
+      ],
+      "python": [
+       29,
+       30
+      ],
+      "java": [
+       35
+      ],
+      "go": [
+       62,
+       63
+      ]
+     },
+     "explanation": "Walk the right column, going down: nothing. There's only one row, so nothing is below the top-right corner.",
+     "variables": [
+      {
+       "name": "side",
+       "value": "right"
+      },
+      {
+       "name": "order",
+       "value": "[1,2,3]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Border edge-one-row: right, order [1,2,3].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "order",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "order 1,2,3",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "blue = walked this step; gold = earlier"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 188,
+        "text": "corners belong to exactly one side"
+       }
+      ]
+     }
+    },
+    {
+     "event": "left",
+     "lines": {
+      "cpp": [
+       42
+      ],
+      "python": [
+       37,
+       38
+      ],
+      "java": [
+       42
+      ],
+      "go": [
+       73,
+       74
+      ]
+     },
+     "explanation": "Walk the left column, going up: nothing. The grid has no cells between the top and bottom rows on this side.",
+     "variables": [
+      {
+       "name": "side",
+       "value": "left"
+      },
+      {
+       "name": "order",
+       "value": "[1,2,3]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Border edge-one-row: left, order [1,2,3].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "order",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "order 1,2,3",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "blue = walked this step; gold = earlier"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 188,
+        "text": "corners belong to exactly one side"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       46
+      ],
+      "python": [
+       41
+      ],
+      "java": [
+       46
+      ],
+      "go": [
+       79
+      ]
+     },
+     "explanation": "Border in clockwise order: [1,2,3].",
+     "variables": [
+      {
+       "name": "side",
+       "value": "-"
+      },
+      {
+       "name": "order",
+       "value": "[1,2,3]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Border edge-one-row: done, order [1,2,3].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "order",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "order 1,2,3",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "blue = walked this step; gold = earlier"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 188,
+        "text": "corners belong to exactly one side"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-one-column",
+   "label": "One column",
+   "input": "3 1\n1\n2\n3\n",
+   "expectedOutput": "[1,2,3]",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       30,
+       31
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       30,
+       31
+      ],
+      "go": [
+       55,
+       56
+      ]
+     },
+     "explanation": "Walk the outside edge of this 3 × 1 grid clockwise, visiting each border cell exactly once.",
+     "variables": [
+      {
+       "name": "side",
+       "value": "-"
+      },
+      {
+       "name": "order",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Border edge-one-column: start, order [].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "order",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "order (empty)",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "blue = walked this step; gold = earlier"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "corners belong to exactly one side"
+       }
+      ]
+     }
+    },
+    {
+     "event": "top",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       26,
+       27
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       58,
+       59
+      ]
+     },
+     "explanation": "Walk the top row, left to right: 1.",
+     "variables": [
+      {
+       "name": "side",
+       "value": "top"
+      },
+      {
+       "name": "order",
+       "value": "[1]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Border edge-one-column: top, order [1].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "order",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "order 1",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "blue = walked this step; gold = earlier"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "corners belong to exactly one side"
+       }
+      ]
+     }
+    },
+    {
+     "event": "right",
+     "lines": {
+      "cpp": [
+       35
+      ],
+      "python": [
+       29,
+       30
+      ],
+      "java": [
+       35
+      ],
+      "go": [
+       62,
+       63
+      ]
+     },
+     "explanation": "Walk the right column, going down: 2, 3. Start one row down, because the top-right corner was already visited.",
+     "variables": [
+      {
+       "name": "side",
+       "value": "right"
+      },
+      {
+       "name": "order",
+       "value": "[1,2,3]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Border edge-one-column: right, order [1,2,3].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "active"
+       },
+       {
+        "id": "order",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "order 1,2,3",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "blue = walked this step; gold = earlier"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "corners belong to exactly one side"
+       }
+      ]
+     }
+    },
+    {
+     "event": "bottom",
+     "lines": {
+      "cpp": [
+       38
+      ],
+      "python": [
+       33,
+       34
+      ],
+      "java": [
+       38
+      ],
+      "go": [
+       67,
+       68
+      ]
+     },
+     "explanation": "Walk the bottom row, right to left: nothing. There's only one column, so the bottom row has nothing left of the corner.",
+     "variables": [
+      {
+       "name": "side",
+       "value": "bottom"
+      },
+      {
+       "name": "order",
+       "value": "[1,2,3]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Border edge-one-column: bottom, order [1,2,3].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "order",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "order 1,2,3",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "blue = walked this step; gold = earlier"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "corners belong to exactly one side"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       46
+      ],
+      "python": [
+       41
+      ],
+      "java": [
+       46
+      ],
+      "go": [
+       79
+      ]
+     },
+     "explanation": "Border in clockwise order: [1,2,3].",
+     "variables": [
+      {
+       "name": "side",
+       "value": "-"
+      },
+      {
+       "name": "order",
+       "value": "[1,2,3]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Border edge-one-column: done, order [1,2,3].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "order",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "order 1,2,3",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "blue = walked this step; gold = earlier"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "corners belong to exactly one side"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

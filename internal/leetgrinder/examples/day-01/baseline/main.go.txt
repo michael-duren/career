@@ -1,0 +1,49 @@
+package main
+
+import (
+    "fmt"
+    "strings"
+)
+
+type field struct { name, value string }
+
+func emit(event string, fields ...field) {
+    fmt.Printf("{\"event\":\"%s\",\"variables\":[", event)
+    for k, f := range fields {
+        if k > 0 { fmt.Print(",") }
+        fmt.Printf("{\"name\":\"%s\",\"value\":\"%s\"}", f.name, f.value)
+    }
+    fmt.Println("]}")
+}
+
+func number(n int) string { return fmt.Sprint(n) }
+
+func listText(values []int) string {
+    parts := make([]string, len(values))
+    for k, value := range values { parts[k] = number(value) }
+    return "[" + strings.Join(parts, ",") + "]"
+}
+
+func main() {
+    var count, target int
+    if _, err := fmt.Scan(&count, &target); err != nil { panic(err) }
+    values := make([]int, count)
+    for k := range values { fmt.Scan(&values[k]) }
+    emit("start", field{"values", listText(values)}, field{"target", number(target)})
+    answer := []int{}
+    for i := 0; i < count; i++ {
+        emit("outer", field{"i", number(i)}, field{"first", number(values[i])})
+        for j := i + 1; j < count; j++ {
+            total := int64(values[i]) + int64(values[j])
+            emit("compare", field{"i", number(i)}, field{"j", number(j)}, field{"left", number(values[i])}, field{"right", number(values[j])}, field{"sum", fmt.Sprint(total)})
+            if total == int64(target) {
+                emit("match", field{"i", number(i)}, field{"j", number(j)})
+                answer = []int{i, j}
+                break
+            }
+        }
+        if len(answer) != 0 { break }
+    }
+    emit("done", field{"result", listText(answer)})
+    fmt.Printf("{\"result\":\"%s\"}\n", listText(answer))
+}

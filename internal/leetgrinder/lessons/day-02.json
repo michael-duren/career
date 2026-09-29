@@ -1,0 +1,295 @@
+{
+  "day": 2,
+  "objectives": [
+    "Use counters as a running summary of everything you've read so far.",
+    "Spend counts as requests arrive, and notice the moment one goes negative.",
+    "Turn a list of lengths into positions with a running total.",
+    "Explain why pairing off different values leaves the majority value standing."
+  ],
+  "prerequisites": [
+    1
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: a counter is a running summary",
+      "paragraphs": [
+        "Yesterday you remembered what you had seen. Today the thing you remember is a number that changes as you read: how many of each item are left, where you are along a route, or which value is ahead in a vote.",
+        "Picture a small shop. The shelf holds two a's, two b's, and one c. Instead of searching the shelf every time an order comes in, you keep a counter per item and subtract 1 per order. The counter tells you everything that matters about the past: how many are left. If a counter would drop below 0, the shop has run out."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "Before writing a loop, say in one sentence what each counter means after each step. For the shop: counts[x] is how many x are still on the shelf."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Shelf counters a: 2, b: 2, c: 1. An order for b lowers the b counter to 1.",
+        "nodes": [
+          {
+            "id": "a",
+            "shape": "rect",
+            "x": 20,
+            "y": 44,
+            "width": 80,
+            "height": 48,
+            "text": "a: 2",
+            "role": "neutral"
+          },
+          {
+            "id": "b",
+            "shape": "rect",
+            "x": 120,
+            "y": 44,
+            "width": 80,
+            "height": 48,
+            "text": "b: 2 → 1",
+            "role": "active"
+          },
+          {
+            "id": "c",
+            "shape": "rect",
+            "x": 220,
+            "y": 44,
+            "width": 80,
+            "height": 48,
+            "text": "c: 1",
+            "role": "neutral"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "title",
+            "x": 20,
+            "y": 28,
+            "text": "shelf counters"
+          },
+          {
+            "id": "order",
+            "x": 120,
+            "y": 118,
+            "text": "order: b"
+          },
+          {
+            "id": "rule",
+            "x": 20,
+            "y": 156,
+            "text": "below 0 means out of stock"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Search every time",
+      "heading": "Baseline: search the shelf for every order",
+      "paragraphs": [
+        "The direct approach keeps the stock as a list. For each order, walk the list looking for an unused copy of that item. If you find one, mark it used. If not, the order fails.",
+        "It works, and marking copies as used is what stops two orders from taking the same item. But each order may scan the whole shelf, so n stock items and m orders cost O(n·m) time. The counters below replace that search with one array lookup."
+      ]
+    },
+    {
+      "id": "stock",
+      "navLabel": "Spending counts",
+      "heading": "Worked example: fill orders from counted stock",
+      "paragraphs": [
+        "Count the stock once into 26 counters, one per lowercase letter (the same array trick as day 1). Then read the orders in order. Each order subtracts 1 from its item's counter.",
+        "If a counter becomes negative, that order asked for something that's gone, and you can stop right there. Nothing later can bring the count back up. If you reach the end with no negative counter, every order was filled.",
+        "Stock \"aabbc\" can fill orders \"abcab\": every counter ends at 0. Stock \"aab\" can't fill \"abaa\": the fourth order wants a third a, and the a counter drops to -1."
+      ],
+      "exampleIds": [
+        "day-02-stock-orders"
+      ]
+    },
+    {
+      "id": "positions",
+      "navLabel": "Lengths to positions",
+      "heading": "Worked example: turn lengths into positions",
+      "paragraphs": [
+        "Sometimes the input gives you lengths, but the question is about positions. A bus route described as segments 2, 3, 1 drives 2 units, then 3, then 1. Its stops are at the running totals: 2, then 5, then 6 (the end of the route).",
+        "Once you have positions, the rest is set and map work you already know. To find the stops two routes share, put route A's stop positions in a set, then walk route B and check each of its positions.",
+        "Routes 2 3 1 and 1 1 3 1 both have length 6. A stops at 2, 5, and 6; B stops at 1, 2, 5, and 6. They share 2, 5, and 6."
+      ],
+      "exampleIds": [
+        "day-02-shared-stops"
+      ]
+    },
+    {
+      "id": "cancel",
+      "navLabel": "Cancelling pairs",
+      "heading": "Worked example: cancel pairs of different values",
+      "paragraphs": [
+        "A majority value appears more than half the time. Here's a way to see which value that is without counting everything. Cross out pairs of different values, one pair at a time, until you can't anymore.",
+        "Every crossed-out pair removes at most one copy of the majority value, and at least one copy of something else. The majority has more copies than everything else combined, so it can't be fully crossed out. Whatever survives is the only possible majority.",
+        "In `[2, 1, 2, 3, 2]`, cross out (2, 1) and (2, 3). A single 2 survives, and 2 really is the majority: three out of five. But in `[1, 2, 3]`, crossing out (1, 2) leaves 3, which appears once. The survivor is only a candidate. If the input doesn't promise that a majority exists, count the survivor in a second pass to confirm."
+      ],
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "The values 2, 1, 2, 3, 2. The pairs 2 and 1, then 2 and 3, are crossed out. The last 2 survives.",
+        "nodes": [
+          {
+            "id": "v0",
+            "shape": "rect",
+            "x": 12,
+            "y": 44,
+            "width": 52,
+            "height": 48,
+            "text": "2",
+            "role": "discarded"
+          },
+          {
+            "id": "v1",
+            "shape": "rect",
+            "x": 72,
+            "y": 44,
+            "width": 52,
+            "height": 48,
+            "text": "1",
+            "role": "discarded"
+          },
+          {
+            "id": "v2",
+            "shape": "rect",
+            "x": 132,
+            "y": 44,
+            "width": 52,
+            "height": 48,
+            "text": "2",
+            "role": "discarded"
+          },
+          {
+            "id": "v3",
+            "shape": "rect",
+            "x": 192,
+            "y": 44,
+            "width": 52,
+            "height": 48,
+            "text": "3",
+            "role": "discarded"
+          },
+          {
+            "id": "v4",
+            "shape": "rect",
+            "x": 252,
+            "y": 44,
+            "width": 52,
+            "height": 48,
+            "text": "2",
+            "role": "result"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "title",
+            "x": 12,
+            "y": 28,
+            "text": "cross out different pairs"
+          },
+          {
+            "id": "p1",
+            "x": 36,
+            "y": 116,
+            "text": "pair 1"
+          },
+          {
+            "id": "p2",
+            "x": 156,
+            "y": 116,
+            "text": "pair 2"
+          },
+          {
+            "id": "survivor",
+            "x": 12,
+            "y": 156,
+            "text": "the last 2 survives"
+          }
+        ]
+      }
+    },
+    {
+      "id": "your-turn-ransom",
+      "navLabel": "Your turn: Ransom Note",
+      "heading": "Your turn: Ransom Note",
+      "paragraphs": [
+        "You get two strings, ransomNote and magazine. Return true if you can build the note by cutting letters out of the magazine, using each magazine letter at most once. Only lowercase letters appear."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Match the problem to the shop example: which string is the stock, and which is the list of orders?"
+      }
+    },
+    {
+      "id": "your-turn-brick",
+      "navLabel": "Your turn: Brick Wall",
+      "heading": "Your turn: Brick Wall",
+      "paragraphs": [
+        "Today's medium. A wall is made of rows of bricks, each row given as a list of brick widths, and every row has the same total width. Draw one vertical line from top to bottom that crosses as few bricks as possible, and return that number. A line along a brick's edge doesn't cross it, and you can't draw the line along either outer side of the wall.",
+        "The lesson doesn't solve this one."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Sketch the example wall on grid paper and try a few vertical lines by hand. Keep track of what makes one line better than another."
+      }
+    },
+    {
+      "id": "your-turn-majority",
+      "navLabel": "Your turn: Majority Element",
+      "heading": "Your turn: Majority Element",
+      "paragraphs": [
+        "Given an array where one value appears more than half the time, return that value. A hash map of counts solves it in O(n) time and O(n) memory. Try to also solve it in O(1) extra memory."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "What does the crossing-out look like if you can only see one element at a time?"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "bullets": [
+        "Searching the shelf for every order: O(n·m) time.",
+        "Counting stock, then spending counts: O(n + m) time, and 26 counters count as O(1) memory.",
+        "Shared stops with a set: O(a + b) time on average for routes with a and b segments, O(a) memory for the set.",
+        "Crossing out pairs in one pass can be done in O(n) time with O(1) memory; a confirming second pass is another O(n)."
+      ],
+      "paragraphs": [
+        "Stop as soon as a spent counter goes negative. Counting all orders first and checking at the end also works, but it hides which order failed.",
+        "Running totals can get large. In C++, Java, and Go, check whether the total of many lengths can overflow a 32-bit integer; Python integers don't overflow."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "What does counts[x] mean after each order in the shop example?",
+          "answer": "How many x are still on the shelf: stock of x minus orders for x so far."
+        },
+        {
+          "prompt": "Why can you stop as soon as a counter goes negative?",
+          "answer": "Orders only ever subtract. Once a counter is negative, that order couldn't be filled, and nothing later raises the count."
+        },
+        {
+          "prompt": "Route segments 4, 1, 3: where are the stops?",
+          "answer": "4, 5, and 8: the running totals."
+        },
+        {
+          "prompt": "Cross out pairs in `[1, 2, 3]`. What survives, and is it a majority?",
+          "answer": "3 survives, but it appears once out of three. The survivor is only a candidate, so confirm it with a second count unless a majority is guaranteed."
+        }
+      ]
+    }
+  ]
+}

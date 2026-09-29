@@ -1,0 +1,229 @@
+{
+  "day": 3,
+  "objectives": [
+    "Group things that should count as \"the same\" by turning each one into a key.",
+    "Pick a key that matches exactly when two items belong together, and never otherwise.",
+    "Check a one-to-one match between two kinds of things with one map per direction."
+  ],
+  "prerequisites": [
+    1,
+    2
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: make equal things look equal",
+      "paragraphs": [
+        "Hash maps compare keys exactly: \"AB-12\" and \"ab12\" are different strings. But often you want them treated as the same thing. The fix is to clean each item up into a key first, so that everything that should match produces the identical key. Then a map groups them for you.",
+        "The second idea today is about matching two kinds of things, like students and lockers. \"Each student has one locker\" is not the same promise as \"each locker has one student\". To check both, you need to look from both sides."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "A good key has two properties. Items that belong together always get the same key, and items that don't belong together never do."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Three plates, AB-12, ab12 and A-B12, all turn into the key ab12.",
+        "nodes": [
+          {
+            "id": "p1",
+            "shape": "rect",
+            "x": 12,
+            "y": 20,
+            "width": 92,
+            "height": 36,
+            "text": "AB-12",
+            "role": "neutral"
+          },
+          {
+            "id": "p2",
+            "shape": "rect",
+            "x": 12,
+            "y": 66,
+            "width": 92,
+            "height": 36,
+            "text": "ab12",
+            "role": "neutral"
+          },
+          {
+            "id": "p3",
+            "shape": "rect",
+            "x": 12,
+            "y": 112,
+            "width": 92,
+            "height": 36,
+            "text": "A-B12",
+            "role": "neutral"
+          },
+          {
+            "id": "key",
+            "shape": "rect",
+            "x": 200,
+            "y": 64,
+            "width": 104,
+            "height": 40,
+            "text": "key: ab12",
+            "role": "result"
+          }
+        ],
+        "edges": [
+          {
+            "id": "e1",
+            "from": "p1",
+            "to": "key",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          },
+          {
+            "id": "e2",
+            "from": "p2",
+            "to": "key",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          },
+          {
+            "id": "e3",
+            "from": "p3",
+            "to": "key",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          }
+        ],
+        "labels": [
+          {
+            "id": "rule",
+            "x": 200,
+            "y": 136,
+            "text": "lowercase,"
+          },
+          {
+            "id": "rule2",
+            "x": 200,
+            "y": 154,
+            "text": "drop dashes"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Compare every pair",
+      "heading": "Baseline: compare every pair",
+      "paragraphs": [
+        "Without keys, grouping means comparing each new item with one item from every group so far, using a \"do these match?\" check. With n items that's up to about n²/2 comparisons, and each check may itself walk both strings.",
+        "Keys replace all those comparisons with one map lookup per item. Computing the key costs some work per item, but you do it once, not once per comparison."
+      ]
+    },
+    {
+      "id": "plates",
+      "navLabel": "Grouping by key",
+      "heading": "Worked example: group license plates",
+      "paragraphs": [
+        "Say two plates are the same if they match after ignoring letter case and dashes. So \"AB-12\", \"ab12\", and \"A-B12\" are one plate written three ways.",
+        "Build the key by lowercasing the plate and removing dashes. Then keep a map from key to the list of original plates. Each plate goes into the list for its key, and a new key starts a new group. One pass, one map.",
+        "Check the key against both properties. Two plates that differ only in case or dashes always produce the same key. Two plates with different letters or digits never do, because the key keeps every letter and digit in order."
+      ],
+      "exampleIds": [
+        "day-03-plate-groups"
+      ]
+    },
+    {
+      "id": "lockers",
+      "navLabel": "Two-way matching",
+      "heading": "Worked example: one student, one locker",
+      "paragraphs": [
+        "You get lines like \"ann 3\" meaning Ann uses locker 3. The same line may repeat. Is this a proper one-to-one assignment, where each student has exactly one locker and each locker has exactly one student?",
+        "Keep two maps. lockerOf maps a student to their locker; studentOf maps a locker to its student. For each line, check both: if the student already has a different locker, fail. If the locker already has a different student, fail. Otherwise record the pair in both maps.",
+        "Either map alone misses a case. With only lockerOf, \"ann 3\" then \"bob 3\" looks fine, because Ann and Bob each have one locker. Only studentOf notices that locker 3 now has two students."
+      ],
+      "callout": {
+        "kind": "watch",
+        "text": "Seeing the same pair again, like \"ann 3\" twice, is not a conflict. Compare against what the map holds, rather than failing whenever a key already exists."
+      },
+      "exampleIds": [
+        "day-03-lockers"
+      ]
+    },
+    {
+      "id": "your-turn-anagrams",
+      "navLabel": "Your turn: Group Anagrams",
+      "heading": "Your turn: Group Anagrams",
+      "paragraphs": [
+        "Today's medium. Given a list of lowercase words, group the words that are anagrams of each other: \"eat\", \"tea\", and \"ate\" go together, \"tan\" and \"nat\" together, and \"bat\" alone.",
+        "The plates example is the pattern. The whole problem comes down to choosing the key."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Write down \"eat\", \"tea\", and \"tan\". Invent a key that gives the first two the same value and the third a different one. Then check it against both properties of a good key."
+      }
+    },
+    {
+      "id": "your-turn-isomorphic",
+      "navLabel": "Your turn: Isomorphic Strings",
+      "heading": "Your turn: Isomorphic Strings",
+      "paragraphs": [
+        "Two strings are isomorphic if you can replace each character in the first to get the second, where every occurrence of a character is replaced by the same character, and no two different characters are replaced by the same one. \"egg\" and \"add\" are isomorphic; \"foo\" and \"bar\" are not."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Test your idea on \"badc\" and \"baba\" before coding. Many first attempts say yes to that pair; the answer is no."
+      }
+    },
+    {
+      "id": "your-turn-pattern",
+      "navLabel": "Your turn: Word Pattern",
+      "heading": "Your turn: Word Pattern",
+      "paragraphs": [
+        "Given a pattern like \"abba\" and a sentence like \"dog cat cat dog\", check whether the sentence follows the pattern: each letter stands for one word, and each word for one letter."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Split the sentence into words first. What should happen if the number of words doesn't match the pattern length?"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "bullets": [
+        "Comparing every pair to group: O(n²) comparisons.",
+        "Grouping by key: O(n) map operations on average, plus the cost of building each key (proportional to the item's length).",
+        "Two-map matching: O(n) time on average, O(n) memory for the maps."
+      ],
+      "paragraphs": [
+        "The cost of the key matters. A key that takes longer to build than the items are long can dominate the running time. Keep keys cheap, and remember that longer keys also take longer to hash.",
+        "Strings work as map keys in every language here. Lists and arrays don't in some of them: Python lists and Go slices can't be keys, and Java arrays compare by identity rather than contents. Convert to a string or tuple when you need a composite key."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "Would \"just the lowercase first letter\" be a good key for the plates? Why not?",
+          "answer": "No. Plates that are different, like \"ab12\" and \"ax99\", would share a key. A key must never match items that don't belong together."
+        },
+        {
+          "prompt": "Why isn't one map enough to check a one-to-one assignment?",
+          "answer": "lockerOf only catches a student getting two lockers. It can't see two students sharing a locker; that needs studentOf."
+        },
+        {
+          "prompt": "Why is it a mistake to fail whenever the student is already in lockerOf?",
+          "answer": "The same pair can appear again. Only a different locker for the same student is a conflict."
+        }
+      ]
+    }
+  ]
+}

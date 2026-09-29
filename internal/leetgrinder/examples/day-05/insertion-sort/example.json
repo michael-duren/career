@@ -1,0 +1,3165 @@
+{
+ "id": "day-05-insertion-sort",
+ "title": "Grow a sorted prefix one key at a time",
+ "invariant": "Before each outer step i, positions 0..i-1 hold the original first i values in sorted order.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 23,
+   "algorithmEnd": 40
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 32
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 23,
+   "algorithmEnd": 40
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 46,
+   "algorithmEnd": 63
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Unsorted [5,2,4,1]",
+   "input": "4\n5 2 4 1\n",
+   "expectedOutput": "[1,2,4,5]",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       23,
+       24
+      ],
+      "python": [
+       18,
+       19
+      ],
+      "java": [
+       23,
+       24
+      ],
+      "go": [
+       46,
+       47
+      ]
+     },
+     "explanation": "Sort [5,2,4,1]. Think of the left end as a sorted hand of cards. One card on its own is already sorted.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "key",
+       "value": "-"
+      },
+      {
+       "name": "j",
+       "value": "-"
+      },
+      {
+       "name": "values",
+       "value": "[5,2,4,1]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort normal: values [5,2,4,1], key -, j -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key -",
+        "role": "neutral"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = -",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..0"
+       }
+      ]
+     }
+    },
+    {
+     "event": "take",
+     "lines": {
+      "cpp": [
+       26,
+       27
+      ],
+      "python": [
+       21,
+       22
+      ],
+      "java": [
+       26,
+       27
+      ],
+      "go": [
+       49,
+       50
+      ]
+     },
+     "explanation": "Pick up the next card, 2. Everything to its left is sorted; find where 2 belongs among them.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "1"
+      },
+      {
+       "name": "key",
+       "value": "2"
+      },
+      {
+       "name": "j",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[5,2,4,1]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort normal: values [5,2,4,1], key 2, j 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key 2",
+        "role": "active"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "key from i"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..0"
+       }
+      ]
+     }
+    },
+    {
+     "event": "shift",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       53
+      ]
+     },
+     "explanation": "5 is bigger than 2, so slide 5 one spot right to make room. (It shows up twice for a moment; the 2 is safe in a variable.)",
+     "variables": [
+      {
+       "name": "i",
+       "value": "1"
+      },
+      {
+       "name": "key",
+       "value": "2"
+      },
+      {
+       "name": "j",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[5,5,4,1]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort normal: values [5,5,4,1], key 2, j 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key 2",
+        "role": "active"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "copied right"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..0"
+       }
+      ]
+     }
+    },
+    {
+     "event": "place",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       34
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "Stop sliding: nothing is left to its left. Drop 2 into the gap at index 0. The first 2 values are sorted now.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "1"
+      },
+      {
+       "name": "key",
+       "value": "2"
+      },
+      {
+       "name": "j",
+       "value": "-1"
+      },
+      {
+       "name": "values",
+       "value": "[2,5,4,1]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort normal: values [2,5,4,1], key 2, j -1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key 2",
+        "role": "active"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = -1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "key placed"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..1"
+       }
+      ]
+     }
+    },
+    {
+     "event": "take",
+     "lines": {
+      "cpp": [
+       26,
+       27
+      ],
+      "python": [
+       21,
+       22
+      ],
+      "java": [
+       26,
+       27
+      ],
+      "go": [
+       49,
+       50
+      ]
+     },
+     "explanation": "Pick up the next card, 4. Everything to its left is sorted; find where 4 belongs among them.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "2"
+      },
+      {
+       "name": "key",
+       "value": "4"
+      },
+      {
+       "name": "j",
+       "value": "1"
+      },
+      {
+       "name": "values",
+       "value": "[2,5,4,1]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort normal: values [2,5,4,1], key 4, j 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key 4",
+        "role": "active"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "key from i"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..1"
+       }
+      ]
+     }
+    },
+    {
+     "event": "shift",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       53
+      ]
+     },
+     "explanation": "5 is bigger than 4, so slide 5 one spot right to make room. (It shows up twice for a moment; the 4 is safe in a variable.)",
+     "variables": [
+      {
+       "name": "i",
+       "value": "2"
+      },
+      {
+       "name": "key",
+       "value": "4"
+      },
+      {
+       "name": "j",
+       "value": "1"
+      },
+      {
+       "name": "values",
+       "value": "[2,5,5,1]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort normal: values [2,5,5,1], key 4, j 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key 4",
+        "role": "active"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "copied right"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..1"
+       }
+      ]
+     }
+    },
+    {
+     "event": "place",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       34
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "Stop sliding: 2 is not bigger than 4. Drop 4 into the gap at index 1. The first 3 values are sorted now.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "2"
+      },
+      {
+       "name": "key",
+       "value": "4"
+      },
+      {
+       "name": "j",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[2,4,5,1]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort normal: values [2,4,5,1], key 4, j 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key 4",
+        "role": "active"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "key placed"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..2"
+       }
+      ]
+     }
+    },
+    {
+     "event": "take",
+     "lines": {
+      "cpp": [
+       26,
+       27
+      ],
+      "python": [
+       21,
+       22
+      ],
+      "java": [
+       26,
+       27
+      ],
+      "go": [
+       49,
+       50
+      ]
+     },
+     "explanation": "Pick up the next card, 1. Everything to its left is sorted; find where 1 belongs among them.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "3"
+      },
+      {
+       "name": "key",
+       "value": "1"
+      },
+      {
+       "name": "j",
+       "value": "2"
+      },
+      {
+       "name": "values",
+       "value": "[2,4,5,1]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort normal: values [2,4,5,1], key 1, j 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key 1",
+        "role": "active"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = 2",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "key from i"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..2"
+       }
+      ]
+     }
+    },
+    {
+     "event": "shift",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       53
+      ]
+     },
+     "explanation": "5 is bigger than 1, so slide 5 one spot right to make room. (It shows up twice for a moment; the 1 is safe in a variable.)",
+     "variables": [
+      {
+       "name": "i",
+       "value": "3"
+      },
+      {
+       "name": "key",
+       "value": "1"
+      },
+      {
+       "name": "j",
+       "value": "2"
+      },
+      {
+       "name": "values",
+       "value": "[2,4,5,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort normal: values [2,4,5,5], key 1, j 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "active"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key 1",
+        "role": "active"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = 2",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "copied right"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..2"
+       }
+      ]
+     }
+    },
+    {
+     "event": "shift",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       53
+      ]
+     },
+     "explanation": "4 is bigger than 1, so slide 4 one spot right to make room. (It shows up twice for a moment; the 1 is safe in a variable.)",
+     "variables": [
+      {
+       "name": "i",
+       "value": "3"
+      },
+      {
+       "name": "key",
+       "value": "1"
+      },
+      {
+       "name": "j",
+       "value": "1"
+      },
+      {
+       "name": "values",
+       "value": "[2,4,4,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort normal: values [2,4,4,5], key 1, j 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key 1",
+        "role": "active"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "copied right"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..2"
+       }
+      ]
+     }
+    },
+    {
+     "event": "shift",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       25
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       53
+      ]
+     },
+     "explanation": "2 is bigger than 1, so slide 2 one spot right to make room. (It shows up twice for a moment; the 1 is safe in a variable.)",
+     "variables": [
+      {
+       "name": "i",
+       "value": "3"
+      },
+      {
+       "name": "key",
+       "value": "1"
+      },
+      {
+       "name": "j",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[2,2,4,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort normal: values [2,2,4,5], key 1, j 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key 1",
+        "role": "active"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "copied right"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..2"
+       }
+      ]
+     }
+    },
+    {
+     "event": "place",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       34
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "Stop sliding: nothing is left to its left. Drop 1 into the gap at index 0. The first 4 values are sorted now.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "3"
+      },
+      {
+       "name": "key",
+       "value": "1"
+      },
+      {
+       "name": "j",
+       "value": "-1"
+      },
+      {
+       "name": "values",
+       "value": "[1,2,4,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort normal: values [1,2,4,5], key 1, j -1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key 1",
+        "role": "active"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = -1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "key placed"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..3"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       38
+      ],
+      "python": [
+       31
+      ],
+      "java": [
+       38
+      ],
+      "go": [
+       61
+      ]
+     },
+     "explanation": "Every card has been placed: [1,2,4,5].",
+     "variables": [
+      {
+       "name": "i",
+       "value": "4"
+      },
+      {
+       "name": "key",
+       "value": "-"
+      },
+      {
+       "name": "j",
+       "value": "-"
+      },
+      {
+       "name": "values",
+       "value": "[1,2,4,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort normal: values [1,2,4,5], key -, j -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "result"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key -",
+        "role": "neutral"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = -",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..3"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-sorted",
+   "label": "Already sorted input",
+   "input": "4\n1 2 3 4\n",
+   "expectedOutput": "[1,2,3,4]",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       23,
+       24
+      ],
+      "python": [
+       18,
+       19
+      ],
+      "java": [
+       23,
+       24
+      ],
+      "go": [
+       46,
+       47
+      ]
+     },
+     "explanation": "Sort [1,2,3,4]. Think of the left end as a sorted hand of cards. One card on its own is already sorted.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "key",
+       "value": "-"
+      },
+      {
+       "name": "j",
+       "value": "-"
+      },
+      {
+       "name": "values",
+       "value": "[1,2,3,4]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort edge-sorted: values [1,2,3,4], key -, j -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key -",
+        "role": "neutral"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = -",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..0"
+       }
+      ]
+     }
+    },
+    {
+     "event": "take",
+     "lines": {
+      "cpp": [
+       26,
+       27
+      ],
+      "python": [
+       21,
+       22
+      ],
+      "java": [
+       26,
+       27
+      ],
+      "go": [
+       49,
+       50
+      ]
+     },
+     "explanation": "Pick up the next card, 2. Everything to its left is sorted; find where 2 belongs among them.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "1"
+      },
+      {
+       "name": "key",
+       "value": "2"
+      },
+      {
+       "name": "j",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[1,2,3,4]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort edge-sorted: values [1,2,3,4], key 2, j 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key 2",
+        "role": "active"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "key from i"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..0"
+       }
+      ]
+     }
+    },
+    {
+     "event": "place",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       34
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "Stop sliding: 1 is not bigger than 2. Drop 2 into the gap at index 1. The first 2 values are sorted now.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "1"
+      },
+      {
+       "name": "key",
+       "value": "2"
+      },
+      {
+       "name": "j",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[1,2,3,4]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort edge-sorted: values [1,2,3,4], key 2, j 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key 2",
+        "role": "active"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "key placed"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..1"
+       }
+      ]
+     }
+    },
+    {
+     "event": "take",
+     "lines": {
+      "cpp": [
+       26,
+       27
+      ],
+      "python": [
+       21,
+       22
+      ],
+      "java": [
+       26,
+       27
+      ],
+      "go": [
+       49,
+       50
+      ]
+     },
+     "explanation": "Pick up the next card, 3. Everything to its left is sorted; find where 3 belongs among them.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "2"
+      },
+      {
+       "name": "key",
+       "value": "3"
+      },
+      {
+       "name": "j",
+       "value": "1"
+      },
+      {
+       "name": "values",
+       "value": "[1,2,3,4]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort edge-sorted: values [1,2,3,4], key 3, j 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key 3",
+        "role": "active"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "key from i"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..1"
+       }
+      ]
+     }
+    },
+    {
+     "event": "place",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       34
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "Stop sliding: 2 is not bigger than 3. Drop 3 into the gap at index 2. The first 3 values are sorted now.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "2"
+      },
+      {
+       "name": "key",
+       "value": "3"
+      },
+      {
+       "name": "j",
+       "value": "1"
+      },
+      {
+       "name": "values",
+       "value": "[1,2,3,4]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort edge-sorted: values [1,2,3,4], key 3, j 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key 3",
+        "role": "active"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "key placed"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..2"
+       }
+      ]
+     }
+    },
+    {
+     "event": "take",
+     "lines": {
+      "cpp": [
+       26,
+       27
+      ],
+      "python": [
+       21,
+       22
+      ],
+      "java": [
+       26,
+       27
+      ],
+      "go": [
+       49,
+       50
+      ]
+     },
+     "explanation": "Pick up the next card, 4. Everything to its left is sorted; find where 4 belongs among them.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "3"
+      },
+      {
+       "name": "key",
+       "value": "4"
+      },
+      {
+       "name": "j",
+       "value": "2"
+      },
+      {
+       "name": "values",
+       "value": "[1,2,3,4]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort edge-sorted: values [1,2,3,4], key 4, j 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "active"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key 4",
+        "role": "active"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = 2",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "key from i"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..2"
+       }
+      ]
+     }
+    },
+    {
+     "event": "place",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       34
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "Stop sliding: 3 is not bigger than 4. Drop 4 into the gap at index 3. The first 4 values are sorted now.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "3"
+      },
+      {
+       "name": "key",
+       "value": "4"
+      },
+      {
+       "name": "j",
+       "value": "2"
+      },
+      {
+       "name": "values",
+       "value": "[1,2,3,4]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort edge-sorted: values [1,2,3,4], key 4, j 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key 4",
+        "role": "active"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = 2",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "key placed"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..3"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       38
+      ],
+      "python": [
+       31
+      ],
+      "java": [
+       38
+      ],
+      "go": [
+       61
+      ]
+     },
+     "explanation": "Every card has been placed: [1,2,3,4].",
+     "variables": [
+      {
+       "name": "i",
+       "value": "4"
+      },
+      {
+       "name": "key",
+       "value": "-"
+      },
+      {
+       "name": "j",
+       "value": "-"
+      },
+      {
+       "name": "values",
+       "value": "[1,2,3,4]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Insertion sort edge-sorted: values [1,2,3,4], key -, j -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "key",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "key -",
+        "role": "neutral"
+       },
+       {
+        "id": "j",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "j = -",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values (gold = sorted prefix)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "sorted prefix: positions 0..3"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

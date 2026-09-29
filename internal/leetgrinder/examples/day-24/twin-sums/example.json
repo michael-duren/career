@@ -1,0 +1,975 @@
+{
+ "id": "day-24-twin-sums",
+ "title": "Split a list in half and reverse the back half",
+ "invariant": "After the reversal, the k-th node of each half are twins.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 40,
+   "algorithmEnd": 66
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 38,
+   "algorithmEnd": 57
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 41,
+   "algorithmEnd": 66
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 70,
+   "algorithmEnd": 95
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "5->4->2->1",
+   "input": "4 0\n5 4 2 1\n",
+   "expectedOutput": "6",
+   "frames": [
+    {
+     "event": "halves",
+     "lines": {
+      "cpp": [
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       48,
+       49,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55
+      ],
+      "python": [
+       39,
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47
+      ],
+      "java": [
+       42,
+       43,
+       44,
+       45,
+       46,
+       48,
+       49,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55
+      ],
+      "go": [
+       71,
+       72,
+       73,
+       74,
+       75,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83,
+       84
+      ]
+     },
+     "explanation": "The list [5,4,2,1] has an even length. Twin pairs are the first and last node, the second and second-to-last, and so on. Find the middle with slow and fast pointers, cut the list there, and reverse the second half: 5->4 and 1->2. Now twins sit side by side.",
+     "variables": [
+      {
+       "name": "first",
+       "value": "5->4"
+      },
+      {
+       "name": "second",
+       "value": "1->2"
+      },
+      {
+       "name": "best",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Twin sums normal: halves, first 5->4, second 1->2, best -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "best",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "best -",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "first half | second half, reversed"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "after reversing, each twin pair lines up by position"
+       }
+      ]
+     }
+    },
+    {
+     "event": "pair",
+     "lines": {
+      "cpp": [
+       60
+      ],
+      "python": [
+       52
+      ],
+      "java": [
+       60
+      ],
+      "go": [
+       89
+      ]
+     },
+     "explanation": "Twins 5 and 1 add up to 6. Largest so far: 6.",
+     "variables": [
+      {
+       "name": "first",
+       "value": "5"
+      },
+      {
+       "name": "second",
+       "value": "1"
+      },
+      {
+       "name": "best",
+       "value": "6"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Twin sums normal: pair, first 5, second 1, best 6.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "best",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "best 6",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "first half | second half, reversed"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "a"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "b"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "after reversing, each twin pair lines up by position"
+       }
+      ]
+     }
+    },
+    {
+     "event": "pair",
+     "lines": {
+      "cpp": [
+       60
+      ],
+      "python": [
+       52
+      ],
+      "java": [
+       60
+      ],
+      "go": [
+       89
+      ]
+     },
+     "explanation": "Twins 4 and 2 add up to 6. Largest so far: 6.",
+     "variables": [
+      {
+       "name": "first",
+       "value": "4"
+      },
+      {
+       "name": "second",
+       "value": "2"
+      },
+      {
+       "name": "best",
+       "value": "6"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Twin sums normal: pair, first 4, second 2, best 6.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "best",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "best 6",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "first half | second half, reversed"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "a"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "b"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "after reversing, each twin pair lines up by position"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       64
+      ],
+      "python": [
+       56
+      ],
+      "java": [
+       64
+      ],
+      "go": [
+       93
+      ]
+     },
+     "explanation": "The largest twin sum is 6. One pass to find the middle, one to reverse, one to compare: O(n) time, O(1) extra memory.",
+     "variables": [
+      {
+       "name": "first",
+       "value": "-"
+      },
+      {
+       "name": "second",
+       "value": "-"
+      },
+      {
+       "name": "best",
+       "value": "6"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Twin sums normal: done, first -, second -, best 6.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "best",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "best 6",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "first half | second half, reversed"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "after reversing, each twin pair lines up by position"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-two",
+   "label": "Two nodes",
+   "input": "2 0\n3 9\n",
+   "expectedOutput": "12",
+   "frames": [
+    {
+     "event": "halves",
+     "lines": {
+      "cpp": [
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       48,
+       49,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55
+      ],
+      "python": [
+       39,
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47
+      ],
+      "java": [
+       42,
+       43,
+       44,
+       45,
+       46,
+       48,
+       49,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55
+      ],
+      "go": [
+       71,
+       72,
+       73,
+       74,
+       75,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83,
+       84
+      ]
+     },
+     "explanation": "The list [3,9] has an even length. Twin pairs are the first and last node, the second and second-to-last, and so on. Find the middle with slow and fast pointers, cut the list there, and reverse the second half: 3 and 9. Now twins sit side by side.",
+     "variables": [
+      {
+       "name": "first",
+       "value": "3"
+      },
+      {
+       "name": "second",
+       "value": "9"
+      },
+      {
+       "name": "best",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Twin sums edge-two: halves, first 3, second 9, best -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "best",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "best -",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "first half | second half, reversed"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "after reversing, each twin pair lines up by position"
+       }
+      ]
+     }
+    },
+    {
+     "event": "pair",
+     "lines": {
+      "cpp": [
+       60
+      ],
+      "python": [
+       52
+      ],
+      "java": [
+       60
+      ],
+      "go": [
+       89
+      ]
+     },
+     "explanation": "Twins 3 and 9 add up to 12. Largest so far: 12.",
+     "variables": [
+      {
+       "name": "first",
+       "value": "3"
+      },
+      {
+       "name": "second",
+       "value": "9"
+      },
+      {
+       "name": "best",
+       "value": "12"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Twin sums edge-two: pair, first 3, second 9, best 12.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "9",
+        "role": "active"
+       },
+       {
+        "id": "best",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "best 12",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "first half | second half, reversed"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "a"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "b"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "after reversing, each twin pair lines up by position"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       64
+      ],
+      "python": [
+       56
+      ],
+      "java": [
+       64
+      ],
+      "go": [
+       93
+      ]
+     },
+     "explanation": "The largest twin sum is 12. One pass to find the middle, one to reverse, one to compare: O(n) time, O(1) extra memory.",
+     "variables": [
+      {
+       "name": "first",
+       "value": "-"
+      },
+      {
+       "name": "second",
+       "value": "-"
+      },
+      {
+       "name": "best",
+       "value": "12"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Twin sums edge-two: done, first -, second -, best 12.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "best",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "best 12",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "first half | second half, reversed"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "after reversing, each twin pair lines up by position"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

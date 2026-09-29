@@ -1,0 +1,1281 @@
+{
+ "id": "day-23-third-node",
+ "title": "Find the node a third of the way with two speeds",
+ "invariant": "After k rounds, slow is k nodes from the head and fast is 3k nodes from the head.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 40,
+   "algorithmEnd": 52
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 38,
+   "algorithmEnd": 47
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 41,
+   "algorithmEnd": 52
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 70,
+   "algorithmEnd": 82
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Seven nodes",
+   "input": "7 0\n1 2 3 4 5 6 7\n",
+   "expectedOutput": "3",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       41,
+       42
+      ],
+      "python": [
+       39
+      ],
+      "java": [
+       42
+      ],
+      "go": [
+       71,
+       72
+      ]
+     },
+     "explanation": "Find the node about a third of the way along a list of 7 nodes, in one pass and without counting first. slow and fast both start at the head.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "1"
+      },
+      {
+       "name": "fast",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Third node normal: start, slow 1, fast 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 412,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "slow moves 1, fast moves 3"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 437,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "slow fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "when fast runs out of room, slow is a third of the way"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       45,
+       46
+      ],
+      "python": [
+       42,
+       43
+      ],
+      "java": [
+       45,
+       46
+      ],
+      "go": [
+       75,
+       76
+      ]
+     },
+     "explanation": "fast has three more nodes ahead, so slow takes one step and fast takes three: slow = 2, fast = 4. fast has always gone three times as far as slow.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "2"
+      },
+      {
+       "name": "fast",
+       "value": "4"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Third node normal: move, slow 2, fast 4.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 412,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "slow moves 1, fast moves 3"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 437,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "slow"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "when fast runs out of room, slow is a third of the way"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       45,
+       46
+      ],
+      "python": [
+       42,
+       43
+      ],
+      "java": [
+       45,
+       46
+      ],
+      "go": [
+       75,
+       76
+      ]
+     },
+     "explanation": "fast has three more nodes ahead, so slow takes one step and fast takes three: slow = 3, fast = 7. fast has always gone three times as far as slow.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "3"
+      },
+      {
+       "name": "fast",
+       "value": "7"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Third node normal: move, slow 3, fast 7.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 412,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "slow moves 1, fast moves 3"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 437,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "slow"
+       },
+       {
+        "id": "pointer-6",
+        "x": 414,
+        "y": 116,
+        "text": "fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "when fast runs out of room, slow is a third of the way"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       50
+      ],
+      "python": [
+       46
+      ],
+      "java": [
+       50
+      ],
+      "go": [
+       80
+      ]
+     },
+     "explanation": "fast can't take three more steps. slow has gone a third as far: node 3. The loop checks fast.next, fast.next.next, and fast.next.next.next before stepping, so it never follows a missing node.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "3"
+      },
+      {
+       "name": "fast",
+       "value": "7"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Third node normal: done, slow 3, fast 7.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 412,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "slow moves 1, fast moves 3"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 437,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "slow"
+       },
+       {
+        "id": "pointer-6",
+        "x": 414,
+        "y": 116,
+        "text": "fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "when fast runs out of room, slow is a third of the way"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-four",
+   "label": "Four nodes",
+   "input": "4 0\n1 2 3 4\n",
+   "expectedOutput": "2",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       41,
+       42
+      ],
+      "python": [
+       39
+      ],
+      "java": [
+       42
+      ],
+      "go": [
+       71,
+       72
+      ]
+     },
+     "explanation": "Find the node about a third of the way along a list of 4 nodes, in one pass and without counting first. slow and fast both start at the head.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "1"
+      },
+      {
+       "name": "fast",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Third node edge-four: start, slow 1, fast 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "slow moves 1, fast moves 3"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "slow fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "when fast runs out of room, slow is a third of the way"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       45,
+       46
+      ],
+      "python": [
+       42,
+       43
+      ],
+      "java": [
+       45,
+       46
+      ],
+      "go": [
+       75,
+       76
+      ]
+     },
+     "explanation": "fast has three more nodes ahead, so slow takes one step and fast takes three: slow = 2, fast = 4. fast has always gone three times as far as slow.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "2"
+      },
+      {
+       "name": "fast",
+       "value": "4"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Third node edge-four: move, slow 2, fast 4.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "slow moves 1, fast moves 3"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "slow"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "when fast runs out of room, slow is a third of the way"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       50
+      ],
+      "python": [
+       46
+      ],
+      "java": [
+       50
+      ],
+      "go": [
+       80
+      ]
+     },
+     "explanation": "fast can't take three more steps. slow has gone a third as far: node 2. The loop checks fast.next, fast.next.next, and fast.next.next.next before stepping, so it never follows a missing node.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "2"
+      },
+      {
+       "name": "fast",
+       "value": "4"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Third node edge-four: done, slow 2, fast 4.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "slow moves 1, fast moves 3"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "slow"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "when fast runs out of room, slow is a third of the way"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-single",
+   "label": "One node",
+   "input": "1 0\n9\n",
+   "expectedOutput": "9",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       41,
+       42
+      ],
+      "python": [
+       39
+      ],
+      "java": [
+       42
+      ],
+      "go": [
+       71,
+       72
+      ]
+     },
+     "explanation": "Find the node about a third of the way along a list of 1 node, in one pass and without counting first. slow and fast both start at the head.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "9"
+      },
+      {
+       "name": "fast",
+       "value": "9"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Third node edge-single: start, slow 9, fast 9.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "9",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "slow moves 1, fast moves 3"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "slow fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "when fast runs out of room, slow is a third of the way"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       50
+      ],
+      "python": [
+       46
+      ],
+      "java": [
+       50
+      ],
+      "go": [
+       80
+      ]
+     },
+     "explanation": "fast can't take three more steps. slow has gone a third as far: node 9. The loop checks fast.next, fast.next.next, and fast.next.next.next before stepping, so it never follows a missing node.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "9"
+      },
+      {
+       "name": "fast",
+       "value": "9"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Third node edge-single: done, slow 9, fast 9.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "9",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "slow moves 1, fast moves 3"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "slow fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "when fast runs out of room, slow is a third of the way"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

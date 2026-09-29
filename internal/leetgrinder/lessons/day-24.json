@@ -1,0 +1,222 @@
+{
+  "day": 24,
+  "objectives": [
+    "Keep two references a fixed number of nodes apart.",
+    "Find a node counted from the end in one pass.",
+    "Split a list in half, reverse one half, and walk both halves together."
+  ],
+  "prerequisites": [
+    22,
+    23
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: a fixed gap measures from the end",
+      "paragraphs": [
+        "\"The second node from the end\" is hard in a list you can only walk forward. But if one reference starts k nodes ahead of another and both move together, then when the front one falls off the end, the back one is exactly k from the end.",
+        "Some questions compare the front of a list with the back. Walking backward isn't possible, but you can reverse the back half and then walk both halves forward side by side."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "When a question counts from the end, turn it into a gap between two references that move together."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Four nodes. trail at node 2 and lead at node 4, two nodes apart.",
+        "nodes": [
+          {
+            "id": "n0",
+            "shape": "rect",
+            "x": 12,
+            "y": 50,
+            "width": 48,
+            "height": 40,
+            "text": "1",
+            "role": "neutral"
+          },
+          {
+            "id": "n1",
+            "shape": "rect",
+            "x": 88,
+            "y": 50,
+            "width": 48,
+            "height": 40,
+            "text": "2",
+            "role": "active"
+          },
+          {
+            "id": "n2",
+            "shape": "rect",
+            "x": 164,
+            "y": 50,
+            "width": 48,
+            "height": 40,
+            "text": "3",
+            "role": "neutral"
+          },
+          {
+            "id": "n3",
+            "shape": "rect",
+            "x": 240,
+            "y": 50,
+            "width": 48,
+            "height": 40,
+            "text": "4",
+            "role": "visited"
+          }
+        ],
+        "edges": [
+          {
+            "id": "e1",
+            "from": "n0",
+            "to": "n1",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          },
+          {
+            "id": "e2",
+            "from": "n1",
+            "to": "n2",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          },
+          {
+            "id": "e3",
+            "from": "n2",
+            "to": "n3",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          }
+        ],
+        "labels": [
+          {
+            "id": "title",
+            "x": 12,
+            "y": 30,
+            "text": "lead stays 2 ahead"
+          },
+          {
+            "id": "l0",
+            "x": 88,
+            "y": 120,
+            "text": "trail"
+          },
+          {
+            "id": "l1",
+            "x": 240,
+            "y": 120,
+            "text": "lead"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Count first",
+      "heading": "Baseline: count, then walk",
+      "paragraphs": [
+        "Counting n first and then walking n - k nodes works in two passes. The gap method needs one pass, which some problems require."
+      ]
+    },
+    {
+      "id": "kth",
+      "navLabel": "Fixed gap",
+      "heading": "Worked example: the k-th node from the end",
+      "paragraphs": [
+        "Move lead k nodes from the head. Put trail at the head. Now move both one node at a time until lead falls off the end. trail is the answer.",
+        "If k equals the length, lead is already past the end after the head start, and trail is the head, the n-th node from the end."
+      ],
+      "exampleIds": [
+        "day-24-kth-from-end"
+      ]
+    },
+    {
+      "id": "twins",
+      "navLabel": "Halves",
+      "heading": "Worked example: twin sums of a list",
+      "paragraphs": [
+        "In a list of even length, the first and last nodes are twins, then the second and second-to-last, and so on. Find the largest twin sum.",
+        "Find the middle with slow and fast pointers and cut the list there. Reverse the second half with day 22's loop. Now the twins line up by position, so walk both halves together and add pairs. Three O(n) passes, O(1) extra memory."
+      ],
+      "exampleIds": [
+        "day-24-twin-sums"
+      ]
+    },
+    {
+      "id": "your-turn-palindrome",
+      "navLabel": "Your turn: Palindrome Linked List",
+      "heading": "Your turn: Palindrome Linked List",
+      "paragraphs": [
+        "Return true if the list's values read the same forward and backward. Try for O(n) time and O(1) extra memory."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "The twin-sum example lines up the two halves. What changes when the length is odd?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-remove-nth",
+      "navLabel": "Your turn: Remove Nth Node From End of List",
+      "heading": "Your turn: Remove Nth Node From End of List",
+      "paragraphs": [
+        "Today's first medium. Remove the n-th node from the end and return the head, in one pass."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Finding the node isn't enough to remove it. Work [1, 2] with n = 2 by hand.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-cycle-two",
+      "navLabel": "Your turn: Linked List Cycle II",
+      "heading": "Your turn: Linked List Cycle II",
+      "paragraphs": [
+        "Today's second medium. If the list has a cycle, return the node where the cycle begins; otherwise return null. Use O(1) extra memory."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Slow and fast tell you there's a cycle. Draw a list with a tail of length a and a loop of length c, write down how far each pointer has traveled when they meet, and see what that says about the start of the loop.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "The gap method and the halves method are both O(n) time and O(1) extra memory.",
+        "Reversing half the list changes the input. If the caller still needs the original list, reverse the half back when you're done."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "Why does trail end k nodes from the end?",
+          "answer": "lead starts k ahead and they move together, so they stay k apart. When lead is past the last node, trail is k nodes before that point."
+        },
+        {
+          "prompt": "Why reverse the second half instead of walking it backward?",
+          "answer": "A singly linked list only goes forward. Reversing lets you walk it forward in the order you need."
+        },
+        {
+          "prompt": "What should you do if the caller needs the original list afterward?",
+          "answer": "Reverse the second half again and reconnect it."
+        }
+      ]
+    }
+  ]
+}

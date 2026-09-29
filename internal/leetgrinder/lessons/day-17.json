@@ -1,0 +1,191 @@
+{
+  "day": 17,
+  "objectives": [
+    "Reduce a three-value search to a two-pointer search by fixing one value.",
+    "Count or find triples in O(n²) instead of O(n³).",
+    "Explain which pointer to move and why no answer is skipped."
+  ],
+  "prerequisites": [
+    15
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: fix one value, solve the pair problem",
+      "paragraphs": [
+        "Three nested loops over an array try every triple: O(n³). But once you fix the first value, the rest is a pair problem, and day 15 solved pair problems on sorted arrays in one pass. So sort, loop over the first value, and run two pointers on the values after it: O(n²).",
+        "The two pointers only work if moving one of them provably can't skip an answer. That argument is the part to get right on every problem this week."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "When you move a pointer, finish the sentence \"every pair using the value I'm leaving has already been handled because ...\". If you can't, the move may skip an answer."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Sorted values -2, 0, 1, 3. The first value is fixed; lo and hi scan the values after it.",
+        "nodes": [
+          {
+            "id": "v0",
+            "shape": "rect",
+            "x": 12,
+            "y": 44,
+            "width": 56,
+            "height": 44,
+            "text": "-2",
+            "role": "visited"
+          },
+          {
+            "id": "v1",
+            "shape": "rect",
+            "x": 74,
+            "y": 44,
+            "width": 56,
+            "height": 44,
+            "text": "0",
+            "role": "active"
+          },
+          {
+            "id": "v2",
+            "shape": "rect",
+            "x": 136,
+            "y": 44,
+            "width": 56,
+            "height": 44,
+            "text": "1",
+            "role": "neutral"
+          },
+          {
+            "id": "v3",
+            "shape": "rect",
+            "x": 198,
+            "y": 44,
+            "width": 56,
+            "height": 44,
+            "text": "3",
+            "role": "active"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "title",
+            "x": 12,
+            "y": 28,
+            "text": "fix one, then two pointers"
+          },
+          {
+            "id": "l0",
+            "x": 12,
+            "y": 110,
+            "text": "fixed i"
+          },
+          {
+            "id": "l1",
+            "x": 80,
+            "y": 110,
+            "text": "lo"
+          },
+          {
+            "id": "l2",
+            "x": 230,
+            "y": 110,
+            "text": "hi"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Every triple",
+      "heading": "Baseline: try every triple",
+      "paragraphs": [
+        "Three loops with i < j < k check every triple once. It's correct, easy to test against, and O(n³): a thousand values means about 166 million triples."
+      ]
+    },
+    {
+      "id": "triples",
+      "navLabel": "Counting triples",
+      "heading": "Worked example: count triples with a small sum",
+      "paragraphs": [
+        "Count triples i < lo < hi whose sum is less than a target. Sort first. For each i, set lo = i + 1 and hi = n - 1.",
+        "If the triple's sum is below the target, then replacing values[hi] with anything between lo and hi gives a smaller sum, so all hi - lo triples with this i and lo count. Add them and move lo right. Otherwise values[hi] is too big with every remaining partner, so move hi left.",
+        "For [-2, 0, 1, 3] and target 2, fixing -2 finds (-2, 0, 1) and (-2, 0, 3). Fixing 0 finds nothing. The answer is 2."
+      ],
+      "exampleIds": [
+        "day-17-triples-below"
+      ]
+    },
+    {
+      "id": "your-turn-three-sum",
+      "navLabel": "Your turn: 3Sum",
+      "heading": "Your turn: 3Sum",
+      "paragraphs": [
+        "Today's first medium. Return every distinct triple of values that sums to 0. The answer must not contain the same triple twice, even if the input has repeated values."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "The counting example handles the pointers. The new part is duplicates: run it on [-1, 0, 1, 2, -1, -4] by hand and see where the same triple would be found twice.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-three-closest",
+      "navLabel": "Your turn: 3Sum Closest",
+      "heading": "Your turn: 3Sum Closest",
+      "paragraphs": [
+        "Today's second medium. Return the sum of three values that is closest to target. Exactly one answer exists."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "You're no longer counting or matching exactly. What do you record at each step, and does the pointer rule still work when the sum equals the target?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-container",
+      "navLabel": "Your turn: Container With Most Water",
+      "heading": "Your turn: Container With Most Water",
+      "paragraphs": [
+        "Today's third medium. Each value is the height of a vertical line. Pick two lines; together with the x-axis they hold water, limited by the shorter line. Return the most water any pair can hold."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Start with the widest pair. What does moving each pointer cost, and what could it gain?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Fixing one value and scanning with two pointers is O(n²) after an O(n log n) sort, with O(1) extra memory besides the output.",
+        "Sums of three values can overflow 32-bit integers when inputs are large. Check the problem's limits and use 64-bit math if needed."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "Why does sorting make the two-pointer step work?",
+          "answer": "It makes the sum grow when lo moves right and shrink when hi moves left, so each comparison tells you which end to drop."
+        },
+        {
+          "prompt": "In the counting example, why can hi - lo triples be counted at once?",
+          "answer": "Every value between lo and hi is at most values[hi], so each of those triples also has a small enough sum."
+        },
+        {
+          "prompt": "What does fixing the first value turn the problem into?",
+          "answer": "A pair problem on the values after it, which two pointers solve in one pass."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,238 @@
+{
+  "day": 7,
+  "objectives": [
+    "Describe a walk through a grid with explicit row and column bounds, and test it on thin grids.",
+    "Work out where a cell moves under a transformation, and check the rule on a corner and an edge.",
+    "Separate \"figure out what to change\" from \"change it\" so new values don't cause more changes."
+  ],
+  "prerequisites": [
+    5,
+    6
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: think in coordinates, not pictures",
+      "paragraphs": [
+        "A matrix is a grid of cells named (row, column), counting from 0. Grid problems are easy to picture and easy to get subtly wrong: a corner visited twice, a loop that runs off a one-row grid, a cell overwritten before it was read.",
+        "The fix is to describe everything with coordinates. Which rows and columns are still left to visit? Where does the cell at (r, c) end up? Which cells were changed by the rules, and which just happened to change? Write the answer down as a formula or a condition before writing loops."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "Always test grid code on a 1 × n grid, an n × 1 grid, and a 2 × 2 grid. Thin grids expose almost every off-by-one mistake."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "A 2 by 3 grid with each cell labeled by its row and column coordinates.",
+        "nodes": [
+          {
+            "id": "a",
+            "shape": "rect",
+            "x": 40,
+            "y": 36,
+            "width": 72,
+            "height": 44,
+            "text": "(0,0)",
+            "role": "active"
+          },
+          {
+            "id": "b",
+            "shape": "rect",
+            "x": 120,
+            "y": 36,
+            "width": 72,
+            "height": 44,
+            "text": "(0,1)",
+            "role": "neutral"
+          },
+          {
+            "id": "c",
+            "shape": "rect",
+            "x": 200,
+            "y": 36,
+            "width": 72,
+            "height": 44,
+            "text": "(0,2)",
+            "role": "neutral"
+          },
+          {
+            "id": "d",
+            "shape": "rect",
+            "x": 40,
+            "y": 88,
+            "width": 72,
+            "height": 44,
+            "text": "(1,0)",
+            "role": "neutral"
+          },
+          {
+            "id": "e",
+            "shape": "rect",
+            "x": 120,
+            "y": 88,
+            "width": 72,
+            "height": 44,
+            "text": "(1,1)",
+            "role": "neutral"
+          },
+          {
+            "id": "f",
+            "shape": "rect",
+            "x": 200,
+            "y": 88,
+            "width": 72,
+            "height": 44,
+            "text": "(1,2)",
+            "role": "result"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "cols",
+            "x": 40,
+            "y": 24,
+            "text": "column →"
+          },
+          {
+            "id": "rows",
+            "x": 6,
+            "y": 62,
+            "text": "row"
+          },
+          {
+            "id": "rule",
+            "x": 40,
+            "y": 158,
+            "text": "(row, column), both from 0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Copy to a new grid",
+      "heading": "Baseline: build a new grid instead of changing this one",
+      "paragraphs": [
+        "The safest way to transform a grid is to read the old grid and write a brand-new one. Nothing you read can change under you, so the only thing to get right is where each value goes.",
+        "It costs a second grid's worth of memory. Two of today's problems ask you to change the grid in place, so you'll need the in-place ideas below. The copy is still the easiest way to check your answer on small inputs."
+      ]
+    },
+    {
+      "id": "border",
+      "navLabel": "Walking the border",
+      "heading": "Worked example: walk the border of a grid",
+      "paragraphs": [
+        "Visit every cell on the outside edge of a grid once, clockwise from the top-left: the top row left to right, then the right column going down, then the bottom row right to left, then the left column going up.",
+        "The corners are the tricky part. Each corner belongs to exactly one side. The right column starts one row below the top, because the top row already took the top-right corner. The left column stops one row below the top, so the top-left corner isn't visited again.",
+        "Thin grids need guards. With one row, the \"bottom row\" is the same as the top row, so it's skipped entirely. With one column, the left side is the same as the right side. The edge cases in the player show both."
+      ],
+      "exampleIds": [
+        "day-07-border"
+      ]
+    },
+    {
+      "id": "transpose",
+      "navLabel": "Moving cells",
+      "heading": "Worked example: transpose in place",
+      "paragraphs": [
+        "Transposing a square grid turns its rows into columns: the value at (r, c) moves to (c, r). Row 0 becomes column 0, and cells on the diagonal, where r = c, don't move.",
+        "In place, that's a swap of (r, c) with (c, r). The inner loop only visits cells above the diagonal, where c > r. If it visited every cell, each pair would be swapped twice and end up back where it started.",
+        "Whenever you move cells around, write the rule as \"(r, c) goes to ...\" and check it on a corner and a middle cell before coding. For a transpose, (0, 2) goes to (2, 0) and (1, 1) stays."
+      ],
+      "exampleIds": [
+        "day-07-transpose"
+      ]
+    },
+    {
+      "id": "mark",
+      "navLabel": "Mark, then change",
+      "heading": "Worked example: mark first, then change",
+      "paragraphs": [
+        "Here's a rule: every cell that holds a 1 turns on the cell directly below it. The trap is doing it in one top-down pass. The 1 you just turned on is sitting below you, and when the loop reaches it, it turns on the next cell down, and the next. A single 1 would light up its whole column.",
+        "The rule was about the 1s in the original grid, not the ones you created. So split the work into two passes. Pass 1 only records the positions of the original 1s. Pass 2 applies the rule using that list, and never looks at cells it changed.",
+        "The list costs memory. Whenever a change could trigger more changes that the rules didn't ask for, separate deciding from changing."
+      ],
+      "exampleIds": [
+        "day-07-light-below"
+      ]
+    },
+    {
+      "id": "your-turn-spiral",
+      "navLabel": "Your turn: Spiral Matrix",
+      "heading": "Your turn: Spiral Matrix",
+      "paragraphs": [
+        "Return all values of an m × n grid in spiral order: around the outside clockwise, then around the next ring in, and so on until every cell is visited once."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Trace a 3 × 4 grid and a 3 × 1 grid by hand. What do you keep track of, and when do you stop?"
+      }
+    },
+    {
+      "id": "your-turn-rotate",
+      "navLabel": "Your turn: Rotate Image",
+      "heading": "Your turn: Rotate Image",
+      "paragraphs": [
+        "Rotate an n × n grid 90 degrees clockwise, in place, without allocating another grid."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Draw a 3 × 3 grid, rotate it on paper, and write down where (0, 0), (0, 1), and (1, 2) end up. How can you move values without losing any?"
+      }
+    },
+    {
+      "id": "your-turn-zeroes",
+      "navLabel": "Your turn: Set Matrix Zeroes",
+      "heading": "Your turn: Set Matrix Zeroes",
+      "paragraphs": [
+        "If a cell is 0, set its entire row and column to 0. Do it in place. Start with a version that uses extra memory, then try to use only O(1) extra memory."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Think about the mark-then-change example: what are the \"original\" facts here, and how small can your record of them be?"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "bullets": [
+        "Walking the border of an m × n grid: O(m + n) time.",
+        "Transposing an n × n grid in place: O(n²) time, O(1) extra memory.",
+        "Mark then change: O(m × n) time, plus memory for the list of marks.",
+        "Copying into a new grid: O(m × n) time and O(m × n) extra memory."
+      ],
+      "paragraphs": [
+        "Transposing in place only works on square grids: a 2 × 3 grid's transpose is 3 × 2, which doesn't fit in the same shape. Check what the problem guarantees before relying on in-place tricks."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "Why does the right column of the border walk start at row 1?",
+          "answer": "The top row already visited the top-right corner. Starting at row 0 would visit it twice."
+        },
+        {
+          "prompt": "Why does the transpose loop start the column at r + 1?",
+          "answer": "Each pair above and below the diagonal must be swapped once. Visiting both (r, c) and (c, r) would swap them back."
+        },
+        {
+          "prompt": "In the light-below example, what goes wrong with a single top-down pass?",
+          "answer": "A 1 you just turned on gets treated like an original 1 when the loop reaches it, so it lights the next cell down, and so on down the column."
+        }
+      ]
+    }
+  ]
+}

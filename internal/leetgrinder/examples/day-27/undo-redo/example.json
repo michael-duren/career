@@ -1,0 +1,2060 @@
+{
+ "id": "day-27-undo-redo",
+ "title": "Undo and redo with two stacks",
+ "invariant": "text holds what's typed, oldest first; redo holds what was undone, most recent on top.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 29,
+   "algorithmEnd": 56
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 21,
+   "algorithmEnd": 39
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 27,
+   "algorithmEnd": 46
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 50,
+   "algorithmEnd": 79
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "a b undo undo redo c",
+   "input": "a b undo undo redo c\n",
+   "expectedOutput": "ac",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       22
+      ],
+      "java": [
+       28
+      ],
+      "go": [
+       51
+      ]
+     },
+     "explanation": "An editor keeps two stacks: the typed text, and letters you've undone that can be redone. Undo moves the last letter from text to redo; redo moves it back.",
+     "variables": [
+      {
+       "name": "token",
+       "value": "-"
+      },
+      {
+       "name": "text",
+       "value": "[]"
+      },
+      {
+       "name": "redo",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Undo redo normal: start, token -, text [], redo [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "redo",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "text",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "text: (empty)",
+        "role": "result"
+       },
+       {
+        "id": "redo",
+        "shape": "rect",
+        "x": 198,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "redo: (empty)",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "actions"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "undo: text → redo; redo: redo → text"
+       }
+      ]
+     }
+    },
+    {
+     "event": "type",
+     "lines": {
+      "cpp": [
+       46,
+       47
+      ],
+      "python": [
+       34,
+       35
+      ],
+      "java": [
+       38,
+       39
+      ],
+      "go": [
+       68,
+       69
+      ]
+     },
+     "explanation": "Type a. Text \"a\".",
+     "variables": [
+      {
+       "name": "token",
+       "value": "a"
+      },
+      {
+       "name": "text",
+       "value": "[a]"
+      },
+      {
+       "name": "redo",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Undo redo normal: type, token a, text [a], redo [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "redo",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "text",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "text: a",
+        "role": "result"
+       },
+       {
+        "id": "redo",
+        "shape": "rect",
+        "x": 198,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "redo: (empty)",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "actions"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "undo: text → redo; redo: redo → text"
+       }
+      ]
+     }
+    },
+    {
+     "event": "type",
+     "lines": {
+      "cpp": [
+       46,
+       47
+      ],
+      "python": [
+       34,
+       35
+      ],
+      "java": [
+       38,
+       39
+      ],
+      "go": [
+       68,
+       69
+      ]
+     },
+     "explanation": "Type b. Text \"ab\".",
+     "variables": [
+      {
+       "name": "token",
+       "value": "b"
+      },
+      {
+       "name": "text",
+       "value": "[a,b]"
+      },
+      {
+       "name": "redo",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Undo redo normal: type, token b, text [a,b], redo [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "redo",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "text",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "text: ab",
+        "role": "result"
+       },
+       {
+        "id": "redo",
+        "shape": "rect",
+        "x": 198,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "redo: (empty)",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "actions"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "undo: text → redo; redo: redo → text"
+       }
+      ]
+     }
+    },
+    {
+     "event": "undo",
+     "lines": {
+      "cpp": [
+       34,
+       35,
+       36
+      ],
+      "python": [
+       26,
+       27
+      ],
+      "java": [
+       32
+      ],
+      "go": [
+       56,
+       57,
+       58
+      ]
+     },
+     "explanation": "Undo: pop b off the text and push it onto redo. Text \"a\", redo [b].",
+     "variables": [
+      {
+       "name": "token",
+       "value": "undo"
+      },
+      {
+       "name": "text",
+       "value": "[a]"
+      },
+      {
+       "name": "redo",
+       "value": "[b]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Undo redo normal: undo, token undo, text [a], redo [b].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "redo",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "text",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "text: a",
+        "role": "result"
+       },
+       {
+        "id": "redo",
+        "shape": "rect",
+        "x": 198,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "redo: b",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "actions"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "undo: text → redo; redo: redo → text"
+       }
+      ]
+     }
+    },
+    {
+     "event": "undo",
+     "lines": {
+      "cpp": [
+       34,
+       35,
+       36
+      ],
+      "python": [
+       26,
+       27
+      ],
+      "java": [
+       32
+      ],
+      "go": [
+       56,
+       57,
+       58
+      ]
+     },
+     "explanation": "Undo: pop a off the text and push it onto redo. Text \"\", redo [b,a].",
+     "variables": [
+      {
+       "name": "token",
+       "value": "undo"
+      },
+      {
+       "name": "text",
+       "value": "[]"
+      },
+      {
+       "name": "redo",
+       "value": "[b,a]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Undo redo normal: undo, token undo, text [], redo [b,a].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "active"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "redo",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "text",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "text: (empty)",
+        "role": "result"
+       },
+       {
+        "id": "redo",
+        "shape": "rect",
+        "x": 198,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "redo: b a",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "actions"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "undo: text → redo; redo: redo → text"
+       }
+      ]
+     }
+    },
+    {
+     "event": "redo",
+     "lines": {
+      "cpp": [
+       40,
+       41,
+       42
+      ],
+      "python": [
+       30,
+       31
+      ],
+      "java": [
+       35
+      ],
+      "go": [
+       62,
+       63,
+       64
+      ]
+     },
+     "explanation": "Redo: pop a off redo and push it back onto the text. Text \"a\".",
+     "variables": [
+      {
+       "name": "token",
+       "value": "redo"
+      },
+      {
+       "name": "text",
+       "value": "[a]"
+      },
+      {
+       "name": "redo",
+       "value": "[b]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Undo redo normal: redo, token redo, text [a], redo [b].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "visited"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "redo",
+        "role": "active"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "text",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "text: a",
+        "role": "result"
+       },
+       {
+        "id": "redo",
+        "shape": "rect",
+        "x": 198,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "redo: b",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "actions"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "undo: text → redo; redo: redo → text"
+       }
+      ]
+     }
+    },
+    {
+     "event": "type",
+     "lines": {
+      "cpp": [
+       46,
+       47
+      ],
+      "python": [
+       34,
+       35
+      ],
+      "java": [
+       38,
+       39
+      ],
+      "go": [
+       68,
+       69
+      ]
+     },
+     "explanation": "Type c. Text \"ac\". Typing something new clears the redo stack: the undone letters no longer fit after it.",
+     "variables": [
+      {
+       "name": "token",
+       "value": "c"
+      },
+      {
+       "name": "text",
+       "value": "[a,c]"
+      },
+      {
+       "name": "redo",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Undo redo normal: type, token c, text [a,c], redo [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "visited"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "redo",
+        "role": "visited"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "active"
+       },
+       {
+        "id": "text",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "text: ac",
+        "role": "result"
+       },
+       {
+        "id": "redo",
+        "shape": "rect",
+        "x": 198,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "redo: (empty)",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "actions"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "undo: text → redo; redo: redo → text"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       52
+      ],
+      "python": [
+       38
+      ],
+      "java": [
+       44
+      ],
+      "go": [
+       74
+      ]
+     },
+     "explanation": "Final text: \"ac\".",
+     "variables": [
+      {
+       "name": "token",
+       "value": "-"
+      },
+      {
+       "name": "text",
+       "value": "[a,c]"
+      },
+      {
+       "name": "redo",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Undo redo normal: done, token -, text [a,c], redo [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "visited"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "redo",
+        "role": "visited"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "visited"
+       },
+       {
+        "id": "text",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "text: ac",
+        "role": "result"
+       },
+       {
+        "id": "redo",
+        "shape": "rect",
+        "x": 198,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "redo: (empty)",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "actions"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "undo: text → redo; redo: redo → text"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-nothing-to-undo",
+   "label": "Undo and redo with nothing to act on",
+   "input": "undo a redo\n",
+   "expectedOutput": "a",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       22
+      ],
+      "java": [
+       28
+      ],
+      "go": [
+       51
+      ]
+     },
+     "explanation": "An editor keeps two stacks: the typed text, and letters you've undone that can be redone. Undo moves the last letter from text to redo; redo moves it back.",
+     "variables": [
+      {
+       "name": "token",
+       "value": "-"
+      },
+      {
+       "name": "text",
+       "value": "[]"
+      },
+      {
+       "name": "redo",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Undo redo edge-nothing-to-undo: start, token -, text [], redo [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "redo",
+        "role": "neutral"
+       },
+       {
+        "id": "text",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "text: (empty)",
+        "role": "result"
+       },
+       {
+        "id": "redo",
+        "shape": "rect",
+        "x": 198,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "redo: (empty)",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "actions"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "undo: text → redo; redo: redo → text"
+       }
+      ]
+     }
+    },
+    {
+     "event": "undo",
+     "lines": {
+      "cpp": [
+       34,
+       35,
+       36
+      ],
+      "python": [
+       26,
+       27
+      ],
+      "java": [
+       32
+      ],
+      "go": [
+       56,
+       57,
+       58
+      ]
+     },
+     "explanation": "Undo with no text does nothing.",
+     "variables": [
+      {
+       "name": "token",
+       "value": "undo"
+      },
+      {
+       "name": "text",
+       "value": "[]"
+      },
+      {
+       "name": "redo",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Undo redo edge-nothing-to-undo: undo, token undo, text [], redo [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "redo",
+        "role": "neutral"
+       },
+       {
+        "id": "text",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "text: (empty)",
+        "role": "result"
+       },
+       {
+        "id": "redo",
+        "shape": "rect",
+        "x": 198,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "redo: (empty)",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "actions"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "undo: text → redo; redo: redo → text"
+       }
+      ]
+     }
+    },
+    {
+     "event": "type",
+     "lines": {
+      "cpp": [
+       46,
+       47
+      ],
+      "python": [
+       34,
+       35
+      ],
+      "java": [
+       38,
+       39
+      ],
+      "go": [
+       68,
+       69
+      ]
+     },
+     "explanation": "Type a. Text \"a\".",
+     "variables": [
+      {
+       "name": "token",
+       "value": "a"
+      },
+      {
+       "name": "text",
+       "value": "[a]"
+      },
+      {
+       "name": "redo",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Undo redo edge-nothing-to-undo: type, token a, text [a], redo [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "redo",
+        "role": "neutral"
+       },
+       {
+        "id": "text",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "text: a",
+        "role": "result"
+       },
+       {
+        "id": "redo",
+        "shape": "rect",
+        "x": 198,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "redo: (empty)",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "actions"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "undo: text → redo; redo: redo → text"
+       }
+      ]
+     }
+    },
+    {
+     "event": "redo",
+     "lines": {
+      "cpp": [
+       40,
+       41,
+       42
+      ],
+      "python": [
+       30,
+       31
+      ],
+      "java": [
+       35
+      ],
+      "go": [
+       62,
+       63,
+       64
+      ]
+     },
+     "explanation": "Redo with nothing to redo does nothing.",
+     "variables": [
+      {
+       "name": "token",
+       "value": "redo"
+      },
+      {
+       "name": "text",
+       "value": "[a]"
+      },
+      {
+       "name": "redo",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Undo redo edge-nothing-to-undo: redo, token redo, text [a], redo [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "redo",
+        "role": "active"
+       },
+       {
+        "id": "text",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "text: a",
+        "role": "result"
+       },
+       {
+        "id": "redo",
+        "shape": "rect",
+        "x": 198,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "redo: (empty)",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "actions"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "undo: text → redo; redo: redo → text"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       52
+      ],
+      "python": [
+       38
+      ],
+      "java": [
+       44
+      ],
+      "go": [
+       74
+      ]
+     },
+     "explanation": "Final text: \"a\".",
+     "variables": [
+      {
+       "name": "token",
+       "value": "-"
+      },
+      {
+       "name": "text",
+       "value": "[a]"
+      },
+      {
+       "name": "redo",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Undo redo edge-nothing-to-undo: done, token -, text [a], redo [].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "undo",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "redo",
+        "role": "visited"
+       },
+       {
+        "id": "text",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "text: a",
+        "role": "result"
+       },
+       {
+        "id": "redo",
+        "shape": "rect",
+        "x": 198,
+        "y": 132,
+        "width": 170,
+        "height": 40,
+        "text": "redo: (empty)",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "actions"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "undo: text → redo; redo: redo → text"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

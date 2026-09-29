@@ -1,0 +1,1337 @@
+{
+ "id": "day-18-distinct-windows",
+ "title": "Track counts as a window slides",
+ "invariant": "counts holds the letters of the current window, and repeats is how many of them appear at least twice.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 23,
+   "algorithmEnd": 45
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 38
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 23,
+   "algorithmEnd": 43
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 46,
+   "algorithmEnd": 74
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Windows of 3 in \"abcabb\"",
+   "input": "abcabb 3\n",
+   "expectedOutput": "3",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       26,
+       27,
+       28
+      ],
+      "python": [
+       19,
+       20,
+       21
+      ],
+      "java": [
+       24,
+       25,
+       26
+      ],
+      "go": [
+       47,
+       48,
+       49
+      ]
+     },
+     "explanation": "Count the windows of 3 letters in \"abcabb\" where no letter repeats. Keep letter counts for the window, plus repeats: how many letters currently appear twice or more.",
+     "variables": [
+      {
+       "name": "right",
+       "value": "-"
+      },
+      {
+       "name": "window",
+       "value": ""
+      },
+      {
+       "name": "repeats",
+       "value": "0"
+      },
+      {
+       "name": "good",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Distinct windows normal: start, window , repeats 0, good 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "repeats",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "repeats 0",
+        "role": "active"
+       },
+       {
+        "id": "good",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "good 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "windows of 3 letters"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green window = no repeats; gray window = has a repeat"
+       }
+      ]
+     }
+    },
+    {
+     "event": "window",
+     "lines": {
+      "cpp": [
+       38
+      ],
+      "python": [
+       33,
+       34
+      ],
+      "java": [
+       36
+      ],
+      "go": [
+       65,
+       66
+      ]
+     },
+     "explanation": "Window \"abc\": the first full window. repeats = 0: no repeats, so it counts. Good windows: 1.",
+     "variables": [
+      {
+       "name": "right",
+       "value": "2"
+      },
+      {
+       "name": "window",
+       "value": "abc"
+      },
+      {
+       "name": "repeats",
+       "value": "0"
+      },
+      {
+       "name": "good",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Distinct windows normal: window, window abc, repeats 0, good 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "repeats",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "repeats 0",
+        "role": "active"
+       },
+       {
+        "id": "good",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "good 1",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "windows of 3 letters"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green window = no repeats; gray window = has a repeat"
+       }
+      ]
+     }
+    },
+    {
+     "event": "window",
+     "lines": {
+      "cpp": [
+       38
+      ],
+      "python": [
+       33,
+       34
+      ],
+      "java": [
+       36
+      ],
+      "go": [
+       65,
+       66
+      ]
+     },
+     "explanation": "Window \"bca\": \"a\" enters and \"a\" leaves. repeats = 0: no repeats, so it counts. Good windows: 2.",
+     "variables": [
+      {
+       "name": "right",
+       "value": "3"
+      },
+      {
+       "name": "window",
+       "value": "bca"
+      },
+      {
+       "name": "repeats",
+       "value": "0"
+      },
+      {
+       "name": "good",
+       "value": "2"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Distinct windows normal: window, window bca, repeats 0, good 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "result"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "repeats",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "repeats 0",
+        "role": "active"
+       },
+       {
+        "id": "good",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "good 2",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "windows of 3 letters"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green window = no repeats; gray window = has a repeat"
+       }
+      ]
+     }
+    },
+    {
+     "event": "window",
+     "lines": {
+      "cpp": [
+       38
+      ],
+      "python": [
+       33,
+       34
+      ],
+      "java": [
+       36
+      ],
+      "go": [
+       65,
+       66
+      ]
+     },
+     "explanation": "Window \"cab\": \"b\" enters and \"b\" leaves. repeats = 0: no repeats, so it counts. Good windows: 3.",
+     "variables": [
+      {
+       "name": "right",
+       "value": "4"
+      },
+      {
+       "name": "window",
+       "value": "cab"
+      },
+      {
+       "name": "repeats",
+       "value": "0"
+      },
+      {
+       "name": "good",
+       "value": "3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Distinct windows normal: window, window cab, repeats 0, good 3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "result"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "result"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "repeats",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "repeats 0",
+        "role": "active"
+       },
+       {
+        "id": "good",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "good 3",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "windows of 3 letters"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green window = no repeats; gray window = has a repeat"
+       }
+      ]
+     }
+    },
+    {
+     "event": "window",
+     "lines": {
+      "cpp": [
+       38
+      ],
+      "python": [
+       33,
+       34
+      ],
+      "java": [
+       36
+      ],
+      "go": [
+       65,
+       66
+      ]
+     },
+     "explanation": "Window \"abb\": \"b\" enters and \"c\" leaves. repeats = 1: 1 letter repeats, so it doesn't count. Good windows: 3.",
+     "variables": [
+      {
+       "name": "right",
+       "value": "5"
+      },
+      {
+       "name": "window",
+       "value": "abb"
+      },
+      {
+       "name": "repeats",
+       "value": "1"
+      },
+      {
+       "name": "good",
+       "value": "3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Distinct windows normal: window, window abb, repeats 1, good 3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "discarded"
+       },
+       {
+        "id": "repeats",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "repeats 1",
+        "role": "active"
+       },
+       {
+        "id": "good",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "good 3",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "windows of 3 letters"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green window = no repeats; gray window = has a repeat"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       43
+      ],
+      "python": [
+       37
+      ],
+      "java": [
+       41
+      ],
+      "go": [
+       72
+      ]
+     },
+     "explanation": "3 windows of length 3 have no repeated letter. Each step updated only the letter that entered and the one that left.",
+     "variables": [
+      {
+       "name": "right",
+       "value": "-"
+      },
+      {
+       "name": "window",
+       "value": ""
+      },
+      {
+       "name": "repeats",
+       "value": "1"
+      },
+      {
+       "name": "good",
+       "value": "3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Distinct windows normal: done, window , repeats 1, good 3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "repeats",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "repeats 1",
+        "role": "active"
+       },
+       {
+        "id": "good",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "good 3",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "windows of 3 letters"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green window = no repeats; gray window = has a repeat"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-short",
+   "label": "Text shorter than the window",
+   "input": "ab 3\n",
+   "expectedOutput": "0",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       26,
+       27,
+       28
+      ],
+      "python": [
+       19,
+       20,
+       21
+      ],
+      "java": [
+       24,
+       25,
+       26
+      ],
+      "go": [
+       47,
+       48,
+       49
+      ]
+     },
+     "explanation": "Count the windows of 3 letters in \"ab\" where no letter repeats. Keep letter counts for the window, plus repeats: how many letters currently appear twice or more.",
+     "variables": [
+      {
+       "name": "right",
+       "value": "-"
+      },
+      {
+       "name": "window",
+       "value": ""
+      },
+      {
+       "name": "repeats",
+       "value": "0"
+      },
+      {
+       "name": "good",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Distinct windows edge-short: start, window , repeats 0, good 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "repeats",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "repeats 0",
+        "role": "active"
+       },
+       {
+        "id": "good",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "good 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "windows of 3 letters"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green window = no repeats; gray window = has a repeat"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       43
+      ],
+      "python": [
+       37
+      ],
+      "java": [
+       41
+      ],
+      "go": [
+       72
+      ]
+     },
+     "explanation": "The text is shorter than 3 letters, so there are no windows.",
+     "variables": [
+      {
+       "name": "right",
+       "value": "-"
+      },
+      {
+       "name": "window",
+       "value": ""
+      },
+      {
+       "name": "repeats",
+       "value": "0"
+      },
+      {
+       "name": "good",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Distinct windows edge-short: done, window , repeats 0, good 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "repeats",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "repeats 0",
+        "role": "active"
+       },
+       {
+        "id": "good",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "good 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "windows of 3 letters"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green window = no repeats; gray window = has a repeat"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

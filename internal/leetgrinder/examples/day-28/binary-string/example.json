@@ -1,0 +1,809 @@
+{
+ "id": "day-28-binary-string",
+ "title": "Build a binary string by halving",
+ "invariant": "binary(n) returns n in base 2, built from binary(n / 2) plus the last bit.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 23,
+   "algorithmEnd": 34
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 29
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 23,
+   "algorithmEnd": 34
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 46,
+   "algorithmEnd": 57
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "6 in binary",
+   "input": "6\n",
+   "expectedOutput": "110",
+   "frames": [
+    {
+     "event": "call",
+     "lines": {
+      "cpp": [
+       23,
+       24
+      ],
+      "python": [
+       18,
+       19
+      ],
+      "java": [
+       23,
+       24
+      ],
+      "go": [
+       46,
+       47
+      ]
+     },
+     "explanation": "binary(6) starts at depth 0. Its promise: return 6 written in base 2. It needs binary(3) first.",
+     "variables": [
+      {
+       "name": "n",
+       "value": "6"
+      },
+      {
+       "name": "depth",
+       "value": "0"
+      },
+      {
+       "name": "result",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Recursion normal: call binary(6), depth 0, result -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "binary(6)",
+        "role": "active"
+       },
+       {
+        "id": "result",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 180,
+        "height": 40,
+        "text": "returns -",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "call stack (newest on the right)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each call waits for the one to its right"
+       }
+      ]
+     }
+    },
+    {
+     "event": "call",
+     "lines": {
+      "cpp": [
+       23,
+       24
+      ],
+      "python": [
+       18,
+       19
+      ],
+      "java": [
+       23,
+       24
+      ],
+      "go": [
+       46,
+       47
+      ]
+     },
+     "explanation": "binary(3) starts at depth 1. Its promise: return 3 written in base 2. It needs binary(1) first.",
+     "variables": [
+      {
+       "name": "n",
+       "value": "3"
+      },
+      {
+       "name": "depth",
+       "value": "1"
+      },
+      {
+       "name": "result",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Recursion normal: call binary(3), depth 1, result -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "binary(6)",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "binary(3)",
+        "role": "active"
+       },
+       {
+        "id": "result",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 180,
+        "height": 40,
+        "text": "returns -",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "call stack (newest on the right)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each call waits for the one to its right"
+       }
+      ]
+     }
+    },
+    {
+     "event": "call",
+     "lines": {
+      "cpp": [
+       23,
+       24
+      ],
+      "python": [
+       18,
+       19
+      ],
+      "java": [
+       23,
+       24
+      ],
+      "go": [
+       46,
+       47
+      ]
+     },
+     "explanation": "binary(1) starts at depth 2.",
+     "variables": [
+      {
+       "name": "n",
+       "value": "1"
+      },
+      {
+       "name": "depth",
+       "value": "2"
+      },
+      {
+       "name": "result",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Recursion normal: call binary(1), depth 2, result -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "binary(6)",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "binary(3)",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "binary(1)",
+        "role": "active"
+       },
+       {
+        "id": "result",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 180,
+        "height": 40,
+        "text": "returns -",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "call stack (newest on the right)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each call waits for the one to its right"
+       }
+      ]
+     }
+    },
+    {
+     "event": "base",
+     "lines": {
+      "cpp": [
+       25,
+       26
+      ],
+      "python": [
+       20,
+       21
+      ],
+      "java": [
+       25,
+       26
+      ],
+      "go": [
+       48,
+       49
+      ]
+     },
+     "explanation": "1 is 0 or 1, which is already one binary digit. Return \"1\": the base case.",
+     "variables": [
+      {
+       "name": "n",
+       "value": "1"
+      },
+      {
+       "name": "depth",
+       "value": "2"
+      },
+      {
+       "name": "result",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Recursion normal: base binary(1), depth 2, result 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "binary(6)",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "binary(3)",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "binary(1)",
+        "role": "result"
+       },
+       {
+        "id": "result",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 180,
+        "height": 40,
+        "text": "returns 1",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "call stack (newest on the right)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each call waits for the one to its right"
+       }
+      ]
+     }
+    },
+    {
+     "event": "return",
+     "lines": {
+      "cpp": [
+       29
+      ],
+      "python": [
+       23
+      ],
+      "java": [
+       29
+      ],
+      "go": [
+       52
+      ]
+     },
+     "explanation": "Back in binary(3): binary(1) gave \"1\". Append 3 % 2 = 1, the last bit, and return \"11\".",
+     "variables": [
+      {
+       "name": "n",
+       "value": "3"
+      },
+      {
+       "name": "depth",
+       "value": "1"
+      },
+      {
+       "name": "result",
+       "value": "11"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Recursion normal: return binary(3), depth 1, result 11.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "binary(6)",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "binary(3)",
+        "role": "result"
+       },
+       {
+        "id": "result",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 180,
+        "height": 40,
+        "text": "returns 11",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "call stack (newest on the right)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each call waits for the one to its right"
+       }
+      ]
+     }
+    },
+    {
+     "event": "return",
+     "lines": {
+      "cpp": [
+       29
+      ],
+      "python": [
+       23
+      ],
+      "java": [
+       29
+      ],
+      "go": [
+       52
+      ]
+     },
+     "explanation": "Back in binary(6): binary(3) gave \"11\". Append 6 % 2 = 0, the last bit, and return \"110\".",
+     "variables": [
+      {
+       "name": "n",
+       "value": "6"
+      },
+      {
+       "name": "depth",
+       "value": "0"
+      },
+      {
+       "name": "result",
+       "value": "110"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Recursion normal: return binary(6), depth 0, result 110.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "binary(6)",
+        "role": "result"
+       },
+       {
+        "id": "result",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 180,
+        "height": 40,
+        "text": "returns 110",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "call stack (newest on the right)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each call waits for the one to its right"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-zero",
+   "label": "0 in binary",
+   "input": "0\n",
+   "expectedOutput": "0",
+   "frames": [
+    {
+     "event": "call",
+     "lines": {
+      "cpp": [
+       23,
+       24
+      ],
+      "python": [
+       18,
+       19
+      ],
+      "java": [
+       23,
+       24
+      ],
+      "go": [
+       46,
+       47
+      ]
+     },
+     "explanation": "binary(0) starts at depth 0.",
+     "variables": [
+      {
+       "name": "n",
+       "value": "0"
+      },
+      {
+       "name": "depth",
+       "value": "0"
+      },
+      {
+       "name": "result",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Recursion edge-zero: call binary(0), depth 0, result -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "binary(0)",
+        "role": "active"
+       },
+       {
+        "id": "result",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 180,
+        "height": 40,
+        "text": "returns -",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "call stack (newest on the right)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each call waits for the one to its right"
+       }
+      ]
+     }
+    },
+    {
+     "event": "base",
+     "lines": {
+      "cpp": [
+       25,
+       26
+      ],
+      "python": [
+       20,
+       21
+      ],
+      "java": [
+       25,
+       26
+      ],
+      "go": [
+       48,
+       49
+      ]
+     },
+     "explanation": "0 is 0 or 1, which is already one binary digit. Return \"0\": the base case.",
+     "variables": [
+      {
+       "name": "n",
+       "value": "0"
+      },
+      {
+       "name": "depth",
+       "value": "0"
+      },
+      {
+       "name": "result",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Recursion edge-zero: base binary(0), depth 0, result 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "binary(0)",
+        "role": "result"
+       },
+       {
+        "id": "result",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 180,
+        "height": 40,
+        "text": "returns 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "call stack (newest on the right)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each call waits for the one to its right"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

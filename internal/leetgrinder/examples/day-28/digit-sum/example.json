@@ -1,0 +1,1069 @@
+{
+ "id": "day-28-digit-sum",
+ "title": "Sum digits by trusting a smaller call",
+ "invariant": "digitSum(n) returns the sum of n's digits, assuming the call for n / 10 keeps the same promise.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 23,
+   "algorithmEnd": 34
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 29
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 23,
+   "algorithmEnd": 34
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 46,
+   "algorithmEnd": 57
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Digits of 1234",
+   "input": "1234\n",
+   "expectedOutput": "10",
+   "frames": [
+    {
+     "event": "call",
+     "lines": {
+      "cpp": [
+       23,
+       24
+      ],
+      "python": [
+       18,
+       19
+      ],
+      "java": [
+       23,
+       24
+      ],
+      "go": [
+       46,
+       47
+      ]
+     },
+     "explanation": "digitSum(1234) starts. Its promise: return the sum of 1234's digits. It's waiting at depth 0 on the call stack.",
+     "variables": [
+      {
+       "name": "n",
+       "value": "1234"
+      },
+      {
+       "name": "depth",
+       "value": "0"
+      },
+      {
+       "name": "result",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Recursion normal: call digitSum(1234), depth 0, result -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(1234)",
+        "role": "active"
+       },
+       {
+        "id": "result",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 180,
+        "height": 40,
+        "text": "returns -",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "call stack (newest on the right)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each call waits for the one to its right"
+       }
+      ]
+     }
+    },
+    {
+     "event": "call",
+     "lines": {
+      "cpp": [
+       23,
+       24
+      ],
+      "python": [
+       18,
+       19
+      ],
+      "java": [
+       23,
+       24
+      ],
+      "go": [
+       46,
+       47
+      ]
+     },
+     "explanation": "digitSum(123) starts. Its promise: return the sum of 123's digits. It's waiting at depth 1 on the call stack.",
+     "variables": [
+      {
+       "name": "n",
+       "value": "123"
+      },
+      {
+       "name": "depth",
+       "value": "1"
+      },
+      {
+       "name": "result",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Recursion normal: call digitSum(123), depth 1, result -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(1234)",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(123)",
+        "role": "active"
+       },
+       {
+        "id": "result",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 180,
+        "height": 40,
+        "text": "returns -",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "call stack (newest on the right)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each call waits for the one to its right"
+       }
+      ]
+     }
+    },
+    {
+     "event": "call",
+     "lines": {
+      "cpp": [
+       23,
+       24
+      ],
+      "python": [
+       18,
+       19
+      ],
+      "java": [
+       23,
+       24
+      ],
+      "go": [
+       46,
+       47
+      ]
+     },
+     "explanation": "digitSum(12) starts. Its promise: return the sum of 12's digits. It's waiting at depth 2 on the call stack.",
+     "variables": [
+      {
+       "name": "n",
+       "value": "12"
+      },
+      {
+       "name": "depth",
+       "value": "2"
+      },
+      {
+       "name": "result",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Recursion normal: call digitSum(12), depth 2, result -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(1234)",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(123)",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(12)",
+        "role": "active"
+       },
+       {
+        "id": "result",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 180,
+        "height": 40,
+        "text": "returns -",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "call stack (newest on the right)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each call waits for the one to its right"
+       }
+      ]
+     }
+    },
+    {
+     "event": "call",
+     "lines": {
+      "cpp": [
+       23,
+       24
+      ],
+      "python": [
+       18,
+       19
+      ],
+      "java": [
+       23,
+       24
+      ],
+      "go": [
+       46,
+       47
+      ]
+     },
+     "explanation": "digitSum(1) starts at depth 3.",
+     "variables": [
+      {
+       "name": "n",
+       "value": "1"
+      },
+      {
+       "name": "depth",
+       "value": "3"
+      },
+      {
+       "name": "result",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Recursion normal: call digitSum(1), depth 3, result -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(1234)",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(123)",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(12)",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(1)",
+        "role": "active"
+       },
+       {
+        "id": "result",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 180,
+        "height": 40,
+        "text": "returns -",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "call stack (newest on the right)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each call waits for the one to its right"
+       }
+      ]
+     }
+    },
+    {
+     "event": "base",
+     "lines": {
+      "cpp": [
+       25,
+       26
+      ],
+      "python": [
+       20,
+       21
+      ],
+      "java": [
+       25,
+       26
+      ],
+      "go": [
+       48,
+       49
+      ]
+     },
+     "explanation": "1 is a single digit, so the answer is just 1. This is the base case: it returns without calling itself, and the stack starts to unwind.",
+     "variables": [
+      {
+       "name": "n",
+       "value": "1"
+      },
+      {
+       "name": "depth",
+       "value": "3"
+      },
+      {
+       "name": "result",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Recursion normal: base digitSum(1), depth 3, result 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(1234)",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(123)",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(12)",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(1)",
+        "role": "result"
+       },
+       {
+        "id": "result",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 180,
+        "height": 40,
+        "text": "returns 1",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "call stack (newest on the right)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each call waits for the one to its right"
+       }
+      ]
+     }
+    },
+    {
+     "event": "return",
+     "lines": {
+      "cpp": [
+       29
+      ],
+      "python": [
+       23
+      ],
+      "java": [
+       29
+      ],
+      "go": [
+       52
+      ]
+     },
+     "explanation": "Back in digitSum(12): the call for 1 returned 1. Add the last digit 2 to get 3 and return it to the caller.",
+     "variables": [
+      {
+       "name": "n",
+       "value": "12"
+      },
+      {
+       "name": "depth",
+       "value": "2"
+      },
+      {
+       "name": "result",
+       "value": "3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Recursion normal: return digitSum(12), depth 2, result 3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(1234)",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(123)",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(12)",
+        "role": "result"
+       },
+       {
+        "id": "result",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 180,
+        "height": 40,
+        "text": "returns 3",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "call stack (newest on the right)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each call waits for the one to its right"
+       }
+      ]
+     }
+    },
+    {
+     "event": "return",
+     "lines": {
+      "cpp": [
+       29
+      ],
+      "python": [
+       23
+      ],
+      "java": [
+       29
+      ],
+      "go": [
+       52
+      ]
+     },
+     "explanation": "Back in digitSum(123): the call for 12 returned 3. Add the last digit 3 to get 6 and return it to the caller.",
+     "variables": [
+      {
+       "name": "n",
+       "value": "123"
+      },
+      {
+       "name": "depth",
+       "value": "1"
+      },
+      {
+       "name": "result",
+       "value": "6"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Recursion normal: return digitSum(123), depth 1, result 6.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(1234)",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(123)",
+        "role": "result"
+       },
+       {
+        "id": "result",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 180,
+        "height": 40,
+        "text": "returns 6",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "call stack (newest on the right)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each call waits for the one to its right"
+       }
+      ]
+     }
+    },
+    {
+     "event": "return",
+     "lines": {
+      "cpp": [
+       29
+      ],
+      "python": [
+       23
+      ],
+      "java": [
+       29
+      ],
+      "go": [
+       52
+      ]
+     },
+     "explanation": "Back in digitSum(1234): the call for 123 returned 6. Add the last digit 4 to get 10 and return it to the caller.",
+     "variables": [
+      {
+       "name": "n",
+       "value": "1234"
+      },
+      {
+       "name": "depth",
+       "value": "0"
+      },
+      {
+       "name": "result",
+       "value": "10"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Recursion normal: return digitSum(1234), depth 0, result 10.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(1234)",
+        "role": "result"
+       },
+       {
+        "id": "result",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 180,
+        "height": 40,
+        "text": "returns 10",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "call stack (newest on the right)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each call waits for the one to its right"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-single-digit",
+   "label": "A single digit",
+   "input": "7\n",
+   "expectedOutput": "7",
+   "frames": [
+    {
+     "event": "call",
+     "lines": {
+      "cpp": [
+       23,
+       24
+      ],
+      "python": [
+       18,
+       19
+      ],
+      "java": [
+       23,
+       24
+      ],
+      "go": [
+       46,
+       47
+      ]
+     },
+     "explanation": "digitSum(7) starts at depth 0.",
+     "variables": [
+      {
+       "name": "n",
+       "value": "7"
+      },
+      {
+       "name": "depth",
+       "value": "0"
+      },
+      {
+       "name": "result",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Recursion edge-single-digit: call digitSum(7), depth 0, result -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(7)",
+        "role": "active"
+       },
+       {
+        "id": "result",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 180,
+        "height": 40,
+        "text": "returns -",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "call stack (newest on the right)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each call waits for the one to its right"
+       }
+      ]
+     }
+    },
+    {
+     "event": "base",
+     "lines": {
+      "cpp": [
+       25,
+       26
+      ],
+      "python": [
+       20,
+       21
+      ],
+      "java": [
+       25,
+       26
+      ],
+      "go": [
+       48,
+       49
+      ]
+     },
+     "explanation": "7 is a single digit, so the answer is just 7. This is the base case: it returns without calling itself, and the stack starts to unwind.",
+     "variables": [
+      {
+       "name": "n",
+       "value": "7"
+      },
+      {
+       "name": "depth",
+       "value": "0"
+      },
+      {
+       "name": "result",
+       "value": "7"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Recursion edge-single-digit: base digitSum(7), depth 0, result 7.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "digitSum(7)",
+        "role": "result"
+       },
+       {
+        "id": "result",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 180,
+        "height": 40,
+        "text": "returns 7",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "call stack (newest on the right)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each call waits for the one to its right"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

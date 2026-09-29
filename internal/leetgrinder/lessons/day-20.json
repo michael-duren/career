@@ -1,0 +1,192 @@
+{
+  "day": 20,
+  "objectives": [
+    "Build prefix sums and answer any range total in O(1).",
+    "Use a leading 0 so ranges that start at index 0 need no special case.",
+    "Turn questions about ranges into questions about pairs of prefix sums."
+  ],
+  "prerequisites": [
+    1,
+    6,
+    18
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: a range is a difference of two running totals",
+      "paragraphs": [
+        "The running total up to position r, minus the running total up to position l - 1, is the total of the range l..r. Everything before l cancels out. So if you store all running totals once, any range total is one subtraction.",
+        "Store them with a 0 in front: prefix[0] = 0 and prefix[i] = the total of the first i values. Then the range l..r is prefix[r + 1] - prefix[l], with no special case when l = 0."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "A question about a range l..r is a question about two prefix sums: prefix[r + 1] and prefix[l]. Once you see that, range problems become pair problems."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Prefix sums 0, 3, 1, 5 for values 3, -2, 4. The total of all three values is prefix[3] minus prefix[0].",
+        "nodes": [
+          {
+            "id": "v0",
+            "shape": "rect",
+            "x": 12,
+            "y": 44,
+            "width": 56,
+            "height": 44,
+            "text": "0",
+            "role": "discarded"
+          },
+          {
+            "id": "v1",
+            "shape": "rect",
+            "x": 74,
+            "y": 44,
+            "width": 56,
+            "height": 44,
+            "text": "3",
+            "role": "neutral"
+          },
+          {
+            "id": "v2",
+            "shape": "rect",
+            "x": 136,
+            "y": 44,
+            "width": 56,
+            "height": 44,
+            "text": "1",
+            "role": "neutral"
+          },
+          {
+            "id": "v3",
+            "shape": "rect",
+            "x": 198,
+            "y": 44,
+            "width": 56,
+            "height": 44,
+            "text": "5",
+            "role": "result"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "title",
+            "x": 12,
+            "y": 28,
+            "text": "prefix sums of [3, -2, 4]"
+          },
+          {
+            "id": "l0",
+            "x": 12,
+            "y": 110,
+            "text": "prefix[0]"
+          },
+          {
+            "id": "l1",
+            "x": 180,
+            "y": 110,
+            "text": "prefix[3]"
+          },
+          {
+            "id": "l2",
+            "x": 12,
+            "y": 130,
+            "text": "whole range: 5 − 0 = 5"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Add each range",
+      "heading": "Baseline: add up each range when asked",
+      "paragraphs": [
+        "Adding the values in a range takes O(length). With many range questions on a long array, that's O(n) per question. Prefix sums take O(n) once and O(1) per question after that."
+      ]
+    },
+    {
+      "id": "ranges",
+      "navLabel": "Range totals",
+      "heading": "Worked example: range totals with prefix sums",
+      "paragraphs": [
+        "For [3, -2, 4], the prefix sums are [0, 3, 1, 5]. The total of values 0 to 2 is prefix[3] - prefix[0] = 5. The total of values 1 to 2 is prefix[3] - prefix[1] = 2.",
+        "Negative values are fine: prefix sums don't have to increase. That's different from day 19's windows, which needed positive values."
+      ],
+      "exampleIds": [
+        "day-20-range-totals"
+      ]
+    },
+    {
+      "id": "your-turn-range-query",
+      "navLabel": "Your turn: Range Sum Query - Immutable",
+      "heading": "Your turn: Range Sum Query - Immutable",
+      "paragraphs": [
+        "Build a class that answers sumRange(left, right) many times for the same array."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "What should the constructor compute so that each query is a single subtraction?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-pivot",
+      "navLabel": "Your turn: Find Pivot Index",
+      "heading": "Your turn: Find Pivot Index",
+      "paragraphs": [
+        "Return the leftmost index where the sum of the values strictly to its left equals the sum of the values strictly to its right, or -1."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Write \"sum to the left\" and \"sum to the right\" using a running total and the total of the whole array.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-subarray-k",
+      "navLabel": "Your turn: Subarray Sum Equals K",
+      "heading": "Your turn: Subarray Sum Equals K",
+      "paragraphs": [
+        "Today's medium. Count the subarrays whose sum equals k. Values can be negative, so a sliding window won't work."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Work [1, 2, 3] with k = 3 by hand and list every range that works. Then check your idea on [1, -1, 1] with k = 1.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Building prefix sums takes O(n) time and O(n) memory. Each range query is O(1).",
+        "Prefix sums of many large values can overflow a 32-bit integer; use 64-bit totals in C++, Java, and Go."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "Why start the prefix array with 0?",
+          "answer": "So the total of a range starting at index 0 is prefix[r + 1] - prefix[0], the same formula as every other range."
+        },
+        {
+          "prompt": "What is the total of values[1..2] for [3, -2, 4]?",
+          "answer": "prefix[3] - prefix[1] = 5 - 3 = 2."
+        },
+        {
+          "prompt": "Why can't day 19's sliding window count subarrays with sum exactly k when values can be negative?",
+          "answer": "With negatives, growing a window can lower its sum and shrinking can raise it, so there's no single direction to move."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,210 @@
+{
+  "day": 23,
+  "objectives": [
+    "Move two references at different speeds through a list.",
+    "Find a position a fixed fraction of the way along without knowing the length.",
+    "Guard every step so a pointer never follows a missing node."
+  ],
+  "prerequisites": [
+    4,
+    22
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: two speeds measure distance",
+      "paragraphs": [
+        "You can't ask a linked list for its length without walking it. But two references moving at different speeds give you proportions for free. If fast moves three nodes for every one that slow moves, then when fast reaches the end, slow has gone a third of the way.",
+        "Day 4 used the same trick with numbers to detect a loop: if fast ever lands on slow again, the walk must be going in circles."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "Before each step, check that the faster pointer has room to take all of its steps. That check is where most bugs live."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Four nodes. After one round slow is at node 2 and fast at node 4.",
+        "nodes": [
+          {
+            "id": "n0",
+            "shape": "rect",
+            "x": 12,
+            "y": 50,
+            "width": 48,
+            "height": 40,
+            "text": "1",
+            "role": "neutral"
+          },
+          {
+            "id": "n1",
+            "shape": "rect",
+            "x": 88,
+            "y": 50,
+            "width": 48,
+            "height": 40,
+            "text": "2",
+            "role": "active"
+          },
+          {
+            "id": "n2",
+            "shape": "rect",
+            "x": 164,
+            "y": 50,
+            "width": 48,
+            "height": 40,
+            "text": "3",
+            "role": "neutral"
+          },
+          {
+            "id": "n3",
+            "shape": "rect",
+            "x": 240,
+            "y": 50,
+            "width": 48,
+            "height": 40,
+            "text": "4",
+            "role": "discarded"
+          }
+        ],
+        "edges": [
+          {
+            "id": "e1",
+            "from": "n0",
+            "to": "n1",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          },
+          {
+            "id": "e2",
+            "from": "n1",
+            "to": "n2",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          },
+          {
+            "id": "e3",
+            "from": "n2",
+            "to": "n3",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          }
+        ],
+        "labels": [
+          {
+            "id": "title",
+            "x": 12,
+            "y": 30,
+            "text": "slow 1 step, fast 3 steps"
+          },
+          {
+            "id": "l0",
+            "x": 88,
+            "y": 120,
+            "text": "slow"
+          },
+          {
+            "id": "l1",
+            "x": 240,
+            "y": 120,
+            "text": "fast"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Count, then walk",
+      "heading": "Baseline: count the nodes, then walk again",
+      "paragraphs": [
+        "Walk the whole list to count n, then walk n / 3 nodes from the head. It's correct and O(n), but takes two passes. The two-speed version does it in one, and the same idea detects cycles, where counting would never finish."
+      ]
+    },
+    {
+      "id": "third",
+      "navLabel": "Two speeds",
+      "heading": "Worked example: the node a third of the way",
+      "paragraphs": [
+        "Start slow and fast at the head. While fast has three more nodes ahead, move slow one step and fast three. When fast can't take three more steps, slow is about a third of the way along.",
+        "The loop condition checks fast.next, fast.next.next, and fast.next.next.next before moving. Skipping any of those checks crashes on short lists."
+      ],
+      "exampleIds": [
+        "day-23-third-node"
+      ]
+    },
+    {
+      "id": "your-turn-middle",
+      "navLabel": "Your turn: Middle of the Linked List",
+      "heading": "Your turn: Middle of the Linked List",
+      "paragraphs": [
+        "Return the middle node. If there are two middle nodes, return the second one."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Change the speeds from the example. Then check which middle you land on for a list of length 4.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-cycle",
+      "navLabel": "Your turn: Linked List Cycle",
+      "heading": "Your turn: Linked List Cycle",
+      "paragraphs": [
+        "Return true if following next pointers ever revisits a node."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Day 4 detected a loop in a number sequence with slow and fast pointers. What's different when the \"next value\" can be null?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-delete-middle",
+      "navLabel": "Your turn: Delete the Middle Node of a Linked List",
+      "heading": "Your turn: Delete the Middle Node of a Linked List",
+      "paragraphs": [
+        "Today's medium. Delete the middle node (index n / 2, rounding down) and return the head. A one-node list becomes empty."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Try lists of length 1, 2, and 5 by hand. Which node do you need to be standing on to delete the middle?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Two-speed walks are O(n) time and O(1) extra memory.",
+        "Test lists of length 1, 2, 3, and 4. Off-by-one errors in the loop condition show up as the wrong middle or a null-pointer crash on exactly these sizes."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "Why does slow end a third of the way when fast moves three times as fast?",
+          "answer": "They move for the same number of rounds, so fast has always gone three times as far. When fast is near the end, slow is near a third."
+        },
+        {
+          "prompt": "What happens if the loop only checks fast.next before moving fast three steps?",
+          "answer": "fast.next.next or fast.next.next.next may be missing, and the program follows a null reference."
+        },
+        {
+          "prompt": "How do two speeds detect a cycle?",
+          "answer": "Without a cycle, fast reaches the end. With one, fast laps slow and they meet."
+        }
+      ]
+    }
+  ]
+}

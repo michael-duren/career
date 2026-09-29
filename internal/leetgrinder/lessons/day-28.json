@@ -1,0 +1,190 @@
+{
+  "day": 28,
+  "objectives": [
+    "Write a recursive function by stating what it promises and trusting a smaller call to keep that promise.",
+    "Choose a base case that stops the recursion.",
+    "Follow the call stack as calls pile up and then return."
+  ],
+  "prerequisites": [
+    26
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: trust a smaller version of the same problem",
+      "paragraphs": [
+        "A recursive function solves a problem by calling itself on a smaller version of it. The trick is to not trace every call in your head. Instead, state what the function promises, assume the smaller call keeps that promise, and use its answer.",
+        "The sum of the digits of 1234 is the sum of the digits of 123, plus 4. If digitSum(123) keeps its promise and returns 6, then digitSum(1234) returns 6 + 4 = 10. Something has to stop the chain: a single digit's sum is just that digit. That's the base case."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "Three things to write down before coding: what the function returns, the smaller call it makes, and the base case where it stops."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Calls digitSum(1234), digitSum(123), digitSum(12), digitSum(1) stacked; answers 1, 3, 6, 10 return back up.",
+        "nodes": [
+          {
+            "id": "c0",
+            "shape": "rect",
+            "x": 20,
+            "y": 20,
+            "width": 150,
+            "height": 28,
+            "text": "digitSum(1234) = 10",
+            "role": "neutral"
+          },
+          {
+            "id": "c1",
+            "shape": "rect",
+            "x": 28,
+            "y": 54,
+            "width": 150,
+            "height": 28,
+            "text": "digitSum(123) = 6",
+            "role": "neutral"
+          },
+          {
+            "id": "c2",
+            "shape": "rect",
+            "x": 36,
+            "y": 88,
+            "width": 150,
+            "height": 28,
+            "text": "digitSum(12) = 3",
+            "role": "neutral"
+          },
+          {
+            "id": "c3",
+            "shape": "rect",
+            "x": 44,
+            "y": 122,
+            "width": 150,
+            "height": 28,
+            "text": "digitSum(1) = 1",
+            "role": "result"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "l",
+            "x": 200,
+            "y": 90,
+            "text": "calls go down,"
+          },
+          {
+            "id": "l2",
+            "x": 200,
+            "y": 108,
+            "text": "answers come up"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "A loop",
+      "heading": "Baseline: the same thing with a loop",
+      "paragraphs": [
+        "Summing digits with a loop (take n % 10, divide n by 10, repeat) is just as fast and uses no call stack. Recursion earns its place when the problem splits into smaller pieces naturally, like trees and divide-and-conquer later in the course. Today's problems are practice for the way of thinking."
+      ]
+    },
+    {
+      "id": "digits",
+      "navLabel": "Contract and base case",
+      "heading": "Worked example: sum the digits recursively",
+      "paragraphs": [
+        "digitSum(n) promises the sum of n's digits. If n has one digit, return n. Otherwise return digitSum(n / 10) + n % 10.",
+        "Watch the call stack in the player: each call waits while the smaller call runs, then finishes once it gets an answer. The deepest call finishes first."
+      ],
+      "exampleIds": [
+        "day-28-digit-sum"
+      ]
+    },
+    {
+      "id": "binary",
+      "navLabel": "Halving",
+      "heading": "Worked example: write a number in binary",
+      "paragraphs": [
+        "binary(n) promises n written in base 2. n's last bit is n % 2, and the bits before it are n / 2 written in base 2. So binary(n) = binary(n / 2) followed by n % 2, with 0 and 1 as base cases.",
+        "Each call halves n, so the recursion is only about log₂ n calls deep. Halving the problem at each step is what makes some recursive solutions fast."
+      ],
+      "exampleIds": [
+        "day-28-binary-string"
+      ]
+    },
+    {
+      "id": "your-turn-fibonacci",
+      "navLabel": "Your turn: Fibonacci Number",
+      "heading": "Your turn: Fibonacci Number",
+      "paragraphs": [
+        "Return F(n), where F(0) = 0, F(1) = 1, and F(n) = F(n - 1) + F(n - 2)."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Write it recursively from the definition, then count how many calls it makes for n = 30. What could you remember to avoid repeating work?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-pow",
+      "navLabel": "Your turn: Pow(x, n)",
+      "heading": "Your turn: Pow(x, n)",
+      "paragraphs": [
+        "Today's first medium. Compute x raised to the power n, where n can be negative and as large as two billion, without calling a built-in power function."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Multiplying n times is too slow for n near two billion. Which idea from the binary example could shrink n faster?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-symbol",
+      "navLabel": "Your turn: K-th Symbol in Grammar",
+      "heading": "Your turn: K-th Symbol in Grammar",
+      "paragraphs": [
+        "Today's second medium. Row 1 is \"0\". Each next row replaces every 0 with \"01\" and every 1 with \"10\". Return the k-th symbol (1-based) of row n, without building the row."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Write out rows 1 to 4. Where does the k-th symbol of row n come from in row n - 1?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Digit sum makes one call per digit: O(number of digits). Binary makes one call per halving: O(log n). Each waiting call uses stack memory, so recursion depth is also memory.",
+        "Very deep recursion can overflow the call stack. Python stops at about 1,000 levels by default; C++, Java, and Go allow more but still have limits. When depth could be large, use a loop or an explicit stack."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "What are the three things to decide before writing a recursive function?",
+          "answer": "What it returns, the smaller call it makes, and the base case where it stops."
+        },
+        {
+          "prompt": "Why does binary(n) only need about log₂ n calls?",
+          "answer": "Each call halves n, and halving reaches 0 or 1 after about log₂ n steps."
+        },
+        {
+          "prompt": "What happens without a base case?",
+          "answer": "The function keeps calling itself until the call stack runs out of memory."
+        }
+      ]
+    }
+  ]
+}

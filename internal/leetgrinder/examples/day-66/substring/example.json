@@ -1,0 +1,1995 @@
+{
+  "id": "day-66-substring",
+  "title": "Longest common substring",
+  "invariant": "dp[i][j] is the length of the matching suffix ending at a[i-1] and b[j-1].",
+  "variants": [
+    {
+      "language": "python",
+      "file": "main.py",
+      "algorithmStart": 10,
+      "algorithmEnd": 23
+    },
+    {
+      "language": "cpp",
+      "file": "main.cpp",
+      "algorithmStart": 26,
+      "algorithmEnd": 39
+    },
+    {
+      "language": "java",
+      "file": "Main.java",
+      "algorithmStart": 25,
+      "algorithmEnd": 38
+    },
+    {
+      "language": "go",
+      "file": "main.go.txt",
+      "algorithmStart": 27,
+      "algorithmEnd": 41
+    }
+  ],
+  "cases": [
+    {
+      "id": "normal",
+      "label": "Contiguous match",
+      "input": "abxc\nzabq\n",
+      "expectedOutput": "ab",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "python": [
+              10
+            ],
+            "cpp": [
+              26
+            ],
+            "java": [
+              25
+            ],
+            "go": [
+              27
+            ]
+          },
+          "explanation": "The two input rows are ready. Empty prefixes have LCS length zero.",
+          "variables": [
+            {
+              "name": "a",
+              "value": "abxc"
+            },
+            {
+              "name": "b",
+              "value": "zabq"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Input: a=abxc; b=zabq",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "x",
+                "role": "neutral"
+              },
+              {
+                "id": "a3",
+                "shape": "rect",
+                "x": 214,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "z",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b3",
+                "shape": "rect",
+                "x": 214,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "q",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Input: a=abxc; b=zabq"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "python": [
+              13
+            ],
+            "cpp": [
+              29
+            ],
+            "java": [
+              28
+            ],
+            "go": [
+              31
+            ]
+          },
+          "explanation": "Row 1 stores matching suffix lengths. Mismatches write zero. The best cell is dp[1][2] = 1.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "row",
+              "value": "0,0,1,0,0"
+            },
+            {
+              "name": "best",
+              "value": "1"
+            },
+            {
+              "name": "end",
+              "value": "1"
+            },
+            {
+              "name": "bestJ",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Completed row i=1",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "x",
+                "role": "neutral"
+              },
+              {
+                "id": "a3",
+                "shape": "rect",
+                "x": 214,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "z",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b3",
+                "shape": "rect",
+                "x": 214,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "q",
+                "role": "neutral"
+              },
+              {
+                "id": "d0",
+                "shape": "rect",
+                "x": 88,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d1",
+                "shape": "rect",
+                "x": 130,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d2",
+                "shape": "rect",
+                "x": 172,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "1",
+                "role": "result"
+              },
+              {
+                "id": "d3",
+                "shape": "rect",
+                "x": 214,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d4",
+                "shape": "rect",
+                "x": 256,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "best-cell",
+                "shape": "rect",
+                "x": 88,
+                "y": 232,
+                "width": 165,
+                "height": 38,
+                "text": "dp[1][2] = 1",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Completed row i=1"
+              },
+              {
+                "id": "rowlabel",
+                "x": 8,
+                "y": 174,
+                "text": "dp row 1; columns 0..4"
+              },
+              {
+                "id": "bestlabel",
+                "x": 8,
+                "y": 247,
+                "text": "Best cell"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "python": [
+              13
+            ],
+            "cpp": [
+              29
+            ],
+            "java": [
+              28
+            ],
+            "go": [
+              31
+            ]
+          },
+          "explanation": "Row 2 stores matching suffix lengths. Mismatches write zero. The best cell is dp[2][3] = 2.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "row",
+              "value": "0,0,0,2,0"
+            },
+            {
+              "name": "best",
+              "value": "2"
+            },
+            {
+              "name": "end",
+              "value": "2"
+            },
+            {
+              "name": "bestJ",
+              "value": "3"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Completed row i=2",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "x",
+                "role": "neutral"
+              },
+              {
+                "id": "a3",
+                "shape": "rect",
+                "x": 214,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "z",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b3",
+                "shape": "rect",
+                "x": 214,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "q",
+                "role": "neutral"
+              },
+              {
+                "id": "d0",
+                "shape": "rect",
+                "x": 88,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d1",
+                "shape": "rect",
+                "x": 130,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d2",
+                "shape": "rect",
+                "x": 172,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d3",
+                "shape": "rect",
+                "x": 214,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "2",
+                "role": "result"
+              },
+              {
+                "id": "d4",
+                "shape": "rect",
+                "x": 256,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "best-cell",
+                "shape": "rect",
+                "x": 88,
+                "y": 232,
+                "width": 165,
+                "height": 38,
+                "text": "dp[2][3] = 2",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Completed row i=2"
+              },
+              {
+                "id": "rowlabel",
+                "x": 8,
+                "y": 174,
+                "text": "dp row 2; columns 0..4"
+              },
+              {
+                "id": "bestlabel",
+                "x": 8,
+                "y": 247,
+                "text": "Best cell"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "python": [
+              13
+            ],
+            "cpp": [
+              29
+            ],
+            "java": [
+              28
+            ],
+            "go": [
+              31
+            ]
+          },
+          "explanation": "Row 3 stores matching suffix lengths. Mismatches write zero. The best cell is dp[2][3] = 2.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "row",
+              "value": "0,0,0,0,0"
+            },
+            {
+              "name": "best",
+              "value": "2"
+            },
+            {
+              "name": "end",
+              "value": "2"
+            },
+            {
+              "name": "bestJ",
+              "value": "3"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Completed row i=3",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "x",
+                "role": "neutral"
+              },
+              {
+                "id": "a3",
+                "shape": "rect",
+                "x": 214,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "z",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b3",
+                "shape": "rect",
+                "x": 214,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "q",
+                "role": "neutral"
+              },
+              {
+                "id": "d0",
+                "shape": "rect",
+                "x": 88,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d1",
+                "shape": "rect",
+                "x": 130,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d2",
+                "shape": "rect",
+                "x": 172,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d3",
+                "shape": "rect",
+                "x": 214,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d4",
+                "shape": "rect",
+                "x": 256,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "best-cell",
+                "shape": "rect",
+                "x": 88,
+                "y": 232,
+                "width": 165,
+                "height": 38,
+                "text": "dp[2][3] = 2",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Completed row i=3"
+              },
+              {
+                "id": "rowlabel",
+                "x": 8,
+                "y": 174,
+                "text": "dp row 3; columns 0..4"
+              },
+              {
+                "id": "bestlabel",
+                "x": 8,
+                "y": 247,
+                "text": "Best cell"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "python": [
+              13
+            ],
+            "cpp": [
+              29
+            ],
+            "java": [
+              28
+            ],
+            "go": [
+              31
+            ]
+          },
+          "explanation": "Row 4 stores matching suffix lengths. Mismatches write zero. The best cell is dp[2][3] = 2.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "4"
+            },
+            {
+              "name": "row",
+              "value": "0,0,0,0,0"
+            },
+            {
+              "name": "best",
+              "value": "2"
+            },
+            {
+              "name": "end",
+              "value": "2"
+            },
+            {
+              "name": "bestJ",
+              "value": "3"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Completed row i=4",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "x",
+                "role": "neutral"
+              },
+              {
+                "id": "a3",
+                "shape": "rect",
+                "x": 214,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "z",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b3",
+                "shape": "rect",
+                "x": 214,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "q",
+                "role": "neutral"
+              },
+              {
+                "id": "d0",
+                "shape": "rect",
+                "x": 88,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d1",
+                "shape": "rect",
+                "x": 130,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d2",
+                "shape": "rect",
+                "x": 172,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d3",
+                "shape": "rect",
+                "x": 214,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d4",
+                "shape": "rect",
+                "x": 256,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "best-cell",
+                "shape": "rect",
+                "x": 88,
+                "y": 232,
+                "width": 165,
+                "height": 38,
+                "text": "dp[2][3] = 2",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Completed row i=4"
+              },
+              {
+                "id": "rowlabel",
+                "x": 8,
+                "y": 174,
+                "text": "dp row 4; columns 0..4"
+              },
+              {
+                "id": "bestlabel",
+                "x": 8,
+                "y": 247,
+                "text": "Best cell"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "python": [
+              22
+            ],
+            "cpp": [
+              38
+            ],
+            "java": [
+              37
+            ],
+            "go": [
+              40
+            ]
+          },
+          "explanation": "The longest contiguous match is ab.",
+          "variables": [
+            {
+              "name": "answer",
+              "value": "ab"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Result: ab",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "x",
+                "role": "neutral"
+              },
+              {
+                "id": "a3",
+                "shape": "rect",
+                "x": 214,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "z",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b3",
+                "shape": "rect",
+                "x": 214,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "q",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Result: ab"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "reset",
+      "label": "A mismatch breaks the run",
+      "input": "abc\nace\n",
+      "expectedOutput": "a",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "python": [
+              10
+            ],
+            "cpp": [
+              26
+            ],
+            "java": [
+              25
+            ],
+            "go": [
+              27
+            ]
+          },
+          "explanation": "The two input rows are ready. Empty prefixes have LCS length zero.",
+          "variables": [
+            {
+              "name": "a",
+              "value": "abc"
+            },
+            {
+              "name": "b",
+              "value": "ace"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Input: a=abc; b=ace",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "e",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Input: a=abc; b=ace"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "python": [
+              13
+            ],
+            "cpp": [
+              29
+            ],
+            "java": [
+              28
+            ],
+            "go": [
+              31
+            ]
+          },
+          "explanation": "Row 1 stores matching suffix lengths. Mismatches write zero. The best cell is dp[1][1] = 1.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "row",
+              "value": "0,1,0,0"
+            },
+            {
+              "name": "best",
+              "value": "1"
+            },
+            {
+              "name": "end",
+              "value": "1"
+            },
+            {
+              "name": "bestJ",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Completed row i=1",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "e",
+                "role": "neutral"
+              },
+              {
+                "id": "d0",
+                "shape": "rect",
+                "x": 88,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d1",
+                "shape": "rect",
+                "x": 130,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "1",
+                "role": "result"
+              },
+              {
+                "id": "d2",
+                "shape": "rect",
+                "x": 172,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d3",
+                "shape": "rect",
+                "x": 214,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "best-cell",
+                "shape": "rect",
+                "x": 88,
+                "y": 232,
+                "width": 165,
+                "height": 38,
+                "text": "dp[1][1] = 1",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Completed row i=1"
+              },
+              {
+                "id": "rowlabel",
+                "x": 8,
+                "y": 174,
+                "text": "dp row 1; columns 0..3"
+              },
+              {
+                "id": "bestlabel",
+                "x": 8,
+                "y": 247,
+                "text": "Best cell"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "python": [
+              13
+            ],
+            "cpp": [
+              29
+            ],
+            "java": [
+              28
+            ],
+            "go": [
+              31
+            ]
+          },
+          "explanation": "Row 2 stores matching suffix lengths. Mismatches write zero. The best cell is dp[1][1] = 1.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "row",
+              "value": "0,0,0,0"
+            },
+            {
+              "name": "best",
+              "value": "1"
+            },
+            {
+              "name": "end",
+              "value": "1"
+            },
+            {
+              "name": "bestJ",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Completed row i=2",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "e",
+                "role": "neutral"
+              },
+              {
+                "id": "d0",
+                "shape": "rect",
+                "x": 88,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d1",
+                "shape": "rect",
+                "x": 130,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d2",
+                "shape": "rect",
+                "x": 172,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d3",
+                "shape": "rect",
+                "x": 214,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "best-cell",
+                "shape": "rect",
+                "x": 88,
+                "y": 232,
+                "width": 165,
+                "height": 38,
+                "text": "dp[1][1] = 1",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Completed row i=2"
+              },
+              {
+                "id": "rowlabel",
+                "x": 8,
+                "y": 174,
+                "text": "dp row 2; columns 0..3"
+              },
+              {
+                "id": "bestlabel",
+                "x": 8,
+                "y": 247,
+                "text": "Best cell"
+              }
+            ]
+          }
+        },
+        {
+          "event": "row",
+          "lines": {
+            "python": [
+              13
+            ],
+            "cpp": [
+              29
+            ],
+            "java": [
+              28
+            ],
+            "go": [
+              31
+            ]
+          },
+          "explanation": "Row 3 stores matching suffix lengths. Mismatches write zero. The best cell is dp[1][1] = 1.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "row",
+              "value": "0,0,1,0"
+            },
+            {
+              "name": "best",
+              "value": "1"
+            },
+            {
+              "name": "end",
+              "value": "1"
+            },
+            {
+              "name": "bestJ",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Completed row i=3",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "e",
+                "role": "neutral"
+              },
+              {
+                "id": "d0",
+                "shape": "rect",
+                "x": 88,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d1",
+                "shape": "rect",
+                "x": 130,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "d2",
+                "shape": "rect",
+                "x": 172,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "1",
+                "role": "visited"
+              },
+              {
+                "id": "d3",
+                "shape": "rect",
+                "x": 214,
+                "y": 185,
+                "width": 36,
+                "height": 36,
+                "text": "0",
+                "role": "neutral"
+              },
+              {
+                "id": "best-cell",
+                "shape": "rect",
+                "x": 88,
+                "y": 232,
+                "width": 165,
+                "height": 38,
+                "text": "dp[1][1] = 1",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Completed row i=3"
+              },
+              {
+                "id": "rowlabel",
+                "x": 8,
+                "y": 174,
+                "text": "dp row 3; columns 0..3"
+              },
+              {
+                "id": "bestlabel",
+                "x": 8,
+                "y": 247,
+                "text": "Best cell"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "python": [
+              22
+            ],
+            "cpp": [
+              38
+            ],
+            "java": [
+              37
+            ],
+            "go": [
+              40
+            ]
+          },
+          "explanation": "The longest contiguous match is a.",
+          "variables": [
+            {
+              "name": "answer",
+              "value": "a"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Result: a",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "e",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Result: a"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

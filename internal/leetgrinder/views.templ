@@ -33,6 +33,7 @@ Export history</a>
 					{ children... }
 				</main>
 			</div>
+			<script type="module" src="/leetgrinder/lesson-player.js"></script>
 			@complexityScript()
 		</body>
 	</html>
@@ -286,31 +287,27 @@ templ Session(page DayPage) {
 				{ page.Error }
 			</p>
 		}
+		<section class="lesson panel" aria-labelledby="lesson-title">
+			if page.Day.MixedPractice() {
+				<p class="eyebrow">01 / CHOOSE AN APPROACH</p>
+				<h2 id="lesson-title">Attempt first, then review</h2>
+				<p class="muted">For mixed practice, choose a technique before opening the guidance. Explain your baseline and invariant before coding.</p>
+				<details class="review-guidance">
+					<summary>Review after your attempts</summary>
+					<div class="prose">
+						@Lesson(page.Day.Lesson)
+					</div>
+				</details>
+			} else {
+				<p class="eyebrow">01 / UNDERSTAND</p>
+				<h2 id="lesson-title">Before you start</h2>
+				<div class="prose">
+					@Lesson(page.Day.Lesson)
+				</div>
+			}
+		</section>
 		<div class="session-grid">
 			<div>
-				<section class="lesson panel" aria-labelledby="lesson-title">
-					if page.Day.MixedPractice() {
-						<p class="eyebrow">01 / CHOOSE AN APPROACH</p>
-						<h2 id="lesson-title">Attempt first, then review</h2>
-						<p class="muted">For mixed practice, choose a technique before opening the guidance. Explain your baseline and invariant before coding.</p>
-						<details class="review-guidance">
-							<summary>Review after your attempts</summary>
-							<div class="prose">
-								@Lesson(page.Day.Lesson)
-							</div>
-							@readingPath(page.Day)
-						</details>
-					} else {
-						<p class="eyebrow">01 / UNDERSTAND</p>
-						<h2 id="lesson-title">Before you start</h2>
-						<div class="prose">
-							@Lesson(page.Day.Lesson)
-						</div>
-					}
-				</section>
-				if !page.Day.MixedPractice() {
-					@readingPath(page.Day)
-				}
 				if page.ShowReviews() {
 					@todaysReviews(*page.Today, page.IDs, page.Day.Number, "")
 				}
@@ -777,40 +774,6 @@ templ scheduleSettings(page SettingsPage) {
 	</section>
 }
 
-templ readingPath(day Day) {
-	if len(day.Readings) > 0 {
-		<section class="panel reading">
-			<h2>Reading path</h2>
-			<p class="muted">Read these in order. A reading marked optional does not draw from your review time budget for the day; the minute estimates cover only the suggested sections, not whole papers. Keep reading and review within 30 minutes.</p>
-			for _, reading := range day.Readings {
-				<article>
-					<a href={ templ.SafeURL(reading.URL) } target="_blank" rel="noopener noreferrer">{ reading.Title } <span aria-hidden="true">↗</span><span class="visually-hidden">(opens in a new tab)</span></a>
-					<p>
-						{ reading.Guidance }
-					</p>
-					<span class="small muted">
-						{ Count(reading.Minutes) } min excerpt ·
-						if reading.Kind == "introduction" {
-							Introduction ·
-						} else if reading.Kind == "paper" {
-							Research paper or technical report ·
-						}
-						if day.MixedPractice() {
-							if reading.Optional {
-								Optional ·
-							}
-							Read after your attempts
-						} else if reading.Optional {
-							Optional reading
-						} else {
-							Read before practice
-						}
-					</span>
-				</article>
-			}
-		</section>
-	}
-}
 
 templ Problems(page ProblemsPage) {
 	@layout("Problems", "problems") {

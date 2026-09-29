@@ -1,0 +1,2718 @@
+{
+  "id": "day-32-depth-rescan",
+  "title": "Baseline: rescan each requested depth",
+  "invariant": "Each recursive collection pass starts at the root and records values only at its requested depth.",
+  "variants": [
+    {
+      "language": "cpp",
+      "file": "main.cpp",
+      "algorithmStart": 19,
+      "algorithmEnd": 43
+    },
+    {
+      "language": "python",
+      "file": "main.py",
+      "algorithmStart": 13,
+      "algorithmEnd": 38
+    },
+    {
+      "language": "java",
+      "file": "Main.java",
+      "algorithmStart": 16,
+      "algorithmEnd": 41
+    },
+    {
+      "language": "go",
+      "file": "main.go.txt",
+      "algorithmStart": 14,
+      "algorithmEnd": 39
+    }
+  ],
+  "cases": [
+    {
+      "id": "normal",
+      "label": "Branching tree",
+      "input": "5\n7 1 2\n3 3 4\n8 -1 -1\n1 -1 -1\n5 -1 -1\n",
+      "expectedOutput": "[[7],[3,8],[1,5]]",
+      "frames": [
+        {
+          "event": "init",
+          "lines": {
+            "cpp": [
+              32
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              30
+            ],
+            "go": [
+              28
+            ]
+          },
+          "explanation": "No level has been scanned. The result and visit counter start empty.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "0"
+            },
+            {
+              "name": "visits",
+              "value": "0"
+            },
+            {
+              "name": "level",
+              "value": "[]"
+            },
+            {
+              "name": "result",
+              "value": "[]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "normal tree during init; target depth 0, cumulative collect visits 0, level [], result []",
+            "nodes": [
+              {
+                "id": "n0",
+                "shape": "circle",
+                "x": 190,
+                "y": 18,
+                "width": 46,
+                "height": 46,
+                "text": "7",
+                "role": "neutral"
+              },
+              {
+                "id": "n1",
+                "shape": "circle",
+                "x": 100,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "n2",
+                "shape": "circle",
+                "x": 280,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "8",
+                "role": "neutral"
+              },
+              {
+                "id": "n3",
+                "shape": "circle",
+                "x": 35,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "n4",
+                "shape": "circle",
+                "x": 155,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "5",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "e0-1",
+                "from": "n0",
+                "to": "n1",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e0-2",
+                "from": "n0",
+                "to": "n2",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-3",
+                "from": "n1",
+                "to": "n3",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-4",
+                "from": "n1",
+                "to": "n4",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 0; scan visits 0"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level []"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result []"
+              }
+            ]
+          }
+        },
+        {
+          "event": "height",
+          "lines": {
+            "cpp": [
+              34
+            ],
+            "python": [
+              30
+            ],
+            "java": [
+              32
+            ],
+            "go": [
+              30
+            ]
+          },
+          "explanation": "A height pass finds 3 node-depths to request. The visit counter tracks later collection scans only.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "3"
+            },
+            {
+              "name": "visits",
+              "value": "0"
+            },
+            {
+              "name": "level",
+              "value": "[]"
+            },
+            {
+              "name": "result",
+              "value": "[]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "normal tree during height; target depth 3, cumulative collect visits 0, level [], result []",
+            "nodes": [
+              {
+                "id": "n0",
+                "shape": "circle",
+                "x": 190,
+                "y": 18,
+                "width": 46,
+                "height": 46,
+                "text": "7",
+                "role": "neutral"
+              },
+              {
+                "id": "n1",
+                "shape": "circle",
+                "x": 100,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "n2",
+                "shape": "circle",
+                "x": 280,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "8",
+                "role": "neutral"
+              },
+              {
+                "id": "n3",
+                "shape": "circle",
+                "x": 35,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "n4",
+                "shape": "circle",
+                "x": 155,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "5",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "e0-1",
+                "from": "n0",
+                "to": "n1",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e0-2",
+                "from": "n0",
+                "to": "n2",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-3",
+                "from": "n1",
+                "to": "n3",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-4",
+                "from": "n1",
+                "to": "n4",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 3; scan visits 0"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level []"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result []"
+              }
+            ]
+          }
+        },
+        {
+          "event": "pass_start",
+          "lines": {
+            "cpp": [
+              37
+            ],
+            "python": [
+              33
+            ],
+            "java": [
+              35
+            ],
+            "go": [
+              33
+            ]
+          },
+          "explanation": "Start a fresh recursive scan from the root for target depth 1. Earlier upper nodes will be visited again.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "1"
+            },
+            {
+              "name": "visits",
+              "value": "0"
+            },
+            {
+              "name": "level",
+              "value": "[]"
+            },
+            {
+              "name": "result",
+              "value": "[]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "normal tree during pass_start; target depth 1, cumulative collect visits 0, level [], result []",
+            "nodes": [
+              {
+                "id": "n0",
+                "shape": "circle",
+                "x": 190,
+                "y": 18,
+                "width": 46,
+                "height": 46,
+                "text": "7",
+                "role": "neutral"
+              },
+              {
+                "id": "n1",
+                "shape": "circle",
+                "x": 100,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "n2",
+                "shape": "circle",
+                "x": 280,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "8",
+                "role": "neutral"
+              },
+              {
+                "id": "n3",
+                "shape": "circle",
+                "x": 35,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "n4",
+                "shape": "circle",
+                "x": 155,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "5",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "e0-1",
+                "from": "n0",
+                "to": "n1",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e0-2",
+                "from": "n0",
+                "to": "n2",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-3",
+                "from": "n1",
+                "to": "n3",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-4",
+                "from": "n1",
+                "to": "n4",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 1; scan visits 0"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level []"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result []"
+              }
+            ]
+          }
+        },
+        {
+          "event": "pass_end",
+          "lines": {
+            "cpp": [
+              39,
+              40
+            ],
+            "python": [
+              35,
+              36
+            ],
+            "java": [
+              37,
+              38
+            ],
+            "go": [
+              35,
+              36
+            ]
+          },
+          "explanation": "Finish the target-depth scan and append level [7]. Cumulative collection visits are now 1. Highlighted nodes visited again: none.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "1"
+            },
+            {
+              "name": "visits",
+              "value": "1"
+            },
+            {
+              "name": "level",
+              "value": "[7]"
+            },
+            {
+              "name": "result",
+              "value": "[[7]]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "normal tree during pass_end; target depth 1, cumulative collect visits 1, level [7], result [[7]] Active nodes were revisited on depth 1; result nodes belong to this level.",
+            "nodes": [
+              {
+                "id": "n0",
+                "shape": "circle",
+                "x": 190,
+                "y": 18,
+                "width": 46,
+                "height": 46,
+                "text": "7",
+                "role": "result"
+              },
+              {
+                "id": "n1",
+                "shape": "circle",
+                "x": 100,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "n2",
+                "shape": "circle",
+                "x": 280,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "8",
+                "role": "neutral"
+              },
+              {
+                "id": "n3",
+                "shape": "circle",
+                "x": 35,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "n4",
+                "shape": "circle",
+                "x": 155,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "5",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "e0-1",
+                "from": "n0",
+                "to": "n1",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e0-2",
+                "from": "n0",
+                "to": "n2",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-3",
+                "from": "n1",
+                "to": "n3",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-4",
+                "from": "n1",
+                "to": "n4",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 1; scan visits 1"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level [7]"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result [[7]]"
+              }
+            ]
+          }
+        },
+        {
+          "event": "pass_start",
+          "lines": {
+            "cpp": [
+              37
+            ],
+            "python": [
+              33
+            ],
+            "java": [
+              35
+            ],
+            "go": [
+              33
+            ]
+          },
+          "explanation": "Start a fresh recursive scan from the root for target depth 2. Earlier upper nodes will be visited again.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "2"
+            },
+            {
+              "name": "visits",
+              "value": "1"
+            },
+            {
+              "name": "level",
+              "value": "[]"
+            },
+            {
+              "name": "result",
+              "value": "[[7]]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "normal tree during pass_start; target depth 2, cumulative collect visits 1, level [], result [[7]]",
+            "nodes": [
+              {
+                "id": "n0",
+                "shape": "circle",
+                "x": 190,
+                "y": 18,
+                "width": 46,
+                "height": 46,
+                "text": "7",
+                "role": "neutral"
+              },
+              {
+                "id": "n1",
+                "shape": "circle",
+                "x": 100,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "n2",
+                "shape": "circle",
+                "x": 280,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "8",
+                "role": "neutral"
+              },
+              {
+                "id": "n3",
+                "shape": "circle",
+                "x": 35,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "n4",
+                "shape": "circle",
+                "x": 155,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "5",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "e0-1",
+                "from": "n0",
+                "to": "n1",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e0-2",
+                "from": "n0",
+                "to": "n2",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-3",
+                "from": "n1",
+                "to": "n3",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-4",
+                "from": "n1",
+                "to": "n4",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 2; scan visits 1"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level []"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result [[7]]"
+              }
+            ]
+          }
+        },
+        {
+          "event": "pass_end",
+          "lines": {
+            "cpp": [
+              39,
+              40
+            ],
+            "python": [
+              35,
+              36
+            ],
+            "java": [
+              37,
+              38
+            ],
+            "go": [
+              35,
+              36
+            ]
+          },
+          "explanation": "Finish the target-depth scan and append level [3,8]. Cumulative collection visits are now 4. Highlighted nodes visited again: 7.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "2"
+            },
+            {
+              "name": "visits",
+              "value": "4"
+            },
+            {
+              "name": "level",
+              "value": "[3,8]"
+            },
+            {
+              "name": "result",
+              "value": "[[7],[3,8]]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "normal tree during pass_end; target depth 2, cumulative collect visits 4, level [3,8], result [[7],[3,8]] Active nodes were revisited on depth 2; result nodes belong to this level.",
+            "nodes": [
+              {
+                "id": "n0",
+                "shape": "circle",
+                "x": 190,
+                "y": 18,
+                "width": 46,
+                "height": 46,
+                "text": "7",
+                "role": "active"
+              },
+              {
+                "id": "n1",
+                "shape": "circle",
+                "x": 100,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "3",
+                "role": "result"
+              },
+              {
+                "id": "n2",
+                "shape": "circle",
+                "x": 280,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "8",
+                "role": "result"
+              },
+              {
+                "id": "n3",
+                "shape": "circle",
+                "x": 35,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "n4",
+                "shape": "circle",
+                "x": 155,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "5",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "e0-1",
+                "from": "n0",
+                "to": "n1",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e0-2",
+                "from": "n0",
+                "to": "n2",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-3",
+                "from": "n1",
+                "to": "n3",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-4",
+                "from": "n1",
+                "to": "n4",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 2; scan visits 4"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level [3,8]"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result [[7],[3,8]]"
+              }
+            ]
+          }
+        },
+        {
+          "event": "pass_start",
+          "lines": {
+            "cpp": [
+              37
+            ],
+            "python": [
+              33
+            ],
+            "java": [
+              35
+            ],
+            "go": [
+              33
+            ]
+          },
+          "explanation": "Start a fresh recursive scan from the root for target depth 3. Earlier upper nodes will be visited again.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "3"
+            },
+            {
+              "name": "visits",
+              "value": "4"
+            },
+            {
+              "name": "level",
+              "value": "[]"
+            },
+            {
+              "name": "result",
+              "value": "[[7],[3,8]]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "normal tree during pass_start; target depth 3, cumulative collect visits 4, level [], result [[7],[3,8]]",
+            "nodes": [
+              {
+                "id": "n0",
+                "shape": "circle",
+                "x": 190,
+                "y": 18,
+                "width": 46,
+                "height": 46,
+                "text": "7",
+                "role": "neutral"
+              },
+              {
+                "id": "n1",
+                "shape": "circle",
+                "x": 100,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "n2",
+                "shape": "circle",
+                "x": 280,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "8",
+                "role": "neutral"
+              },
+              {
+                "id": "n3",
+                "shape": "circle",
+                "x": 35,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "n4",
+                "shape": "circle",
+                "x": 155,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "5",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "e0-1",
+                "from": "n0",
+                "to": "n1",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e0-2",
+                "from": "n0",
+                "to": "n2",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-3",
+                "from": "n1",
+                "to": "n3",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-4",
+                "from": "n1",
+                "to": "n4",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 3; scan visits 4"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level []"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result [[7],[3,8]]"
+              }
+            ]
+          }
+        },
+        {
+          "event": "pass_end",
+          "lines": {
+            "cpp": [
+              39,
+              40
+            ],
+            "python": [
+              35,
+              36
+            ],
+            "java": [
+              37,
+              38
+            ],
+            "go": [
+              35,
+              36
+            ]
+          },
+          "explanation": "Finish the target-depth scan and append level [1,5]. Cumulative collection visits are now 9. Highlighted nodes visited again: 7, 3, 8.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "3"
+            },
+            {
+              "name": "visits",
+              "value": "9"
+            },
+            {
+              "name": "level",
+              "value": "[1,5]"
+            },
+            {
+              "name": "result",
+              "value": "[[7],[3,8],[1,5]]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "normal tree during pass_end; target depth 3, cumulative collect visits 9, level [1,5], result [[7],[3,8],[1,5]] Active nodes were revisited on depth 3; result nodes belong to this level.",
+            "nodes": [
+              {
+                "id": "n0",
+                "shape": "circle",
+                "x": 190,
+                "y": 18,
+                "width": 46,
+                "height": 46,
+                "text": "7",
+                "role": "active"
+              },
+              {
+                "id": "n1",
+                "shape": "circle",
+                "x": 100,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "3",
+                "role": "active"
+              },
+              {
+                "id": "n2",
+                "shape": "circle",
+                "x": 280,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "8",
+                "role": "active"
+              },
+              {
+                "id": "n3",
+                "shape": "circle",
+                "x": 35,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "1",
+                "role": "result"
+              },
+              {
+                "id": "n4",
+                "shape": "circle",
+                "x": 155,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "5",
+                "role": "result"
+              }
+            ],
+            "edges": [
+              {
+                "id": "e0-1",
+                "from": "n0",
+                "to": "n1",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e0-2",
+                "from": "n0",
+                "to": "n2",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-3",
+                "from": "n1",
+                "to": "n3",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-4",
+                "from": "n1",
+                "to": "n4",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 3; scan visits 9"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level [1,5]"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result [[7],[3,8],[1,5]]"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              43
+            ],
+            "python": [
+              38
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              39
+            ]
+          },
+          "explanation": "All depth-specific scans finished. The nested result is the program output.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "3"
+            },
+            {
+              "name": "visits",
+              "value": "9"
+            },
+            {
+              "name": "level",
+              "value": "[]"
+            },
+            {
+              "name": "result",
+              "value": "[[7],[3,8],[1,5]]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "normal tree during done; target depth 3, cumulative collect visits 9, level [], result [[7],[3,8],[1,5]]",
+            "nodes": [
+              {
+                "id": "n0",
+                "shape": "circle",
+                "x": 190,
+                "y": 18,
+                "width": 46,
+                "height": 46,
+                "text": "7",
+                "role": "neutral"
+              },
+              {
+                "id": "n1",
+                "shape": "circle",
+                "x": 100,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "n2",
+                "shape": "circle",
+                "x": 280,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "8",
+                "role": "neutral"
+              },
+              {
+                "id": "n3",
+                "shape": "circle",
+                "x": 35,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "1",
+                "role": "neutral"
+              },
+              {
+                "id": "n4",
+                "shape": "circle",
+                "x": 155,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "5",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "e0-1",
+                "from": "n0",
+                "to": "n1",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e0-2",
+                "from": "n0",
+                "to": "n2",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-3",
+                "from": "n1",
+                "to": "n3",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-4",
+                "from": "n1",
+                "to": "n4",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 3; scan visits 9"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level []"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result [[7],[3,8],[1,5]]"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge",
+      "label": "Single-child chain",
+      "input": "3\n7 1 -1\n3 -1 2\n5 -1 -1\n",
+      "expectedOutput": "[[7],[3],[5]]",
+      "frames": [
+        {
+          "event": "init",
+          "lines": {
+            "cpp": [
+              32
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              30
+            ],
+            "go": [
+              28
+            ]
+          },
+          "explanation": "No level has been scanned. The result and visit counter start empty.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "0"
+            },
+            {
+              "name": "visits",
+              "value": "0"
+            },
+            {
+              "name": "level",
+              "value": "[]"
+            },
+            {
+              "name": "result",
+              "value": "[]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "edge tree during init; target depth 0, cumulative collect visits 0, level [], result []",
+            "nodes": [
+              {
+                "id": "n0",
+                "shape": "circle",
+                "x": 190,
+                "y": 18,
+                "width": 46,
+                "height": 46,
+                "text": "7",
+                "role": "neutral"
+              },
+              {
+                "id": "n1",
+                "shape": "circle",
+                "x": 100,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "n2",
+                "shape": "circle",
+                "x": 155,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "5",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "e0-1",
+                "from": "n0",
+                "to": "n1",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-2",
+                "from": "n1",
+                "to": "n2",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 0; scan visits 0"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level []"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result []"
+              }
+            ]
+          }
+        },
+        {
+          "event": "height",
+          "lines": {
+            "cpp": [
+              34
+            ],
+            "python": [
+              30
+            ],
+            "java": [
+              32
+            ],
+            "go": [
+              30
+            ]
+          },
+          "explanation": "A height pass finds 3 node-depths to request. The visit counter tracks later collection scans only.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "3"
+            },
+            {
+              "name": "visits",
+              "value": "0"
+            },
+            {
+              "name": "level",
+              "value": "[]"
+            },
+            {
+              "name": "result",
+              "value": "[]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "edge tree during height; target depth 3, cumulative collect visits 0, level [], result []",
+            "nodes": [
+              {
+                "id": "n0",
+                "shape": "circle",
+                "x": 190,
+                "y": 18,
+                "width": 46,
+                "height": 46,
+                "text": "7",
+                "role": "neutral"
+              },
+              {
+                "id": "n1",
+                "shape": "circle",
+                "x": 100,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "n2",
+                "shape": "circle",
+                "x": 155,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "5",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "e0-1",
+                "from": "n0",
+                "to": "n1",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-2",
+                "from": "n1",
+                "to": "n2",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 3; scan visits 0"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level []"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result []"
+              }
+            ]
+          }
+        },
+        {
+          "event": "pass_start",
+          "lines": {
+            "cpp": [
+              37
+            ],
+            "python": [
+              33
+            ],
+            "java": [
+              35
+            ],
+            "go": [
+              33
+            ]
+          },
+          "explanation": "Start a fresh recursive scan from the root for target depth 1. Earlier upper nodes will be visited again.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "1"
+            },
+            {
+              "name": "visits",
+              "value": "0"
+            },
+            {
+              "name": "level",
+              "value": "[]"
+            },
+            {
+              "name": "result",
+              "value": "[]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "edge tree during pass_start; target depth 1, cumulative collect visits 0, level [], result []",
+            "nodes": [
+              {
+                "id": "n0",
+                "shape": "circle",
+                "x": 190,
+                "y": 18,
+                "width": 46,
+                "height": 46,
+                "text": "7",
+                "role": "neutral"
+              },
+              {
+                "id": "n1",
+                "shape": "circle",
+                "x": 100,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "n2",
+                "shape": "circle",
+                "x": 155,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "5",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "e0-1",
+                "from": "n0",
+                "to": "n1",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-2",
+                "from": "n1",
+                "to": "n2",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 1; scan visits 0"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level []"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result []"
+              }
+            ]
+          }
+        },
+        {
+          "event": "pass_end",
+          "lines": {
+            "cpp": [
+              39,
+              40
+            ],
+            "python": [
+              35,
+              36
+            ],
+            "java": [
+              37,
+              38
+            ],
+            "go": [
+              35,
+              36
+            ]
+          },
+          "explanation": "Finish the target-depth scan and append level [7]. Cumulative collection visits are now 1. Highlighted nodes visited again: none.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "1"
+            },
+            {
+              "name": "visits",
+              "value": "1"
+            },
+            {
+              "name": "level",
+              "value": "[7]"
+            },
+            {
+              "name": "result",
+              "value": "[[7]]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "edge tree during pass_end; target depth 1, cumulative collect visits 1, level [7], result [[7]] Active nodes were revisited on depth 1; result nodes belong to this level.",
+            "nodes": [
+              {
+                "id": "n0",
+                "shape": "circle",
+                "x": 190,
+                "y": 18,
+                "width": 46,
+                "height": 46,
+                "text": "7",
+                "role": "result"
+              },
+              {
+                "id": "n1",
+                "shape": "circle",
+                "x": 100,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "n2",
+                "shape": "circle",
+                "x": 155,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "5",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "e0-1",
+                "from": "n0",
+                "to": "n1",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-2",
+                "from": "n1",
+                "to": "n2",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 1; scan visits 1"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level [7]"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result [[7]]"
+              }
+            ]
+          }
+        },
+        {
+          "event": "pass_start",
+          "lines": {
+            "cpp": [
+              37
+            ],
+            "python": [
+              33
+            ],
+            "java": [
+              35
+            ],
+            "go": [
+              33
+            ]
+          },
+          "explanation": "Start a fresh recursive scan from the root for target depth 2. Earlier upper nodes will be visited again.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "2"
+            },
+            {
+              "name": "visits",
+              "value": "1"
+            },
+            {
+              "name": "level",
+              "value": "[]"
+            },
+            {
+              "name": "result",
+              "value": "[[7]]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "edge tree during pass_start; target depth 2, cumulative collect visits 1, level [], result [[7]]",
+            "nodes": [
+              {
+                "id": "n0",
+                "shape": "circle",
+                "x": 190,
+                "y": 18,
+                "width": 46,
+                "height": 46,
+                "text": "7",
+                "role": "neutral"
+              },
+              {
+                "id": "n1",
+                "shape": "circle",
+                "x": 100,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "n2",
+                "shape": "circle",
+                "x": 155,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "5",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "e0-1",
+                "from": "n0",
+                "to": "n1",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-2",
+                "from": "n1",
+                "to": "n2",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 2; scan visits 1"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level []"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result [[7]]"
+              }
+            ]
+          }
+        },
+        {
+          "event": "pass_end",
+          "lines": {
+            "cpp": [
+              39,
+              40
+            ],
+            "python": [
+              35,
+              36
+            ],
+            "java": [
+              37,
+              38
+            ],
+            "go": [
+              35,
+              36
+            ]
+          },
+          "explanation": "Finish the target-depth scan and append level [3]. Cumulative collection visits are now 3. Highlighted nodes visited again: 7.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "2"
+            },
+            {
+              "name": "visits",
+              "value": "3"
+            },
+            {
+              "name": "level",
+              "value": "[3]"
+            },
+            {
+              "name": "result",
+              "value": "[[7],[3]]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "edge tree during pass_end; target depth 2, cumulative collect visits 3, level [3], result [[7],[3]] Active nodes were revisited on depth 2; result nodes belong to this level.",
+            "nodes": [
+              {
+                "id": "n0",
+                "shape": "circle",
+                "x": 190,
+                "y": 18,
+                "width": 46,
+                "height": 46,
+                "text": "7",
+                "role": "active"
+              },
+              {
+                "id": "n1",
+                "shape": "circle",
+                "x": 100,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "3",
+                "role": "result"
+              },
+              {
+                "id": "n2",
+                "shape": "circle",
+                "x": 155,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "5",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "e0-1",
+                "from": "n0",
+                "to": "n1",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-2",
+                "from": "n1",
+                "to": "n2",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 2; scan visits 3"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level [3]"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result [[7],[3]]"
+              }
+            ]
+          }
+        },
+        {
+          "event": "pass_start",
+          "lines": {
+            "cpp": [
+              37
+            ],
+            "python": [
+              33
+            ],
+            "java": [
+              35
+            ],
+            "go": [
+              33
+            ]
+          },
+          "explanation": "Start a fresh recursive scan from the root for target depth 3. Earlier upper nodes will be visited again.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "3"
+            },
+            {
+              "name": "visits",
+              "value": "3"
+            },
+            {
+              "name": "level",
+              "value": "[]"
+            },
+            {
+              "name": "result",
+              "value": "[[7],[3]]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "edge tree during pass_start; target depth 3, cumulative collect visits 3, level [], result [[7],[3]]",
+            "nodes": [
+              {
+                "id": "n0",
+                "shape": "circle",
+                "x": 190,
+                "y": 18,
+                "width": 46,
+                "height": 46,
+                "text": "7",
+                "role": "neutral"
+              },
+              {
+                "id": "n1",
+                "shape": "circle",
+                "x": 100,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "n2",
+                "shape": "circle",
+                "x": 155,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "5",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "e0-1",
+                "from": "n0",
+                "to": "n1",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-2",
+                "from": "n1",
+                "to": "n2",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 3; scan visits 3"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level []"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result [[7],[3]]"
+              }
+            ]
+          }
+        },
+        {
+          "event": "pass_end",
+          "lines": {
+            "cpp": [
+              39,
+              40
+            ],
+            "python": [
+              35,
+              36
+            ],
+            "java": [
+              37,
+              38
+            ],
+            "go": [
+              35,
+              36
+            ]
+          },
+          "explanation": "Finish the target-depth scan and append level [5]. Cumulative collection visits are now 6. Highlighted nodes visited again: 7, 3.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "3"
+            },
+            {
+              "name": "visits",
+              "value": "6"
+            },
+            {
+              "name": "level",
+              "value": "[5]"
+            },
+            {
+              "name": "result",
+              "value": "[[7],[3],[5]]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "edge tree during pass_end; target depth 3, cumulative collect visits 6, level [5], result [[7],[3],[5]] Active nodes were revisited on depth 3; result nodes belong to this level.",
+            "nodes": [
+              {
+                "id": "n0",
+                "shape": "circle",
+                "x": 190,
+                "y": 18,
+                "width": 46,
+                "height": 46,
+                "text": "7",
+                "role": "active"
+              },
+              {
+                "id": "n1",
+                "shape": "circle",
+                "x": 100,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "3",
+                "role": "active"
+              },
+              {
+                "id": "n2",
+                "shape": "circle",
+                "x": 155,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "5",
+                "role": "result"
+              }
+            ],
+            "edges": [
+              {
+                "id": "e0-1",
+                "from": "n0",
+                "to": "n1",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-2",
+                "from": "n1",
+                "to": "n2",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 3; scan visits 6"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level [5]"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result [[7],[3],[5]]"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              43
+            ],
+            "python": [
+              38
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              39
+            ]
+          },
+          "explanation": "All depth-specific scans finished. The nested result is the program output.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "3"
+            },
+            {
+              "name": "visits",
+              "value": "6"
+            },
+            {
+              "name": "level",
+              "value": "[]"
+            },
+            {
+              "name": "result",
+              "value": "[[7],[3],[5]]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "edge tree during done; target depth 3, cumulative collect visits 6, level [], result [[7],[3],[5]]",
+            "nodes": [
+              {
+                "id": "n0",
+                "shape": "circle",
+                "x": 190,
+                "y": 18,
+                "width": 46,
+                "height": 46,
+                "text": "7",
+                "role": "neutral"
+              },
+              {
+                "id": "n1",
+                "shape": "circle",
+                "x": 100,
+                "y": 95,
+                "width": 46,
+                "height": 46,
+                "text": "3",
+                "role": "neutral"
+              },
+              {
+                "id": "n2",
+                "shape": "circle",
+                "x": 155,
+                "y": 170,
+                "width": 46,
+                "height": 46,
+                "text": "5",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "e0-1",
+                "from": "n0",
+                "to": "n1",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              },
+              {
+                "id": "e1-2",
+                "from": "n1",
+                "to": "n2",
+                "label": "",
+                "directed": true,
+                "role": "neutral"
+              }
+            ],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 3; scan visits 6"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level []"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result [[7],[3],[5]]"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "empty",
+      "label": "Empty tree",
+      "input": "0\n",
+      "expectedOutput": "[]",
+      "frames": [
+        {
+          "event": "init",
+          "lines": {
+            "cpp": [
+              32
+            ],
+            "python": [
+              28
+            ],
+            "java": [
+              30
+            ],
+            "go": [
+              28
+            ]
+          },
+          "explanation": "No level has been scanned. The result and visit counter start empty.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "0"
+            },
+            {
+              "name": "visits",
+              "value": "0"
+            },
+            {
+              "name": "level",
+              "value": "[]"
+            },
+            {
+              "name": "result",
+              "value": "[]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "empty tree during init; target depth 0, cumulative collect visits 0, level [], result []",
+            "nodes": [],
+            "edges": [],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 0; scan visits 0"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level []"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result []"
+              }
+            ]
+          }
+        },
+        {
+          "event": "height",
+          "lines": {
+            "cpp": [
+              34
+            ],
+            "python": [
+              30
+            ],
+            "java": [
+              32
+            ],
+            "go": [
+              30
+            ]
+          },
+          "explanation": "A height pass finds 0 node-depths to request. The visit counter tracks later collection scans only.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "0"
+            },
+            {
+              "name": "visits",
+              "value": "0"
+            },
+            {
+              "name": "level",
+              "value": "[]"
+            },
+            {
+              "name": "result",
+              "value": "[]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "empty tree during height; target depth 0, cumulative collect visits 0, level [], result []",
+            "nodes": [],
+            "edges": [],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 0; scan visits 0"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level []"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result []"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              43
+            ],
+            "python": [
+              38
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              39
+            ]
+          },
+          "explanation": "All depth-specific scans finished. The nested result is the program output.",
+          "variables": [
+            {
+              "name": "depth",
+              "value": "0"
+            },
+            {
+              "name": "visits",
+              "value": "0"
+            },
+            {
+              "name": "level",
+              "value": "[]"
+            },
+            {
+              "name": "result",
+              "value": "[]"
+            }
+          ],
+          "scene": {
+            "width": 440,
+            "height": 340,
+            "description": "empty tree during done; target depth 0, cumulative collect visits 0, level [], result []",
+            "nodes": [],
+            "edges": [],
+            "labels": [
+              {
+                "id": "title",
+                "x": 8,
+                "y": 20,
+                "text": "Repeated scan from root"
+              },
+              {
+                "id": "depth",
+                "x": 8,
+                "y": 250,
+                "text": "Target depth 0; scan visits 0"
+              },
+              {
+                "id": "level",
+                "x": 8,
+                "y": 280,
+                "text": "Collected level []"
+              },
+              {
+                "id": "result",
+                "x": 8,
+                "y": 310,
+                "text": "Completed result []"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

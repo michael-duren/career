@@ -1,0 +1,115 @@
+package leetgrinder
+
+import "fmt"
+
+templ lessonContent(content LessonContent) {
+	<article class="leetgrinder-lesson lesson-structured">
+		<div class="lesson-layout">
+			<div class="lesson-body">
+				<div class="lesson-goals">
+					<p class="lesson-goals-title">By the end of this lesson you can</p>
+					<ul>
+						for _, goal := range content.Objectives {
+							<li>@richText(goal)</li>
+						}
+					</ul>
+					if len(content.Prerequisites) > 0 {
+						<p class="lesson-prereqs">Builds on
+							for _, n := range content.Prerequisites {
+								<a href={ templ.SafeURL(DayURL(n)) }>{ DayLabel(n) }</a>
+							}
+						</p>
+					}
+				</div>
+				for _, section := range content.Sections {
+					@lessonSection(section)
+				}
+				@lessonReferences(content.Day)
+			</div>
+			<nav class="lesson-toc" aria-label="On this page">
+				<p class="lesson-toc-title">On this page</p>
+				<ol>
+					for _, section := range content.Sections {
+						<li><a href={ templ.SafeURL("#" + section.ID) }>{ section.Nav() }</a></li>
+					}
+					<li><a href="#lesson-references">References</a></li>
+					<li><a href="#practice-title">Practice problems</a></li>
+				</ol>
+			</nav>
+		</div>
+	</article>
+}
+
+templ lessonSection(section LessonSection) {
+	<section id={ section.ID } class={ "lesson-section", templ.KV("has-figure", section.Diagram != nil) }>
+		<div class="lesson-section-text">
+			<h3>{ section.Heading }</h3>
+			for _, paragraph := range section.Paragraphs {
+				<p>@richText(paragraph)</p>
+			}
+			if len(section.Bullets) > 0 {
+				<ul>
+					for _, bullet := range section.Bullets {
+						<li>@richText(bullet)</li>
+					}
+				</ul>
+			}
+			if section.Callout != nil {
+				<aside class={ "lesson-callout", "lesson-callout-" + section.Callout.Kind }>
+					<p class="lesson-callout-title">{ calloutTitle(*section.Callout) }</p>
+					<p>@richText(section.Callout.Text)</p>
+				</aside>
+			}
+		</div>
+		if section.Diagram != nil {
+			@lessonDiagram(*section.Diagram)
+		}
+		for _, id := range section.ExampleIDs {
+			if example, ok := LookupExampleContent(id); ok {
+				@lessonExample(example)
+			}
+		}
+		if len(section.Checks) > 0 {
+			<div class="lesson-checks">
+				for _, check := range section.Checks {
+					<details class="lesson-check"><summary>@richText(check.Prompt)</summary><p>@richText(check.Answer)</p></details>
+				}
+			</div>
+		}
+	</section>
+}
+
+templ richText(text string) {
+	for _, part := range inlineParts(text) {
+		if part.Code {
+			<code>{ part.Text }</code>
+		} else {
+			{ part.Text }
+		}
+	}
+}
+
+templ lessonDiagram(scene Scene) {
+	<figure class="lesson-diagram">
+		<svg viewBox={ fmt.Sprintf("0 0 %d %d", scene.Width, scene.Height) } role="img" aria-label={ scene.Description }>
+			<title>{ scene.Description }</title>
+			for _, edge := range scene.Edges {
+				<line x1={ Count(sceneCenterX(scene,edge.From)) } y1={ Count(sceneCenterY(scene,edge.From)) } x2={ Count(sceneCenterX(scene,edge.To)) } y2={ Count(sceneCenterY(scene,edge.To)) } class={ "scene-edge scene-"+edge.Role }/>
+				<text x={ Count((sceneCenterX(scene,edge.From)+sceneCenterX(scene,edge.To))/2) } y={ Count((sceneCenterY(scene,edge.From)+sceneCenterY(scene,edge.To))/2-6) }>{ edge.Label }</text>
+			}
+			for _, node := range scene.Nodes {
+				if node.Shape == "rect" {
+					<rect x={ Count(node.X) } y={ Count(node.Y) } width={ Count(node.Width) } height={ Count(node.Height) } class={ "scene-"+node.Role }/>
+				}
+				if node.Shape == "circle" {
+					<circle cx={ Count(node.X+node.Width/2) } cy={ Count(node.Y+node.Height/2) } r={ Count(node.Width/2) } class={ "scene-"+node.Role }/>
+				}
+				<text x={ Count(node.X+node.Width/2) } y={ Count(node.Y+node.Height/2) } text-anchor="middle" dominant-baseline="middle">{ node.Text }</text>
+			}
+			for _, label := range scene.Labels {
+				<text x={ Count(label.X) } y={ Count(label.Y) }>{ label.Text }</text>
+			}
+		</svg>
+		<figcaption>{ scene.Description }</figcaption>
+	</figure>
+}

@@ -1,0 +1,107 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
+type Variable struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func emit(event string, values ...string) {
+	vars := make([]Variable, 0, len(values)/2)
+	for k := 0; k < len(values); k += 2 {
+		vars = append(vars, Variable{values[k], values[k+1]})
+	}
+	data, _ := json.Marshal(struct {
+		Event     string     `json:"event"`
+		Variables []Variable `json:"variables"`
+	}{event, vars})
+	fmt.Println(string(data))
+}
+func rowText(row []int) string {
+	parts := make([]string, len(row))
+	for k, v := range row {
+		parts[k] = strconv.Itoa(v)
+	}
+	return strings.Join(parts, ",")
+}
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func main() {
+	in := bufio.NewScanner(os.Stdin)
+	in.Scan()
+	a := in.Text()
+	in.Scan()
+	b := in.Text()
+	emit("start", "a", a, "b", b)
+	dp := make([][]int, len(a)+1)
+	for i := range dp {
+		dp[i] = make([]int, len(b)+1)
+	}
+	for i := 1; i <= len(a); i++ {
+		for j := 1; j <= len(b); j++ {
+			if a[i-1] == b[j-1] {
+				dp[i][j] = dp[i-1][j-1] + 1
+			} else {
+				dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+			}
+		}
+		emit("row", "i", strconv.Itoa(i), "row", rowText(dp[i]))
+	}
+	i, j, out := len(a), len(b), make([]byte, 0, len(a)+len(b))
+	for i > 0 || j > 0 {
+		fromI, fromJ := i, j
+		upper, left := "-", "-"
+		if i > 0 {
+			upper = strconv.Itoa(dp[i-1][j])
+		}
+		if j > 0 {
+			left = strconv.Itoa(dp[i][j-1])
+		}
+		choice := ""
+		if i == 0 {
+			choice = "rest-b"
+			out = append(out, b[j-1])
+			j--
+		} else if j == 0 {
+			choice = "rest-a"
+			out = append(out, a[i-1])
+			i--
+		} else if a[i-1] == b[j-1] {
+			choice = "match"
+			out = append(out, a[i-1])
+			i--
+			j--
+		} else if dp[i-1][j] >= dp[i][j-1] {
+			choice = "upper"
+			out = append(out, a[i-1])
+			i--
+		} else {
+			choice = "left"
+			out = append(out, b[j-1])
+			j--
+		}
+		emit("walk", "fromI", strconv.Itoa(fromI), "fromJ", strconv.Itoa(fromJ), "upper", upper, "left", left, "choice", choice, "i", strconv.Itoa(i), "j", strconv.Itoa(j), "out", string(out))
+	}
+	for k := 0; k < len(out)/2; k++ {
+		out[k], out[len(out)-1-k] = out[len(out)-1-k], out[k]
+	}
+	answer := string(out)
+	emit("done", "answer", answer)
+	data, _ := json.Marshal(struct {
+		Result string `json:"result"`
+	}{answer})
+	fmt.Println(string(data))
+}

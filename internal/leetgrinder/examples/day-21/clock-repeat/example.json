@@ -1,0 +1,2333 @@
+{
+ "id": "day-21-clock-repeat",
+ "title": "Spot a full lap with remainders",
+ "invariant": "seen holds every hour the clock has shown so far, including the starting 0.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 25,
+   "algorithmEnd": 41
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 31
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 25,
+   "algorithmEnd": 41
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 56,
+   "algorithmEnd": 72
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Shifts 5, -3, 10, 4 on a 12-hour clock",
+   "input": "4 12\n5 -3 10 4\n",
+   "expectedOutput": "yes",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       26,
+       27
+      ],
+      "python": [
+       19,
+       20
+      ],
+      "java": [
+       26,
+       27
+      ],
+      "go": [
+       57,
+       58
+      ]
+     },
+     "explanation": "A 12-hour clock starts at 0. Apply the shifts [5,-3,10,4] one by one (negative means backward). Keep a set of every hour the clock has shown, starting with 0.",
+     "variables": [
+      {
+       "name": "step",
+       "value": "-"
+      },
+      {
+       "name": "hour",
+       "value": "0"
+      },
+      {
+       "name": "seen",
+       "value": "[0]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Clock normal: start, step -, hour 0, seen [0].",
+      "nodes": [
+       {
+        "id": "h0",
+        "shape": "circle",
+        "x": 137,
+        "y": 15,
+        "width": 26,
+        "height": 26,
+        "text": "0",
+        "role": "active"
+       },
+       {
+        "id": "h1",
+        "shape": "circle",
+        "x": 173,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "h2",
+        "shape": "circle",
+        "x": 199,
+        "y": 51,
+        "width": 26,
+        "height": 26,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "h3",
+        "shape": "circle",
+        "x": 209,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "h4",
+        "shape": "circle",
+        "x": 199,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "h5",
+        "shape": "circle",
+        "x": 173,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "h6",
+        "shape": "circle",
+        "x": 137,
+        "y": 159,
+        "width": 26,
+        "height": 26,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "h7",
+        "shape": "circle",
+        "x": 101,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "h8",
+        "shape": "circle",
+        "x": 74,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "h9",
+        "shape": "circle",
+        "x": 65,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "h10",
+        "shape": "circle",
+        "x": 74,
+        "y": 50,
+        "width": 26,
+        "height": 26,
+        "text": "10",
+        "role": "neutral"
+       },
+       {
+        "id": "h11",
+        "shape": "circle",
+        "x": 100,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "steps",
+        "shape": "rect",
+        "x": 290,
+        "y": 60,
+        "width": 214,
+        "height": 40,
+        "text": "step -",
+        "role": "neutral"
+       },
+       {
+        "id": "shifts",
+        "shape": "rect",
+        "x": 290,
+        "y": 110,
+        "width": 214,
+        "height": 40,
+        "text": "shifts 5,-3,10,4",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 18,
+        "text": "gold = seen before; blue = now"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       35
+      ],
+      "python": [
+       27
+      ],
+      "java": [
+       35
+      ],
+      "go": [
+       66
+      ]
+     },
+     "explanation": "Shift +5: 0 → 5. Hour 5 is new; add it to the set.",
+     "variables": [
+      {
+       "name": "step",
+       "value": "0"
+      },
+      {
+       "name": "hour",
+       "value": "5"
+      },
+      {
+       "name": "seen",
+       "value": "[0,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Clock normal: move, step 0, hour 5, seen [0,5].",
+      "nodes": [
+       {
+        "id": "h0",
+        "shape": "circle",
+        "x": 137,
+        "y": 15,
+        "width": 26,
+        "height": 26,
+        "text": "0",
+        "role": "visited"
+       },
+       {
+        "id": "h1",
+        "shape": "circle",
+        "x": 173,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "h2",
+        "shape": "circle",
+        "x": 199,
+        "y": 51,
+        "width": 26,
+        "height": 26,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "h3",
+        "shape": "circle",
+        "x": 209,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "h4",
+        "shape": "circle",
+        "x": 199,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "h5",
+        "shape": "circle",
+        "x": 173,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "5",
+        "role": "active"
+       },
+       {
+        "id": "h6",
+        "shape": "circle",
+        "x": 137,
+        "y": 159,
+        "width": 26,
+        "height": 26,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "h7",
+        "shape": "circle",
+        "x": 101,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "h8",
+        "shape": "circle",
+        "x": 74,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "h9",
+        "shape": "circle",
+        "x": 65,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "h10",
+        "shape": "circle",
+        "x": 74,
+        "y": 50,
+        "width": 26,
+        "height": 26,
+        "text": "10",
+        "role": "neutral"
+       },
+       {
+        "id": "h11",
+        "shape": "circle",
+        "x": 100,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "steps",
+        "shape": "rect",
+        "x": 290,
+        "y": 60,
+        "width": 214,
+        "height": 40,
+        "text": "step 0",
+        "role": "neutral"
+       },
+       {
+        "id": "shifts",
+        "shape": "rect",
+        "x": 290,
+        "y": 110,
+        "width": 214,
+        "height": 40,
+        "text": "shifts 5,-3,10,4",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 18,
+        "text": "gold = seen before; blue = now"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       35
+      ],
+      "python": [
+       27
+      ],
+      "java": [
+       35
+      ],
+      "go": [
+       66
+      ]
+     },
+     "explanation": "Shift -3: 5 → 2. Hour 2 is new; add it to the set.",
+     "variables": [
+      {
+       "name": "step",
+       "value": "1"
+      },
+      {
+       "name": "hour",
+       "value": "2"
+      },
+      {
+       "name": "seen",
+       "value": "[0,2,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Clock normal: move, step 1, hour 2, seen [0,2,5].",
+      "nodes": [
+       {
+        "id": "h0",
+        "shape": "circle",
+        "x": 137,
+        "y": 15,
+        "width": 26,
+        "height": 26,
+        "text": "0",
+        "role": "visited"
+       },
+       {
+        "id": "h1",
+        "shape": "circle",
+        "x": 173,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "h2",
+        "shape": "circle",
+        "x": 199,
+        "y": 51,
+        "width": 26,
+        "height": 26,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "h3",
+        "shape": "circle",
+        "x": 209,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "h4",
+        "shape": "circle",
+        "x": 199,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "h5",
+        "shape": "circle",
+        "x": 173,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "h6",
+        "shape": "circle",
+        "x": 137,
+        "y": 159,
+        "width": 26,
+        "height": 26,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "h7",
+        "shape": "circle",
+        "x": 101,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "h8",
+        "shape": "circle",
+        "x": 74,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "h9",
+        "shape": "circle",
+        "x": 65,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "h10",
+        "shape": "circle",
+        "x": 74,
+        "y": 50,
+        "width": 26,
+        "height": 26,
+        "text": "10",
+        "role": "neutral"
+       },
+       {
+        "id": "h11",
+        "shape": "circle",
+        "x": 100,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "steps",
+        "shape": "rect",
+        "x": 290,
+        "y": 60,
+        "width": 214,
+        "height": 40,
+        "text": "step 1",
+        "role": "neutral"
+       },
+       {
+        "id": "shifts",
+        "shape": "rect",
+        "x": 290,
+        "y": 110,
+        "width": 214,
+        "height": 40,
+        "text": "shifts 5,-3,10,4",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 18,
+        "text": "gold = seen before; blue = now"
+       }
+      ]
+     }
+    },
+    {
+     "event": "repeat",
+     "lines": {
+      "cpp": [
+       31,
+       32
+      ],
+      "python": [
+       24,
+       25
+      ],
+      "java": [
+       31,
+       32
+      ],
+      "go": [
+       62,
+       63
+      ]
+     },
+     "explanation": "Shift +10: 2 → 0. The clock has shown 0 before, so the shifts since that moment took it all the way around: some run of consecutive shifts adds up to a multiple of 12.",
+     "variables": [
+      {
+       "name": "step",
+       "value": "2"
+      },
+      {
+       "name": "hour",
+       "value": "0"
+      },
+      {
+       "name": "seen",
+       "value": "[0,2,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Clock normal: repeat, step 2, hour 0, seen [0,2,5].",
+      "nodes": [
+       {
+        "id": "h0",
+        "shape": "circle",
+        "x": 137,
+        "y": 15,
+        "width": 26,
+        "height": 26,
+        "text": "0",
+        "role": "result"
+       },
+       {
+        "id": "h1",
+        "shape": "circle",
+        "x": 173,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "h2",
+        "shape": "circle",
+        "x": 199,
+        "y": 51,
+        "width": 26,
+        "height": 26,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "h3",
+        "shape": "circle",
+        "x": 209,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "h4",
+        "shape": "circle",
+        "x": 199,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "h5",
+        "shape": "circle",
+        "x": 173,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "h6",
+        "shape": "circle",
+        "x": 137,
+        "y": 159,
+        "width": 26,
+        "height": 26,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "h7",
+        "shape": "circle",
+        "x": 101,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "h8",
+        "shape": "circle",
+        "x": 74,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "h9",
+        "shape": "circle",
+        "x": 65,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "h10",
+        "shape": "circle",
+        "x": 74,
+        "y": 50,
+        "width": 26,
+        "height": 26,
+        "text": "10",
+        "role": "neutral"
+       },
+       {
+        "id": "h11",
+        "shape": "circle",
+        "x": 100,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "steps",
+        "shape": "rect",
+        "x": 290,
+        "y": 60,
+        "width": 214,
+        "height": 40,
+        "text": "step 2",
+        "role": "neutral"
+       },
+       {
+        "id": "shifts",
+        "shape": "rect",
+        "x": 290,
+        "y": 110,
+        "width": 214,
+        "height": 40,
+        "text": "shifts 5,-3,10,4",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 18,
+        "text": "gold = seen before; blue = now"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-negative",
+   "label": "A negative first shift",
+   "input": "4 12\n-5 2 3 -1\n",
+   "expectedOutput": "yes",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       26,
+       27
+      ],
+      "python": [
+       19,
+       20
+      ],
+      "java": [
+       26,
+       27
+      ],
+      "go": [
+       57,
+       58
+      ]
+     },
+     "explanation": "A 12-hour clock starts at 0. Apply the shifts [-5,2,3,-1] one by one (negative means backward). Keep a set of every hour the clock has shown, starting with 0.",
+     "variables": [
+      {
+       "name": "step",
+       "value": "-"
+      },
+      {
+       "name": "hour",
+       "value": "0"
+      },
+      {
+       "name": "seen",
+       "value": "[0]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Clock edge-negative: start, step -, hour 0, seen [0].",
+      "nodes": [
+       {
+        "id": "h0",
+        "shape": "circle",
+        "x": 137,
+        "y": 15,
+        "width": 26,
+        "height": 26,
+        "text": "0",
+        "role": "active"
+       },
+       {
+        "id": "h1",
+        "shape": "circle",
+        "x": 173,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "h2",
+        "shape": "circle",
+        "x": 199,
+        "y": 51,
+        "width": 26,
+        "height": 26,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "h3",
+        "shape": "circle",
+        "x": 209,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "h4",
+        "shape": "circle",
+        "x": 199,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "h5",
+        "shape": "circle",
+        "x": 173,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "h6",
+        "shape": "circle",
+        "x": 137,
+        "y": 159,
+        "width": 26,
+        "height": 26,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "h7",
+        "shape": "circle",
+        "x": 101,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "h8",
+        "shape": "circle",
+        "x": 74,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "h9",
+        "shape": "circle",
+        "x": 65,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "h10",
+        "shape": "circle",
+        "x": 74,
+        "y": 50,
+        "width": 26,
+        "height": 26,
+        "text": "10",
+        "role": "neutral"
+       },
+       {
+        "id": "h11",
+        "shape": "circle",
+        "x": 100,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "steps",
+        "shape": "rect",
+        "x": 290,
+        "y": 60,
+        "width": 214,
+        "height": 40,
+        "text": "step -",
+        "role": "neutral"
+       },
+       {
+        "id": "shifts",
+        "shape": "rect",
+        "x": 290,
+        "y": 110,
+        "width": 214,
+        "height": 40,
+        "text": "shifts -5,2,3,-1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 18,
+        "text": "gold = seen before; blue = now"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       35
+      ],
+      "python": [
+       27
+      ],
+      "java": [
+       35
+      ],
+      "go": [
+       66
+      ]
+     },
+     "explanation": "Shift -5: 0 → 7. In C++, Java, and Go, -5 % 12 is -5, a negative remainder, so add 12 and take % 12 again to get 7. Hour 7 is new; add it to the set.",
+     "variables": [
+      {
+       "name": "step",
+       "value": "0"
+      },
+      {
+       "name": "hour",
+       "value": "7"
+      },
+      {
+       "name": "seen",
+       "value": "[0,7]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Clock edge-negative: move, step 0, hour 7, seen [0,7].",
+      "nodes": [
+       {
+        "id": "h0",
+        "shape": "circle",
+        "x": 137,
+        "y": 15,
+        "width": 26,
+        "height": 26,
+        "text": "0",
+        "role": "visited"
+       },
+       {
+        "id": "h1",
+        "shape": "circle",
+        "x": 173,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "h2",
+        "shape": "circle",
+        "x": 199,
+        "y": 51,
+        "width": 26,
+        "height": 26,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "h3",
+        "shape": "circle",
+        "x": 209,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "h4",
+        "shape": "circle",
+        "x": 199,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "h5",
+        "shape": "circle",
+        "x": 173,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "h6",
+        "shape": "circle",
+        "x": 137,
+        "y": 159,
+        "width": 26,
+        "height": 26,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "h7",
+        "shape": "circle",
+        "x": 101,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "7",
+        "role": "active"
+       },
+       {
+        "id": "h8",
+        "shape": "circle",
+        "x": 74,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "h9",
+        "shape": "circle",
+        "x": 65,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "h10",
+        "shape": "circle",
+        "x": 74,
+        "y": 50,
+        "width": 26,
+        "height": 26,
+        "text": "10",
+        "role": "neutral"
+       },
+       {
+        "id": "h11",
+        "shape": "circle",
+        "x": 100,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "steps",
+        "shape": "rect",
+        "x": 290,
+        "y": 60,
+        "width": 214,
+        "height": 40,
+        "text": "step 0",
+        "role": "neutral"
+       },
+       {
+        "id": "shifts",
+        "shape": "rect",
+        "x": 290,
+        "y": 110,
+        "width": 214,
+        "height": 40,
+        "text": "shifts -5,2,3,-1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 18,
+        "text": "gold = seen before; blue = now"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       35
+      ],
+      "python": [
+       27
+      ],
+      "java": [
+       35
+      ],
+      "go": [
+       66
+      ]
+     },
+     "explanation": "Shift +2: 7 → 9. Hour 9 is new; add it to the set.",
+     "variables": [
+      {
+       "name": "step",
+       "value": "1"
+      },
+      {
+       "name": "hour",
+       "value": "9"
+      },
+      {
+       "name": "seen",
+       "value": "[0,7,9]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Clock edge-negative: move, step 1, hour 9, seen [0,7,9].",
+      "nodes": [
+       {
+        "id": "h0",
+        "shape": "circle",
+        "x": 137,
+        "y": 15,
+        "width": 26,
+        "height": 26,
+        "text": "0",
+        "role": "visited"
+       },
+       {
+        "id": "h1",
+        "shape": "circle",
+        "x": 173,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "h2",
+        "shape": "circle",
+        "x": 199,
+        "y": 51,
+        "width": 26,
+        "height": 26,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "h3",
+        "shape": "circle",
+        "x": 209,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "h4",
+        "shape": "circle",
+        "x": 199,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "h5",
+        "shape": "circle",
+        "x": 173,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "h6",
+        "shape": "circle",
+        "x": 137,
+        "y": 159,
+        "width": 26,
+        "height": 26,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "h7",
+        "shape": "circle",
+        "x": 101,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "7",
+        "role": "visited"
+       },
+       {
+        "id": "h8",
+        "shape": "circle",
+        "x": 74,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "h9",
+        "shape": "circle",
+        "x": 65,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "9",
+        "role": "active"
+       },
+       {
+        "id": "h10",
+        "shape": "circle",
+        "x": 74,
+        "y": 50,
+        "width": 26,
+        "height": 26,
+        "text": "10",
+        "role": "neutral"
+       },
+       {
+        "id": "h11",
+        "shape": "circle",
+        "x": 100,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "steps",
+        "shape": "rect",
+        "x": 290,
+        "y": 60,
+        "width": 214,
+        "height": 40,
+        "text": "step 1",
+        "role": "neutral"
+       },
+       {
+        "id": "shifts",
+        "shape": "rect",
+        "x": 290,
+        "y": 110,
+        "width": 214,
+        "height": 40,
+        "text": "shifts -5,2,3,-1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 18,
+        "text": "gold = seen before; blue = now"
+       }
+      ]
+     }
+    },
+    {
+     "event": "repeat",
+     "lines": {
+      "cpp": [
+       31,
+       32
+      ],
+      "python": [
+       24,
+       25
+      ],
+      "java": [
+       31,
+       32
+      ],
+      "go": [
+       62,
+       63
+      ]
+     },
+     "explanation": "Shift +3: 9 → 0. The clock has shown 0 before, so the shifts since that moment took it all the way around: some run of consecutive shifts adds up to a multiple of 12.",
+     "variables": [
+      {
+       "name": "step",
+       "value": "2"
+      },
+      {
+       "name": "hour",
+       "value": "0"
+      },
+      {
+       "name": "seen",
+       "value": "[0,7,9]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Clock edge-negative: repeat, step 2, hour 0, seen [0,7,9].",
+      "nodes": [
+       {
+        "id": "h0",
+        "shape": "circle",
+        "x": 137,
+        "y": 15,
+        "width": 26,
+        "height": 26,
+        "text": "0",
+        "role": "result"
+       },
+       {
+        "id": "h1",
+        "shape": "circle",
+        "x": 173,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "h2",
+        "shape": "circle",
+        "x": 199,
+        "y": 51,
+        "width": 26,
+        "height": 26,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "h3",
+        "shape": "circle",
+        "x": 209,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "h4",
+        "shape": "circle",
+        "x": 199,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "h5",
+        "shape": "circle",
+        "x": 173,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "h6",
+        "shape": "circle",
+        "x": 137,
+        "y": 159,
+        "width": 26,
+        "height": 26,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "h7",
+        "shape": "circle",
+        "x": 101,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "7",
+        "role": "visited"
+       },
+       {
+        "id": "h8",
+        "shape": "circle",
+        "x": 74,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "h9",
+        "shape": "circle",
+        "x": 65,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "9",
+        "role": "visited"
+       },
+       {
+        "id": "h10",
+        "shape": "circle",
+        "x": 74,
+        "y": 50,
+        "width": 26,
+        "height": 26,
+        "text": "10",
+        "role": "neutral"
+       },
+       {
+        "id": "h11",
+        "shape": "circle",
+        "x": 100,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "steps",
+        "shape": "rect",
+        "x": 290,
+        "y": 60,
+        "width": 214,
+        "height": 40,
+        "text": "step 2",
+        "role": "neutral"
+       },
+       {
+        "id": "shifts",
+        "shape": "rect",
+        "x": 290,
+        "y": 110,
+        "width": 214,
+        "height": 40,
+        "text": "shifts -5,2,3,-1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 18,
+        "text": "gold = seen before; blue = now"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-no-repeat",
+   "label": "No full lap",
+   "input": "2 12\n1 1\n",
+   "expectedOutput": "no",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       26,
+       27
+      ],
+      "python": [
+       19,
+       20
+      ],
+      "java": [
+       26,
+       27
+      ],
+      "go": [
+       57,
+       58
+      ]
+     },
+     "explanation": "A 12-hour clock starts at 0. Apply the shifts [1,1] one by one (negative means backward). Keep a set of every hour the clock has shown, starting with 0.",
+     "variables": [
+      {
+       "name": "step",
+       "value": "-"
+      },
+      {
+       "name": "hour",
+       "value": "0"
+      },
+      {
+       "name": "seen",
+       "value": "[0]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Clock edge-no-repeat: start, step -, hour 0, seen [0].",
+      "nodes": [
+       {
+        "id": "h0",
+        "shape": "circle",
+        "x": 137,
+        "y": 15,
+        "width": 26,
+        "height": 26,
+        "text": "0",
+        "role": "active"
+       },
+       {
+        "id": "h1",
+        "shape": "circle",
+        "x": 173,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "h2",
+        "shape": "circle",
+        "x": 199,
+        "y": 51,
+        "width": 26,
+        "height": 26,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "h3",
+        "shape": "circle",
+        "x": 209,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "h4",
+        "shape": "circle",
+        "x": 199,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "h5",
+        "shape": "circle",
+        "x": 173,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "h6",
+        "shape": "circle",
+        "x": 137,
+        "y": 159,
+        "width": 26,
+        "height": 26,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "h7",
+        "shape": "circle",
+        "x": 101,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "h8",
+        "shape": "circle",
+        "x": 74,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "h9",
+        "shape": "circle",
+        "x": 65,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "h10",
+        "shape": "circle",
+        "x": 74,
+        "y": 50,
+        "width": 26,
+        "height": 26,
+        "text": "10",
+        "role": "neutral"
+       },
+       {
+        "id": "h11",
+        "shape": "circle",
+        "x": 100,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "steps",
+        "shape": "rect",
+        "x": 290,
+        "y": 60,
+        "width": 214,
+        "height": 40,
+        "text": "step -",
+        "role": "neutral"
+       },
+       {
+        "id": "shifts",
+        "shape": "rect",
+        "x": 290,
+        "y": 110,
+        "width": 214,
+        "height": 40,
+        "text": "shifts 1,1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 18,
+        "text": "gold = seen before; blue = now"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       35
+      ],
+      "python": [
+       27
+      ],
+      "java": [
+       35
+      ],
+      "go": [
+       66
+      ]
+     },
+     "explanation": "Shift +1: 0 → 1. Hour 1 is new; add it to the set.",
+     "variables": [
+      {
+       "name": "step",
+       "value": "0"
+      },
+      {
+       "name": "hour",
+       "value": "1"
+      },
+      {
+       "name": "seen",
+       "value": "[0,1]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Clock edge-no-repeat: move, step 0, hour 1, seen [0,1].",
+      "nodes": [
+       {
+        "id": "h0",
+        "shape": "circle",
+        "x": 137,
+        "y": 15,
+        "width": 26,
+        "height": 26,
+        "text": "0",
+        "role": "visited"
+       },
+       {
+        "id": "h1",
+        "shape": "circle",
+        "x": 173,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "h2",
+        "shape": "circle",
+        "x": 199,
+        "y": 51,
+        "width": 26,
+        "height": 26,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "h3",
+        "shape": "circle",
+        "x": 209,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "h4",
+        "shape": "circle",
+        "x": 199,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "h5",
+        "shape": "circle",
+        "x": 173,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "h6",
+        "shape": "circle",
+        "x": 137,
+        "y": 159,
+        "width": 26,
+        "height": 26,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "h7",
+        "shape": "circle",
+        "x": 101,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "h8",
+        "shape": "circle",
+        "x": 74,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "h9",
+        "shape": "circle",
+        "x": 65,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "h10",
+        "shape": "circle",
+        "x": 74,
+        "y": 50,
+        "width": 26,
+        "height": 26,
+        "text": "10",
+        "role": "neutral"
+       },
+       {
+        "id": "h11",
+        "shape": "circle",
+        "x": 100,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "steps",
+        "shape": "rect",
+        "x": 290,
+        "y": 60,
+        "width": 214,
+        "height": 40,
+        "text": "step 0",
+        "role": "neutral"
+       },
+       {
+        "id": "shifts",
+        "shape": "rect",
+        "x": 290,
+        "y": 110,
+        "width": 214,
+        "height": 40,
+        "text": "shifts 1,1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 18,
+        "text": "gold = seen before; blue = now"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       35
+      ],
+      "python": [
+       27
+      ],
+      "java": [
+       35
+      ],
+      "go": [
+       66
+      ]
+     },
+     "explanation": "Shift +1: 1 → 2. Hour 2 is new; add it to the set.",
+     "variables": [
+      {
+       "name": "step",
+       "value": "1"
+      },
+      {
+       "name": "hour",
+       "value": "2"
+      },
+      {
+       "name": "seen",
+       "value": "[0,1,2]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Clock edge-no-repeat: move, step 1, hour 2, seen [0,1,2].",
+      "nodes": [
+       {
+        "id": "h0",
+        "shape": "circle",
+        "x": 137,
+        "y": 15,
+        "width": 26,
+        "height": 26,
+        "text": "0",
+        "role": "visited"
+       },
+       {
+        "id": "h1",
+        "shape": "circle",
+        "x": 173,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "h2",
+        "shape": "circle",
+        "x": 199,
+        "y": 51,
+        "width": 26,
+        "height": 26,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "h3",
+        "shape": "circle",
+        "x": 209,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "h4",
+        "shape": "circle",
+        "x": 199,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "h5",
+        "shape": "circle",
+        "x": 173,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "h6",
+        "shape": "circle",
+        "x": 137,
+        "y": 159,
+        "width": 26,
+        "height": 26,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "h7",
+        "shape": "circle",
+        "x": 101,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "h8",
+        "shape": "circle",
+        "x": 74,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "h9",
+        "shape": "circle",
+        "x": 65,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "h10",
+        "shape": "circle",
+        "x": 74,
+        "y": 50,
+        "width": 26,
+        "height": 26,
+        "text": "10",
+        "role": "neutral"
+       },
+       {
+        "id": "h11",
+        "shape": "circle",
+        "x": 100,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "steps",
+        "shape": "rect",
+        "x": 290,
+        "y": 60,
+        "width": 214,
+        "height": 40,
+        "text": "step 1",
+        "role": "neutral"
+       },
+       {
+        "id": "shifts",
+        "shape": "rect",
+        "x": 290,
+        "y": 110,
+        "width": 214,
+        "height": 40,
+        "text": "shifts 1,1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 18,
+        "text": "gold = seen before; blue = now"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       39
+      ],
+      "python": [
+       30
+      ],
+      "java": [
+       39
+      ],
+      "go": [
+       70
+      ]
+     },
+     "explanation": "No hour repeated, so no run of consecutive shifts adds up to a multiple of 12.",
+     "variables": [
+      {
+       "name": "step",
+       "value": "-"
+      },
+      {
+       "name": "hour",
+       "value": "2"
+      },
+      {
+       "name": "seen",
+       "value": "[0,1,2]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Clock edge-no-repeat: done, step -, hour 2, seen [0,1,2].",
+      "nodes": [
+       {
+        "id": "h0",
+        "shape": "circle",
+        "x": 137,
+        "y": 15,
+        "width": 26,
+        "height": 26,
+        "text": "0",
+        "role": "visited"
+       },
+       {
+        "id": "h1",
+        "shape": "circle",
+        "x": 173,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "h2",
+        "shape": "circle",
+        "x": 199,
+        "y": 51,
+        "width": 26,
+        "height": 26,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "h3",
+        "shape": "circle",
+        "x": 209,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "h4",
+        "shape": "circle",
+        "x": 199,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "h5",
+        "shape": "circle",
+        "x": 173,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "h6",
+        "shape": "circle",
+        "x": 137,
+        "y": 159,
+        "width": 26,
+        "height": 26,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "h7",
+        "shape": "circle",
+        "x": 101,
+        "y": 149,
+        "width": 26,
+        "height": 26,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "h8",
+        "shape": "circle",
+        "x": 74,
+        "y": 123,
+        "width": 26,
+        "height": 26,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "h9",
+        "shape": "circle",
+        "x": 65,
+        "y": 87,
+        "width": 26,
+        "height": 26,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "h10",
+        "shape": "circle",
+        "x": 74,
+        "y": 50,
+        "width": 26,
+        "height": 26,
+        "text": "10",
+        "role": "neutral"
+       },
+       {
+        "id": "h11",
+        "shape": "circle",
+        "x": 100,
+        "y": 24,
+        "width": 26,
+        "height": 26,
+        "text": "11",
+        "role": "neutral"
+       },
+       {
+        "id": "steps",
+        "shape": "rect",
+        "x": 290,
+        "y": 60,
+        "width": 214,
+        "height": 40,
+        "text": "step -",
+        "role": "neutral"
+       },
+       {
+        "id": "shifts",
+        "shape": "rect",
+        "x": 290,
+        "y": 110,
+        "width": 214,
+        "height": 40,
+        "text": "shifts 1,1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 18,
+        "text": "gold = seen before; blue = now"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

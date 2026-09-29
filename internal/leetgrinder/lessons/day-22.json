@@ -1,0 +1,203 @@
+{
+  "day": 22,
+  "objectives": [
+    "Describe a linked list as nodes that each know only their next node.",
+    "Change a node's next without losing the rest of the list.",
+    "Insert and remove nodes without losing the rest of the list."
+  ],
+  "prerequisites": [
+    6
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: each node only knows the next one",
+      "paragraphs": [
+        "A linked list is a chain of nodes. Each node holds a value and a reference to the next node, and the last node's next is empty (null, None, nil). You get to the list through its first node, the head.",
+        "There's no index. To reach the fifth node you follow four arrows. And if you overwrite a node's next before saving it, everything after that node is gone: nothing else points to it."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "Before changing any node's next, ask: is the node it currently points to saved somewhere else? If not, save it first."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Three nodes 1, 2, 3 linked by arrows; the head is 1.",
+        "nodes": [
+          {
+            "id": "n0",
+            "shape": "rect",
+            "x": 12,
+            "y": 50,
+            "width": 48,
+            "height": 40,
+            "text": "1",
+            "role": "active"
+          },
+          {
+            "id": "n1",
+            "shape": "rect",
+            "x": 88,
+            "y": 50,
+            "width": 48,
+            "height": 40,
+            "text": "2",
+            "role": "neutral"
+          },
+          {
+            "id": "n2",
+            "shape": "rect",
+            "x": 164,
+            "y": 50,
+            "width": 48,
+            "height": 40,
+            "text": "3",
+            "role": "neutral"
+          }
+        ],
+        "edges": [
+          {
+            "id": "e1",
+            "from": "n0",
+            "to": "n1",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          },
+          {
+            "id": "e2",
+            "from": "n1",
+            "to": "n2",
+            "label": "",
+            "directed": true,
+            "role": "neutral"
+          }
+        ],
+        "labels": [
+          {
+            "id": "title",
+            "x": 12,
+            "y": 30,
+            "text": "a linked list"
+          },
+          {
+            "id": "l0",
+            "x": 12,
+            "y": 120,
+            "text": "head"
+          },
+          {
+            "id": "l1",
+            "x": 12,
+            "y": 140,
+            "text": "each arrow is a node's next"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Copy into an array",
+      "heading": "Baseline: copy the values into an array",
+      "paragraphs": [
+        "You can always walk the list, copy its values into an array, do the work there, and build a new list. It costs O(n) extra memory, and interview problems usually ask you to rearrange the existing nodes instead."
+      ]
+    },
+    {
+      "id": "reverse",
+      "navLabel": "A reversed copy",
+      "heading": "Worked example: build a reversed copy",
+      "paragraphs": [
+        "Walk the list with cur. For each node, create a new node with the same value whose next is the copy built so far, so the new node goes in front. The original list is never changed.",
+        "Adding at the front reverses the order: 1->2->3 becomes 3->2->1. This costs a new node per value. Reversing in place, by turning each existing arrow around, uses no new nodes; that's the first practice problem."
+      ],
+      "exampleIds": [
+        "day-22-reversed-copy"
+      ]
+    },
+    {
+      "id": "insert",
+      "navLabel": "Inserting nodes",
+      "heading": "Worked example: insert a copy after every node",
+      "paragraphs": [
+        "To insert a node after cur, create it pointing at cur.next, then point cur.next at the new node. Built in that order, the new node already holds the rest of the list, so nothing is lost at any moment.",
+        "Then jump cur past the copy to the next original node. Moving cur to cur.next instead would land on the copy and insert copies forever."
+      ],
+      "exampleIds": [
+        "day-22-insert-copies"
+      ]
+    },
+    {
+      "id": "your-turn-reverse",
+      "navLabel": "Your turn: Reverse Linked List",
+      "heading": "Your turn: Reverse Linked List",
+      "paragraphs": [
+        "Reverse a singly linked list in place, without creating new nodes (O(1) extra memory), and return the new head."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Use prev and cur. What must you save before changing cur.next?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-merge",
+      "navLabel": "Your turn: Merge Two Sorted Lists",
+      "heading": "Your turn: Merge Two Sorted Lists",
+      "paragraphs": [
+        "Merge two sorted linked lists into one sorted list by relinking their nodes, and return its head."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Day 5 merged sorted arrays. What changes when you can't index, and how do you avoid a special case for the first node of the result?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-reverse-two",
+      "navLabel": "Your turn: Reverse Linked List II",
+      "heading": "Your turn: Reverse Linked List II",
+      "paragraphs": [
+        "Today's medium. Reverse only the nodes from position left to position right (1-based), leaving the rest of the list in place, in one pass."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Draw 1->2->3->4->5 with left = 2 and right = 4. Before reversing anything, mark which nodes must be reconnected at each end of the reversed part.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Reversing and inserting both touch each node once: O(n) time, O(1) extra memory besides any new nodes.",
+        "Always check the empty list and the one-node list. A loop written as while cur handles both without special cases."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "When turning an arrow around in place, why must cur.next be saved first?",
+          "answer": "After the change, nothing else points to the rest of the list, so it would be lost."
+        },
+        {
+          "prompt": "Why does adding each value at the front of the copy reverse the order?",
+          "answer": "The first value added ends up at the back, and the last value added is the new front."
+        },
+        {
+          "prompt": "When inserting a copy after cur, why create it pointing at cur.next first?",
+          "answer": "Then the rest of the list stays reachable through the new node at every moment."
+        }
+      ]
+    }
+  ]
+}

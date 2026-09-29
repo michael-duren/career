@@ -1,0 +1,1378 @@
+{
+ "id": "day-03-lockers",
+ "title": "Check a one-to-one match with two maps",
+ "invariant": "Both maps always describe the same set of pairs, one from each side.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 32,
+   "algorithmEnd": 51
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 34
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 27,
+   "algorithmEnd": 47
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 51,
+   "algorithmEnd": 71
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Consistent, with a repeated line",
+   "input": "3\nann 3 bob 5 ann 3\n",
+   "expectedOutput": "true",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       19,
+       20
+      ],
+      "java": [
+       28
+      ],
+      "go": [
+       52
+      ]
+     },
+     "explanation": "Two maps: lockerOf answers \"which locker does this student have?\" and studentOf answers \"who owns this locker?\" Both start empty.",
+     "variables": [
+      {
+       "name": "student",
+       "value": "-"
+      },
+      {
+       "name": "locker",
+       "value": "-"
+      },
+      {
+       "name": "lockerOf",
+       "value": "{}"
+      },
+      {
+       "name": "studentOf",
+       "value": "{}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Lockers normal: start - -, lockerOf {}, studentOf {}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "bob→5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→3",
+        "role": "neutral"
+       },
+       {
+        "id": "locker-of",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "lockerOf {}",
+        "role": "neutral"
+       },
+       {
+        "id": "student-of",
+        "shape": "rect",
+        "x": 258,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "studentOf {}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "assignment lines"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "one map per direction"
+       }
+      ]
+     }
+    },
+    {
+     "event": "assign",
+     "lines": {
+      "cpp": [
+       44,
+       45
+      ],
+      "python": [
+       29,
+       30
+      ],
+      "java": [
+       40,
+       41
+      ],
+      "go": [
+       64,
+       65
+      ]
+     },
+     "explanation": "ann has no locker yet and locker 3 has no owner, so record ann → 3 in both maps.",
+     "variables": [
+      {
+       "name": "student",
+       "value": "ann"
+      },
+      {
+       "name": "locker",
+       "value": "3"
+      },
+      {
+       "name": "lockerOf",
+       "value": "{ann:3}"
+      },
+      {
+       "name": "studentOf",
+       "value": "{3:ann}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Lockers normal: assign ann 3, lockerOf {ann:3}, studentOf {3:ann}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→3",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "bob→5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→3",
+        "role": "neutral"
+       },
+       {
+        "id": "locker-of",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "lockerOf {ann:3}",
+        "role": "neutral"
+       },
+       {
+        "id": "student-of",
+        "shape": "rect",
+        "x": 258,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "studentOf {3:ann}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "assignment lines"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "one map per direction"
+       }
+      ]
+     }
+    },
+    {
+     "event": "assign",
+     "lines": {
+      "cpp": [
+       44,
+       45
+      ],
+      "python": [
+       29,
+       30
+      ],
+      "java": [
+       40,
+       41
+      ],
+      "go": [
+       64,
+       65
+      ]
+     },
+     "explanation": "bob has no locker yet and locker 5 has no owner, so record bob → 5 in both maps.",
+     "variables": [
+      {
+       "name": "student",
+       "value": "bob"
+      },
+      {
+       "name": "locker",
+       "value": "5"
+      },
+      {
+       "name": "lockerOf",
+       "value": "{ann:3,bob:5}"
+      },
+      {
+       "name": "studentOf",
+       "value": "{3:ann,5:bob}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Lockers normal: assign bob 5, lockerOf {ann:3,bob:5}, studentOf {3:ann,5:bob}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "bob→5",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→3",
+        "role": "neutral"
+       },
+       {
+        "id": "locker-of",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "lockerOf {ann:3,bob:5}",
+        "role": "neutral"
+       },
+       {
+        "id": "student-of",
+        "shape": "rect",
+        "x": 258,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "studentOf {3:ann,5:bob}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "assignment lines"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "one map per direction"
+       }
+      ]
+     }
+    },
+    {
+     "event": "assign",
+     "lines": {
+      "cpp": [
+       44,
+       45
+      ],
+      "python": [
+       29,
+       30
+      ],
+      "java": [
+       40,
+       41
+      ],
+      "go": [
+       64,
+       65
+      ]
+     },
+     "explanation": "ann → 3 again. Both maps already agree, so nothing changes.",
+     "variables": [
+      {
+       "name": "student",
+       "value": "ann"
+      },
+      {
+       "name": "locker",
+       "value": "3"
+      },
+      {
+       "name": "lockerOf",
+       "value": "{ann:3,bob:5}"
+      },
+      {
+       "name": "studentOf",
+       "value": "{3:ann,5:bob}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Lockers normal: assign ann 3, lockerOf {ann:3,bob:5}, studentOf {3:ann,5:bob}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "bob→5",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→3",
+        "role": "active"
+       },
+       {
+        "id": "locker-of",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "lockerOf {ann:3,bob:5}",
+        "role": "neutral"
+       },
+       {
+        "id": "student-of",
+        "shape": "rect",
+        "x": 258,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "studentOf {3:ann,5:bob}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "assignment lines"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "one map per direction"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       49
+      ],
+      "python": [
+       33
+      ],
+      "java": [
+       45
+      ],
+      "go": [
+       69
+      ]
+     },
+     "explanation": "Every line agreed with both maps: each student has one locker and each locker has one student.",
+     "variables": [
+      {
+       "name": "student",
+       "value": "-"
+      },
+      {
+       "name": "locker",
+       "value": "-"
+      },
+      {
+       "name": "lockerOf",
+       "value": "{ann:3,bob:5}"
+      },
+      {
+       "name": "studentOf",
+       "value": "{3:ann,5:bob}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Lockers normal: done - -, lockerOf {ann:3,bob:5}, studentOf {3:ann,5:bob}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→3",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "bob→5",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→3",
+        "role": "result"
+       },
+       {
+        "id": "locker-of",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "lockerOf {ann:3,bob:5}",
+        "role": "neutral"
+       },
+       {
+        "id": "student-of",
+        "shape": "rect",
+        "x": 258,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "studentOf {3:ann,5:bob}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "assignment lines"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "one map per direction"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-shared-locker",
+   "label": "Two students, one locker",
+   "input": "2\nann 3 bob 3\n",
+   "expectedOutput": "false",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       19,
+       20
+      ],
+      "java": [
+       28
+      ],
+      "go": [
+       52
+      ]
+     },
+     "explanation": "Two maps: lockerOf answers \"which locker does this student have?\" and studentOf answers \"who owns this locker?\" Both start empty.",
+     "variables": [
+      {
+       "name": "student",
+       "value": "-"
+      },
+      {
+       "name": "locker",
+       "value": "-"
+      },
+      {
+       "name": "lockerOf",
+       "value": "{}"
+      },
+      {
+       "name": "studentOf",
+       "value": "{}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Lockers edge-shared-locker: start - -, lockerOf {}, studentOf {}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "bob→3",
+        "role": "neutral"
+       },
+       {
+        "id": "locker-of",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "lockerOf {}",
+        "role": "neutral"
+       },
+       {
+        "id": "student-of",
+        "shape": "rect",
+        "x": 258,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "studentOf {}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "assignment lines"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "one map per direction"
+       }
+      ]
+     }
+    },
+    {
+     "event": "assign",
+     "lines": {
+      "cpp": [
+       44,
+       45
+      ],
+      "python": [
+       29,
+       30
+      ],
+      "java": [
+       40,
+       41
+      ],
+      "go": [
+       64,
+       65
+      ]
+     },
+     "explanation": "ann has no locker yet and locker 3 has no owner, so record ann → 3 in both maps.",
+     "variables": [
+      {
+       "name": "student",
+       "value": "ann"
+      },
+      {
+       "name": "locker",
+       "value": "3"
+      },
+      {
+       "name": "lockerOf",
+       "value": "{ann:3}"
+      },
+      {
+       "name": "studentOf",
+       "value": "{3:ann}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Lockers edge-shared-locker: assign ann 3, lockerOf {ann:3}, studentOf {3:ann}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→3",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "bob→3",
+        "role": "neutral"
+       },
+       {
+        "id": "locker-of",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "lockerOf {ann:3}",
+        "role": "neutral"
+       },
+       {
+        "id": "student-of",
+        "shape": "rect",
+        "x": 258,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "studentOf {3:ann}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "assignment lines"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "one map per direction"
+       }
+      ]
+     }
+    },
+    {
+     "event": "locker-conflict",
+     "lines": {
+      "cpp": [
+       40,
+       41
+      ],
+      "python": [
+       26,
+       27
+      ],
+      "java": [
+       36,
+       37
+      ],
+      "go": [
+       60,
+       61
+      ]
+     },
+     "explanation": "Locker 3 already belongs to ann. bob can't have it too. lockerOf alone would miss this; studentOf catches it.",
+     "variables": [
+      {
+       "name": "student",
+       "value": "bob"
+      },
+      {
+       "name": "locker",
+       "value": "3"
+      },
+      {
+       "name": "lockerOf",
+       "value": "{ann:3}"
+      },
+      {
+       "name": "studentOf",
+       "value": "{3:ann}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Lockers edge-shared-locker: locker-conflict bob 3, lockerOf {ann:3}, studentOf {3:ann}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "bob→3",
+        "role": "discarded"
+       },
+       {
+        "id": "locker-of",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "lockerOf {ann:3}",
+        "role": "neutral"
+       },
+       {
+        "id": "student-of",
+        "shape": "rect",
+        "x": 258,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "studentOf {3:ann}",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "assignment lines"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "one map per direction"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-two-lockers",
+   "label": "One student, two lockers",
+   "input": "2\nann 3 ann 4\n",
+   "expectedOutput": "false",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       19,
+       20
+      ],
+      "java": [
+       28
+      ],
+      "go": [
+       52
+      ]
+     },
+     "explanation": "Two maps: lockerOf answers \"which locker does this student have?\" and studentOf answers \"who owns this locker?\" Both start empty.",
+     "variables": [
+      {
+       "name": "student",
+       "value": "-"
+      },
+      {
+       "name": "locker",
+       "value": "-"
+      },
+      {
+       "name": "lockerOf",
+       "value": "{}"
+      },
+      {
+       "name": "studentOf",
+       "value": "{}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Lockers edge-two-lockers: start - -, lockerOf {}, studentOf {}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→4",
+        "role": "neutral"
+       },
+       {
+        "id": "locker-of",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "lockerOf {}",
+        "role": "neutral"
+       },
+       {
+        "id": "student-of",
+        "shape": "rect",
+        "x": 258,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "studentOf {}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "assignment lines"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "one map per direction"
+       }
+      ]
+     }
+    },
+    {
+     "event": "assign",
+     "lines": {
+      "cpp": [
+       44,
+       45
+      ],
+      "python": [
+       29,
+       30
+      ],
+      "java": [
+       40,
+       41
+      ],
+      "go": [
+       64,
+       65
+      ]
+     },
+     "explanation": "ann has no locker yet and locker 3 has no owner, so record ann → 3 in both maps.",
+     "variables": [
+      {
+       "name": "student",
+       "value": "ann"
+      },
+      {
+       "name": "locker",
+       "value": "3"
+      },
+      {
+       "name": "lockerOf",
+       "value": "{ann:3}"
+      },
+      {
+       "name": "studentOf",
+       "value": "{3:ann}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Lockers edge-two-lockers: assign ann 3, lockerOf {ann:3}, studentOf {3:ann}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→3",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→4",
+        "role": "neutral"
+       },
+       {
+        "id": "locker-of",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "lockerOf {ann:3}",
+        "role": "neutral"
+       },
+       {
+        "id": "student-of",
+        "shape": "rect",
+        "x": 258,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "studentOf {3:ann}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "assignment lines"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "one map per direction"
+       }
+      ]
+     }
+    },
+    {
+     "event": "student-conflict",
+     "lines": {
+      "cpp": [
+       36,
+       37
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       32,
+       33
+      ],
+      "go": [
+       56,
+       57
+      ]
+     },
+     "explanation": "ann already has locker 3, but this line gives ann locker 4. One student, two lockers: not one-to-one.",
+     "variables": [
+      {
+       "name": "student",
+       "value": "ann"
+      },
+      {
+       "name": "locker",
+       "value": "4"
+      },
+      {
+       "name": "lockerOf",
+       "value": "{ann:3}"
+      },
+      {
+       "name": "studentOf",
+       "value": "{3:ann}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Lockers edge-two-lockers: student-conflict ann 4, lockerOf {ann:3}, studentOf {3:ann}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ann→4",
+        "role": "discarded"
+       },
+       {
+        "id": "locker-of",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "lockerOf {ann:3}",
+        "role": "discarded"
+       },
+       {
+        "id": "student-of",
+        "shape": "rect",
+        "x": 258,
+        "y": 132,
+        "width": 230,
+        "height": 40,
+        "text": "studentOf {3:ann}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "assignment lines"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "one map per direction"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

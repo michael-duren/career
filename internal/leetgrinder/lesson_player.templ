@@ -1,0 +1,27 @@
+package leetgrinder
+
+templ lessonExample(example ExampleContent) {
+	<section class="lesson-example" data-lesson-example={ example.ID }>
+		<h4>{ example.Title }</h4>
+		<p class="example-invariant"><span>What stays true</span> { example.Invariant }</p>
+		<template class="trace-payload" data-player-data>{ exampleJSON(example) }</template>
+		<div data-player-fallback>
+			<p>Initial state for the first case: { example.Cases[0].Label }</p>
+			@lessonDiagram(example.Cases[0].Frames[0].Scene)
+			<p>{ example.Cases[0].Frames[0].Explanation }</p>
+			for _, v := range example.Variants {
+				<details open><summary>{ v.Language } source</summary><pre><code>{ displayExample(example).Sources[v.Language] }</code></pre></details>
+			}
+			<details class="example-transcript"><summary>Full trace transcript</summary>
+				for _, c := range example.Cases {
+					<h5>{ c.Label }</h5>
+					<ol>
+						for _, f := range c.Frames {
+							<li>{ f.Explanation }</li>
+						}
+					</ol>
+				}
+			</details>
+		</div>
+	</section>
+}

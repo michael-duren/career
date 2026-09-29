@@ -1,6 +1,9 @@
 package leetgrinder
 
 templ Lesson(key string) {
+	if content, ok := LookupLessonContent(key); ok {
+		@lessonContent(content)
+	} else {
 	switch key {
 		case "day-01":
 			@lessonDay01()
@@ -173,6 +176,8 @@ templ Lesson(key string) {
 		default:
 			<p>This lesson is not available.</p>
 	}
+	}
+
 }
 
 templ lessonDay01() {
@@ -1352,9 +1357,9 @@ templ lessonDay84() {
 }
 
 templ lessonReferences(day int) {
-	<footer class="lesson-references">
+	<footer class="lesson-references" id="lesson-references">
 		<h3>References</h3>
-		<p class="small muted">Sources and further reading for the concepts above. The worked examples and practice prompts are original to this lesson.</p>
+		<p class="small muted">Sources supporting this lesson. Optional background and further detail.</p>
 		<ol>
 			for _, reading := range lessonReadings(day) {
 				<li>

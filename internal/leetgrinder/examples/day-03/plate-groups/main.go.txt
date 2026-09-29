@@ -1,0 +1,80 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
+type variable struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func emit(event string, pairs ...string) {
+	variables := []variable{}
+	for k := 0; k+1 < len(pairs); k += 2 {
+		variables = append(variables, variable{pairs[k], pairs[k+1]})
+	}
+	data, _ := json.Marshal(struct {
+		Event     string     `json:"event"`
+		Variables []variable `json:"variables"`
+	}{event, variables})
+	fmt.Println(string(data))
+}
+
+func result(answer string) {
+	data, _ := json.Marshal(struct {
+		Result string `json:"result"`
+	}{answer})
+	fmt.Println(string(data))
+}
+
+func itoa(value int) string { return strconv.Itoa(value) }
+
+func show(values []int) string {
+	parts := make([]string, len(values))
+	for k, value := range values {
+		parts[k] = strconv.Itoa(value)
+	}
+	return "[" + strings.Join(parts, ",") + "]"
+}
+
+func showGroups(keys []string, groups map[string][]string) string {
+	parts := make([]string, len(keys))
+	for k, key := range keys {
+		parts[k] = key + ":" + strings.Join(groups[key], ",")
+	}
+	return strings.Join(parts, "|")
+}
+
+func solve(plates []string) string {
+	groups := map[string][]string{}
+	keys := []string{}
+	emit("start", "plate", "-", "key", "-", "groups", showGroups(keys, groups))
+	for _, plate := range plates {
+		key := strings.ReplaceAll(strings.ToLower(plate), "-", "")
+		if _, seen := groups[key]; !seen {
+			keys = append(keys, key)
+		}
+		groups[key] = append(groups[key], plate)
+		emit("add", "plate", plate, "key", key, "groups", showGroups(keys, groups))
+	}
+
+	emit("done", "plate", "-", "key", "-", "groups", showGroups(keys, groups))
+	return showGroups(keys, groups)
+}
+
+func main() {
+	in := bufio.NewReader(os.Stdin)
+	var n int
+	fmt.Fscan(in, &n)
+	plates := make([]string, n)
+	for k := range plates {
+		fmt.Fscan(in, &plates[k])
+	}
+	result(solve(plates))
+}

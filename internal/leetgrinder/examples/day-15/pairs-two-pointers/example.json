@@ -1,0 +1,1913 @@
+{
+ "id": "day-15-pairs-two-pointers",
+ "title": "Count pairs by moving two pointers inward",
+ "invariant": "Every pair using an index outside lo..hi has already been counted or ruled out.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 23,
+   "algorithmEnd": 40
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 32
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 23,
+   "algorithmEnd": 40
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 46,
+   "algorithmEnd": 63
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Sum ≤ 6 in [1, 2, 4, 5, 7]",
+   "input": "5 6\n1 2 4 5 7\n",
+   "expectedOutput": "4",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24,
+       25
+      ],
+      "python": [
+       19,
+       20
+      ],
+      "java": [
+       24,
+       25
+      ],
+      "go": [
+       47,
+       48
+      ]
+     },
+     "explanation": "Count pairs with sum ≤ 6 in the sorted list. lo starts at the smallest value, hi at the largest.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "4"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "sorted values; pair sum ≤ 6 normal: start, lo 0, hi 4, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 6"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "lo"
+       },
+       {
+        "id": "pointer-4",
+        "x": 282,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = finished with; each step removes one end"
+       }
+      ]
+     }
+    },
+    {
+     "event": "too-big",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       56
+      ]
+     },
+     "explanation": "1 + 7 = 8 > 6. Every other partner for 7 is at least 1, so 7 can't be in any pair. Drop it: move hi left.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "3"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "sorted values; pair sum ≤ 6 normal: too-big, lo 0, hi 3, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 6"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "lo"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = finished with; each step removes one end"
+       }
+      ]
+     }
+    },
+    {
+     "event": "count",
+     "lines": {
+      "cpp": [
+       29,
+       30
+      ],
+      "python": [
+       24,
+       25
+      ],
+      "java": [
+       29,
+       30
+      ],
+      "go": [
+       52,
+       53
+      ]
+     },
+     "explanation": "1 + 5 = 6 ≤ 6. Every index from lo + 1 to hi holds a value ≤ 5, so 1 pairs with all 3 of them. Count 3. 1 is fully counted: move lo right.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "3"
+      },
+      {
+       "name": "count",
+       "value": "3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "sorted values; pair sum ≤ 6 normal: count, lo 1, hi 3, count 3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 3",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 6"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "lo"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = finished with; each step removes one end"
+       }
+      ]
+     }
+    },
+    {
+     "event": "too-big",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       56
+      ]
+     },
+     "explanation": "2 + 5 = 7 > 6. Every other partner for 5 is at least 2, so 5 can't be in any pair. Drop it: move hi left.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "2"
+      },
+      {
+       "name": "count",
+       "value": "3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "sorted values; pair sum ≤ 6 normal: too-big, lo 1, hi 2, count 3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 3",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 6"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "lo"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = finished with; each step removes one end"
+       }
+      ]
+     }
+    },
+    {
+     "event": "count",
+     "lines": {
+      "cpp": [
+       29,
+       30
+      ],
+      "python": [
+       24,
+       25
+      ],
+      "java": [
+       29,
+       30
+      ],
+      "go": [
+       52,
+       53
+      ]
+     },
+     "explanation": "2 + 4 = 6 ≤ 6. Every index from lo + 1 to hi holds a value ≤ 4, so 2 pairs with the one value there. Count 4. 2 is fully counted: move lo right.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "2"
+      },
+      {
+       "name": "hi",
+       "value": "2"
+      },
+      {
+       "name": "count",
+       "value": "4"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "sorted values; pair sum ≤ 6 normal: count, lo 2, hi 2, count 4.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 4",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 6"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "lo hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = finished with; each step removes one end"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       38
+      ],
+      "python": [
+       31
+      ],
+      "java": [
+       38
+      ],
+      "go": [
+       61
+      ]
+     },
+     "explanation": "lo met hi. 4 pairs, found in one pass after sorting.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "2"
+      },
+      {
+       "name": "hi",
+       "value": "2"
+      },
+      {
+       "name": "count",
+       "value": "4"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "sorted values; pair sum ≤ 6 normal: done, lo 2, hi 2, count 4.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 4",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 6"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "lo hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = finished with; each step removes one end"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-none",
+   "label": "Nothing fits",
+   "input": "5 2\n1 2 4 5 7\n",
+   "expectedOutput": "0",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24,
+       25
+      ],
+      "python": [
+       19,
+       20
+      ],
+      "java": [
+       24,
+       25
+      ],
+      "go": [
+       47,
+       48
+      ]
+     },
+     "explanation": "Count pairs with sum ≤ 2 in the sorted list. lo starts at the smallest value, hi at the largest.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "4"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "sorted values; pair sum ≤ 2 edge-none: start, lo 0, hi 4, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 2"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "lo"
+       },
+       {
+        "id": "pointer-4",
+        "x": 282,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = finished with; each step removes one end"
+       }
+      ]
+     }
+    },
+    {
+     "event": "too-big",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       56
+      ]
+     },
+     "explanation": "1 + 7 = 8 > 2. Every other partner for 7 is at least 1, so 7 can't be in any pair. Drop it: move hi left.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "3"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "sorted values; pair sum ≤ 2 edge-none: too-big, lo 0, hi 3, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 2"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "lo"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = finished with; each step removes one end"
+       }
+      ]
+     }
+    },
+    {
+     "event": "too-big",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       56
+      ]
+     },
+     "explanation": "1 + 5 = 6 > 2. Every other partner for 5 is at least 1, so 5 can't be in any pair. Drop it: move hi left.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "2"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "sorted values; pair sum ≤ 2 edge-none: too-big, lo 0, hi 2, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 2"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "lo"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = finished with; each step removes one end"
+       }
+      ]
+     }
+    },
+    {
+     "event": "too-big",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       56
+      ]
+     },
+     "explanation": "1 + 4 = 5 > 2. Every other partner for 4 is at least 1, so 4 can't be in any pair. Drop it: move hi left.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "1"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "sorted values; pair sum ≤ 2 edge-none: too-big, lo 0, hi 1, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 2"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "lo"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = finished with; each step removes one end"
+       }
+      ]
+     }
+    },
+    {
+     "event": "too-big",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       56
+      ]
+     },
+     "explanation": "1 + 2 = 3 > 2. Every other partner for 2 is at least 1, so 2 can't be in any pair. Drop it: move hi left.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "0"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "sorted values; pair sum ≤ 2 edge-none: too-big, lo 0, hi 0, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 2"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "lo hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = finished with; each step removes one end"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       38
+      ],
+      "python": [
+       31
+      ],
+      "java": [
+       38
+      ],
+      "go": [
+       61
+      ]
+     },
+     "explanation": "lo met hi. 0 pairs, found in one pass after sorting.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "0"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "sorted values; pair sum ≤ 2 edge-none: done, lo 0, hi 0, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "sorted values; pair sum ≤ 2"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "lo hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "gray = finished with; each step removes one end"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

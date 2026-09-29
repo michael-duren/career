@@ -1,0 +1,208 @@
+{
+  "day": 19,
+  "objectives": [
+    "Grow a window on the right and shrink it on the left to keep it valid.",
+    "State exactly when a window is valid, and what makes it invalid.",
+    "Explain why each pointer moves at most n times."
+  ],
+  "prerequisites": [
+    18
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: stretch until it breaks, then shrink",
+      "paragraphs": [
+        "Some window problems have no fixed size. Instead there's a rule, like \"the sum is at most 4\". Add values on the right while the window follows the rule. When a new value breaks it, drop values from the left until it's fine again.",
+        "This works when shrinking a window can only help it follow the rule, and growing can only hurt. Then for each right end, the best left end only ever moves right, never back. Each index enters once and leaves once: O(n) in total."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "Write the validity rule in one line. Then check: if a window is valid, is every smaller window inside it also valid? If yes, grow-and-shrink works."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Values 1, 2, 1, 3, 1, 1. After 3 enters, 1 and 2 are dropped so the window 1, 3 sums to 4.",
+        "nodes": [
+          {
+            "id": "v0",
+            "shape": "rect",
+            "x": 12,
+            "y": 44,
+            "width": 44,
+            "height": 44,
+            "text": "1",
+            "role": "discarded"
+          },
+          {
+            "id": "v1",
+            "shape": "rect",
+            "x": 62,
+            "y": 44,
+            "width": 44,
+            "height": 44,
+            "text": "2",
+            "role": "discarded"
+          },
+          {
+            "id": "v2",
+            "shape": "rect",
+            "x": 112,
+            "y": 44,
+            "width": 44,
+            "height": 44,
+            "text": "1",
+            "role": "active"
+          },
+          {
+            "id": "v3",
+            "shape": "rect",
+            "x": 162,
+            "y": 44,
+            "width": 44,
+            "height": 44,
+            "text": "3",
+            "role": "active"
+          },
+          {
+            "id": "v4",
+            "shape": "rect",
+            "x": 212,
+            "y": 44,
+            "width": 44,
+            "height": 44,
+            "text": "1",
+            "role": "neutral"
+          },
+          {
+            "id": "v5",
+            "shape": "rect",
+            "x": 262,
+            "y": 44,
+            "width": 44,
+            "height": 44,
+            "text": "1",
+            "role": "neutral"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "title",
+            "x": 12,
+            "y": 28,
+            "text": "budget 4"
+          },
+          {
+            "id": "l0",
+            "x": 12,
+            "y": 110,
+            "text": "dropped"
+          },
+          {
+            "id": "l1",
+            "x": 120,
+            "y": 110,
+            "text": "window: sum 4"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Every window",
+      "heading": "Baseline: try every window",
+      "paragraphs": [
+        "Check all O(n²) windows, adding as you extend each one. Correct, and too slow for large inputs. The grow-and-shrink loop visits each index at most twice."
+      ]
+    },
+    {
+      "id": "longest",
+      "navLabel": "Longest valid window",
+      "heading": "Worked example: longest run within a budget",
+      "paragraphs": [
+        "Find the longest run of consecutive positive values whose sum is at most a budget. For each right end, add values[right]. While the sum is over budget, subtract values[left] and move left right. Then the window left..right is the longest valid window ending at right; compare its length with the best so far.",
+        "For [1, 2, 1, 3, 1, 1] with budget 4, the best is [1, 2, 1], length 3. If every value is over budget, the window keeps shrinking to nothing and the answer is 0."
+      ],
+      "callout": {
+        "kind": "watch",
+        "text": "This needs positive values. With negatives, dropping a value from the left could raise the sum, and \"shrink until valid\" stops being safe."
+      },
+      "exampleIds": [
+        "day-19-longest-budget"
+      ]
+    },
+    {
+      "id": "your-turn-min-size",
+      "navLabel": "Your turn: Minimum Size Subarray Sum",
+      "heading": "Your turn: Minimum Size Subarray Sum",
+      "paragraphs": [
+        "Today's first medium. Given positive integers and a target, return the length of the shortest subarray whose sum is at least target, or 0 if none exists."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Now the rule flips: you want a sum that's big enough, and the shortest such window. When should you shrink, and when do you record the answer?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-no-repeat",
+      "navLabel": "Your turn: Longest Substring Without Repeating Characters",
+      "heading": "Your turn: Longest Substring Without Repeating Characters",
+      "paragraphs": [
+        "Today's second medium. Return the length of the longest substring with no repeated character."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Write the validity rule for a window of characters. What state tells you instantly when a new character breaks it?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-ones",
+      "navLabel": "Your turn: Max Consecutive Ones III",
+      "heading": "Your turn: Max Consecutive Ones III",
+      "paragraphs": [
+        "Today's third medium. Given an array of 0s and 1s and a number k, you may flip at most k zeros to ones. Return the length of the longest run of ones you can get."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Rephrase it without the word \"flip\": what does a valid window look like?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Grow-and-shrink windows are O(n) time: left and right each move forward at most n times. Memory is O(1) for a sum, or the size of the alphabet for character counts.",
+        "Record the answer at the right moment. For \"longest\", record after shrinking back to valid."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "Why does the left pointer never need to move back?",
+          "answer": "If a window ending at right needed left to be at least some index, a window ending further right needs it at least that far too, because extending only makes the sum bigger."
+        },
+        {
+          "prompt": "Why do negative values break the budget example?",
+          "answer": "Removing a negative value from the left raises the sum, so shrinking no longer moves the window toward valid."
+        },
+        {
+          "prompt": "With budget 4, what happens when a single value is 5?",
+          "answer": "The window shrinks until it's empty, contributing length 0."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1041 @@
+{
+ "id": "day-22-reversed-copy",
+ "title": "Build a reversed copy by adding to the front",
+ "invariant": "copy holds the nodes read so far, newest first, so it is the reversal of the part already walked.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 40,
+   "algorithmEnd": 52
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 38,
+   "algorithmEnd": 48
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 41,
+   "algorithmEnd": 53
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 70,
+   "algorithmEnd": 88
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "1->2->3",
+   "input": "3 0\n1 2 3\n",
+   "expectedOutput": "3->2->1",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       41,
+       42
+      ],
+      "python": [
+       39,
+       40
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       71,
+       72,
+       73,
+       74,
+       75,
+       77
+      ]
+     },
+     "explanation": "Build a reversed copy of 1->2->3 without changing it. copy starts empty; cur walks the original from the head.",
+     "variables": [
+      {
+       "name": "cur",
+       "value": "1"
+      },
+      {
+       "name": "copy",
+       "value": "empty"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reversed copy normal: start, cur 1, copy empty.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "copy",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 240,
+        "height": 40,
+        "text": "copy empty",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "original list (gold = already copied)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "cur"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each new node goes in front of the copy"
+       }
+      ]
+     }
+    },
+    {
+     "event": "prepend",
+     "lines": {
+      "cpp": [
+       45,
+       46
+      ],
+      "python": [
+       43,
+       44
+      ],
+      "java": [
+       46,
+       47
+      ],
+      "go": [
+       81,
+       82
+      ]
+     },
+     "explanation": "Make a new node 1 whose next is the current copy, so it goes in front. The copy is now 1. Move cur along the original.",
+     "variables": [
+      {
+       "name": "cur",
+       "value": "2"
+      },
+      {
+       "name": "copy",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reversed copy normal: prepend, cur 2, copy 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "copy",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 240,
+        "height": 40,
+        "text": "copy 1",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "original list (gold = already copied)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "cur"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each new node goes in front of the copy"
+       }
+      ]
+     }
+    },
+    {
+     "event": "prepend",
+     "lines": {
+      "cpp": [
+       45,
+       46
+      ],
+      "python": [
+       43,
+       44
+      ],
+      "java": [
+       46,
+       47
+      ],
+      "go": [
+       81,
+       82
+      ]
+     },
+     "explanation": "Make a new node 2 whose next is the current copy, so it goes in front. The copy is now 2->1. Move cur along the original.",
+     "variables": [
+      {
+       "name": "cur",
+       "value": "3"
+      },
+      {
+       "name": "copy",
+       "value": "2->1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reversed copy normal: prepend, cur 3, copy 2->1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "copy",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 240,
+        "height": 40,
+        "text": "copy 2->1",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "original list (gold = already copied)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "cur"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each new node goes in front of the copy"
+       }
+      ]
+     }
+    },
+    {
+     "event": "prepend",
+     "lines": {
+      "cpp": [
+       45,
+       46
+      ],
+      "python": [
+       43,
+       44
+      ],
+      "java": [
+       46,
+       47
+      ],
+      "go": [
+       81,
+       82
+      ]
+     },
+     "explanation": "Make a new node 3 whose next is the current copy, so it goes in front. The copy is now 3->2->1. Move cur along the original.",
+     "variables": [
+      {
+       "name": "cur",
+       "value": "-"
+      },
+      {
+       "name": "copy",
+       "value": "3->2->1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reversed copy normal: prepend, cur -, copy 3->2->1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "copy",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 240,
+        "height": 40,
+        "text": "copy 3->2->1",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "original list (gold = already copied)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each new node goes in front of the copy"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       50
+      ],
+      "python": [
+       47
+      ],
+      "java": [
+       51
+      ],
+      "go": [
+       86
+      ]
+     },
+     "explanation": "cur has walked off the end. Adding each value at the front reversed the order: 3->2->1. The original list is unchanged.",
+     "variables": [
+      {
+       "name": "cur",
+       "value": "-"
+      },
+      {
+       "name": "copy",
+       "value": "3->2->1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reversed copy normal: done, cur -, copy 3->2->1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "copy",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 240,
+        "height": 40,
+        "text": "copy 3->2->1",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "original list (gold = already copied)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each new node goes in front of the copy"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-single",
+   "label": "One node",
+   "input": "1 0\n7\n",
+   "expectedOutput": "7",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       41,
+       42
+      ],
+      "python": [
+       39,
+       40
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       71,
+       72,
+       73,
+       74,
+       75,
+       77
+      ]
+     },
+     "explanation": "Build a reversed copy of 7 without changing it. copy starts empty; cur walks the original from the head.",
+     "variables": [
+      {
+       "name": "cur",
+       "value": "7"
+      },
+      {
+       "name": "copy",
+       "value": "empty"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reversed copy edge-single: start, cur 7, copy empty.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "copy",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 240,
+        "height": 40,
+        "text": "copy empty",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "original list (gold = already copied)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "cur"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each new node goes in front of the copy"
+       }
+      ]
+     }
+    },
+    {
+     "event": "prepend",
+     "lines": {
+      "cpp": [
+       45,
+       46
+      ],
+      "python": [
+       43,
+       44
+      ],
+      "java": [
+       46,
+       47
+      ],
+      "go": [
+       81,
+       82
+      ]
+     },
+     "explanation": "Make a new node 7 whose next is the current copy, so it goes in front. The copy is now 7. Move cur along the original.",
+     "variables": [
+      {
+       "name": "cur",
+       "value": "-"
+      },
+      {
+       "name": "copy",
+       "value": "7"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reversed copy edge-single: prepend, cur -, copy 7.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "visited"
+       },
+       {
+        "id": "copy",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 240,
+        "height": 40,
+        "text": "copy 7",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "original list (gold = already copied)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each new node goes in front of the copy"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       50
+      ],
+      "python": [
+       47
+      ],
+      "java": [
+       51
+      ],
+      "go": [
+       86
+      ]
+     },
+     "explanation": "cur has walked off the end. Adding each value at the front reversed the order: 7. The original list is unchanged.",
+     "variables": [
+      {
+       "name": "cur",
+       "value": "-"
+      },
+      {
+       "name": "copy",
+       "value": "7"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reversed copy edge-single: done, cur -, copy 7.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "visited"
+       },
+       {
+        "id": "copy",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 240,
+        "height": 40,
+        "text": "copy 7",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "original list (gold = already copied)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each new node goes in front of the copy"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-empty",
+   "label": "Empty list",
+   "input": "0 0\n\n",
+   "expectedOutput": "empty",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       41,
+       42
+      ],
+      "python": [
+       39,
+       40
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       71,
+       72,
+       73,
+       74,
+       75,
+       77
+      ]
+     },
+     "explanation": "The list is empty, so the copy stays empty.",
+     "variables": [
+      {
+       "name": "cur",
+       "value": "-"
+      },
+      {
+       "name": "copy",
+       "value": "empty"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reversed copy edge-empty: start, cur -, copy empty.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "(empty)",
+        "role": "neutral"
+       },
+       {
+        "id": "copy",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 240,
+        "height": 40,
+        "text": "copy empty",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "original list (gold = already copied)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each new node goes in front of the copy"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       50
+      ],
+      "python": [
+       47
+      ],
+      "java": [
+       51
+      ],
+      "go": [
+       86
+      ]
+     },
+     "explanation": "cur has walked off the end. Adding each value at the front reversed the order: empty. The original list is unchanged.",
+     "variables": [
+      {
+       "name": "cur",
+       "value": "-"
+      },
+      {
+       "name": "copy",
+       "value": "empty"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Reversed copy edge-empty: done, cur -, copy empty.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "(empty)",
+        "role": "neutral"
+       },
+       {
+        "id": "copy",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 240,
+        "height": 40,
+        "text": "copy empty",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "original list (gold = already copied)"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "each new node goes in front of the copy"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,233 @@
+{
+  "day": 5,
+  "objectives": [
+    "Describe what's true about the array after every step of a sorting loop.",
+    "Merge two sorted lists by always taking the smaller front.",
+    "Partition around a pivot, and explain when quicksort gets slow."
+  ],
+  "prerequisites": [
+    1,
+    2
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: sorting grows a part that's already right",
+      "paragraphs": [
+        "Every sort you'll write today works the same way underneath. Part of the array is known to be correct: a sorted left end, a merged prefix, a block of values smaller than a pivot. Each step moves one value and grows that part by one, without breaking what's already there.",
+        "So the most useful thing you can say about a sorting loop is what's true after each step. If you can say it, and it's still true when the loop ends, the array is sorted. If you can't say it, the code is guesswork."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "Before writing the loop, finish this sentence: \"After each step, the part from ___ to ___ is ___.\" That sentence is called the loop invariant."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "An array split into a sorted part on the left and an untouched part on the right, with the next value about to join the sorted part.",
+        "nodes": [
+          {
+            "id": "s1",
+            "shape": "rect",
+            "x": 12,
+            "y": 50,
+            "width": 50,
+            "height": 46,
+            "text": "2",
+            "role": "visited"
+          },
+          {
+            "id": "s2",
+            "shape": "rect",
+            "x": 68,
+            "y": 50,
+            "width": 50,
+            "height": 46,
+            "text": "4",
+            "role": "visited"
+          },
+          {
+            "id": "s3",
+            "shape": "rect",
+            "x": 124,
+            "y": 50,
+            "width": 50,
+            "height": 46,
+            "text": "5",
+            "role": "visited"
+          },
+          {
+            "id": "next",
+            "shape": "rect",
+            "x": 196,
+            "y": 50,
+            "width": 50,
+            "height": 46,
+            "text": "1",
+            "role": "active"
+          },
+          {
+            "id": "rest",
+            "shape": "rect",
+            "x": 252,
+            "y": 50,
+            "width": 56,
+            "height": 46,
+            "text": "3",
+            "role": "neutral"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "sorted",
+            "x": 12,
+            "y": 34,
+            "text": "sorted so far"
+          },
+          {
+            "id": "nextl",
+            "x": 196,
+            "y": 34,
+            "text": "next"
+          },
+          {
+            "id": "rule",
+            "x": 12,
+            "y": 130,
+            "text": "each step: the sorted part"
+          },
+          {
+            "id": "rule2",
+            "x": 12,
+            "y": 150,
+            "text": "grows by one, still sorted"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Insertion sort",
+      "heading": "Baseline: insertion sort",
+      "paragraphs": [
+        "Insertion sort is how most people sort a hand of cards. The left end is sorted. Pick up the next card, slide bigger cards one spot right to make room, and drop the card into the gap.",
+        "After each card, the cards to the left of it are sorted. That's the whole invariant. The slide uses \"bigger than\", not \"bigger than or equal\", so equal values keep their original order. A sort that does that is called stable.",
+        "On an already sorted array nothing slides, so it's fast: O(n). On a reversed array every card slides all the way left, which is O(n²). That's fine for small or nearly sorted inputs, and too slow for large random ones."
+      ],
+      "exampleIds": [
+        "day-05-insertion-sort"
+      ]
+    },
+    {
+      "id": "merge",
+      "navLabel": "Merging",
+      "heading": "Worked example: merge two sorted lists",
+      "paragraphs": [
+        "If two lists are already sorted, you can combine them into one sorted list in a single pass. Keep a pointer at the front of each. The smallest value left is always one of the two fronts, so compare them, take the smaller one, and move that pointer forward.",
+        "When one list runs out, everything left in the other is bigger than what you've taken, so it goes on the end as is. Taking from the first list on a tie keeps equal values in their original order.",
+        "Merging [2, 9] and [1, 5, 8] takes 1, 2, 5, 8, then 9. Each value is looked at once, so merging lists of length n and m costs O(n + m)."
+      ],
+      "exampleIds": [
+        "day-05-merge-front"
+      ]
+    },
+    {
+      "id": "quicksort",
+      "navLabel": "Partitioning",
+      "heading": "Worked example: partition and quicksort",
+      "paragraphs": [
+        "Quicksort picks one value, the pivot, and rearranges the range so that smaller values end up to its left and the rest to its right. The pivot is then in its final sorted position, and you sort the left and right sides the same way.",
+        "This version uses the last value as the pivot. A marker called store tracks where the next smaller value should go. Scan the range: when a value is smaller than the pivot, swap it into the store spot and move store right. At the end, swap the pivot into store. The invariant: everything left of store is smaller than the pivot, everything between store and the scan is not.",
+        "When the pivot splits the range roughly in half, quicksort takes O(n log n). When it doesn't, it degrades. The all-equal edge case shows the worst: nothing is ever smaller than the pivot, so each round only removes one value, and the total work is O(n²)."
+      ],
+      "callout": {
+        "kind": "watch",
+        "text": "Picking the last value as pivot is also O(n²) on an already sorted array. Equal values and sorted inputs both hurt this pivot rule."
+      },
+      "exampleIds": [
+        "day-05-quicksort"
+      ]
+    },
+    {
+      "id": "your-turn-merge",
+      "navLabel": "Your turn: Merge Sorted Array",
+      "heading": "Your turn: Merge Sorted Array",
+      "paragraphs": [
+        "You get nums1, which has m sorted values followed by n empty slots, and nums2 with n sorted values. Merge nums2 into nums1 in place, so nums1 ends up fully sorted. You can't use a second output array."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Try the merge example's approach, writing into nums1 from the front. What goes wrong? Then look at where the empty slots are."
+      }
+    },
+    {
+      "id": "your-turn-sort",
+      "navLabel": "Your turn: Sort an Array",
+      "heading": "Your turn: Sort an Array",
+      "paragraphs": [
+        "Today's first medium. Sort an array of integers in O(n log n) time without using the language's built-in sort. The test data includes large inputs, sorted inputs, and many repeated values, so the quicksort above will be too slow as written."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Find inputs that make the quicksort above slow. Then decide whether to fix it or build a different O(n log n) sort."
+      }
+    },
+    {
+      "id": "your-turn-colors",
+      "navLabel": "Your turn: Sort Colors",
+      "heading": "Your turn: Sort Colors",
+      "paragraphs": [
+        "Today's second medium. The array holds only 0s, 1s, and 2s. Sort it in place so all 0s come first, then 1s, then 2s. Try to do it in a single pass with O(1) extra memory."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "The partition above splits values into two groups. Here you need three. Draw the array as regions, and write down what each region holds after every step before you write any code."
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "bullets": [
+        "Insertion sort: O(n²) worst case, O(n) on sorted input, O(1) extra memory.",
+        "Merging two sorted lists into a new one: O(n + m) time and O(n + m) memory for the output.",
+        "Quicksort: O(n log n) on average with a good pivot, O(n²) worst case, no extra array.",
+        "Any sort that only compares pairs of values needs about n log n comparisons in the worst case. Beating that requires knowing something about the values, like there being only three of them."
+      ],
+      "paragraphs": [
+        "When you write a comparison, compare with < and >. Subtracting two integers to compare them can overflow in C++, Java, and Go."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "What is true after each step of insertion sort?",
+          "answer": "Every value to the left of the current position is sorted."
+        },
+        {
+          "prompt": "When merging, why is the smallest remaining value always one of the two fronts?",
+          "answer": "Each list is sorted, so its front is its smallest remaining value. The overall smallest is the smaller of those two."
+        },
+        {
+          "prompt": "Why does quicksort slow down when every value is the same?",
+          "answer": "Nothing is smaller than the pivot, so each partition only fixes the pivot and leaves n - 1 values for the next round: n + (n-1) + ... work, which is O(n²)."
+        },
+        {
+          "prompt": "What does it mean for a sort to be stable, and which examples are?",
+          "answer": "Equal values keep their original order. Insertion sort and the merge are stable; this quicksort's swaps are not."
+        }
+      ]
+    }
+  ]
+}

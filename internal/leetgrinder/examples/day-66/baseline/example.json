@@ -1,0 +1,2271 @@
+{
+  "id": "day-66-baseline",
+  "title": "Recursive LCS baseline",
+  "invariant": "A call at (i,j) returns the LCS length of the first i and j symbols.",
+  "variants": [
+    {
+      "language": "python",
+      "file": "main.py",
+      "algorithmStart": 10,
+      "algorithmEnd": 19
+    },
+    {
+      "language": "cpp",
+      "file": "main.cpp",
+      "algorithmStart": 26,
+      "algorithmEnd": 36
+    },
+    {
+      "language": "java",
+      "file": "Main.java",
+      "algorithmStart": 21,
+      "algorithmEnd": 33
+    },
+    {
+      "language": "go",
+      "file": "main.go.txt",
+      "algorithmStart": 23,
+      "algorithmEnd": 35
+    }
+  ],
+  "cases": [
+    {
+      "id": "normal",
+      "label": "Overlapping recursive subproblems",
+      "input": "abc\nbca\n",
+      "expectedOutput": "2",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "python": [
+              10
+            ],
+            "cpp": [
+              26
+            ],
+            "java": [
+              31
+            ],
+            "go": [
+              33
+            ]
+          },
+          "explanation": "The two input rows are ready. Empty prefixes have LCS length zero.",
+          "variables": [
+            {
+              "name": "a",
+              "value": "abc"
+            },
+            {
+              "name": "b",
+              "value": "bca"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Input: a=abc; b=bca",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Input: a=abc; b=bca"
+              }
+            ]
+          }
+        },
+        {
+          "event": "call",
+          "lines": {
+            "python": [
+              11
+            ],
+            "cpp": [
+              27
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              23
+            ]
+          },
+          "explanation": "The recursive call asks for prefixes (3, 3). A mismatch branches into both skips; a match uses one diagonal call.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "j",
+              "value": "3"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "First call (3,3)",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "active"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "active"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "First call (3,3)"
+              }
+            ]
+          }
+        },
+        {
+          "event": "call",
+          "lines": {
+            "python": [
+              11
+            ],
+            "cpp": [
+              27
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              23
+            ]
+          },
+          "explanation": "The recursive call asks for prefixes (2, 3). A mismatch branches into both skips; a match uses one diagonal call.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "j",
+              "value": "3"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "First call (2,3)",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "active"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "active"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "First call (2,3)"
+              }
+            ]
+          }
+        },
+        {
+          "event": "call",
+          "lines": {
+            "python": [
+              11
+            ],
+            "cpp": [
+              27
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              23
+            ]
+          },
+          "explanation": "The recursive call asks for prefixes (1, 3). A mismatch branches into both skips; a match uses one diagonal call.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "j",
+              "value": "3"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "First call (1,3)",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "active"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "active"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "First call (1,3)"
+              }
+            ]
+          }
+        },
+        {
+          "event": "call",
+          "lines": {
+            "python": [
+              11
+            ],
+            "cpp": [
+              27
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              23
+            ]
+          },
+          "explanation": "An empty prefix returns zero for state (0, 2).",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "j",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "First call (0,2)",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "active"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "First call (0,2)"
+              }
+            ]
+          }
+        },
+        {
+          "event": "call",
+          "lines": {
+            "python": [
+              11
+            ],
+            "cpp": [
+              27
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              23
+            ]
+          },
+          "explanation": "The recursive call asks for prefixes (2, 2). A mismatch branches into both skips; a match uses one diagonal call.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "j",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "First call (2,2)",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "active"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "active"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "First call (2,2)"
+              }
+            ]
+          }
+        },
+        {
+          "event": "call",
+          "lines": {
+            "python": [
+              11
+            ],
+            "cpp": [
+              27
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              23
+            ]
+          },
+          "explanation": "The recursive call asks for prefixes (1, 2). A mismatch branches into both skips; a match uses one diagonal call.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "j",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "First call (1,2)",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "active"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "active"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "First call (1,2)"
+              }
+            ]
+          }
+        },
+        {
+          "event": "call",
+          "lines": {
+            "python": [
+              11
+            ],
+            "cpp": [
+              27
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              23
+            ]
+          },
+          "explanation": "This exact prefix pair was already visited; the baseline solves it again. An empty prefix returns zero for state (0, 2).",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "j",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Repeated call (0,2)",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "active"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Repeated call (0,2)"
+              }
+            ]
+          }
+        },
+        {
+          "event": "call",
+          "lines": {
+            "python": [
+              11
+            ],
+            "cpp": [
+              27
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              23
+            ]
+          },
+          "explanation": "The recursive call asks for prefixes (1, 1). A mismatch branches into both skips; a match uses one diagonal call.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "j",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "First call (1,1)",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "active"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "active"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "First call (1,1)"
+              }
+            ]
+          }
+        },
+        {
+          "event": "call",
+          "lines": {
+            "python": [
+              11
+            ],
+            "cpp": [
+              27
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              23
+            ]
+          },
+          "explanation": "An empty prefix returns zero for state (0, 1).",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "j",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "First call (0,1)",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "active"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "First call (0,1)"
+              }
+            ]
+          }
+        },
+        {
+          "event": "call",
+          "lines": {
+            "python": [
+              11
+            ],
+            "cpp": [
+              27
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              23
+            ]
+          },
+          "explanation": "An empty prefix returns zero for state (1, 0).",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "j",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "First call (1,0)",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "active"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "First call (1,0)"
+              }
+            ]
+          }
+        },
+        {
+          "event": "call",
+          "lines": {
+            "python": [
+              11
+            ],
+            "cpp": [
+              27
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              23
+            ]
+          },
+          "explanation": "The recursive call asks for prefixes (2, 1). A mismatch branches into both skips; a match uses one diagonal call.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "j",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "First call (2,1)",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "active"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "active"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "First call (2,1)"
+              }
+            ]
+          }
+        },
+        {
+          "event": "call",
+          "lines": {
+            "python": [
+              11
+            ],
+            "cpp": [
+              27
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              23
+            ]
+          },
+          "explanation": "This exact prefix pair was already visited; the baseline solves it again. An empty prefix returns zero for state (1, 0).",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "j",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Repeated call (1,0)",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "active"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Repeated call (1,0)"
+              }
+            ]
+          }
+        },
+        {
+          "event": "call",
+          "lines": {
+            "python": [
+              11
+            ],
+            "cpp": [
+              27
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              23
+            ]
+          },
+          "explanation": "The recursive call asks for prefixes (3, 2). A mismatch branches into both skips; a match uses one diagonal call.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "j",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "First call (3,2)",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "active"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "active"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "First call (3,2)"
+              }
+            ]
+          }
+        },
+        {
+          "event": "call",
+          "lines": {
+            "python": [
+              11
+            ],
+            "cpp": [
+              27
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              23
+            ]
+          },
+          "explanation": "This exact prefix pair was already visited; the baseline solves it again. The recursive call asks for prefixes (2, 1). A mismatch branches into both skips; a match uses one diagonal call.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "j",
+              "value": "1"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Repeated call (2,1)",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "active"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "active"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Repeated call (2,1)"
+              }
+            ]
+          }
+        },
+        {
+          "event": "call",
+          "lines": {
+            "python": [
+              11
+            ],
+            "cpp": [
+              27
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              23
+            ]
+          },
+          "explanation": "This exact prefix pair was already visited; the baseline solves it again. An empty prefix returns zero for state (1, 0).",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "j",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Repeated call (1,0)",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "active"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Repeated call (1,0)"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "python": [
+              18
+            ],
+            "cpp": [
+              35
+            ],
+            "java": [
+              32
+            ],
+            "go": [
+              34
+            ]
+          },
+          "explanation": "The recursive search returns LCS length 2.",
+          "variables": [
+            {
+              "name": "answer",
+              "value": "2"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Result: 2",
+            "nodes": [
+              {
+                "id": "a0",
+                "shape": "rect",
+                "x": 88,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "a1",
+                "shape": "rect",
+                "x": 130,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "a2",
+                "shape": "rect",
+                "x": 172,
+                "y": 28,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "b",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Result: 2"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "empty",
+      "label": "An empty prefix",
+      "input": "\ncat\n",
+      "expectedOutput": "0",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "python": [
+              10
+            ],
+            "cpp": [
+              26
+            ],
+            "java": [
+              31
+            ],
+            "go": [
+              33
+            ]
+          },
+          "explanation": "The two input rows are ready. Empty prefixes have LCS length zero.",
+          "variables": [
+            {
+              "name": "a",
+              "value": ""
+            },
+            {
+              "name": "b",
+              "value": "cat"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Input: a=; b=cat",
+            "nodes": [
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "t",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Input: a=; b=cat"
+              }
+            ]
+          }
+        },
+        {
+          "event": "call",
+          "lines": {
+            "python": [
+              11
+            ],
+            "cpp": [
+              27
+            ],
+            "java": [
+              21
+            ],
+            "go": [
+              23
+            ]
+          },
+          "explanation": "An empty prefix returns zero for state (0, 3).",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "j",
+              "value": "3"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "First call (0,3)",
+            "nodes": [
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "t",
+                "role": "active"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "First call (0,3)"
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "python": [
+              18
+            ],
+            "cpp": [
+              35
+            ],
+            "java": [
+              32
+            ],
+            "go": [
+              34
+            ]
+          },
+          "explanation": "The recursive search returns LCS length 0.",
+          "variables": [
+            {
+              "name": "answer",
+              "value": "0"
+            }
+          ],
+          "scene": {
+            "width": 400,
+            "height": 315,
+            "description": "Result: 0",
+            "nodes": [
+              {
+                "id": "b0",
+                "shape": "rect",
+                "x": 88,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "b1",
+                "shape": "rect",
+                "x": 130,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "b2",
+                "shape": "rect",
+                "x": 172,
+                "y": 82,
+                "width": 36,
+                "height": 36,
+                "text": "t",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "alabel",
+                "x": 8,
+                "y": 48,
+                "text": "a prefixes"
+              },
+              {
+                "id": "blabel",
+                "x": 8,
+                "y": 102,
+                "text": "b prefixes"
+              },
+              {
+                "id": "event",
+                "x": 8,
+                "y": 145,
+                "text": "Result: 0"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

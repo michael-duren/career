@@ -1,0 +1,1992 @@
+{
+ "id": "day-02-stock-orders",
+ "title": "Spend counts as orders arrive",
+ "invariant": "Each counter is (items of that kind in stock) − (orders for it so far). A negative counter means an order couldn't be filled.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 30,
+   "algorithmEnd": 43
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 31
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 29,
+   "algorithmEnd": 42
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 56,
+   "algorithmEnd": 74
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Enough stock for every order",
+   "input": "aabbc\nabcab\n",
+   "expectedOutput": "filled",
+   "frames": [
+    {
+     "event": "stock",
+     "lines": {
+      "cpp": [
+       31,
+       32
+      ],
+      "python": [
+       19,
+       20,
+       21
+      ],
+      "java": [
+       30,
+       31
+      ],
+      "go": [
+       57,
+       58,
+       59
+      ]
+     },
+     "explanation": "Count the stock \"aabbc\" once: {a:2,b:2,c:1}. Each counter is how many of that item are still on the shelf.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "item",
+       "value": "-"
+      },
+      {
+       "name": "left",
+       "value": "-"
+      },
+      {
+       "name": "counts",
+       "value": "{a:2,b:2,c:1}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Stock orders normal: stock aabbc, order - item -, counts {a:2,b:2,c:1}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "a: 2",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-b",
+        "shape": "rect",
+        "x": 100,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "b: 2",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-c",
+        "shape": "rect",
+        "x": 184,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "c: 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "orders, in the order they arrive"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "shelf counters, starting from stock \"aabbc\""
+       }
+      ]
+     }
+    },
+    {
+     "event": "order",
+     "lines": {
+      "cpp": [
+       35,
+       36
+      ],
+      "python": [
+       24,
+       25
+      ],
+      "java": [
+       34,
+       35
+      ],
+      "go": [
+       63,
+       64,
+       65
+      ]
+     },
+     "explanation": "Order 0 takes one a. 1 left.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "0"
+      },
+      {
+       "name": "item",
+       "value": "a"
+      },
+      {
+       "name": "left",
+       "value": "1"
+      },
+      {
+       "name": "counts",
+       "value": "{a:1,b:2,c:1}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Stock orders normal: stock aabbc, order 0 item a, counts {a:1,b:2,c:1}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "a: 1",
+        "role": "active"
+       },
+       {
+        "id": "shelf-b",
+        "shape": "rect",
+        "x": 100,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "b: 2",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-c",
+        "shape": "rect",
+        "x": 184,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "c: 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "orders, in the order they arrive"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "shelf counters, starting from stock \"aabbc\""
+       }
+      ]
+     }
+    },
+    {
+     "event": "order",
+     "lines": {
+      "cpp": [
+       35,
+       36
+      ],
+      "python": [
+       24,
+       25
+      ],
+      "java": [
+       34,
+       35
+      ],
+      "go": [
+       63,
+       64,
+       65
+      ]
+     },
+     "explanation": "Order 1 takes one b. 1 left.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "1"
+      },
+      {
+       "name": "item",
+       "value": "b"
+      },
+      {
+       "name": "left",
+       "value": "1"
+      },
+      {
+       "name": "counts",
+       "value": "{a:1,b:1,c:1}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Stock orders normal: stock aabbc, order 1 item b, counts {a:1,b:1,c:1}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "a: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-b",
+        "shape": "rect",
+        "x": 100,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "b: 1",
+        "role": "active"
+       },
+       {
+        "id": "shelf-c",
+        "shape": "rect",
+        "x": 184,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "c: 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "orders, in the order they arrive"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "shelf counters, starting from stock \"aabbc\""
+       }
+      ]
+     }
+    },
+    {
+     "event": "order",
+     "lines": {
+      "cpp": [
+       35,
+       36
+      ],
+      "python": [
+       24,
+       25
+      ],
+      "java": [
+       34,
+       35
+      ],
+      "go": [
+       63,
+       64,
+       65
+      ]
+     },
+     "explanation": "Order 2 takes one c. 0 left.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "2"
+      },
+      {
+       "name": "item",
+       "value": "c"
+      },
+      {
+       "name": "left",
+       "value": "0"
+      },
+      {
+       "name": "counts",
+       "value": "{a:1,b:1}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Stock orders normal: stock aabbc, order 2 item c, counts {a:1,b:1}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "a: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-b",
+        "shape": "rect",
+        "x": 100,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "b: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-c",
+        "shape": "rect",
+        "x": 184,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "c: 0",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "orders, in the order they arrive"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "shelf counters, starting from stock \"aabbc\""
+       }
+      ]
+     }
+    },
+    {
+     "event": "order",
+     "lines": {
+      "cpp": [
+       35,
+       36
+      ],
+      "python": [
+       24,
+       25
+      ],
+      "java": [
+       34,
+       35
+      ],
+      "go": [
+       63,
+       64,
+       65
+      ]
+     },
+     "explanation": "Order 3 takes one a. 0 left.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "3"
+      },
+      {
+       "name": "item",
+       "value": "a"
+      },
+      {
+       "name": "left",
+       "value": "0"
+      },
+      {
+       "name": "counts",
+       "value": "{b:1}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Stock orders normal: stock aabbc, order 3 item a, counts {b:1}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "active"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "a: 0",
+        "role": "active"
+       },
+       {
+        "id": "shelf-b",
+        "shape": "rect",
+        "x": 100,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "b: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-c",
+        "shape": "rect",
+        "x": 184,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "c: 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "orders, in the order they arrive"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "shelf counters, starting from stock \"aabbc\""
+       }
+      ]
+     }
+    },
+    {
+     "event": "order",
+     "lines": {
+      "cpp": [
+       35,
+       36
+      ],
+      "python": [
+       24,
+       25
+      ],
+      "java": [
+       34,
+       35
+      ],
+      "go": [
+       63,
+       64,
+       65
+      ]
+     },
+     "explanation": "Order 4 takes one b. 0 left.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "4"
+      },
+      {
+       "name": "item",
+       "value": "b"
+      },
+      {
+       "name": "left",
+       "value": "0"
+      },
+      {
+       "name": "counts",
+       "value": "{}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Stock orders normal: stock aabbc, order 4 item b, counts {}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "result"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "active"
+       },
+       {
+        "id": "shelf-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "a: 0",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-b",
+        "shape": "rect",
+        "x": 100,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "b: 0",
+        "role": "active"
+       },
+       {
+        "id": "shelf-c",
+        "shape": "rect",
+        "x": 184,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "c: 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "orders, in the order they arrive"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "shelf counters, starting from stock \"aabbc\""
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       41
+      ],
+      "python": [
+       30
+      ],
+      "java": [
+       40
+      ],
+      "go": [
+       72
+      ]
+     },
+     "explanation": "Every order was filled. No counter went below 0.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "item",
+       "value": "-"
+      },
+      {
+       "name": "left",
+       "value": "-"
+      },
+      {
+       "name": "counts",
+       "value": "{}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Stock orders normal: stock aabbc, order - item -, counts {}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "result"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "result"
+       },
+       {
+        "id": "shelf-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "a: 0",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-b",
+        "shape": "rect",
+        "x": 100,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "b: 0",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-c",
+        "shape": "rect",
+        "x": 184,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "c: 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "orders, in the order they arrive"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "shelf counters, starting from stock \"aabbc\""
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-short",
+   "label": "Runs out on the fourth order",
+   "input": "aab\nabaa\n",
+   "expectedOutput": "short at 3",
+   "frames": [
+    {
+     "event": "stock",
+     "lines": {
+      "cpp": [
+       31,
+       32
+      ],
+      "python": [
+       19,
+       20,
+       21
+      ],
+      "java": [
+       30,
+       31
+      ],
+      "go": [
+       57,
+       58,
+       59
+      ]
+     },
+     "explanation": "Count the stock \"aab\" once: {a:2,b:1}. Each counter is how many of that item are still on the shelf.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "item",
+       "value": "-"
+      },
+      {
+       "name": "left",
+       "value": "-"
+      },
+      {
+       "name": "counts",
+       "value": "{a:2,b:1}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Stock orders edge-short: stock aab, order - item -, counts {a:2,b:1}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "a: 2",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-b",
+        "shape": "rect",
+        "x": 100,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "b: 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "orders, in the order they arrive"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "shelf counters, starting from stock \"aab\""
+       }
+      ]
+     }
+    },
+    {
+     "event": "order",
+     "lines": {
+      "cpp": [
+       35,
+       36
+      ],
+      "python": [
+       24,
+       25
+      ],
+      "java": [
+       34,
+       35
+      ],
+      "go": [
+       63,
+       64,
+       65
+      ]
+     },
+     "explanation": "Order 0 takes one a. 1 left.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "0"
+      },
+      {
+       "name": "item",
+       "value": "a"
+      },
+      {
+       "name": "left",
+       "value": "1"
+      },
+      {
+       "name": "counts",
+       "value": "{a:1,b:1}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Stock orders edge-short: stock aab, order 0 item a, counts {a:1,b:1}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "a: 1",
+        "role": "active"
+       },
+       {
+        "id": "shelf-b",
+        "shape": "rect",
+        "x": 100,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "b: 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "orders, in the order they arrive"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "shelf counters, starting from stock \"aab\""
+       }
+      ]
+     }
+    },
+    {
+     "event": "order",
+     "lines": {
+      "cpp": [
+       35,
+       36
+      ],
+      "python": [
+       24,
+       25
+      ],
+      "java": [
+       34,
+       35
+      ],
+      "go": [
+       63,
+       64,
+       65
+      ]
+     },
+     "explanation": "Order 1 takes one b. 0 left.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "1"
+      },
+      {
+       "name": "item",
+       "value": "b"
+      },
+      {
+       "name": "left",
+       "value": "0"
+      },
+      {
+       "name": "counts",
+       "value": "{a:1}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Stock orders edge-short: stock aab, order 1 item b, counts {a:1}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "a: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-b",
+        "shape": "rect",
+        "x": 100,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "b: 0",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "orders, in the order they arrive"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "shelf counters, starting from stock \"aab\""
+       }
+      ]
+     }
+    },
+    {
+     "event": "order",
+     "lines": {
+      "cpp": [
+       35,
+       36
+      ],
+      "python": [
+       24,
+       25
+      ],
+      "java": [
+       34,
+       35
+      ],
+      "go": [
+       63,
+       64,
+       65
+      ]
+     },
+     "explanation": "Order 2 takes one a. 0 left.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "2"
+      },
+      {
+       "name": "item",
+       "value": "a"
+      },
+      {
+       "name": "left",
+       "value": "0"
+      },
+      {
+       "name": "counts",
+       "value": "{}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Stock orders edge-short: stock aab, order 2 item a, counts {}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "shelf-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "a: 0",
+        "role": "active"
+       },
+       {
+        "id": "shelf-b",
+        "shape": "rect",
+        "x": 100,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "b: 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "orders, in the order they arrive"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "shelf counters, starting from stock \"aab\""
+       }
+      ]
+     }
+    },
+    {
+     "event": "order",
+     "lines": {
+      "cpp": [
+       35,
+       36
+      ],
+      "python": [
+       24,
+       25
+      ],
+      "java": [
+       34,
+       35
+      ],
+      "go": [
+       63,
+       64,
+       65
+      ]
+     },
+     "explanation": "Order 3 wants one more a, but none are left: the counter drops to -1. Stop here; this order can't be filled.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "3"
+      },
+      {
+       "name": "item",
+       "value": "a"
+      },
+      {
+       "name": "left",
+       "value": "-1"
+      },
+      {
+       "name": "counts",
+       "value": "{a:-1}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Stock orders edge-short: stock aab, order 3 item a, counts {a:-1}.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "discarded"
+       },
+       {
+        "id": "shelf-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "a: -1",
+        "role": "active"
+       },
+       {
+        "id": "shelf-b",
+        "shape": "rect",
+        "x": 100,
+        "y": 132,
+        "width": 72,
+        "height": 40,
+        "text": "b: 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "orders, in the order they arrive"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "shelf counters, starting from stock \"aab\""
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

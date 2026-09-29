@@ -1,0 +1,3657 @@
+{
+ "id": "day-04-distinct-grid",
+ "title": "One set per row and one per column",
+ "invariant": "Before checking a cell, rows[r] and cols[c] hold exactly the letters already placed in that row and column.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 31,
+   "algorithmEnd": 51
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 36
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 29,
+   "algorithmEnd": 50
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 56,
+   "algorithmEnd": 81
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "A valid 3 × 3 grid",
+   "input": "3\nabc\nbca\ncab\n",
+   "expectedOutput": "true",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       32,
+       33
+      ],
+      "python": [
+       19,
+       20,
+       21
+      ],
+      "java": [
+       30,
+       31,
+       32
+      ],
+      "go": [
+       57,
+       58,
+       59,
+       60
+      ]
+     },
+     "explanation": "One set per row and one set per column, all empty. Dots are empty cells and are skipped.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "-"
+      },
+      {
+       "name": "c",
+       "value": "-"
+      },
+      {
+       "name": "letter",
+       "value": "-"
+      },
+      {
+       "name": "row",
+       "value": "-"
+      },
+      {
+       "name": "col",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Distinct grid normal: start at (-,-) letter -.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "row-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "row - set -",
+        "role": "neutral"
+       },
+       {
+        "id": "col-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "col - set -",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "each row and column needs distinct letters"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "check both sets before adding the letter"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44
+      ],
+      "python": [
+       31,
+       32
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       73,
+       74
+      ]
+     },
+     "explanation": "(0,0) holds a. Row 0 and column 0 don't have a yet, so add it to both: row 0 = {a}, column 0 = {a}.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "0"
+      },
+      {
+       "name": "c",
+       "value": "0"
+      },
+      {
+       "name": "letter",
+       "value": "a"
+      },
+      {
+       "name": "row",
+       "value": "{a}"
+      },
+      {
+       "name": "col",
+       "value": "{a}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Distinct grid normal: add at (0,0) letter a.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "active"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "row-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "row 0 set {a}",
+        "role": "neutral"
+       },
+       {
+        "id": "col-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "col 0 set {a}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "each row and column needs distinct letters"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "check both sets before adding the letter"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44
+      ],
+      "python": [
+       31,
+       32
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       73,
+       74
+      ]
+     },
+     "explanation": "(0,1) holds b. Row 0 and column 1 don't have b yet, so add it to both: row 0 = {a,b}, column 1 = {b}.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "0"
+      },
+      {
+       "name": "c",
+       "value": "1"
+      },
+      {
+       "name": "letter",
+       "value": "b"
+      },
+      {
+       "name": "row",
+       "value": "{a,b}"
+      },
+      {
+       "name": "col",
+       "value": "{b}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Distinct grid normal: add at (0,1) letter b.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "active"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "row-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "row 0 set {a,b}",
+        "role": "neutral"
+       },
+       {
+        "id": "col-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "col 1 set {b}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "each row and column needs distinct letters"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "check both sets before adding the letter"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44
+      ],
+      "python": [
+       31,
+       32
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       73,
+       74
+      ]
+     },
+     "explanation": "(0,2) holds c. Row 0 and column 2 don't have c yet, so add it to both: row 0 = {a,b,c}, column 2 = {c}.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "0"
+      },
+      {
+       "name": "c",
+       "value": "2"
+      },
+      {
+       "name": "letter",
+       "value": "c"
+      },
+      {
+       "name": "row",
+       "value": "{a,b,c}"
+      },
+      {
+       "name": "col",
+       "value": "{c}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Distinct grid normal: add at (0,2) letter c.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "active"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "row-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "row 0 set {a,b,c}",
+        "role": "neutral"
+       },
+       {
+        "id": "col-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "col 2 set {c}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "each row and column needs distinct letters"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "check both sets before adding the letter"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44
+      ],
+      "python": [
+       31,
+       32
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       73,
+       74
+      ]
+     },
+     "explanation": "(1,0) holds b. Row 1 and column 0 don't have b yet, so add it to both: row 1 = {b}, column 0 = {a,b}.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "1"
+      },
+      {
+       "name": "c",
+       "value": "0"
+      },
+      {
+       "name": "letter",
+       "value": "b"
+      },
+      {
+       "name": "row",
+       "value": "{b}"
+      },
+      {
+       "name": "col",
+       "value": "{a,b}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Distinct grid normal: add at (1,0) letter b.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "active"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "row-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "row 1 set {b}",
+        "role": "neutral"
+       },
+       {
+        "id": "col-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "col 0 set {a,b}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "each row and column needs distinct letters"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "check both sets before adding the letter"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44
+      ],
+      "python": [
+       31,
+       32
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       73,
+       74
+      ]
+     },
+     "explanation": "(1,1) holds c. Row 1 and column 1 don't have c yet, so add it to both: row 1 = {b,c}, column 1 = {b,c}.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "1"
+      },
+      {
+       "name": "c",
+       "value": "1"
+      },
+      {
+       "name": "letter",
+       "value": "c"
+      },
+      {
+       "name": "row",
+       "value": "{b,c}"
+      },
+      {
+       "name": "col",
+       "value": "{b,c}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Distinct grid normal: add at (1,1) letter c.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "active"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "row-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "row 1 set {b,c}",
+        "role": "neutral"
+       },
+       {
+        "id": "col-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "col 1 set {b,c}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "each row and column needs distinct letters"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "check both sets before adding the letter"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44
+      ],
+      "python": [
+       31,
+       32
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       73,
+       74
+      ]
+     },
+     "explanation": "(1,2) holds a. Row 1 and column 2 don't have a yet, so add it to both: row 1 = {a,b,c}, column 2 = {a,c}.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "1"
+      },
+      {
+       "name": "c",
+       "value": "2"
+      },
+      {
+       "name": "letter",
+       "value": "a"
+      },
+      {
+       "name": "row",
+       "value": "{a,b,c}"
+      },
+      {
+       "name": "col",
+       "value": "{a,c}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Distinct grid normal: add at (1,2) letter a.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "active"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "row-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "row 1 set {a,b,c}",
+        "role": "neutral"
+       },
+       {
+        "id": "col-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "col 2 set {a,c}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "each row and column needs distinct letters"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "check both sets before adding the letter"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44
+      ],
+      "python": [
+       31,
+       32
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       73,
+       74
+      ]
+     },
+     "explanation": "(2,0) holds c. Row 2 and column 0 don't have c yet, so add it to both: row 2 = {c}, column 0 = {a,b,c}.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "2"
+      },
+      {
+       "name": "c",
+       "value": "0"
+      },
+      {
+       "name": "letter",
+       "value": "c"
+      },
+      {
+       "name": "row",
+       "value": "{c}"
+      },
+      {
+       "name": "col",
+       "value": "{a,b,c}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Distinct grid normal: add at (2,0) letter c.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "active"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "row-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "row 2 set {c}",
+        "role": "neutral"
+       },
+       {
+        "id": "col-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "col 0 set {a,b,c}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "each row and column needs distinct letters"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "check both sets before adding the letter"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44
+      ],
+      "python": [
+       31,
+       32
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       73,
+       74
+      ]
+     },
+     "explanation": "(2,1) holds a. Row 2 and column 1 don't have a yet, so add it to both: row 2 = {a,c}, column 1 = {a,b,c}.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "2"
+      },
+      {
+       "name": "c",
+       "value": "1"
+      },
+      {
+       "name": "letter",
+       "value": "a"
+      },
+      {
+       "name": "row",
+       "value": "{a,c}"
+      },
+      {
+       "name": "col",
+       "value": "{a,b,c}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Distinct grid normal: add at (2,1) letter a.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "active"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "row-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "row 2 set {a,c}",
+        "role": "neutral"
+       },
+       {
+        "id": "col-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "col 1 set {a,b,c}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "each row and column needs distinct letters"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "check both sets before adding the letter"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44
+      ],
+      "python": [
+       31,
+       32
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       73,
+       74
+      ]
+     },
+     "explanation": "(2,2) holds b. Row 2 and column 2 don't have b yet, so add it to both: row 2 = {a,b,c}, column 2 = {a,b,c}.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "2"
+      },
+      {
+       "name": "c",
+       "value": "2"
+      },
+      {
+       "name": "letter",
+       "value": "b"
+      },
+      {
+       "name": "row",
+       "value": "{a,b,c}"
+      },
+      {
+       "name": "col",
+       "value": "{a,b,c}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Distinct grid normal: add at (2,2) letter b.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "active"
+       },
+       {
+        "id": "row-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "row 2 set {a,b,c}",
+        "role": "neutral"
+       },
+       {
+        "id": "col-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "col 2 set {a,b,c}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "each row and column needs distinct letters"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "check both sets before adding the letter"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       49
+      ],
+      "python": [
+       35
+      ],
+      "java": [
+       48
+      ],
+      "go": [
+       79
+      ]
+     },
+     "explanation": "Every letter was new in its row and in its column, so the grid is valid.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "-"
+      },
+      {
+       "name": "c",
+       "value": "-"
+      },
+      {
+       "name": "letter",
+       "value": "-"
+      },
+      {
+       "name": "row",
+       "value": "-"
+      },
+      {
+       "name": "col",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Distinct grid normal: done at (-,-) letter -.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "result"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "result"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "result"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "result"
+       },
+       {
+        "id": "row-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "row - set -",
+        "role": "neutral"
+       },
+       {
+        "id": "col-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "col - set -",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "each row and column needs distinct letters"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "check both sets before adding the letter"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-column-clash",
+   "label": "Repeat in a column only",
+   "input": "3\nab.\n.ca\na..\n",
+   "expectedOutput": "false",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       32,
+       33
+      ],
+      "python": [
+       19,
+       20,
+       21
+      ],
+      "java": [
+       30,
+       31,
+       32
+      ],
+      "go": [
+       57,
+       58,
+       59,
+       60
+      ]
+     },
+     "explanation": "One set per row and one set per column, all empty. Dots are empty cells and are skipped.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "-"
+      },
+      {
+       "name": "c",
+       "value": "-"
+      },
+      {
+       "name": "letter",
+       "value": "-"
+      },
+      {
+       "name": "row",
+       "value": "-"
+      },
+      {
+       "name": "col",
+       "value": "-"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Distinct grid edge-column-clash: start at (-,-) letter -.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "row-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "row - set -",
+        "role": "neutral"
+       },
+       {
+        "id": "col-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "col - set -",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "each row and column needs distinct letters"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "check both sets before adding the letter"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44
+      ],
+      "python": [
+       31,
+       32
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       73,
+       74
+      ]
+     },
+     "explanation": "(0,0) holds a. Row 0 and column 0 don't have a yet, so add it to both: row 0 = {a}, column 0 = {a}.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "0"
+      },
+      {
+       "name": "c",
+       "value": "0"
+      },
+      {
+       "name": "letter",
+       "value": "a"
+      },
+      {
+       "name": "row",
+       "value": "{a}"
+      },
+      {
+       "name": "col",
+       "value": "{a}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Distinct grid edge-column-clash: add at (0,0) letter a.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "active"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "row-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "row 0 set {a}",
+        "role": "neutral"
+       },
+       {
+        "id": "col-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "col 0 set {a}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "each row and column needs distinct letters"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "check both sets before adding the letter"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44
+      ],
+      "python": [
+       31,
+       32
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       73,
+       74
+      ]
+     },
+     "explanation": "(0,1) holds b. Row 0 and column 1 don't have b yet, so add it to both: row 0 = {a,b}, column 1 = {b}.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "0"
+      },
+      {
+       "name": "c",
+       "value": "1"
+      },
+      {
+       "name": "letter",
+       "value": "b"
+      },
+      {
+       "name": "row",
+       "value": "{a,b}"
+      },
+      {
+       "name": "col",
+       "value": "{b}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Distinct grid edge-column-clash: add at (0,1) letter b.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "active"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "row-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "row 0 set {a,b}",
+        "role": "neutral"
+       },
+       {
+        "id": "col-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "col 1 set {b}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "each row and column needs distinct letters"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "check both sets before adding the letter"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44
+      ],
+      "python": [
+       31,
+       32
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       73,
+       74
+      ]
+     },
+     "explanation": "(1,1) holds c. Row 1 and column 1 don't have c yet, so add it to both: row 1 = {c}, column 1 = {b,c}.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "1"
+      },
+      {
+       "name": "c",
+       "value": "1"
+      },
+      {
+       "name": "letter",
+       "value": "c"
+      },
+      {
+       "name": "row",
+       "value": "{c}"
+      },
+      {
+       "name": "col",
+       "value": "{b,c}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Distinct grid edge-column-clash: add at (1,1) letter c.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "active"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "row-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "row 1 set {c}",
+        "role": "neutral"
+       },
+       {
+        "id": "col-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "col 1 set {b,c}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "each row and column needs distinct letters"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "check both sets before adding the letter"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44
+      ],
+      "python": [
+       31,
+       32
+      ],
+      "java": [
+       42,
+       43
+      ],
+      "go": [
+       73,
+       74
+      ]
+     },
+     "explanation": "(1,2) holds a. Row 1 and column 2 don't have a yet, so add it to both: row 1 = {a,c}, column 2 = {a}.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "1"
+      },
+      {
+       "name": "c",
+       "value": "2"
+      },
+      {
+       "name": "letter",
+       "value": "a"
+      },
+      {
+       "name": "row",
+       "value": "{a,c}"
+      },
+      {
+       "name": "col",
+       "value": "{a}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Distinct grid edge-column-clash: add at (1,2) letter a.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "active"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "row-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "row 1 set {a,c}",
+        "role": "neutral"
+       },
+       {
+        "id": "col-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "col 2 set {a}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "each row and column needs distinct letters"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "check both sets before adding the letter"
+       }
+      ]
+     }
+    },
+    {
+     "event": "clash",
+     "lines": {
+      "cpp": [
+       39,
+       40
+      ],
+      "python": [
+       28,
+       29
+      ],
+      "java": [
+       38,
+       39
+      ],
+      "go": [
+       69,
+       70
+      ]
+     },
+     "explanation": "(2,0) holds a, but column 0 already has {a}. a repeats, so the grid is invalid.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "2"
+      },
+      {
+       "name": "c",
+       "value": "0"
+      },
+      {
+       "name": "letter",
+       "value": "a"
+      },
+      {
+       "name": "row",
+       "value": "{}"
+      },
+      {
+       "name": "col",
+       "value": "{a}"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Distinct grid edge-column-clash: clash at (2,0) letter a.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "c",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "a",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": ".",
+        "role": "discarded"
+       },
+       {
+        "id": "row-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "row 2 set {}",
+        "role": "neutral"
+       },
+       {
+        "id": "col-set",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "col 0 set {a}",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "each row and column needs distinct letters"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "check both sets before adding the letter"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

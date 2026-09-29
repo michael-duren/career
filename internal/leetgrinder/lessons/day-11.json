@@ -1,0 +1,199 @@
+{
+  "day": 11,
+  "objectives": [
+    "Run binary search over values you compute on demand, instead of a stored list.",
+    "Convert between a position in a flat list and a (row, column) in a grid.",
+    "Decide which searches need full sorted order and which need a different rule."
+  ],
+  "prerequisites": [
+    8,
+    10
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: binary search needs order, not a list",
+      "paragraphs": [
+        "Binary search only ever asks two things: what's the value at index i, and is it smaller or bigger than what I want? It doesn't care whether that value comes from an array, a formula, or a grid, as long as the values go up as i goes up.",
+        "A grid can be read as one long list, row by row. In a grid with 3 columns, list position 5 is row 5 ÷ 3 = 1, column 5 mod 3 = 2. Going the other way, (row 1, column 2) is position 1 × 3 + 2 = 5."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "For a grid with c columns: position p is row p / c and column p % c (integer division). Cell (r, col) is position r · c + col."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "A 2 by 3 grid numbered 0 to 5 row by row. Position 5 is row 1, column 2.",
+        "nodes": [
+          {
+            "id": "c0",
+            "shape": "rect",
+            "x": 40,
+            "y": 40,
+            "width": 54,
+            "height": 44,
+            "text": "0",
+            "role": "neutral"
+          },
+          {
+            "id": "c1",
+            "shape": "rect",
+            "x": 100,
+            "y": 40,
+            "width": 54,
+            "height": 44,
+            "text": "1",
+            "role": "neutral"
+          },
+          {
+            "id": "c2",
+            "shape": "rect",
+            "x": 160,
+            "y": 40,
+            "width": 54,
+            "height": 44,
+            "text": "2",
+            "role": "neutral"
+          },
+          {
+            "id": "c3",
+            "shape": "rect",
+            "x": 40,
+            "y": 90,
+            "width": 54,
+            "height": 44,
+            "text": "3",
+            "role": "neutral"
+          },
+          {
+            "id": "c4",
+            "shape": "rect",
+            "x": 100,
+            "y": 90,
+            "width": 54,
+            "height": 44,
+            "text": "4",
+            "role": "neutral"
+          },
+          {
+            "id": "c5",
+            "shape": "rect",
+            "x": 160,
+            "y": 90,
+            "width": 54,
+            "height": 44,
+            "text": "5",
+            "role": "result"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "t",
+            "x": 40,
+            "y": 28,
+            "text": "positions, row by row"
+          },
+          {
+            "id": "r",
+            "x": 40,
+            "y": 158,
+            "text": "5 → row 5/3 = 1, col 5%3 = 2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Look at every cell",
+      "heading": "Baseline: look at every cell",
+      "paragraphs": [
+        "Checking every cell of an m × n grid always works and takes O(m·n). Whether you can do better depends on how the grid is ordered, which is exactly what today's three problems vary."
+      ]
+    },
+    {
+      "id": "computed",
+      "navLabel": "Computed values",
+      "heading": "Worked example: search values you compute",
+      "paragraphs": [
+        "Is 49 in the list 0², 1², 2², ..., 10²? You could build the list, but you don't need to. value(i) = i·i can be computed whenever the search looks at index i, and it increases with i, so binary search works on it directly.",
+        "The code is the day 8 search with values[mid] replaced by mid * mid. The same idea lets you search a grid, a range of answers, or anything else where you can compute the value at a position."
+      ],
+      "exampleIds": [
+        "day-11-computed-array"
+      ]
+    },
+    {
+      "id": "your-turn-matrix",
+      "navLabel": "Your turn: Search a 2D Matrix",
+      "heading": "Your turn: Search a 2D Matrix",
+      "paragraphs": [
+        "Today's first medium. Each row of the grid is sorted, and each row's first value is greater than the previous row's last value. Return whether target is in the grid, in O(log(m·n)) time."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Is there a single order you can read every cell in that is sorted?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-matrix-two",
+      "navLabel": "Your turn: Search a 2D Matrix II",
+      "heading": "Your turn: Search a 2D Matrix II",
+      "paragraphs": [
+        "Today's second medium. Now each row is sorted left to right and each column top to bottom, but a row can start below the previous row's end. Return whether target is in the grid."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Reading this grid row by row isn't sorted. Which cell gives you a yes/no answer that rules out a whole row or column?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-rotated-min",
+      "navLabel": "Your turn: Find Minimum in Rotated Sorted Array",
+      "heading": "Your turn: Find Minimum in Rotated Sorted Array",
+      "paragraphs": [
+        "Today's third medium. A sorted array of distinct values was rotated: [0, 1, 2, 4, 5, 6, 7] might become [4, 5, 6, 7, 0, 1, 2]. Find the minimum in O(log n)."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "The array isn't sorted, but binary search only needs a yes/no question that flips once. Draw [4, 5, 6, 7, 0, 1, 2] as a graph and look for one.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Binary search over a computed value costs O(log n) times the cost of computing one value. Computing i·i can overflow a 32-bit int for large i; use 64-bit math.",
+        "Converting positions with / and % is O(1), so treating an m × n grid as a flat list keeps searches at O(log(m·n))."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "In a grid with 4 columns, which cell is position 9?",
+          "answer": "Row 9 / 4 = 2, column 9 % 4 = 1."
+        },
+        {
+          "prompt": "What two things does binary search need from the data?",
+          "answer": "A way to get the value at a position, and values that are in order, so one comparison rules out half."
+        },
+        {
+          "prompt": "Why can't you binary search a grid that is sorted only by rows and columns as one flat list?",
+          "answer": "Read row by row, its values can go down between rows, so a comparison at mid doesn't rule out half."
+        }
+      ]
+    }
+  ]
+}

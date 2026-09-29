@@ -1,0 +1,2465 @@
+{
+ "id": "day-10-staircase-count",
+ "title": "Count small values in a sorted grid",
+ "invariant": "Every column left of c has been fully counted, and rows below r have no more cells to count.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 23,
+   "algorithmEnd": 40
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 32
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 23,
+   "algorithmEnd": 40
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 46,
+   "algorithmEnd": 63
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Cells ≤ 5",
+   "input": "3 3 5\n1 4 7\n2 5 8\n3 6 9\n",
+   "expectedOutput": "5",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24,
+       25
+      ],
+      "python": [
+       19,
+       20
+      ],
+      "java": [
+       24,
+       25
+      ],
+      "go": [
+       47,
+       48
+      ]
+     },
+     "explanation": "Count cells ≤ 5. Rows and columns both increase. Start at the bottom-left corner, which is the largest value in its column and the smallest in its row.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "2"
+      },
+      {
+       "name": "c",
+       "value": "0"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Staircase count normal: start, r 2, c 0, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "active"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "count 0",
+        "role": "result"
+       },
+       {
+        "id": "pos",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "at (2, 0)",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "count cells ≤ 5"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "each step rules out a whole row or column"
+       }
+      ]
+     }
+    },
+    {
+     "event": "take-column",
+     "lines": {
+      "cpp": [
+       29,
+       30
+      ],
+      "python": [
+       24,
+       25
+      ],
+      "java": [
+       29,
+       30
+      ],
+      "go": [
+       52,
+       53
+      ]
+     },
+     "explanation": "3 ≤ 5. Everything above it in column 0 is smaller, so all 3 cells in rows 0..2 of that column count. Count = 3. Move right.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "2"
+      },
+      {
+       "name": "c",
+       "value": "1"
+      },
+      {
+       "name": "count",
+       "value": "3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Staircase count normal: take-column, r 2, c 1, count 3.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "active"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "count 3",
+        "role": "result"
+       },
+       {
+        "id": "pos",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "at (2, 1)",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "count cells ≤ 5"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "each step rules out a whole row or column"
+       }
+      ]
+     }
+    },
+    {
+     "event": "go-up",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       56
+      ]
+     },
+     "explanation": "6 > 5. Everything to its right in row 2 is bigger, so row 2 has no more cells to count. Move up.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "1"
+      },
+      {
+       "name": "c",
+       "value": "1"
+      },
+      {
+       "name": "count",
+       "value": "3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Staircase count normal: go-up, r 1, c 1, count 3.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "active"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "count 3",
+        "role": "result"
+       },
+       {
+        "id": "pos",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "at (1, 1)",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "count cells ≤ 5"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "each step rules out a whole row or column"
+       }
+      ]
+     }
+    },
+    {
+     "event": "take-column",
+     "lines": {
+      "cpp": [
+       29,
+       30
+      ],
+      "python": [
+       24,
+       25
+      ],
+      "java": [
+       29,
+       30
+      ],
+      "go": [
+       52,
+       53
+      ]
+     },
+     "explanation": "5 ≤ 5. Everything above it in column 1 is smaller, so all 2 cells in rows 0..1 of that column count. Count = 5. Move right.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "1"
+      },
+      {
+       "name": "c",
+       "value": "2"
+      },
+      {
+       "name": "count",
+       "value": "5"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Staircase count normal: take-column, r 1, c 2, count 5.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "active"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "count 5",
+        "role": "result"
+       },
+       {
+        "id": "pos",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "at (1, 2)",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "count cells ≤ 5"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "each step rules out a whole row or column"
+       }
+      ]
+     }
+    },
+    {
+     "event": "go-up",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       56
+      ]
+     },
+     "explanation": "8 > 5. Everything to its right in row 1 is bigger, so row 1 has no more cells to count. Move up.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "0"
+      },
+      {
+       "name": "c",
+       "value": "2"
+      },
+      {
+       "name": "count",
+       "value": "5"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Staircase count normal: go-up, r 0, c 2, count 5.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "active"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "count 5",
+        "role": "result"
+       },
+       {
+        "id": "pos",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "at (0, 2)",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "count cells ≤ 5"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "each step rules out a whole row or column"
+       }
+      ]
+     }
+    },
+    {
+     "event": "go-up",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       56
+      ]
+     },
+     "explanation": "7 > 5. Everything to its right in row 0 is bigger, so row 0 has no more cells to count. Move up.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "-1"
+      },
+      {
+       "name": "c",
+       "value": "2"
+      },
+      {
+       "name": "count",
+       "value": "5"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Staircase count normal: go-up, r -1, c 2, count 5.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "count 5",
+        "role": "result"
+       },
+       {
+        "id": "pos",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "at (-1, 2)",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "count cells ≤ 5"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "each step rules out a whole row or column"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       38
+      ],
+      "python": [
+       31
+      ],
+      "java": [
+       38
+      ],
+      "go": [
+       61
+      ]
+     },
+     "explanation": "Walked off the grid. 5 cells are ≤ 5, found in at most rows + columns steps.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "-1"
+      },
+      {
+       "name": "c",
+       "value": "2"
+      },
+      {
+       "name": "count",
+       "value": "5"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Staircase count normal: done, r -1, c 2, count 5.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "count 5",
+        "role": "result"
+       },
+       {
+        "id": "pos",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "at (-1, 2)",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "count cells ≤ 5"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "each step rules out a whole row or column"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-none",
+   "label": "Nothing is small enough",
+   "input": "3 3 0\n1 4 7\n2 5 8\n3 6 9\n",
+   "expectedOutput": "0",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24,
+       25
+      ],
+      "python": [
+       19,
+       20
+      ],
+      "java": [
+       24,
+       25
+      ],
+      "go": [
+       47,
+       48
+      ]
+     },
+     "explanation": "Count cells ≤ 0. Rows and columns both increase. Start at the bottom-left corner, which is the largest value in its column and the smallest in its row.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "2"
+      },
+      {
+       "name": "c",
+       "value": "0"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Staircase count edge-none: start, r 2, c 0, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "active"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "count 0",
+        "role": "result"
+       },
+       {
+        "id": "pos",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "at (2, 0)",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "count cells ≤ 0"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "each step rules out a whole row or column"
+       }
+      ]
+     }
+    },
+    {
+     "event": "go-up",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       56
+      ]
+     },
+     "explanation": "3 > 0. Everything to its right in row 2 is bigger, so row 2 has no more cells to count. Move up.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "1"
+      },
+      {
+       "name": "c",
+       "value": "0"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Staircase count edge-none: go-up, r 1, c 0, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "count 0",
+        "role": "result"
+       },
+       {
+        "id": "pos",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "at (1, 0)",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "count cells ≤ 0"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "each step rules out a whole row or column"
+       }
+      ]
+     }
+    },
+    {
+     "event": "go-up",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       56
+      ]
+     },
+     "explanation": "2 > 0. Everything to its right in row 1 is bigger, so row 1 has no more cells to count. Move up.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "0"
+      },
+      {
+       "name": "c",
+       "value": "0"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Staircase count edge-none: go-up, r 0, c 0, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "count 0",
+        "role": "result"
+       },
+       {
+        "id": "pos",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "at (0, 0)",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "count cells ≤ 0"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "each step rules out a whole row or column"
+       }
+      ]
+     }
+    },
+    {
+     "event": "go-up",
+     "lines": {
+      "cpp": [
+       33
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       33
+      ],
+      "go": [
+       56
+      ]
+     },
+     "explanation": "1 > 0. Everything to its right in row 0 is bigger, so row 0 has no more cells to count. Move up.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "-1"
+      },
+      {
+       "name": "c",
+       "value": "0"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Staircase count edge-none: go-up, r -1, c 0, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "count 0",
+        "role": "result"
+       },
+       {
+        "id": "pos",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "at (-1, 0)",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "count cells ≤ 0"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "each step rules out a whole row or column"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       38
+      ],
+      "python": [
+       31
+      ],
+      "java": [
+       38
+      ],
+      "go": [
+       61
+      ]
+     },
+     "explanation": "Walked off the grid. 0 cells are ≤ 0, found in at most rows + columns steps.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "-1"
+      },
+      {
+       "name": "c",
+       "value": "0"
+      },
+      {
+       "name": "count",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Staircase count edge-none: done, r -1, c 0, count 0.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "count",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "count 0",
+        "role": "result"
+       },
+       {
+        "id": "pos",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "at (-1, 0)",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "count cells ≤ 0"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "each step rules out a whole row or column"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

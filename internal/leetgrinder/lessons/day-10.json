@@ -1,0 +1,208 @@
+{
+  "day": 10,
+  "objectives": [
+    "Find the first position whose value is at least a target (the lower bound).",
+    "Count values with a lower bound, including duplicates and missing values.",
+    "Count cells in a grid sorted by rows and columns with a staircase walk."
+  ],
+  "prerequisites": [
+    8,
+    9
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: find where a value starts",
+      "paragraphs": [
+        "Exact search answers \"is it here?\" Many questions are about where a group starts instead. In the sorted list [1, 3, 3, 3, 8], the 3s start at index 1. That index is also how many values are smaller than 3.",
+        "The first index whose value is at least x is called the lower bound of x. It exists even when x isn't in the list: for 4 it's index 4, where the 8 is, meaning four values are smaller than 4."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "The lower bound is a first-true search from day 9 with the question \"is values[i] ≥ x?\". Every no comes before every yes because the list is sorted."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Sorted values 1, 3, 3, 3, 8. Index 1, the first 3, is the lower bound of 3.",
+        "nodes": [
+          {
+            "id": "v0",
+            "shape": "rect",
+            "x": 12,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "1",
+            "role": "discarded"
+          },
+          {
+            "id": "v1",
+            "shape": "rect",
+            "x": 72,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "3",
+            "role": "result"
+          },
+          {
+            "id": "v2",
+            "shape": "rect",
+            "x": 132,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "3",
+            "role": "visited"
+          },
+          {
+            "id": "v3",
+            "shape": "rect",
+            "x": 192,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "3",
+            "role": "visited"
+          },
+          {
+            "id": "v4",
+            "shape": "rect",
+            "x": 252,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "8",
+            "role": "neutral"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "title",
+            "x": 12,
+            "y": 28,
+            "text": "lower bound of 3"
+          },
+          {
+            "id": "l0",
+            "x": 12,
+            "y": 110,
+            "text": "index 1: first value ≥ 3"
+          },
+          {
+            "id": "l1",
+            "x": 12,
+            "y": 130,
+            "text": "so 1 value is below 3"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Scan from the left",
+      "heading": "Baseline: scan until the value is big enough",
+      "paragraphs": [
+        "Walking from the left until you reach a value ≥ x finds the lower bound in O(n). With many duplicates or many questions, binary search's O(log n) per question is much faster."
+      ]
+    },
+    {
+      "id": "lower",
+      "navLabel": "Lower bound",
+      "heading": "Worked example: count the scores below a cutoff",
+      "paragraphs": [
+        "Use the hi-excluded range from day 8, starting with lo = 0 and hi = n. hi = n means \"maybe every value is below x\".",
+        "If values[mid] < x, the first value ≥ x is after mid: lo = mid + 1. Otherwise mid could be the first one: hi = mid. When lo = hi, that's the lower bound, and it's also the count of values below x.",
+        "The three cases in the player cover a value with duplicates (3), a missing value (4), and a value bigger than everything (10), where the answer is n."
+      ],
+      "exampleIds": [
+        "day-10-count-below"
+      ]
+    },
+    {
+      "id": "staircase",
+      "navLabel": "Staircase in a grid",
+      "heading": "Worked example: count small values in a sorted grid",
+      "paragraphs": [
+        "In a grid where every row increases left to right and every column increases top to bottom, you can count the cells ≤ x without looking at all of them.",
+        "Start at the bottom-left corner. It's the largest value in its column and the smallest in its row. If it's ≤ x, the whole column above it is ≤ x too: count those cells and move right. If it's > x, the rest of its row is even larger: move up. Each step rules out a whole row or column, so it takes at most rows + columns steps."
+      ],
+      "exampleIds": [
+        "day-10-staircase-count"
+      ]
+    },
+    {
+      "id": "your-turn-negatives",
+      "navLabel": "Your turn: Count Negative Numbers in a Sorted Matrix",
+      "heading": "Your turn: Count Negative Numbers in a Sorted Matrix",
+      "paragraphs": [
+        "A grid is sorted in non-increasing order (each value is ≤ the one before it) along each row and each column. Count its negative numbers."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "This is the staircase walk with the order flipped. Pick the corner that lets each step rule out a whole row or column.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-letter",
+      "navLabel": "Your turn: Find Smallest Letter Greater Than Target",
+      "heading": "Your turn: Find Smallest Letter Greater Than Target",
+      "paragraphs": [
+        "Given a sorted list of letters and a target letter, return the smallest letter in the list that is strictly greater than the target. If there isn't one, wrap around and return the first letter."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Try target \"z\" on [\"c\", \"f\", \"j\"] and target \"c\" on the same list. What should each return?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-first-last",
+      "navLabel": "Your turn: Find First and Last Position of Element in Sorted Array",
+      "heading": "Your turn: Find First and Last Position of Element in Sorted Array",
+      "paragraphs": [
+        "Today's medium. Given a sorted array that may contain duplicates, return the first and last index of a target, or [-1, -1] if it isn't there. It must run in O(log n)."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Test your idea on [5, 7, 7, 8, 8, 10] with target 8 and with target 6 before coding.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "A lower bound takes O(log n). The staircase count takes O(rows + columns), which beats checking all rows × columns cells.",
+        "Be clear about which question you're asking: \"≥ x\" and \"> x\" give different indexes whenever x appears in the list."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "What is the lower bound of 4 in [1, 3, 3, 3, 8], and why is it useful?",
+          "answer": "Index 4. It's the count of values below 4, and it's where 4 would be inserted."
+        },
+        {
+          "prompt": "In the staircase walk, why is it safe to count a whole column at once?",
+          "answer": "The current cell is ≤ x and it's the largest in its column so far, so every cell above it is ≤ x too."
+        },
+        {
+          "prompt": "Why can't the staircase start at the top-left corner?",
+          "answer": "When the top-left is ≤ x, you can't tell whether to move right or down, so no row or column is ruled out."
+        }
+      ]
+    }
+  ]
+}

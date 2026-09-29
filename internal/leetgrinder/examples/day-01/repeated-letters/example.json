@@ -1,0 +1,2476 @@
+{
+ "id": "day-01-repeated-letters",
+ "title": "Count letters with 26 counters",
+ "invariant": "After reading position i, each counter holds how many times its letter appears in word[0..i].",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 23,
+   "algorithmEnd": 41
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 31
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 23,
+   "algorithmEnd": 41
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 46,
+   "algorithmEnd": 67
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Letters that repeat in \"banana\"",
+   "input": "banana\n",
+   "expectedOutput": "an",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "Make 26 counters, one per letter, all at 0. Counter 0 is a, counter 1 is b, and so on. We'll read \"banana\" once.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "letter",
+       "value": "-"
+      },
+      {
+       "name": "count",
+       "value": "-"
+      },
+      {
+       "name": "repeated",
+       "value": ""
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Letter counts normal: word banana, letter -, repeated none.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "word = \"banana\""
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "counters for the letters seen (others stay 0); green = repeats"
+       }
+      ]
+     }
+    },
+    {
+     "event": "count",
+     "lines": {
+      "cpp": [
+       27,
+       28
+      ],
+      "python": [
+       22
+      ],
+      "java": [
+       27,
+       28
+      ],
+      "go": [
+       50,
+       51
+      ]
+     },
+     "explanation": "b is letter number 1 (a is 0), so add 1 to counts[1]. The b counter is now 1.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "0"
+      },
+      {
+       "name": "letter",
+       "value": "b"
+      },
+      {
+       "name": "count",
+       "value": "1"
+      },
+      {
+       "name": "repeated",
+       "value": ""
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Letter counts normal: word banana, letter b, repeated none.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-b",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "b: 1",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "word = \"banana\""
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "counters for the letters seen (others stay 0); green = repeats"
+       }
+      ]
+     }
+    },
+    {
+     "event": "count",
+     "lines": {
+      "cpp": [
+       27,
+       28
+      ],
+      "python": [
+       22
+      ],
+      "java": [
+       27,
+       28
+      ],
+      "go": [
+       50,
+       51
+      ]
+     },
+     "explanation": "a is letter number 0 (a is 0), so add 1 to counts[0]. The a counter is now 1.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "1"
+      },
+      {
+       "name": "letter",
+       "value": "a"
+      },
+      {
+       "name": "count",
+       "value": "1"
+      },
+      {
+       "name": "repeated",
+       "value": ""
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Letter counts normal: word banana, letter a, repeated none.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "a: 1",
+        "role": "active"
+       },
+       {
+        "id": "counter-b",
+        "shape": "rect",
+        "x": 98,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "b: 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "word = \"banana\""
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "counters for the letters seen (others stay 0); green = repeats"
+       }
+      ]
+     }
+    },
+    {
+     "event": "count",
+     "lines": {
+      "cpp": [
+       27,
+       28
+      ],
+      "python": [
+       22
+      ],
+      "java": [
+       27,
+       28
+      ],
+      "go": [
+       50,
+       51
+      ]
+     },
+     "explanation": "n is letter number 13 (a is 0), so add 1 to counts[13]. The n counter is now 1.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "2"
+      },
+      {
+       "name": "letter",
+       "value": "n"
+      },
+      {
+       "name": "count",
+       "value": "1"
+      },
+      {
+       "name": "repeated",
+       "value": ""
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Letter counts normal: word banana, letter n, repeated none.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "a: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-b",
+        "shape": "rect",
+        "x": 98,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "b: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-n",
+        "shape": "rect",
+        "x": 180,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "n: 1",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "word = \"banana\""
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "counters for the letters seen (others stay 0); green = repeats"
+       }
+      ]
+     }
+    },
+    {
+     "event": "count",
+     "lines": {
+      "cpp": [
+       27,
+       28
+      ],
+      "python": [
+       22
+      ],
+      "java": [
+       27,
+       28
+      ],
+      "go": [
+       50,
+       51
+      ]
+     },
+     "explanation": "a is letter number 0 (a is 0), so add 1 to counts[0]. The a counter is now 2.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "3"
+      },
+      {
+       "name": "letter",
+       "value": "a"
+      },
+      {
+       "name": "count",
+       "value": "2"
+      },
+      {
+       "name": "repeated",
+       "value": ""
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Letter counts normal: word banana, letter a, repeated none.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "active"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "a: 2",
+        "role": "active"
+       },
+       {
+        "id": "counter-b",
+        "shape": "rect",
+        "x": 98,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "b: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-n",
+        "shape": "rect",
+        "x": 180,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "n: 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "word = \"banana\""
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "counters for the letters seen (others stay 0); green = repeats"
+       }
+      ]
+     }
+    },
+    {
+     "event": "count",
+     "lines": {
+      "cpp": [
+       27,
+       28
+      ],
+      "python": [
+       22
+      ],
+      "java": [
+       27,
+       28
+      ],
+      "go": [
+       50,
+       51
+      ]
+     },
+     "explanation": "n is letter number 13 (a is 0), so add 1 to counts[13]. The n counter is now 2.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "4"
+      },
+      {
+       "name": "letter",
+       "value": "n"
+      },
+      {
+       "name": "count",
+       "value": "2"
+      },
+      {
+       "name": "repeated",
+       "value": ""
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Letter counts normal: word banana, letter n, repeated none.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "active"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "a: 2",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-b",
+        "shape": "rect",
+        "x": 98,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "b: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-n",
+        "shape": "rect",
+        "x": 180,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "n: 2",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "word = \"banana\""
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "counters for the letters seen (others stay 0); green = repeats"
+       }
+      ]
+     }
+    },
+    {
+     "event": "count",
+     "lines": {
+      "cpp": [
+       27,
+       28
+      ],
+      "python": [
+       22
+      ],
+      "java": [
+       27,
+       28
+      ],
+      "go": [
+       50,
+       51
+      ]
+     },
+     "explanation": "a is letter number 0 (a is 0), so add 1 to counts[0]. The a counter is now 3.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "5"
+      },
+      {
+       "name": "letter",
+       "value": "a"
+      },
+      {
+       "name": "count",
+       "value": "3"
+      },
+      {
+       "name": "repeated",
+       "value": ""
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Letter counts normal: word banana, letter a, repeated none.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "visited"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "active"
+       },
+       {
+        "id": "counter-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "a: 3",
+        "role": "active"
+       },
+       {
+        "id": "counter-b",
+        "shape": "rect",
+        "x": 98,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "b: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-n",
+        "shape": "rect",
+        "x": 180,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "n: 2",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "word = \"banana\""
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "counters for the letters seen (others stay 0); green = repeats"
+       }
+      ]
+     }
+    },
+    {
+     "event": "repeat",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       27
+      ],
+      "java": [
+       34
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "Counter a ended at 3, so a repeats. Repeated letters so far: a.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "letter",
+       "value": "a"
+      },
+      {
+       "name": "count",
+       "value": "3"
+      },
+      {
+       "name": "repeated",
+       "value": "a"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Letter counts normal: word banana, letter a, repeated a.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "visited"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "counter-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "a: 3",
+        "role": "result"
+       },
+       {
+        "id": "counter-b",
+        "shape": "rect",
+        "x": 98,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "b: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-n",
+        "shape": "rect",
+        "x": 180,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "n: 2",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "word = \"banana\""
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "counters for the letters seen (others stay 0); green = repeats"
+       }
+      ]
+     }
+    },
+    {
+     "event": "repeat",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       27
+      ],
+      "java": [
+       34
+      ],
+      "go": [
+       57
+      ]
+     },
+     "explanation": "Counter n ended at 2, so n repeats. Repeated letters so far: a, n.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "letter",
+       "value": "n"
+      },
+      {
+       "name": "count",
+       "value": "2"
+      },
+      {
+       "name": "repeated",
+       "value": "an"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Letter counts normal: word banana, letter n, repeated an.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "visited"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "counter-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "a: 3",
+        "role": "result"
+       },
+       {
+        "id": "counter-b",
+        "shape": "rect",
+        "x": 98,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "b: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-n",
+        "shape": "rect",
+        "x": 180,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "n: 2",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "word = \"banana\""
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "counters for the letters seen (others stay 0); green = repeats"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       39
+      ],
+      "python": [
+       30
+      ],
+      "java": [
+       39
+      ],
+      "go": [
+       62
+      ]
+     },
+     "explanation": "Letters that appear more than once: a, n.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "letter",
+       "value": "-"
+      },
+      {
+       "name": "count",
+       "value": "-"
+      },
+      {
+       "name": "repeated",
+       "value": "an"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Letter counts normal: word banana, letter -, repeated an.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "n",
+        "role": "visited"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "counter-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "a: 3",
+        "role": "result"
+       },
+       {
+        "id": "counter-b",
+        "shape": "rect",
+        "x": 98,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "b: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-n",
+        "shape": "rect",
+        "x": 180,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "n: 2",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "word = \"banana\""
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "counters for the letters seen (others stay 0); green = repeats"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-no-repeats",
+   "label": "No letter repeats",
+   "input": "abc\n",
+   "expectedOutput": "none",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "Make 26 counters, one per letter, all at 0. Counter 0 is a, counter 1 is b, and so on. We'll read \"abc\" once.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "letter",
+       "value": "-"
+      },
+      {
+       "name": "count",
+       "value": "-"
+      },
+      {
+       "name": "repeated",
+       "value": ""
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Letter counts edge-no-repeats: word abc, letter -, repeated none.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "word = \"abc\""
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "counters for the letters seen (others stay 0); green = repeats"
+       }
+      ]
+     }
+    },
+    {
+     "event": "count",
+     "lines": {
+      "cpp": [
+       27,
+       28
+      ],
+      "python": [
+       22
+      ],
+      "java": [
+       27,
+       28
+      ],
+      "go": [
+       50,
+       51
+      ]
+     },
+     "explanation": "a is letter number 0 (a is 0), so add 1 to counts[0]. The a counter is now 1.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "0"
+      },
+      {
+       "name": "letter",
+       "value": "a"
+      },
+      {
+       "name": "count",
+       "value": "1"
+      },
+      {
+       "name": "repeated",
+       "value": ""
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Letter counts edge-no-repeats: word abc, letter a, repeated none.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "a: 1",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "word = \"abc\""
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "counters for the letters seen (others stay 0); green = repeats"
+       }
+      ]
+     }
+    },
+    {
+     "event": "count",
+     "lines": {
+      "cpp": [
+       27,
+       28
+      ],
+      "python": [
+       22
+      ],
+      "java": [
+       27,
+       28
+      ],
+      "go": [
+       50,
+       51
+      ]
+     },
+     "explanation": "b is letter number 1 (a is 0), so add 1 to counts[1]. The b counter is now 1.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "1"
+      },
+      {
+       "name": "letter",
+       "value": "b"
+      },
+      {
+       "name": "count",
+       "value": "1"
+      },
+      {
+       "name": "repeated",
+       "value": ""
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Letter counts edge-no-repeats: word abc, letter b, repeated none.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "a: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-b",
+        "shape": "rect",
+        "x": 98,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "b: 1",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "word = \"abc\""
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "counters for the letters seen (others stay 0); green = repeats"
+       }
+      ]
+     }
+    },
+    {
+     "event": "count",
+     "lines": {
+      "cpp": [
+       27,
+       28
+      ],
+      "python": [
+       22
+      ],
+      "java": [
+       27,
+       28
+      ],
+      "go": [
+       50,
+       51
+      ]
+     },
+     "explanation": "c is letter number 2 (a is 0), so add 1 to counts[2]. The c counter is now 1.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "2"
+      },
+      {
+       "name": "letter",
+       "value": "c"
+      },
+      {
+       "name": "count",
+       "value": "1"
+      },
+      {
+       "name": "repeated",
+       "value": ""
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Letter counts edge-no-repeats: word abc, letter c, repeated none.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "active"
+       },
+       {
+        "id": "counter-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "a: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-b",
+        "shape": "rect",
+        "x": 98,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "b: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-c",
+        "shape": "rect",
+        "x": 180,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "c: 1",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "word = \"abc\""
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "counters for the letters seen (others stay 0); green = repeats"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       39
+      ],
+      "python": [
+       30
+      ],
+      "java": [
+       39
+      ],
+      "go": [
+       62
+      ]
+     },
+     "explanation": "Every counter is 0 or 1, so no letter repeats.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "letter",
+       "value": "-"
+      },
+      {
+       "name": "count",
+       "value": "-"
+      },
+      {
+       "name": "repeated",
+       "value": ""
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Letter counts edge-no-repeats: word abc, letter -, repeated none.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "c",
+        "role": "visited"
+       },
+       {
+        "id": "counter-a",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "a: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-b",
+        "shape": "rect",
+        "x": 98,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "b: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "counter-c",
+        "shape": "rect",
+        "x": 180,
+        "y": 132,
+        "width": 70,
+        "height": 40,
+        "text": "c: 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "word = \"abc\""
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "counters for the letters seen (others stay 0); green = repeats"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,247 @@
+{
+  "day": 1,
+  "objectives": [
+    "Solve Two Sum by checking every pair, then make it fast with a hash map.",
+    "Say exactly what the map stores, and why you check it before you add to it.",
+    "Count things with a map or a fixed array of counters, then use that on today's two practice problems."
+  ],
+  "sections": [
+    {
+      "id": "problem",
+      "navLabel": "Today's problem",
+      "heading": "Intuition: find two numbers that add up to a target",
+      "paragraphs": [
+        "Today's main problem is Two Sum. You get a list of numbers and a target. Find two numbers in the list that add up to the target, and return their positions (their indexes), not the numbers themselves.",
+        "Take `nums = [8, 3, 6]` and `target = 9`. 8 + 3 is 11, 8 + 6 is 14, and 3 + 6 is 9. So the answer is `[1, 2]`: the 3 sits at index 1 and the 6 at index 2.",
+        "Two rules make it a little tricky. You can't use the same position twice, so `[4]` with target 8 has no answer, because there is only one 4. But two different positions may hold the same number: `[4, 4]` with target 8 has the answer `[0, 1]`."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "Every problem today uses one idea: as you walk through the input, remember what you've already seen, so each new item needs one quick lookup instead of another full scan."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "The list 8, 3, 6 at indexes 0, 1, 2. The 3 and the 6 are highlighted because 3 + 6 equals the target 9.",
+        "nodes": [
+          {
+            "id": "v0",
+            "shape": "rect",
+            "x": 20,
+            "y": 44,
+            "width": 76,
+            "height": 52,
+            "text": "8",
+            "role": "neutral"
+          },
+          {
+            "id": "v1",
+            "shape": "rect",
+            "x": 122,
+            "y": 44,
+            "width": 76,
+            "height": 52,
+            "text": "3",
+            "role": "result"
+          },
+          {
+            "id": "v2",
+            "shape": "rect",
+            "x": 224,
+            "y": 44,
+            "width": 76,
+            "height": 52,
+            "text": "6",
+            "role": "result"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "target",
+            "x": 20,
+            "y": 26,
+            "text": "target = 9"
+          },
+          {
+            "id": "i0",
+            "x": 34,
+            "y": 118,
+            "text": "index 0"
+          },
+          {
+            "id": "i1",
+            "x": 136,
+            "y": 118,
+            "text": "index 1"
+          },
+          {
+            "id": "i2",
+            "x": 238,
+            "y": 118,
+            "text": "index 2"
+          },
+          {
+            "id": "sum",
+            "x": 20,
+            "y": 156,
+            "text": "3 + 6 = 9, so return [1, 2]"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Check every pair",
+      "heading": "Baseline: check every pair",
+      "paragraphs": [
+        "Start with the solution anyone would write first: try every pair. Pick a first position `i`. For each later position `j`, check whether `nums[i] + nums[j]` equals the target. Stop as soon as one does.",
+        "Starting `j` at `i + 1` does two jobs. It never pairs a position with itself, and it never checks the same pair twice (3 + 6 and 6 + 3 are the same pair).",
+        "This version is short and easy to trust, which makes it a good way to test a faster version later. The problem is speed. A list of n numbers has about n²/2 pairs, so 10,000 numbers means roughly 50 million checks. That's O(n²) time."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Pick the \"A lone value\" case in the player below. The loop picks the 4, finds nothing after it, and stops. It never adds the 4 to itself."
+      },
+      "exampleIds": [
+        "day-01-baseline"
+      ]
+    },
+    {
+      "id": "complement",
+      "navLabel": "Remember what you've seen",
+      "heading": "Worked example: remember what you've seen",
+      "paragraphs": [
+        "Here's the trick. When you're standing on a number `x`, you already know which number would complete the pair: `target - x`. That number is called the complement. With target 9, a 6 needs a 3, and an 8 needs a 1.",
+        "So instead of comparing `x` with every other number, ask one question: have I already passed its complement? To answer instantly, keep a hash map as you go. The key is a number you've seen and the value is the index where you saw it. A hash map is `dict` in Python, `HashMap` in Java, `unordered_map` in C++, and `map` in Go. A lookup takes about the same time no matter how big the map gets.",
+        "Walk through `[8, 3, 6]` with target 9. At index 0, the 8 needs a 1. The map is empty, so store `8 → 0`. At index 1, the 3 needs a 6. It isn't there, so store `3 → 1`. At index 2, the 6 needs a 3, and the map has it at index 1. The answer is `[1, 2]`.",
+        "That's one pass over the list with one lookup and at most one insert per number: O(n) time on average. The map can hold up to n entries, so it costs O(n) extra memory. You trade memory for speed."
+      ],
+      "callout": {
+        "kind": "watch",
+        "title": "Look before you store",
+        "text": "Check for the complement before adding the current number. If you stored first, `[4]` with target 8 would find its own 4 and return `[0, 0]`. Checking first means the map only ever holds earlier positions, so any match is a different position."
+      },
+      "exampleIds": [
+        "day-01-complement-lookup"
+      ]
+    },
+    {
+      "id": "counting",
+      "navLabel": "Counting pairs",
+      "heading": "Worked example: count pairs instead of finding one",
+      "paragraphs": [
+        "Two Sum stops at the first pair. Some problems ask a different question: how many pairs are there? Take `[1, 5, 3, 3, 3]` with target 6. The 1 and the 5 make one pair. The three 3s make three more, because any two of them add up to 6: positions (2, 3), (2, 4), and (3, 4). That's 4 pairs.",
+        "An index map can't answer this. When the third 3 arrives, it pairs with both earlier 3s, but a value-to-index map only remembers one position for 3. What we need is how many times each number has appeared so far.",
+        "So keep a count map instead: the key is a number, the value is how many times you've seen it. For each new number, look up how many earlier numbers equal its complement and add that to the total. Then count the current number. It's the same look-before-store order as Two Sum, and for the same reason: the current number must not pair with itself.",
+        "Adding the whole count at once is what keeps it fast. The third 3 adds 2 in one step instead of walking back over the earlier 3s. That's still one pass and O(n) time."
+      ],
+      "exampleIds": [
+        "day-01-pair-counts"
+      ]
+    },
+    {
+      "id": "letters",
+      "navLabel": "Counting letters",
+      "heading": "Worked example: count letters with 26 counters",
+      "paragraphs": [
+        "When the only possible keys are the 26 lowercase letters, you don't need a hash map. An array of 26 counters works, and it's simpler and faster. Counter 0 is for a, counter 1 for b, and so on up to 25 for z.",
+        "To find a letter's counter, subtract the code for a from the letter's code: `letter - 'a'` in C++, Java, and Go, or `ord(letter) - ord('a')` in Python. So b is 1 and n is 13.",
+        "Here's a small job for it: list the letters that appear more than once in a word. Read the word once and add 1 to each letter's counter. Then scan the 26 counters and report every letter whose count is above 1. For \"banana\" that's a (3 times) and n (twice)."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "The 26-counter array only works because the input is limited to lowercase English letters. If any character could appear, use a hash map from character to count."
+      },
+      "exampleIds": [
+        "day-01-repeated-letters"
+      ]
+    },
+    {
+      "id": "choosing",
+      "navLabel": "Set, map, or counts?",
+      "heading": "Choosing what to remember",
+      "paragraphs": [
+        "All of today's problems remember something about the items you've already passed. What you store depends on the question you need to answer:"
+      ],
+      "bullets": [
+        "Have I seen this value? Use a set.",
+        "Where did I see it? Use a map from value to index, as in Two Sum.",
+        "How many times have I seen it? Use a map from value to count, or an array of counters when the possible values are few and known in advance, like the 26 letters."
+      ],
+      "callout": {
+        "kind": "watch",
+        "text": "Picking the wrong one is a common bug. A set can't give you an index, and a value-to-index map can't tell you there were two 4s."
+      }
+    },
+    {
+      "id": "your-turn-anagram",
+      "navLabel": "Your turn: Valid Anagram",
+      "heading": "Your turn: Valid Anagram",
+      "paragraphs": [
+        "Valid Anagram gives you two strings and asks whether one is a rearrangement of the other: the same letters, each used the same number of times, like \"listen\" and \"silent\". Only lowercase English letters appear.",
+        "You have what you need from the letter-counting example. Decide what \"the same letters, the same number of times\" means in terms of counters."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Try \"rat\" and \"car\" by hand with a row of counters. What would the counters look like if the two words were anagrams?"
+      }
+    },
+    {
+      "id": "your-turn-songs",
+      "navLabel": "Your turn: Pairs of Songs",
+      "heading": "Your turn: Pairs of Songs",
+      "paragraphs": [
+        "Pairs of Songs With Total Durations Divisible by 60 is today's medium. It asks you to count pairs, like the count map example, but a pair works when its total is any multiple of 60, not one fixed target. So there isn't a single number each song needs, and that code won't work as written.",
+        "The lesson doesn't solve it. Use the counting pattern above and work out what to count."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Before coding, pair up `[30, 20, 150, 100, 40]` by hand. For each song, write down which other durations would work with it. Then ask what your map needs to store."
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "bullets": [
+        "Check every pair: O(n²) time, O(1) extra memory.",
+        "Two Sum with a hash map: O(n) time on average, O(n) extra memory.",
+        "Counting pairs with a count map: O(n) time on average, O(n) extra memory.",
+        "Counting letters with 26 counters: O(n) time, and 26 counters count as O(1) memory."
+      ],
+      "paragraphs": [
+        "\"On average\" matters for hash maps. Lookups are fast on average, but a table with many collisions can be slower. For interview problems, treat a lookup as O(1).",
+        "Return what the problem asks for. Two Sum wants indexes, not the numbers. LeetCode promises exactly one answer exists; the programs here return `[]` when there is none so you can see that case."
+      ]
+    },
+    {
+      "id": "check",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "Why do we look up the complement before storing the current number?",
+          "answer": "So the map only holds earlier positions. Otherwise `[4]` with target 8 would match the 4 with itself."
+        },
+        {
+          "prompt": "In `[3, 3]` with target 6, what does the map hold when you reach index 1?",
+          "answer": "`{3: 0}`. The second 3 finds the first one, so the answer is `[0, 1]`."
+        },
+        {
+          "prompt": "In `[2, 2, 2]` with target 4, how many pairs are there, and what does the count map add at each step?",
+          "answer": "3 pairs. The first 2 adds 0, the second adds 1, and the third adds 2."
+        },
+        {
+          "prompt": "Why can't a value-to-index map count pairs?",
+          "answer": "It remembers only one position per value. When a number has appeared several times, you need to know how many times, not where."
+        }
+      ]
+    }
+  ]
+}

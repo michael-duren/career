@@ -1,0 +1,176 @@
+{
+  "day": 26,
+  "objectives": [
+    "Use a stack for work that must finish in the reverse order it started.",
+    "Recognize nesting: the most recently started thing must finish first.",
+    "Handle the empty stack and the leftover stack at the end."
+  ],
+  "prerequisites": [
+    22
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: the last thing opened closes first",
+      "paragraphs": [
+        "A stack is a pile: you add to the top and take from the top. That order, last in, first out, matches anything that nests. The innermost bracket closes before the outer one. The folder you entered most recently is the one you leave first.",
+        "So when a problem has things that start and later finish, and the most recent unfinished one always finishes first, keep the unfinished ones on a stack."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "Two checks every stack problem needs: what happens when you pop an empty stack, and what it means if the stack isn't empty at the end."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "A stack holding a then b, with b on top. The next closing tag must be b.",
+        "nodes": [
+          {
+            "id": "a",
+            "shape": "rect",
+            "x": 40,
+            "y": 110,
+            "width": 120,
+            "height": 38,
+            "text": "a",
+            "role": "neutral"
+          },
+          {
+            "id": "b",
+            "shape": "rect",
+            "x": 40,
+            "y": 66,
+            "width": 120,
+            "height": 38,
+            "text": "b (top)",
+            "role": "active"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "t",
+            "x": 40,
+            "y": 40,
+            "text": "open tags, newest on top"
+          },
+          {
+            "id": "r",
+            "x": 180,
+            "y": 90,
+            "text": "next close"
+          },
+          {
+            "id": "r2",
+            "x": 180,
+            "y": 108,
+            "text": "must be b"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Rescan",
+      "heading": "Baseline: find the innermost match by rescanning",
+      "paragraphs": [
+        "You could repeatedly search the text for an innermost pair, like an opening tag immediately followed by its matching close, remove it, and start over. Each pass is O(n) and you may need O(n) passes: O(n²). A stack does it in one pass."
+      ]
+    },
+    {
+      "id": "tags",
+      "navLabel": "Matching tags",
+      "heading": "Worked example: do the tags nest properly?",
+      "paragraphs": [
+        "Read the tags left to right. An opening tag goes on the stack. A closing tag must match the top of the stack; if it does, pop it. If the stack is empty or the top is a different tag, the nesting is broken.",
+        "At the end, the stack must be empty. A leftover tag means something was opened and never closed."
+      ],
+      "exampleIds": [
+        "day-26-tag-matching"
+      ]
+    },
+    {
+      "id": "paths",
+      "navLabel": "Folder paths",
+      "heading": "Worked example: simplify a folder path",
+      "paragraphs": [
+        "Follow the steps a, b, .., c, . from the root. A folder name goes on the stack. .. pops the stack, unless you're already at the root. . does nothing. The stack is the path.",
+        "Here the stack isn't checking anything; it's the answer being built. Popping an empty stack is allowed and simply does nothing, which is a rule you choose, not an accident."
+      ],
+      "exampleIds": [
+        "day-26-folder-path"
+      ]
+    },
+    {
+      "id": "your-turn-parentheses",
+      "navLabel": "Your turn: Valid Parentheses",
+      "heading": "Your turn: Valid Parentheses",
+      "paragraphs": [
+        "Given a string of the characters ()[]{}, return true if every bracket is closed by the same type of bracket in the right order."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Match the problem to the tag example. What plays the role of the tag name?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-min-stack",
+      "navLabel": "Your turn: Min Stack",
+      "heading": "Your turn: Min Stack",
+      "paragraphs": [
+        "Today's first medium. Design a stack with push, pop, top, and getMin, where every operation takes O(1) time."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Pushing a new minimum is easy to track. The hard part is pop: when the minimum leaves, what was the minimum before it arrived?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-rpn",
+      "navLabel": "Your turn: Evaluate Reverse Polish Notation",
+      "heading": "Your turn: Evaluate Reverse Polish Notation",
+      "paragraphs": [
+        "Today's second medium. Evaluate an arithmetic expression written in postfix form, like [\"2\", \"1\", \"+\", \"3\", \"*\"], which means (2 + 1) × 3. Division truncates toward zero."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "When you reach an operator, where are its two numbers? Work the example by hand, and watch the order for subtraction and division.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Each item is pushed and popped at most once, so stack scans are O(n) time and up to O(n) memory for the stack.",
+        "Integer division in Python (//) rounds toward negative infinity. C++, Java, and Go truncate toward zero. If a problem says \"truncate\", use int(a / b) in Python."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "Why does a closing tag have to match the top of the stack, not any open tag?",
+          "answer": "The top is the most recently opened tag. Closing anything else would leave it inside a tag that already ended."
+        },
+        {
+          "prompt": "What does a non-empty stack at the end mean for the tag check?",
+          "answer": "Some tag was opened and never closed."
+        },
+        {
+          "prompt": "Why is popping an empty stack fine for folder paths but a failure for tags?",
+          "answer": "For paths, .. at the root is defined to stay at the root. For tags, a close with nothing open is broken nesting."
+        }
+      ]
+    }
+  ]
+}

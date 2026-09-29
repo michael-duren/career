@@ -1,0 +1,37 @@
+package main
+import("bufio";"fmt";"os";"strconv";"strings")
+func flat(a []int)string{
+    parts:=make([]string,len(a));for i,x:=range a{parts[i]=strconv.Itoa(x)}
+    return "["+strings.Join(parts,",")+"]"
+}
+func nested(a [][]int)string{
+    parts:=make([]string,len(a));for i,row:=range a{parts[i]=flat(row)}
+    return "["+strings.Join(parts,",")+"]"
+}
+func emit(event string,depth,current int,q,level []int,result string){
+    fmt.Printf("{\"event\":\"%s\",\"variables\":[{\"name\":\"depth\",\"value\":\"%d\"},{\"name\":\"current\",\"value\":\"%d\"},{\"name\":\"queue\",\"value\":\"%s\"},{\"name\":\"level\",\"value\":\"%s\"},{\"name\":\"result\",\"value\":\"%s\"}]}\n",event,depth,current,flat(q),flat(level),result)
+}
+func main(){
+    in:=bufio.NewReader(os.Stdin);var n int;fmt.Fscan(in,&n)
+    value:=make([]int,n);left:=make([]int,n);right:=make([]int,n)
+    for i:=0;i<n;i++{fmt.Fscan(in,&value[i],&left[i],&right[i])}
+    q:=[]int{};if n>0{q=append(q,0)}
+    depth:=0
+    result:=0 // MODE: depth
+    emit("init",depth,-1,q,[]int{},strconv.Itoa(result))
+    for len(q)>0 && result==0{
+        depth++;count:=len(q);level:=[]int{}
+        emit("level_start",depth,-1,q,level,strconv.Itoa(result))
+        for i:=0;i<count;i++{
+            node:=q[0];q=q[1:]
+            if left[node]==-1 && right[node]==-1{
+                result=depth;emit("leaf",depth,node,q,level,strconv.Itoa(result));break
+            }
+            if left[node]!=-1{q=append(q,left[node])}
+            if right[node]!=-1{q=append(q,right[node])}
+            emit("visit",depth,node,q,level,strconv.Itoa(result))
+        }
+    }
+    emit("done",depth,-1,q,[]int{},strconv.Itoa(result))
+    fmt.Printf("{\"result\":\"%s\"}\n",strconv.Itoa(result))
+}

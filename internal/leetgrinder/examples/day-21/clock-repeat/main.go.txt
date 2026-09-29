@@ -1,0 +1,83 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"sort"
+	"strconv"
+	"strings"
+)
+
+type variable struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func emit(event string, pairs ...string) {
+	variables := []variable{}
+	for k := 0; k+1 < len(pairs); k += 2 {
+		variables = append(variables, variable{pairs[k], pairs[k+1]})
+	}
+	data, _ := json.Marshal(struct {
+		Event     string     `json:"event"`
+		Variables []variable `json:"variables"`
+	}{event, variables})
+	fmt.Println(string(data))
+}
+
+func result(answer string) {
+	data, _ := json.Marshal(struct {
+		Result string `json:"result"`
+	}{answer})
+	fmt.Println(string(data))
+}
+
+func itoa(value int) string { return strconv.Itoa(value) }
+
+func show(values []int) string {
+	parts := make([]string, len(values))
+	for k, value := range values {
+		parts[k] = strconv.Itoa(value)
+	}
+	return "[" + strings.Join(parts, ",") + "]"
+}
+
+func showSet(seen map[int]bool) string {
+	hours := []int{}
+	for hour := range seen {
+		hours = append(hours, hour)
+	}
+	sort.Ints(hours)
+	return show(hours)
+}
+
+func solve(values []int, target int) string {
+	seen := map[int]bool{0: true}
+	hour := 0
+	emit("start", "step", "-", "hour", itoa(hour), "seen", showSet(seen))
+	for step, shift := range values {
+		hour = ((hour+shift)%target + target) % target
+		if seen[hour] {
+			emit("repeat", "step", itoa(step), "hour", itoa(hour), "seen", showSet(seen))
+			return "yes"
+		}
+		seen[hour] = true
+		emit("move", "step", itoa(step), "hour", itoa(hour), "seen", showSet(seen))
+	}
+
+	emit("done", "step", "-", "hour", itoa(hour), "seen", showSet(seen))
+	return "no"
+}
+
+func main() {
+	in := bufio.NewReader(os.Stdin)
+	var n, target int
+	fmt.Fscan(in, &n, &target)
+	values := make([]int, n)
+	for k := range values {
+		fmt.Fscan(in, &values[k])
+	}
+	result(solve(values, target))
+}

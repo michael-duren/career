@@ -1,0 +1,1465 @@
+{
+ "id": "day-07-light-below",
+ "title": "Mark first, then change",
+ "invariant": "The marks list holds exactly the original 1s. Pass 2 reads only the marks, so new 1s never spread.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 29,
+   "algorithmEnd": 50
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 22,
+   "algorithmEnd": 37
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 29,
+   "algorithmEnd": 50
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 54,
+   "algorithmEnd": 75
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Two original 1s",
+   "input": "3 3\n1 0 0\n0 0 1\n0 0 0\n",
+   "expectedOutput": "[[1,0,0],[1,0,1],[0,0,1]]",
+   "frames": [
+    {
+     "event": "mark",
+     "lines": {
+      "cpp": [
+       35
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       35
+      ],
+      "go": [
+       60
+      ]
+     },
+     "explanation": "(0, 0) is an original 1. Don't change anything yet; just write down its position. Marks so far: 1.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "0"
+      },
+      {
+       "name": "c",
+       "value": "0"
+      },
+      {
+       "name": "marks",
+       "value": "1"
+      },
+      {
+       "name": "grid",
+       "value": "[[1,0,0],[0,0,1],[0,0,0]]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Light below normal: mark at (0,0), marks 1.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "phase",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "pass 1: mark only",
+        "role": "neutral"
+       },
+       {
+        "id": "marks",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "marks: 1",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "gold = original 1; green = turned on"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "decide from the marks, never from cells you just changed"
+       }
+      ]
+     }
+    },
+    {
+     "event": "mark",
+     "lines": {
+      "cpp": [
+       35
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       35
+      ],
+      "go": [
+       60
+      ]
+     },
+     "explanation": "(1, 2) is an original 1. Don't change anything yet; just write down its position. Marks so far: 2.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "1"
+      },
+      {
+       "name": "c",
+       "value": "2"
+      },
+      {
+       "name": "marks",
+       "value": "2"
+      },
+      {
+       "name": "grid",
+       "value": "[[1,0,0],[0,0,1],[0,0,0]]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Light below normal: mark at (1,2), marks 2.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "phase",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "pass 1: mark only",
+        "role": "neutral"
+       },
+       {
+        "id": "marks",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "marks: 2",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "gold = original 1; green = turned on"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "decide from the marks, never from cells you just changed"
+       }
+      ]
+     }
+    },
+    {
+     "event": "light",
+     "lines": {
+      "cpp": [
+       43
+      ],
+      "python": [
+       33
+      ],
+      "java": [
+       43
+      ],
+      "go": [
+       68
+      ]
+     },
+     "explanation": "Turn on (1, 0), the cell below a marked 1. This new 1 isn't in the marks list, so it can't spread any further.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "1"
+      },
+      {
+       "name": "c",
+       "value": "0"
+      },
+      {
+       "name": "marks",
+       "value": "2"
+      },
+      {
+       "name": "grid",
+       "value": "[[1,0,0],[1,0,1],[0,0,0]]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Light below normal: light at (1,0), marks 2.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "phase",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "pass 2: change",
+        "role": "neutral"
+       },
+       {
+        "id": "marks",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "marks: 2",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "gold = original 1; green = turned on"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "decide from the marks, never from cells you just changed"
+       }
+      ]
+     }
+    },
+    {
+     "event": "light",
+     "lines": {
+      "cpp": [
+       43
+      ],
+      "python": [
+       33
+      ],
+      "java": [
+       43
+      ],
+      "go": [
+       68
+      ]
+     },
+     "explanation": "Turn on (2, 2), the cell below a marked 1. This new 1 isn't in the marks list, so it can't spread any further.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "2"
+      },
+      {
+       "name": "c",
+       "value": "2"
+      },
+      {
+       "name": "marks",
+       "value": "2"
+      },
+      {
+       "name": "grid",
+       "value": "[[1,0,0],[1,0,1],[0,0,1]]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Light below normal: light at (2,2), marks 2.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "phase",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "pass 2: change",
+        "role": "neutral"
+       },
+       {
+        "id": "marks",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "marks: 2",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "gold = original 1; green = turned on"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "decide from the marks, never from cells you just changed"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       48
+      ],
+      "python": [
+       36
+      ],
+      "java": [
+       48
+      ],
+      "go": [
+       73
+      ]
+     },
+     "explanation": "Done: only cells below original 1s were turned on. [[1,0,0],[1,0,1],[0,0,1]].",
+     "variables": [
+      {
+       "name": "r",
+       "value": "-"
+      },
+      {
+       "name": "c",
+       "value": "-"
+      },
+      {
+       "name": "marks",
+       "value": "2"
+      },
+      {
+       "name": "grid",
+       "value": "[[1,0,0],[1,0,1],[0,0,1]]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Light below normal: done at (-,-), marks 2.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "phase",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "done",
+        "role": "neutral"
+       },
+       {
+        "id": "marks",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "marks: 2",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "gold = original 1; green = turned on"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "decide from the marks, never from cells you just changed"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-cascade-bait",
+   "label": "A column that would cascade",
+   "input": "3 1\n1\n0\n0\n",
+   "expectedOutput": "[[1],[1],[0]]",
+   "frames": [
+    {
+     "event": "mark",
+     "lines": {
+      "cpp": [
+       35
+      ],
+      "python": [
+       28
+      ],
+      "java": [
+       35
+      ],
+      "go": [
+       60
+      ]
+     },
+     "explanation": "(0, 0) is an original 1. Don't change anything yet; just write down its position. Marks so far: 1.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "0"
+      },
+      {
+       "name": "c",
+       "value": "0"
+      },
+      {
+       "name": "marks",
+       "value": "1"
+      },
+      {
+       "name": "grid",
+       "value": "[[1],[0],[0]]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Light below edge-cascade-bait: mark at (0,0), marks 1.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "phase",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "pass 1: mark only",
+        "role": "neutral"
+       },
+       {
+        "id": "marks",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "marks: 1",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "gold = original 1; green = turned on"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "decide from the marks, never from cells you just changed"
+       }
+      ]
+     }
+    },
+    {
+     "event": "light",
+     "lines": {
+      "cpp": [
+       43
+      ],
+      "python": [
+       33
+      ],
+      "java": [
+       43
+      ],
+      "go": [
+       68
+      ]
+     },
+     "explanation": "Turn on (1, 0), the cell below a marked 1. This new 1 isn't in the marks list, so it can't spread any further.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "1"
+      },
+      {
+       "name": "c",
+       "value": "0"
+      },
+      {
+       "name": "marks",
+       "value": "1"
+      },
+      {
+       "name": "grid",
+       "value": "[[1],[1],[0]]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Light below edge-cascade-bait: light at (1,0), marks 1.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "phase",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "pass 2: change",
+        "role": "neutral"
+       },
+       {
+        "id": "marks",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "marks: 1",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "gold = original 1; green = turned on"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "decide from the marks, never from cells you just changed"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       48
+      ],
+      "python": [
+       36
+      ],
+      "java": [
+       48
+      ],
+      "go": [
+       73
+      ]
+     },
+     "explanation": "Done: only cells below original 1s were turned on. [[1],[1],[0]].",
+     "variables": [
+      {
+       "name": "r",
+       "value": "-"
+      },
+      {
+       "name": "c",
+       "value": "-"
+      },
+      {
+       "name": "marks",
+       "value": "1"
+      },
+      {
+       "name": "grid",
+       "value": "[[1],[1],[0]]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Light below edge-cascade-bait: done at (-,-), marks 1.",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "phase",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "done",
+        "role": "neutral"
+       },
+       {
+        "id": "marks",
+        "shape": "rect",
+        "x": 220,
+        "y": 92,
+        "width": 284,
+        "height": 38,
+        "text": "marks: 1",
+        "role": "visited"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "gold = original 1; green = turned on"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "decide from the marks, never from cells you just changed"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}
