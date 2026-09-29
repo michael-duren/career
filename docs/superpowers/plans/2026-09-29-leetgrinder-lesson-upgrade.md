@@ -12,7 +12,7 @@
 
 **Assignments:** [All 84 lesson assignments](2026-09-29-leetgrinder-lesson-assignments.md).
 
-**Status:** Plan only. No product code or data has been changed. All implementation checkboxes are initially open.
+**Status:** Implementation is underway on `feat/leetgrinder-lessons`. The shared renderer, player, verifier, browser checks, and pilot days 1, 32, and 66 are in place. Day 2 is complete, making 4 of 84 days authored. The remaining day content and final migration audit are open.
 
 ## Global constraints
 
