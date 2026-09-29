@@ -77,8 +77,13 @@ test('dragging a session to another day saves without flashing the editor or err
 
   const session = sessionFor(page, goal.title);
   await expect(session).toBeVisible();
-  const handle = session.locator('.scheduler-block-main');
-  const source = (await handle.boundingBox())!;
+  // Scoped to this goal's own session id, not just "the first session on the
+  // page" - the suite doesn't clean up between specs and CI retries failed
+  // tests, so an unscoped selector can end up dragging an unrelated session
+  // left over from an earlier run.
+  const sessionId = await session.getAttribute('data-session-id');
+  const handleSelector = `[data-session-id="${sessionId}"] .scheduler-block-main`;
+  const source = (await page.locator(handleSelector).boundingBox())!;
   const targetDate = await page.locator('[data-scheduler-date]').nth(1).getAttribute('data-scheduler-date');
   const target = (await page.locator('[data-scheduler-date]').nth(1).boundingBox())!;
 
@@ -89,13 +94,7 @@ test('dragging a session to another day saves without flashing the editor or err
   // input, not JS-dispatched events, and dispatching directly on the element
   // sidesteps that entirely). Dispatching PointerEvents straight at the
   // element is what actually drives it.
-  await page.evaluate(([sx, sy, tx, ty]) => {
-    const el = document.querySelector('[data-session-id] .scheduler-block-main') as HTMLElement;
-    const fire = (type: string, x: number, y: number) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 1, isPrimary: true, clientX: x, clientY: y, button: 0, buttons: type === 'pointerup' ? 0 : 1 }));
-    fire('pointerdown', sx, sy);
-    for (let i = 1; i <= 10; i++) fire('pointermove', sx + (tx - sx) * i / 10, sy + (ty - sy) * i / 10);
-    fire('pointerup', tx, ty);
-  }, [source.x + source.width / 2, source.y + source.height / 2, target.x + target.width / 2, target.y + 80]);
+  await dispatchPointerDrag(page, handleSelector, { x: source.x + source.width / 2, y: source.y + source.height / 2 }, { x: target.x + target.width / 2, y: target.y + 80 }, 10);
 
   // The dialog must never appear for a successful drag save - it used to
   // flash open (setDraft before the async save resolved) even on success.
