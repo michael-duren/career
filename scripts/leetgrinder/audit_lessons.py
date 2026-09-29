@@ -2,10 +2,29 @@
 """Check authored lesson coverage without using the private research corpus."""
 import argparse
 import json
+import re
 from pathlib import Path
 
 LANGUAGES = {"cpp", "python", "java", "go"}
 HEADINGS = ("intuition", "baseline", "worked example", "complexity", "before you finish")
+EXAMPLE_FILES = {"example.json", "main.cpp", "main.py", "Main.java", "main.go.txt"}
+
+
+def embedded_asset_errors(root: Path) -> list[str]:
+    """Reject stray files that Go's directory embed would include in the site binary."""
+    errors = []
+    lessons = root / "internal/leetgrinder/lessons"
+    examples = root / "internal/leetgrinder/examples"
+    for path in lessons.rglob("*"):
+        if path.is_file() and (path.parent != lessons or not re.fullmatch(r"day-\d{2}\.json", path.name)):
+            errors.append(f"unexpected embedded lesson asset: {path.relative_to(root)}")
+    for path in examples.rglob("*"):
+        if not path.is_file():
+            continue
+        parts = path.relative_to(examples).parts
+        if len(parts) != 3 or not re.fullmatch(r"day-\d{2}", parts[0]) or parts[2] not in EXAMPLE_FILES:
+            errors.append(f"unexpected embedded example asset: {path.relative_to(root)}")
+    return sorted(errors)
 
 
 def audit(root: Path, days=range(1, 85)) -> dict:
@@ -77,8 +96,10 @@ def audit(root: Path, days=range(1, 85)) -> dict:
             entry["cases"] += len(cases)
             entry["languageRuns"] += len(cases) * len(languages & LANGUAGES)
         entries.append(entry)
+    asset_errors = embedded_asset_errors(root)
     return {
-        "passed": all(not entry["errors"] for entry in entries),
+        "passed": not asset_errors and all(not entry["errors"] for entry in entries),
+        "embeddedAssetErrors": asset_errors,
         "totals": {"days": len(entries), "completeDays": sum(not entry["errors"] for entry in entries), "examples": sum(entry["examples"] for entry in entries), "cases": sum(entry["cases"] for entry in entries), "languageRuns": sum(entry["languageRuns"] for entry in entries)},
         "days": entries,
     }
@@ -98,6 +119,8 @@ def main():
     for entry in report["days"]:
         for error in entry["errors"]:
             print(f"day {entry['day']:02d}: {error}")
+    for error in report["embeddedAssetErrors"]:
+        print(error)
     raise SystemExit(0 if report["passed"] else 1)
 
 
