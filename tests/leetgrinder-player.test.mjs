@@ -312,3 +312,18 @@ test('mountLessonExamples accepts an example root and cleanup restores its fallb
   cleanup();
   assert.equal(fallback.hidden, false);
 });
+
+test('player shows algorithm lines and folds the complete runnable source', () => {
+  const document = fakeDocument();
+  const data = example();
+  for (const variant of data.variants) { variant.algorithmStart = 2; variant.algorithmEnd = 2; }
+  for (const traceCase of data.cases) for (const frame of traceCase.frames) {
+    frame.lines = { cpp: [2], python: [2], java: [2], go: [2] };
+  }
+  const { root } = host(document, data);
+  mountExample(root);
+  assert.equal(root.querySelector('.lesson-player-code').querySelectorAll('.lesson-code-line').length, 1);
+  assert.match(root.querySelector('.lesson-player-code').textContent, /2  two/);
+  assert.equal(Boolean(root.querySelector('.lesson-player-full-source').open), false);
+  assert.match(root.querySelector('.lesson-player-full-source').textContent, /one/);
+});

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, execFileSync } from 'node:child_process';
 import { chromium } from 'playwright';
+import { readdirSync } from 'node:fs';
 
 const port = 18097;
 const origin = `http://127.0.0.1:${port}`;
@@ -48,16 +49,42 @@ test('authored lessons render and the SVG player controls real page content', { 
   assert.equal(await guidance.locator('.lesson-references').count(), 1);
   assert.equal(await page.getByText('Reading path').count(), 0);
 
-  for (const day of [1, 32, 66]) {
+  const authoredDays = process.env.LEETGRINDER_DAYS
+    ? process.env.LEETGRINDER_DAYS.split(',').map(Number)
+    : readdirSync('internal/leetgrinder/lessons').filter(name => /^day-\d\d\.json$/.test(name)).map(name => Number(name.slice(4, 6))).sort((a, b) => a - b);
+  for (const day of authoredDays) {
     await page.goto(`${origin}/day/${day}`);
-    assert.equal(await page.locator('[data-lesson-example]').count() > 0, true);
-    for (const example of await page.locator('[data-lesson-example]').all()) {
-      assert.equal(await example.locator('.lesson-player').count(), 1);
-      assert.equal(await example.locator('.lesson-player-svg').count(), 1);
-      await example.getByRole('button', { name: 'Next' }).click();
-      assert.equal(await example.locator('.lesson-player-code .is-active').count() > 0, true);
-      await example.getByRole('tab', { name: 'C++' }).click();
-      assert.equal(await example.getByRole('tab', { name: 'C++' }).getAttribute('aria-selected'), 'true');
+    const guidance = page.locator('details.review-guidance');
+    if (day >= 78) {
+      assert.equal(await guidance.getAttribute('open'), null, `day ${day} guidance should start closed`);
+      await guidance.locator('summary').click();
+    }
+    const examples = await page.locator('[data-lesson-example]').all();
+    assert.ok(examples.length > 0, `day ${day} needs linked examples`);
+    for (const example of examples) {
+      const payload = await example.evaluate(element => JSON.parse(element.querySelector('[data-player-data]').content.textContent));
+      const player = example.locator('.lesson-player');
+      assert.equal(await player.count(), 1, `${payload.id} player missing`);
+      assert.equal(await example.locator('.lesson-player-svg title').count(), 1);
+      for (const traceCase of payload.cases) {
+        await example.locator('.lesson-player-case').selectOption(traceCase.id);
+        assert.equal(await example.locator('.lesson-player-explanation').textContent(), traceCase.frames[0].explanation);
+        for (const [language, label] of [['cpp', 'C++'], ['python', 'Python'], ['java', 'Java'], ['go', 'Go']]) {
+          await example.getByRole('tab', { name: label }).click();
+          assert.equal(await example.getByRole('tab', { name: label }).getAttribute('aria-selected'), 'true');
+          const line = traceCase.frames[0].lines[language][0];
+          assert.equal(await example.locator(`.lesson-player-code .is-active[data-line="${line}"]`).count(), 1, `${payload.id}/${traceCase.id}/${language} first line`);
+        }
+        await example.getByRole('tab', { name: 'Python' }).click();
+        for (let frameIndex = 1; frameIndex < traceCase.frames.length; frameIndex++) {
+          await example.getByRole('button', { name: 'Next' }).click();
+          const frame = traceCase.frames[frameIndex];
+          assert.equal(await example.locator('.lesson-player-explanation').textContent(), frame.explanation, `${payload.id}/${traceCase.id} frame ${frameIndex}`);
+          const line = frame.lines.python[0];
+          assert.equal(await example.locator(`.lesson-player-code .is-active[data-line="${line}"]`).count(), 1, `${payload.id}/${traceCase.id} line ${line}`);
+        }
+        assert.equal(await example.getByRole('button', { name: 'Next' }).isDisabled(), true);
+      }
       await example.getByRole('button', { name: 'Start' }).click();
     }
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `day ${day} overflows at 360px: ${JSON.stringify(await page.evaluate(() => [...document.querySelectorAll('*')].filter(el => el.getBoundingClientRect().right > innerWidth + 2).slice(0, 10).map(el => ({tag:el.tagName, cls:el.className?.baseVal || el.className, right:el.getBoundingClientRect().right}))))}`);

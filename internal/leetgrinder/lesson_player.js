@@ -190,6 +190,9 @@ export function mountExample(element) {
   codePanel.setAttribute('role', 'tabpanel');
   codePanel.tabIndex = 0;
   const code = make(doc, 'code', 'lesson-player-code', make(doc, 'pre', '', codePanel));
+  const fullSource = make(doc, 'details', 'lesson-player-full-source', codePanel);
+  make(doc, 'summary', '', fullSource, 'Full runnable program');
+  const fullCode = make(doc, 'code', '', make(doc, 'pre', '', fullSource));
   const copy = make(doc, 'button', 'lesson-player-copy', codePanel, 'Copy code');
   copy.type = 'button';
   const tabs = new Map();
@@ -222,8 +225,13 @@ export function mountExample(element) {
   function renderCode(frame) {
     code.replaceChildren();
     const highlighted = new Set(frame.lines[language] || []);
-    const lines = (example.sources?.[language] || '').replace(/\n$/, '').split('\n');
-    for (let i = 0; i < lines.length; i++) {
+    const source = example.sources?.[language] || '';
+    const lines = source.replace(/\n$/, '').split('\n');
+    const variant = example.variants.find(item => item.language === language);
+    const first = variant?.algorithmStart || 1;
+    const last = variant?.algorithmEnd || lines.length;
+    fullCode.textContent = source;
+    for (let i = first - 1; i < Math.min(last, lines.length); i++) {
       const line = make(doc, 'span', highlighted.has(i + 1) ? 'lesson-code-line is-active' : 'lesson-code-line', code);
       line.setAttribute('data-line', String(i + 1));
       line.textContent = `${i + 1}  ${lines[i]}`;
