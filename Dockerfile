@@ -1,4 +1,4 @@
-FROM node:22-bookworm-slim AS frontend
+FROM node:22.23.3-bookworm-slim AS frontend
 WORKDIR /build
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -7,7 +7,7 @@ COPY src ./src
 COPY public ./public
 RUN npm run build
 
-FROM golang:1.27.0-bookworm AS backend
+FROM golang:1.27.1-bookworm AS backend
 WORKDIR /build
 COPY go.mod go.sum ./
 RUN go mod download
