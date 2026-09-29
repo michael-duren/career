@@ -1,0 +1,1303 @@
+{
+ "id": "day-16-remove-value",
+ "title": "Remove a value in place, keeping order",
+ "invariant": "The first write cells hold, in order, every value read so far that isn't the target.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 23,
+   "algorithmEnd": 39
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 30
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 23,
+   "algorithmEnd": 38
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 46,
+   "algorithmEnd": 61
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Remove 5 from [5, 2, 5, 7]",
+   "input": "4 5\n5 2 5 7\n",
+   "expectedOutput": "[2,7]",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "Remove every 5 from [5,2,5,7] in place, keeping the other values in order. read looks at each value; write is where the next kept value goes.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "-"
+      },
+      {
+       "name": "write",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[5,2,5,7]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Remove value normal: start, read -, write 0, values [5,2,5,7].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept prefix; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "write never passes read"
+       }
+      ]
+     }
+    },
+    {
+     "event": "drop",
+     "lines": {
+      "cpp": [
+       31,
+       32
+      ],
+      "python": [
+       26,
+       27
+      ],
+      "java": [
+       31,
+       32
+      ],
+      "go": [
+       54,
+       55
+      ]
+     },
+     "explanation": "values[0] is 5: skip it. write stays at 0, so the next kept value will overwrite this spot.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "0"
+      },
+      {
+       "name": "write",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[5,2,5,7]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Remove value normal: drop, read 0, write 0, values [5,2,5,7].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept prefix; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "read write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "write never passes read"
+       }
+      ]
+     }
+    },
+    {
+     "event": "keep",
+     "lines": {
+      "cpp": [
+       28,
+       29
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       28,
+       29
+      ],
+      "go": [
+       51,
+       52
+      ]
+     },
+     "explanation": "2 is not 5: keep it. Copy it to index 0. The first 1 cells are now the kept values, in order.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "1"
+      },
+      {
+       "name": "write",
+       "value": "1"
+      },
+      {
+       "name": "values",
+       "value": "[2,2,5,7]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Remove value normal: keep, read 1, write 1, values [2,2,5,7].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 1",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept prefix; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "read write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "write never passes read"
+       }
+      ]
+     }
+    },
+    {
+     "event": "drop",
+     "lines": {
+      "cpp": [
+       31,
+       32
+      ],
+      "python": [
+       26,
+       27
+      ],
+      "java": [
+       31,
+       32
+      ],
+      "go": [
+       54,
+       55
+      ]
+     },
+     "explanation": "values[2] is 5: skip it. write stays at 1, so the next kept value will overwrite this spot.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "2"
+      },
+      {
+       "name": "write",
+       "value": "1"
+      },
+      {
+       "name": "values",
+       "value": "[2,2,5,7]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Remove value normal: drop, read 2, write 1, values [2,2,5,7].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 1",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept prefix; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "read"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "write never passes read"
+       }
+      ]
+     }
+    },
+    {
+     "event": "keep",
+     "lines": {
+      "cpp": [
+       28,
+       29
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       28,
+       29
+      ],
+      "go": [
+       51,
+       52
+      ]
+     },
+     "explanation": "7 is not 5: keep it. Copy it to index 1. The first 2 cells are now the kept values, in order.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "3"
+      },
+      {
+       "name": "write",
+       "value": "2"
+      },
+      {
+       "name": "values",
+       "value": "[2,7,5,7]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Remove value normal: keep, read 3, write 2, values [2,7,5,7].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "active"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 2",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept prefix; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "read"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "write never passes read"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       36
+      ],
+      "python": [
+       29
+      ],
+      "java": [
+       36
+      ],
+      "go": [
+       59
+      ]
+     },
+     "explanation": "The first 2 cells are the answer: [2,7]. The rest of the array is leftover and can be ignored.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "-"
+      },
+      {
+       "name": "write",
+       "value": "2"
+      },
+      {
+       "name": "values",
+       "value": "[2,7,5,7]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Remove value normal: done, read -, write 2, values [2,7,5,7].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 2",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept prefix; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "write never passes read"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-all-removed",
+   "label": "Every value is removed",
+   "input": "2 5\n5 5\n",
+   "expectedOutput": "[]",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "Remove every 5 from [5,5] in place, keeping the other values in order. read looks at each value; write is where the next kept value goes.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "-"
+      },
+      {
+       "name": "write",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[5,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Remove value edge-all-removed: start, read -, write 0, values [5,5].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept prefix; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "write never passes read"
+       }
+      ]
+     }
+    },
+    {
+     "event": "drop",
+     "lines": {
+      "cpp": [
+       31,
+       32
+      ],
+      "python": [
+       26,
+       27
+      ],
+      "java": [
+       31,
+       32
+      ],
+      "go": [
+       54,
+       55
+      ]
+     },
+     "explanation": "values[0] is 5: skip it. write stays at 0, so the next kept value will overwrite this spot.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "0"
+      },
+      {
+       "name": "write",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[5,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Remove value edge-all-removed: drop, read 0, write 0, values [5,5].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept prefix; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "read write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "write never passes read"
+       }
+      ]
+     }
+    },
+    {
+     "event": "drop",
+     "lines": {
+      "cpp": [
+       31,
+       32
+      ],
+      "python": [
+       26,
+       27
+      ],
+      "java": [
+       31,
+       32
+      ],
+      "go": [
+       54,
+       55
+      ]
+     },
+     "explanation": "values[1] is 5: skip it. write stays at 0, so the next kept value will overwrite this spot.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "1"
+      },
+      {
+       "name": "write",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[5,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Remove value edge-all-removed: drop, read 1, write 0, values [5,5].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "active"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept prefix; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "read"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "write never passes read"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       36
+      ],
+      "python": [
+       29
+      ],
+      "java": [
+       36
+      ],
+      "go": [
+       59
+      ]
+     },
+     "explanation": "Every value was 5, so nothing is kept.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "-"
+      },
+      {
+       "name": "write",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[5,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Remove value edge-all-removed: done, read -, write 0, values [5,5].",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept prefix; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "write never passes read"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

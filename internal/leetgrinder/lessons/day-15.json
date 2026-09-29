@@ -1,0 +1,208 @@
+{
+  "day": 15,
+  "objectives": [
+    "Walk two pointers toward each other from both ends of an array.",
+    "Explain why each pointer move rules out a value for good.",
+    "Count pairs in a sorted array in one pass instead of one binary search per value."
+  ],
+  "prerequisites": [
+    5,
+    14
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: work inward from both ends",
+      "paragraphs": [
+        "Some questions pair up the two ends of an array: the first value with the last, the second with the second-to-last, and so on. Put one index at each end and move them toward each other. Every value is visited once, so it's O(n).",
+        "In a sorted array the two ends are also the smallest and largest values. Comparing them tells you which end can't help anymore, so you drop that end and continue. That's the same \"rule out part of the input with one check\" idea as binary search, one value at a time instead of half at a time."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "Each move of a pointer should come with a reason the value you're leaving behind can never be part of the answer."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "The values 1, 2, 3, 2, 1 with lo at the first value and hi at the last, moving toward each other.",
+        "nodes": [
+          {
+            "id": "v0",
+            "shape": "rect",
+            "x": 12,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "1",
+            "role": "active"
+          },
+          {
+            "id": "v1",
+            "shape": "rect",
+            "x": 72,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "2",
+            "role": "neutral"
+          },
+          {
+            "id": "v2",
+            "shape": "rect",
+            "x": 132,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "3",
+            "role": "neutral"
+          },
+          {
+            "id": "v3",
+            "shape": "rect",
+            "x": 192,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "2",
+            "role": "neutral"
+          },
+          {
+            "id": "v4",
+            "shape": "rect",
+            "x": 252,
+            "y": 44,
+            "width": 54,
+            "height": 44,
+            "text": "1",
+            "role": "active"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "title",
+            "x": 12,
+            "y": 28,
+            "text": "compare from both ends"
+          },
+          {
+            "id": "l0",
+            "x": 12,
+            "y": 110,
+            "text": "lo →"
+          },
+          {
+            "id": "l1",
+            "x": 230,
+            "y": 110,
+            "text": "← hi"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Every pair",
+      "heading": "Baseline: check every pair",
+      "paragraphs": [
+        "Comparing every pair of positions costs O(n²). For mirror comparisons you don't even need that: position i only ever needs to be compared with position n - 1 - i."
+      ]
+    },
+    {
+      "id": "mirror",
+      "navLabel": "Mirror check",
+      "heading": "Worked example: does a list read the same backward?",
+      "paragraphs": [
+        "Put lo at 0 and hi at n - 1. If the values differ, the list isn't the same backward, and you can stop. If they match, move both inward. When lo meets or passes hi, every mirror pair has matched.",
+        "A list with zero or one value reads the same backward. The loop handles that without a special case, because lo < hi is false from the start."
+      ],
+      "exampleIds": [
+        "day-15-mirror-check"
+      ]
+    },
+    {
+      "id": "pairs",
+      "navLabel": "Counting pairs",
+      "heading": "Worked example: count pairs from both ends",
+      "paragraphs": [
+        "Day 14 counted pairs with sum ≤ T using a binary search per value. In a sorted array you can do it in one pass. Look at the smallest and largest remaining values.",
+        "If values[lo] + values[hi] ≤ T, then values[lo] also works with everything between lo and hi, because those are all smaller than values[hi]. Count them all at once and move lo right. If the sum is too big, values[hi] is too big even with the smallest remaining partner, so move hi left.",
+        "Each step removes one end for good, so the loop runs at most n times."
+      ],
+      "exampleIds": [
+        "day-15-pairs-two-pointers"
+      ]
+    },
+    {
+      "id": "your-turn-reverse",
+      "navLabel": "Your turn: Reverse String",
+      "heading": "Your turn: Reverse String",
+      "paragraphs": [
+        "Reverse an array of characters in place, using O(1) extra memory."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Which two positions should trade places first, and when do you stop?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-palindrome",
+      "navLabel": "Your turn: Valid Palindrome",
+      "heading": "Your turn: Valid Palindrome",
+      "paragraphs": [
+        "A phrase is a palindrome if, after lowercasing and removing everything that isn't a letter or digit, it reads the same forward and backward. \"A man, a plan, a canal: Panama\" is one."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "You can build a cleaned-up copy first, but try it without the copy: what should each pointer do when it lands on a character that doesn't count?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-two-sum-sorted",
+      "navLabel": "Your turn: Two Sum II - Input Array Is Sorted",
+      "heading": "Your turn: Two Sum II - Input Array Is Sorted",
+      "paragraphs": [
+        "Today's medium. The array is sorted in non-decreasing order. Return the 1-based indexes of two numbers that add up to target, using O(1) extra memory. Exactly one answer exists."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "The pair-counting example compares the sum with a limit. With an exact target there are three outcomes instead of two. What does each one tell you?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Both examples are O(n) time and O(1) extra memory. The pair counting needs sorted input; sorting first adds O(n log n).",
+        "Be careful with the loop condition: lo < hi means a value is never paired with itself."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "In the pair-counting example, why can you count hi - lo pairs at once?",
+          "answer": "Every value between lo and hi is at most values[hi], so each one also pairs with values[lo] within the limit."
+        },
+        {
+          "prompt": "Why is it safe to drop values[hi] when the sum is too big?",
+          "answer": "values[lo] is the smallest remaining value. If even that is too big with values[hi], nothing else is."
+        },
+        {
+          "prompt": "Why does the mirror check need no special case for a one-value list?",
+          "answer": "lo and hi start equal, so the loop never runs and the answer is true."
+        }
+      ]
+    }
+  ]
+}

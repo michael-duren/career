@@ -1,0 +1,207 @@
+{
+  "day": 21,
+  "objectives": [
+    "Build answers from a pass from the left and a pass from the right.",
+    "Normalize remainders so they're never negative in any language.",
+    "Recognize that two equal running remainders mean the values between them add up to a multiple."
+  ],
+  "prerequisites": [
+    20
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: running state from both sides, and around a clock",
+      "paragraphs": [
+        "Day 20's prefix sums summarize everything to the left of a position. Some problems also need everything to the right. A second pass from the right end builds that, and then each position can combine its left and right summaries.",
+        "Remainders behave like a clock. On a 12-hour clock, moving forward 5 and then back 17 lands where you started, because the moves add up to -12. If a running clock position ever repeats, the moves between the two visits add up to a whole number of laps: a multiple of 12."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "Two running totals with the same remainder mod m mean the values between them add up to a multiple of m."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "A clock at 0 moves +5 to 5, then -3 to 2, then +10 back to 0. The three moves add up to 12.",
+        "nodes": [
+          {
+            "id": "a",
+            "shape": "circle",
+            "x": 20,
+            "y": 60,
+            "width": 48,
+            "height": 48,
+            "text": "0",
+            "role": "result"
+          },
+          {
+            "id": "b",
+            "shape": "circle",
+            "x": 110,
+            "y": 60,
+            "width": 48,
+            "height": 48,
+            "text": "5",
+            "role": "neutral"
+          },
+          {
+            "id": "c",
+            "shape": "circle",
+            "x": 200,
+            "y": 60,
+            "width": 48,
+            "height": 48,
+            "text": "2",
+            "role": "neutral"
+          },
+          {
+            "id": "d",
+            "shape": "circle",
+            "x": 260,
+            "y": 60,
+            "width": 48,
+            "height": 48,
+            "text": "0",
+            "role": "result"
+          }
+        ],
+        "edges": [
+          {
+            "id": "e1",
+            "from": "a",
+            "to": "b",
+            "label": "+5",
+            "directed": true,
+            "role": "neutral"
+          },
+          {
+            "id": "e2",
+            "from": "b",
+            "to": "c",
+            "label": "-3",
+            "directed": true,
+            "role": "neutral"
+          },
+          {
+            "id": "e3",
+            "from": "c",
+            "to": "d",
+            "label": "+10",
+            "directed": true,
+            "role": "neutral"
+          }
+        ],
+        "labels": [
+          {
+            "id": "t",
+            "x": 20,
+            "y": 30,
+            "text": "12-hour clock positions"
+          },
+          {
+            "id": "r",
+            "x": 20,
+            "y": 150,
+            "text": "+5 −3 +10 = 12, back at 0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Every range",
+      "heading": "Baseline: check every range",
+      "paragraphs": [
+        "Checking every range's sum for divisibility is O(n²) even with prefix sums. Remembering remainders you've already seen turns \"does some earlier position match?\" into one map lookup."
+      ]
+    },
+    {
+      "id": "clock",
+      "navLabel": "Clock remainders",
+      "heading": "Worked example: find a run of moves that makes a full lap",
+      "paragraphs": [
+        "A clock starts at 0 and applies shifts one at a time. Record the first step at which each hour appeared, with hour 0 recorded before any step. After each shift, compute the new hour. If you've seen it before, the shifts since then add up to a multiple of 12.",
+        "Computing the hour needs care with negative shifts. In Python, -5 % 12 is 7. In C++, Java, and Go, it's -5. Writing ((hour + shift) % m + m) % m gives the same, non-negative answer in every language."
+      ],
+      "callout": {
+        "kind": "watch",
+        "text": "Recording hour 0 before any step matters. Without it, a run of shifts starting at the very first one could never be found."
+      },
+      "exampleIds": [
+        "day-21-clock-repeat"
+      ]
+    },
+    {
+      "id": "your-turn-product",
+      "navLabel": "Your turn: Product of Array Except Self",
+      "heading": "Your turn: Product of Array Except Self",
+      "paragraphs": [
+        "Today's first medium. Return an array where each position holds the product of every other value. Don't use division, and aim for O(n) time."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "For one position, split \"every other value\" into two groups you could compute with running products. What two passes would give you both?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-continuous",
+      "navLabel": "Your turn: Continuous Subarray Sum",
+      "heading": "Your turn: Continuous Subarray Sum",
+      "paragraphs": [
+        "Today's second medium. Return true if some subarray of length at least 2 has a sum that is a multiple of k."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "The clock example finds a run of any length. What extra information do you need to guarantee the run has at least two values?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-divisible",
+      "navLabel": "Your turn: Subarray Sums Divisible by K",
+      "heading": "Your turn: Subarray Sums Divisible by K",
+      "paragraphs": [
+        "Today's third medium. Count the subarrays whose sum is divisible by k. Values can be negative."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "The clock example stops at the first repeat. To count every run, what should you remember about each remainder instead of the first step it appeared?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "The clock scan is O(n) time with at most m remembered remainders. Two passes, one from each side, are O(n) time and O(n) memory, or O(1) extra if you build the answer in the output array.",
+        "Normalize remainders before using them as keys: -5 and 7 are the same position on a 12-hour clock, but they're different map keys."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "On a 12-hour clock, the positions after some shifts are 0, 5, 2, 0. What do the three shifts add up to, mod 12?",
+          "answer": "0. The clock returned to where it was, so the shifts form whole laps: a multiple of 12."
+        },
+        {
+          "prompt": "What is (-5 % 12 + 12) % 12, and why write it that way?",
+          "answer": "7. It's non-negative in every language, even where -5 % 12 is -5."
+        },
+        {
+          "prompt": "Why record hour 0 before the first step?",
+          "answer": "So a run that starts with the very first shift can be detected when the clock returns to 0."
+        }
+      ]
+    }
+  ]
+}

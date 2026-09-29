@@ -1,0 +1,197 @@
+{
+  "day": 18,
+  "objectives": [
+    "Slide a window of fixed size across an array in O(n).",
+    "Update a window's summary with one value entering and one leaving.",
+    "Keep counts for the letters inside a window."
+  ],
+  "prerequisites": [
+    2,
+    16
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: slide, don't recompute",
+      "paragraphs": [
+        "A window is a run of consecutive values. When a fixed-size window moves one step right, only two values change: one enters on the right and one leaves on the left. Everything else in the window stays the same.",
+        "So don't recompute the window's sum or counts from scratch. Keep them as running state and update them with the two values that changed. That turns O(n·k) into O(n)."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "For each step, write down what the value entering does to your state and what the value leaving does. Do both, in an order that keeps the window exactly k wide."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Values 6, 1, 5, 2 with a window of two. Moving right, 6 leaves and 5 enters.",
+        "nodes": [
+          {
+            "id": "v0",
+            "shape": "rect",
+            "x": 12,
+            "y": 44,
+            "width": 56,
+            "height": 44,
+            "text": "6",
+            "role": "discarded"
+          },
+          {
+            "id": "v1",
+            "shape": "rect",
+            "x": 74,
+            "y": 44,
+            "width": 56,
+            "height": 44,
+            "text": "1",
+            "role": "active"
+          },
+          {
+            "id": "v2",
+            "shape": "rect",
+            "x": 136,
+            "y": 44,
+            "width": 56,
+            "height": 44,
+            "text": "5",
+            "role": "result"
+          },
+          {
+            "id": "v3",
+            "shape": "rect",
+            "x": 198,
+            "y": 44,
+            "width": 56,
+            "height": 44,
+            "text": "2",
+            "role": "neutral"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "title",
+            "x": 12,
+            "y": 28,
+            "text": "window of 2 slides right"
+          },
+          {
+            "id": "l0",
+            "x": 12,
+            "y": 110,
+            "text": "leaves"
+          },
+          {
+            "id": "l1",
+            "x": 140,
+            "y": 110,
+            "text": "enters"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Recompute each window",
+      "heading": "Baseline: add up every window from scratch",
+      "paragraphs": [
+        "For each of the n - k + 1 windows, add its k values. That's O(n·k). With n = 100,000 and k = 50,000, it's billions of additions."
+      ]
+    },
+    {
+      "id": "sum",
+      "navLabel": "Window sum",
+      "heading": "Worked example: the wettest run of days",
+      "paragraphs": [
+        "Given rainfall per day, find the largest total over any k consecutive days. Add the first k days. Then for each next day, add the entering day and subtract the day that just left.",
+        "For [6, 1, 5, 2] and k = 2, the window sums are 7, 6, and 7, so the answer is 7."
+      ],
+      "exampleIds": [
+        "day-18-window-sum"
+      ]
+    },
+    {
+      "id": "counts",
+      "navLabel": "Window counts",
+      "heading": "Worked example: windows with no repeated letter",
+      "paragraphs": [
+        "Count the windows of k letters where no letter appears twice. Keep a count per letter in the window, and one more number: repeats, how many letters currently appear at least twice.",
+        "When a letter enters and its count becomes 2, repeats goes up. When a letter leaves and its count drops back to 1, repeats goes down. A window is good when repeats is 0. Tracking repeats means you never scan the counts to check a window."
+      ],
+      "exampleIds": [
+        "day-18-distinct-windows"
+      ]
+    },
+    {
+      "id": "your-turn-average",
+      "navLabel": "Your turn: Maximum Average Subarray I",
+      "heading": "Your turn: Maximum Average Subarray I",
+      "paragraphs": [
+        "Find the contiguous subarray of length k with the largest average, and return that average."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "The largest average of k values comes from the largest what?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-vowels",
+      "navLabel": "Your turn: Maximum Number of Vowels in a Substring of Given Length",
+      "heading": "Your turn: Maximum Number of Vowels in a Substring of Given Length",
+      "paragraphs": [
+        "Today's first medium. Return the largest number of vowels in any substring of length k."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Decide what one number summarizes a window, and what each entering and leaving letter does to it.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-threshold",
+      "navLabel": "Your turn: Number of Sub-arrays of Size K and Average Greater than or Equal to Threshold",
+      "heading": "Your turn: Number of Sub-arrays of Size K and Average Greater than or Equal to Threshold",
+      "paragraphs": [
+        "Today's second medium. Count the subarrays of length k whose average is at least threshold."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Averages involve division. Can you rewrite \"average ≥ threshold\" as a comparison that uses only whole numbers?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "A fixed-size sliding window is O(n) time. Its memory is O(1) for a sum, or O(alphabet size) for letter counts.",
+        "Handle the first window separately or guard the \"leaving\" update so it only runs once the window is full. When k is larger than the input, there are no windows at all."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "When the window moves from [6, 1] to [1, 5], what changes in the sum?",
+          "answer": "Add 5 and subtract 6: the sum goes from 7 to 6."
+        },
+        {
+          "prompt": "Why keep a repeats counter instead of scanning all counts for each window?",
+          "answer": "Scanning costs the alphabet size per window. The counter changes only when a count crosses 2, which you see as it happens."
+        },
+        {
+          "prompt": "How many windows of size k does an array of length n have?",
+          "answer": "n - k + 1, or none if k > n."
+        }
+      ]
+    }
+  ]
+}

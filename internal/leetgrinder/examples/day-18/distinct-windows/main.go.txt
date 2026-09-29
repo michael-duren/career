@@ -1,0 +1,82 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
+type variable struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func emit(event string, pairs ...string) {
+	variables := []variable{}
+	for k := 0; k+1 < len(pairs); k += 2 {
+		variables = append(variables, variable{pairs[k], pairs[k+1]})
+	}
+	data, _ := json.Marshal(struct {
+		Event     string     `json:"event"`
+		Variables []variable `json:"variables"`
+	}{event, variables})
+	fmt.Println(string(data))
+}
+
+func result(answer string) {
+	data, _ := json.Marshal(struct {
+		Result string `json:"result"`
+	}{answer})
+	fmt.Println(string(data))
+}
+
+func itoa(value int) string { return strconv.Itoa(value) }
+
+func show(values []int) string {
+	parts := make([]string, len(values))
+	for k, value := range values {
+		parts[k] = strconv.Itoa(value)
+	}
+	return "[" + strings.Join(parts, ",") + "]"
+}
+
+func solve(text string, k int) int {
+	counts := map[byte]int{}
+	repeats := 0
+	good := 0
+	emit("start", "right", "-", "window", "", "repeats", itoa(repeats), "good", itoa(good))
+	for right := 0; right < len(text); right++ {
+		letter := text[right]
+		counts[letter]++
+		if counts[letter] == 2 {
+			repeats++
+		}
+		if right >= k {
+			old := text[right-k]
+			counts[old]--
+			if counts[old] == 1 {
+				repeats--
+			}
+		}
+		if right >= k-1 {
+			if repeats == 0 {
+				good++
+			}
+			emit("window", "right", itoa(right), "window", text[right-k+1:right+1], "repeats", itoa(repeats), "good", itoa(good))
+		}
+	}
+
+	emit("done", "right", "-", "window", "", "repeats", itoa(repeats), "good", itoa(good))
+	return good
+}
+
+func main() {
+	in := bufio.NewReader(os.Stdin)
+	var text string
+	var k int
+	fmt.Fscan(in, &text, &k)
+	result(itoa(solve(text, k)))
+}

@@ -1,0 +1,185 @@
+{
+  "day": 16,
+  "objectives": [
+    "Filter an array in place with a read pointer and a write pointer.",
+    "Keep the kept values in their original order.",
+    "Decide what to compare the next value against: the input, or what you've already kept."
+  ],
+  "prerequisites": [
+    6,
+    15
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: one pointer reads, one pointer writes",
+      "paragraphs": [
+        "You met read and write pointers on day 6. read visits every value. write marks where the next kept value goes. Because write never passes read, each write lands on a cell that has already been read, so nothing is lost.",
+        "The only thing that changes from problem to problem is the rule for keeping a value. Sometimes the rule looks at the value alone (\"is it not 5?\"). Sometimes it looks at what you've already kept (\"is it different from the last value I kept?\"). The kept values sit in cells 0 to write - 1, so the last one kept is values[write - 1]."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "After each step, cells 0 to write - 1 are exactly the answer so far, in order. Keep that sentence true and the loop is correct."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Cells 0 and 1 hold the kept values 2 and 7. Cell 2 is free to overwrite. read is at cell 3.",
+        "nodes": [
+          {
+            "id": "v0",
+            "shape": "rect",
+            "x": 12,
+            "y": 44,
+            "width": 56,
+            "height": 44,
+            "text": "2",
+            "role": "result"
+          },
+          {
+            "id": "v1",
+            "shape": "rect",
+            "x": 74,
+            "y": 44,
+            "width": 56,
+            "height": 44,
+            "text": "7",
+            "role": "result"
+          },
+          {
+            "id": "v2",
+            "shape": "rect",
+            "x": 136,
+            "y": 44,
+            "width": 56,
+            "height": 44,
+            "text": "5",
+            "role": "discarded"
+          },
+          {
+            "id": "v3",
+            "shape": "rect",
+            "x": 198,
+            "y": 44,
+            "width": 56,
+            "height": 44,
+            "text": "7",
+            "role": "active"
+          }
+        ],
+        "edges": [],
+        "labels": [
+          {
+            "id": "title",
+            "x": 12,
+            "y": 28,
+            "text": "kept prefix"
+          },
+          {
+            "id": "l0",
+            "x": 12,
+            "y": 110,
+            "text": "kept (0..write-1)"
+          },
+          {
+            "id": "l1",
+            "x": 160,
+            "y": 110,
+            "text": "read"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Build a new list",
+      "heading": "Baseline: build a new list",
+      "paragraphs": [
+        "Append every value you keep to a new list and return it. It's clear and correct, and costs O(n) extra memory. The problems today ask for O(1) extra memory, with the answer left at the front of the input array."
+      ]
+    },
+    {
+      "id": "remove",
+      "navLabel": "Removing a value",
+      "heading": "Worked example: remove every copy of a value",
+      "paragraphs": [
+        "Remove every 5 from [5, 2, 5, 7], keeping the others in order. read visits each value. A 5 is skipped. Anything else is copied to write, and write moves forward.",
+        "The result is [2, 7] in the first two cells. Whatever is left after write doesn't matter; the problem only looks at the first write cells. If every value is removed, write stays at 0 and the answer is empty."
+      ],
+      "exampleIds": [
+        "day-16-remove-value"
+      ]
+    },
+    {
+      "id": "your-turn-move-zeroes",
+      "navLabel": "Your turn: Move Zeroes",
+      "heading": "Your turn: Move Zeroes",
+      "paragraphs": [
+        "Move all zeros to the end of the array, keeping the order of the other values. Do it in place."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "It's the remove-a-value example plus one more step. What should the cells after write hold at the end?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-dedupe",
+      "navLabel": "Your turn: Remove Duplicates from Sorted Array",
+      "heading": "Your turn: Remove Duplicates from Sorted Array",
+      "paragraphs": [
+        "The array is sorted. Remove duplicates in place so each value appears once, and return the number of unique values, k. The first k cells must hold them in order."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "The rule for keeping a value now depends on what you've already kept. Which cell holds the last value you kept?",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "your-turn-dedupe-two",
+      "navLabel": "Your turn: Remove Duplicates from Sorted Array II",
+      "heading": "Your turn: Remove Duplicates from Sorted Array II",
+      "paragraphs": [
+        "Today's medium. Same as above, but each value may appear at most twice. [1, 1, 1, 2, 2, 3] becomes [1, 1, 2, 2, 3]."
+      ],
+      "callout": {
+        "kind": "try",
+        "text": "Write the keep rule as a sentence first, then work out which already-kept cell you need to look at to check it.",
+        "title": "Where to start"
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "paragraphs": [
+        "Read and write pointers take O(n) time and O(1) extra memory. Each value is read once and written at most once.",
+        "Compare against the right thing. For duplicates, comparing values[read] with values[read - 1] (the input) and with values[write - 1] (the kept output) can give different answers once cells have been overwritten."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "Why is it safe to write into the array while still reading it?",
+          "answer": "write never passes read, so each write lands on a cell that was already read."
+        },
+        {
+          "prompt": "What do the cells after write hold at the end?",
+          "answer": "Leftovers. The answer is only the first write cells, unless the problem asks you to fill the rest."
+        },
+        {
+          "prompt": "Where is the last value you kept?",
+          "answer": "values[write - 1], as long as write is at least 1."
+        }
+      ]
+    }
+  ]
+}

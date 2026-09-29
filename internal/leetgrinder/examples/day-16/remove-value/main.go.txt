@@ -1,0 +1,72 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
+type variable struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func emit(event string, pairs ...string) {
+	variables := []variable{}
+	for k := 0; k+1 < len(pairs); k += 2 {
+		variables = append(variables, variable{pairs[k], pairs[k+1]})
+	}
+	data, _ := json.Marshal(struct {
+		Event     string     `json:"event"`
+		Variables []variable `json:"variables"`
+	}{event, variables})
+	fmt.Println(string(data))
+}
+
+func result(answer string) {
+	data, _ := json.Marshal(struct {
+		Result string `json:"result"`
+	}{answer})
+	fmt.Println(string(data))
+}
+
+func itoa(value int) string { return strconv.Itoa(value) }
+
+func show(values []int) string {
+	parts := make([]string, len(values))
+	for k, value := range values {
+		parts[k] = strconv.Itoa(value)
+	}
+	return "[" + strings.Join(parts, ",") + "]"
+}
+
+func solve(values []int, target int) []int {
+	write := 0
+	emit("start", "read", "-", "write", itoa(write), "values", show(values))
+	for read := range values {
+		if values[read] != target {
+			values[write] = values[read]
+			write++
+			emit("keep", "read", itoa(read), "write", itoa(write), "values", show(values))
+		} else {
+			emit("drop", "read", itoa(read), "write", itoa(write), "values", show(values))
+		}
+	}
+
+	emit("done", "read", "-", "write", itoa(write), "values", show(values))
+	return values[:write]
+}
+
+func main() {
+	in := bufio.NewReader(os.Stdin)
+	var n, target int
+	fmt.Fscan(in, &n, &target)
+	values := make([]int, n)
+	for k := range values {
+		fmt.Fscan(in, &values[k])
+	}
+	result(show(solve(values, target)))
+}

@@ -1,0 +1,1021 @@
+{
+ "id": "day-15-mirror-check",
+ "title": "Compare mirror positions from both ends",
+ "invariant": "Every pair outside lo..hi has already matched.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 23,
+   "algorithmEnd": 38
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 30
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 23,
+   "algorithmEnd": 38
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 46,
+   "algorithmEnd": 61
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "[1, 2, 3, 2, 1]",
+   "input": "5 0\n1 2 3 2 1\n",
+   "expectedOutput": "true",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "Does [1,2,3,2,1] read the same backward? Put lo at the first value and hi at the last, and walk them toward each other.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "4"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "values normal: start, lo 0, hi 4.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "lo"
+       },
+       {
+        "id": "pointer-4",
+        "x": 282,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = checked pairs; blue = compare next"
+       }
+      ]
+     }
+    },
+    {
+     "event": "match",
+     "lines": {
+      "cpp": [
+       31,
+       32
+      ],
+      "python": [
+       25,
+       26
+      ],
+      "java": [
+       31,
+       32
+      ],
+      "go": [
+       54,
+       55
+      ]
+     },
+     "explanation": "values[0] = values[4] = 1. This pair matches; move both pointers inward.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "1"
+      },
+      {
+       "name": "hi",
+       "value": "3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "values normal: match, lo 1, hi 3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "lo"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = checked pairs; blue = compare next"
+       }
+      ]
+     }
+    },
+    {
+     "event": "match",
+     "lines": {
+      "cpp": [
+       31,
+       32
+      ],
+      "python": [
+       25,
+       26
+      ],
+      "java": [
+       31,
+       32
+      ],
+      "go": [
+       54,
+       55
+      ]
+     },
+     "explanation": "values[1] = values[3] = 2. This pair matches; move both pointers inward.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "2"
+      },
+      {
+       "name": "hi",
+       "value": "2"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "values normal: match, lo 2, hi 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "lo hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = checked pairs; blue = compare next"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       36
+      ],
+      "python": [
+       29
+      ],
+      "java": [
+       36
+      ],
+      "go": [
+       59
+      ]
+     },
+     "explanation": "The pointers met or crossed without a mismatch. Every mirror pair matched, so it reads the same backward.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "2"
+      },
+      {
+       "name": "hi",
+       "value": "2"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "values normal: done, lo 2, hi 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "lo hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = checked pairs; blue = compare next"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-mismatch",
+   "label": "[1, 2, 2, 3]",
+   "input": "4 0\n1 2 2 3\n",
+   "expectedOutput": "false",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "Does [1,2,2,3] read the same backward? Put lo at the first value and hi at the last, and walk them toward each other.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "values edge-mismatch: start, lo 0, hi 3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "lo"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = checked pairs; blue = compare next"
+       }
+      ]
+     }
+    },
+    {
+     "event": "mismatch",
+     "lines": {
+      "cpp": [
+       27,
+       28
+      ],
+      "python": [
+       22,
+       23
+      ],
+      "java": [
+       27,
+       28
+      ],
+      "go": [
+       50,
+       51
+      ]
+     },
+     "explanation": "values[0] = 1 but values[3] = 3. Mirror positions differ, so it isn't the same backward. Stop.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "values edge-mismatch: mismatch, lo 0, hi 3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "lo"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = checked pairs; blue = compare next"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-single",
+   "label": "One value",
+   "input": "1 0\n7\n",
+   "expectedOutput": "true",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "Does [7] read the same backward? Put lo at the first value and hi at the last, and walk them toward each other.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "values edge-single: start, lo 0, hi 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "lo hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = checked pairs; blue = compare next"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       36
+      ],
+      "python": [
+       29
+      ],
+      "java": [
+       36
+      ],
+      "go": [
+       59
+      ]
+     },
+     "explanation": "With zero or one value there's nothing to compare, so it reads the same backward.",
+     "variables": [
+      {
+       "name": "lo",
+       "value": "0"
+      },
+      {
+       "name": "hi",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "values edge-single: done, lo 0, hi 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "lo hi"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "green = checked pairs; blue = compare next"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}
