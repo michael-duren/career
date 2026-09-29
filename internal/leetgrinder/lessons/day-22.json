@@ -134,7 +134,7 @@
       "navLabel": "Your turn: Reverse Linked List",
       "heading": "Your turn: Reverse Linked List",
       "paragraphs": [
-        "Reverse a singly linked list and return the new head."
+        "Reverse a singly linked list in place, without creating new nodes (O(1) extra memory), and return the new head."
       ],
       "callout": {
         "kind": "try",

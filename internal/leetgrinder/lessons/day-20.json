@@ -153,7 +153,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "Rewrite \"the range l..r sums to k\" as an equation between two prefix sums. Then look back at how day 1 counted pairs.",
+        "text": "Work [1, 2, 3] with k = 3 by hand and list every range that works. Then check your idea on [1, -1, 1] with k = 1.",
         "title": "Where to start"
       }
     },

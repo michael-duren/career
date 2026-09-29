@@ -170,7 +170,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "Finding the node isn't enough to remove it.",
+        "text": "Finding the node isn't enough to remove it. Work [1, 2] with n = 2 by hand.",
         "title": "Where to start"
       }
     },

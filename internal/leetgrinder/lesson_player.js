@@ -377,9 +377,15 @@ export function mountExample(element) {
     ancestor = ancestor.parentElement;
   }
   on(win, 'pagehide', () => dispatch({ type: 'stop' }));
+  try {
+    renderTranscript();
+    render();
+  } catch (error) {
+    for (const remove of listeners) remove();
+    ui.remove();
+    throw error;
+  }
   if (fallback) fallback.hidden = true;
-  renderTranscript();
-  render();
   const controller = { destroy() {
     if (timer !== null) win.clearTimeout(timer);
     for (const remove of listeners) remove();

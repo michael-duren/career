@@ -715,7 +715,7 @@
        59
       ]
      },
-     "explanation": "Buses take 2 minutes per trip and all run at once. What is the least time to finish 1 trips in total? Instead of searching a list, search the answer itself: it's between 1 and 2 (the fastest bus alone could do all trips by then).",
+     "explanation": "Buses take 2 minutes per trip and all run at once. What is the least time to finish 1 trip in total? Instead of searching a list, search the answer itself: it's between 1 and 2 (the fastest bus alone could do all trips by then).",
      "variables": [
       {
        "name": "lo",

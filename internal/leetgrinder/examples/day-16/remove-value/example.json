@@ -327,7 +327,7 @@
        52
       ]
      },
-     "explanation": "2 is not 5: keep it. Copy it to index 0. The first 1 cells are now the kept values, in order.",
+     "explanation": "2 is not 5: keep it. Copy it to index 0. The first cell is now the kept value.",
      "variables": [
       {
        "name": "read",

@@ -374,3 +374,24 @@ test('codeView ignores parentheses inside strings and never hides past an unbala
   const numbers = codeView(lines, 1, lines.length, []).map(entry => entry.number);
   assert.deepEqual(numbers, [1, 3, 5]);
 });
+
+test('a broken example keeps its fallback and does not stop the next example', () => {
+  const document = fakeDocument();
+  const broken = example('day-01-broken');
+  broken.cases[0].frames[0].scene = null;
+  const first = host(document, broken);
+  const second = host(document, example());
+  const originalError = console.error;
+  console.error = () => {};
+  let cleanup;
+  try {
+    cleanup = mountLessonExamples(document);
+  } finally {
+    console.error = originalError;
+  }
+  assert.equal(first.fallback.hidden, false);
+  assert.equal(first.root.querySelector('.lesson-player'), null);
+  assert.equal(second.fallback.hidden, true);
+  assert.notEqual(second.root.querySelector('.lesson-player'), null);
+  cleanup();
+});

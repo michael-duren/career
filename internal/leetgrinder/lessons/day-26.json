@@ -124,7 +124,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "Pushing a new minimum is easy to track. The hard part is pop: when the minimum leaves, what was the minimum before it arrived? What could you store to remember that?",
+        "text": "Pushing a new minimum is easy to track. The hard part is pop: when the minimum leaves, what was the minimum before it arrived?",
         "title": "Where to start"
       }
     },

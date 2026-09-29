@@ -142,7 +142,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "For one position, split \"every other value\" into two groups you could compute with running products. What two passes would give you both?",
+        "text": "Work [1, 2, 3, 4] by hand without dividing. Then try [0, 2, 3] and [0, 0, 3].",
         "title": "Where to start"
       }
     },
@@ -155,7 +155,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "The clock example finds a run of any length. What extra information do you need to guarantee the run has at least two values?",
+        "text": "Test your idea on [0] and on [5, 0, 0] with k = 5 before coding.",
         "title": "Where to start"
       }
     },

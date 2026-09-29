@@ -687,7 +687,7 @@
        53
       ]
      },
-     "explanation": "2 + 4 = 6 ≤ 6. Every index from lo + 1 to hi holds a value ≤ 4, so 2 pairs with all 1 of them. Count 4. 2 is fully counted: move lo right.",
+     "explanation": "2 + 4 = 6 ≤ 6. Every index from lo + 1 to hi holds a value ≤ 4, so 2 pairs with the one value there. Count 4. 2 is fully counted: move lo right.",
      "variables": [
       {
        "name": "lo",

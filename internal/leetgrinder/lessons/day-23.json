@@ -171,7 +171,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "To delete a node you need the node before it. How can slow end one node earlier than usual?",
+        "text": "Try lists of length 1, 2, and 5 by hand. Which node do you need to be standing on to delete the middle?",
         "title": "Where to start"
       }
     },
