@@ -175,7 +175,7 @@
       "heading": "Complexity and cautions",
       "paragraphs": [
         "Search on the answer costs O(log R) checks for an answer range of size R, times the cost of one check. For the buses a check is O(number of buses), so the total is O(n log R).",
-        "Totals inside the check can get large. In C++, Java, and Go, sum in a 64-bit type. Rounding up can be done without floating point: (a + b - 1) / b for positive integers."
+        "Totals inside the check can get large. In C++, Java, and Go, sum in a 64-bit type."
       ]
     },
     {

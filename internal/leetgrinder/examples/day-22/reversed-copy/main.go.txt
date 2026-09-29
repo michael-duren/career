@@ -43,22 +43,48 @@ func show(values []int) string {
 	return "[" + strings.Join(parts, ",") + "]"
 }
 
-func solve(values []int, target int) int {
-	k := target
-	total := 0
-	for right := 0; right < k; right++ {
-		total += values[right]
+type Node struct {
+	Value int
+	Next  *Node
+}
+
+func build(values []int) *Node {
+	var head *Node
+	for k := len(values) - 1; k >= 0; k-- {
+		head = &Node{values[k], head}
 	}
-	best := total
-	emit("first", "right", itoa(k-1), "total", itoa(total), "best", itoa(best))
-	for right := k; right < len(values); right++ {
-		total += values[right] - values[right-k]
-		best = max(best, total)
-		emit("slide", "right", itoa(right), "total", itoa(total), "best", itoa(best))
+	return head
+}
+
+func render(node *Node) string {
+	parts := []string{}
+	for ; node != nil; node = node.Next {
+		parts = append(parts, itoa(node.Value))
+	}
+	if len(parts) == 0 {
+		return "empty"
+	}
+	return strings.Join(parts, "->")
+}
+
+func solve(values []int, target int) string {
+	cur := build(values)
+	var reversed *Node
+	name := func(node *Node) string {
+		if node == nil {
+			return "-"
+		}
+		return itoa(node.Value)
+	}
+	emit("start", "cur", name(cur), "copy", render(reversed))
+	for cur != nil {
+		reversed = &Node{cur.Value, reversed}
+		cur = cur.Next
+		emit("prepend", "cur", name(cur), "copy", render(reversed))
 	}
 
-	emit("done", "right", "-", "total", itoa(total), "best", itoa(best))
-	return best
+	emit("done", "cur", "-", "copy", render(reversed))
+	return render(reversed)
 }
 
 func main() {
@@ -69,5 +95,5 @@ func main() {
 	for k := range values {
 		fmt.Fscan(in, &values[k])
 	}
-	result(itoa(solve(values, target)))
+	result(solve(values, target))
 }

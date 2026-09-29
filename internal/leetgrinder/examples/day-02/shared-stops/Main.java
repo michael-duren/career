@@ -23,14 +23,14 @@ public class Main {
     static int[] solve(int[] first, int[] second) {
         Set<Integer> stops = new HashSet<>();
         int position = 0;
-        for (int k = 0; k + 1 < first.length; k++) {
+        for (int k = 0; k < first.length; k++) {
             position += first[k];
             stops.add(position);
             emit("stop", "route", "A", "length", str(first[k]), "position", str(position), "shared", "[]");
         }
         List<Integer> shared = new ArrayList<>();
         position = 0;
-        for (int k = 0; k + 1 < second.length; k++) {
+        for (int k = 0; k < second.length; k++) {
             position += second[k];
             if (stops.contains(position)) shared.add(position);
             emit("check", "route", "B", "length", str(second[k]), "position", str(position), "shared", show(toArray(shared)));

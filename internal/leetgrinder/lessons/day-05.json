@@ -144,7 +144,7 @@
       ],
       "callout": {
         "kind": "watch",
-        "text": "Picking the last value as pivot is also O(n²) on an already sorted array. Real implementations pick a random pivot, or split into three groups (smaller, equal, larger) to handle repeats."
+        "text": "Picking the last value as pivot is also O(n²) on an already sorted array. Equal values and sorted inputs both hurt this pivot rule."
       },
       "exampleIds": [
         "day-05-quicksort"
@@ -173,7 +173,7 @@
       "callout": {
         "kind": "try",
         "title": "Where to start",
-        "text": "Two directions work. Fix the quicksort's weak spots from the \"Watch out\" box, or work out how the merge example could become part of a full sort."
+        "text": "Find inputs that make the quicksort above slow. Then decide whether to fix it or build a different O(n log n) sort."
       }
     },
     {

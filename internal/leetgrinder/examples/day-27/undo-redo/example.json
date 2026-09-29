@@ -58,7 +58,7 @@
        "value": "-"
       },
       {
-       "name": "stack",
+       "name": "text",
        "value": "[]"
       },
       {
@@ -232,7 +232,7 @@
        "value": "a"
       },
       {
-       "name": "stack",
+       "name": "text",
        "value": "[a]"
       },
       {
@@ -406,7 +406,7 @@
        "value": "b"
       },
       {
-       "name": "stack",
+       "name": "text",
        "value": "[a,b]"
       },
       {
@@ -581,7 +581,7 @@
        "value": "undo"
       },
       {
-       "name": "stack",
+       "name": "text",
        "value": "[a]"
       },
       {
@@ -756,7 +756,7 @@
        "value": "undo"
       },
       {
-       "name": "stack",
+       "name": "text",
        "value": "[]"
       },
       {
@@ -931,7 +931,7 @@
        "value": "redo"
       },
       {
-       "name": "stack",
+       "name": "text",
        "value": "[a]"
       },
       {
@@ -1105,7 +1105,7 @@
        "value": "c"
       },
       {
-       "name": "stack",
+       "name": "text",
        "value": "[a,c]"
       },
       {
@@ -1275,7 +1275,7 @@
        "value": "-"
       },
       {
-       "name": "stack",
+       "name": "text",
        "value": "[a,c]"
       },
       {
@@ -1453,7 +1453,7 @@
        "value": "-"
       },
       {
-       "name": "stack",
+       "name": "text",
        "value": "[]"
       },
       {
@@ -1580,7 +1580,7 @@
        "value": "undo"
       },
       {
-       "name": "stack",
+       "name": "text",
        "value": "[]"
       },
       {
@@ -1706,7 +1706,7 @@
        "value": "a"
       },
       {
-       "name": "stack",
+       "name": "text",
        "value": "[a]"
       },
       {
@@ -1833,7 +1833,7 @@
        "value": "redo"
       },
       {
-       "name": "stack",
+       "name": "text",
        "value": "[a]"
       },
       {
@@ -1955,7 +1955,7 @@
        "value": "-"
       },
       {
-       "name": "stack",
+       "name": "text",
        "value": "[a]"
       },
       {

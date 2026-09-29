@@ -133,7 +133,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "The rule for keeping a value now depends on what you've already kept. Which cell holds the last value you kept?",
+        "text": "The rule for keeping a value now depends on what you've already kept. Work [1, 1, 2] by hand first.",
         "title": "Where to start"
       }
     },
@@ -176,8 +176,8 @@
           "answer": "Leftovers. The answer is only the first write cells, unless the problem asks you to fill the rest."
         },
         {
-          "prompt": "Where is the last value you kept?",
-          "answer": "values[write - 1], as long as write is at least 1."
+          "prompt": "What should a new value be compared against when the keep rule depends on what you've kept?",
+          "answer": "The last kept value, at the end of the kept prefix, not the previous input value."
         }
       ]
     }

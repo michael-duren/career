@@ -1,13 +1,13 @@
 {
  "id": "day-21-clock-repeat",
  "title": "Spot a full lap with remainders",
- "invariant": "first_seen maps each hour shown so far to the step that first produced it.",
+ "invariant": "seen holds every hour the clock has shown so far, including the starting 0.",
  "variants": [
   {
    "language": "cpp",
    "file": "main.cpp",
-   "algorithmStart": 23,
-   "algorithmEnd": 47
+   "algorithmStart": 25,
+   "algorithmEnd": 41
   },
   {
    "language": "python",
@@ -18,14 +18,14 @@
   {
    "language": "java",
    "file": "Main.java",
-   "algorithmStart": 23,
-   "algorithmEnd": 44
+   "algorithmStart": 25,
+   "algorithmEnd": 41
   },
   {
    "language": "go",
    "file": "main.go.txt",
-   "algorithmStart": 46,
-   "algorithmEnd": 67
+   "algorithmStart": 56,
+   "algorithmEnd": 72
   }
  ],
  "cases": [
@@ -33,30 +33,29 @@
    "id": "normal",
    "label": "Shifts 5, -3, 10, 4 on a 12-hour clock",
    "input": "4 12\n5 -3 10 4\n",
-   "expectedOutput": "0..2",
+   "expectedOutput": "yes",
    "frames": [
     {
      "event": "start",
      "lines": {
       "cpp": [
-       32,
-       33
+       26,
+       27
       ],
       "python": [
        19,
        20
       ],
       "java": [
-       28,
-       29,
-       30
+       26,
+       27
       ],
       "go": [
-       52,
-       53
+       57,
+       58
       ]
      },
-     "explanation": "A 12-hour clock starts at 0. Apply the shifts [5,-3,10,4] one by one (negative means backward). Remember the first step at which each hour appeared; 0 appeared before any step.",
+     "explanation": "A 12-hour clock starts at 0. Apply the shifts [5,-3,10,4] one by one (negative means backward). Keep a set of every hour the clock has shown, starting with 0.",
      "variables": [
       {
        "name": "step",
@@ -68,13 +67,13 @@
       },
       {
        "name": "seen",
-       "value": "{0:-1}"
+       "value": "[0]"
       }
      ],
      "scene": {
       "width": 520,
       "height": 200,
-      "description": "Clock normal: start, step -, hour 0, seen {0:-1}.",
+      "description": "Clock normal: start, step -, hour 0, seen [0].",
       "nodes": [
        {
         "id": "h0",
@@ -232,19 +231,19 @@
      "event": "move",
      "lines": {
       "cpp": [
-       41
+       35
       ],
       "python": [
        27
       ],
       "java": [
-       38
+       35
       ],
       "go": [
-       61
+       66
       ]
      },
-     "explanation": "Shift +5: 0 → 5. Hour 5 is new; remember it.",
+     "explanation": "Shift +5: 0 → 5. Hour 5 is new; add it to the set.",
      "variables": [
       {
        "name": "step",
@@ -256,13 +255,13 @@
       },
       {
        "name": "seen",
-       "value": "{0:-1,5:0}"
+       "value": "[0,5]"
       }
      ],
      "scene": {
       "width": 520,
       "height": 200,
-      "description": "Clock normal: move, step 0, hour 5, seen {0:-1,5:0}.",
+      "description": "Clock normal: move, step 0, hour 5, seen [0,5].",
       "nodes": [
        {
         "id": "h0",
@@ -420,19 +419,19 @@
      "event": "move",
      "lines": {
       "cpp": [
-       41
+       35
       ],
       "python": [
        27
       ],
       "java": [
-       38
+       35
       ],
       "go": [
-       61
+       66
       ]
      },
-     "explanation": "Shift -3: 5 → 2. Hour 2 is new; remember it.",
+     "explanation": "Shift -3: 5 → 2. Hour 2 is new; add it to the set.",
      "variables": [
       {
        "name": "step",
@@ -444,13 +443,13 @@
       },
       {
        "name": "seen",
-       "value": "{0:-1,2:1,5:0}"
+       "value": "[0,2,5]"
       }
      ],
      "scene": {
       "width": 520,
       "height": 200,
-      "description": "Clock normal: move, step 1, hour 2, seen {0:-1,2:1,5:0}.",
+      "description": "Clock normal: move, step 1, hour 2, seen [0,2,5].",
       "nodes": [
        {
         "id": "h0",
@@ -608,23 +607,23 @@
      "event": "repeat",
      "lines": {
       "cpp": [
-       37,
-       38
+       31,
+       32
       ],
       "python": [
        24,
        25
       ],
       "java": [
-       34,
-       35
+       31,
+       32
       ],
       "go": [
-       57,
-       58
+       62,
+       63
       ]
      },
-     "explanation": "Shift +10: 2 → 0. The clock showed 0 before. So the shifts from step 0 to step 2 moved it all the way around: they add up to 12, a multiple of 12.",
+     "explanation": "Shift +10: 2 → 0. The clock has shown 0 before, so the shifts since that moment took it all the way around: some run of consecutive shifts adds up to a multiple of 12.",
      "variables": [
       {
        "name": "step",
@@ -636,13 +635,13 @@
       },
       {
        "name": "seen",
-       "value": "{0:-1,2:1,5:0}"
+       "value": "[0,2,5]"
       }
      ],
      "scene": {
       "width": 520,
       "height": 200,
-      "description": "Clock normal: repeat, step 2, hour 0, seen {0:-1,2:1,5:0}.",
+      "description": "Clock normal: repeat, step 2, hour 0, seen [0,2,5].",
       "nodes": [
        {
         "id": "h0",
@@ -802,30 +801,29 @@
    "id": "edge-negative",
    "label": "A negative first shift",
    "input": "4 12\n-5 2 3 -1\n",
-   "expectedOutput": "0..2",
+   "expectedOutput": "yes",
    "frames": [
     {
      "event": "start",
      "lines": {
       "cpp": [
-       32,
-       33
+       26,
+       27
       ],
       "python": [
        19,
        20
       ],
       "java": [
-       28,
-       29,
-       30
+       26,
+       27
       ],
       "go": [
-       52,
-       53
+       57,
+       58
       ]
      },
-     "explanation": "A 12-hour clock starts at 0. Apply the shifts [-5,2,3,-1] one by one (negative means backward). Remember the first step at which each hour appeared; 0 appeared before any step.",
+     "explanation": "A 12-hour clock starts at 0. Apply the shifts [-5,2,3,-1] one by one (negative means backward). Keep a set of every hour the clock has shown, starting with 0.",
      "variables": [
       {
        "name": "step",
@@ -837,13 +835,13 @@
       },
       {
        "name": "seen",
-       "value": "{0:-1}"
+       "value": "[0]"
       }
      ],
      "scene": {
       "width": 520,
       "height": 200,
-      "description": "Clock edge-negative: start, step -, hour 0, seen {0:-1}.",
+      "description": "Clock edge-negative: start, step -, hour 0, seen [0].",
       "nodes": [
        {
         "id": "h0",
@@ -1001,19 +999,19 @@
      "event": "move",
      "lines": {
       "cpp": [
-       41
+       35
       ],
       "python": [
        27
       ],
       "java": [
-       38
+       35
       ],
       "go": [
-       61
+       66
       ]
      },
-     "explanation": "Shift -5: 0 → 7. In C++, Java, and Go, -5 % 12 is -5, a negative remainder, so add 12 and take % 12 again to get 7. Hour 7 is new; remember it.",
+     "explanation": "Shift -5: 0 → 7. In C++, Java, and Go, -5 % 12 is -5, a negative remainder, so add 12 and take % 12 again to get 7. Hour 7 is new; add it to the set.",
      "variables": [
       {
        "name": "step",
@@ -1025,13 +1023,13 @@
       },
       {
        "name": "seen",
-       "value": "{0:-1,7:0}"
+       "value": "[0,7]"
       }
      ],
      "scene": {
       "width": 520,
       "height": 200,
-      "description": "Clock edge-negative: move, step 0, hour 7, seen {0:-1,7:0}.",
+      "description": "Clock edge-negative: move, step 0, hour 7, seen [0,7].",
       "nodes": [
        {
         "id": "h0",
@@ -1189,19 +1187,19 @@
      "event": "move",
      "lines": {
       "cpp": [
-       41
+       35
       ],
       "python": [
        27
       ],
       "java": [
-       38
+       35
       ],
       "go": [
-       61
+       66
       ]
      },
-     "explanation": "Shift +2: 7 → 9. Hour 9 is new; remember it.",
+     "explanation": "Shift +2: 7 → 9. Hour 9 is new; add it to the set.",
      "variables": [
       {
        "name": "step",
@@ -1213,13 +1211,13 @@
       },
       {
        "name": "seen",
-       "value": "{0:-1,7:0,9:1}"
+       "value": "[0,7,9]"
       }
      ],
      "scene": {
       "width": 520,
       "height": 200,
-      "description": "Clock edge-negative: move, step 1, hour 9, seen {0:-1,7:0,9:1}.",
+      "description": "Clock edge-negative: move, step 1, hour 9, seen [0,7,9].",
       "nodes": [
        {
         "id": "h0",
@@ -1377,23 +1375,23 @@
      "event": "repeat",
      "lines": {
       "cpp": [
-       37,
-       38
+       31,
+       32
       ],
       "python": [
        24,
        25
       ],
       "java": [
-       34,
-       35
+       31,
+       32
       ],
       "go": [
-       57,
-       58
+       62,
+       63
       ]
      },
-     "explanation": "Shift +3: 9 → 0. The clock showed 0 before. So the shifts from step 0 to step 2 moved it all the way around: they add up to 0, a multiple of 12.",
+     "explanation": "Shift +3: 9 → 0. The clock has shown 0 before, so the shifts since that moment took it all the way around: some run of consecutive shifts adds up to a multiple of 12.",
      "variables": [
       {
        "name": "step",
@@ -1405,13 +1403,13 @@
       },
       {
        "name": "seen",
-       "value": "{0:-1,7:0,9:1}"
+       "value": "[0,7,9]"
       }
      ],
      "scene": {
       "width": 520,
       "height": 200,
-      "description": "Clock edge-negative: repeat, step 2, hour 0, seen {0:-1,7:0,9:1}.",
+      "description": "Clock edge-negative: repeat, step 2, hour 0, seen [0,7,9].",
       "nodes": [
        {
         "id": "h0",
@@ -1571,30 +1569,29 @@
    "id": "edge-no-repeat",
    "label": "No full lap",
    "input": "2 12\n1 1\n",
-   "expectedOutput": "none",
+   "expectedOutput": "no",
    "frames": [
     {
      "event": "start",
      "lines": {
       "cpp": [
-       32,
-       33
+       26,
+       27
       ],
       "python": [
        19,
        20
       ],
       "java": [
-       28,
-       29,
-       30
+       26,
+       27
       ],
       "go": [
-       52,
-       53
+       57,
+       58
       ]
      },
-     "explanation": "A 12-hour clock starts at 0. Apply the shifts [1,1] one by one (negative means backward). Remember the first step at which each hour appeared; 0 appeared before any step.",
+     "explanation": "A 12-hour clock starts at 0. Apply the shifts [1,1] one by one (negative means backward). Keep a set of every hour the clock has shown, starting with 0.",
      "variables": [
       {
        "name": "step",
@@ -1606,13 +1603,13 @@
       },
       {
        "name": "seen",
-       "value": "{0:-1}"
+       "value": "[0]"
       }
      ],
      "scene": {
       "width": 520,
       "height": 200,
-      "description": "Clock edge-no-repeat: start, step -, hour 0, seen {0:-1}.",
+      "description": "Clock edge-no-repeat: start, step -, hour 0, seen [0].",
       "nodes": [
        {
         "id": "h0",
@@ -1770,19 +1767,19 @@
      "event": "move",
      "lines": {
       "cpp": [
-       41
+       35
       ],
       "python": [
        27
       ],
       "java": [
-       38
+       35
       ],
       "go": [
-       61
+       66
       ]
      },
-     "explanation": "Shift +1: 0 → 1. Hour 1 is new; remember it.",
+     "explanation": "Shift +1: 0 → 1. Hour 1 is new; add it to the set.",
      "variables": [
       {
        "name": "step",
@@ -1794,13 +1791,13 @@
       },
       {
        "name": "seen",
-       "value": "{0:-1,1:0}"
+       "value": "[0,1]"
       }
      ],
      "scene": {
       "width": 520,
       "height": 200,
-      "description": "Clock edge-no-repeat: move, step 0, hour 1, seen {0:-1,1:0}.",
+      "description": "Clock edge-no-repeat: move, step 0, hour 1, seen [0,1].",
       "nodes": [
        {
         "id": "h0",
@@ -1958,19 +1955,19 @@
      "event": "move",
      "lines": {
       "cpp": [
-       41
+       35
       ],
       "python": [
        27
       ],
       "java": [
-       38
+       35
       ],
       "go": [
-       61
+       66
       ]
      },
-     "explanation": "Shift +1: 1 → 2. Hour 2 is new; remember it.",
+     "explanation": "Shift +1: 1 → 2. Hour 2 is new; add it to the set.",
      "variables": [
       {
        "name": "step",
@@ -1982,13 +1979,13 @@
       },
       {
        "name": "seen",
-       "value": "{0:-1,1:0,2:1}"
+       "value": "[0,1,2]"
       }
      ],
      "scene": {
       "width": 520,
       "height": 200,
-      "description": "Clock edge-no-repeat: move, step 1, hour 2, seen {0:-1,1:0,2:1}.",
+      "description": "Clock edge-no-repeat: move, step 1, hour 2, seen [0,1,2].",
       "nodes": [
        {
         "id": "h0",
@@ -2146,16 +2143,16 @@
      "event": "done",
      "lines": {
       "cpp": [
-       45
+       39
       ],
       "python": [
        30
       ],
       "java": [
-       42
+       39
       ],
       "go": [
-       65
+       70
       ]
      },
      "explanation": "No hour repeated, so no run of consecutive shifts adds up to a multiple of 12.",
@@ -2170,13 +2167,13 @@
       },
       {
        "name": "seen",
-       "value": "{0:-1,1:0,2:1}"
+       "value": "[0,1,2]"
       }
      ],
      "scene": {
       "width": 520,
       "height": 200,
-      "description": "Clock edge-no-repeat: done, step -, hour 2, seen {0:-1,1:0,2:1}.",
+      "description": "Clock edge-no-repeat: done, step -, hour 2, seen [0,1,2].",
       "nodes": [
        {
         "id": "h0",

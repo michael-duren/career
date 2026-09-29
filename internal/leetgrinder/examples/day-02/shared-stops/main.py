@@ -18,13 +18,13 @@ def show(values):
 def solve(first, second):
     stops = set()
     position = 0
-    for length in first[:-1]:
+    for length in first:
         position += length
         stops.add(position)
         emit("stop", route="A", length=length, position=position, shared="[]")
     shared = []
     position = 0
-    for length in second[:-1]:
+    for length in second:
         position += length
         if position in stops:
             shared.append(position)

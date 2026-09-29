@@ -155,7 +155,7 @@
        83
       ]
      },
-     "explanation": "Make a copy of 1 whose next is cur.next, then point cur at the copy. The copy was created holding the old next, so nothing got lost. Jump cur past the copy to the original 2. List: 1->1->2.",
+     "explanation": "Make a copy of 1 whose next is cur.next, then point cur.next at the copy. The copy was created holding the old next, so nothing got lost. Jump cur past the copy to the original 2. List: 1->1->2.",
      "variables": [
       {
        "name": "cur",
@@ -267,7 +267,7 @@
        83
       ]
      },
-     "explanation": "Make a copy of 2 whose next is cur.next, then point cur at the copy. The copy was created holding the old next, so nothing got lost. Jump cur past the copy to the end. List: 1->1->2->2.",
+     "explanation": "Make a copy of 2 whose next is cur.next, then point cur.next at the copy. The copy was created holding the old next, so nothing got lost. Jump cur past the copy to the end. List: 1->1->2->2.",
      "variables": [
       {
        "name": "cur",

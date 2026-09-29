@@ -28,16 +28,71 @@
         "height": 170,
         "description": "Three red socks. A set holds red once; a count map holds red: 3.",
         "nodes": [
-          {"id": "s1", "shape": "rect", "x": 12, "y": 36, "width": 60, "height": 40, "text": "red", "role": "neutral"},
-          {"id": "s2", "shape": "rect", "x": 80, "y": 36, "width": 60, "height": 40, "text": "red", "role": "neutral"},
-          {"id": "s3", "shape": "rect", "x": 148, "y": 36, "width": 60, "height": 40, "text": "red", "role": "neutral"},
-          {"id": "set", "shape": "rect", "x": 12, "y": 108, "width": 130, "height": 40, "text": "set {red}", "role": "discarded"},
-          {"id": "count", "shape": "rect", "x": 160, "y": 108, "width": 140, "height": 40, "text": "counts {red: 3}", "role": "result"}
+          {
+            "id": "s1",
+            "shape": "rect",
+            "x": 12,
+            "y": 36,
+            "width": 60,
+            "height": 40,
+            "text": "red",
+            "role": "neutral"
+          },
+          {
+            "id": "s2",
+            "shape": "rect",
+            "x": 80,
+            "y": 36,
+            "width": 60,
+            "height": 40,
+            "text": "red",
+            "role": "neutral"
+          },
+          {
+            "id": "s3",
+            "shape": "rect",
+            "x": 148,
+            "y": 36,
+            "width": 60,
+            "height": 40,
+            "text": "red",
+            "role": "neutral"
+          },
+          {
+            "id": "set",
+            "shape": "rect",
+            "x": 12,
+            "y": 108,
+            "width": 130,
+            "height": 40,
+            "text": "set {red}",
+            "role": "discarded"
+          },
+          {
+            "id": "count",
+            "shape": "rect",
+            "x": 160,
+            "y": 108,
+            "width": 140,
+            "height": 40,
+            "text": "counts {red: 3}",
+            "role": "result"
+          }
         ],
         "edges": [],
         "labels": [
-          {"id": "title", "x": 12, "y": 24, "text": "three socks in the drawer"},
-          {"id": "lost", "x": 12, "y": 164, "text": "the set forgets how many"}
+          {
+            "id": "title",
+            "x": 12,
+            "y": 24,
+            "text": "three socks in the drawer"
+          },
+          {
+            "id": "lost",
+            "x": 12,
+            "y": 164,
+            "text": "the set forgets how many"
+          }
         ]
       }
     },
@@ -48,7 +103,7 @@
       "paragraphs": [
         "Pull socks out of a drawer one at a time. How many complete pairs can you make? Keep a count map: waiting[color] is how many socks of that color are sitting unmatched.",
         "When a sock arrives and one of its color is already waiting, use both: add a pair and set that color back to 0. Otherwise it waits. Spending the waiting sock is what stops it from being used in two pairs.",
-        "For red, blue, red, red, blue, green you get 2 pairs (red and blue) and have a red and a green left over. A set couldn't do this: after three reds it would still just say \"red\"."
+        "For red, blue, red, red, blue, green you get 2 pairs (red and blue) and have a red and a green left over. Here a set you add to and remove from would also work, because at most one sock of a color is ever waiting. Counts matter when several copies can be waiting and each is spent once."
       ],
       "exampleIds": [
         "day-04-sock-pairs"
@@ -106,7 +161,7 @@
       "callout": {
         "kind": "try",
         "title": "Where to start",
-        "text": "Decide which one each problem needs: a set or counts. Then think about how the sock example spends a copy once it's used."
+        "text": "Decide which one each problem needs: a set or counts. Work [1, 2, 2, 1] and [2, 2] by hand first."
       }
     },
     {
@@ -132,7 +187,7 @@
       "callout": {
         "kind": "try",
         "title": "Where to start",
-        "text": "The grid example handles rows and columns. The new part is the boxes: work out, for a cell at (row, column), which of the nine boxes it's in. Test your formula on (0, 0), (4, 4), and (8, 2)."
+        "text": "List every rule a digit must follow and decide what you need to remember for each one. Test your code on a board where two 5s share a 3 × 3 box but no row or column."
       }
     },
     {
@@ -159,8 +214,8 @@
       ],
       "checks": [
         {
-          "prompt": "Why can't a set answer \"how many pairs of socks?\"",
-          "answer": "A set only records that a color appeared. Pairs depend on how many socks of each color there are."
+          "prompt": "When do you need counts instead of a set?",
+          "answer": "When several copies of a value can be available at once and each copy may be used only once."
         },
         {
           "prompt": "Why does seeing a value twice prove the process loops forever?",

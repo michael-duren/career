@@ -36,17 +36,16 @@ def render(node):
     return "->".join(parts) or "empty"
 
 def solve(values, target):
-    prev, cur = None, build(values)
-    emit("start", reversed=render(prev), rest=render(cur))
+    cur = build(values)
+    copy = None
+    emit("start", cur="-" if cur is None else cur.value, copy=render(copy))
     while cur:
-        following = cur.next
-        cur.next = prev
-        prev = cur
-        cur = following
-        emit("flip", reversed=render(prev), rest=render(cur))
+        copy = Node(cur.value, copy)
+        cur = cur.next
+        emit("prepend", cur="-" if cur is None else cur.value, copy=render(copy))
 
-    emit("done", reversed=render(prev), rest=render(cur))
-    return render(prev)
+    emit("done", cur="-", copy=render(copy))
+    return render(copy)
 
 
 def main():

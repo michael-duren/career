@@ -127,7 +127,7 @@
       "heading": "Worked example: count pairs from both ends",
       "paragraphs": [
         "Day 14 counted pairs with sum ≤ T using a binary search per value. In a sorted array you can do it in one pass. Look at the smallest and largest remaining values.",
-        "If values[lo] + values[hi] ≤ T, then values[lo] also works with everything between lo and hi, because those are all smaller than values[hi]. Count them all at once and move lo right. If the sum is too big, values[hi] is too big even with the smallest remaining partner, so move hi left.",
+        "If values[lo] + values[hi] ≤ T, then values[lo] also works with every index from lo + 1 to hi, because those values are all ≤ values[hi]. Count them all at once and move lo right. If the sum is too big, values[hi] is too big even with the smallest remaining partner, so move hi left.",
         "Each step removes one end for good, so the loop runs at most n times."
       ],
       "exampleIds": [

@@ -144,7 +144,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "Solve the version without duplicates first. Then find an input, like [1, 0, 1, 1, 1], where your check can't tell which half is which. What's the safest small step in that case?",
+        "text": "Solve the version without duplicates first. Then look for an input where your check can't tell which half is sorted.",
         "title": "Where to start"
       }
     },
@@ -157,7 +157,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "The mountain example assumed exactly one top. Convince yourself that walking uphill from anywhere must still reach some peak, then see whether the same check works.",
+        "text": "If values[mid] < values[mid + 1], must a peak exist somewhere to the right? Convince yourself before coding.",
         "title": "Where to start"
       }
     },
@@ -166,7 +166,7 @@
       "navLabel": "Complexity",
       "heading": "Complexity and cautions",
       "paragraphs": [
-        "Each of these searches is O(log n) as long as every step discards a constant fraction. When duplicates make a comparison ambiguous, you may only be able to discard one element, and the worst case becomes O(n).",
+        "Each of these searches is O(log n) as long as every step discards a constant fraction.",
         "Always check that indexes like mid + 1 stay inside the array for every possible lo and hi."
       ]
     },
@@ -187,8 +187,8 @@
           "answer": "mid itself could be the peak, so it must stay a candidate."
         },
         {
-          "prompt": "Why can duplicates slow a rotated search down to O(n)?",
-          "answer": "If mid, lo, and hi hold the same value, you can't tell which side is sorted, so you can only drop one element safely."
+          "prompt": "Why doesn't the mountain search need the array to be sorted?",
+          "answer": "It only uses the slope at mid, which tells you which side the top is on."
         }
       ]
     }

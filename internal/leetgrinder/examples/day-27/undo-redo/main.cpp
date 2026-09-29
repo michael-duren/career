@@ -28,28 +28,28 @@ string showStack(const vector<string>& stack) {
 
 string solve(const vector<string>& tokens) {
     vector<string> text, redo;
-    emit("start", {{"token", "-"}, {"stack", showStack(text)}, {"redo", showStack(redo)}});
+    emit("start", {{"token", "-"}, {"text", showStack(text)}, {"redo", showStack(redo)}});
     for (const string& token : tokens) {
         if (token == "undo") {
             if (!text.empty()) {
                 redo.push_back(text.back());
                 text.pop_back();
             }
-            emit("undo", {{"token", token}, {"stack", showStack(text)}, {"redo", showStack(redo)}});
+            emit("undo", {{"token", token}, {"text", showStack(text)}, {"redo", showStack(redo)}});
         } else if (token == "redo") {
             if (!redo.empty()) {
                 text.push_back(redo.back());
                 redo.pop_back();
             }
-            emit("redo", {{"token", token}, {"stack", showStack(text)}, {"redo", showStack(redo)}});
+            emit("redo", {{"token", token}, {"text", showStack(text)}, {"redo", showStack(redo)}});
         } else {
             text.push_back(token);
             redo.clear();
-            emit("type", {{"token", token}, {"stack", showStack(text)}, {"redo", showStack(redo)}});
+            emit("type", {{"token", token}, {"text", showStack(text)}, {"redo", showStack(redo)}});
         }
     }
 
-    emit("done", {{"token", "-"}, {"stack", showStack(text)}, {"redo", showStack(redo)}});
+    emit("done", {{"token", "-"}, {"text", showStack(text)}, {"redo", showStack(redo)}});
     string out;
     for (const string& letter : text) out += letter;
     return out.empty() ? "(empty)" : out;

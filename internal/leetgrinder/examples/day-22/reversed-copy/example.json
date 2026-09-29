@@ -1,31 +1,31 @@
 {
- "id": "day-22-reverse-list",
- "title": "Reverse a linked list, one arrow at a time",
- "invariant": "prev heads the already-reversed part and cur heads the untouched part; together they hold every node.",
+ "id": "day-22-reversed-copy",
+ "title": "Build a reversed copy by adding to the front",
+ "invariant": "copy holds the nodes read so far, newest first, so it is the reversal of the part already walked.",
  "variants": [
   {
    "language": "cpp",
    "file": "main.cpp",
    "algorithmStart": 40,
-   "algorithmEnd": 54
+   "algorithmEnd": 52
   },
   {
    "language": "python",
    "file": "main.py",
    "algorithmStart": 38,
-   "algorithmEnd": 49
+   "algorithmEnd": 48
   },
   {
    "language": "java",
    "file": "Main.java",
    "algorithmStart": 41,
-   "algorithmEnd": 54
+   "algorithmEnd": 53
   },
   {
    "language": "go",
    "file": "main.go.txt",
    "algorithmStart": 70,
-   "algorithmEnd": 84
+   "algorithmEnd": 88
   }
  ],
  "cases": [
@@ -43,31 +43,37 @@
        42
       ],
       "python": [
-       39
+       39,
+       40
       ],
       "java": [
-       42
+       42,
+       43
       ],
       "go": [
        71,
-       72
+       72,
+       73,
+       74,
+       75,
+       77
       ]
      },
-     "explanation": "The list is 1->2->3. prev is empty (nothing reversed yet) and cur is the first node. Each step points one arrow backward.",
+     "explanation": "Build a reversed copy of 1->2->3 without changing it. copy starts empty; cur walks the original from the head.",
      "variables": [
       {
-       "name": "reversed",
-       "value": "empty"
+       "name": "cur",
+       "value": "1"
       },
       {
-       "name": "rest",
-       "value": "1->2->3"
+       "name": "copy",
+       "value": "empty"
       }
      ],
      "scene": {
       "width": 520,
       "height": 210,
-      "description": "Reverse normal: start, reversed empty, rest 1->2->3.",
+      "description": "Reversed copy normal: start, cur 1, copy empty.",
       "nodes": [
        {
         "id": "cell-0",
@@ -100,24 +106,14 @@
         "role": "neutral"
        },
        {
-        "id": "rev",
+        "id": "copy",
         "shape": "rect",
         "x": 16,
         "y": 132,
-        "width": 220,
+        "width": 240,
         "height": 40,
-        "text": "reversed empty",
+        "text": "copy empty",
         "role": "result"
-       },
-       {
-        "id": "rest",
-        "shape": "rect",
-        "x": 248,
-        "y": 132,
-        "width": 200,
-        "height": 40,
-        "text": "rest 1->2->3",
-        "role": "neutral"
        }
       ],
       "edges": [],
@@ -126,7 +122,7 @@
         "id": "title",
         "x": 16,
         "y": 24,
-        "text": "green = reversed part (reads backward); plain = not yet"
+        "text": "original list (gold = already copied)"
        },
        {
         "id": "cell-index-0",
@@ -156,54 +152,46 @@
         "id": "footer",
         "x": 16,
         "y": 196,
-        "text": "save next, point back, advance"
+        "text": "each new node goes in front of the copy"
        }
       ]
      }
     },
     {
-     "event": "flip",
+     "event": "prepend",
      "lines": {
       "cpp": [
        45,
-       46,
-       47,
-       48
+       46
       ],
       "python": [
-       42,
        43,
-       44,
-       45
+       44
       ],
       "java": [
-       45,
        46,
-       47,
-       48
+       47
       ],
       "go": [
-       75,
-       76,
-       77,
-       78
+       81,
+       82
       ]
      },
-     "explanation": "Save cur.next (2) first, because the next line overwrites it. Point node 1 back at prev. Now prev = 1 heads the reversed part 1, and cur moves to the saved node.",
+     "explanation": "Make a new node 1 whose next is the current copy, so it goes in front. The copy is now 1. Move cur along the original.",
      "variables": [
       {
-       "name": "reversed",
-       "value": "1"
+       "name": "cur",
+       "value": "2"
       },
       {
-       "name": "rest",
-       "value": "2->3"
+       "name": "copy",
+       "value": "1"
       }
      ],
      "scene": {
       "width": 520,
       "height": 210,
-      "description": "Reverse normal: flip, reversed 1, rest 2->3.",
+      "description": "Reversed copy normal: prepend, cur 2, copy 1.",
       "nodes": [
        {
         "id": "cell-0",
@@ -213,7 +201,7 @@
         "width": 58,
         "height": 42,
         "text": "1",
-        "role": "result"
+        "role": "visited"
        },
        {
         "id": "cell-1",
@@ -236,24 +224,14 @@
         "role": "neutral"
        },
        {
-        "id": "rev",
+        "id": "copy",
         "shape": "rect",
         "x": 16,
         "y": 132,
-        "width": 220,
+        "width": 240,
         "height": 40,
-        "text": "reversed 1",
+        "text": "copy 1",
         "role": "result"
-       },
-       {
-        "id": "rest",
-        "shape": "rect",
-        "x": 248,
-        "y": 132,
-        "width": 200,
-        "height": 40,
-        "text": "rest 2->3",
-        "role": "neutral"
        }
       ],
       "edges": [],
@@ -262,7 +240,7 @@
         "id": "title",
         "x": 16,
         "y": 24,
-        "text": "green = reversed part (reads backward); plain = not yet"
+        "text": "original list (gold = already copied)"
        },
        {
         "id": "cell-index-0",
@@ -281,12 +259,6 @@
         "x": 173,
         "y": 96,
         "text": "2"
-       },
-       {
-        "id": "pointer-0",
-        "x": 18,
-        "y": 116,
-        "text": "prev"
        },
        {
         "id": "pointer-1",
@@ -298,54 +270,46 @@
         "id": "footer",
         "x": 16,
         "y": 196,
-        "text": "save next, point back, advance"
+        "text": "each new node goes in front of the copy"
        }
       ]
      }
     },
     {
-     "event": "flip",
+     "event": "prepend",
      "lines": {
       "cpp": [
        45,
-       46,
-       47,
-       48
+       46
       ],
       "python": [
-       42,
        43,
-       44,
-       45
+       44
       ],
       "java": [
-       45,
        46,
-       47,
-       48
+       47
       ],
       "go": [
-       75,
-       76,
-       77,
-       78
+       81,
+       82
       ]
      },
-     "explanation": "Save cur.next (3) first, because the next line overwrites it. Point node 2 back at prev. Now prev = 2 heads the reversed part 2->1, and cur moves to the saved node.",
+     "explanation": "Make a new node 2 whose next is the current copy, so it goes in front. The copy is now 2->1. Move cur along the original.",
      "variables": [
       {
-       "name": "reversed",
-       "value": "2->1"
+       "name": "cur",
+       "value": "3"
       },
       {
-       "name": "rest",
-       "value": "3"
+       "name": "copy",
+       "value": "2->1"
       }
      ],
      "scene": {
       "width": 520,
       "height": 210,
-      "description": "Reverse normal: flip, reversed 2->1, rest 3.",
+      "description": "Reversed copy normal: prepend, cur 3, copy 2->1.",
       "nodes": [
        {
         "id": "cell-0",
@@ -354,8 +318,8 @@
         "y": 36,
         "width": 58,
         "height": 42,
-        "text": "2",
-        "role": "result"
+        "text": "1",
+        "role": "visited"
        },
        {
         "id": "cell-1",
@@ -364,8 +328,8 @@
         "y": 36,
         "width": 58,
         "height": 42,
-        "text": "1",
-        "role": "result"
+        "text": "2",
+        "role": "visited"
        },
        {
         "id": "cell-2",
@@ -378,24 +342,14 @@
         "role": "neutral"
        },
        {
-        "id": "rev",
+        "id": "copy",
         "shape": "rect",
         "x": 16,
         "y": 132,
-        "width": 220,
+        "width": 240,
         "height": 40,
-        "text": "reversed 2->1",
+        "text": "copy 2->1",
         "role": "result"
-       },
-       {
-        "id": "rest",
-        "shape": "rect",
-        "x": 248,
-        "y": 132,
-        "width": 200,
-        "height": 40,
-        "text": "rest 3",
-        "role": "neutral"
        }
       ],
       "edges": [],
@@ -404,7 +358,7 @@
         "id": "title",
         "x": 16,
         "y": 24,
-        "text": "green = reversed part (reads backward); plain = not yet"
+        "text": "original list (gold = already copied)"
        },
        {
         "id": "cell-index-0",
@@ -423,12 +377,6 @@
         "x": 173,
         "y": 96,
         "text": "2"
-       },
-       {
-        "id": "pointer-0",
-        "x": 18,
-        "y": 116,
-        "text": "prev"
        },
        {
         "id": "pointer-2",
@@ -440,54 +388,46 @@
         "id": "footer",
         "x": 16,
         "y": 196,
-        "text": "save next, point back, advance"
+        "text": "each new node goes in front of the copy"
        }
       ]
      }
     },
     {
-     "event": "flip",
+     "event": "prepend",
      "lines": {
       "cpp": [
        45,
-       46,
-       47,
-       48
+       46
       ],
       "python": [
-       42,
        43,
-       44,
-       45
+       44
       ],
       "java": [
-       45,
        46,
-       47,
-       48
+       47
       ],
       "go": [
-       75,
-       76,
-       77,
-       78
+       81,
+       82
       ]
      },
-     "explanation": "Save cur.next (nothing left), because the next line overwrites it. Point node 3 back at prev. Now prev = 3 heads the reversed part 3->2->1, and cur moves to the saved node.",
+     "explanation": "Make a new node 3 whose next is the current copy, so it goes in front. The copy is now 3->2->1. Move cur along the original.",
      "variables": [
       {
-       "name": "reversed",
-       "value": "3->2->1"
+       "name": "cur",
+       "value": "-"
       },
       {
-       "name": "rest",
-       "value": "empty"
+       "name": "copy",
+       "value": "3->2->1"
       }
      ],
      "scene": {
       "width": 520,
       "height": 210,
-      "description": "Reverse normal: flip, reversed 3->2->1, rest empty.",
+      "description": "Reversed copy normal: prepend, cur -, copy 3->2->1.",
       "nodes": [
        {
         "id": "cell-0",
@@ -496,8 +436,8 @@
         "y": 36,
         "width": 58,
         "height": 42,
-        "text": "3",
-        "role": "result"
+        "text": "1",
+        "role": "visited"
        },
        {
         "id": "cell-1",
@@ -507,7 +447,7 @@
         "width": 58,
         "height": 42,
         "text": "2",
-        "role": "result"
+        "role": "visited"
        },
        {
         "id": "cell-2",
@@ -516,28 +456,18 @@
         "y": 36,
         "width": 58,
         "height": 42,
-        "text": "1",
-        "role": "result"
+        "text": "3",
+        "role": "visited"
        },
        {
-        "id": "rev",
+        "id": "copy",
         "shape": "rect",
         "x": 16,
         "y": 132,
-        "width": 220,
+        "width": 240,
         "height": 40,
-        "text": "reversed 3->2->1",
+        "text": "copy 3->2->1",
         "role": "result"
-       },
-       {
-        "id": "rest",
-        "shape": "rect",
-        "x": 248,
-        "y": 132,
-        "width": 200,
-        "height": 40,
-        "text": "rest empty",
-        "role": "neutral"
        }
       ],
       "edges": [],
@@ -546,7 +476,7 @@
         "id": "title",
         "x": 16,
         "y": 24,
-        "text": "green = reversed part (reads backward); plain = not yet"
+        "text": "original list (gold = already copied)"
        },
        {
         "id": "cell-index-0",
@@ -567,16 +497,10 @@
         "text": "2"
        },
        {
-        "id": "pointer-0",
-        "x": 18,
-        "y": 116,
-        "text": "prev"
-       },
-       {
         "id": "footer",
         "x": 16,
         "y": 196,
-        "text": "save next, point back, advance"
+        "text": "each new node goes in front of the copy"
        }
       ]
      }
@@ -585,33 +509,33 @@
      "event": "done",
      "lines": {
       "cpp": [
-       52
+       50
       ],
       "python": [
-       48
+       47
       ],
       "java": [
-       52
+       51
       ],
       "go": [
-       82
+       86
       ]
      },
-     "explanation": "cur is empty: every arrow now points backward. The new head is prev: 3->2->1.",
+     "explanation": "cur has walked off the end. Adding each value at the front reversed the order: 3->2->1. The original list is unchanged.",
      "variables": [
       {
-       "name": "reversed",
-       "value": "3->2->1"
+       "name": "cur",
+       "value": "-"
       },
       {
-       "name": "rest",
-       "value": "empty"
+       "name": "copy",
+       "value": "3->2->1"
       }
      ],
      "scene": {
       "width": 520,
       "height": 210,
-      "description": "Reverse normal: done, reversed 3->2->1, rest empty.",
+      "description": "Reversed copy normal: done, cur -, copy 3->2->1.",
       "nodes": [
        {
         "id": "cell-0",
@@ -620,8 +544,8 @@
         "y": 36,
         "width": 58,
         "height": 42,
-        "text": "3",
-        "role": "result"
+        "text": "1",
+        "role": "visited"
        },
        {
         "id": "cell-1",
@@ -631,7 +555,7 @@
         "width": 58,
         "height": 42,
         "text": "2",
-        "role": "result"
+        "role": "visited"
        },
        {
         "id": "cell-2",
@@ -640,28 +564,18 @@
         "y": 36,
         "width": 58,
         "height": 42,
-        "text": "1",
-        "role": "result"
+        "text": "3",
+        "role": "visited"
        },
        {
-        "id": "rev",
+        "id": "copy",
         "shape": "rect",
         "x": 16,
         "y": 132,
-        "width": 220,
+        "width": 240,
         "height": 40,
-        "text": "reversed 3->2->1",
+        "text": "copy 3->2->1",
         "role": "result"
-       },
-       {
-        "id": "rest",
-        "shape": "rect",
-        "x": 248,
-        "y": 132,
-        "width": 200,
-        "height": 40,
-        "text": "rest empty",
-        "role": "neutral"
        }
       ],
       "edges": [],
@@ -670,7 +584,7 @@
         "id": "title",
         "x": 16,
         "y": 24,
-        "text": "green = reversed part (reads backward); plain = not yet"
+        "text": "original list (gold = already copied)"
        },
        {
         "id": "cell-index-0",
@@ -691,16 +605,10 @@
         "text": "2"
        },
        {
-        "id": "pointer-0",
-        "x": 18,
-        "y": 116,
-        "text": "prev"
-       },
-       {
         "id": "footer",
         "x": 16,
         "y": 196,
-        "text": "save next, point back, advance"
+        "text": "each new node goes in front of the copy"
        }
       ]
      }
@@ -721,31 +629,37 @@
        42
       ],
       "python": [
-       39
+       39,
+       40
       ],
       "java": [
-       42
+       42,
+       43
       ],
       "go": [
        71,
-       72
+       72,
+       73,
+       74,
+       75,
+       77
       ]
      },
-     "explanation": "The list is 7. prev is empty (nothing reversed yet) and cur is the first node. Each step points one arrow backward.",
+     "explanation": "Build a reversed copy of 7 without changing it. copy starts empty; cur walks the original from the head.",
      "variables": [
       {
-       "name": "reversed",
-       "value": "empty"
+       "name": "cur",
+       "value": "7"
       },
       {
-       "name": "rest",
-       "value": "7"
+       "name": "copy",
+       "value": "empty"
       }
      ],
      "scene": {
       "width": 520,
       "height": 210,
-      "description": "Reverse edge-single: start, reversed empty, rest 7.",
+      "description": "Reversed copy edge-single: start, cur 7, copy empty.",
       "nodes": [
        {
         "id": "cell-0",
@@ -758,24 +672,14 @@
         "role": "neutral"
        },
        {
-        "id": "rev",
+        "id": "copy",
         "shape": "rect",
         "x": 16,
         "y": 132,
-        "width": 220,
+        "width": 240,
         "height": 40,
-        "text": "reversed empty",
+        "text": "copy empty",
         "role": "result"
-       },
-       {
-        "id": "rest",
-        "shape": "rect",
-        "x": 248,
-        "y": 132,
-        "width": 200,
-        "height": 40,
-        "text": "rest 7",
-        "role": "neutral"
        }
       ],
       "edges": [],
@@ -784,7 +688,7 @@
         "id": "title",
         "x": 16,
         "y": 24,
-        "text": "green = reversed part (reads backward); plain = not yet"
+        "text": "original list (gold = already copied)"
        },
        {
         "id": "cell-index-0",
@@ -802,54 +706,46 @@
         "id": "footer",
         "x": 16,
         "y": 196,
-        "text": "save next, point back, advance"
+        "text": "each new node goes in front of the copy"
        }
       ]
      }
     },
     {
-     "event": "flip",
+     "event": "prepend",
      "lines": {
       "cpp": [
        45,
-       46,
-       47,
-       48
+       46
       ],
       "python": [
-       42,
        43,
-       44,
-       45
+       44
       ],
       "java": [
-       45,
        46,
-       47,
-       48
+       47
       ],
       "go": [
-       75,
-       76,
-       77,
-       78
+       81,
+       82
       ]
      },
-     "explanation": "Save cur.next (nothing left), because the next line overwrites it. Point node 7 back at prev. Now prev = 7 heads the reversed part 7, and cur moves to the saved node.",
+     "explanation": "Make a new node 7 whose next is the current copy, so it goes in front. The copy is now 7. Move cur along the original.",
      "variables": [
       {
-       "name": "reversed",
-       "value": "7"
+       "name": "cur",
+       "value": "-"
       },
       {
-       "name": "rest",
-       "value": "empty"
+       "name": "copy",
+       "value": "7"
       }
      ],
      "scene": {
       "width": 520,
       "height": 210,
-      "description": "Reverse edge-single: flip, reversed 7, rest empty.",
+      "description": "Reversed copy edge-single: prepend, cur -, copy 7.",
       "nodes": [
        {
         "id": "cell-0",
@@ -859,27 +755,17 @@
         "width": 58,
         "height": 42,
         "text": "7",
-        "role": "result"
+        "role": "visited"
        },
        {
-        "id": "rev",
+        "id": "copy",
         "shape": "rect",
         "x": 16,
         "y": 132,
-        "width": 220,
+        "width": 240,
         "height": 40,
-        "text": "reversed 7",
+        "text": "copy 7",
         "role": "result"
-       },
-       {
-        "id": "rest",
-        "shape": "rect",
-        "x": 248,
-        "y": 132,
-        "width": 200,
-        "height": 40,
-        "text": "rest empty",
-        "role": "neutral"
        }
       ],
       "edges": [],
@@ -888,7 +774,7 @@
         "id": "title",
         "x": 16,
         "y": 24,
-        "text": "green = reversed part (reads backward); plain = not yet"
+        "text": "original list (gold = already copied)"
        },
        {
         "id": "cell-index-0",
@@ -897,16 +783,10 @@
         "text": "0"
        },
        {
-        "id": "pointer-0",
-        "x": 18,
-        "y": 116,
-        "text": "prev"
-       },
-       {
         "id": "footer",
         "x": 16,
         "y": 196,
-        "text": "save next, point back, advance"
+        "text": "each new node goes in front of the copy"
        }
       ]
      }
@@ -915,33 +795,33 @@
      "event": "done",
      "lines": {
       "cpp": [
-       52
+       50
       ],
       "python": [
-       48
+       47
       ],
       "java": [
-       52
+       51
       ],
       "go": [
-       82
+       86
       ]
      },
-     "explanation": "cur is empty: every arrow now points backward. The new head is prev: 7.",
+     "explanation": "cur has walked off the end. Adding each value at the front reversed the order: 7. The original list is unchanged.",
      "variables": [
       {
-       "name": "reversed",
-       "value": "7"
+       "name": "cur",
+       "value": "-"
       },
       {
-       "name": "rest",
-       "value": "empty"
+       "name": "copy",
+       "value": "7"
       }
      ],
      "scene": {
       "width": 520,
       "height": 210,
-      "description": "Reverse edge-single: done, reversed 7, rest empty.",
+      "description": "Reversed copy edge-single: done, cur -, copy 7.",
       "nodes": [
        {
         "id": "cell-0",
@@ -951,27 +831,17 @@
         "width": 58,
         "height": 42,
         "text": "7",
-        "role": "result"
+        "role": "visited"
        },
        {
-        "id": "rev",
+        "id": "copy",
         "shape": "rect",
         "x": 16,
         "y": 132,
-        "width": 220,
+        "width": 240,
         "height": 40,
-        "text": "reversed 7",
+        "text": "copy 7",
         "role": "result"
-       },
-       {
-        "id": "rest",
-        "shape": "rect",
-        "x": 248,
-        "y": 132,
-        "width": 200,
-        "height": 40,
-        "text": "rest empty",
-        "role": "neutral"
        }
       ],
       "edges": [],
@@ -980,7 +850,7 @@
         "id": "title",
         "x": 16,
         "y": 24,
-        "text": "green = reversed part (reads backward); plain = not yet"
+        "text": "original list (gold = already copied)"
        },
        {
         "id": "cell-index-0",
@@ -989,16 +859,10 @@
         "text": "0"
        },
        {
-        "id": "pointer-0",
-        "x": 18,
-        "y": 116,
-        "text": "prev"
-       },
-       {
         "id": "footer",
         "x": 16,
         "y": 196,
-        "text": "save next, point back, advance"
+        "text": "each new node goes in front of the copy"
        }
       ]
      }
@@ -1019,31 +883,37 @@
        42
       ],
       "python": [
-       39
+       39,
+       40
       ],
       "java": [
-       42
+       42,
+       43
       ],
       "go": [
        71,
-       72
+       72,
+       73,
+       74,
+       75,
+       77
       ]
      },
-     "explanation": "The list is empty. cur starts as nothing, so there are no arrows to flip.",
+     "explanation": "The list is empty, so the copy stays empty.",
      "variables": [
       {
-       "name": "reversed",
-       "value": "empty"
+       "name": "cur",
+       "value": "-"
       },
       {
-       "name": "rest",
+       "name": "copy",
        "value": "empty"
       }
      ],
      "scene": {
       "width": 520,
       "height": 210,
-      "description": "Reverse edge-empty: start, reversed empty, rest empty.",
+      "description": "Reversed copy edge-empty: start, cur -, copy empty.",
       "nodes": [
        {
         "id": "cell-0",
@@ -1056,24 +926,14 @@
         "role": "neutral"
        },
        {
-        "id": "rev",
+        "id": "copy",
         "shape": "rect",
         "x": 16,
         "y": 132,
-        "width": 220,
+        "width": 240,
         "height": 40,
-        "text": "reversed empty",
+        "text": "copy empty",
         "role": "result"
-       },
-       {
-        "id": "rest",
-        "shape": "rect",
-        "x": 248,
-        "y": 132,
-        "width": 200,
-        "height": 40,
-        "text": "rest empty",
-        "role": "neutral"
        }
       ],
       "edges": [],
@@ -1082,7 +942,7 @@
         "id": "title",
         "x": 16,
         "y": 24,
-        "text": "green = reversed part (reads backward); plain = not yet"
+        "text": "original list (gold = already copied)"
        },
        {
         "id": "cell-index-0",
@@ -1094,7 +954,7 @@
         "id": "footer",
         "x": 16,
         "y": 196,
-        "text": "save next, point back, advance"
+        "text": "each new node goes in front of the copy"
        }
       ]
      }
@@ -1103,33 +963,33 @@
      "event": "done",
      "lines": {
       "cpp": [
-       52
+       50
       ],
       "python": [
-       48
+       47
       ],
       "java": [
-       52
+       51
       ],
       "go": [
-       82
+       86
       ]
      },
-     "explanation": "cur is empty: every arrow now points backward. The new head is prev: empty.",
+     "explanation": "cur has walked off the end. Adding each value at the front reversed the order: empty. The original list is unchanged.",
      "variables": [
       {
-       "name": "reversed",
-       "value": "empty"
+       "name": "cur",
+       "value": "-"
       },
       {
-       "name": "rest",
+       "name": "copy",
        "value": "empty"
       }
      ],
      "scene": {
       "width": 520,
       "height": 210,
-      "description": "Reverse edge-empty: done, reversed empty, rest empty.",
+      "description": "Reversed copy edge-empty: done, cur -, copy empty.",
       "nodes": [
        {
         "id": "cell-0",
@@ -1142,24 +1002,14 @@
         "role": "neutral"
        },
        {
-        "id": "rev",
+        "id": "copy",
         "shape": "rect",
         "x": 16,
         "y": 132,
-        "width": 220,
+        "width": 240,
         "height": 40,
-        "text": "reversed empty",
+        "text": "copy empty",
         "role": "result"
-       },
-       {
-        "id": "rest",
-        "shape": "rect",
-        "x": 248,
-        "y": 132,
-        "width": 200,
-        "height": 40,
-        "text": "rest empty",
-        "role": "neutral"
        }
       ],
       "edges": [],
@@ -1168,7 +1018,7 @@
         "id": "title",
         "x": 16,
         "y": 24,
-        "text": "green = reversed part (reads backward); plain = not yet"
+        "text": "original list (gold = already copied)"
        },
        {
         "id": "cell-index-0",
@@ -1180,7 +1030,7 @@
         "id": "footer",
         "x": 16,
         "y": 196,
-        "text": "save next, point back, advance"
+        "text": "each new node goes in front of the copy"
        }
       ]
      }

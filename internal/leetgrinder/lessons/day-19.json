@@ -179,7 +179,7 @@
       "heading": "Complexity and cautions",
       "paragraphs": [
         "Grow-and-shrink windows are O(n) time: left and right each move forward at most n times. Memory is O(1) for a sum, or the size of the alphabet for character counts.",
-        "Record the answer at the right moment. For \"longest\", record after shrinking back to valid. For \"shortest\", record while the window is still valid, before each shrink."
+        "Record the answer at the right moment. For \"longest\", record after shrinking back to valid."
       ]
     },
     {

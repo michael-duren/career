@@ -540,7 +540,7 @@
        73
       ]
      },
-     "explanation": "lo = hi = 3: the least time that finishes 5 trips (5 trips by then).",
+     "explanation": "lo = hi = 3: the least time that finishes 5 trips (5 by then).",
      "variables": [
       {
        "name": "lo",
@@ -825,7 +825,7 @@
        68
       ]
      },
-     "explanation": "In 1 minutes each bus finishes 1 ÷ its trip time, rounded down: 0 = 0 trips. Not enough, and less time is never better, so the answer is more than 1: lo = 2.",
+     "explanation": "In 1 minute each bus finishes 1 ÷ its trip time, rounded down: 0 = 0 trips. Not enough, and less time is never better, so the answer is more than 1: lo = 2.",
      "variables": [
       {
        "name": "lo",
@@ -941,7 +941,7 @@
        73
       ]
      },
-     "explanation": "lo = hi = 2: the least time that finishes 1 trips (1 trips by then).",
+     "explanation": "lo = hi = 2: the least time that finishes 1 trip (1 by then).",
      "variables": [
       {
        "name": "lo",

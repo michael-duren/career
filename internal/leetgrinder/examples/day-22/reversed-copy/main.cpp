@@ -38,19 +38,17 @@ string render(Node* node) {
 }
 
 string solve(const vector<int>& values, int target) {
-    Node* prev = nullptr;
     Node* cur = build(values);
-    emit("start", {{"reversed", render(prev)}, {"rest", render(cur)}});
+    Node* copy = nullptr;
+    emit("start", {{"cur", cur ? to_string(cur->value) : "-"}, {"copy", render(copy)}});
     while (cur) {
-        Node* following = cur->next;
-        cur->next = prev;
-        prev = cur;
-        cur = following;
-        emit("flip", {{"reversed", render(prev)}, {"rest", render(cur)}});
+        copy = new Node{cur->value, copy};
+        cur = cur->next;
+        emit("prepend", {{"cur", cur ? to_string(cur->value) : "-"}, {"copy", render(copy)}});
     }
 
-    emit("done", {{"reversed", render(prev)}, {"rest", render(cur)}});
-    return render(prev);
+    emit("done", {{"cur", "-"}, {"copy", render(copy)}});
+    return render(copy);
 }
 
 int main() {

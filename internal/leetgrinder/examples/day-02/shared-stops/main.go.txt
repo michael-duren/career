@@ -46,14 +46,14 @@ func show(values []int) string {
 func solve(first, second []int) []int {
 	stops := map[int]bool{}
 	position := 0
-	for _, length := range first[:len(first)-1] {
+	for _, length := range first {
 		position += length
 		stops[position] = true
 		emit("stop", "route", "A", "length", itoa(length), "position", itoa(position), "shared", "[]")
 	}
 	shared := []int{}
 	position = 0
-	for _, length := range second[:len(second)-1] {
+	for _, length := range second {
 		position += length
 		if stops[position] {
 			shared = append(shared, position)

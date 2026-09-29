@@ -2,7 +2,7 @@
   "day": 22,
   "objectives": [
     "Describe a linked list as nodes that each know only their next node.",
-    "Reverse a list in place by saving the next node before changing any arrow.",
+    "Change a node's next without losing the rest of the list.",
     "Insert and remove nodes without losing the rest of the list."
   ],
   "prerequisites": [
@@ -107,14 +107,14 @@
     },
     {
       "id": "reverse",
-      "navLabel": "Reversing a list",
-      "heading": "Worked example: reverse a list in place",
+      "navLabel": "A reversed copy",
+      "heading": "Worked example: build a reversed copy",
       "paragraphs": [
-        "Keep two references: prev, the head of the part already reversed (empty at first), and cur, the first node not yet reversed. For each node: save cur.next, point cur.next back at prev, then move prev to cur and cur to the saved node.",
-        "The save has to come first. Once cur.next points backward, the saved reference is the only way to reach the rest of the list. When cur runs out, prev is the new head."
+        "Walk the list with cur. For each node, create a new node with the same value whose next is the copy built so far, so the new node goes in front. The original list is never changed.",
+        "Adding at the front reverses the order: 1->2->3 becomes 3->2->1. This costs a new node per value. Reversing in place, by turning each existing arrow around, uses no new nodes; that's the first practice problem."
       ],
       "exampleIds": [
-        "day-22-reverse-list"
+        "day-22-reversed-copy"
       ]
     },
     {
@@ -138,7 +138,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "Write it from memory, then try doing it with recursion too.",
+        "text": "Use prev and cur. What must you save before changing cur.next?",
         "title": "Where to start"
       }
     },
@@ -186,12 +186,12 @@
       ],
       "checks": [
         {
-          "prompt": "Why must cur.next be saved before it's changed during reversal?",
+          "prompt": "When turning an arrow around in place, why must cur.next be saved first?",
           "answer": "After the change, nothing else points to the rest of the list, so it would be lost."
         },
         {
-          "prompt": "After the loop, why is prev the new head?",
-          "answer": "cur is empty, so every node has been reversed, and prev is the last one handled, which was the old tail."
+          "prompt": "Why does adding each value at the front of the copy reverse the order?",
+          "answer": "The first value added ends up at the back, and the last value added is the new front."
         },
         {
           "prompt": "When inserting a copy after cur, why create it pointing at cur.next first?",

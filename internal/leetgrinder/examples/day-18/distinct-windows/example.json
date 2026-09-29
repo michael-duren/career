@@ -1237,7 +1237,7 @@
        72
       ]
      },
-     "explanation": "0 windows of length 3 have no repeated letter. Each step updated only the letter that entered and the one that left.",
+     "explanation": "The text is shorter than 3 letters, so there are no windows.",
      "variables": [
       {
        "name": "right",

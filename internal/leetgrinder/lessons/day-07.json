@@ -27,18 +27,87 @@
         "height": 170,
         "description": "A 2 by 3 grid with each cell labeled by its row and column coordinates.",
         "nodes": [
-          {"id": "a", "shape": "rect", "x": 40, "y": 36, "width": 72, "height": 44, "text": "(0,0)", "role": "active"},
-          {"id": "b", "shape": "rect", "x": 120, "y": 36, "width": 72, "height": 44, "text": "(0,1)", "role": "neutral"},
-          {"id": "c", "shape": "rect", "x": 200, "y": 36, "width": 72, "height": 44, "text": "(0,2)", "role": "neutral"},
-          {"id": "d", "shape": "rect", "x": 40, "y": 88, "width": 72, "height": 44, "text": "(1,0)", "role": "neutral"},
-          {"id": "e", "shape": "rect", "x": 120, "y": 88, "width": 72, "height": 44, "text": "(1,1)", "role": "neutral"},
-          {"id": "f", "shape": "rect", "x": 200, "y": 88, "width": 72, "height": 44, "text": "(1,2)", "role": "result"}
+          {
+            "id": "a",
+            "shape": "rect",
+            "x": 40,
+            "y": 36,
+            "width": 72,
+            "height": 44,
+            "text": "(0,0)",
+            "role": "active"
+          },
+          {
+            "id": "b",
+            "shape": "rect",
+            "x": 120,
+            "y": 36,
+            "width": 72,
+            "height": 44,
+            "text": "(0,1)",
+            "role": "neutral"
+          },
+          {
+            "id": "c",
+            "shape": "rect",
+            "x": 200,
+            "y": 36,
+            "width": 72,
+            "height": 44,
+            "text": "(0,2)",
+            "role": "neutral"
+          },
+          {
+            "id": "d",
+            "shape": "rect",
+            "x": 40,
+            "y": 88,
+            "width": 72,
+            "height": 44,
+            "text": "(1,0)",
+            "role": "neutral"
+          },
+          {
+            "id": "e",
+            "shape": "rect",
+            "x": 120,
+            "y": 88,
+            "width": 72,
+            "height": 44,
+            "text": "(1,1)",
+            "role": "neutral"
+          },
+          {
+            "id": "f",
+            "shape": "rect",
+            "x": 200,
+            "y": 88,
+            "width": 72,
+            "height": 44,
+            "text": "(1,2)",
+            "role": "result"
+          }
         ],
         "edges": [],
         "labels": [
-          {"id": "cols", "x": 40, "y": 24, "text": "column →"},
-          {"id": "rows", "x": 6, "y": 62, "text": "row"},
-          {"id": "rule", "x": 40, "y": 158, "text": "(row, column), both from 0"}
+          {
+            "id": "cols",
+            "x": 40,
+            "y": 24,
+            "text": "column →"
+          },
+          {
+            "id": "rows",
+            "x": 6,
+            "y": 62,
+            "text": "row"
+          },
+          {
+            "id": "rule",
+            "x": 40,
+            "y": 158,
+            "text": "(row, column), both from 0"
+          }
         ]
       }
     },
@@ -100,7 +169,7 @@
       "callout": {
         "kind": "try",
         "title": "Where to start",
-        "text": "The border walk is one ring. Decide what you'd keep track of to walk the next ring in, then trace a 3 × 4 grid and a 3 × 1 grid by hand."
+        "text": "Trace a 3 × 4 grid and a 3 × 1 grid by hand. What do you keep track of, and when do you stop?"
       }
     },
     {
@@ -113,7 +182,7 @@
       "callout": {
         "kind": "try",
         "title": "Where to start",
-        "text": "Draw a 3 × 3 grid, rotate it on paper, and write down where (0, 0), (0, 1), and (1, 2) end up. Compare that rule with the transpose rule."
+        "text": "Draw a 3 × 3 grid, rotate it on paper, and write down where (0, 0), (0, 1), and (1, 2) end up. How can you move values without losing any?"
       }
     },
     {

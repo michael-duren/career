@@ -49,7 +49,7 @@ func showStack(stack []string) string {
 
 func solve(tokens []string) string {
 	text, redo := []string{}, []string{}
-	emit("start", "token", "-", "stack", showStack(text), "redo", showStack(redo))
+	emit("start", "token", "-", "text", showStack(text), "redo", showStack(redo))
 	for _, token := range tokens {
 		switch token {
 		case "undo":
@@ -57,21 +57,21 @@ func solve(tokens []string) string {
 				redo = append(redo, text[len(text)-1])
 				text = text[:len(text)-1]
 			}
-			emit("undo", "token", token, "stack", showStack(text), "redo", showStack(redo))
+			emit("undo", "token", token, "text", showStack(text), "redo", showStack(redo))
 		case "redo":
 			if len(redo) > 0 {
 				text = append(text, redo[len(redo)-1])
 				redo = redo[:len(redo)-1]
 			}
-			emit("redo", "token", token, "stack", showStack(text), "redo", showStack(redo))
+			emit("redo", "token", token, "text", showStack(text), "redo", showStack(redo))
 		default:
 			text = append(text, token)
 			redo = redo[:0]
-			emit("type", "token", token, "stack", showStack(text), "redo", showStack(redo))
+			emit("type", "token", token, "text", showStack(text), "redo", showStack(redo))
 		}
 	}
 
-	emit("done", "token", "-", "stack", showStack(text), "redo", showStack(redo))
+	emit("done", "token", "-", "text", showStack(text), "redo", showStack(redo))
 	if len(text) == 0 {
 		return "(empty)"
 	}

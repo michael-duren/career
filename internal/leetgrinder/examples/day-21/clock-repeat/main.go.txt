@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -43,27 +44,31 @@ func show(values []int) string {
 	return "[" + strings.Join(parts, ",") + "]"
 }
 
-func showSeen(firstSeen map[int]int) string {
-	text := strings.TrimSuffix(strings.TrimPrefix(fmt.Sprint(firstSeen), "map["), "]")
-	return "{" + strings.ReplaceAll(text, " ", ",") + "}"
+func showSet(seen map[int]bool) string {
+	hours := []int{}
+	for hour := range seen {
+		hours = append(hours, hour)
+	}
+	sort.Ints(hours)
+	return show(hours)
 }
 
 func solve(values []int, target int) string {
-	firstSeen := map[int]int{0: -1}
+	seen := map[int]bool{0: true}
 	hour := 0
-	emit("start", "step", "-", "hour", itoa(hour), "seen", showSeen(firstSeen))
+	emit("start", "step", "-", "hour", itoa(hour), "seen", showSet(seen))
 	for step, shift := range values {
 		hour = ((hour+shift)%target + target) % target
-		if earlier, ok := firstSeen[hour]; ok {
-			emit("repeat", "step", itoa(step), "hour", itoa(hour), "seen", showSeen(firstSeen))
-			return itoa(earlier+1) + ".." + itoa(step)
+		if seen[hour] {
+			emit("repeat", "step", itoa(step), "hour", itoa(hour), "seen", showSet(seen))
+			return "yes"
 		}
-		firstSeen[hour] = step
-		emit("move", "step", itoa(step), "hour", itoa(hour), "seen", showSeen(firstSeen))
+		seen[hour] = true
+		emit("move", "step", itoa(step), "hour", itoa(hour), "seen", showSet(seen))
 	}
 
-	emit("done", "step", "-", "hour", itoa(hour), "seen", showSeen(firstSeen))
-	return "none"
+	emit("done", "step", "-", "hour", itoa(hour), "seen", showSet(seen))
+	return "no"
 }
 
 func main() {

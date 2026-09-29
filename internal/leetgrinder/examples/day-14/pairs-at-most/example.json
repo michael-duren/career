@@ -399,7 +399,7 @@
        59
       ]
      },
-     "explanation": "i = 1 (2): binary search finds the first j where the sum is too big, j = 3. Partners 4: 1 pair. Total 4.",
+     "explanation": "i = 1 (2): binary search finds the first j where the sum is too big, j = 3. One partner, 4: 1 pair. Total 4.",
      "variables": [
       {
        "name": "i",
@@ -939,7 +939,7 @@
        59
       ]
      },
-     "explanation": "i = 4 (7): binary search finds that even the next value is too big. No partners. Total 4.",
+     "explanation": "i = 4 (7) is the last value, so it has no partners after it. Total 4.",
      "variables": [
       {
        "name": "i",
@@ -2129,7 +2129,7 @@
        59
       ]
      },
-     "explanation": "i = 4 (7): binary search finds that even the next value is too big. No partners. Total 0.",
+     "explanation": "i = 4 (7) is the last value, so it has no partners after it. Total 0.",
      "variables": [
       {
        "name": "i",

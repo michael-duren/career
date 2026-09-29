@@ -39,18 +39,17 @@ public class Main {
     }
 
     static String solve(int[] values, int target) {
-        Node prev = null, cur = build(values);
-        emit("start", "reversed", render(prev), "rest", render(cur));
+        Node cur = build(values);
+        Node copy = null;
+        emit("start", "cur", cur == null ? "-" : str(cur.value), "copy", render(copy));
         while (cur != null) {
-            Node following = cur.next;
-            cur.next = prev;
-            prev = cur;
-            cur = following;
-            emit("flip", "reversed", render(prev), "rest", render(cur));
+            copy = new Node(cur.value, copy);
+            cur = cur.next;
+            emit("prepend", "cur", cur == null ? "-" : str(cur.value), "copy", render(copy));
         }
 
-        emit("done", "reversed", render(prev), "rest", render(cur));
-        return render(prev);
+        emit("done", "cur", "-", "copy", render(copy));
+        return render(copy);
     }
 
     public static void main(String[] args) {

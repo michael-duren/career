@@ -168,7 +168,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "Is this the first k where something becomes true, or the last k where something is still true? Decide before writing the loop, and check how large k·k can get.",
+        "text": "Test x = 0, 1, 8, and 2147395599 before you submit.",
         "title": "Where to start"
       }
     },

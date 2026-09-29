@@ -16,29 +16,26 @@ def show(values):
 
 
 def solve(values, target):
-    first_seen = {0: -1}
+    seen = {0}
     hour = 0
-    emit("start", step="-", hour=hour, seen=show_seen(first_seen))
+    emit("start", step="-", hour=hour, seen=show(sorted(seen)))
     for step, shift in enumerate(values):
         hour = ((hour + shift) % target + target) % target
-        if hour in first_seen:
-            emit("repeat", step=step, hour=hour, seen=show_seen(first_seen))
-            return f"{first_seen[hour] + 1}..{step}"
-        first_seen[hour] = step
-        emit("move", step=step, hour=hour, seen=show_seen(first_seen))
+        if hour in seen:
+            emit("repeat", step=step, hour=hour, seen=show(sorted(seen)))
+            return "yes"
+        seen.add(hour)
+        emit("move", step=step, hour=hour, seen=show(sorted(seen)))
 
-    emit("done", step="-", hour=hour, seen=show_seen(first_seen))
-    return "none"
+    emit("done", step="-", hour=hour, seen=show(sorted(seen)))
+    return "no"
 
 
 def main():
     tokens = [int(token) for token in sys.stdin.read().split()]
     n, target = tokens[0], tokens[1]
-    result(solve(tokens[2:2 + n], target))
-
-
-def show_seen(first_seen):
-    return "{" + ",".join(f"{hour}:{first_seen[hour]}" for hour in sorted(first_seen)) + "}"
+    values = tokens[2:2 + n]
+    result(solve(values, target))
 
 
 main()

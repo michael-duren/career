@@ -1,7 +1,7 @@
 {
   "day": 18,
   "objectives": [
-    "Slide a window of fixed size across an array in O(n).",
+    "Slide a window of fixed size across an array or string in O(n).",
     "Update a window's summary with one value entering and one leaving.",
     "Keep counts for the letters inside a window."
   ],
@@ -100,18 +100,6 @@
       ]
     },
     {
-      "id": "sum",
-      "navLabel": "Window sum",
-      "heading": "Worked example: the wettest run of days",
-      "paragraphs": [
-        "Given rainfall per day, find the largest total over any k consecutive days. Add the first k days. Then for each next day, add the entering day and subtract the day that just left.",
-        "For [6, 1, 5, 2] and k = 2, the window sums are 7, 6, and 7, so the answer is 7."
-      ],
-      "exampleIds": [
-        "day-18-window-sum"
-      ]
-    },
-    {
       "id": "counts",
       "navLabel": "Window counts",
       "heading": "Worked example: windows with no repeated letter",
@@ -158,7 +146,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "Averages involve division. Can you rewrite \"average ≥ threshold\" as a comparison that uses only whole numbers?",
+        "text": "Can you avoid division entirely?",
         "title": "Where to start"
       }
     },
@@ -180,7 +168,7 @@
       ],
       "checks": [
         {
-          "prompt": "When the window moves from [6, 1] to [1, 5], what changes in the sum?",
+          "prompt": "A window over [6, 1, 5, 2] moves from [6, 1] to [1, 5]. What changes in its sum?",
           "answer": "Add 5 and subtract 6: the sum goes from 7 to 6."
         },
         {

@@ -134,7 +134,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "Write out the grid from the problem's example as one list, row by row. What do you notice, and what does the key-idea box above let you do with it?",
+        "text": "Is there a single order you can read every cell in that is sorted?",
         "title": "Where to start"
       }
     },
@@ -147,7 +147,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "Reading this grid row by row isn't sorted, so a flat binary search fails. Look back at a walk from day 10 that uses both kinds of order.",
+        "text": "Reading this grid row by row isn't sorted. Which cell gives you a yes/no answer that rules out a whole row or column?",
         "title": "Where to start"
       }
     },

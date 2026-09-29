@@ -139,7 +139,7 @@
       "navLabel": "Your turn: Count Negative Numbers in a Sorted Matrix",
       "heading": "Your turn: Count Negative Numbers in a Sorted Matrix",
       "paragraphs": [
-        "A grid is sorted in non-increasing order along each row and each column. Count its negative numbers."
+        "A grid is sorted in non-increasing order (each value is ≤ the one before it) along each row and each column. Count its negative numbers."
       ],
       "callout": {
         "kind": "try",
@@ -156,7 +156,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "\"At least\" and \"strictly greater\" are different questions. Which one do you need, and what does it change in the lower bound loop?",
+        "text": "Try target \"z\" on [\"c\", \"f\", \"j\"] and target \"c\" on the same list. What should each return?",
         "title": "Where to start"
       }
     },
@@ -169,7 +169,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "The lower bound gives you one end. Work out the yes/no question whose first yes would give you the other end, and test it on [5, 7, 7, 8, 8, 10] with target 8.",
+        "text": "Test your idea on [5, 7, 7, 8, 8, 10] with target 8 and with target 6 before coding.",
         "title": "Where to start"
       }
     },
@@ -200,7 +200,7 @@
         },
         {
           "prompt": "Why can't the staircase start at the top-left corner?",
-          "answer": "The top-left is the smallest in both its row and column, so neither outcome rules out a whole row or column."
+          "answer": "When the top-left is ≤ x, you can't tell whether to move right or down, so no row or column is ruled out."
         }
       ]
     }

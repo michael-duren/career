@@ -26,17 +26,73 @@
         "height": 170,
         "description": "Left to right, a cell reads its left neighbor's new value. Right to left, a cell reads its left neighbor's old value.",
         "nodes": [
-          {"id": "n1", "shape": "rect", "x": 16, "y": 44, "width": 64, "height": 42, "text": "new", "role": "result"},
-          {"id": "n2", "shape": "rect", "x": 90, "y": 44, "width": 64, "height": 42, "text": "write", "role": "active"},
-          {"id": "o1", "shape": "rect", "x": 170, "y": 44, "width": 64, "height": 42, "text": "old", "role": "visited"},
-          {"id": "o2", "shape": "rect", "x": 244, "y": 44, "width": 64, "height": 42, "text": "write", "role": "active"}
+          {
+            "id": "n1",
+            "shape": "rect",
+            "x": 16,
+            "y": 44,
+            "width": 64,
+            "height": 42,
+            "text": "new",
+            "role": "result"
+          },
+          {
+            "id": "n2",
+            "shape": "rect",
+            "x": 90,
+            "y": 44,
+            "width": 64,
+            "height": 42,
+            "text": "write",
+            "role": "active"
+          },
+          {
+            "id": "o1",
+            "shape": "rect",
+            "x": 170,
+            "y": 44,
+            "width": 64,
+            "height": 42,
+            "text": "old",
+            "role": "visited"
+          },
+          {
+            "id": "o2",
+            "shape": "rect",
+            "x": 244,
+            "y": 44,
+            "width": 64,
+            "height": 42,
+            "text": "write",
+            "role": "active"
+          }
         ],
         "edges": [],
         "labels": [
-          {"id": "l1", "x": 16, "y": 28, "text": "left to right"},
-          {"id": "l2", "x": 170, "y": 28, "text": "right to left"},
-          {"id": "r1", "x": 16, "y": 116, "text": "reads a new value"},
-          {"id": "r2", "x": 170, "y": 116, "text": "reads an old value"}
+          {
+            "id": "l1",
+            "x": 16,
+            "y": 28,
+            "text": "left to right"
+          },
+          {
+            "id": "l2",
+            "x": 170,
+            "y": 28,
+            "text": "right to left"
+          },
+          {
+            "id": "r1",
+            "x": 16,
+            "y": 116,
+            "text": "reads a new value"
+          },
+          {
+            "id": "r2",
+            "x": 170,
+            "y": 116,
+            "text": "reads an old value"
+          }
         ]
       }
     },
@@ -92,7 +148,7 @@
       "heading": "Worked example: add numbers stored as digits",
       "paragraphs": [
         "Some numbers are too long for built-in integers, so they're stored as arrays of digits, most significant first: 475 is [4, 7, 5]. Adding two of them works like addition on paper.",
-        "Start at the rightmost digit of each number with a carry of 0. For each column, add the two digits and the carry. Keep total % 10 as the result digit and pass total / 10 to the next column left as the carry. When one number runs out, treat its missing digits as 0.",
+        "Start at the rightmost digit of each number with a carry of 0. For each column, add the two digits and the carry. Keep total % 10 as the result digit and pass total / 10 (total // 10 in Python) to the next column left as the carry. When one number runs out, treat its missing digits as 0.",
         "Don't stop just because both numbers are used up. 99 + 1 ends with a carry of 1 and needs an extra digit: [1, 0, 0]. The digits come out right to left, so reverse them at the end."
       ],
       "exampleIds": [

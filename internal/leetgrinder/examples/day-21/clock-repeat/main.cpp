@@ -20,30 +20,24 @@ string show(const vector<int>& values) {
     return out + "]";
 }
 
-#include <map>
-
-string showSeen(const map<int, int>& firstSeen) {
-    string out = "{";
-    for (const auto& [hour, step] : firstSeen) out += (out.size() > 1 ? "," : "") + to_string(hour) + ":" + to_string(step);
-    return out + "}";
-}
+#include <set>
 
 string solve(const vector<int>& values, int target) {
-    map<int, int> firstSeen = {{0, -1}};
+    set<int> seen = {0};
     int hour = 0;
-    emit("start", {{"step", "-"}, {"hour", to_string(hour)}, {"seen", showSeen(firstSeen)}});
+    emit("start", {{"step", "-"}, {"hour", to_string(hour)}, {"seen", show(vector<int>(seen.begin(), seen.end()))}});
     for (int step = 0; step < (int)values.size(); ++step) {
         hour = ((hour + values[step]) % target + target) % target;
-        if (firstSeen.count(hour)) {
-            emit("repeat", {{"step", to_string(step)}, {"hour", to_string(hour)}, {"seen", showSeen(firstSeen)}});
-            return to_string(firstSeen[hour] + 1) + ".." + to_string(step);
+        if (seen.count(hour)) {
+            emit("repeat", {{"step", to_string(step)}, {"hour", to_string(hour)}, {"seen", show(vector<int>(seen.begin(), seen.end()))}});
+            return "yes";
         }
-        firstSeen[hour] = step;
-        emit("move", {{"step", to_string(step)}, {"hour", to_string(hour)}, {"seen", showSeen(firstSeen)}});
+        seen.insert(hour);
+        emit("move", {{"step", to_string(step)}, {"hour", to_string(hour)}, {"seen", show(vector<int>(seen.begin(), seen.end()))}});
     }
 
-    emit("done", {{"step", "-"}, {"hour", to_string(hour)}, {"seen", showSeen(firstSeen)}});
-    return "none";
+    emit("done", {{"step", "-"}, {"hour", to_string(hour)}, {"seen", show(vector<int>(seen.begin(), seen.end()))}});
+    return "no";
 }
 
 int main() {

@@ -4,7 +4,7 @@
 
 Assigned problems: Ransom Note, Brick Wall (medium), Majority Element. None of them is solved in the lesson. Each has a "Your turn" section that restates the problem and gives a process hint only; the learner writes the solution.
 
-Techniques are taught on separate examples: Counters as a running summary: spending stock counts as orders arrive, turning segment lengths into stop positions, and the pair-cancellation argument for a majority (static diagram only).
+Techniques are taught on separate examples: Counters as a running summary: spending stock counts as orders arrive, turning segment lengths into stop positions (including the final stop), and the pair-cancellation argument for a majority (static diagram only).
 
 Research articles listed in the assignment appendix were consulted as research only. All prose, programs, cases, and diagrams are original.
 

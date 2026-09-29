@@ -337,7 +337,7 @@
        55
       ]
      },
-     "explanation": "-2 + 0 + 3 = 1 < 2. Any value between lo and hi is smaller than 3, so all 2 triples with this i and lo count. Count 2.",
+     "explanation": "-2 + 0 + 3 = 1 < 2. Every index from lo + 1 to hi holds a value ≤ 3, so all 2 triples with this i and lo count. Count 2.",
      "variables": [
       {
        "name": "i",

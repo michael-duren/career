@@ -26,22 +26,22 @@ public class Main {
 
     static String solve(List<String> tokens) {
         List<String> text = new ArrayList<>(), redo = new ArrayList<>();
-        emit("start", "token", "-", "stack", showStack(text), "redo", showStack(redo));
+        emit("start", "token", "-", "text", showStack(text), "redo", showStack(redo));
         for (String token : tokens) {
             if (token.equals("undo")) {
                 if (!text.isEmpty()) redo.add(text.remove(text.size() - 1));
-                emit("undo", "token", token, "stack", showStack(text), "redo", showStack(redo));
+                emit("undo", "token", token, "text", showStack(text), "redo", showStack(redo));
             } else if (token.equals("redo")) {
                 if (!redo.isEmpty()) text.add(redo.remove(redo.size() - 1));
-                emit("redo", "token", token, "stack", showStack(text), "redo", showStack(redo));
+                emit("redo", "token", token, "text", showStack(text), "redo", showStack(redo));
             } else {
                 text.add(token);
                 redo.clear();
-                emit("type", "token", token, "stack", showStack(text), "redo", showStack(redo));
+                emit("type", "token", token, "text", showStack(text), "redo", showStack(redo));
             }
         }
 
-        emit("done", "token", "-", "stack", showStack(text), "redo", showStack(redo));
+        emit("done", "token", "-", "text", showStack(text), "redo", showStack(redo));
         return text.isEmpty() ? "(empty)" : String.join("", text);
     }
 

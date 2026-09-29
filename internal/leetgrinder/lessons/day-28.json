@@ -138,7 +138,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "Multiplying n times is too slow. The binary example halved n at each step. How does xⁿ relate to a power with half the exponent? Watch for negative n and for overflow when negating it.",
+        "text": "Multiplying n times is too slow for n near two billion. Which idea from the binary example could shrink n faster?",
         "title": "Where to start"
       }
     },

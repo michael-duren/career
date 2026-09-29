@@ -3,7 +3,7 @@
   "objectives": [
     "Pick the right binary search template for a new problem.",
     "Count pairs in a sorted array with one binary search per element.",
-    "Combine search on the answer with a greedy check."
+    "Combine search on the answer with a check that makes the best choice at each step."
   ],
   "prerequisites": [
     8,
@@ -43,7 +43,7 @@
       "navLabel": "Counting pairs",
       "heading": "Worked example: count pairs with a small enough sum",
       "paragraphs": [
-        "Sort the values. For a fixed i, partners j that work are all at the start of the part after i, because the values only grow. So binary search for the first j where values[i] + values[j] > T. Every index between i + 1 and that j is a partner.",
+        "Sort the values. For a fixed i, the partners that work sit in one block starting right after i, because the values only grow. So binary search for the first j where values[i] + values[j] > T. Every index between i + 1 and that j is a partner.",
         "For [1, 2, 4, 5, 7] and T = 6: from 1, the first partner that's too big is 7 at index 4, giving 3 pairs. From 2, it's 5 at index 3, giving 1 pair. From 4 on, there are none. Total 4. Counting only j > i means each pair is counted once."
       ],
       "diagram": {

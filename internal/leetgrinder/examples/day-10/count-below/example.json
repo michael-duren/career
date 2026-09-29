@@ -641,7 +641,7 @@
        60
       ]
      },
-     "explanation": "lo = hi = 1. Index 1 is the first score of 3 or more, so exactly 1 scores are below 3.",
+     "explanation": "lo = hi = 1. Index 1 is the first score of 3 or more, so exactly 1 score is below 3.",
      "variables": [
       {
        "name": "lo",
@@ -1977,7 +1977,7 @@
        60
       ]
      },
-     "explanation": "lo = hi = 5. Index 5 is the first score of 10 or more, so exactly 5 scores are below 10.",
+     "explanation": "lo = hi = 5: no score is 10 or more, so all 5 scores are below 10.",
      "variables": [
       {
        "name": "lo",

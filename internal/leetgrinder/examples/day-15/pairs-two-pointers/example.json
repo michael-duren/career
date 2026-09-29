@@ -371,7 +371,7 @@
        53
       ]
      },
-     "explanation": "1 + 5 = 6 ≤ 6. Every value between lo and hi is even smaller than 5, so 1 pairs with all 3 of them. Count 3. 1 is fully counted: move lo right.",
+     "explanation": "1 + 5 = 6 ≤ 6. Every index from lo + 1 to hi holds a value ≤ 5, so 1 pairs with all 3 of them. Count 3. 1 is fully counted: move lo right.",
      "variables": [
       {
        "name": "lo",
@@ -687,7 +687,7 @@
        53
       ]
      },
-     "explanation": "2 + 4 = 6 ≤ 6. Every value between lo and hi is even smaller than 4, so 2 pairs with all 1 of them. Count 4. 2 is fully counted: move lo right.",
+     "explanation": "2 + 4 = 6 ≤ 6. Every index from lo + 1 to hi holds a value ≤ 4, so 2 pairs with all 1 of them. Count 4. 2 is fully counted: move lo right.",
      "variables": [
       {
        "name": "lo",

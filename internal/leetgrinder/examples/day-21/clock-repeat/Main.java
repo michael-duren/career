@@ -20,27 +20,24 @@ public class Main {
         return out.append("]").toString();
     }
 
-    static String showSeen(Map<Integer, Integer> firstSeen) {
-        return firstSeen.toString().replace("=", ":").replace(", ", ",");
-    }
+    static String showSet(Set<Integer> seen) { return show(seen.stream().mapToInt(Integer::intValue).toArray()); }
 
     static String solve(int[] values, int target) {
-        Map<Integer, Integer> firstSeen = new TreeMap<>();
-        firstSeen.put(0, -1);
+        Set<Integer> seen = new TreeSet<>(List.of(0));
         int hour = 0;
-        emit("start", "step", "-", "hour", str(hour), "seen", showSeen(firstSeen));
+        emit("start", "step", "-", "hour", str(hour), "seen", showSet(seen));
         for (int step = 0; step < values.length; step++) {
             hour = ((hour + values[step]) % target + target) % target;
-            if (firstSeen.containsKey(hour)) {
-                emit("repeat", "step", str(step), "hour", str(hour), "seen", showSeen(firstSeen));
-                return (firstSeen.get(hour) + 1) + ".." + step;
+            if (seen.contains(hour)) {
+                emit("repeat", "step", str(step), "hour", str(hour), "seen", showSet(seen));
+                return "yes";
             }
-            firstSeen.put(hour, step);
-            emit("move", "step", str(step), "hour", str(hour), "seen", showSeen(firstSeen));
+            seen.add(hour);
+            emit("move", "step", str(step), "hour", str(hour), "seen", showSet(seen));
         }
 
-        emit("done", "step", "-", "hour", str(hour), "seen", showSeen(firstSeen));
-        return "none";
+        emit("done", "step", "-", "hour", str(hour), "seen", showSet(seen));
+        return "no";
     }
 
     public static void main(String[] args) {

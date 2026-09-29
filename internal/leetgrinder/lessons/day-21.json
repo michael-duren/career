@@ -122,7 +122,7 @@
       "navLabel": "Clock remainders",
       "heading": "Worked example: find a run of moves that makes a full lap",
       "paragraphs": [
-        "A clock starts at 0 and applies shifts one at a time. Record the first step at which each hour appeared, with hour 0 recorded before any step. After each shift, compute the new hour. If you've seen it before, the shifts since then add up to a multiple of 12.",
+        "A clock starts at 0 and applies shifts one at a time. Keep a set of every hour it has shown, starting with 0. After each shift, compute the new hour. If it's already in the set, the shifts since the clock last showed that hour add up to a multiple of 12.",
         "Computing the hour needs care with negative shifts. In Python, -5 % 12 is 7. In C++, Java, and Go, it's -5. Writing ((hour + shift) % m + m) % m gives the same, non-negative answer in every language."
       ],
       "callout": {
@@ -168,7 +168,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "The clock example stops at the first repeat. To count every run, what should you remember about each remainder instead of the first step it appeared?",
+        "text": "How many earlier positions could pair with this one?",
         "title": "Where to start"
       }
     },

@@ -121,7 +121,7 @@
       "navLabel": "Count first",
       "heading": "Baseline: count, then walk",
       "paragraphs": [
-        "Counting n first and then walking n - k nodes works in two passes. The gap method needs one pass, which matters when the list is streamed or when the problem asks for one pass."
+        "Counting n first and then walking n - k nodes works in two passes. The gap method needs one pass, which some problems require."
       ]
     },
     {
@@ -170,7 +170,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "Finding the node isn't enough to remove it. Which node do you actually need a reference to, and what if that node would be before the head?",
+        "text": "Finding the node isn't enough to remove it.",
         "title": "Where to start"
       }
     },

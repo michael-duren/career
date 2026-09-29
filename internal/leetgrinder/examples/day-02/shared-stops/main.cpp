@@ -25,14 +25,14 @@ string show(const vector<int>& values) {
 vector<int> solve(const vector<int>& first, const vector<int>& second) {
     set<int> stops;
     int position = 0;
-    for (size_t k = 0; k + 1 < first.size(); ++k) {
+    for (size_t k = 0; k < first.size(); ++k) {
         position += first[k];
         stops.insert(position);
         emit("stop", {{"route", "A"}, {"length", to_string(first[k])}, {"position", to_string(position)}, {"shared", "[]"}});
     }
     vector<int> shared;
     position = 0;
-    for (size_t k = 0; k + 1 < second.size(); ++k) {
+    for (size_t k = 0; k < second.size(); ++k) {
         position += second[k];
         if (stops.count(position)) shared.push_back(position);
         emit("check", {{"route", "B"}, {"length", to_string(second[k])}, {"position", to_string(position)}, {"shared", show(shared)}});

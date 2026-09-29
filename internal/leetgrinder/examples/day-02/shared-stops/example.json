@@ -33,7 +33,7 @@
    "id": "normal",
    "label": "Routes 2 3 1 and 1 1 3 1",
    "input": "2 3 1\n1 1 3 1\n",
-   "expectedOutput": "[2,5]",
+   "expectedOutput": "[2,5,6]",
    "frames": [
     {
      "event": "stop",
@@ -55,7 +55,7 @@
        51
       ]
      },
-     "explanation": "Route A drives 2 more, so it stops at 2. Remember 2 in a set. The last segment is skipped: both routes end at 6, and the end doesn't count as a shared stop.",
+     "explanation": "Route A drives 2 more, so it stops at 2. Remember 2 in a set.",
      "variables": [
       {
        "name": "route",
@@ -266,6 +266,136 @@
      }
     },
     {
+     "event": "stop",
+     "lines": {
+      "cpp": [
+       29,
+       30
+      ],
+      "python": [
+       22,
+       23
+      ],
+      "java": [
+       27,
+       28
+      ],
+      "go": [
+       50,
+       51
+      ]
+     },
+     "explanation": "Route A drives 1 more, so it stops at 6. Remember 6 in a set.",
+     "variables": [
+      {
+       "name": "route",
+       "value": "A"
+      },
+      {
+       "name": "length",
+       "value": "1"
+      },
+      {
+       "name": "position",
+       "value": "6"
+      },
+      {
+       "name": "shared",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Shared stops normal: stop route A position 6, shared [].",
+      "nodes": [
+       {
+        "id": "a-line",
+        "shape": "rect",
+        "x": 30,
+        "y": 52,
+        "width": 460,
+        "height": 6,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "b-line",
+        "shape": "rect",
+        "x": 30,
+        "y": 142,
+        "width": 460,
+        "height": 6,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "a-0",
+        "shape": "circle",
+        "x": 169,
+        "y": 40,
+        "width": 28,
+        "height": 28,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "a-1",
+        "shape": "circle",
+        "x": 399,
+        "y": 40,
+        "width": 28,
+        "height": 28,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "a-2",
+        "shape": "circle",
+        "x": 476,
+        "y": 40,
+        "width": 28,
+        "height": 28,
+        "text": "6",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "a-title",
+        "x": 16,
+        "y": 30,
+        "text": "Route A"
+       },
+       {
+        "id": "b-title",
+        "x": 16,
+        "y": 120,
+        "text": "Route B"
+       },
+       {
+        "id": "start",
+        "x": 22,
+        "y": 90,
+        "text": "0"
+       },
+       {
+        "id": "end",
+        "x": 480,
+        "y": 90,
+        "text": "end 6"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "shared so far: []"
+       }
+      ]
+     }
+    },
+    {
      "event": "check",
      "lines": {
       "cpp": [
@@ -349,6 +479,16 @@
         "width": 28,
         "height": 28,
         "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "a-2",
+        "shape": "circle",
+        "x": 476,
+        "y": 40,
+        "width": 28,
+        "height": 28,
+        "text": "6",
         "role": "visited"
        },
        {
@@ -481,6 +621,16 @@
         "width": 28,
         "height": 28,
         "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "a-2",
+        "shape": "circle",
+        "x": 476,
+        "y": 40,
+        "width": 28,
+        "height": 28,
+        "text": "6",
         "role": "visited"
        },
        {
@@ -626,6 +776,16 @@
         "role": "result"
        },
        {
+        "id": "a-2",
+        "shape": "circle",
+        "x": 476,
+        "y": 40,
+        "width": 28,
+        "height": 28,
+        "text": "6",
+        "role": "visited"
+       },
+       {
         "id": "b-0",
         "shape": "circle",
         "x": 92,
@@ -692,44 +852,50 @@
      }
     },
     {
-     "event": "done",
+     "event": "check",
      "lines": {
       "cpp": [
-       41
+       36,
+       37
       ],
       "python": [
-       33
+       28,
+       29,
+       30
       ],
       "java": [
-       39
+       34,
+       35
       ],
       "go": [
-       64
+       57,
+       58,
+       59
       ]
      },
-     "explanation": "Shared stops: [2,5].",
+     "explanation": "Route B drives 1 more and stops at 6. Route A also stops there, so it's shared.",
      "variables": [
       {
        "name": "route",
-       "value": "-"
+       "value": "B"
       },
       {
        "name": "length",
-       "value": "-"
+       "value": "1"
       },
       {
        "name": "position",
-       "value": "-"
+       "value": "6"
       },
       {
        "name": "shared",
-       "value": "[2,5]"
+       "value": "[2,5,6]"
       }
      ],
      "scene": {
       "width": 520,
       "height": 210,
-      "description": "Shared stops normal: done route - position -, shared [2,5].",
+      "description": "Shared stops normal: check route B position 6, shared [2,5,6].",
       "nodes": [
        {
         "id": "a-line",
@@ -772,6 +938,16 @@
         "role": "result"
        },
        {
+        "id": "a-2",
+        "shape": "circle",
+        "x": 476,
+        "y": 40,
+        "width": 28,
+        "height": 28,
+        "text": "6",
+        "role": "result"
+       },
+       {
         "id": "b-0",
         "shape": "circle",
         "x": 92,
@@ -799,6 +975,182 @@
         "width": 28,
         "height": 28,
         "text": "5",
+        "role": "result"
+       },
+       {
+        "id": "b-3",
+        "shape": "circle",
+        "x": 476,
+        "y": 130,
+        "width": 28,
+        "height": 28,
+        "text": "6",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "a-title",
+        "x": 16,
+        "y": 30,
+        "text": "Route A"
+       },
+       {
+        "id": "b-title",
+        "x": 16,
+        "y": 120,
+        "text": "Route B"
+       },
+       {
+        "id": "start",
+        "x": 22,
+        "y": 90,
+        "text": "0"
+       },
+       {
+        "id": "end",
+        "x": 480,
+        "y": 90,
+        "text": "end 6"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "shared so far: [2,5,6]"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       41
+      ],
+      "python": [
+       33
+      ],
+      "java": [
+       39
+      ],
+      "go": [
+       64
+      ]
+     },
+     "explanation": "Shared stops: [2,5,6].",
+     "variables": [
+      {
+       "name": "route",
+       "value": "-"
+      },
+      {
+       "name": "length",
+       "value": "-"
+      },
+      {
+       "name": "position",
+       "value": "-"
+      },
+      {
+       "name": "shared",
+       "value": "[2,5,6]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Shared stops normal: done route - position -, shared [2,5,6].",
+      "nodes": [
+       {
+        "id": "a-line",
+        "shape": "rect",
+        "x": 30,
+        "y": 52,
+        "width": 460,
+        "height": 6,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "b-line",
+        "shape": "rect",
+        "x": 30,
+        "y": 142,
+        "width": 460,
+        "height": 6,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "a-0",
+        "shape": "circle",
+        "x": 169,
+        "y": 40,
+        "width": 28,
+        "height": 28,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "a-1",
+        "shape": "circle",
+        "x": 399,
+        "y": 40,
+        "width": 28,
+        "height": 28,
+        "text": "5",
+        "role": "result"
+       },
+       {
+        "id": "a-2",
+        "shape": "circle",
+        "x": 476,
+        "y": 40,
+        "width": 28,
+        "height": 28,
+        "text": "6",
+        "role": "result"
+       },
+       {
+        "id": "b-0",
+        "shape": "circle",
+        "x": 92,
+        "y": 130,
+        "width": 28,
+        "height": 28,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "b-1",
+        "shape": "circle",
+        "x": 169,
+        "y": 130,
+        "width": 28,
+        "height": 28,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "b-2",
+        "shape": "circle",
+        "x": 399,
+        "y": 130,
+        "width": 28,
+        "height": 28,
+        "text": "5",
+        "role": "result"
+       },
+       {
+        "id": "b-3",
+        "shape": "circle",
+        "x": 476,
+        "y": 130,
+        "width": 28,
+        "height": 28,
+        "text": "6",
         "role": "result"
        }
       ],
@@ -832,7 +1184,7 @@
         "id": "footer",
         "x": 16,
         "y": 196,
-        "text": "shared so far: [2,5]"
+        "text": "shared so far: [2,5,6]"
        }
       ]
      }
@@ -840,10 +1192,10 @@
    ]
   },
   {
-   "id": "edge-none-shared",
-   "label": "No shared stops",
+   "id": "edge-only-end",
+   "label": "Only the last stop is shared",
    "input": "3 3\n2 4\n",
-   "expectedOutput": "[]",
+   "expectedOutput": "[6]",
    "frames": [
     {
      "event": "stop",
@@ -865,7 +1217,7 @@
        51
       ]
      },
-     "explanation": "Route A drives 3 more, so it stops at 3. Remember 3 in a set. The last segment is skipped: both routes end at 6, and the end doesn't count as a shared stop.",
+     "explanation": "Route A drives 3 more, so it stops at 3. Remember 3 in a set.",
      "variables": [
       {
        "name": "route",
@@ -887,7 +1239,7 @@
      "scene": {
       "width": 520,
       "height": 210,
-      "description": "Shared stops edge-none-shared: stop route A position 3, shared [].",
+      "description": "Shared stops edge-only-end: stop route A position 3, shared [].",
       "nodes": [
        {
         "id": "a-line",
@@ -917,6 +1269,126 @@
         "width": 28,
         "height": 28,
         "text": "3",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "a-title",
+        "x": 16,
+        "y": 30,
+        "text": "Route A"
+       },
+       {
+        "id": "b-title",
+        "x": 16,
+        "y": 120,
+        "text": "Route B"
+       },
+       {
+        "id": "start",
+        "x": 22,
+        "y": 90,
+        "text": "0"
+       },
+       {
+        "id": "end",
+        "x": 480,
+        "y": 90,
+        "text": "end 6"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "shared so far: []"
+       }
+      ]
+     }
+    },
+    {
+     "event": "stop",
+     "lines": {
+      "cpp": [
+       29,
+       30
+      ],
+      "python": [
+       22,
+       23
+      ],
+      "java": [
+       27,
+       28
+      ],
+      "go": [
+       50,
+       51
+      ]
+     },
+     "explanation": "Route A drives 3 more, so it stops at 6. Remember 6 in a set.",
+     "variables": [
+      {
+       "name": "route",
+       "value": "A"
+      },
+      {
+       "name": "length",
+       "value": "3"
+      },
+      {
+       "name": "position",
+       "value": "6"
+      },
+      {
+       "name": "shared",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Shared stops edge-only-end: stop route A position 6, shared [].",
+      "nodes": [
+       {
+        "id": "a-line",
+        "shape": "rect",
+        "x": 30,
+        "y": 52,
+        "width": 460,
+        "height": 6,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "b-line",
+        "shape": "rect",
+        "x": 30,
+        "y": 142,
+        "width": 460,
+        "height": 6,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "a-0",
+        "shape": "circle",
+        "x": 246,
+        "y": 40,
+        "width": 28,
+        "height": 28,
+        "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "a-1",
+        "shape": "circle",
+        "x": 476,
+        "y": 40,
+        "width": 28,
+        "height": 28,
+        "text": "6",
         "role": "active"
        }
       ],
@@ -999,7 +1471,7 @@
      "scene": {
       "width": 520,
       "height": 210,
-      "description": "Shared stops edge-none-shared: check route B position 2, shared [].",
+      "description": "Shared stops edge-only-end: check route B position 2, shared [].",
       "nodes": [
        {
         "id": "a-line",
@@ -1029,6 +1501,16 @@
         "width": 28,
         "height": 28,
         "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "a-1",
+        "shape": "circle",
+        "x": 476,
+        "y": 40,
+        "width": 28,
+        "height": 28,
+        "text": "6",
         "role": "visited"
        },
        {
@@ -1078,44 +1560,50 @@
      }
     },
     {
-     "event": "done",
+     "event": "check",
      "lines": {
       "cpp": [
-       41
+       36,
+       37
       ],
       "python": [
-       33
+       28,
+       29,
+       30
       ],
       "java": [
-       39
+       34,
+       35
       ],
       "go": [
-       64
+       57,
+       58,
+       59
       ]
      },
-     "explanation": "The routes share no stops before the end.",
+     "explanation": "Route B drives 4 more and stops at 6. Route A also stops there, so it's shared.",
      "variables": [
       {
        "name": "route",
-       "value": "-"
+       "value": "B"
       },
       {
        "name": "length",
-       "value": "-"
+       "value": "4"
       },
       {
        "name": "position",
-       "value": "-"
+       "value": "6"
       },
       {
        "name": "shared",
-       "value": "[]"
+       "value": "[6]"
       }
      ],
      "scene": {
       "width": 520,
       "height": 210,
-      "description": "Shared stops edge-none-shared: done route - position -, shared [].",
+      "description": "Shared stops edge-only-end: check route B position 6, shared [6].",
       "nodes": [
        {
         "id": "a-line",
@@ -1148,6 +1636,16 @@
         "role": "visited"
        },
        {
+        "id": "a-1",
+        "shape": "circle",
+        "x": 476,
+        "y": 40,
+        "width": 28,
+        "height": 28,
+        "text": "6",
+        "role": "result"
+       },
+       {
         "id": "b-0",
         "shape": "circle",
         "x": 169,
@@ -1156,6 +1654,16 @@
         "height": 28,
         "text": "2",
         "role": "visited"
+       },
+       {
+        "id": "b-1",
+        "shape": "circle",
+        "x": 476,
+        "y": 130,
+        "width": 28,
+        "height": 28,
+        "text": "6",
+        "role": "active"
        }
       ],
       "edges": [],
@@ -1188,7 +1696,143 @@
         "id": "footer",
         "x": 16,
         "y": 196,
-        "text": "shared so far: []"
+        "text": "shared so far: [6]"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       41
+      ],
+      "python": [
+       33
+      ],
+      "java": [
+       39
+      ],
+      "go": [
+       64
+      ]
+     },
+     "explanation": "Shared stops: [6].",
+     "variables": [
+      {
+       "name": "route",
+       "value": "-"
+      },
+      {
+       "name": "length",
+       "value": "-"
+      },
+      {
+       "name": "position",
+       "value": "-"
+      },
+      {
+       "name": "shared",
+       "value": "[6]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Shared stops edge-only-end: done route - position -, shared [6].",
+      "nodes": [
+       {
+        "id": "a-line",
+        "shape": "rect",
+        "x": 30,
+        "y": 52,
+        "width": 460,
+        "height": 6,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "b-line",
+        "shape": "rect",
+        "x": 30,
+        "y": 142,
+        "width": 460,
+        "height": 6,
+        "text": "",
+        "role": "neutral"
+       },
+       {
+        "id": "a-0",
+        "shape": "circle",
+        "x": 246,
+        "y": 40,
+        "width": 28,
+        "height": 28,
+        "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "a-1",
+        "shape": "circle",
+        "x": 476,
+        "y": 40,
+        "width": 28,
+        "height": 28,
+        "text": "6",
+        "role": "result"
+       },
+       {
+        "id": "b-0",
+        "shape": "circle",
+        "x": 169,
+        "y": 130,
+        "width": 28,
+        "height": 28,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "b-1",
+        "shape": "circle",
+        "x": 476,
+        "y": 130,
+        "width": 28,
+        "height": 28,
+        "text": "6",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "a-title",
+        "x": 16,
+        "y": 30,
+        "text": "Route A"
+       },
+       {
+        "id": "b-title",
+        "x": 16,
+        "y": 120,
+        "text": "Route B"
+       },
+       {
+        "id": "start",
+        "x": 22,
+        "y": 90,
+        "text": "0"
+       },
+       {
+        "id": "end",
+        "x": 480,
+        "y": 90,
+        "text": "end 6"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "shared so far: [6]"
        }
       ]
      }

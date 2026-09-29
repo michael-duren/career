@@ -152,7 +152,7 @@
       ],
       "callout": {
         "kind": "try",
-        "text": "Start with the widest pair. Moving a pointer inward always loses width. Which pointer's move could possibly gain enough height to make up for it?",
+        "text": "Start with the widest pair. What does moving each pointer cost, and what could it gain?",
         "title": "Where to start"
       }
     },
