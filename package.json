@@ -17,14 +17,14 @@
     "check:mcp-oauth": "node scripts/check-mcp-oauth.mjs"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.8",
+    "@astrojs/check": "^0.9.10",
     "@astrojs/markdown-remark": "^7.3.1",
     "@astrojs/mdx": "^8.0.2",
     "@astrojs/react": "^7.0.0",
     "@dagrejs/dagre": "^3.1.1",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@radix-ui/react-slot": "^1.2.4",
-    "@tailwindcss/typography": "^0.5.19",
+    "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.5",
     "bcryptjs": "^3.0.3",
@@ -47,7 +47,7 @@
     "remark-gfm": "^4.0.1",
     "sharp": "^0.35.5",
     "tailwind-merge": "^3.5.0",
-    "tailwindcss": "^4.2.2",
+    "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
     "zod": "^4.6.4"
   },
