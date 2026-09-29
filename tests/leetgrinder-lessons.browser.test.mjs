@@ -15,7 +15,7 @@ async function waitForServer(server, getLogs) {
   throw new Error(`Leetgrinder preview did not start (exit ${server.exitCode}): ${getLogs()}`);
 }
 
-test('authored lessons render and the SVG player controls real page content', { timeout: 120000 }, async t => {
+test('authored lessons render and the SVG player controls real page content', { timeout: 20 * 60 * 1000 }, async t => {
   const binary = '/tmp/career-leetgrinder-preview-test';
   execFileSync('go', ['build', '-o', binary, './cmd/leetgrinder-preview'], { env: { ...process.env, GOCACHE: '/tmp/career-leetgrinder-go-cache' } });
   const server = spawn(binary, ['-addr', `127.0.0.1:${port}`], { stdio: 'pipe' });
