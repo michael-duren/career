@@ -20,6 +20,11 @@ pnpm-debug.log*
 # macOS-specific files
 .DS_Store
 
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.auth/
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
