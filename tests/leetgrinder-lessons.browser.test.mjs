@@ -68,20 +68,20 @@ test('authored lessons render and the SVG player controls real page content', { 
       assert.equal(await example.locator('.lesson-player-svg title').count(), 1);
       for (const traceCase of payload.cases) {
         await example.locator('.lesson-player-case').selectOption(traceCase.id);
-        assert.equal(await example.locator('.lesson-player-explanation').textContent(), traceCase.frames[0].explanation);
-        for (const [language, label] of [['cpp', 'C++'], ['python', 'Python'], ['java', 'Java'], ['go', 'Go']]) {
-          await example.getByRole('tab', { name: label }).click();
-          assert.equal(await example.getByRole('tab', { name: label }).getAttribute('aria-selected'), 'true');
-          const line = traceCase.frames[0].lines[language][0];
-          assert.equal(await example.locator(`.lesson-player-code .is-active[data-line="${line}"]`).count(), 1, `${payload.id}/${traceCase.id}/${language} first line`);
-        }
-        await example.getByRole('tab', { name: 'Python' }).click();
-        for (let frameIndex = 1; frameIndex < traceCase.frames.length; frameIndex++) {
-          await example.getByRole('button', { name: 'Next' }).click();
+        for (let frameIndex = 0; frameIndex < traceCase.frames.length; frameIndex++) {
+          if (frameIndex) await example.getByRole('button', { name: 'Next' }).click();
           const frame = traceCase.frames[frameIndex];
           assert.equal(await example.locator('.lesson-player-explanation').textContent(), frame.explanation, `${payload.id}/${traceCase.id} frame ${frameIndex}`);
-          const line = frame.lines.python[0];
-          assert.equal(await example.locator(`.lesson-player-code .is-active[data-line="${line}"]`).count(), 1, `${payload.id}/${traceCase.id} line ${line}`);
+          assert.equal(await example.locator('.lesson-player-svg desc').textContent(), frame.scene.description, `${payload.id}/${traceCase.id} scene ${frameIndex}`);
+          const variables = await example.locator('.lesson-player-variables tbody tr').evaluateAll(rows => rows.map(row => ({ name: row.querySelector('th').textContent, value: row.querySelector('td').textContent })));
+          assert.deepEqual(variables, frame.variables, `${payload.id}/${traceCase.id} variables ${frameIndex}`);
+          for (const [language, label] of [['cpp', 'C++'], ['python', 'Python'], ['java', 'Java'], ['go', 'Go']]) {
+            const tab = example.getByRole('tab', { name: label });
+            await tab.click();
+            assert.equal(await tab.getAttribute('aria-selected'), 'true');
+            const activeLines = await example.locator('.lesson-player-code .is-active').evaluateAll(lines => lines.map(line => Number(line.dataset.line)));
+            assert.deepEqual(activeLines, frame.lines[language], `${payload.id}/${traceCase.id}/${language} lines at frame ${frameIndex}`);
+          }
         }
         assert.equal(await example.getByRole('button', { name: 'Next' }).isDisabled(), true);
       }
