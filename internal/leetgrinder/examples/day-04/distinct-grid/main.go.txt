@@ -1,0 +1,92 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"sort"
+	"strconv"
+	"strings"
+)
+
+type variable struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func emit(event string, pairs ...string) {
+	variables := []variable{}
+	for k := 0; k+1 < len(pairs); k += 2 {
+		variables = append(variables, variable{pairs[k], pairs[k+1]})
+	}
+	data, _ := json.Marshal(struct {
+		Event     string     `json:"event"`
+		Variables []variable `json:"variables"`
+	}{event, variables})
+	fmt.Println(string(data))
+}
+
+func result(answer string) {
+	data, _ := json.Marshal(struct {
+		Result string `json:"result"`
+	}{answer})
+	fmt.Println(string(data))
+}
+
+func itoa(value int) string { return strconv.Itoa(value) }
+
+func show(values []int) string {
+	parts := make([]string, len(values))
+	for k, value := range values {
+		parts[k] = strconv.Itoa(value)
+	}
+	return "[" + strings.Join(parts, ",") + "]"
+}
+
+func showSet(letters map[byte]bool) string {
+	parts := []string{}
+	for letter := range letters {
+		parts = append(parts, string(letter))
+	}
+	sort.Strings(parts)
+	return "{" + strings.Join(parts, ",") + "}"
+}
+
+func solve(grid []string) string {
+	n := len(grid)
+	rows, cols := make([]map[byte]bool, n), make([]map[byte]bool, n)
+	for k := range rows {
+		rows[k], cols[k] = map[byte]bool{}, map[byte]bool{}
+	}
+	emit("start", "r", "-", "c", "-", "letter", "-", "row", "-", "col", "-")
+	for r := 0; r < n; r++ {
+		for c := 0; c < n; c++ {
+			letter := grid[r][c]
+			if letter == '.' {
+				continue
+			}
+			if rows[r][letter] || cols[c][letter] {
+				emit("clash", "r", itoa(r), "c", itoa(c), "letter", string(letter), "row", showSet(rows[r]), "col", showSet(cols[c]))
+				return "false"
+			}
+			rows[r][letter] = true
+			cols[c][letter] = true
+			emit("add", "r", itoa(r), "c", itoa(c), "letter", string(letter), "row", showSet(rows[r]), "col", showSet(cols[c]))
+		}
+	}
+
+	emit("done", "r", "-", "c", "-", "letter", "-", "row", "-", "col", "-")
+	return "true"
+}
+
+func main() {
+	in := bufio.NewReader(os.Stdin)
+	var n int
+	fmt.Fscan(in, &n)
+	grid := make([]string, n)
+	for k := range grid {
+		fmt.Fscan(in, &grid[k])
+	}
+	result(solve(grid))
+}

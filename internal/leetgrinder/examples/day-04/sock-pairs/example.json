@@ -1,0 +1,2063 @@
+{
+ "id": "day-04-sock-pairs",
+ "title": "Match up copies with counts",
+ "invariant": "waiting[color] is how many socks of that color are unmatched right now.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 32,
+   "algorithmEnd": 49
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 32
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 29,
+   "algorithmEnd": 46
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 62,
+   "algorithmEnd": 79
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Six socks, two pairs",
+   "input": "6\nred blue red red blue green\n",
+   "expectedOutput": "2",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       33,
+       34
+      ],
+      "python": [
+       19,
+       20
+      ],
+      "java": [
+       30,
+       31
+      ],
+      "go": [
+       63,
+       64
+      ]
+     },
+     "explanation": "No socks yet. waiting[color] will be how many socks of that color are sitting unmatched: 0 or 1.",
+     "variables": [
+      {
+       "name": "sock",
+       "value": "-"
+      },
+      {
+       "name": "waiting",
+       "value": "{}"
+      },
+      {
+       "name": "pairs",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Sock pairs normal: sock -, waiting {}, pairs 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "green",
+        "role": "neutral"
+       },
+       {
+        "id": "waiting",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 250,
+        "height": 40,
+        "text": "waiting {}",
+        "role": "neutral"
+       },
+       {
+        "id": "pairs",
+        "shape": "rect",
+        "x": 278,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "socks, in the order you pull them out"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "a count, not a yes/no: the map tracks how many are waiting"
+       }
+      ]
+     }
+    },
+    {
+     "event": "wait",
+     "lines": {
+      "cpp": [
+       42,
+       43
+      ],
+      "python": [
+       28,
+       29
+      ],
+      "java": [
+       39,
+       40
+      ],
+      "go": [
+       72,
+       73
+      ]
+     },
+     "explanation": "A red sock with no red waiting. Put it aside: waiting is now {red:1}.",
+     "variables": [
+      {
+       "name": "sock",
+       "value": "red"
+      },
+      {
+       "name": "waiting",
+       "value": "{red:1}"
+      },
+      {
+       "name": "pairs",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Sock pairs normal: sock red, waiting {red:1}, pairs 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "green",
+        "role": "neutral"
+       },
+       {
+        "id": "waiting",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 250,
+        "height": 40,
+        "text": "waiting {red:1}",
+        "role": "neutral"
+       },
+       {
+        "id": "pairs",
+        "shape": "rect",
+        "x": 278,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "socks, in the order you pull them out"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "a count, not a yes/no: the map tracks how many are waiting"
+       }
+      ]
+     }
+    },
+    {
+     "event": "wait",
+     "lines": {
+      "cpp": [
+       42,
+       43
+      ],
+      "python": [
+       28,
+       29
+      ],
+      "java": [
+       39,
+       40
+      ],
+      "go": [
+       72,
+       73
+      ]
+     },
+     "explanation": "A blue sock with no blue waiting. Put it aside: waiting is now {blue:1,red:1}.",
+     "variables": [
+      {
+       "name": "sock",
+       "value": "blue"
+      },
+      {
+       "name": "waiting",
+       "value": "{blue:1,red:1}"
+      },
+      {
+       "name": "pairs",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Sock pairs normal: sock blue, waiting {blue:1,red:1}, pairs 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "green",
+        "role": "neutral"
+       },
+       {
+        "id": "waiting",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 250,
+        "height": 40,
+        "text": "waiting {blue:1,red:1}",
+        "role": "neutral"
+       },
+       {
+        "id": "pairs",
+        "shape": "rect",
+        "x": 278,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "socks, in the order you pull them out"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "a count, not a yes/no: the map tracks how many are waiting"
+       }
+      ]
+     }
+    },
+    {
+     "event": "pair",
+     "lines": {
+      "cpp": [
+       39,
+       40
+      ],
+      "python": [
+       25,
+       26
+      ],
+      "java": [
+       36,
+       37
+      ],
+      "go": [
+       69,
+       70
+      ]
+     },
+     "explanation": "A red sock, and one red was already waiting. Use both: that's a pair, and the red count goes back to 0. Pairs: 1.",
+     "variables": [
+      {
+       "name": "sock",
+       "value": "red"
+      },
+      {
+       "name": "waiting",
+       "value": "{blue:1}"
+      },
+      {
+       "name": "pairs",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Sock pairs normal: sock red, waiting {blue:1}, pairs 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "green",
+        "role": "neutral"
+       },
+       {
+        "id": "waiting",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 250,
+        "height": 40,
+        "text": "waiting {blue:1}",
+        "role": "neutral"
+       },
+       {
+        "id": "pairs",
+        "shape": "rect",
+        "x": 278,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 1",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "socks, in the order you pull them out"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "a count, not a yes/no: the map tracks how many are waiting"
+       }
+      ]
+     }
+    },
+    {
+     "event": "wait",
+     "lines": {
+      "cpp": [
+       42,
+       43
+      ],
+      "python": [
+       28,
+       29
+      ],
+      "java": [
+       39,
+       40
+      ],
+      "go": [
+       72,
+       73
+      ]
+     },
+     "explanation": "A red sock with no red waiting. Put it aside: waiting is now {blue:1,red:1}.",
+     "variables": [
+      {
+       "name": "sock",
+       "value": "red"
+      },
+      {
+       "name": "waiting",
+       "value": "{blue:1,red:1}"
+      },
+      {
+       "name": "pairs",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Sock pairs normal: sock red, waiting {blue:1,red:1}, pairs 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "active"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "green",
+        "role": "neutral"
+       },
+       {
+        "id": "waiting",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 250,
+        "height": 40,
+        "text": "waiting {blue:1,red:1}",
+        "role": "neutral"
+       },
+       {
+        "id": "pairs",
+        "shape": "rect",
+        "x": 278,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "socks, in the order you pull them out"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "a count, not a yes/no: the map tracks how many are waiting"
+       }
+      ]
+     }
+    },
+    {
+     "event": "pair",
+     "lines": {
+      "cpp": [
+       39,
+       40
+      ],
+      "python": [
+       25,
+       26
+      ],
+      "java": [
+       36,
+       37
+      ],
+      "go": [
+       69,
+       70
+      ]
+     },
+     "explanation": "A blue sock, and one blue was already waiting. Use both: that's a pair, and the blue count goes back to 0. Pairs: 2.",
+     "variables": [
+      {
+       "name": "sock",
+       "value": "blue"
+      },
+      {
+       "name": "waiting",
+       "value": "{red:1}"
+      },
+      {
+       "name": "pairs",
+       "value": "2"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Sock pairs normal: sock blue, waiting {red:1}, pairs 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "visited"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "result"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "green",
+        "role": "neutral"
+       },
+       {
+        "id": "waiting",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 250,
+        "height": 40,
+        "text": "waiting {red:1}",
+        "role": "neutral"
+       },
+       {
+        "id": "pairs",
+        "shape": "rect",
+        "x": 278,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 2",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "socks, in the order you pull them out"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "a count, not a yes/no: the map tracks how many are waiting"
+       }
+      ]
+     }
+    },
+    {
+     "event": "wait",
+     "lines": {
+      "cpp": [
+       42,
+       43
+      ],
+      "python": [
+       28,
+       29
+      ],
+      "java": [
+       39,
+       40
+      ],
+      "go": [
+       72,
+       73
+      ]
+     },
+     "explanation": "A green sock with no green waiting. Put it aside: waiting is now {green:1,red:1}.",
+     "variables": [
+      {
+       "name": "sock",
+       "value": "green"
+      },
+      {
+       "name": "waiting",
+       "value": "{green:1,red:1}"
+      },
+      {
+       "name": "pairs",
+       "value": "2"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Sock pairs normal: sock green, waiting {green:1,red:1}, pairs 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "visited"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "visited"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "green",
+        "role": "active"
+       },
+       {
+        "id": "waiting",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 250,
+        "height": 40,
+        "text": "waiting {green:1,red:1}",
+        "role": "neutral"
+       },
+       {
+        "id": "pairs",
+        "shape": "rect",
+        "x": 278,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 2",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "socks, in the order you pull them out"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "a count, not a yes/no: the map tracks how many are waiting"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       47
+      ],
+      "python": [
+       31
+      ],
+      "java": [
+       44
+      ],
+      "go": [
+       77
+      ]
+     },
+     "explanation": "2 pairs. Left over, unmatched: {green:1,red:1}.",
+     "variables": [
+      {
+       "name": "sock",
+       "value": "-"
+      },
+      {
+       "name": "waiting",
+       "value": "{green:1,red:1}"
+      },
+      {
+       "name": "pairs",
+       "value": "2"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Sock pairs normal: sock -, waiting {green:1,red:1}, pairs 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "visited"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "visited"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 346,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "green",
+        "role": "visited"
+       },
+       {
+        "id": "waiting",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 250,
+        "height": 40,
+        "text": "waiting {green:1,red:1}",
+        "role": "neutral"
+       },
+       {
+        "id": "pairs",
+        "shape": "rect",
+        "x": 278,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 2",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "socks, in the order you pull them out"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 371,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "a count, not a yes/no: the map tracks how many are waiting"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-no-pairs",
+   "label": "All different colors",
+   "input": "3\nred blue green\n",
+   "expectedOutput": "0",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       33,
+       34
+      ],
+      "python": [
+       19,
+       20
+      ],
+      "java": [
+       30,
+       31
+      ],
+      "go": [
+       63,
+       64
+      ]
+     },
+     "explanation": "No socks yet. waiting[color] will be how many socks of that color are sitting unmatched: 0 or 1.",
+     "variables": [
+      {
+       "name": "sock",
+       "value": "-"
+      },
+      {
+       "name": "waiting",
+       "value": "{}"
+      },
+      {
+       "name": "pairs",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Sock pairs edge-no-pairs: sock -, waiting {}, pairs 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "green",
+        "role": "neutral"
+       },
+       {
+        "id": "waiting",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 250,
+        "height": 40,
+        "text": "waiting {}",
+        "role": "neutral"
+       },
+       {
+        "id": "pairs",
+        "shape": "rect",
+        "x": 278,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "socks, in the order you pull them out"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "a count, not a yes/no: the map tracks how many are waiting"
+       }
+      ]
+     }
+    },
+    {
+     "event": "wait",
+     "lines": {
+      "cpp": [
+       42,
+       43
+      ],
+      "python": [
+       28,
+       29
+      ],
+      "java": [
+       39,
+       40
+      ],
+      "go": [
+       72,
+       73
+      ]
+     },
+     "explanation": "A red sock with no red waiting. Put it aside: waiting is now {red:1}.",
+     "variables": [
+      {
+       "name": "sock",
+       "value": "red"
+      },
+      {
+       "name": "waiting",
+       "value": "{red:1}"
+      },
+      {
+       "name": "pairs",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Sock pairs edge-no-pairs: sock red, waiting {red:1}, pairs 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "green",
+        "role": "neutral"
+       },
+       {
+        "id": "waiting",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 250,
+        "height": 40,
+        "text": "waiting {red:1}",
+        "role": "neutral"
+       },
+       {
+        "id": "pairs",
+        "shape": "rect",
+        "x": 278,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "socks, in the order you pull them out"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "a count, not a yes/no: the map tracks how many are waiting"
+       }
+      ]
+     }
+    },
+    {
+     "event": "wait",
+     "lines": {
+      "cpp": [
+       42,
+       43
+      ],
+      "python": [
+       28,
+       29
+      ],
+      "java": [
+       39,
+       40
+      ],
+      "go": [
+       72,
+       73
+      ]
+     },
+     "explanation": "A blue sock with no blue waiting. Put it aside: waiting is now {blue:1,red:1}.",
+     "variables": [
+      {
+       "name": "sock",
+       "value": "blue"
+      },
+      {
+       "name": "waiting",
+       "value": "{blue:1,red:1}"
+      },
+      {
+       "name": "pairs",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Sock pairs edge-no-pairs: sock blue, waiting {blue:1,red:1}, pairs 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "green",
+        "role": "neutral"
+       },
+       {
+        "id": "waiting",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 250,
+        "height": 40,
+        "text": "waiting {blue:1,red:1}",
+        "role": "neutral"
+       },
+       {
+        "id": "pairs",
+        "shape": "rect",
+        "x": 278,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "socks, in the order you pull them out"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "a count, not a yes/no: the map tracks how many are waiting"
+       }
+      ]
+     }
+    },
+    {
+     "event": "wait",
+     "lines": {
+      "cpp": [
+       42,
+       43
+      ],
+      "python": [
+       28,
+       29
+      ],
+      "java": [
+       39,
+       40
+      ],
+      "go": [
+       72,
+       73
+      ]
+     },
+     "explanation": "A green sock with no green waiting. Put it aside: waiting is now {blue:1,green:1,red:1}.",
+     "variables": [
+      {
+       "name": "sock",
+       "value": "green"
+      },
+      {
+       "name": "waiting",
+       "value": "{blue:1,green:1,red:1}"
+      },
+      {
+       "name": "pairs",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Sock pairs edge-no-pairs: sock green, waiting {blue:1,green:1,red:1}, pairs 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "green",
+        "role": "active"
+       },
+       {
+        "id": "waiting",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 250,
+        "height": 40,
+        "text": "waiting {blue:1,green:1,red:1}",
+        "role": "neutral"
+       },
+       {
+        "id": "pairs",
+        "shape": "rect",
+        "x": 278,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "socks, in the order you pull them out"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "a count, not a yes/no: the map tracks how many are waiting"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       47
+      ],
+      "python": [
+       31
+      ],
+      "java": [
+       44
+      ],
+      "go": [
+       77
+      ]
+     },
+     "explanation": "0 pairs. Left over, unmatched: {blue:1,green:1,red:1}.",
+     "variables": [
+      {
+       "name": "sock",
+       "value": "-"
+      },
+      {
+       "name": "waiting",
+       "value": "{blue:1,green:1,red:1}"
+      },
+      {
+       "name": "pairs",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Sock pairs edge-no-pairs: sock -, waiting {blue:1,green:1,red:1}, pairs 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "red",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "blue",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "green",
+        "role": "visited"
+       },
+       {
+        "id": "waiting",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 250,
+        "height": 40,
+        "text": "waiting {blue:1,green:1,red:1}",
+        "role": "neutral"
+       },
+       {
+        "id": "pairs",
+        "shape": "rect",
+        "x": 278,
+        "y": 132,
+        "width": 110,
+        "height": 40,
+        "text": "pairs 0",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "socks, in the order you pull them out"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "a count, not a yes/no: the map tracks how many are waiting"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

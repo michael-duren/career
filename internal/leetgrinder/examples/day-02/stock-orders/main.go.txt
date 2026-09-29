@@ -1,0 +1,86 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
+type variable struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func emit(event string, pairs ...string) {
+	variables := []variable{}
+	for k := 0; k+1 < len(pairs); k += 2 {
+		variables = append(variables, variable{pairs[k], pairs[k+1]})
+	}
+	data, _ := json.Marshal(struct {
+		Event     string     `json:"event"`
+		Variables []variable `json:"variables"`
+	}{event, variables})
+	fmt.Println(string(data))
+}
+
+func result(answer string) {
+	data, _ := json.Marshal(struct {
+		Result string `json:"result"`
+	}{answer})
+	fmt.Println(string(data))
+}
+
+func itoa(value int) string { return strconv.Itoa(value) }
+
+func show(values []int) string {
+	parts := make([]string, len(values))
+	for k, value := range values {
+		parts[k] = strconv.Itoa(value)
+	}
+	return "[" + strings.Join(parts, ",") + "]"
+}
+
+func showLetters(counts [26]int) string {
+	parts := []string{}
+	for k, count := range counts {
+		if count != 0 {
+			parts = append(parts, string(rune('a'+k))+":"+itoa(count))
+		}
+	}
+	return "{" + strings.Join(parts, ",") + "}"
+}
+
+func solve(stock, orders string) string {
+	var counts [26]int
+	for i := 0; i < len(stock); i++ {
+		counts[stock[i]-'a']++
+	}
+	emit("stock", "i", "-", "item", "-", "left", "-", "counts", showLetters(counts))
+	for i := 0; i < len(orders); i++ {
+		item := orders[i]
+		counts[item-'a']--
+		left := counts[item-'a']
+		emit("order", "i", itoa(i), "item", string(item), "left", itoa(left), "counts", showLetters(counts))
+		if left < 0 {
+			return "short at " + itoa(i)
+		}
+	}
+
+	emit("done", "i", "-", "item", "-", "left", "-", "counts", showLetters(counts))
+	return "filled"
+}
+
+func main() {
+	scanner := bufio.NewScanner(os.Stdin)
+	stock, orders := "", ""
+	if scanner.Scan() {
+		stock = strings.TrimSpace(scanner.Text())
+	}
+	if scanner.Scan() {
+		orders = strings.TrimSpace(scanner.Text())
+	}
+	result(solve(stock, orders))
+}

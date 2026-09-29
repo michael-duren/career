@@ -1,36 +1,29 @@
-# Day 1 authoring record: remainder frequency
+# Day 1 authoring record
 
-## Scope and sources
+## Scope
 
-This record covers `day-01-remainder-frequency`, the fixed array of 60 counters for song durations. The existing day 1 lesson and curriculum establish the gap: the lesson describes this technique, but its current examples only animate pair search and a value-to-index map. The new example gives the count-array technique its own runnable trace. The lesson owner will link it from the lesson.
+Day 1 teaches Two Sum (easy) end to end: exhaustive pair search, then one-pass complement lookup with a value-to-index map and the look-before-store rule. It then teaches counting pairs with a value-to-count map and counting letters with a 26-slot array (finding repeated letters).
 
-The following local AlgoMonster files were consulted as research only:
+Valid Anagram and Pairs of Songs With Total Durations Divisible by 60 are left to the learner. Each has a "Your turn" section that restates the problem and gives a process hint only. The former remainder-bucket and anagram-count examples were removed because they were complete solutions. Two Sum remains the worked problem by agreement.
 
-- `/home/mduren/Documents/data/algomonster/articles/12-company-oas/01-10-pairs_of_songs.md`, “Explanation” and “Implementation”: the modulo-60 pairing rule and the need to count earlier songs.
-- `/home/mduren/Documents/data/algomonster/articles/01-getting-started/02-04-hashmap_intro.md`, “Hash Function” and “Hash Tables”: background on key-to-value lookup. The example uses a fixed array because the keys are exactly the integers 0 through 59.
+The hashmap introduction in the research corpus was consulted as research only. All prose, programs, cases, and diagrams are original.
 
-No article prose, code, image, diagram, or input was copied into the site. The source paths here document research and are not runtime dependencies. The existing public References footer remains the bibliography for the lesson.
+## Examples
 
-## Input and behavior
+| Example | Case | stdin | Output |
+| --- | --- | --- | --- |
+| baseline | normal / edge / duplicate | `3 9\n8 3 6\n`, `1 8\n4\n`, `2 8\n4 4\n` | `[1,2]`, `[]`, `[0,1]` |
+| complement-lookup | normal / duplicate / single | same inputs | `[1,2]`, `[0,1]`, `[]` |
+| pair-counts | normal | `5 6\n1 5 3 3 3\n` | `4` |
+| pair-counts | edge-all-equal | `4 4\n2 2 2 2\n` | `6` |
+| repeated-letters | normal / edge-no-repeats | `banana`, `abc` | `an`, `none` |
 
-Each program reads the song count followed by that many nonnegative integer durations. The first line of the normal input is `5`; its durations are `30 20 150 100 40`. The result is `3`, from index pairs `(0, 2)`, `(1, 3)`, and `(1, 4)`. The edge input is `3` followed by `60 60 60`. Its result is `3`, since each new zero-remainder song pairs with every earlier zero-remainder song. Each program emits one JSONL event per frame and a final `{"result":"3"}` record.
+Pair counting adds the count of earlier complements before recording the current value, so each pair is counted once by its later position. The all-equal edge shows the running total growing by 0, 1, 2, 3.
 
-The invariant is that `counts[r]` contains only earlier songs with remainder `r`. At each song, the algorithm reads bucket `(60 - remainder) % 60`, adds its count to the answer, and then increments the current remainder bucket. The second modulo is essential when the remainder is zero: the complement is bucket zero. Querying before insertion also prevents a song from pairing with itself. The scan takes O(n) time and O(1) auxiliary space for 60 counters, excluding input and trace output.
+## Writing style
 
-## Trace and drawing decisions
+Problem-first, plain language: state what the problem gives and asks, work a tiny example, show the obvious approach, then the improvement. Terms are defined when introduced. Step captions describe the concrete values at that step.
 
-Both cases start with `start`, then emit `lookup`, `count`, and `store` for each song, and finish with `done`. The ordered variables come from the Python program's observed JSONL output. The verifier checks those records against all four compiled or interpreted programs. Source line maps point to the actual event emit calls, and each variant's displayed algorithm range runs from `start` through `done`.
+## Verification
 
-The scene shows songs in input order above frequency buckets. For the normal input it displays six selected buckets `0, 10, 20, 30, 40, 50`; every omitted bucket remains zero. The edge input displays bucket zero. Each bucket's label gives its remainder and current count. An arrow points from the active song to the bucket being read or updated. A separate label shows the running pair total. The `count` frame still shows the old frequency array, making the lookup-before-store order visible. The zero-remainder edge frames show totals increasing by zero, one, then two, for a final total of three.
-
-## Verification and review
-
-On 2026-09-29, `python3 scripts/leetgrinder/verify_examples.py --days 1` exited 0. The verifier ran all day 1 examples in C++, Python, Java, and Go, including both cases of this example, and compared each JSONL event, ordered variable list, and result against the authored frames. Go source is stored as `main.go.txt`; the verifier stages it as `main.go` to compile it.
-
-A visual reviewer should check that the edge-case bucket zero remains readable at a narrow viewport and that the arrow and count label communicate the selected bucket without relying on color alone.
-
-## Complete day 1 inventory
-
-The lesson now includes four original runnable examples: exhaustive pair search, one-pass complement lookup, remainder-frequency pair counting, and fixed-alphabet anagram counts. Each has C++, Python, Java, and Go programs with observed-state traces and normal and edge cases. The anagram example uses `cacao` versus `aacco` as the matching case; `cacao` versus `cocoa` has an extra `o` and fails. The empty-string case also returns true. Source articles were consulted only as research and no article text, code, or image is shipped.
-
-The pilot Go package tests and the example verifier passed after all four examples were linked. The Chromium browser sweep passed with all four linked examples at 360 pixels and no page-level horizontal overflow.
+`python3 scripts/leetgrinder/verify_examples.py --days 1` passes for all four examples in C++, Python, Java, and Go. Go tests and the day 1 browser sweep pass.

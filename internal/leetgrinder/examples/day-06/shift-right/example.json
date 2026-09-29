@@ -1,0 +1,795 @@
+{
+ "id": "day-06-shift-right",
+ "title": "Shift right in place, right to left",
+ "invariant": "While copying into index i, cells 0 to i-1 still hold their original values.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 23,
+   "algorithmEnd": 32
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 25
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 23,
+   "algorithmEnd": 32
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 46,
+   "algorithmEnd": 55
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Shift [1, 2, 3, 4]",
+   "input": "4\n1 2 3 4\n",
+   "expectedOutput": "[0,1,2,3]",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       23,
+       24
+      ],
+      "python": [
+       18,
+       19
+      ],
+      "java": [
+       23,
+       24
+      ],
+      "go": [
+       46,
+       47
+      ]
+     },
+     "explanation": "Shift every value one spot right, dropping the last one and putting 0 at the front. Go right to left, so every value is read before it gets overwritten.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "values",
+       "value": "[1,2,3,4]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Shift right normal: values [1,2,3,4], i -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = already shifted; gold = original value about to be read"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right to left: each read happens before that cell is overwritten"
+       }
+      ]
+     }
+    },
+    {
+     "event": "copy",
+     "lines": {
+      "cpp": [
+       26
+      ],
+      "python": [
+       21
+      ],
+      "java": [
+       26
+      ],
+      "go": [
+       49
+      ]
+     },
+     "explanation": "Copy the 3 at index 2 into index 3. The 4 that was there falls off the end. Index 2 hasn't been written yet, so it still holds its original value.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "3"
+      },
+      {
+       "name": "values",
+       "value": "[1,2,3,3]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Shift right normal: values [1,2,3,3], i 3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = already shifted; gold = original value about to be read"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "write"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "read (still original)"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right to left: each read happens before that cell is overwritten"
+       }
+      ]
+     }
+    },
+    {
+     "event": "copy",
+     "lines": {
+      "cpp": [
+       26
+      ],
+      "python": [
+       21
+      ],
+      "java": [
+       26
+      ],
+      "go": [
+       49
+      ]
+     },
+     "explanation": "Copy the 2 at index 1 into index 2. The 3 that was there has already moved right. Index 1 hasn't been written yet, so it still holds its original value.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "2"
+      },
+      {
+       "name": "values",
+       "value": "[1,2,2,3]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Shift right normal: values [1,2,2,3], i 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = already shifted; gold = original value about to be read"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "write"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "read (still original)"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right to left: each read happens before that cell is overwritten"
+       }
+      ]
+     }
+    },
+    {
+     "event": "copy",
+     "lines": {
+      "cpp": [
+       26
+      ],
+      "python": [
+       21
+      ],
+      "java": [
+       26
+      ],
+      "go": [
+       49
+      ]
+     },
+     "explanation": "Copy the 1 at index 0 into index 1. The 2 that was there has already moved right. Index 0 hasn't been written yet, so it still holds its original value.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "1"
+      },
+      {
+       "name": "values",
+       "value": "[1,1,2,3]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Shift right normal: values [1,1,2,3], i 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = already shifted; gold = original value about to be read"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "write"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "read (still original)"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right to left: each read happens before that cell is overwritten"
+       }
+      ]
+     }
+    },
+    {
+     "event": "fill",
+     "lines": {
+      "cpp": [
+       29
+      ],
+      "python": [
+       23
+      ],
+      "java": [
+       29
+      ],
+      "go": [
+       52
+      ]
+     },
+     "explanation": "Put 0 in the front: [0,1,2,3]. Going left to right instead would copy the first value into every cell.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[0,1,2,3]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Shift right normal: values [0,1,2,3], i 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "0",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = already shifted; gold = original value about to be read"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right to left: each read happens before that cell is overwritten"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-single",
+   "label": "One value",
+   "input": "1\n5\n",
+   "expectedOutput": "[0]",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       23,
+       24
+      ],
+      "python": [
+       18,
+       19
+      ],
+      "java": [
+       23,
+       24
+      ],
+      "go": [
+       46,
+       47
+      ]
+     },
+     "explanation": "Shift every value one spot right, dropping the last one and putting 0 at the front. Go right to left, so every value is read before it gets overwritten.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "values",
+       "value": "[5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Shift right edge-single: values [5], i -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = already shifted; gold = original value about to be read"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right to left: each read happens before that cell is overwritten"
+       }
+      ]
+     }
+    },
+    {
+     "event": "fill",
+     "lines": {
+      "cpp": [
+       29
+      ],
+      "python": [
+       23
+      ],
+      "java": [
+       29
+      ],
+      "go": [
+       52
+      ]
+     },
+     "explanation": "With one value there's nothing to copy; the front just becomes 0.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[0]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Shift right edge-single: values [0], i 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "0",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = already shifted; gold = original value about to be read"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "right to left: each read happens before that cell is overwritten"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

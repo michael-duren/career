@@ -1,9 +1,10 @@
 {
   "day": 2,
   "objectives": [
-    "State exactly what a counter means before and after each processed item.",
-    "Choose between a fixed 26-letter array, a map of internal wall edges, and a constant-space vote balance.",
-    "Explain why a negative letter count, an excluded wall end, and a second majority pass decide correctness."
+    "Use counters as a running summary of everything you've read so far.",
+    "Spend counts as requests arrive, and notice the moment one goes negative.",
+    "Turn a list of lengths into positions with a running total.",
+    "Explain why pairing off different values leaves the majority value standing."
   ],
   "prerequisites": [
     1
@@ -11,516 +12,175 @@
   "sections": [
     {
       "id": "intuition",
-      "heading": "Intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: a counter is a running summary",
       "paragraphs": [
-        "A count is useful only when its meaning matches the question. A letter bucket can mean unused supply. A wall-coordinate bucket can mean how many rows have a seam there. A vote balance can mean how many equal values remain after unequal pairs have been removed. The same integer operation does different work in each problem.",
-        "Presence alone cannot make a note with repeated letters. A first-occurrence index cannot tell how many wall rows share a boundary. A surviving vote candidate is not yet proof that it appears more than half the time."
+        "Yesterday you remembered what you had seen. Today the thing you remember is a number that changes as you read: how many of each item are left, where you are along a route, or which value is ahead in a vote.",
+        "Picture a small shop. The shelf holds two a's, two b's, and one c. Instead of searching the shelf every time an order comes in, you keep a counter per item and subtract 1 per order. The counter tells you everything that matters about the past: how many are left. If a counter would drop below 0, the shop has run out."
       ],
+      "callout": {
+        "kind": "key",
+        "text": "Before writing a loop, say in one sentence what each counter means after each step. For the shop: counts[x] is how many x are still on the shelf."
+      },
       "diagram": {
-        "width": 520,
-        "height": 225,
-        "description": "Three count states: letter supply, internal wall-edge frequency, and uncanceled votes.",
+        "width": 320,
+        "height": 170,
+        "description": "Shelf counters a: 2, b: 2, c: 1. An order for b lowers the b counter to 1.",
         "nodes": [
-          {
-            "id": "supply",
-            "shape": "rect",
-            "x": 15,
-            "y": 35,
-            "width": 145,
-            "height": 50,
-            "text": "o supply: 1",
-            "role": "neutral"
-          },
-          {
-            "id": "spend",
-            "shape": "rect",
-            "x": 184,
-            "y": 35,
-            "width": 145,
-            "height": 50,
-            "text": "o needed: 2",
-            "role": "active"
-          },
-          {
-            "id": "deficit",
-            "shape": "rect",
-            "x": 353,
-            "y": 35,
-            "width": 145,
-            "height": 50,
-            "text": "balance: -1",
-            "role": "discarded"
-          },
-          {
-            "id": "row1",
-            "shape": "rect",
-            "x": 15,
-            "y": 116,
-            "width": 145,
-            "height": 50,
-            "text": "row 1 edge: 2",
-            "role": "neutral"
-          },
-          {
-            "id": "row2",
-            "shape": "rect",
-            "x": 184,
-            "y": 116,
-            "width": 145,
-            "height": 50,
-            "text": "row 2 edge: 2",
-            "role": "neutral"
-          },
-          {
-            "id": "edges",
-            "shape": "rect",
-            "x": 353,
-            "y": 116,
-            "width": 145,
-            "height": 50,
-            "text": "edge 2: 2",
-            "role": "result"
-          }
+          {"id": "a", "shape": "rect", "x": 20, "y": 44, "width": 80, "height": 48, "text": "a: 2", "role": "neutral"},
+          {"id": "b", "shape": "rect", "x": 120, "y": 44, "width": 80, "height": 48, "text": "b: 2 → 1", "role": "active"},
+          {"id": "c", "shape": "rect", "x": 220, "y": 44, "width": 80, "height": 48, "text": "c: 1", "role": "neutral"}
         ],
         "edges": [],
         "labels": [
-          {
-            "id": "letters",
-            "x": 15,
-            "y": 25,
-            "text": "Ransom Note: supply minus requests"
-          },
-          {
-            "id": "wall",
-            "x": 15,
-            "y": 107,
-            "text": "Brick Wall: count rows aligned at an interior coordinate"
-          },
-          {
-            "id": "vote",
-            "x": 15,
-            "y": 206,
-            "text": "Majority: unequal pairs cancel; the survivor still needs a full count"
-          }
+          {"id": "title", "x": 20, "y": 28, "text": "shelf counters"},
+          {"id": "order", "x": 120, "y": 118, "text": "order: b"},
+          {"id": "rule", "x": 20, "y": 156, "text": "below 0 means out of stock"}
         ]
       }
     },
     {
-      "id": "definitions",
-      "heading": "Definitions and recognition cues",
+      "id": "baseline",
+      "navLabel": "Search every time",
+      "heading": "Baseline: search the shelf for every order",
       "paragraphs": [
-        "Ransom Note asks whether every lowercase ASCII letter of a note can be taken from a magazine, each magazine position at most once. Its 26 possible keys justify a fixed array. If the input alphabet included arbitrary Unicode characters, byte indexing into 26 slots would be wrong; use a map keyed by characters under a stated normalization rule.",
-        "Brick Wall asks for a vertical line strictly between the two outer sides of a wall whose rows have equal total width and positive integer brick widths. Crossing a boundary between adjacent bricks avoids crossing a brick. Coordinate 0 and the full wall width are outside boundaries, so they are not candidates.",
-        "A majority element occurs strictly more than n/2 times. LeetCode 169 promises one, but these runnable examples also accept arrays without one. Cancellation finds a candidate; a second pass checks that stronger condition. A plurality, which merely leads all other values, is different."
+        "The direct approach keeps the stock as a list. For each order, walk the list looking for an unused copy of that item. If you find one, mark it used. If not, the order fails.",
+        "It works, and marking copies as used is what stops two orders from taking the same item. But each order may scan the whole shelf, so n stock items and m orders cost O(n·m) time. The counters below replace that search with one array lookup."
       ]
     },
     {
-      "id": "ransom-baseline",
-      "heading": "A correct baseline: assign magazine copies",
+      "id": "stock",
+      "navLabel": "Spending counts",
+      "heading": "Worked example: fill orders from counted stock",
       "paragraphs": [
-        "For each note letter, scan the magazine for a matching position that has not been used. Mark it and move to the next letter. If none exists, answer false. The invariant is that every marked position supplies exactly one earlier note letter; no copy is reused.",
-        "For note length m and magazine length n, this performs at most mn comparisons and uses n marks. The repeated scan of the same magazine positions is the work the count array will remove."
+        "Count the stock once into 26 counters, one per lowercase letter (the same array trick as day 1). Then read the orders in order. Each order subtracts 1 from its item's counter.",
+        "If a counter becomes negative, that order asked for something that's gone, and you can stop right there. Nothing later can bring the count back up. If you reach the end with no negative counter, every order was filled.",
+        "Stock \"aabbc\" can fill orders \"abcab\": every counter ends at 0. Stock \"aab\" can't fill \"abaa\": the fourth order wants a third a, and the a counter drops to -1."
       ],
       "exampleIds": [
-        "day-02-ransom-baseline"
+        "day-02-stock-orders"
       ]
     },
     {
-      "id": "ransom-counts",
-      "heading": "Worked example: spend from fixed letter counts",
+      "id": "positions",
+      "navLabel": "Lengths to positions",
+      "heading": "Worked example: turn lengths into positions",
       "paragraphs": [
-        "Scan the magazine once and add one to its letter bucket. Then scan the note, subtracting one from the requested bucket. After any note prefix, each bucket is magazine supply minus that prefix’s demand. A negative bucket means this note cannot be built; returning immediately is safe because later requests cannot replenish the magazine.",
-        "For magazine cacao, the buckets start with c=2, a=2, o=1. Note cocoa spends c, o, c, then a second o. Its o bucket becomes -1. This is the same multiplicity idea introduced by the anagram example on day 1, now with asymmetric supply and demand.",
-        "The four programs assume lowercase ASCII, so each letter has index letter minus a. An empty note would succeed immediately under the problem contract; the token-based teaching input uses nonempty strings."
+        "Sometimes the input gives you lengths, but the question is about positions. A bus route described as segments 2, 3, 1 drives 2 units, then 3, then 1. Its stops are at the running totals: 2, then 5, then 6 (the end of the route).",
+        "Once you have positions, the rest is set and map work you already know. To find the stops two routes share, put route A's stop positions in a set, then walk route B and check each of its positions.",
+        "Routes 2 3 1 and 1 1 3 1 both have length 6. A stops at 2 and 5; B stops at 1, 2, and 5. They share 2 and 5. We skip the last segment of each route, because both routes end at the same place and the end isn't an interesting stop."
+      ],
+      "exampleIds": [
+        "day-02-shared-stops"
+      ]
+    },
+    {
+      "id": "cancel",
+      "navLabel": "Cancelling pairs",
+      "heading": "Worked example: cancel pairs of different values",
+      "paragraphs": [
+        "A majority value appears more than half the time. Here's a way to see which value that is without counting everything. Cross out pairs of different values, one pair at a time, until you can't anymore.",
+        "Every crossed-out pair removes at most one copy of the majority value, and one copy of something else. The majority has more copies than everything else combined, so it can't be fully crossed out. Whatever survives is the only possible majority.",
+        "In `[2, 1, 2, 3, 2]`, cross out (2, 1) and (2, 3). A single 2 survives, and 2 really is the majority: three out of five. But in `[1, 2, 3]`, crossing out (1, 2) leaves 3, which appears once. The survivor is only a candidate. If the input doesn't promise that a majority exists, count the survivor in a second pass to confirm."
       ],
       "diagram": {
-        "width": 500,
-        "height": 190,
-        "description": "Magazine cacao supplies one o, but note cocoa requests two. The o counter reaches minus one.",
+        "width": 320,
+        "height": 170,
+        "description": "The values 2, 1, 2, 3, 2. The pairs 2 and 1, then 2 and 3, are crossed out. The last 2 survives.",
         "nodes": [
-          {
-            "id": "mag",
-            "shape": "rect",
-            "x": 20,
-            "y": 43,
-            "width": 130,
-            "height": 44,
-            "text": "mag: cacao",
-            "role": "neutral"
-          },
-          {
-            "id": "note",
-            "shape": "rect",
-            "x": 185,
-            "y": 43,
-            "width": 130,
-            "height": 44,
-            "text": "note: cocoa",
-            "role": "active"
-          },
-          {
-            "id": "before",
-            "shape": "rect",
-            "x": 20,
-            "y": 116,
-            "width": 130,
-            "height": 44,
-            "text": "o starts: 1",
-            "role": "neutral"
-          },
-          {
-            "id": "after",
-            "shape": "rect",
-            "x": 185,
-            "y": 116,
-            "width": 130,
-            "height": 44,
-            "text": "after two: -1",
-            "role": "discarded"
-          },
-          {
-            "id": "answer",
-            "shape": "rect",
-            "x": 350,
-            "y": 116,
-            "width": 130,
-            "height": 44,
-            "text": "false",
-            "role": "result"
-          }
+          {"id": "v0", "shape": "rect", "x": 12, "y": 44, "width": 52, "height": 48, "text": "2", "role": "discarded"},
+          {"id": "v1", "shape": "rect", "x": 72, "y": 44, "width": 52, "height": 48, "text": "1", "role": "discarded"},
+          {"id": "v2", "shape": "rect", "x": 132, "y": 44, "width": 52, "height": 48, "text": "2", "role": "discarded"},
+          {"id": "v3", "shape": "rect", "x": 192, "y": 44, "width": 52, "height": 48, "text": "3", "role": "discarded"},
+          {"id": "v4", "shape": "rect", "x": 252, "y": 44, "width": 52, "height": 48, "text": "2", "role": "result"}
         ],
         "edges": [],
         "labels": [
-          {
-            "id": "top",
-            "x": 20,
-            "y": 26,
-            "text": "One bucket per lowercase letter"
-          },
-          {
-            "id": "bottom",
-            "x": 20,
-            "y": 180,
-            "text": "A negative bucket is a proof of shortage, not just a warning."
-          }
+          {"id": "title", "x": 12, "y": 28, "text": "cross out different pairs"},
+          {"id": "p1", "x": 36, "y": 116, "text": "pair 1"},
+          {"id": "p2", "x": 156, "y": 116, "text": "pair 2"},
+          {"id": "survivor", "x": 12, "y": 156, "text": "the last 2 survives"}
         ]
-      },
-      "exampleIds": [
-        "day-02-ransom-counts"
-      ]
+      }
     },
     {
-      "id": "brick-baseline",
-      "heading": "A correct baseline: test every interior cut",
+      "id": "your-turn-ransom",
+      "navLabel": "Your turn: Ransom Note",
+      "heading": "Your turn: Ransom Note",
       "paragraphs": [
-        "Try each integer coordinate x from 1 through width minus 1. For each row, add brick widths until an internal edge equals x or the row is exhausted. Count a crossing when no internal edge occurs there. Keep the smallest crossed count.",
-        "The invariant after checking a prefix of rows is that crossed counts precisely the rows whose bricks cover x. Since every legal integer cut is tried, the smallest recorded value is correct. Repeatedly rebuilding row prefix sums costs O(WB) time for wall width W and B bricks, with O(1) auxiliary space."
+        "You get two strings, ransomNote and magazine. Return true if you can build the note by cutting letters out of the magazine, using each magazine letter at most once. Only lowercase letters appear."
       ],
-      "exampleIds": [
-        "day-02-brick-baseline"
-      ]
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Match the problem to the shop example: which string is the stock, and which is the list of orders?"
+      }
     },
     {
-      "id": "brick-edges",
-      "heading": "Worked example: count internal brick edges",
+      "id": "your-turn-brick",
+      "navLabel": "Your turn: Brick Wall",
+      "heading": "Your turn: Brick Wall",
       "paragraphs": [
-        "For each row, accumulate widths of all bricks except its last brick. Increment edges[x] at each resulting coordinate x. The last brick would end at the full wall width, which is forbidden. After any number of rows, edges[x] is exactly the number of those rows with an internal boundary at x.",
-        "At a legal coordinate x, every row either has one boundary there or contributes one crossed brick. Thus crossed(x) equals row count minus edges[x]. The largest edge count gives the fewest crossed bricks. If the map stays empty, every row is a single brick and the answer is the row count.",
-        "The example wall has three internal edges at x=2, so a cut there crosses zero bricks. Hash-map operations are expected O(1), giving expected O(B) time and O(B) auxiliary space. An ordered map gives O(B log B) worst-case time. Real implementations should use an integer width large enough for cumulative sums."
+        "Today's medium. A wall is made of rows of bricks, each row given as a list of brick widths, and every row has the same total width. Draw one vertical line from top to bottom that crosses as few bricks as possible, and return that number. A line along a brick's edge doesn't cross it, and you can't draw the line along either outer side of the wall.",
+        "The lesson doesn't solve this one. Both worked examples above are useful here."
       ],
-      "diagram": {
-        "width": 500,
-        "height": 250,
-        "description": "Three rows of width four. Coordinate two is an internal edge in all three rows; the outer ends at zero and four cannot be chosen.",
-        "nodes": [
-          {
-            "id": "a0",
-            "shape": "rect",
-            "x": 50,
-            "y": 38,
-            "width": 60,
-            "height": 40,
-            "text": "1",
-            "role": "neutral"
-          },
-          {
-            "id": "a1",
-            "shape": "rect",
-            "x": 112,
-            "y": 38,
-            "width": 60,
-            "height": 40,
-            "text": "1",
-            "role": "neutral"
-          },
-          {
-            "id": "a2",
-            "shape": "rect",
-            "x": 174,
-            "y": 38,
-            "width": 120,
-            "height": 40,
-            "text": "2",
-            "role": "neutral"
-          },
-          {
-            "id": "b0",
-            "shape": "rect",
-            "x": 50,
-            "y": 94,
-            "width": 120,
-            "height": 40,
-            "text": "2",
-            "role": "neutral"
-          },
-          {
-            "id": "b1",
-            "shape": "rect",
-            "x": 172,
-            "y": 94,
-            "width": 60,
-            "height": 40,
-            "text": "1",
-            "role": "neutral"
-          },
-          {
-            "id": "b2",
-            "shape": "rect",
-            "x": 234,
-            "y": 94,
-            "width": 60,
-            "height": 40,
-            "text": "1",
-            "role": "neutral"
-          },
-          {
-            "id": "c0",
-            "shape": "rect",
-            "x": 50,
-            "y": 150,
-            "width": 60,
-            "height": 40,
-            "text": "1",
-            "role": "neutral"
-          },
-          {
-            "id": "c1",
-            "shape": "rect",
-            "x": 112,
-            "y": 150,
-            "width": 60,
-            "height": 40,
-            "text": "1",
-            "role": "neutral"
-          },
-          {
-            "id": "c2",
-            "shape": "rect",
-            "x": 174,
-            "y": 150,
-            "width": 120,
-            "height": 40,
-            "text": "2",
-            "role": "neutral"
-          },
-          {
-            "id": "cut",
-            "shape": "rect",
-            "x": 171,
-            "y": 30,
-            "width": 3,
-            "height": 168,
-            "text": "",
-            "role": "result"
-          },
-          {
-            "id": "score",
-            "shape": "rect",
-            "x": 338,
-            "y": 95,
-            "width": 142,
-            "height": 50,
-            "text": "edge 2: 3",
-            "role": "result"
-          }
-        ],
-        "edges": [],
-        "labels": [
-          {
-            "id": "axis",
-            "x": 50,
-            "y": 24,
-            "text": "0      1      2      3      4"
-          },
-          {
-            "id": "rows",
-            "x": 4,
-            "y": 70,
-            "text": "r0"
-          },
-          {
-            "id": "rows1",
-            "x": 4,
-            "y": 126,
-            "text": "r1"
-          },
-          {
-            "id": "rows2",
-            "x": 4,
-            "y": 182,
-            "text": "r2"
-          },
-          {
-            "id": "rule",
-            "x": 15,
-            "y": 229,
-            "text": "Crossed = row count minus aligned internal edges."
-          }
-        ]
-      },
-      "exampleIds": [
-        "day-02-brick-edges"
-      ]
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Sketch the example wall on grid paper and try a few vertical lines by hand. Keep track of what makes one line better than another."
+      }
     },
     {
-      "id": "majority-baseline",
-      "heading": "A correct baseline: count each candidate",
+      "id": "your-turn-majority",
+      "navLabel": "Your turn: Majority Element",
+      "heading": "Your turn: Majority Element",
       "paragraphs": [
-        "Take a value from the array and count it across the whole array. Return the first value with a count strictly above n/2. If no tested value qualifies, return none. Every possible majority appears as an input value, so the exhaustive count cannot miss it.",
-        "A full scan for each of n candidates costs O(n²) time and O(1) auxiliary space. Duplicate candidates can repeat the same scan. A frequency map would remove that repeated work in expected O(n) time but need O(n) space for arbitrary integers."
+        "Given an array where one value appears more than half the time, return that value. A hash map of counts solves it in O(n) time and O(n) memory. Try to also solve it in O(1) extra memory."
       ],
-      "exampleIds": [
-        "day-02-majority-baseline"
-      ]
-    },
-    {
-      "id": "majority-vote",
-      "heading": "Worked example: cancellation and verification",
-      "paragraphs": [
-        "Walk left to right with candidate and balance. If balance is zero, adopt the current value with balance one. A matching value adds one vote; a different value removes one. Each removal pairs one candidate copy with one different copy, so neither member of that pair can change whether a strict majority exists among the unpaired values.",
-        "After the first pass, any true majority must be the surviving candidate: more than half of all values cannot be completely paired with different values. But an array such as [1, 2, 3, 4] leaves no majority. Count the candidate in a second pass and return it only when the count exceeds n/2.",
-        "For [2, 1, 2, 3, 2], the first 2 cancels with 1, and the next 2 cancels with 3. The final 2 survives. Verification finds three copies out of five. Both passes use O(n) time; candidate, balance, and count use O(1) auxiliary space."
-      ],
-      "diagram": {
-        "width": 520,
-        "height": 190,
-        "description": "Cancel unequal values from 2, 1, 2, 3, 2. One unpaired 2 remains, and a second pass counts three 2s out of five.",
-        "nodes": [
-          {
-            "id": "a",
-            "shape": "rect",
-            "x": 15,
-            "y": 45,
-            "width": 62,
-            "height": 45,
-            "text": "2",
-            "role": "discarded"
-          },
-          {
-            "id": "b",
-            "shape": "rect",
-            "x": 95,
-            "y": 45,
-            "width": 62,
-            "height": 45,
-            "text": "1",
-            "role": "discarded"
-          },
-          {
-            "id": "c",
-            "shape": "rect",
-            "x": 175,
-            "y": 45,
-            "width": 62,
-            "height": 45,
-            "text": "2",
-            "role": "discarded"
-          },
-          {
-            "id": "d",
-            "shape": "rect",
-            "x": 255,
-            "y": 45,
-            "width": 62,
-            "height": 45,
-            "text": "3",
-            "role": "discarded"
-          },
-          {
-            "id": "e",
-            "shape": "rect",
-            "x": 335,
-            "y": 45,
-            "width": 62,
-            "height": 45,
-            "text": "2",
-            "role": "result"
-          },
-          {
-            "id": "proof",
-            "shape": "rect",
-            "x": 142,
-            "y": 120,
-            "width": 200,
-            "height": 48,
-            "text": "3 of 5 > half",
-            "role": "result"
-          }
-        ],
-        "edges": [],
-        "labels": [
-          {
-            "id": "row",
-            "x": 15,
-            "y": 26,
-            "text": "Two unequal pairs cancel"
-          },
-          {
-            "id": "survivor",
-            "x": 15,
-            "y": 110,
-            "text": "Survivor is a candidate"
-          },
-          {
-            "id": "second",
-            "x": 15,
-            "y": 181,
-            "text": "Verify against the original array, including canceled positions."
-          }
-        ]
-      },
-      "exampleIds": [
-        "day-02-majority-vote"
-      ]
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Do the crossing-out on `[2, 2, 1, 1, 1, 2, 2]` in a single left-to-right pass. What is the least you need to remember at each step?"
+      }
     },
     {
       "id": "complexity",
+      "navLabel": "Complexity",
       "heading": "Complexity and cautions",
+      "bullets": [
+        "Searching the shelf for every order: O(n·m) time.",
+        "Counting stock, then spending counts: O(n + m) time, and 26 counters count as O(1) memory.",
+        "Shared stops with a set: O(a + b) time on average for routes with a and b segments, O(a) memory for the set.",
+        "Crossing out pairs in one pass can be done in O(n) time with O(1) memory; a confirming second pass is another O(n)."
+      ],
       "paragraphs": [
-        "Let m be note length, n be magazine length, B be total bricks, W be integer wall width, r be row count, and q be majority-array length. Ransom assignment uses O(mn) time and O(n) marks; 26 buckets use O(m+n) time and O(1) auxiliary space. Neither bound includes input storage or emitted trace records.",
-        "Testing every wall coordinate and every brick costs O(WB) time and O(1) auxiliary space. Counting internal edges uses expected O(B) time and O(B) map space, with at most B-r inserted boundaries. The answer is r when no internal boundary exists. Never count the wall end: that would falsely permit a zero-crossing line along the outside.",
-        "Full-array majority recounts take O(q²) time and O(1) auxiliary space. Cancellation plus verification takes O(q) time and O(1) auxiliary space. Do not return the vote candidate without verification when existence is unknown. Use a wider type if a count or cumulative width could exceed the language’s ordinary integer range."
+        "Stop as soon as a spent counter goes negative. Counting all orders first and checking at the end also works, but it hides which order failed.",
+        "Running totals can get large. In C++, Java, and Go, check whether the total of many lengths can overflow a 32-bit integer; Python integers don't overflow."
       ]
     },
     {
       "id": "checks",
+      "navLabel": "Check yourself",
       "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
       "checks": [
         {
-          "prompt": "Why can a note with two o letters fail when the magazine contains an o?",
-          "answer": "Presence records only that an o exists. The supply bucket must hold at least two; after the second request it becomes negative if only one was available."
+          "prompt": "What does counts[x] mean after each order in the shop example?",
+          "answer": "How many x are still on the shelf: stock of x minus orders for x so far."
         },
         {
-          "prompt": "Why do we skip the final brick of every wall row?",
-          "answer": "Adding its width reaches the outer wall end. A cut there is not an interior line, so it cannot reduce the number of crossed bricks."
+          "prompt": "Why can you stop as soon as a counter goes negative?",
+          "answer": "Orders only ever subtract. Once a counter is negative, that order couldn't be filled, and nothing later raises the count."
         },
         {
-          "prompt": "What does the Boyer-Moore balance count, and why is a second pass needed?",
-          "answer": "It counts unpaired copies of the current candidate after unequal pairs cancel. A survivor may still occur at most half the time, so a full occurrence count checks the majority condition."
+          "prompt": "Route segments 4, 1, 3: where are the stops, and which one is skipped?",
+          "answer": "4, 5, and 8. The last one, 8, is the end of the route, so it's skipped."
         },
         {
-          "prompt": "Would an array of 26 counters work for arbitrary Unicode text?",
-          "answer": "No. The index calculation assumes lowercase ASCII a through z. A different alphabet needs a representation and normalization rule suited to its characters."
+          "prompt": "Cross out pairs in `[1, 2, 3]`. What survives, and is it a majority?",
+          "answer": "3 survives, but it appears once out of three. The survivor is only a candidate, so confirm it with a second count unless a majority is guaranteed."
         }
       ]
     }

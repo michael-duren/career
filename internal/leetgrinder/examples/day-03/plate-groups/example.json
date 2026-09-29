@@ -1,0 +1,1735 @@
+{
+ "id": "day-03-plate-groups",
+ "title": "Group items by a cleaned-up key",
+ "invariant": "Two plates are in the same group exactly when they produce the same key.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 38,
+   "algorithmEnd": 52
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 27
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 29,
+   "algorithmEnd": 40
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 54,
+   "algorithmEnd": 69
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Mixed plates",
+   "input": "5\nAB-12 cd3 ab12 C-D3 xy9\n",
+   "expectedOutput": "ab12:AB-12,ab12|cd3:cd3,C-D3|xy9:xy9",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       39,
+       40
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       55,
+       56
+      ]
+     },
+     "explanation": "The map starts empty. Its keys will be cleaned-up plates; each value is the list of original plates with that key.",
+     "variables": [
+      {
+       "name": "plate",
+       "value": "-"
+      },
+      {
+       "name": "key",
+       "value": "-"
+      },
+      {
+       "name": "groups",
+       "value": ""
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Plate groups normal: plate -, key -, groups none.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "AB-12",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "cd3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ab12",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "C-D3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "xy9",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "plates, in input order"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "boxes: key and how many plates share it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44,
+       45,
+       46
+      ],
+      "python": [
+       22,
+       23
+      ],
+      "java": [
+       33,
+       34
+      ],
+      "go": [
+       59,
+       60,
+       61,
+       63
+      ]
+     },
+     "explanation": "Lowercase \"AB-12\" and drop dashes: the key is \"ab12\". That key is new, so it starts a new group.",
+     "variables": [
+      {
+       "name": "plate",
+       "value": "AB-12"
+      },
+      {
+       "name": "key",
+       "value": "ab12"
+      },
+      {
+       "name": "groups",
+       "value": "ab12:AB-12"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Plate groups normal: plate AB-12, key ab12, groups ab12:AB-12.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "AB-12",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "cd3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ab12",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "C-D3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "xy9",
+        "role": "neutral"
+       },
+       {
+        "id": "group-ab12",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "ab12: 1",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "plates, in input order"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "boxes: key and how many plates share it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44,
+       45,
+       46
+      ],
+      "python": [
+       22,
+       23
+      ],
+      "java": [
+       33,
+       34
+      ],
+      "go": [
+       59,
+       60,
+       61,
+       63
+      ]
+     },
+     "explanation": "Lowercase \"cd3\" and drop dashes: the key is \"cd3\". That key is new, so it starts a new group.",
+     "variables": [
+      {
+       "name": "plate",
+       "value": "cd3"
+      },
+      {
+       "name": "key",
+       "value": "cd3"
+      },
+      {
+       "name": "groups",
+       "value": "ab12:AB-12|cd3:cd3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Plate groups normal: plate cd3, key cd3, groups ab12:AB-12|cd3:cd3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "AB-12",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "cd3",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ab12",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "C-D3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "xy9",
+        "role": "neutral"
+       },
+       {
+        "id": "group-ab12",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "ab12: 1",
+        "role": "neutral"
+       },
+       {
+        "id": "group-cd3",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "cd3: 1",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "plates, in input order"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "boxes: key and how many plates share it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44,
+       45,
+       46
+      ],
+      "python": [
+       22,
+       23
+      ],
+      "java": [
+       33,
+       34
+      ],
+      "go": [
+       59,
+       60,
+       61,
+       63
+      ]
+     },
+     "explanation": "Lowercase \"ab12\" and drop dashes: the key is \"ab12\". That key already exists, so \"ab12\" joins AB-12 in the same group.",
+     "variables": [
+      {
+       "name": "plate",
+       "value": "ab12"
+      },
+      {
+       "name": "key",
+       "value": "ab12"
+      },
+      {
+       "name": "groups",
+       "value": "ab12:AB-12,ab12|cd3:cd3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Plate groups normal: plate ab12, key ab12, groups ab12:AB-12,ab12|cd3:cd3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "AB-12",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "cd3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ab12",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "C-D3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "xy9",
+        "role": "neutral"
+       },
+       {
+        "id": "group-ab12",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "ab12: 2",
+        "role": "active"
+       },
+       {
+        "id": "group-cd3",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "cd3: 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "plates, in input order"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "boxes: key and how many plates share it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44,
+       45,
+       46
+      ],
+      "python": [
+       22,
+       23
+      ],
+      "java": [
+       33,
+       34
+      ],
+      "go": [
+       59,
+       60,
+       61,
+       63
+      ]
+     },
+     "explanation": "Lowercase \"C-D3\" and drop dashes: the key is \"cd3\". That key already exists, so \"C-D3\" joins cd3 in the same group.",
+     "variables": [
+      {
+       "name": "plate",
+       "value": "C-D3"
+      },
+      {
+       "name": "key",
+       "value": "cd3"
+      },
+      {
+       "name": "groups",
+       "value": "ab12:AB-12,ab12|cd3:cd3,C-D3"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Plate groups normal: plate C-D3, key cd3, groups ab12:AB-12,ab12|cd3:cd3,C-D3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "AB-12",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "cd3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ab12",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "C-D3",
+        "role": "active"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "xy9",
+        "role": "neutral"
+       },
+       {
+        "id": "group-ab12",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "ab12: 2",
+        "role": "neutral"
+       },
+       {
+        "id": "group-cd3",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "cd3: 2",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "plates, in input order"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "boxes: key and how many plates share it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44,
+       45,
+       46
+      ],
+      "python": [
+       22,
+       23
+      ],
+      "java": [
+       33,
+       34
+      ],
+      "go": [
+       59,
+       60,
+       61,
+       63
+      ]
+     },
+     "explanation": "Lowercase \"xy9\" and drop dashes: the key is \"xy9\". That key is new, so it starts a new group.",
+     "variables": [
+      {
+       "name": "plate",
+       "value": "xy9"
+      },
+      {
+       "name": "key",
+       "value": "xy9"
+      },
+      {
+       "name": "groups",
+       "value": "ab12:AB-12,ab12|cd3:cd3,C-D3|xy9:xy9"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Plate groups normal: plate xy9, key xy9, groups ab12:AB-12,ab12|cd3:cd3,C-D3|xy9:xy9.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "AB-12",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "cd3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ab12",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "C-D3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "xy9",
+        "role": "active"
+       },
+       {
+        "id": "group-ab12",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "ab12: 2",
+        "role": "neutral"
+       },
+       {
+        "id": "group-cd3",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "cd3: 2",
+        "role": "neutral"
+       },
+       {
+        "id": "group-xy9",
+        "shape": "rect",
+        "x": 280,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "xy9: 1",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "plates, in input order"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "boxes: key and how many plates share it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       50
+      ],
+      "python": [
+       26
+      ],
+      "java": [
+       38
+      ],
+      "go": [
+       67
+      ]
+     },
+     "explanation": "3 groups. Plates in the same group look different but share a key.",
+     "variables": [
+      {
+       "name": "plate",
+       "value": "-"
+      },
+      {
+       "name": "key",
+       "value": "-"
+      },
+      {
+       "name": "groups",
+       "value": "ab12:AB-12,ab12|cd3:cd3,C-D3|xy9:xy9"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Plate groups normal: plate -, key -, groups ab12:AB-12,ab12|cd3:cd3,C-D3|xy9:xy9.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "AB-12",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "cd3",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "ab12",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "C-D3",
+        "role": "result"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "xy9",
+        "role": "result"
+       },
+       {
+        "id": "group-ab12",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "ab12: 2",
+        "role": "neutral"
+       },
+       {
+        "id": "group-cd3",
+        "shape": "rect",
+        "x": 148,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "cd3: 2",
+        "role": "neutral"
+       },
+       {
+        "id": "group-xy9",
+        "shape": "rect",
+        "x": 280,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "xy9: 1",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "plates, in input order"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "boxes: key and how many plates share it"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-one-group",
+   "label": "Every plate has the same key",
+   "input": "3\na-b AB A-B\n",
+   "expectedOutput": "ab:a-b,AB,A-B",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       39,
+       40
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       55,
+       56
+      ]
+     },
+     "explanation": "The map starts empty. Its keys will be cleaned-up plates; each value is the list of original plates with that key.",
+     "variables": [
+      {
+       "name": "plate",
+       "value": "-"
+      },
+      {
+       "name": "key",
+       "value": "-"
+      },
+      {
+       "name": "groups",
+       "value": ""
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Plate groups edge-one-group: plate -, key -, groups none.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a-b",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "AB",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "A-B",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "plates, in input order"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "boxes: key and how many plates share it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44,
+       45,
+       46
+      ],
+      "python": [
+       22,
+       23
+      ],
+      "java": [
+       33,
+       34
+      ],
+      "go": [
+       59,
+       60,
+       61,
+       63
+      ]
+     },
+     "explanation": "Lowercase \"a-b\" and drop dashes: the key is \"ab\". That key is new, so it starts a new group.",
+     "variables": [
+      {
+       "name": "plate",
+       "value": "a-b"
+      },
+      {
+       "name": "key",
+       "value": "ab"
+      },
+      {
+       "name": "groups",
+       "value": "ab:a-b"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Plate groups edge-one-group: plate a-b, key ab, groups ab:a-b.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a-b",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "AB",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "A-B",
+        "role": "neutral"
+       },
+       {
+        "id": "group-ab",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "ab: 1",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "plates, in input order"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "boxes: key and how many plates share it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44,
+       45,
+       46
+      ],
+      "python": [
+       22,
+       23
+      ],
+      "java": [
+       33,
+       34
+      ],
+      "go": [
+       59,
+       60,
+       61,
+       63
+      ]
+     },
+     "explanation": "Lowercase \"AB\" and drop dashes: the key is \"ab\". That key already exists, so \"AB\" joins a-b in the same group.",
+     "variables": [
+      {
+       "name": "plate",
+       "value": "AB"
+      },
+      {
+       "name": "key",
+       "value": "ab"
+      },
+      {
+       "name": "groups",
+       "value": "ab:a-b,AB"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Plate groups edge-one-group: plate AB, key ab, groups ab:a-b,AB.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a-b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "AB",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "A-B",
+        "role": "neutral"
+       },
+       {
+        "id": "group-ab",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "ab: 2",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "plates, in input order"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "boxes: key and how many plates share it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "add",
+     "lines": {
+      "cpp": [
+       43,
+       44,
+       45,
+       46
+      ],
+      "python": [
+       22,
+       23
+      ],
+      "java": [
+       33,
+       34
+      ],
+      "go": [
+       59,
+       60,
+       61,
+       63
+      ]
+     },
+     "explanation": "Lowercase \"A-B\" and drop dashes: the key is \"ab\". That key already exists, so \"A-B\" joins a-b, AB in the same group.",
+     "variables": [
+      {
+       "name": "plate",
+       "value": "A-B"
+      },
+      {
+       "name": "key",
+       "value": "ab"
+      },
+      {
+       "name": "groups",
+       "value": "ab:a-b,AB,A-B"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Plate groups edge-one-group: plate A-B, key ab, groups ab:a-b,AB,A-B.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a-b",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "AB",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "A-B",
+        "role": "active"
+       },
+       {
+        "id": "group-ab",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "ab: 3",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "plates, in input order"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "boxes: key and how many plates share it"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       50
+      ],
+      "python": [
+       26
+      ],
+      "java": [
+       38
+      ],
+      "go": [
+       67
+      ]
+     },
+     "explanation": "1 group. Plates in the same group look different but share a key.",
+     "variables": [
+      {
+       "name": "plate",
+       "value": "-"
+      },
+      {
+       "name": "key",
+       "value": "-"
+      },
+      {
+       "name": "groups",
+       "value": "ab:a-b,AB,A-B"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Plate groups edge-one-group: plate -, key -, groups ab:a-b,AB,A-B.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "a-b",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "AB",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "A-B",
+        "role": "result"
+       },
+       {
+        "id": "group-ab",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 120,
+        "height": 40,
+        "text": "ab: 3",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "plates, in input order"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "boxes: key and how many plates share it"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1097 @@
+{
+ "id": "day-06-running-max",
+ "title": "Running maximum, in place, left to right",
+ "invariant": "Before step i, cells 0 to i-1 hold running maximums and cells from i on still hold the input.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 23,
+   "algorithmEnd": 32
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 25
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 23,
+   "algorithmEnd": 32
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 46,
+   "algorithmEnd": 55
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Running max of [3, 1, 4, 1, 5]",
+   "input": "5\n3 1 4 1 5\n",
+   "expectedOutput": "[3,3,4,4,5]",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       23,
+       24
+      ],
+      "python": [
+       18,
+       19
+      ],
+      "java": [
+       23,
+       24
+      ],
+      "go": [
+       46,
+       47
+      ]
+     },
+     "explanation": "Replace each value with the largest value up to and including it. The first value is already its own maximum.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "values",
+       "value": "[3,1,4,1,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Running max normal: values [3,1,4,1,5], i -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "input",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 200,
+        "height": 40,
+        "text": "input [3,1,4,1,5]",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = finished; each write reads the finished cell on its left"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "left to right, because each cell needs its left neighbor's new value"
+       }
+      ]
+     }
+    },
+    {
+     "event": "update",
+     "lines": {
+      "cpp": [
+       26
+      ],
+      "python": [
+       21
+      ],
+      "java": [
+       26
+      ],
+      "go": [
+       49
+      ]
+     },
+     "explanation": "Compare 1 with the cell to its left, 3. That cell already holds the largest value from 0 to 0, so index 1 becomes 3.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "1"
+      },
+      {
+       "name": "values",
+       "value": "[3,3,4,1,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Running max normal: values [3,3,4,1,5], i 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "input",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 200,
+        "height": 40,
+        "text": "input [3,1,4,1,5]",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = finished; each write reads the finished cell on its left"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "i (write)"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "i-1 (read)"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "left to right, because each cell needs its left neighbor's new value"
+       }
+      ]
+     }
+    },
+    {
+     "event": "update",
+     "lines": {
+      "cpp": [
+       26
+      ],
+      "python": [
+       21
+      ],
+      "java": [
+       26
+      ],
+      "go": [
+       49
+      ]
+     },
+     "explanation": "Compare 4 with the cell to its left, 3. That cell already holds the largest value from 0 to 1, so index 2 keeps its own value.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "2"
+      },
+      {
+       "name": "values",
+       "value": "[3,3,4,1,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Running max normal: values [3,3,4,1,5], i 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "visited"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "input",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 200,
+        "height": 40,
+        "text": "input [3,1,4,1,5]",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = finished; each write reads the finished cell on its left"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "i (write)"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "i-1 (read)"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "left to right, because each cell needs its left neighbor's new value"
+       }
+      ]
+     }
+    },
+    {
+     "event": "update",
+     "lines": {
+      "cpp": [
+       26
+      ],
+      "python": [
+       21
+      ],
+      "java": [
+       26
+      ],
+      "go": [
+       49
+      ]
+     },
+     "explanation": "Compare 1 with the cell to its left, 4. That cell already holds the largest value from 0 to 2, so index 3 becomes 4.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "3"
+      },
+      {
+       "name": "values",
+       "value": "[3,3,4,4,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Running max normal: values [3,3,4,4,5], i 3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "visited"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "active"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "input",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 200,
+        "height": 40,
+        "text": "input [3,1,4,1,5]",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = finished; each write reads the finished cell on its left"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "i (write)"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "i-1 (read)"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "left to right, because each cell needs its left neighbor's new value"
+       }
+      ]
+     }
+    },
+    {
+     "event": "update",
+     "lines": {
+      "cpp": [
+       26
+      ],
+      "python": [
+       21
+      ],
+      "java": [
+       26
+      ],
+      "go": [
+       49
+      ]
+     },
+     "explanation": "Compare 5 with the cell to its left, 4. That cell already holds the largest value from 0 to 3, so index 4 keeps its own value.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "4"
+      },
+      {
+       "name": "values",
+       "value": "[3,3,4,4,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Running max normal: values [3,3,4,4,5], i 4.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "visited"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "active"
+       },
+       {
+        "id": "input",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 200,
+        "height": 40,
+        "text": "input [3,1,4,1,5]",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = finished; each write reads the finished cell on its left"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-4",
+        "x": 282,
+        "y": 116,
+        "text": "i (write)"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "i-1 (read)"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "left to right, because each cell needs its left neighbor's new value"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       24
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       53
+      ]
+     },
+     "explanation": "Each cell now holds the largest value seen so far: [3,3,4,4,5].",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "values",
+       "value": "[3,3,4,4,5]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Running max normal: values [3,3,4,4,5], i -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "result"
+       },
+       {
+        "id": "input",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 200,
+        "height": 40,
+        "text": "input [3,1,4,1,5]",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = finished; each write reads the finished cell on its left"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "left to right, because each cell needs its left neighbor's new value"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-single",
+   "label": "One value",
+   "input": "1\n7\n",
+   "expectedOutput": "[7]",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       23,
+       24
+      ],
+      "python": [
+       18,
+       19
+      ],
+      "java": [
+       23,
+       24
+      ],
+      "go": [
+       46,
+       47
+      ]
+     },
+     "explanation": "Replace each value with the largest value up to and including it. The first value is already its own maximum.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "values",
+       "value": "[7]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Running max edge-single: values [7], i -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "result"
+       },
+       {
+        "id": "input",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 200,
+        "height": 40,
+        "text": "input [7]",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = finished; each write reads the finished cell on its left"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "left to right, because each cell needs its left neighbor's new value"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       24
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       53
+      ]
+     },
+     "explanation": "With one value the loop never runs; it's already its own maximum.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "-"
+      },
+      {
+       "name": "values",
+       "value": "[7]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Running max edge-single: values [7], i -.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "7",
+        "role": "result"
+       },
+       {
+        "id": "input",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 200,
+        "height": 40,
+        "text": "input [7]",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = finished; each write reads the finished cell on its left"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "left to right, because each cell needs its left neighbor's new value"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

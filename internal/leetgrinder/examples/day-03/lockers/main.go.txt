@@ -1,0 +1,82 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
+type variable struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func emit(event string, pairs ...string) {
+	variables := []variable{}
+	for k := 0; k+1 < len(pairs); k += 2 {
+		variables = append(variables, variable{pairs[k], pairs[k+1]})
+	}
+	data, _ := json.Marshal(struct {
+		Event     string     `json:"event"`
+		Variables []variable `json:"variables"`
+	}{event, variables})
+	fmt.Println(string(data))
+}
+
+func result(answer string) {
+	data, _ := json.Marshal(struct {
+		Result string `json:"result"`
+	}{answer})
+	fmt.Println(string(data))
+}
+
+func itoa(value int) string { return strconv.Itoa(value) }
+
+func show(values []int) string {
+	parts := make([]string, len(values))
+	for k, value := range values {
+		parts[k] = strconv.Itoa(value)
+	}
+	return "[" + strings.Join(parts, ",") + "]"
+}
+
+func showMap(mapping map[string]string) string {
+	text := strings.TrimSuffix(strings.TrimPrefix(fmt.Sprint(mapping), "map["), "]")
+	return "{" + strings.ReplaceAll(text, " ", ",") + "}"
+}
+
+func solve(pairs [][2]string) string {
+	lockerOf, studentOf := map[string]string{}, map[string]string{}
+	emit("start", "student", "-", "locker", "-", "lockerOf", showMap(lockerOf), "studentOf", showMap(studentOf))
+	for _, pair := range pairs {
+		student, locker := pair[0], pair[1]
+		if owned, ok := lockerOf[student]; ok && owned != locker {
+			emit("student-conflict", "student", student, "locker", locker, "lockerOf", showMap(lockerOf), "studentOf", showMap(studentOf))
+			return "false"
+		}
+		if owner, ok := studentOf[locker]; ok && owner != student {
+			emit("locker-conflict", "student", student, "locker", locker, "lockerOf", showMap(lockerOf), "studentOf", showMap(studentOf))
+			return "false"
+		}
+		lockerOf[student] = locker
+		studentOf[locker] = student
+		emit("assign", "student", student, "locker", locker, "lockerOf", showMap(lockerOf), "studentOf", showMap(studentOf))
+	}
+
+	emit("done", "student", "-", "locker", "-", "lockerOf", showMap(lockerOf), "studentOf", showMap(studentOf))
+	return "true"
+}
+
+func main() {
+	in := bufio.NewReader(os.Stdin)
+	var n int
+	fmt.Fscan(in, &n)
+	pairs := make([][2]string, n)
+	for k := range pairs {
+		fmt.Fscan(in, &pairs[k][0], &pairs[k][1])
+	}
+	result(solve(pairs))
+}

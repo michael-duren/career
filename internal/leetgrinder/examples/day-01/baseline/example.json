@@ -1,1549 +1,1549 @@
 {
-  "id": "day-01-baseline",
-  "title": "Find a pair by exhaustive search",
-  "invariant": "For each first index i, the inner index j starts at i + 1. Every comparison has i < j, so it uses distinct positions and visits each unordered pair once.",
-  "variants": [
+ "id": "day-01-baseline",
+ "title": "Check every pair",
+ "invariant": "j always starts after i, so a number is never paired with itself and no pair is checked twice.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 30,
+   "algorithmEnd": 45
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 19,
+   "algorithmEnd": 32
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 30,
+   "algorithmEnd": 45
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 32,
+   "algorithmEnd": 47
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Pair after two outer positions",
+   "input": "3 9\n8 3 6\n",
+   "expectedOutput": "[1,2]",
+   "frames": [
     {
-      "language": "cpp",
-      "file": "main.cpp",
-      "algorithmStart": 30,
-      "algorithmEnd": 45
+     "event": "start",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       32
+      ]
+     },
+     "explanation": "We want two numbers in [8,3,6] that add up to 9. Try every pair, one at a time.",
+     "variables": [
+      {
+       "name": "values",
+       "value": "[8,3,6]"
+      },
+      {
+       "name": "target",
+       "value": "9"
+      }
+     ],
+     "scene": {
+      "width": 300,
+      "height": 175,
+      "description": "Choose a first index, then try later indices.",
+      "nodes": [
+       {
+        "id": "v0",
+        "shape": "rect",
+        "x": 12,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "v1",
+        "shape": "rect",
+        "x": 84,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "v2",
+        "shape": "rect",
+        "x": 156,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "6",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "target",
+        "x": 12,
+        "y": 25,
+        "text": "target = 9"
+       },
+       {
+        "id": "index0",
+        "x": 28,
+        "y": 113,
+        "text": "index 0"
+       },
+       {
+        "id": "index1",
+        "x": 100,
+        "y": 113,
+        "text": "index 1"
+       },
+       {
+        "id": "index2",
+        "x": 172,
+        "y": 113,
+        "text": "index 2"
+       },
+       {
+        "id": "status",
+        "x": 12,
+        "y": 149,
+        "text": "Choose a first index, then try later indices."
+       }
+      ]
+     }
     },
     {
-      "language": "python",
-      "file": "main.py",
-      "algorithmStart": 19,
-      "algorithmEnd": 32
+     "event": "outer",
+     "lines": {
+      "cpp": [
+       32,
+       33
+      ],
+      "python": [
+       21,
+       22
+      ],
+      "java": [
+       32,
+       33
+      ],
+      "go": [
+       34,
+       35
+      ]
+     },
+     "explanation": "Pick 8 (index 0) as the first number. Pair it with each number after it.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "0"
+      },
+      {
+       "name": "first",
+       "value": "8"
+      }
+     ],
+     "scene": {
+      "width": 300,
+      "height": 175,
+      "description": "i = 0; j starts at 1.",
+      "nodes": [
+       {
+        "id": "v0",
+        "shape": "rect",
+        "x": 12,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "8",
+        "role": "active"
+       },
+       {
+        "id": "v1",
+        "shape": "rect",
+        "x": 84,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "v2",
+        "shape": "rect",
+        "x": 156,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "6",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "target",
+        "x": 12,
+        "y": 25,
+        "text": "target = 9"
+       },
+       {
+        "id": "index0",
+        "x": 28,
+        "y": 113,
+        "text": "index 0"
+       },
+       {
+        "id": "index1",
+        "x": 100,
+        "y": 113,
+        "text": "index 1"
+       },
+       {
+        "id": "index2",
+        "x": 172,
+        "y": 113,
+        "text": "index 2"
+       },
+       {
+        "id": "status",
+        "x": 12,
+        "y": 149,
+        "text": "i = 0; j starts at 1."
+       }
+      ]
+     }
     },
     {
-      "language": "java",
-      "file": "Main.java",
-      "algorithmStart": 30,
-      "algorithmEnd": 45
+     "event": "compare",
+     "lines": {
+      "cpp": [
+       34,
+       35,
+       36
+      ],
+      "python": [
+       23,
+       24,
+       25
+      ],
+      "java": [
+       34,
+       35,
+       36
+      ],
+      "go": [
+       36,
+       37,
+       38
+      ]
+     },
+     "explanation": "8 + 3 = 11. Not 9, keep going.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "0"
+      },
+      {
+       "name": "j",
+       "value": "1"
+      },
+      {
+       "name": "left",
+       "value": "8"
+      },
+      {
+       "name": "right",
+       "value": "3"
+      },
+      {
+       "name": "sum",
+       "value": "11"
+      }
+     ],
+     "scene": {
+      "width": 300,
+      "height": 175,
+      "description": "8 + 3 = 11",
+      "nodes": [
+       {
+        "id": "v0",
+        "shape": "rect",
+        "x": 12,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "8",
+        "role": "active"
+       },
+       {
+        "id": "v1",
+        "shape": "rect",
+        "x": 84,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "3",
+        "role": "active"
+       },
+       {
+        "id": "v2",
+        "shape": "rect",
+        "x": 156,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "6",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "target",
+        "x": 12,
+        "y": 25,
+        "text": "target = 9"
+       },
+       {
+        "id": "index0",
+        "x": 28,
+        "y": 113,
+        "text": "index 0"
+       },
+       {
+        "id": "index1",
+        "x": 100,
+        "y": 113,
+        "text": "index 1"
+       },
+       {
+        "id": "index2",
+        "x": 172,
+        "y": 113,
+        "text": "index 2"
+       },
+       {
+        "id": "status",
+        "x": 12,
+        "y": 149,
+        "text": "8 + 3 = 11"
+       }
+      ]
+     }
     },
     {
-      "language": "go",
-      "file": "main.go.txt",
-      "algorithmStart": 32,
-      "algorithmEnd": 47
+     "event": "compare",
+     "lines": {
+      "cpp": [
+       34,
+       35,
+       36
+      ],
+      "python": [
+       23,
+       24,
+       25
+      ],
+      "java": [
+       34,
+       35,
+       36
+      ],
+      "go": [
+       36,
+       37,
+       38
+      ]
+     },
+     "explanation": "8 + 6 = 14. Not 9, keep going.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "0"
+      },
+      {
+       "name": "j",
+       "value": "2"
+      },
+      {
+       "name": "left",
+       "value": "8"
+      },
+      {
+       "name": "right",
+       "value": "6"
+      },
+      {
+       "name": "sum",
+       "value": "14"
+      }
+     ],
+     "scene": {
+      "width": 300,
+      "height": 175,
+      "description": "8 + 6 = 14",
+      "nodes": [
+       {
+        "id": "v0",
+        "shape": "rect",
+        "x": 12,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "8",
+        "role": "active"
+       },
+       {
+        "id": "v1",
+        "shape": "rect",
+        "x": 84,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "v2",
+        "shape": "rect",
+        "x": 156,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "6",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "target",
+        "x": 12,
+        "y": 25,
+        "text": "target = 9"
+       },
+       {
+        "id": "index0",
+        "x": 28,
+        "y": 113,
+        "text": "index 0"
+       },
+       {
+        "id": "index1",
+        "x": 100,
+        "y": 113,
+        "text": "index 1"
+       },
+       {
+        "id": "index2",
+        "x": 172,
+        "y": 113,
+        "text": "index 2"
+       },
+       {
+        "id": "status",
+        "x": 12,
+        "y": 149,
+        "text": "8 + 6 = 14"
+       }
+      ]
+     }
+    },
+    {
+     "event": "outer",
+     "lines": {
+      "cpp": [
+       32,
+       33
+      ],
+      "python": [
+       21,
+       22
+      ],
+      "java": [
+       32,
+       33
+      ],
+      "go": [
+       34,
+       35
+      ]
+     },
+     "explanation": "Pick 3 (index 1) as the first number. Pair it with each number after it.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "1"
+      },
+      {
+       "name": "first",
+       "value": "3"
+      }
+     ],
+     "scene": {
+      "width": 300,
+      "height": 175,
+      "description": "i = 1; j starts at 2.",
+      "nodes": [
+       {
+        "id": "v0",
+        "shape": "rect",
+        "x": 12,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "v1",
+        "shape": "rect",
+        "x": 84,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "3",
+        "role": "active"
+       },
+       {
+        "id": "v2",
+        "shape": "rect",
+        "x": 156,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "6",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "target",
+        "x": 12,
+        "y": 25,
+        "text": "target = 9"
+       },
+       {
+        "id": "index0",
+        "x": 28,
+        "y": 113,
+        "text": "index 0"
+       },
+       {
+        "id": "index1",
+        "x": 100,
+        "y": 113,
+        "text": "index 1"
+       },
+       {
+        "id": "index2",
+        "x": 172,
+        "y": 113,
+        "text": "index 2"
+       },
+       {
+        "id": "status",
+        "x": 12,
+        "y": 149,
+        "text": "i = 1; j starts at 2."
+       }
+      ]
+     }
+    },
+    {
+     "event": "compare",
+     "lines": {
+      "cpp": [
+       34,
+       35,
+       36
+      ],
+      "python": [
+       23,
+       24,
+       25
+      ],
+      "java": [
+       34,
+       35,
+       36
+      ],
+      "go": [
+       36,
+       37,
+       38
+      ]
+     },
+     "explanation": "3 + 6 = 9. That's the target.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "1"
+      },
+      {
+       "name": "j",
+       "value": "2"
+      },
+      {
+       "name": "left",
+       "value": "3"
+      },
+      {
+       "name": "right",
+       "value": "6"
+      },
+      {
+       "name": "sum",
+       "value": "9"
+      }
+     ],
+     "scene": {
+      "width": 300,
+      "height": 175,
+      "description": "3 + 6 = 9",
+      "nodes": [
+       {
+        "id": "v0",
+        "shape": "rect",
+        "x": 12,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "v1",
+        "shape": "rect",
+        "x": 84,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "3",
+        "role": "active"
+       },
+       {
+        "id": "v2",
+        "shape": "rect",
+        "x": 156,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "6",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "target",
+        "x": 12,
+        "y": 25,
+        "text": "target = 9"
+       },
+       {
+        "id": "index0",
+        "x": 28,
+        "y": 113,
+        "text": "index 0"
+       },
+       {
+        "id": "index1",
+        "x": 100,
+        "y": 113,
+        "text": "index 1"
+       },
+       {
+        "id": "index2",
+        "x": 172,
+        "y": 113,
+        "text": "index 2"
+       },
+       {
+        "id": "status",
+        "x": 12,
+        "y": 149,
+        "text": "3 + 6 = 9"
+       }
+      ]
+     }
+    },
+    {
+     "event": "match",
+     "lines": {
+      "cpp": [
+       37,
+       38,
+       39
+      ],
+      "python": [
+       26,
+       27,
+       28
+      ],
+      "java": [
+       37,
+       38,
+       39
+      ],
+      "go": [
+       39,
+       40,
+       41
+      ]
+     },
+     "explanation": "Found it: index 1 and index 2 add up to 9.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "1"
+      },
+      {
+       "name": "j",
+       "value": "2"
+      }
+     ],
+     "scene": {
+      "width": 300,
+      "height": 175,
+      "description": "Matching indices: [1,2]",
+      "nodes": [
+       {
+        "id": "v0",
+        "shape": "rect",
+        "x": 12,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "v1",
+        "shape": "rect",
+        "x": 84,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "v2",
+        "shape": "rect",
+        "x": 156,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "6",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "target",
+        "x": 12,
+        "y": 25,
+        "text": "target = 9"
+       },
+       {
+        "id": "index0",
+        "x": 28,
+        "y": 113,
+        "text": "index 0"
+       },
+       {
+        "id": "index1",
+        "x": 100,
+        "y": 113,
+        "text": "index 1"
+       },
+       {
+        "id": "index2",
+        "x": 172,
+        "y": 113,
+        "text": "index 2"
+       },
+       {
+        "id": "status",
+        "x": 12,
+        "y": 149,
+        "text": "Matching indices: [1,2]"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       45
+      ],
+      "python": [
+       32
+      ],
+      "java": [
+       45
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "Return [1,2].",
+     "variables": [
+      {
+       "name": "result",
+       "value": "[1,2]"
+      }
+     ],
+     "scene": {
+      "width": 300,
+      "height": 175,
+      "description": "Result: [1,2]",
+      "nodes": [
+       {
+        "id": "v0",
+        "shape": "rect",
+        "x": 12,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "v1",
+        "shape": "rect",
+        "x": 84,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "v2",
+        "shape": "rect",
+        "x": 156,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "6",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "target",
+        "x": 12,
+        "y": 25,
+        "text": "target = 9"
+       },
+       {
+        "id": "index0",
+        "x": 28,
+        "y": 113,
+        "text": "index 0"
+       },
+       {
+        "id": "index1",
+        "x": 100,
+        "y": 113,
+        "text": "index 1"
+       },
+       {
+        "id": "index2",
+        "x": 172,
+        "y": 113,
+        "text": "index 2"
+       },
+       {
+        "id": "status",
+        "x": 12,
+        "y": 149,
+        "text": "Result: [1,2]"
+       }
+      ]
+     }
     }
-  ],
-  "cases": [
+   ]
+  },
+  {
+   "id": "edge",
+   "label": "A lone value cannot pair with itself",
+   "input": "1 8\n4\n",
+   "expectedOutput": "[]",
+   "frames": [
     {
-      "id": "normal",
-      "label": "Pair after two outer positions",
-      "input": "3 9\n8 3 6\n",
-      "expectedOutput": "[1,2]",
-      "frames": [
-        {
-          "event": "start",
-          "lines": {
-            "cpp": [
-              30
-            ],
-            "python": [
-              19
-            ],
-            "java": [
-              30
-            ],
-            "go": [
-              32
-            ]
-          },
-          "explanation": "The exhaustive search begins. The loops use O(n²) time in the worst case and O(1) auxiliary space, excluding input, output, and trace data.",
-          "variables": [
-            {
-              "name": "values",
-              "value": "[8,3,6]"
-            },
-            {
-              "name": "target",
-              "value": "9"
-            }
-          ],
-          "scene": {
-            "width": 300,
-            "height": 175,
-            "description": "Choose a first index, then try later indices.",
-            "nodes": [
-              {
-                "id": "v0",
-                "shape": "rect",
-                "x": 12,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "8",
-                "role": "neutral"
-              },
-              {
-                "id": "v1",
-                "shape": "rect",
-                "x": 84,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "3",
-                "role": "neutral"
-              },
-              {
-                "id": "v2",
-                "shape": "rect",
-                "x": 156,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "6",
-                "role": "neutral"
-              }
-            ],
-            "edges": [],
-            "labels": [
-              {
-                "id": "target",
-                "x": 12,
-                "y": 25,
-                "text": "target = 9"
-              },
-              {
-                "id": "index0",
-                "x": 28,
-                "y": 113,
-                "text": "index 0"
-              },
-              {
-                "id": "index1",
-                "x": 100,
-                "y": 113,
-                "text": "index 1"
-              },
-              {
-                "id": "index2",
-                "x": 172,
-                "y": 113,
-                "text": "index 2"
-              },
-              {
-                "id": "status",
-                "x": 12,
-                "y": 149,
-                "text": "Choose a first index, then try later indices."
-              }
-            ]
-          }
-        },
-        {
-          "event": "outer",
-          "lines": {
-            "cpp": [
-              32,
-              33
-            ],
-            "python": [
-              21,
-              22
-            ],
-            "java": [
-              32,
-              33
-            ],
-            "go": [
-              34,
-              35
-            ]
-          },
-          "explanation": "Choose index 0 as the first position. The inner loop starts at 1, so every comparison maintains i < j.",
-          "variables": [
-            {
-              "name": "i",
-              "value": "0"
-            },
-            {
-              "name": "first",
-              "value": "8"
-            }
-          ],
-          "scene": {
-            "width": 300,
-            "height": 175,
-            "description": "i = 0; j starts at 1.",
-            "nodes": [
-              {
-                "id": "v0",
-                "shape": "rect",
-                "x": 12,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "8",
-                "role": "active"
-              },
-              {
-                "id": "v1",
-                "shape": "rect",
-                "x": 84,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "3",
-                "role": "neutral"
-              },
-              {
-                "id": "v2",
-                "shape": "rect",
-                "x": 156,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "6",
-                "role": "neutral"
-              }
-            ],
-            "edges": [],
-            "labels": [
-              {
-                "id": "target",
-                "x": 12,
-                "y": 25,
-                "text": "target = 9"
-              },
-              {
-                "id": "index0",
-                "x": 28,
-                "y": 113,
-                "text": "index 0"
-              },
-              {
-                "id": "index1",
-                "x": 100,
-                "y": 113,
-                "text": "index 1"
-              },
-              {
-                "id": "index2",
-                "x": 172,
-                "y": 113,
-                "text": "index 2"
-              },
-              {
-                "id": "status",
-                "x": 12,
-                "y": 149,
-                "text": "i = 0; j starts at 1."
-              }
-            ]
-          }
-        },
-        {
-          "event": "compare",
-          "lines": {
-            "cpp": [
-              34,
-              35,
-              36
-            ],
-            "python": [
-              23,
-              24,
-              25
-            ],
-            "java": [
-              34,
-              35,
-              36
-            ],
-            "go": [
-              36,
-              37,
-              38
-            ]
-          },
-          "explanation": "Compare indices 0 and 1: 8 + 3 = 11. Each unordered pair is checked at most once.",
-          "variables": [
-            {
-              "name": "i",
-              "value": "0"
-            },
-            {
-              "name": "j",
-              "value": "1"
-            },
-            {
-              "name": "left",
-              "value": "8"
-            },
-            {
-              "name": "right",
-              "value": "3"
-            },
-            {
-              "name": "sum",
-              "value": "11"
-            }
-          ],
-          "scene": {
-            "width": 300,
-            "height": 175,
-            "description": "8 + 3 = 11",
-            "nodes": [
-              {
-                "id": "v0",
-                "shape": "rect",
-                "x": 12,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "8",
-                "role": "active"
-              },
-              {
-                "id": "v1",
-                "shape": "rect",
-                "x": 84,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "3",
-                "role": "active"
-              },
-              {
-                "id": "v2",
-                "shape": "rect",
-                "x": 156,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "6",
-                "role": "neutral"
-              }
-            ],
-            "edges": [],
-            "labels": [
-              {
-                "id": "target",
-                "x": 12,
-                "y": 25,
-                "text": "target = 9"
-              },
-              {
-                "id": "index0",
-                "x": 28,
-                "y": 113,
-                "text": "index 0"
-              },
-              {
-                "id": "index1",
-                "x": 100,
-                "y": 113,
-                "text": "index 1"
-              },
-              {
-                "id": "index2",
-                "x": 172,
-                "y": 113,
-                "text": "index 2"
-              },
-              {
-                "id": "status",
-                "x": 12,
-                "y": 149,
-                "text": "8 + 3 = 11"
-              }
-            ]
-          }
-        },
-        {
-          "event": "compare",
-          "lines": {
-            "cpp": [
-              34,
-              35,
-              36
-            ],
-            "python": [
-              23,
-              24,
-              25
-            ],
-            "java": [
-              34,
-              35,
-              36
-            ],
-            "go": [
-              36,
-              37,
-              38
-            ]
-          },
-          "explanation": "Compare indices 0 and 2: 8 + 6 = 14. Each unordered pair is checked at most once.",
-          "variables": [
-            {
-              "name": "i",
-              "value": "0"
-            },
-            {
-              "name": "j",
-              "value": "2"
-            },
-            {
-              "name": "left",
-              "value": "8"
-            },
-            {
-              "name": "right",
-              "value": "6"
-            },
-            {
-              "name": "sum",
-              "value": "14"
-            }
-          ],
-          "scene": {
-            "width": 300,
-            "height": 175,
-            "description": "8 + 6 = 14",
-            "nodes": [
-              {
-                "id": "v0",
-                "shape": "rect",
-                "x": 12,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "8",
-                "role": "active"
-              },
-              {
-                "id": "v1",
-                "shape": "rect",
-                "x": 84,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "3",
-                "role": "neutral"
-              },
-              {
-                "id": "v2",
-                "shape": "rect",
-                "x": 156,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "6",
-                "role": "active"
-              }
-            ],
-            "edges": [],
-            "labels": [
-              {
-                "id": "target",
-                "x": 12,
-                "y": 25,
-                "text": "target = 9"
-              },
-              {
-                "id": "index0",
-                "x": 28,
-                "y": 113,
-                "text": "index 0"
-              },
-              {
-                "id": "index1",
-                "x": 100,
-                "y": 113,
-                "text": "index 1"
-              },
-              {
-                "id": "index2",
-                "x": 172,
-                "y": 113,
-                "text": "index 2"
-              },
-              {
-                "id": "status",
-                "x": 12,
-                "y": 149,
-                "text": "8 + 6 = 14"
-              }
-            ]
-          }
-        },
-        {
-          "event": "outer",
-          "lines": {
-            "cpp": [
-              32,
-              33
-            ],
-            "python": [
-              21,
-              22
-            ],
-            "java": [
-              32,
-              33
-            ],
-            "go": [
-              34,
-              35
-            ]
-          },
-          "explanation": "Choose index 1 as the first position. The inner loop starts at 2, so every comparison maintains i < j.",
-          "variables": [
-            {
-              "name": "i",
-              "value": "1"
-            },
-            {
-              "name": "first",
-              "value": "3"
-            }
-          ],
-          "scene": {
-            "width": 300,
-            "height": 175,
-            "description": "i = 1; j starts at 2.",
-            "nodes": [
-              {
-                "id": "v0",
-                "shape": "rect",
-                "x": 12,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "8",
-                "role": "neutral"
-              },
-              {
-                "id": "v1",
-                "shape": "rect",
-                "x": 84,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "3",
-                "role": "active"
-              },
-              {
-                "id": "v2",
-                "shape": "rect",
-                "x": 156,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "6",
-                "role": "neutral"
-              }
-            ],
-            "edges": [],
-            "labels": [
-              {
-                "id": "target",
-                "x": 12,
-                "y": 25,
-                "text": "target = 9"
-              },
-              {
-                "id": "index0",
-                "x": 28,
-                "y": 113,
-                "text": "index 0"
-              },
-              {
-                "id": "index1",
-                "x": 100,
-                "y": 113,
-                "text": "index 1"
-              },
-              {
-                "id": "index2",
-                "x": 172,
-                "y": 113,
-                "text": "index 2"
-              },
-              {
-                "id": "status",
-                "x": 12,
-                "y": 149,
-                "text": "i = 1; j starts at 2."
-              }
-            ]
-          }
-        },
-        {
-          "event": "compare",
-          "lines": {
-            "cpp": [
-              34,
-              35,
-              36
-            ],
-            "python": [
-              23,
-              24,
-              25
-            ],
-            "java": [
-              34,
-              35,
-              36
-            ],
-            "go": [
-              36,
-              37,
-              38
-            ]
-          },
-          "explanation": "Compare indices 1 and 2: 3 + 6 = 9. Each unordered pair is checked at most once.",
-          "variables": [
-            {
-              "name": "i",
-              "value": "1"
-            },
-            {
-              "name": "j",
-              "value": "2"
-            },
-            {
-              "name": "left",
-              "value": "3"
-            },
-            {
-              "name": "right",
-              "value": "6"
-            },
-            {
-              "name": "sum",
-              "value": "9"
-            }
-          ],
-          "scene": {
-            "width": 300,
-            "height": 175,
-            "description": "3 + 6 = 9",
-            "nodes": [
-              {
-                "id": "v0",
-                "shape": "rect",
-                "x": 12,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "8",
-                "role": "neutral"
-              },
-              {
-                "id": "v1",
-                "shape": "rect",
-                "x": 84,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "3",
-                "role": "active"
-              },
-              {
-                "id": "v2",
-                "shape": "rect",
-                "x": 156,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "6",
-                "role": "active"
-              }
-            ],
-            "edges": [],
-            "labels": [
-              {
-                "id": "target",
-                "x": 12,
-                "y": 25,
-                "text": "target = 9"
-              },
-              {
-                "id": "index0",
-                "x": 28,
-                "y": 113,
-                "text": "index 0"
-              },
-              {
-                "id": "index1",
-                "x": 100,
-                "y": 113,
-                "text": "index 1"
-              },
-              {
-                "id": "index2",
-                "x": 172,
-                "y": 113,
-                "text": "index 2"
-              },
-              {
-                "id": "status",
-                "x": 12,
-                "y": 149,
-                "text": "3 + 6 = 9"
-              }
-            ]
-          }
-        },
-        {
-          "event": "match",
-          "lines": {
-            "cpp": [
-              37,
-              38,
-              39
-            ],
-            "python": [
-              26,
-              27,
-              28
-            ],
-            "java": [
-              37,
-              38,
-              39
-            ],
-            "go": [
-              39,
-              40,
-              41
-            ]
-          },
-          "explanation": "The values at distinct indices 1 and 2 sum to 9; return these indices.",
-          "variables": [
-            {
-              "name": "i",
-              "value": "1"
-            },
-            {
-              "name": "j",
-              "value": "2"
-            }
-          ],
-          "scene": {
-            "width": 300,
-            "height": 175,
-            "description": "Matching indices: [1,2]",
-            "nodes": [
-              {
-                "id": "v0",
-                "shape": "rect",
-                "x": 12,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "8",
-                "role": "neutral"
-              },
-              {
-                "id": "v1",
-                "shape": "rect",
-                "x": 84,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "3",
-                "role": "result"
-              },
-              {
-                "id": "v2",
-                "shape": "rect",
-                "x": 156,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "6",
-                "role": "result"
-              }
-            ],
-            "edges": [],
-            "labels": [
-              {
-                "id": "target",
-                "x": 12,
-                "y": 25,
-                "text": "target = 9"
-              },
-              {
-                "id": "index0",
-                "x": 28,
-                "y": 113,
-                "text": "index 0"
-              },
-              {
-                "id": "index1",
-                "x": 100,
-                "y": 113,
-                "text": "index 1"
-              },
-              {
-                "id": "index2",
-                "x": 172,
-                "y": 113,
-                "text": "index 2"
-              },
-              {
-                "id": "status",
-                "x": 12,
-                "y": 149,
-                "text": "Matching indices: [1,2]"
-              }
-            ]
-          }
-        },
-        {
-          "event": "done",
-          "lines": {
-            "cpp": [
-              45
-            ],
-            "python": [
-              32
-            ],
-            "java": [
-              45
-            ],
-            "go": [
-              47
-            ]
-          },
-          "explanation": "Return [1,2].",
-          "variables": [
-            {
-              "name": "result",
-              "value": "[1,2]"
-            }
-          ],
-          "scene": {
-            "width": 300,
-            "height": 175,
-            "description": "Result: [1,2]",
-            "nodes": [
-              {
-                "id": "v0",
-                "shape": "rect",
-                "x": 12,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "8",
-                "role": "neutral"
-              },
-              {
-                "id": "v1",
-                "shape": "rect",
-                "x": 84,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "3",
-                "role": "result"
-              },
-              {
-                "id": "v2",
-                "shape": "rect",
-                "x": 156,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "6",
-                "role": "result"
-              }
-            ],
-            "edges": [],
-            "labels": [
-              {
-                "id": "target",
-                "x": 12,
-                "y": 25,
-                "text": "target = 9"
-              },
-              {
-                "id": "index0",
-                "x": 28,
-                "y": 113,
-                "text": "index 0"
-              },
-              {
-                "id": "index1",
-                "x": 100,
-                "y": 113,
-                "text": "index 1"
-              },
-              {
-                "id": "index2",
-                "x": 172,
-                "y": 113,
-                "text": "index 2"
-              },
-              {
-                "id": "status",
-                "x": 12,
-                "y": 149,
-                "text": "Result: [1,2]"
-              }
-            ]
-          }
-        }
+     "event": "start",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       32
       ]
+     },
+     "explanation": "We want two numbers in [4] that add up to 8. Try every pair, one at a time.",
+     "variables": [
+      {
+       "name": "values",
+       "value": "[4]"
+      },
+      {
+       "name": "target",
+       "value": "8"
+      }
+     ],
+     "scene": {
+      "width": 300,
+      "height": 175,
+      "description": "Choose a first index, then try later indices.",
+      "nodes": [
+       {
+        "id": "v0",
+        "shape": "rect",
+        "x": 12,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "4",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "target",
+        "x": 12,
+        "y": 25,
+        "text": "target = 8"
+       },
+       {
+        "id": "index0",
+        "x": 28,
+        "y": 113,
+        "text": "index 0"
+       },
+       {
+        "id": "status",
+        "x": 12,
+        "y": 149,
+        "text": "Choose a first index, then try later indices."
+       }
+      ]
+     }
     },
     {
-      "id": "edge",
-      "label": "A lone value cannot pair with itself",
-      "input": "1 8\n4\n",
-      "expectedOutput": "[]",
-      "frames": [
-        {
-          "event": "start",
-          "lines": {
-            "cpp": [
-              30
-            ],
-            "python": [
-              19
-            ],
-            "java": [
-              30
-            ],
-            "go": [
-              32
-            ]
-          },
-          "explanation": "The exhaustive search begins. The loops use O(n²) time in the worst case and O(1) auxiliary space, excluding input, output, and trace data.",
-          "variables": [
-            {
-              "name": "values",
-              "value": "[4]"
-            },
-            {
-              "name": "target",
-              "value": "8"
-            }
-          ],
-          "scene": {
-            "width": 300,
-            "height": 175,
-            "description": "Choose a first index, then try later indices.",
-            "nodes": [
-              {
-                "id": "v0",
-                "shape": "rect",
-                "x": 12,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "4",
-                "role": "neutral"
-              }
-            ],
-            "edges": [],
-            "labels": [
-              {
-                "id": "target",
-                "x": 12,
-                "y": 25,
-                "text": "target = 8"
-              },
-              {
-                "id": "index0",
-                "x": 28,
-                "y": 113,
-                "text": "index 0"
-              },
-              {
-                "id": "status",
-                "x": 12,
-                "y": 149,
-                "text": "Choose a first index, then try later indices."
-              }
-            ]
-          }
-        },
-        {
-          "event": "outer",
-          "lines": {
-            "cpp": [
-              32,
-              33
-            ],
-            "python": [
-              21,
-              22
-            ],
-            "java": [
-              32,
-              33
-            ],
-            "go": [
-              34,
-              35
-            ]
-          },
-          "explanation": "Choose index 0 as the first position. The inner loop starts at 1, so every comparison maintains i < j.",
-          "variables": [
-            {
-              "name": "i",
-              "value": "0"
-            },
-            {
-              "name": "first",
-              "value": "4"
-            }
-          ],
-          "scene": {
-            "width": 300,
-            "height": 175,
-            "description": "i = 0; j starts at 1.",
-            "nodes": [
-              {
-                "id": "v0",
-                "shape": "rect",
-                "x": 12,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "4",
-                "role": "active"
-              }
-            ],
-            "edges": [],
-            "labels": [
-              {
-                "id": "target",
-                "x": 12,
-                "y": 25,
-                "text": "target = 8"
-              },
-              {
-                "id": "index0",
-                "x": 28,
-                "y": 113,
-                "text": "index 0"
-              },
-              {
-                "id": "status",
-                "x": 12,
-                "y": 149,
-                "text": "i = 0; j starts at 1."
-              }
-            ]
-          }
-        },
-        {
-          "event": "done",
-          "lines": {
-            "cpp": [
-              45
-            ],
-            "python": [
-              32
-            ],
-            "java": [
-              45
-            ],
-            "go": [
-              47
-            ]
-          },
-          "explanation": "No two distinct positions sum to the target; return [].",
-          "variables": [
-            {
-              "name": "result",
-              "value": "[]"
-            }
-          ],
-          "scene": {
-            "width": 300,
-            "height": 175,
-            "description": "Result: []",
-            "nodes": [
-              {
-                "id": "v0",
-                "shape": "rect",
-                "x": 12,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "4",
-                "role": "neutral"
-              }
-            ],
-            "edges": [],
-            "labels": [
-              {
-                "id": "target",
-                "x": 12,
-                "y": 25,
-                "text": "target = 8"
-              },
-              {
-                "id": "index0",
-                "x": 28,
-                "y": 113,
-                "text": "index 0"
-              },
-              {
-                "id": "status",
-                "x": 12,
-                "y": 149,
-                "text": "Result: []"
-              }
-            ]
-          }
-        }
+     "event": "outer",
+     "lines": {
+      "cpp": [
+       32,
+       33
+      ],
+      "python": [
+       21,
+       22
+      ],
+      "java": [
+       32,
+       33
+      ],
+      "go": [
+       34,
+       35
       ]
+     },
+     "explanation": "Pick 4 (index 0). There is nothing after it to pair with.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "0"
+      },
+      {
+       "name": "first",
+       "value": "4"
+      }
+     ],
+     "scene": {
+      "width": 300,
+      "height": 175,
+      "description": "i = 0; j starts at 1.",
+      "nodes": [
+       {
+        "id": "v0",
+        "shape": "rect",
+        "x": 12,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "4",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "target",
+        "x": 12,
+        "y": 25,
+        "text": "target = 8"
+       },
+       {
+        "id": "index0",
+        "x": 28,
+        "y": 113,
+        "text": "index 0"
+       },
+       {
+        "id": "status",
+        "x": 12,
+        "y": 149,
+        "text": "i = 0; j starts at 1."
+       }
+      ]
+     }
     },
     {
-      "id": "duplicate",
-      "label": "Equal values at distinct indices",
-      "input": "2 8\n4 4\n",
-      "expectedOutput": "[0,1]",
-      "frames": [
-        {
-          "event": "start",
-          "lines": {
-            "cpp": [
-              30
-            ],
-            "python": [
-              19
-            ],
-            "java": [
-              30
-            ],
-            "go": [
-              32
-            ]
-          },
-          "explanation": "The exhaustive search begins. The loops use O(n²) time in the worst case and O(1) auxiliary space, excluding input, output, and trace data.",
-          "variables": [
-            {
-              "name": "values",
-              "value": "[4,4]"
-            },
-            {
-              "name": "target",
-              "value": "8"
-            }
-          ],
-          "scene": {
-            "width": 300,
-            "height": 175,
-            "description": "Choose a first index, then try later indices.",
-            "nodes": [
-              {
-                "id": "v0",
-                "shape": "rect",
-                "x": 12,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "4",
-                "role": "neutral"
-              },
-              {
-                "id": "v1",
-                "shape": "rect",
-                "x": 84,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "4",
-                "role": "neutral"
-              }
-            ],
-            "edges": [],
-            "labels": [
-              {
-                "id": "target",
-                "x": 12,
-                "y": 25,
-                "text": "target = 8"
-              },
-              {
-                "id": "index0",
-                "x": 28,
-                "y": 113,
-                "text": "index 0"
-              },
-              {
-                "id": "index1",
-                "x": 100,
-                "y": 113,
-                "text": "index 1"
-              },
-              {
-                "id": "status",
-                "x": 12,
-                "y": 149,
-                "text": "Choose a first index, then try later indices."
-              }
-            ]
-          }
-        },
-        {
-          "event": "outer",
-          "lines": {
-            "cpp": [
-              32,
-              33
-            ],
-            "python": [
-              21,
-              22
-            ],
-            "java": [
-              32,
-              33
-            ],
-            "go": [
-              34,
-              35
-            ]
-          },
-          "explanation": "Choose index 0 as the first position. The inner loop starts at 1, so every comparison maintains i < j.",
-          "variables": [
-            {
-              "name": "i",
-              "value": "0"
-            },
-            {
-              "name": "first",
-              "value": "4"
-            }
-          ],
-          "scene": {
-            "width": 300,
-            "height": 175,
-            "description": "i = 0; j starts at 1.",
-            "nodes": [
-              {
-                "id": "v0",
-                "shape": "rect",
-                "x": 12,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "4",
-                "role": "active"
-              },
-              {
-                "id": "v1",
-                "shape": "rect",
-                "x": 84,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "4",
-                "role": "neutral"
-              }
-            ],
-            "edges": [],
-            "labels": [
-              {
-                "id": "target",
-                "x": 12,
-                "y": 25,
-                "text": "target = 8"
-              },
-              {
-                "id": "index0",
-                "x": 28,
-                "y": 113,
-                "text": "index 0"
-              },
-              {
-                "id": "index1",
-                "x": 100,
-                "y": 113,
-                "text": "index 1"
-              },
-              {
-                "id": "status",
-                "x": 12,
-                "y": 149,
-                "text": "i = 0; j starts at 1."
-              }
-            ]
-          }
-        },
-        {
-          "event": "compare",
-          "lines": {
-            "cpp": [
-              34,
-              35,
-              36
-            ],
-            "python": [
-              23,
-              24,
-              25
-            ],
-            "java": [
-              34,
-              35,
-              36
-            ],
-            "go": [
-              36,
-              37,
-              38
-            ]
-          },
-          "explanation": "Compare indices 0 and 1: 4 + 4 = 8. Each unordered pair is checked at most once.",
-          "variables": [
-            {
-              "name": "i",
-              "value": "0"
-            },
-            {
-              "name": "j",
-              "value": "1"
-            },
-            {
-              "name": "left",
-              "value": "4"
-            },
-            {
-              "name": "right",
-              "value": "4"
-            },
-            {
-              "name": "sum",
-              "value": "8"
-            }
-          ],
-          "scene": {
-            "width": 300,
-            "height": 175,
-            "description": "4 + 4 = 8",
-            "nodes": [
-              {
-                "id": "v0",
-                "shape": "rect",
-                "x": 12,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "4",
-                "role": "active"
-              },
-              {
-                "id": "v1",
-                "shape": "rect",
-                "x": 84,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "4",
-                "role": "active"
-              }
-            ],
-            "edges": [],
-            "labels": [
-              {
-                "id": "target",
-                "x": 12,
-                "y": 25,
-                "text": "target = 8"
-              },
-              {
-                "id": "index0",
-                "x": 28,
-                "y": 113,
-                "text": "index 0"
-              },
-              {
-                "id": "index1",
-                "x": 100,
-                "y": 113,
-                "text": "index 1"
-              },
-              {
-                "id": "status",
-                "x": 12,
-                "y": 149,
-                "text": "4 + 4 = 8"
-              }
-            ]
-          }
-        },
-        {
-          "event": "match",
-          "lines": {
-            "cpp": [
-              37,
-              38,
-              39
-            ],
-            "python": [
-              26,
-              27,
-              28
-            ],
-            "java": [
-              37,
-              38,
-              39
-            ],
-            "go": [
-              39,
-              40,
-              41
-            ]
-          },
-          "explanation": "The values at distinct indices 0 and 1 sum to 8; return these indices.",
-          "variables": [
-            {
-              "name": "i",
-              "value": "0"
-            },
-            {
-              "name": "j",
-              "value": "1"
-            }
-          ],
-          "scene": {
-            "width": 300,
-            "height": 175,
-            "description": "Matching indices: [0,1]",
-            "nodes": [
-              {
-                "id": "v0",
-                "shape": "rect",
-                "x": 12,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "4",
-                "role": "result"
-              },
-              {
-                "id": "v1",
-                "shape": "rect",
-                "x": 84,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "4",
-                "role": "result"
-              }
-            ],
-            "edges": [],
-            "labels": [
-              {
-                "id": "target",
-                "x": 12,
-                "y": 25,
-                "text": "target = 8"
-              },
-              {
-                "id": "index0",
-                "x": 28,
-                "y": 113,
-                "text": "index 0"
-              },
-              {
-                "id": "index1",
-                "x": 100,
-                "y": 113,
-                "text": "index 1"
-              },
-              {
-                "id": "status",
-                "x": 12,
-                "y": 149,
-                "text": "Matching indices: [0,1]"
-              }
-            ]
-          }
-        },
-        {
-          "event": "done",
-          "lines": {
-            "cpp": [
-              45
-            ],
-            "python": [
-              32
-            ],
-            "java": [
-              45
-            ],
-            "go": [
-              47
-            ]
-          },
-          "explanation": "Return [0,1].",
-          "variables": [
-            {
-              "name": "result",
-              "value": "[0,1]"
-            }
-          ],
-          "scene": {
-            "width": 300,
-            "height": 175,
-            "description": "Result: [0,1]",
-            "nodes": [
-              {
-                "id": "v0",
-                "shape": "rect",
-                "x": 12,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "4",
-                "role": "result"
-              },
-              {
-                "id": "v1",
-                "shape": "rect",
-                "x": 84,
-                "y": 48,
-                "width": 62,
-                "height": 47,
-                "text": "4",
-                "role": "result"
-              }
-            ],
-            "edges": [],
-            "labels": [
-              {
-                "id": "target",
-                "x": 12,
-                "y": 25,
-                "text": "target = 8"
-              },
-              {
-                "id": "index0",
-                "x": 28,
-                "y": 113,
-                "text": "index 0"
-              },
-              {
-                "id": "index1",
-                "x": 100,
-                "y": 113,
-                "text": "index 1"
-              },
-              {
-                "id": "status",
-                "x": 12,
-                "y": 149,
-                "text": "Result: [0,1]"
-              }
-            ]
-          }
-        }
+     "event": "done",
+     "lines": {
+      "cpp": [
+       45
+      ],
+      "python": [
+       32
+      ],
+      "java": [
+       45
+      ],
+      "go": [
+       47
       ]
+     },
+     "explanation": "No pair of different positions adds up to the target, so return an empty list.",
+     "variables": [
+      {
+       "name": "result",
+       "value": "[]"
+      }
+     ],
+     "scene": {
+      "width": 300,
+      "height": 175,
+      "description": "Result: []",
+      "nodes": [
+       {
+        "id": "v0",
+        "shape": "rect",
+        "x": 12,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "4",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "target",
+        "x": 12,
+        "y": 25,
+        "text": "target = 8"
+       },
+       {
+        "id": "index0",
+        "x": 28,
+        "y": 113,
+        "text": "index 0"
+       },
+       {
+        "id": "status",
+        "x": 12,
+        "y": 149,
+        "text": "Result: []"
+       }
+      ]
+     }
     }
-  ]
+   ]
+  },
+  {
+   "id": "duplicate",
+   "label": "Equal values at distinct indices",
+   "input": "2 8\n4 4\n",
+   "expectedOutput": "[0,1]",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       32
+      ]
+     },
+     "explanation": "We want two numbers in [4,4] that add up to 8. Try every pair, one at a time.",
+     "variables": [
+      {
+       "name": "values",
+       "value": "[4,4]"
+      },
+      {
+       "name": "target",
+       "value": "8"
+      }
+     ],
+     "scene": {
+      "width": 300,
+      "height": 175,
+      "description": "Choose a first index, then try later indices.",
+      "nodes": [
+       {
+        "id": "v0",
+        "shape": "rect",
+        "x": 12,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "v1",
+        "shape": "rect",
+        "x": 84,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "4",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "target",
+        "x": 12,
+        "y": 25,
+        "text": "target = 8"
+       },
+       {
+        "id": "index0",
+        "x": 28,
+        "y": 113,
+        "text": "index 0"
+       },
+       {
+        "id": "index1",
+        "x": 100,
+        "y": 113,
+        "text": "index 1"
+       },
+       {
+        "id": "status",
+        "x": 12,
+        "y": 149,
+        "text": "Choose a first index, then try later indices."
+       }
+      ]
+     }
+    },
+    {
+     "event": "outer",
+     "lines": {
+      "cpp": [
+       32,
+       33
+      ],
+      "python": [
+       21,
+       22
+      ],
+      "java": [
+       32,
+       33
+      ],
+      "go": [
+       34,
+       35
+      ]
+     },
+     "explanation": "Pick 4 (index 0) as the first number. Pair it with each number after it.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "0"
+      },
+      {
+       "name": "first",
+       "value": "4"
+      }
+     ],
+     "scene": {
+      "width": 300,
+      "height": 175,
+      "description": "i = 0; j starts at 1.",
+      "nodes": [
+       {
+        "id": "v0",
+        "shape": "rect",
+        "x": 12,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "4",
+        "role": "active"
+       },
+       {
+        "id": "v1",
+        "shape": "rect",
+        "x": 84,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "4",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "target",
+        "x": 12,
+        "y": 25,
+        "text": "target = 8"
+       },
+       {
+        "id": "index0",
+        "x": 28,
+        "y": 113,
+        "text": "index 0"
+       },
+       {
+        "id": "index1",
+        "x": 100,
+        "y": 113,
+        "text": "index 1"
+       },
+       {
+        "id": "status",
+        "x": 12,
+        "y": 149,
+        "text": "i = 0; j starts at 1."
+       }
+      ]
+     }
+    },
+    {
+     "event": "compare",
+     "lines": {
+      "cpp": [
+       34,
+       35,
+       36
+      ],
+      "python": [
+       23,
+       24,
+       25
+      ],
+      "java": [
+       34,
+       35,
+       36
+      ],
+      "go": [
+       36,
+       37,
+       38
+      ]
+     },
+     "explanation": "4 + 4 = 8. That's the target.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "0"
+      },
+      {
+       "name": "j",
+       "value": "1"
+      },
+      {
+       "name": "left",
+       "value": "4"
+      },
+      {
+       "name": "right",
+       "value": "4"
+      },
+      {
+       "name": "sum",
+       "value": "8"
+      }
+     ],
+     "scene": {
+      "width": 300,
+      "height": 175,
+      "description": "4 + 4 = 8",
+      "nodes": [
+       {
+        "id": "v0",
+        "shape": "rect",
+        "x": 12,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "4",
+        "role": "active"
+       },
+       {
+        "id": "v1",
+        "shape": "rect",
+        "x": 84,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "4",
+        "role": "active"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "target",
+        "x": 12,
+        "y": 25,
+        "text": "target = 8"
+       },
+       {
+        "id": "index0",
+        "x": 28,
+        "y": 113,
+        "text": "index 0"
+       },
+       {
+        "id": "index1",
+        "x": 100,
+        "y": 113,
+        "text": "index 1"
+       },
+       {
+        "id": "status",
+        "x": 12,
+        "y": 149,
+        "text": "4 + 4 = 8"
+       }
+      ]
+     }
+    },
+    {
+     "event": "match",
+     "lines": {
+      "cpp": [
+       37,
+       38,
+       39
+      ],
+      "python": [
+       26,
+       27,
+       28
+      ],
+      "java": [
+       37,
+       38,
+       39
+      ],
+      "go": [
+       39,
+       40,
+       41
+      ]
+     },
+     "explanation": "Found it: index 0 and index 1 add up to 8.",
+     "variables": [
+      {
+       "name": "i",
+       "value": "0"
+      },
+      {
+       "name": "j",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 300,
+      "height": 175,
+      "description": "Matching indices: [0,1]",
+      "nodes": [
+       {
+        "id": "v0",
+        "shape": "rect",
+        "x": 12,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "v1",
+        "shape": "rect",
+        "x": 84,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "4",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "target",
+        "x": 12,
+        "y": 25,
+        "text": "target = 8"
+       },
+       {
+        "id": "index0",
+        "x": 28,
+        "y": 113,
+        "text": "index 0"
+       },
+       {
+        "id": "index1",
+        "x": 100,
+        "y": 113,
+        "text": "index 1"
+       },
+       {
+        "id": "status",
+        "x": 12,
+        "y": 149,
+        "text": "Matching indices: [0,1]"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       45
+      ],
+      "python": [
+       32
+      ],
+      "java": [
+       45
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "Return [0,1].",
+     "variables": [
+      {
+       "name": "result",
+       "value": "[0,1]"
+      }
+     ],
+     "scene": {
+      "width": 300,
+      "height": 175,
+      "description": "Result: [0,1]",
+      "nodes": [
+       {
+        "id": "v0",
+        "shape": "rect",
+        "x": 12,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "v1",
+        "shape": "rect",
+        "x": 84,
+        "y": 48,
+        "width": 62,
+        "height": 47,
+        "text": "4",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "target",
+        "x": 12,
+        "y": 25,
+        "text": "target = 8"
+       },
+       {
+        "id": "index0",
+        "x": 28,
+        "y": 113,
+        "text": "index 0"
+       },
+       {
+        "id": "index1",
+        "x": 100,
+        "y": 113,
+        "text": "index 1"
+       },
+       {
+        "id": "status",
+        "x": 12,
+        "y": 149,
+        "text": "Result: [0,1]"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
 }

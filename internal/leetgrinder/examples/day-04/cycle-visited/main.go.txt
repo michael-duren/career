@@ -1,0 +1,77 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"sort"
+	"strconv"
+	"strings"
+)
+
+type variable struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func emit(event string, pairs ...string) {
+	variables := []variable{}
+	for k := 0; k+1 < len(pairs); k += 2 {
+		variables = append(variables, variable{pairs[k], pairs[k+1]})
+	}
+	data, _ := json.Marshal(struct {
+		Event     string     `json:"event"`
+		Variables []variable `json:"variables"`
+	}{event, variables})
+	fmt.Println(string(data))
+}
+
+func result(answer string) {
+	data, _ := json.Marshal(struct {
+		Result string `json:"result"`
+	}{answer})
+	fmt.Println(string(data))
+}
+
+func itoa(value int) string { return strconv.Itoa(value) }
+
+func show(values []int) string {
+	parts := make([]string, len(values))
+	for k, value := range values {
+		parts[k] = strconv.Itoa(value)
+	}
+	return "[" + strings.Join(parts, ",") + "]"
+}
+
+func step(x int) int { return (x*x + 1) % 10 }
+
+func showSet(seen map[int]bool) string {
+	values := []int{}
+	for value := range seen {
+		values = append(values, value)
+	}
+	sort.Ints(values)
+	return show(values)
+}
+
+func solve(start int) int {
+	seen := map[int]bool{}
+	x := start
+	emit("start", "x", itoa(x), "seen", showSet(seen))
+	for !seen[x] {
+		seen[x] = true
+		x = step(x)
+		emit("step", "x", itoa(x), "seen", showSet(seen))
+	}
+
+	emit("repeat", "x", itoa(x), "seen", showSet(seen))
+	return x
+}
+
+func main() {
+	in := bufio.NewReader(os.Stdin)
+	var start int
+	fmt.Fscan(in, &start)
+	result(itoa(solve(start)))
+}

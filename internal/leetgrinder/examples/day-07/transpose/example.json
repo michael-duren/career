@@ -1,0 +1,1419 @@
+{
+ "id": "day-07-transpose",
+ "title": "Transpose a square grid in place",
+ "invariant": "After the swaps for row r, rows 0 to r and columns 0 to r are already transposed.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 29,
+   "algorithmEnd": 41
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 22,
+   "algorithmEnd": 31
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 29,
+   "algorithmEnd": 41
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 54,
+   "algorithmEnd": 66
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "3 × 3 grid",
+   "input": "3 3\n1 2 3\n4 5 6\n7 8 9\n",
+   "expectedOutput": "[[1,4,7],[2,5,8],[3,6,9]]",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       23
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       55
+      ]
+     },
+     "explanation": "Transposing turns rows into columns: the value at (r, c) moves to (c, r). The diagonal, where r = c, stays put.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "-"
+      },
+      {
+       "name": "c",
+       "value": "-"
+      },
+      {
+       "name": "grid",
+       "value": "[[1,2,3],[4,5,6],[7,8,9]]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Transpose normal: start (-,-), grid [[1,2,3],[4,5,6],[7,8,9]].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "visited"
+       },
+       {
+        "id": "pair",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "(r, c) goes to (c, r)",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "gold = diagonal (never moves)"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "only cells above the diagonal start a swap"
+       }
+      ]
+     }
+    },
+    {
+     "event": "swap",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       27
+      ],
+      "java": [
+       34
+      ],
+      "go": [
+       59
+      ]
+     },
+     "explanation": "Swap (0, 1) with (1, 0). The inner loop starts at c = r + 1, so only cells above the diagonal start a swap and each pair is swapped exactly once.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "0"
+      },
+      {
+       "name": "c",
+       "value": "1"
+      },
+      {
+       "name": "grid",
+       "value": "[[1,4,3],[2,5,6],[7,8,9]]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Transpose normal: swap (0,1), grid [[1,4,3],[2,5,6],[7,8,9]].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "active"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "visited"
+       },
+       {
+        "id": "pair",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "swap (0,1) with (1,0)",
+        "role": "active"
+       }
+      ],
+      "edges": [
+       {
+        "id": "swap",
+        "from": "cell-0-1",
+        "to": "cell-1-0",
+        "label": "",
+        "directed": false,
+        "role": "active"
+       }
+      ],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "gold = diagonal (never moves)"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "only cells above the diagonal start a swap"
+       }
+      ]
+     }
+    },
+    {
+     "event": "swap",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       27
+      ],
+      "java": [
+       34
+      ],
+      "go": [
+       59
+      ]
+     },
+     "explanation": "Swap (0, 2) with (2, 0). The inner loop starts at c = r + 1, so only cells above the diagonal start a swap and each pair is swapped exactly once.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "0"
+      },
+      {
+       "name": "c",
+       "value": "2"
+      },
+      {
+       "name": "grid",
+       "value": "[[1,4,7],[2,5,6],[3,8,9]]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Transpose normal: swap (0,2), grid [[1,4,7],[2,5,6],[3,8,9]].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "active"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "active"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "visited"
+       },
+       {
+        "id": "pair",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "swap (0,2) with (2,0)",
+        "role": "active"
+       }
+      ],
+      "edges": [
+       {
+        "id": "swap",
+        "from": "cell-0-2",
+        "to": "cell-2-0",
+        "label": "",
+        "directed": false,
+        "role": "active"
+       }
+      ],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "gold = diagonal (never moves)"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "only cells above the diagonal start a swap"
+       }
+      ]
+     }
+    },
+    {
+     "event": "swap",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       27
+      ],
+      "java": [
+       34
+      ],
+      "go": [
+       59
+      ]
+     },
+     "explanation": "Swap (1, 2) with (2, 1). The inner loop starts at c = r + 1, so only cells above the diagonal start a swap and each pair is swapped exactly once.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "1"
+      },
+      {
+       "name": "c",
+       "value": "2"
+      },
+      {
+       "name": "grid",
+       "value": "[[1,4,7],[2,5,8],[3,6,9]]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Transpose normal: swap (1,2), grid [[1,4,7],[2,5,8],[3,6,9]].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "visited"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "active"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "active"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "visited"
+       },
+       {
+        "id": "pair",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "swap (1,2) with (2,1)",
+        "role": "active"
+       }
+      ],
+      "edges": [
+       {
+        "id": "swap",
+        "from": "cell-1-2",
+        "to": "cell-2-1",
+        "label": "",
+        "directed": false,
+        "role": "active"
+       }
+      ],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "gold = diagonal (never moves)"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "only cells above the diagonal start a swap"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       39
+      ],
+      "python": [
+       30
+      ],
+      "java": [
+       39
+      ],
+      "go": [
+       64
+      ]
+     },
+     "explanation": "Row k is now what column k was: [[1,4,7],[2,5,8],[3,6,9]].",
+     "variables": [
+      {
+       "name": "r",
+       "value": "-"
+      },
+      {
+       "name": "c",
+       "value": "-"
+      },
+      {
+       "name": "grid",
+       "value": "[[1,4,7],[2,5,8],[3,6,9]]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 240,
+      "description": "Transpose normal: done (-,-), grid [[1,4,7],[2,5,8],[3,6,9]].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "7",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "5",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "8",
+        "role": "result"
+       },
+       {
+        "id": "cell-2-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-2-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "6",
+        "role": "result"
+       },
+       {
+        "id": "cell-2-2",
+        "shape": "rect",
+        "x": 144,
+        "y": 148,
+        "width": 46,
+        "height": 46,
+        "text": "9",
+        "role": "result"
+       },
+       {
+        "id": "pair",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "(r, c) goes to (c, r)",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "gold = diagonal (never moves)"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "row-2",
+        "x": 16,
+        "y": 176,
+        "text": "2"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "col-2",
+        "x": 163,
+        "y": 38,
+        "text": "2"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 228,
+        "text": "only cells above the diagonal start a swap"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-2x2",
+   "label": "2 × 2 grid: one swap",
+   "input": "2 2\n1 2\n3 4\n",
+   "expectedOutput": "[[1,3],[2,4]]",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       30
+      ],
+      "python": [
+       23
+      ],
+      "java": [
+       30
+      ],
+      "go": [
+       55
+      ]
+     },
+     "explanation": "Transposing turns rows into columns: the value at (r, c) moves to (c, r). The diagonal, where r = c, stays put.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "-"
+      },
+      {
+       "name": "c",
+       "value": "-"
+      },
+      {
+       "name": "grid",
+       "value": "[[1,2],[3,4]]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Transpose edge-2x2: start (-,-), grid [[1,2],[3,4]].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "visited"
+       },
+       {
+        "id": "pair",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "(r, c) goes to (c, r)",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "gold = diagonal (never moves)"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 188,
+        "text": "only cells above the diagonal start a swap"
+       }
+      ]
+     }
+    },
+    {
+     "event": "swap",
+     "lines": {
+      "cpp": [
+       34
+      ],
+      "python": [
+       27
+      ],
+      "java": [
+       34
+      ],
+      "go": [
+       59
+      ]
+     },
+     "explanation": "Swap (0, 1) with (1, 0). The inner loop starts at c = r + 1, so only cells above the diagonal start a swap and each pair is swapped exactly once.",
+     "variables": [
+      {
+       "name": "r",
+       "value": "0"
+      },
+      {
+       "name": "c",
+       "value": "1"
+      },
+      {
+       "name": "grid",
+       "value": "[[1,3],[2,4]]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Transpose edge-2x2: swap (0,1), grid [[1,3],[2,4]].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "visited"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "active"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "visited"
+       },
+       {
+        "id": "pair",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "swap (0,1) with (1,0)",
+        "role": "active"
+       }
+      ],
+      "edges": [
+       {
+        "id": "swap",
+        "from": "cell-0-1",
+        "to": "cell-1-0",
+        "label": "",
+        "directed": false,
+        "role": "active"
+       }
+      ],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "gold = diagonal (never moves)"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 188,
+        "text": "only cells above the diagonal start a swap"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       39
+      ],
+      "python": [
+       30
+      ],
+      "java": [
+       39
+      ],
+      "go": [
+       64
+      ]
+     },
+     "explanation": "Row k is now what column k was: [[1,3],[2,4]].",
+     "variables": [
+      {
+       "name": "r",
+       "value": "-"
+      },
+      {
+       "name": "c",
+       "value": "-"
+      },
+      {
+       "name": "grid",
+       "value": "[[1,3],[2,4]]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 200,
+      "description": "Transpose edge-2x2: done (-,-), grid [[1,3],[2,4]].",
+      "nodes": [
+       {
+        "id": "cell-0-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "1",
+        "role": "result"
+       },
+       {
+        "id": "cell-0-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 44,
+        "width": 46,
+        "height": 46,
+        "text": "3",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-0",
+        "shape": "rect",
+        "x": 40,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-1-1",
+        "shape": "rect",
+        "x": 92,
+        "y": 96,
+        "width": 46,
+        "height": 46,
+        "text": "4",
+        "role": "result"
+       },
+       {
+        "id": "pair",
+        "shape": "rect",
+        "x": 220,
+        "y": 44,
+        "width": 284,
+        "height": 38,
+        "text": "(r, c) goes to (c, r)",
+        "role": "neutral"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 22,
+        "text": "gold = diagonal (never moves)"
+       },
+       {
+        "id": "row-0",
+        "x": 16,
+        "y": 72,
+        "text": "0"
+       },
+       {
+        "id": "row-1",
+        "x": 16,
+        "y": 124,
+        "text": "1"
+       },
+       {
+        "id": "col-0",
+        "x": 59,
+        "y": 38,
+        "text": "0"
+       },
+       {
+        "id": "col-1",
+        "x": 111,
+        "y": 38,
+        "text": "1"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 188,
+        "text": "only cells above the diagonal start a swap"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

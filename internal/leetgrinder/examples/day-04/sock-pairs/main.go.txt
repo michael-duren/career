@@ -1,0 +1,90 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"sort"
+	"strconv"
+	"strings"
+)
+
+type variable struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func emit(event string, pairs ...string) {
+	variables := []variable{}
+	for k := 0; k+1 < len(pairs); k += 2 {
+		variables = append(variables, variable{pairs[k], pairs[k+1]})
+	}
+	data, _ := json.Marshal(struct {
+		Event     string     `json:"event"`
+		Variables []variable `json:"variables"`
+	}{event, variables})
+	fmt.Println(string(data))
+}
+
+func result(answer string) {
+	data, _ := json.Marshal(struct {
+		Result string `json:"result"`
+	}{answer})
+	fmt.Println(string(data))
+}
+
+func itoa(value int) string { return strconv.Itoa(value) }
+
+func show(values []int) string {
+	parts := make([]string, len(values))
+	for k, value := range values {
+		parts[k] = strconv.Itoa(value)
+	}
+	return "[" + strings.Join(parts, ",") + "]"
+}
+
+func showCounts(counts map[string]int) string {
+	keys := []string{}
+	for key, count := range counts {
+		if count != 0 {
+			keys = append(keys, key)
+		}
+	}
+	sort.Strings(keys)
+	parts := make([]string, len(keys))
+	for k, key := range keys {
+		parts[k] = key + ":" + itoa(counts[key])
+	}
+	return "{" + strings.Join(parts, ",") + "}"
+}
+
+func solve(socks []string) int {
+	waiting := map[string]int{}
+	pairs := 0
+	emit("start", "sock", "-", "waiting", showCounts(waiting), "pairs", itoa(pairs))
+	for _, sock := range socks {
+		waiting[sock]++
+		if waiting[sock] == 2 {
+			waiting[sock] = 0
+			pairs++
+			emit("pair", "sock", sock, "waiting", showCounts(waiting), "pairs", itoa(pairs))
+		} else {
+			emit("wait", "sock", sock, "waiting", showCounts(waiting), "pairs", itoa(pairs))
+		}
+	}
+
+	emit("done", "sock", "-", "waiting", showCounts(waiting), "pairs", itoa(pairs))
+	return pairs
+}
+
+func main() {
+	in := bufio.NewReader(os.Stdin)
+	var n int
+	fmt.Fscan(in, &n)
+	socks := make([]string, n)
+	for k := range socks {
+		fmt.Fscan(in, &socks[k])
+	}
+	result(itoa(solve(socks)))
+}

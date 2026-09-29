@@ -1,0 +1,88 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
+type variable struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func emit(event string, pairs ...string) {
+	variables := []variable{}
+	for k := 0; k+1 < len(pairs); k += 2 {
+		variables = append(variables, variable{pairs[k], pairs[k+1]})
+	}
+	data, _ := json.Marshal(struct {
+		Event     string     `json:"event"`
+		Variables []variable `json:"variables"`
+	}{event, variables})
+	fmt.Println(string(data))
+}
+
+func result(answer string) {
+	data, _ := json.Marshal(struct {
+		Result string `json:"result"`
+	}{answer})
+	fmt.Println(string(data))
+}
+
+func itoa(value int) string { return strconv.Itoa(value) }
+
+func show(values []int) string {
+	parts := make([]string, len(values))
+	for k, value := range values {
+		parts[k] = strconv.Itoa(value)
+	}
+	return "[" + strings.Join(parts, ",") + "]"
+}
+
+func solve(a, b []int) []int {
+	i, j, carry := len(a)-1, len(b)-1, 0
+	digits := []int{}
+	emit("start", "i", itoa(i), "j", itoa(j), "carry", itoa(carry), "digits", show(digits))
+	for i >= 0 || j >= 0 || carry > 0 {
+		total := carry
+		if i >= 0 {
+			total += a[i]
+		}
+		if j >= 0 {
+			total += b[j]
+		}
+		digits = append(digits, total%10)
+		carry = total / 10
+		emit("column", "i", itoa(i), "j", itoa(j), "carry", itoa(carry), "digits", show(digits))
+		i--
+		j--
+	}
+
+	for left, right := 0, len(digits)-1; left < right; left, right = left+1, right-1 {
+		digits[left], digits[right] = digits[right], digits[left]
+	}
+	emit("done", "i", itoa(i), "j", itoa(j), "carry", itoa(carry), "digits", show(digits))
+	return digits
+}
+
+func parse(line string) []int {
+	digits := []int{}
+	for _, field := range strings.Fields(line) {
+		digit, _ := strconv.Atoi(field)
+		digits = append(digits, digit)
+	}
+	return digits
+}
+
+func main() {
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
+	a := parse(scanner.Text())
+	scanner.Scan()
+	b := parse(scanner.Text())
+	result(show(solve(a, b)))
+}

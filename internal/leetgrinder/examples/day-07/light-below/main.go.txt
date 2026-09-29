@@ -1,0 +1,89 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
+type variable struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func emit(event string, pairs ...string) {
+	variables := []variable{}
+	for k := 0; k+1 < len(pairs); k += 2 {
+		variables = append(variables, variable{pairs[k], pairs[k+1]})
+	}
+	data, _ := json.Marshal(struct {
+		Event     string     `json:"event"`
+		Variables []variable `json:"variables"`
+	}{event, variables})
+	fmt.Println(string(data))
+}
+
+func result(answer string) {
+	data, _ := json.Marshal(struct {
+		Result string `json:"result"`
+	}{answer})
+	fmt.Println(string(data))
+}
+
+func itoa(value int) string { return strconv.Itoa(value) }
+
+func show(values []int) string {
+	parts := make([]string, len(values))
+	for k, value := range values {
+		parts[k] = strconv.Itoa(value)
+	}
+	return "[" + strings.Join(parts, ",") + "]"
+}
+
+func showGrid(grid [][]int) string {
+	parts := make([]string, len(grid))
+	for r, row := range grid {
+		parts[r] = show(row)
+	}
+	return "[" + strings.Join(parts, ",") + "]"
+}
+
+func solve(grid [][]int) [][]int {
+	rows, cols := len(grid), len(grid[0])
+	marks := [][2]int{}
+	for r := 0; r < rows; r++ {
+		for c := 0; c < cols; c++ {
+			if grid[r][c] == 1 {
+				marks = append(marks, [2]int{r, c})
+				emit("mark", "r", itoa(r), "c", itoa(c), "marks", itoa(len(marks)), "grid", showGrid(grid))
+			}
+		}
+	}
+
+	for _, mark := range marks {
+		if mark[0]+1 < rows {
+			grid[mark[0]+1][mark[1]] = 1
+			emit("light", "r", itoa(mark[0]+1), "c", itoa(mark[1]), "marks", itoa(len(marks)), "grid", showGrid(grid))
+		}
+	}
+
+	emit("done", "r", "-", "c", "-", "marks", itoa(len(marks)), "grid", showGrid(grid))
+	return grid
+}
+
+func main() {
+	in := bufio.NewReader(os.Stdin)
+	var rows, cols int
+	fmt.Fscan(in, &rows, &cols)
+	grid := make([][]int, rows)
+	for r := range grid {
+		grid[r] = make([]int, cols)
+		for c := range grid[r] {
+			fmt.Fscan(in, &grid[r][c])
+		}
+	}
+	result(showGrid(solve(grid)))
+}

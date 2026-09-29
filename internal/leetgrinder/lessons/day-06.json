@@ -1,0 +1,178 @@
+{
+  "day": 6,
+  "objectives": [
+    "Pick the direction of an in-place loop by asking which cells each step reads.",
+    "Keep some values and drop others in place with a read pointer and a write pointer.",
+    "Add numbers stored as digits, carrying from right to left."
+  ],
+  "prerequisites": [
+    5
+  ],
+  "sections": [
+    {
+      "id": "intuition",
+      "navLabel": "The idea",
+      "heading": "Intuition: don't overwrite what you still need",
+      "paragraphs": [
+        "Today's problems change an array in place, reading and writing the same cells. That's safe only if every value is read before something overwrites it, or if overwriting it is exactly what you want.",
+        "So before writing the loop, ask one question: when I write cell i, which cells do I read, and should they hold their old value or their new one? The answer decides whether the loop runs left to right or right to left."
+      ],
+      "callout": {
+        "kind": "key",
+        "text": "Need the neighbor's new value? Go in the direction that updates it first. Need its old value? Go the other way, so you read it before it changes."
+      },
+      "diagram": {
+        "width": 320,
+        "height": 170,
+        "description": "Left to right, a cell reads its left neighbor's new value. Right to left, a cell reads its left neighbor's old value.",
+        "nodes": [
+          {"id": "n1", "shape": "rect", "x": 16, "y": 44, "width": 64, "height": 42, "text": "new", "role": "result"},
+          {"id": "n2", "shape": "rect", "x": 90, "y": 44, "width": 64, "height": 42, "text": "write", "role": "active"},
+          {"id": "o1", "shape": "rect", "x": 170, "y": 44, "width": 64, "height": 42, "text": "old", "role": "visited"},
+          {"id": "o2", "shape": "rect", "x": 244, "y": 44, "width": 64, "height": 42, "text": "write", "role": "active"}
+        ],
+        "edges": [],
+        "labels": [
+          {"id": "l1", "x": 16, "y": 28, "text": "left to right"},
+          {"id": "l2", "x": 170, "y": 28, "text": "right to left"},
+          {"id": "r1", "x": 16, "y": 116, "text": "reads a new value"},
+          {"id": "r2", "x": 170, "y": 116, "text": "reads an old value"}
+        ]
+      }
+    },
+    {
+      "id": "baseline",
+      "navLabel": "Copy first",
+      "heading": "Baseline: write into a new array",
+      "paragraphs": [
+        "The always-safe approach is to read from the input and write into a separate output array. Nothing you read can change under you, so the order of the loop doesn't matter.",
+        "It costs O(n) extra memory. When a problem asks for O(1) extra memory, or says to modify the array in place, you need the direction reasoning below."
+      ]
+    },
+    {
+      "id": "running-max",
+      "navLabel": "Left to right",
+      "heading": "Worked example: running maximum, left to right",
+      "paragraphs": [
+        "Replace each value with the largest value up to and including it: [3, 1, 4, 1, 5] becomes [3, 3, 4, 4, 5].",
+        "Cell i needs the largest value among cells 0 to i. If the cell on its left already holds the largest value among 0 to i-1, then cell i only needs max(its own value, left neighbor). So the left neighbor must be updated first: go left to right. Overwriting is fine here, because each input value is used once, right when its own cell is updated."
+      ],
+      "exampleIds": [
+        "day-06-running-max"
+      ]
+    },
+    {
+      "id": "shift",
+      "navLabel": "Right to left",
+      "heading": "Worked example: shift right, right to left",
+      "paragraphs": [
+        "Shift every value one spot to the right, drop the last value, and put 0 at the front: [1, 2, 3, 4] becomes [0, 1, 2, 3].",
+        "Cell i gets the old value of cell i-1. If you went left to right, you'd copy cell 0 into cell 1, then copy that same value into cell 2, and so on, filling the array with the first value. Going right to left, cell i-1 hasn't been touched yet when you read it."
+      ],
+      "exampleIds": [
+        "day-06-shift-right"
+      ]
+    },
+    {
+      "id": "keep",
+      "navLabel": "Read and write pointers",
+      "heading": "Worked example: keep only the even values",
+      "paragraphs": [
+        "Remove the odd values from an array in place, keeping the even ones in their original order at the front. Use two indexes: read visits every value, and write marks where the next kept value goes.",
+        "When read finds an even value, copy it to write and move write forward. When it finds an odd value, do nothing. write never gets ahead of read, so a write only ever lands on a cell that has already been read. At the end, the first write cells are the answer.",
+        "For [3, 8, 5, 2, 6], the kept values are 8, 2, and 6, and they end up in the first three cells."
+      ],
+      "exampleIds": [
+        "day-06-keep-evens"
+      ]
+    },
+    {
+      "id": "carry",
+      "navLabel": "Carrying digits",
+      "heading": "Worked example: add numbers stored as digits",
+      "paragraphs": [
+        "Some numbers are too long for built-in integers, so they're stored as arrays of digits, most significant first: 475 is [4, 7, 5]. Adding two of them works like addition on paper.",
+        "Start at the rightmost digit of each number with a carry of 0. For each column, add the two digits and the carry. Keep total % 10 as the result digit and pass total / 10 to the next column left as the carry. When one number runs out, treat its missing digits as 0.",
+        "Don't stop just because both numbers are used up. 99 + 1 ends with a carry of 1 and needs an extra digit: [1, 0, 0]. The digits come out right to left, so reverse them at the end."
+      ],
+      "exampleIds": [
+        "day-06-add-digits"
+      ]
+    },
+    {
+      "id": "your-turn-running-sum",
+      "navLabel": "Your turn: Running Sum",
+      "heading": "Your turn: Running Sum of 1d Array",
+      "paragraphs": [
+        "Return an array where each value is the sum of all input values up to and including it: [1, 2, 3, 4] becomes [1, 3, 6, 10]. Try doing it in place."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Compare it with the running maximum. What changes, and does the loop direction change?"
+      }
+    },
+    {
+      "id": "your-turn-plus-one",
+      "navLabel": "Your turn: Plus One",
+      "heading": "Your turn: Plus One",
+      "paragraphs": [
+        "A large integer is stored as an array of digits, most significant first. Add one to it and return the new array."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Work [1, 2, 9], [9, 9], and [4, 3] by hand. When can you stop early?"
+      }
+    },
+    {
+      "id": "your-turn-multiply",
+      "navLabel": "Your turn: Multiply Strings",
+      "heading": "Your turn: Multiply Strings",
+      "paragraphs": [
+        "Today's medium. Given two non-negative integers as strings, return their product as a string, without converting the whole strings to integers. The numbers can be up to 200 digits long."
+      ],
+      "callout": {
+        "kind": "try",
+        "title": "Where to start",
+        "text": "Multiply 23 × 45 on paper the long way and label where every digit you write down goes. Then decide how big the result can be and what array you'll build it in."
+      }
+    },
+    {
+      "id": "complexity",
+      "navLabel": "Complexity",
+      "heading": "Complexity and cautions",
+      "bullets": [
+        "Running max, shift right, keep evens: one pass, O(n) time, O(1) extra memory.",
+        "Writing into a new array instead: same time, O(n) extra memory.",
+        "Adding digit arrays of lengths n and m: O(n + m) time, and the result has at most one more digit than the longer input."
+      ],
+      "paragraphs": [
+        "Watch number sizes. A running sum of many large values can overflow a 32-bit integer in C++, Java, and Go; Python integers don't overflow. Digit arrays exist precisely so no single number has to fit.",
+        "In Go, indexing a string gives a byte, so convert a digit character with int(s[i] - '0'). In Java, s.charAt(i) - '0' gives an int. In Python, int(ch) works."
+      ]
+    },
+    {
+      "id": "checks",
+      "navLabel": "Check yourself",
+      "heading": "Before you finish",
+      "paragraphs": [
+        "Try to answer each question before opening it."
+      ],
+      "checks": [
+        {
+          "prompt": "Why does the running maximum go left to right, but shifting right goes right to left?",
+          "answer": "The running maximum needs its left neighbor's new value. The shift needs its left neighbor's old value, which is still there only if you haven't written to it yet."
+        },
+        {
+          "prompt": "In the keep-evens example, why is it safe to write into the array while still reading it?",
+          "answer": "write never passes read, so every write lands on a cell that has already been read."
+        },
+        {
+          "prompt": "When adding digit arrays, why does the loop continue after both numbers run out?",
+          "answer": "There may still be a carry, like in 99 + 1, and it needs its own digit."
+        }
+      ]
+    }
+  ]
+}

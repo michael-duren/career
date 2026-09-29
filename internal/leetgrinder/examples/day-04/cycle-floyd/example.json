@@ -1,0 +1,3461 @@
+{
+ "id": "day-04-cycle-floyd",
+ "title": "Detect a loop with slow and fast pointers",
+ "invariant": "After k rounds, slow has taken k steps and fast has taken 2k. If they're ever equal after moving, the walk loops.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 25,
+   "algorithmEnd": 37
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 32
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 25,
+   "algorithmEnd": 37
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 48,
+   "algorithmEnd": 60
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Start at 3",
+   "input": "3\n",
+   "expectedOutput": "7",
+   "frames": [
+    {
+     "event": "first-move",
+     "lines": {
+      "cpp": [
+       26,
+       27
+      ],
+      "python": [
+       19,
+       20
+      ],
+      "java": [
+       26,
+       27
+      ],
+      "go": [
+       49,
+       50
+      ]
+     },
+     "explanation": "Both start at 3. slow takes one step and fast takes two: slow = 0, fast = 1. Not equal yet.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "0"
+      },
+      {
+       "name": "fast",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Cycle normal: first-move, slow 0, fast 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "0",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 65,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 114,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 163,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 212,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 261,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 310,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 359,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 408,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 457,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "slow",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "slow 0",
+        "role": "active"
+       },
+       {
+        "id": "fast",
+        "shape": "rect",
+        "x": 128,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "fast 1",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values 0 to 9; next(x) = (x·x + 1) % 10"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 32,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 81,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 130,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 179,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 228,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 277,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 326,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 375,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 424,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 473,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "slow"
+       },
+       {
+        "id": "pointer-1",
+        "x": 67,
+        "y": 116,
+        "text": "fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "path from 3: 3 → 0 → 1 → 2 → 5 → 6 → 7 → 0 …"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       30,
+       31
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       30,
+       31
+      ],
+      "go": [
+       53,
+       54
+      ]
+     },
+     "explanation": "slow takes one step and fast takes two: slow = 1, fast = 5. Not equal yet.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "1"
+      },
+      {
+       "name": "fast",
+       "value": "5"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Cycle normal: move, slow 1, fast 5.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 65,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 114,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 163,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 212,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 261,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 310,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 359,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 408,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 457,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "slow",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "slow 1",
+        "role": "active"
+       },
+       {
+        "id": "fast",
+        "shape": "rect",
+        "x": 128,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "fast 5",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values 0 to 9; next(x) = (x·x + 1) % 10"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 32,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 81,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 130,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 179,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 228,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 277,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 326,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 375,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 424,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 473,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "pointer-1",
+        "x": 67,
+        "y": 116,
+        "text": "slow"
+       },
+       {
+        "id": "pointer-5",
+        "x": 263,
+        "y": 116,
+        "text": "fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "path from 3: 3 → 0 → 1 → 2 → 5 → 6 → 7 → 0 …"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       30,
+       31
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       30,
+       31
+      ],
+      "go": [
+       53,
+       54
+      ]
+     },
+     "explanation": "slow takes one step and fast takes two: slow = 2, fast = 7. Not equal yet.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "2"
+      },
+      {
+       "name": "fast",
+       "value": "7"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Cycle normal: move, slow 2, fast 7.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 65,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 114,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 163,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 212,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 261,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 310,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 359,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 408,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 457,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "slow",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "slow 2",
+        "role": "active"
+       },
+       {
+        "id": "fast",
+        "shape": "rect",
+        "x": 128,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "fast 7",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values 0 to 9; next(x) = (x·x + 1) % 10"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 32,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 81,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 130,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 179,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 228,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 277,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 326,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 375,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 424,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 473,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "pointer-2",
+        "x": 116,
+        "y": 116,
+        "text": "slow"
+       },
+       {
+        "id": "pointer-7",
+        "x": 361,
+        "y": 116,
+        "text": "fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "path from 3: 3 → 0 → 1 → 2 → 5 → 6 → 7 → 0 …"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       30,
+       31
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       30,
+       31
+      ],
+      "go": [
+       53,
+       54
+      ]
+     },
+     "explanation": "slow takes one step and fast takes two: slow = 5, fast = 1. Not equal yet.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "5"
+      },
+      {
+       "name": "fast",
+       "value": "1"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Cycle normal: move, slow 5, fast 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 65,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 114,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 163,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 212,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 261,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "5",
+        "role": "active"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 310,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 359,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 408,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 457,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "slow",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "slow 5",
+        "role": "active"
+       },
+       {
+        "id": "fast",
+        "shape": "rect",
+        "x": 128,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "fast 1",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values 0 to 9; next(x) = (x·x + 1) % 10"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 32,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 81,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 130,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 179,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 228,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 277,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 326,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 375,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 424,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 473,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "pointer-5",
+        "x": 263,
+        "y": 116,
+        "text": "slow"
+       },
+       {
+        "id": "pointer-1",
+        "x": 67,
+        "y": 116,
+        "text": "fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "path from 3: 3 → 0 → 1 → 2 → 5 → 6 → 7 → 0 …"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       30,
+       31
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       30,
+       31
+      ],
+      "go": [
+       53,
+       54
+      ]
+     },
+     "explanation": "slow takes one step and fast takes two: slow = 6, fast = 5. Not equal yet.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "6"
+      },
+      {
+       "name": "fast",
+       "value": "5"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Cycle normal: move, slow 6, fast 5.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 65,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 114,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 163,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 212,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 261,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 310,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "6",
+        "role": "active"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 359,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 408,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 457,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "slow",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "slow 6",
+        "role": "active"
+       },
+       {
+        "id": "fast",
+        "shape": "rect",
+        "x": 128,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "fast 5",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values 0 to 9; next(x) = (x·x + 1) % 10"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 32,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 81,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 130,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 179,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 228,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 277,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 326,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 375,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 424,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 473,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "pointer-6",
+        "x": 312,
+        "y": 116,
+        "text": "slow"
+       },
+       {
+        "id": "pointer-5",
+        "x": 263,
+        "y": 116,
+        "text": "fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "path from 3: 3 → 0 → 1 → 2 → 5 → 6 → 7 → 0 …"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       30,
+       31
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       30,
+       31
+      ],
+      "go": [
+       53,
+       54
+      ]
+     },
+     "explanation": "slow takes one step and fast takes two: slow = 7, fast = 7.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "7"
+      },
+      {
+       "name": "fast",
+       "value": "7"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Cycle normal: move, slow 7, fast 7.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 65,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 114,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 163,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 212,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 261,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 310,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 359,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "7",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 408,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 457,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "slow",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "slow 7",
+        "role": "active"
+       },
+       {
+        "id": "fast",
+        "shape": "rect",
+        "x": 128,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "fast 7",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values 0 to 9; next(x) = (x·x + 1) % 10"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 32,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 81,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 130,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 179,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 228,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 277,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 326,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 375,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 424,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 473,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "pointer-7",
+        "x": 361,
+        "y": 116,
+        "text": "slow fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "path from 3: 3 → 0 → 1 → 2 → 5 → 6 → 7 → 0 …"
+       }
+      ]
+     }
+    },
+    {
+     "event": "meet",
+     "lines": {
+      "cpp": [
+       35
+      ],
+      "python": [
+       27
+      ],
+      "java": [
+       35
+      ],
+      "go": [
+       58
+      ]
+     },
+     "explanation": "slow and fast are both at 7. fast can only catch slow by lapping it inside a loop, so the walk has a loop. Only two numbers were stored.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "7"
+      },
+      {
+       "name": "fast",
+       "value": "7"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Cycle normal: meet, slow 7, fast 7.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 65,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 114,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 163,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 212,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 261,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 310,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 359,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "7",
+        "role": "result"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 408,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 457,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "slow",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "slow 7",
+        "role": "active"
+       },
+       {
+        "id": "fast",
+        "shape": "rect",
+        "x": 128,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "fast 7",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values 0 to 9; next(x) = (x·x + 1) % 10"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 32,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 81,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 130,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 179,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 228,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 277,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 326,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 375,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 424,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 473,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "pointer-7",
+        "x": 361,
+        "y": 116,
+        "text": "slow fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "path from 3: 3 → 0 → 1 → 2 → 5 → 6 → 7 → 0 …"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-starts-in-loop",
+   "label": "Start inside the loop",
+   "input": "0\n",
+   "expectedOutput": "0",
+   "frames": [
+    {
+     "event": "first-move",
+     "lines": {
+      "cpp": [
+       26,
+       27
+      ],
+      "python": [
+       19,
+       20
+      ],
+      "java": [
+       26,
+       27
+      ],
+      "go": [
+       49,
+       50
+      ]
+     },
+     "explanation": "Both start at 0. slow takes one step and fast takes two: slow = 1, fast = 2. Not equal yet.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "1"
+      },
+      {
+       "name": "fast",
+       "value": "2"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Cycle edge-starts-in-loop: first-move, slow 1, fast 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 65,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 114,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "2",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 163,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 212,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 261,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 310,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 359,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 408,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 457,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "slow",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "slow 1",
+        "role": "active"
+       },
+       {
+        "id": "fast",
+        "shape": "rect",
+        "x": 128,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "fast 2",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values 0 to 9; next(x) = (x·x + 1) % 10"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 32,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 81,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 130,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 179,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 228,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 277,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 326,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 375,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 424,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 473,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "pointer-1",
+        "x": 67,
+        "y": 116,
+        "text": "slow"
+       },
+       {
+        "id": "pointer-2",
+        "x": 116,
+        "y": 116,
+        "text": "fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "path from 0: 0 → 1 → 2 → 5 → 6 → 7 → 0 → 1 …"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       30,
+       31
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       30,
+       31
+      ],
+      "go": [
+       53,
+       54
+      ]
+     },
+     "explanation": "slow takes one step and fast takes two: slow = 2, fast = 6. Not equal yet.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "2"
+      },
+      {
+       "name": "fast",
+       "value": "6"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Cycle edge-starts-in-loop: move, slow 2, fast 6.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 65,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 114,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 163,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 212,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 261,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 310,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "6",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 359,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 408,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 457,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "slow",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "slow 2",
+        "role": "active"
+       },
+       {
+        "id": "fast",
+        "shape": "rect",
+        "x": 128,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "fast 6",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values 0 to 9; next(x) = (x·x + 1) % 10"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 32,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 81,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 130,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 179,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 228,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 277,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 326,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 375,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 424,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 473,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "pointer-2",
+        "x": 116,
+        "y": 116,
+        "text": "slow"
+       },
+       {
+        "id": "pointer-6",
+        "x": 312,
+        "y": 116,
+        "text": "fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "path from 0: 0 → 1 → 2 → 5 → 6 → 7 → 0 → 1 …"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       30,
+       31
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       30,
+       31
+      ],
+      "go": [
+       53,
+       54
+      ]
+     },
+     "explanation": "slow takes one step and fast takes two: slow = 5, fast = 0. Not equal yet.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "5"
+      },
+      {
+       "name": "fast",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Cycle edge-starts-in-loop: move, slow 5, fast 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "0",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 65,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 114,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 163,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 212,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 261,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "5",
+        "role": "active"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 310,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 359,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 408,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 457,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "slow",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "slow 5",
+        "role": "active"
+       },
+       {
+        "id": "fast",
+        "shape": "rect",
+        "x": 128,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "fast 0",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values 0 to 9; next(x) = (x·x + 1) % 10"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 32,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 81,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 130,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 179,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 228,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 277,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 326,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 375,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 424,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 473,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "pointer-5",
+        "x": 263,
+        "y": 116,
+        "text": "slow"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "path from 0: 0 → 1 → 2 → 5 → 6 → 7 → 0 → 1 …"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       30,
+       31
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       30,
+       31
+      ],
+      "go": [
+       53,
+       54
+      ]
+     },
+     "explanation": "slow takes one step and fast takes two: slow = 6, fast = 2. Not equal yet.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "6"
+      },
+      {
+       "name": "fast",
+       "value": "2"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Cycle edge-starts-in-loop: move, slow 6, fast 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 65,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 114,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "2",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 163,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 212,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 261,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 310,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "6",
+        "role": "active"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 359,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 408,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 457,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "slow",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "slow 6",
+        "role": "active"
+       },
+       {
+        "id": "fast",
+        "shape": "rect",
+        "x": 128,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "fast 2",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values 0 to 9; next(x) = (x·x + 1) % 10"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 32,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 81,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 130,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 179,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 228,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 277,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 326,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 375,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 424,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 473,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "pointer-6",
+        "x": 312,
+        "y": 116,
+        "text": "slow"
+       },
+       {
+        "id": "pointer-2",
+        "x": 116,
+        "y": 116,
+        "text": "fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "path from 0: 0 → 1 → 2 → 5 → 6 → 7 → 0 → 1 …"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       30,
+       31
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       30,
+       31
+      ],
+      "go": [
+       53,
+       54
+      ]
+     },
+     "explanation": "slow takes one step and fast takes two: slow = 7, fast = 6. Not equal yet.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "7"
+      },
+      {
+       "name": "fast",
+       "value": "6"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Cycle edge-starts-in-loop: move, slow 7, fast 6.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "0",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 65,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 114,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 163,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 212,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 261,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 310,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "6",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 359,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "7",
+        "role": "active"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 408,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 457,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "slow",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "slow 7",
+        "role": "active"
+       },
+       {
+        "id": "fast",
+        "shape": "rect",
+        "x": 128,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "fast 6",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values 0 to 9; next(x) = (x·x + 1) % 10"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 32,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 81,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 130,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 179,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 228,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 277,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 326,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 375,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 424,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 473,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "pointer-7",
+        "x": 361,
+        "y": 116,
+        "text": "slow"
+       },
+       {
+        "id": "pointer-6",
+        "x": 312,
+        "y": 116,
+        "text": "fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "path from 0: 0 → 1 → 2 → 5 → 6 → 7 → 0 → 1 …"
+       }
+      ]
+     }
+    },
+    {
+     "event": "move",
+     "lines": {
+      "cpp": [
+       30,
+       31
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       30,
+       31
+      ],
+      "go": [
+       53,
+       54
+      ]
+     },
+     "explanation": "slow takes one step and fast takes two: slow = 0, fast = 0.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "0"
+      },
+      {
+       "name": "fast",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Cycle edge-starts-in-loop: move, slow 0, fast 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "0",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 65,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 114,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 163,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 212,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 261,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 310,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 359,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 408,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 457,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "slow",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "slow 0",
+        "role": "active"
+       },
+       {
+        "id": "fast",
+        "shape": "rect",
+        "x": 128,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "fast 0",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values 0 to 9; next(x) = (x·x + 1) % 10"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 32,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 81,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 130,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 179,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 228,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 277,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 326,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 375,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 424,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 473,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "slow fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "path from 0: 0 → 1 → 2 → 5 → 6 → 7 → 0 → 1 …"
+       }
+      ]
+     }
+    },
+    {
+     "event": "meet",
+     "lines": {
+      "cpp": [
+       35
+      ],
+      "python": [
+       27
+      ],
+      "java": [
+       35
+      ],
+      "go": [
+       58
+      ]
+     },
+     "explanation": "slow and fast are both at 0. fast can only catch slow by lapping it inside a loop, so the walk has a loop. Only two numbers were stored.",
+     "variables": [
+      {
+       "name": "slow",
+       "value": "0"
+      },
+      {
+       "name": "fast",
+       "value": "0"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Cycle edge-starts-in-loop: meet, slow 0, fast 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "0",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 65,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 114,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 163,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 212,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "4",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-5",
+        "shape": "rect",
+        "x": 261,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-6",
+        "shape": "rect",
+        "x": 310,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-7",
+        "shape": "rect",
+        "x": 359,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "7",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-8",
+        "shape": "rect",
+        "x": 408,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-9",
+        "shape": "rect",
+        "x": 457,
+        "y": 36,
+        "width": 41,
+        "height": 42,
+        "text": "9",
+        "role": "neutral"
+       },
+       {
+        "id": "slow",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "slow 0",
+        "role": "active"
+       },
+       {
+        "id": "fast",
+        "shape": "rect",
+        "x": 128,
+        "y": 132,
+        "width": 100,
+        "height": 40,
+        "text": "fast 0",
+        "role": "discarded"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "values 0 to 9; next(x) = (x·x + 1) % 10"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 32,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 81,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 130,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 179,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 228,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "cell-index-5",
+        "x": 277,
+        "y": 96,
+        "text": "5"
+       },
+       {
+        "id": "cell-index-6",
+        "x": 326,
+        "y": 96,
+        "text": "6"
+       },
+       {
+        "id": "cell-index-7",
+        "x": 375,
+        "y": 96,
+        "text": "7"
+       },
+       {
+        "id": "cell-index-8",
+        "x": 424,
+        "y": 96,
+        "text": "8"
+       },
+       {
+        "id": "cell-index-9",
+        "x": 473,
+        "y": 96,
+        "text": "9"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "slow fast"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "path from 0: 0 → 1 → 2 → 5 → 6 → 7 → 0 → 1 …"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

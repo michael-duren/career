@@ -1,0 +1,1559 @@
+{
+ "id": "day-06-keep-evens",
+ "title": "Keep some values in place with read and write",
+ "invariant": "After read passes a position, cells 0 to write-1 hold the even values seen so far, in order.",
+ "variants": [
+  {
+   "language": "cpp",
+   "file": "main.cpp",
+   "algorithmStart": 23,
+   "algorithmEnd": 39
+  },
+  {
+   "language": "python",
+   "file": "main.py",
+   "algorithmStart": 18,
+   "algorithmEnd": 30
+  },
+  {
+   "language": "java",
+   "file": "Main.java",
+   "algorithmStart": 23,
+   "algorithmEnd": 38
+  },
+  {
+   "language": "go",
+   "file": "main.go.txt",
+   "algorithmStart": 46,
+   "algorithmEnd": 61
+  }
+ ],
+ "cases": [
+  {
+   "id": "normal",
+   "label": "Keep the evens in [3, 8, 5, 2, 6]",
+   "input": "5\n3 8 5 2 6\n",
+   "expectedOutput": "[8,2,6]",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "read visits every value; write marks where the next kept value goes. write never passes read, so writing can only overwrite a value that was already read.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "-"
+      },
+      {
+       "name": "write",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[3,8,5,2,6]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Keep evens normal: values [3,8,5,2,6], read -, write 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept so far; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "read explores, write marks the next free spot"
+       }
+      ]
+     }
+    },
+    {
+     "event": "skip",
+     "lines": {
+      "cpp": [
+       31,
+       32
+      ],
+      "python": [
+       26,
+       27
+      ],
+      "java": [
+       31,
+       32
+      ],
+      "go": [
+       54,
+       55
+      ]
+     },
+     "explanation": "3 is odd. Skip it; write stays at 0, so the next even value will cover this spot.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "0"
+      },
+      {
+       "name": "write",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[3,8,5,2,6]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Keep evens normal: values [3,8,5,2,6], read 0, write 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "8",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept so far; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "read write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "read explores, write marks the next free spot"
+       }
+      ]
+     }
+    },
+    {
+     "event": "keep",
+     "lines": {
+      "cpp": [
+       28,
+       29
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       28,
+       29
+      ],
+      "go": [
+       51,
+       52
+      ]
+     },
+     "explanation": "8 is even, so keep it. Copy it back to index 0. write moves to 1.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "1"
+      },
+      {
+       "name": "write",
+       "value": "1"
+      },
+      {
+       "name": "values",
+       "value": "[8,8,5,2,6]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Keep evens normal: values [8,8,5,2,6], read 1, write 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "8",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "8",
+        "role": "active"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 1",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept so far; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "read write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "read explores, write marks the next free spot"
+       }
+      ]
+     }
+    },
+    {
+     "event": "skip",
+     "lines": {
+      "cpp": [
+       31,
+       32
+      ],
+      "python": [
+       26,
+       27
+      ],
+      "java": [
+       31,
+       32
+      ],
+      "go": [
+       54,
+       55
+      ]
+     },
+     "explanation": "5 is odd. Skip it; write stays at 1, so the next even value will cover this spot.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "2"
+      },
+      {
+       "name": "write",
+       "value": "1"
+      },
+      {
+       "name": "values",
+       "value": "[8,8,5,2,6]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Keep evens normal: values [8,8,5,2,6], read 2, write 1.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "8",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "8",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "active"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 1",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept so far; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "read"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "read explores, write marks the next free spot"
+       }
+      ]
+     }
+    },
+    {
+     "event": "keep",
+     "lines": {
+      "cpp": [
+       28,
+       29
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       28,
+       29
+      ],
+      "go": [
+       51,
+       52
+      ]
+     },
+     "explanation": "2 is even, so keep it. Copy it back to index 1. write moves to 2.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "3"
+      },
+      {
+       "name": "write",
+       "value": "2"
+      },
+      {
+       "name": "values",
+       "value": "[8,2,5,2,6]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Keep evens normal: values [8,2,5,2,6], read 3, write 2.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "8",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "5",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "active"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "neutral"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 2",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept so far; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "read"
+       },
+       {
+        "id": "pointer-2",
+        "x": 150,
+        "y": 116,
+        "text": "write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "read explores, write marks the next free spot"
+       }
+      ]
+     }
+    },
+    {
+     "event": "keep",
+     "lines": {
+      "cpp": [
+       28,
+       29
+      ],
+      "python": [
+       23,
+       24
+      ],
+      "java": [
+       28,
+       29
+      ],
+      "go": [
+       51,
+       52
+      ]
+     },
+     "explanation": "6 is even, so keep it. Copy it back to index 2. write moves to 3.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "4"
+      },
+      {
+       "name": "write",
+       "value": "3"
+      },
+      {
+       "name": "values",
+       "value": "[8,2,6,2,6]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Keep evens normal: values [8,2,6,2,6], read 4, write 3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "8",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "active"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 3",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept so far; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-4",
+        "x": 282,
+        "y": 116,
+        "text": "read"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "read explores, write marks the next free spot"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       36
+      ],
+      "python": [
+       29
+      ],
+      "java": [
+       36
+      ],
+      "go": [
+       59
+      ]
+     },
+     "explanation": "The first 3 cells hold the kept values, in their original order: [8,2,6]. Whatever is after them doesn't matter.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "-"
+      },
+      {
+       "name": "write",
+       "value": "3"
+      },
+      {
+       "name": "values",
+       "value": "[8,2,6,2,6]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Keep evens normal: values [8,2,6,2,6], read -, write 3.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "8",
+        "role": "result"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "result"
+       },
+       {
+        "id": "cell-2",
+        "shape": "rect",
+        "x": 148,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "result"
+       },
+       {
+        "id": "cell-3",
+        "shape": "rect",
+        "x": 214,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "2",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-4",
+        "shape": "rect",
+        "x": 280,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "6",
+        "role": "discarded"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 3",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept so far; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "cell-index-2",
+        "x": 173,
+        "y": 96,
+        "text": "2"
+       },
+       {
+        "id": "cell-index-3",
+        "x": 239,
+        "y": 96,
+        "text": "3"
+       },
+       {
+        "id": "cell-index-4",
+        "x": 305,
+        "y": 96,
+        "text": "4"
+       },
+       {
+        "id": "pointer-3",
+        "x": 216,
+        "y": 116,
+        "text": "write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "read explores, write marks the next free spot"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-none-kept",
+   "label": "No even values",
+   "input": "2\n1 3\n",
+   "expectedOutput": "[]",
+   "frames": [
+    {
+     "event": "start",
+     "lines": {
+      "cpp": [
+       24
+      ],
+      "python": [
+       19
+      ],
+      "java": [
+       24
+      ],
+      "go": [
+       47
+      ]
+     },
+     "explanation": "read visits every value; write marks where the next kept value goes. write never passes read, so writing can only overwrite a value that was already read.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "-"
+      },
+      {
+       "name": "write",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[1,3]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Keep evens edge-none-kept: values [1,3], read -, write 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "neutral"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept so far; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "read explores, write marks the next free spot"
+       }
+      ]
+     }
+    },
+    {
+     "event": "skip",
+     "lines": {
+      "cpp": [
+       31,
+       32
+      ],
+      "python": [
+       26,
+       27
+      ],
+      "java": [
+       31,
+       32
+      ],
+      "go": [
+       54,
+       55
+      ]
+     },
+     "explanation": "1 is odd. Skip it; write stays at 0, so the next even value will cover this spot.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "0"
+      },
+      {
+       "name": "write",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[1,3]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Keep evens edge-none-kept: values [1,3], read 0, write 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "active"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "neutral"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept so far; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "read write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "read explores, write marks the next free spot"
+       }
+      ]
+     }
+    },
+    {
+     "event": "skip",
+     "lines": {
+      "cpp": [
+       31,
+       32
+      ],
+      "python": [
+       26,
+       27
+      ],
+      "java": [
+       31,
+       32
+      ],
+      "go": [
+       54,
+       55
+      ]
+     },
+     "explanation": "3 is odd. Skip it; write stays at 0, so the next even value will cover this spot.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "1"
+      },
+      {
+       "name": "write",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[1,3]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Keep evens edge-none-kept: values [1,3], read 1, write 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "active"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept so far; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "pointer-1",
+        "x": 84,
+        "y": 116,
+        "text": "read"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "read explores, write marks the next free spot"
+       }
+      ]
+     }
+    },
+    {
+     "event": "done",
+     "lines": {
+      "cpp": [
+       36
+      ],
+      "python": [
+       29
+      ],
+      "java": [
+       36
+      ],
+      "go": [
+       59
+      ]
+     },
+     "explanation": "Nothing was even, so nothing is kept and the answer is empty.",
+     "variables": [
+      {
+       "name": "read",
+       "value": "-"
+      },
+      {
+       "name": "write",
+       "value": "0"
+      },
+      {
+       "name": "values",
+       "value": "[1,3]"
+      }
+     ],
+     "scene": {
+      "width": 520,
+      "height": 210,
+      "description": "Keep evens edge-none-kept: values [1,3], read -, write 0.",
+      "nodes": [
+       {
+        "id": "cell-0",
+        "shape": "rect",
+        "x": 16,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "1",
+        "role": "discarded"
+       },
+       {
+        "id": "cell-1",
+        "shape": "rect",
+        "x": 82,
+        "y": 36,
+        "width": 58,
+        "height": 42,
+        "text": "3",
+        "role": "discarded"
+       },
+       {
+        "id": "kept",
+        "shape": "rect",
+        "x": 16,
+        "y": 132,
+        "width": 150,
+        "height": 40,
+        "text": "kept: first 0",
+        "role": "result"
+       }
+      ],
+      "edges": [],
+      "labels": [
+       {
+        "id": "title",
+        "x": 16,
+        "y": 24,
+        "text": "green = kept so far; gray = free to overwrite"
+       },
+       {
+        "id": "cell-index-0",
+        "x": 41,
+        "y": 96,
+        "text": "0"
+       },
+       {
+        "id": "cell-index-1",
+        "x": 107,
+        "y": 96,
+        "text": "1"
+       },
+       {
+        "id": "pointer-0",
+        "x": 18,
+        "y": 116,
+        "text": "write"
+       },
+       {
+        "id": "footer",
+        "x": 16,
+        "y": 196,
+        "text": "read explores, write marks the next free spot"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}
