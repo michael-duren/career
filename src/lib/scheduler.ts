@@ -70,7 +70,7 @@ export type Mutation = { revision: string; week: string } & (
   { action: 'settings'; settings: Settings } |
   { action: 'rule'; id?: string; rule: z.infer<typeof ruleSchema>; effectiveFrom?: string } |
   { action: 'session'; id?: string; session: SchedulerSession } |
-  { action: 'cancel'; id: string } |
+  { action: 'cancel'; id: string; scope?: 'date' | 'future' } |
   { action: 'actual'; id?: string; session?: SchedulerSession; actual: z.infer<typeof actualSchema> }
 );
 export type SessionDraft = { id?: string; ruleId?: string; assignment: Assignment; date: string; startDate?: string; start: string; endDate: string; end: string; mode: 'plan' | 'actual'; repeat: boolean; scope: 'date' | 'future'; originalStart?: string; originalEnd?: string };

@@ -135,6 +135,10 @@ type Mutation struct {
 	Session       *Session  `json:"session,omitempty"`
 	Actual        *Actual   `json:"actual,omitempty"`
 	EffectiveFrom string    `json:"effectiveFrom,omitempty"`
+	// Scope applies to "cancel": "future" ends the occurrence's rule the day
+	// before it and removes later, not-yet-started occurrences of that rule.
+	// Anything else (including empty) cancels only this occurrence.
+	Scope string `json:"scope,omitempty"`
 }
 type Conflict struct {
 	Message string   `json:"error"`

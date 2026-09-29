@@ -13,6 +13,7 @@
     "gen-weeks": "node scripts/gen-weeks.js",
     "test": "node --test tests/goal-dependencies.test.ts tests/mini-goals.test.ts tests/workspace.test.ts tests/timeline.test.ts tests/scheduler.test.ts tests/search.test.ts tests/journals.test.ts tests/companies.test.ts tests/connections.test.ts tests/running.test.ts tests/tag-colors.test.ts extension/leetgrinder/test/lib.test.js",
     "test:mcp:deferred": "node --test tests/mcp.test.ts tests/mcp-oauth.test.ts tests/mcp-bridge.test.mjs",
+    "test:e2e": "playwright test",
     "mcp": "node scripts/career-mcp.mjs",
     "check:mcp-oauth": "node scripts/check-mcp-oauth.mjs"
   },
@@ -52,6 +53,7 @@
     "zod": "^4.6.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie": "^0.6.0",
     "@types/jsonwebtoken": "^9.0.10",
