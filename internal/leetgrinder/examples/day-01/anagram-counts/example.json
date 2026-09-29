@@ -1,0 +1,4916 @@
+{
+  "id": "day-01-anagram-counts",
+  "title": "Compare letter counts in a 26-slot array",
+  "invariant": "After adding all letters of the first string and removing a prefix of the second, counts[i] is the first string’s frequency of letter i minus that prefix’s frequency. A negative count proves the second string needs more of that letter than the first contains. If the strings have equal length and no bucket becomes negative, all buckets finish at zero.",
+  "variants": [
+    {
+      "language": "cpp",
+      "file": "main.cpp",
+      "algorithmStart": 35,
+      "algorithmEnd": 53
+    },
+    {
+      "language": "python",
+      "file": "main.py",
+      "algorithmStart": 21,
+      "algorithmEnd": 33
+    },
+    {
+      "language": "java",
+      "file": "Main.java",
+      "algorithmStart": 30,
+      "algorithmEnd": 48
+    },
+    {
+      "language": "go",
+      "file": "main.go.txt",
+      "algorithmStart": 36,
+      "algorithmEnd": 52
+    }
+  ],
+  "cases": [
+    {
+      "id": "normal",
+      "label": "Same letter counts: cacao / aacco",
+      "input": "cacao\naacco\n",
+      "expectedOutput": "true",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              35
+            ],
+            "python": [
+              21
+            ],
+            "java": [
+              30
+            ],
+            "go": [
+              36
+            ]
+          },
+          "explanation": "All 26 buckets begin at zero. A bucket will hold letters added from the first string minus letters removed by the second.",
+          "variables": [
+            {
+              "name": "first",
+              "value": "cacao"
+            },
+            {
+              "name": "second",
+              "value": "aacco"
+            },
+            {
+              "name": "counts",
+              "value": "{}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "The selected letter counts are zero before scanning.",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 0",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 0",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "add",
+          "lines": {
+            "cpp": [
+              39
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              34
+            ],
+            "go": [
+              39
+            ]
+          },
+          "explanation": "Add the first string’s c at index 0. Its bucket rises to 1.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "letter",
+              "value": "c"
+            },
+            {
+              "name": "counts",
+              "value": "{c:1}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "add: c changes its bucket to 1",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "active"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 0",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 1",
+                "role": "active"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word0-0",
+                "to": "bucket-c",
+                "label": "+1",
+                "directed": true,
+                "role": "active"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "add",
+          "lines": {
+            "cpp": [
+              39
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              34
+            ],
+            "go": [
+              39
+            ]
+          },
+          "explanation": "Add the first string’s a at index 1. Its bucket rises to 1.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "letter",
+              "value": "a"
+            },
+            {
+              "name": "counts",
+              "value": "{a:1,c:1}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "add: a changes its bucket to 1",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "active"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 1",
+                "role": "active"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 1",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word0-1",
+                "to": "bucket-a",
+                "label": "+1",
+                "directed": true,
+                "role": "active"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "add",
+          "lines": {
+            "cpp": [
+              39
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              34
+            ],
+            "go": [
+              39
+            ]
+          },
+          "explanation": "Add the first string’s c at index 2. Its bucket rises to 2.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "letter",
+              "value": "c"
+            },
+            {
+              "name": "counts",
+              "value": "{a:1,c:2}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "add: c changes its bucket to 2",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "active"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 1",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 2",
+                "role": "active"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word0-2",
+                "to": "bucket-c",
+                "label": "+1",
+                "directed": true,
+                "role": "active"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "add",
+          "lines": {
+            "cpp": [
+              39
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              34
+            ],
+            "go": [
+              39
+            ]
+          },
+          "explanation": "Add the first string’s a at index 3. Its bucket rises to 2.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "letter",
+              "value": "a"
+            },
+            {
+              "name": "counts",
+              "value": "{a:2,c:2}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "add: a changes its bucket to 2",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "active"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 2",
+                "role": "active"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 2",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word0-3",
+                "to": "bucket-a",
+                "label": "+1",
+                "directed": true,
+                "role": "active"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "add",
+          "lines": {
+            "cpp": [
+              39
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              34
+            ],
+            "go": [
+              39
+            ]
+          },
+          "explanation": "Add the first string’s o at index 4. Its bucket rises to 1.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "4"
+            },
+            {
+              "name": "letter",
+              "value": "o"
+            },
+            {
+              "name": "counts",
+              "value": "{a:2,c:2,o:1}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "add: o changes its bucket to 1",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "active"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 2",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 2",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 1",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word0-4",
+                "to": "bucket-o",
+                "label": "+1",
+                "directed": true,
+                "role": "active"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "remove",
+          "lines": {
+            "cpp": [
+              46
+            ],
+            "python": [
+              29
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              45
+            ]
+          },
+          "explanation": "Subtract the second string’s a at index 0. Its bucket becomes 1.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "letter",
+              "value": "a"
+            },
+            {
+              "name": "counts",
+              "value": "{a:1,c:2,o:1}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "remove: a changes its bucket to 1",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "visited"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "active"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 1",
+                "role": "active"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 2",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 1",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word1-0",
+                "to": "bucket-a",
+                "label": "-1",
+                "directed": true,
+                "role": "active"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "remove",
+          "lines": {
+            "cpp": [
+              46
+            ],
+            "python": [
+              29
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              45
+            ]
+          },
+          "explanation": "Subtract the second string’s a at index 1. Its bucket becomes 0.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "letter",
+              "value": "a"
+            },
+            {
+              "name": "counts",
+              "value": "{c:2,o:1}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "remove: a changes its bucket to 0",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "visited"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "active"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 0",
+                "role": "active"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 2",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 1",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word1-1",
+                "to": "bucket-a",
+                "label": "-1",
+                "directed": true,
+                "role": "active"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "remove",
+          "lines": {
+            "cpp": [
+              46
+            ],
+            "python": [
+              29
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              45
+            ]
+          },
+          "explanation": "Subtract the second string’s c at index 2. Its bucket becomes 1.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "letter",
+              "value": "c"
+            },
+            {
+              "name": "counts",
+              "value": "{c:1,o:1}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "remove: c changes its bucket to 1",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "visited"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "active"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 0",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 1",
+                "role": "active"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 1",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word1-2",
+                "to": "bucket-c",
+                "label": "-1",
+                "directed": true,
+                "role": "active"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "remove",
+          "lines": {
+            "cpp": [
+              46
+            ],
+            "python": [
+              29
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              45
+            ]
+          },
+          "explanation": "Subtract the second string’s c at index 3. Its bucket becomes 0.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "letter",
+              "value": "c"
+            },
+            {
+              "name": "counts",
+              "value": "{o:1}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "remove: c changes its bucket to 0",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "visited"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "active"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 0",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 0",
+                "role": "active"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 1",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word1-3",
+                "to": "bucket-c",
+                "label": "-1",
+                "directed": true,
+                "role": "active"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "remove",
+          "lines": {
+            "cpp": [
+              46
+            ],
+            "python": [
+              29
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              45
+            ]
+          },
+          "explanation": "Subtract the second string’s o at index 4. Its bucket becomes 0.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "4"
+            },
+            {
+              "name": "letter",
+              "value": "o"
+            },
+            {
+              "name": "counts",
+              "value": "{}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "remove: o changes its bucket to 0",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "visited"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "active"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 0",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 0",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 0",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word1-4",
+                "to": "bucket-o",
+                "label": "-1",
+                "directed": true,
+                "role": "active"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              53
+            ],
+            "python": [
+              33
+            ],
+            "java": [
+              48
+            ],
+            "go": [
+              52
+            ]
+          },
+          "explanation": "Every count is zero after both strings, so each letter occurs equally often.",
+          "variables": [
+            {
+              "name": "counts",
+              "value": "{}"
+            },
+            {
+              "name": "anagram",
+              "value": "true"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "Every bucket returns to zero, so the strings are anagrams.",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "visited"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 0",
+                "role": "result"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 0",
+                "role": "result"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 0",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "All counts are zero: anagram."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge",
+      "label": "Extra o: cacao / cocoa",
+      "input": "cacao\ncocoa\n",
+      "expectedOutput": "false",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              35
+            ],
+            "python": [
+              21
+            ],
+            "java": [
+              30
+            ],
+            "go": [
+              36
+            ]
+          },
+          "explanation": "All 26 buckets begin at zero. A bucket will hold letters added from the first string minus letters removed by the second.",
+          "variables": [
+            {
+              "name": "first",
+              "value": "cacao"
+            },
+            {
+              "name": "second",
+              "value": "cocoa"
+            },
+            {
+              "name": "counts",
+              "value": "{}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "The selected letter counts are zero before scanning.",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 0",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 0",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "add",
+          "lines": {
+            "cpp": [
+              39
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              34
+            ],
+            "go": [
+              39
+            ]
+          },
+          "explanation": "Add the first string’s c at index 0. Its bucket rises to 1.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "letter",
+              "value": "c"
+            },
+            {
+              "name": "counts",
+              "value": "{c:1}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "add: c changes its bucket to 1",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "active"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 0",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 1",
+                "role": "active"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word0-0",
+                "to": "bucket-c",
+                "label": "+1",
+                "directed": true,
+                "role": "active"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "add",
+          "lines": {
+            "cpp": [
+              39
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              34
+            ],
+            "go": [
+              39
+            ]
+          },
+          "explanation": "Add the first string’s a at index 1. Its bucket rises to 1.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "letter",
+              "value": "a"
+            },
+            {
+              "name": "counts",
+              "value": "{a:1,c:1}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "add: a changes its bucket to 1",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "active"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 1",
+                "role": "active"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 1",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word0-1",
+                "to": "bucket-a",
+                "label": "+1",
+                "directed": true,
+                "role": "active"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "add",
+          "lines": {
+            "cpp": [
+              39
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              34
+            ],
+            "go": [
+              39
+            ]
+          },
+          "explanation": "Add the first string’s c at index 2. Its bucket rises to 2.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "letter",
+              "value": "c"
+            },
+            {
+              "name": "counts",
+              "value": "{a:1,c:2}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "add: c changes its bucket to 2",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "active"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 1",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 2",
+                "role": "active"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word0-2",
+                "to": "bucket-c",
+                "label": "+1",
+                "directed": true,
+                "role": "active"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "add",
+          "lines": {
+            "cpp": [
+              39
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              34
+            ],
+            "go": [
+              39
+            ]
+          },
+          "explanation": "Add the first string’s a at index 3. Its bucket rises to 2.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "letter",
+              "value": "a"
+            },
+            {
+              "name": "counts",
+              "value": "{a:2,c:2}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "add: a changes its bucket to 2",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "active"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 2",
+                "role": "active"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 2",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word0-3",
+                "to": "bucket-a",
+                "label": "+1",
+                "directed": true,
+                "role": "active"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "add",
+          "lines": {
+            "cpp": [
+              39
+            ],
+            "python": [
+              24
+            ],
+            "java": [
+              34
+            ],
+            "go": [
+              39
+            ]
+          },
+          "explanation": "Add the first string’s o at index 4. Its bucket rises to 1.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "4"
+            },
+            {
+              "name": "letter",
+              "value": "o"
+            },
+            {
+              "name": "counts",
+              "value": "{a:2,c:2,o:1}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "add: o changes its bucket to 1",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "active"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 2",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 2",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 1",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word0-4",
+                "to": "bucket-o",
+                "label": "+1",
+                "directed": true,
+                "role": "active"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "remove",
+          "lines": {
+            "cpp": [
+              46
+            ],
+            "python": [
+              29
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              45
+            ]
+          },
+          "explanation": "Subtract the second string’s c at index 0. Its bucket becomes 1.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "0"
+            },
+            {
+              "name": "letter",
+              "value": "c"
+            },
+            {
+              "name": "counts",
+              "value": "{a:2,c:1,o:1}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "remove: c changes its bucket to 1",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "visited"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "active"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 2",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 1",
+                "role": "active"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 1",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word1-0",
+                "to": "bucket-c",
+                "label": "-1",
+                "directed": true,
+                "role": "active"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "remove",
+          "lines": {
+            "cpp": [
+              46
+            ],
+            "python": [
+              29
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              45
+            ]
+          },
+          "explanation": "Subtract the second string’s o at index 1. Its bucket becomes 0.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "1"
+            },
+            {
+              "name": "letter",
+              "value": "o"
+            },
+            {
+              "name": "counts",
+              "value": "{a:2,c:1}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "remove: o changes its bucket to 0",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "visited"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "active"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 2",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 1",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 0",
+                "role": "active"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word1-1",
+                "to": "bucket-o",
+                "label": "-1",
+                "directed": true,
+                "role": "active"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "remove",
+          "lines": {
+            "cpp": [
+              46
+            ],
+            "python": [
+              29
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              45
+            ]
+          },
+          "explanation": "Subtract the second string’s c at index 2. Its bucket becomes 0.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "2"
+            },
+            {
+              "name": "letter",
+              "value": "c"
+            },
+            {
+              "name": "counts",
+              "value": "{a:2}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "remove: c changes its bucket to 0",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "visited"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "visited"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "active"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 2",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 0",
+                "role": "active"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word1-2",
+                "to": "bucket-c",
+                "label": "-1",
+                "directed": true,
+                "role": "active"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "remove",
+          "lines": {
+            "cpp": [
+              46
+            ],
+            "python": [
+              29
+            ],
+            "java": [
+              41
+            ],
+            "go": [
+              45
+            ]
+          },
+          "explanation": "Subtract the second string’s o at index 3. Its bucket becomes -1. The first string had too few o’s, so no later letter can repair this mismatch.",
+          "variables": [
+            {
+              "name": "i",
+              "value": "3"
+            },
+            {
+              "name": "letter",
+              "value": "o"
+            },
+            {
+              "name": "counts",
+              "value": "{a:2,o:-1}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "remove: o changes its bucket to -1",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "visited"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "visited"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "active"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 2",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 0",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: -1",
+                "role": "discarded"
+              }
+            ],
+            "edges": [
+              {
+                "id": "change",
+                "from": "word1-3",
+                "to": "bucket-o",
+                "label": "-1",
+                "directed": true,
+                "role": "discarded"
+              }
+            ],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "A negative bucket proves a shortage."
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              53
+            ],
+            "python": [
+              33
+            ],
+            "java": [
+              48
+            ],
+            "go": [
+              52
+            ]
+          },
+          "explanation": "A negative o count proves the second string needs more o’s than the first supplied.",
+          "variables": [
+            {
+              "name": "counts",
+              "value": "{a:2,o:-1}"
+            },
+            {
+              "name": "anagram",
+              "value": "false"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "The second o makes its count negative, so the strings differ.",
+            "nodes": [
+              {
+                "id": "word0-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "visited"
+              },
+              {
+                "id": "word0-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "visited"
+              },
+              {
+                "id": "word0-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 42,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "visited"
+              },
+              {
+                "id": "word1-0",
+                "shape": "rect",
+                "x": 18,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-1",
+                "shape": "rect",
+                "x": 86,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-2",
+                "shape": "rect",
+                "x": 154,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "c",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-3",
+                "shape": "rect",
+                "x": 222,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "o",
+                "role": "neutral"
+              },
+              {
+                "id": "word1-4",
+                "shape": "rect",
+                "x": 290,
+                "y": 109,
+                "width": 56,
+                "height": 42,
+                "text": "a",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 2",
+                "role": "result"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 0",
+                "role": "result"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: -1",
+                "role": "discarded"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "A negative bucket proves a shortage."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "empty",
+      "label": "Both strings empty",
+      "input": "\n\n",
+      "expectedOutput": "true",
+      "frames": [
+        {
+          "event": "start",
+          "lines": {
+            "cpp": [
+              35
+            ],
+            "python": [
+              21
+            ],
+            "java": [
+              30
+            ],
+            "go": [
+              36
+            ]
+          },
+          "explanation": "All 26 buckets begin at zero. A bucket will hold letters added from the first string minus letters removed by the second.",
+          "variables": [
+            {
+              "name": "first",
+              "value": ""
+            },
+            {
+              "name": "second",
+              "value": ""
+            },
+            {
+              "name": "counts",
+              "value": "{}"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "The selected letter counts are zero before scanning.",
+            "nodes": [
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 0",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 0",
+                "role": "neutral"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 0",
+                "role": "neutral"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "Each bucket is first-string count minus second-string count."
+              }
+            ]
+          }
+        },
+        {
+          "event": "done",
+          "lines": {
+            "cpp": [
+              53
+            ],
+            "python": [
+              33
+            ],
+            "java": [
+              48
+            ],
+            "go": [
+              52
+            ]
+          },
+          "explanation": "Both strings are empty, so all 26 counts remain zero.",
+          "variables": [
+            {
+              "name": "counts",
+              "value": "{}"
+            },
+            {
+              "name": "anagram",
+              "value": "true"
+            }
+          ],
+          "scene": {
+            "width": 520,
+            "height": 281,
+            "description": "Every bucket returns to zero, so the strings are anagrams.",
+            "nodes": [
+              {
+                "id": "bucket-a",
+                "shape": "rect",
+                "x": 55,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "a: 0",
+                "role": "result"
+              },
+              {
+                "id": "bucket-c",
+                "shape": "rect",
+                "x": 187,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "c: 0",
+                "role": "result"
+              },
+              {
+                "id": "bucket-o",
+                "shape": "rect",
+                "x": 319,
+                "y": 191,
+                "width": 103,
+                "height": 43,
+                "text": "o: 0",
+                "role": "result"
+              }
+            ],
+            "edges": [],
+            "labels": [
+              {
+                "id": "first-label",
+                "x": 18,
+                "y": 29,
+                "text": "First string: add each letter"
+              },
+              {
+                "id": "second-label",
+                "x": 18,
+                "y": 96,
+                "text": "Second string: subtract each letter"
+              },
+              {
+                "id": "array-label",
+                "x": 18,
+                "y": 178,
+                "text": "Selected buckets of the 26-letter array (other 23 stay 0)"
+              },
+              {
+                "id": "status",
+                "x": 18,
+                "y": 263,
+                "text": "All counts are zero: anagram."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

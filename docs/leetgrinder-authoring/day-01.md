@@ -28,3 +28,9 @@ The scene shows songs in input order above frequency buckets. For the normal inp
 On 2026-09-29, `python3 scripts/leetgrinder/verify_examples.py --days 1` exited 0. The verifier ran all day 1 examples in C++, Python, Java, and Go, including both cases of this example, and compared each JSONL event, ordered variable list, and result against the authored frames. Go source is stored as `main.go.txt`; the verifier stages it as `main.go` to compile it.
 
 A visual reviewer should check that the edge-case bucket zero remains readable at a narrow viewport and that the arrow and count label communicate the selected bucket without relying on color alone.
+
+## Complete day 1 inventory
+
+The lesson now includes four original runnable examples: exhaustive pair search, one-pass complement lookup, remainder-frequency pair counting, and fixed-alphabet anagram counts. Each has C++, Python, Java, and Go programs with observed-state traces and normal and edge cases. The anagram example uses `cacao` versus `aacco` as the matching case; `cacao` versus `cocoa` has an extra `o` and fails. The empty-string case also returns true. Source articles were consulted only as research and no article text, code, or image is shipped.
+
+The pilot Go package tests and the example verifier passed after all four examples were linked. The Chromium browser sweep passed with all four linked examples at 360 pixels and no page-level horizontal overflow.

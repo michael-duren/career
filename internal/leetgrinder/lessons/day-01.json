@@ -99,10 +99,12 @@
       "heading": "Choose the right map",
       "paragraphs": [
         "A set answers whether a value exists. A value-to-index map tells you where an earlier value occurred. A value-to-count map tracks how many occurrences are available. Those are different summaries, even when all three use hashing.",
-        "For a fixed set of 60 remainders, a count array can replace a map. Before adding a song's remainder to the counts, ask how many earlier songs have the complementary remainder. Treat remainder zero carefully: its complement is zero. This order counts each pair once. For an anagram with a guaranteed 26-letter alphabet, a fixed count array can compare letter multiplicities without sorting. If the alphabet can include other characters, the representation must change."
+        "For a fixed set of 60 remainders, a count array can replace a map. Before adding a song's remainder to the counts, ask how many earlier songs have the complementary remainder. Treat remainder zero carefully: its complement is zero. This order counts each pair once. For an anagram with a guaranteed 26-letter alphabet, a fixed count array can compare letter multiplicities without sorting. If the alphabet can include other characters, the representation must change.",
+        "To compare two lowercase words, add counts for letters in the first and subtract counts for letters in the second. If any count is nonzero, the words are not anagrams. For example, cacao and aacco match. Cacao and cocoa leave an o deficit. This fixed-array method depends on a 26-letter input contract."
       ],
       "exampleIds": [
-        "day-01-remainder-frequency"
+        "day-01-remainder-frequency",
+        "day-01-anagram-counts"
       ]
     },
     {
