@@ -9,7 +9,7 @@ import (
 
 func TestPreviewRendersRealDayAndMixedDisclosure(t *testing.T) {
 	h := previewHandler()
-	for _, tc := range []struct{ path, want string }{{"/day/1", "Worked example: one-pass complement lookup"}, {"/day/84", "Review after your attempts"}} {
+	for _, tc := range []struct{ path, want string }{{"/day/1", "Baseline: check every pair"}, {"/day/84", "Review after your attempts"}} {
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, httptest.NewRequest("GET", tc.path, nil))
 		if w.Code != http.StatusOK || !strings.Contains(w.Body.String(), tc.want) {
