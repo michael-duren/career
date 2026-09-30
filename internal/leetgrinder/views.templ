@@ -113,8 +113,8 @@ templ Overview(page OverviewPage) {
 								<li>
 									<a href={ templ.SafeURL(ProblemURL(a.ProblemSlug)) }>{ page.Today.State.Problem(a.ProblemSlug).DisplayTitle() }</a>
 									<span class="small muted">{ OutcomeLabel(a.Outcome) } · { Count(a.Minutes) } min</span>
-									if a.IsReview {
-										<span class="small muted">· Review</span>
+									if kind := page.Today.KindOf(a); kind != KindNew {
+										<span class="small muted">· { KindLabel(kind) }</span>
 									}
 									if page.Today.State.StatedWrong(a.ID) {
 										@complexityBadge()
@@ -164,7 +164,7 @@ templ goalCard(today Today) {
 			</h2>
 			<ul class="goal-progress">
 				<li class={ templ.KV("done", today.Progress.NewLeft() == 0) }><strong>{ Count(today.Progress.New()) }/{ Count(today.Goal.New) }</strong> new</li>
-				<li class={ templ.KV("done", today.Progress.ReviewsLeft() == 0) }><strong>{ Count(today.Progress.Reviews()) }/{ Count(today.Goal.Review) }</strong> review</li>
+				<li class={ templ.KV("done", today.Progress.ReviewsLeft() == 0) }><strong>{ Count(today.Progress.Reviews()) }/{ Count(today.Progress.ReviewTarget()) }</strong> review</li>
 				<li><strong>{ Count(today.Progress.Bonus()) }</strong> bonus</li>
 			</ul>
 		</div>
@@ -447,7 +447,7 @@ templ Reviews(page ReviewsPage) {
 			<div><strong>{ Count(len(page.Today.Reviews)) }</strong><p>Picked today</p></div>
 			<div><strong>{ Count(page.Today.Backlog()) }</strong><p>Backlog</p></div>
 			<div><strong>{ Count(len(page.Today.Cards)) }</strong><p>Problems tracked</p></div>
-			<div><strong>{ Count(page.Today.Progress.Reviews()) }/{ Count(page.Today.Goal.Review) }</strong><p>Reviews toward today's goal</p></div>
+			<div><strong>{ Count(page.Today.Progress.Reviews()) }/{ Count(page.Today.Progress.ReviewTarget()) }</strong><p>Reviews toward today's goal</p></div>
 		</section>
 		@todaysReviews(page.Today, page.IDs, "reviews")
 		<section class="queue" aria-labelledby="queue-title">

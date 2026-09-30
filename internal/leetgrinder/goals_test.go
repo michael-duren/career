@@ -31,8 +31,9 @@ func TestClassifyNewReviewPractice(t *testing.T) {
 	if !reflect.DeepEqual(day2.Kinds, map[string]string{"binary-search": KindReview, "valid-anagram": KindPractice}) {
 		t.Fatalf("day 2: %v", day2.Kinds)
 	}
-	// Day 1 has no frozen goal, so the default 2 + 1 applies: 3 new but no review.
-	if day1.Goal != DefaultGoal || day1.New() != 3 || day1.Met() || day1.Bonus() != 1 || day1.Remaining() != 1 {
+	// Day 1 has no frozen goal, so the default 2 + 1 applies. Nothing was due,
+	// so 3 new problems meet it.
+	if day1.Goal != DefaultGoal || day1.New() != 3 || !day1.Met() || day1.Bonus() != 1 || day1.Remaining() != 0 {
 		t.Fatalf("day 1 progress: new %d met %v bonus %d", day1.New(), day1.Met(), day1.Bonus())
 	}
 	// In UTC the 23:30 and 00:30 attempts fall on the same day.
@@ -173,6 +174,7 @@ func TestTodayKindsAndRemaining(t *testing.T) {
 		attempt("two-sum", "solved", 10, false, now.Add(-time.Hour)),
 		attempt("binary-search", "unfinished", 25, false, now.Add(-2*time.Hour)),
 		attempt("binary-search", "unfinished", 25, false, now.AddDate(0, 0, -5)),
+		attempt("ransom-note", "unfinished", 25, false, now.AddDate(0, 0, -5)),
 	}, Plans: map[time.Time][]string{Date(now, loc): {"binary-search", "ransom-note"}}, Goals: map[time.Time]DailyGoal{Date(now, loc): {New: 2, Review: 2}}}
 	today := NewToday(settings, state, now)
 	if today.Kind("two-sum") != KindNew || today.Kind("binary-search") != KindReview || today.Kind("valid-anagram") != "" {
@@ -183,5 +185,38 @@ func TestTodayKindsAndRemaining(t *testing.T) {
 	}
 	if !today.Picked("ransom-note") || today.Picked("two-sum") || len(today.MissingReviews()) != 1 {
 		t.Fatal("picks")
+	}
+}
+
+func TestGoalWithNothingDue(t *testing.T) {
+	loc := time.UTC
+	now := time.Date(2026, 10, 10, 18, 0, 0, 0, loc)
+	settings := DefaultSettings()
+	settings.Timezone = "UTC"
+	// Two new problems; the only earlier problem was solved easily yesterday
+	// and is not due, so a re-solve of it is practice.
+	state := State{Problems: testProblems, Attempts: []Attempt{
+		attempt("two-sum", "solved", 10, false, now.Add(-time.Hour)),
+		attempt("ransom-note", "solved", 10, false, now.Add(-2*time.Hour)),
+		attempt("valid-anagram", "solved", 5, false, now.Add(-3*time.Hour)),
+		attempt("valid-anagram", "solved", 5, false, now.AddDate(0, 0, -1)),
+	}}
+	today := NewToday(settings, state, now)
+	p := today.Progress
+	if p.Available != 0 || p.ReviewTarget() != 0 || !p.Met() || p.Remaining() != 0 || p.Bonus() != 1 || today.Kind("valid-anagram") != KindPractice {
+		t.Fatalf("nothing-due day: available %d met %v remaining %d bonus %d", p.Available, p.Met(), p.Remaining(), p.Bonus())
+	}
+	if today.Streaks.Current != 1 {
+		t.Fatalf("streak %d", today.Streaks.Current)
+	}
+	// With one card due, the target is 1 again until it is reviewed.
+	state.Attempts = append(state.Attempts, attempt("binary-search", "unfinished", 25, false, now.AddDate(0, 0, -10)))
+	p = NewToday(settings, state, now).Progress
+	if p.Available != 1 || p.ReviewTarget() != 1 || p.Met() || p.ReviewsLeft() != 1 {
+		t.Fatalf("one due: available %d met %v", p.Available, p.Met())
+	}
+	// Recent attempts label a re-solve by its kind.
+	if k := NewToday(settings, state, now).KindOf(state.Attempts[2]); k != KindPractice {
+		t.Fatalf("KindOf %s", k)
 	}
 }

@@ -113,7 +113,7 @@ func (s *Store) LeetgrinderToday(ctx context.Context, now time.Time) (leetgrinde
 	if _, err = tx.ExecContext(ctx, "INSERT INTO leetgrinder_daily_goal(local_date,goal_new,goal_review) VALUES($1,$2,$3) ON CONFLICT (local_date) DO NOTHING", day, settings.Goal.New, settings.Goal.Review); err != nil {
 		return leetgrinder.Today{}, err
 	}
-	state, err := loadLeetgrinderState(ctx, tx)
+	state, err := loadLeetgrinderState(ctx, tx, false)
 	if err != nil {
 		return leetgrinder.Today{}, err
 	}

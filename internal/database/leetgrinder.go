@@ -26,16 +26,22 @@ func (s *Store) LeetgrinderState(ctx context.Context) (leetgrinder.State, error)
 		return leetgrinder.State{Attempts: []leetgrinder.Attempt{}}, err
 	}
 	defer tx.Rollback()
-	state, err := loadLeetgrinderState(ctx, tx)
+	state, err := loadLeetgrinderState(ctx, tx, true)
 	if err != nil {
 		return state, err
 	}
 	return state, tx.Commit()
 }
 
-func loadLeetgrinderState(ctx context.Context, tx queryer) (leetgrinder.State, error) {
+// loadLeetgrinderState reads everything; withCode false leaves captured code
+// out, for paths that only count and schedule attempts.
+func loadLeetgrinderState(ctx context.Context, tx queryer, withCode bool) (leetgrinder.State, error) {
 	state := leetgrinder.State{Attempts: []leetgrinder.Attempt{}}
-	rows, err := tx.QueryContext(ctx, "SELECT "+leetgrinderAttemptColumns+" FROM leetgrinder_attempts ORDER BY created_at DESC,id")
+	columns := leetgrinderAttemptColumns
+	if !withCode {
+		columns = strings.Replace(columns, ",code,", ",''::text,", 1)
+	}
+	rows, err := tx.QueryContext(ctx, "SELECT "+columns+" FROM leetgrinder_attempts ORDER BY created_at DESC,id")
 	if err != nil {
 		return state, err
 	}

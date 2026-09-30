@@ -274,6 +274,10 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 		reject(400, "Write complexity in big-O notation, such as O(m·n): start with O( and end with ), in 40 characters or fewer.")
 		return
 	}
+	if form.Revision == "" {
+		// Freeze today's goal and picks first, as the extension API does.
+		_, _ = s.db.LeetgrinderToday(r.Context(), s.clock())
+	}
 	_, err = s.db.SaveLeetgrinderAttempt(r.Context(), attempt, form.Revision)
 	if err != nil {
 		switch {

@@ -35,11 +35,8 @@ func NewToday(settings Settings, state State, now time.Time) Today {
 	t := Today{Settings: settings, State: state, Now: now, Date: Date(now, loc)}
 	t.Goal = state.GoalFor(t.Date)
 	t.Cards = BuildCards(state, loc)
-	t.history = History(state, loc)
-	t.Progress = DayProgress{Date: t.Date, Goal: t.Goal, Kinds: map[string]string{}}
-	if d, ok := t.history[t.Date]; ok {
-		t.Progress = *d
-	}
+	t.history = History(state, loc, t.Date)
+	t.Progress = *t.history[t.Date]
 	t.Streaks = ComputeStreaks(t.history, t.Progress)
 	// Reasons describe each card as it stood before today, so they stay
 	// stable after today's review is logged.
@@ -68,6 +65,14 @@ func NewToday(settings Settings, state State, now time.Time) Today {
 func (t Today) AttemptedOn(slug string) bool {
 	_, ok := t.Progress.Kinds[slug]
 	return ok
+}
+
+// KindOf is how an attempt's local day counts its problem.
+func (t Today) KindOf(a Attempt) string {
+	if d, ok := t.history[Date(a.CreatedAt, t.Settings.Location())]; ok {
+		return d.Kinds[a.ProblemSlug]
+	}
+	return ""
 }
 
 // Kind is how today counts the attempts on slug, or "" when there are none.

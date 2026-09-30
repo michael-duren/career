@@ -44,6 +44,9 @@ type DayProgress struct {
 	Goal DailyGoal
 	// Kinds maps each problem attempted that day to its kind.
 	Kinds map[string]string
+	// Available counts the reviews that could count toward the goal that
+	// day; see ReviewTarget.
+	Available int
 }
 
 func (d DayProgress) count(kind string) int {
@@ -60,12 +63,17 @@ func (d DayProgress) New() int      { return d.count(KindNew) }
 func (d DayProgress) Reviews() int  { return d.count(KindReview) }
 func (d DayProgress) Practice() int { return d.count(KindPractice) }
 
+// ReviewTarget is the day's review target, capped at the reviews that
+// could count that day: problems due or flagged by the end of the day, plus
+// any other pick reviewed. A day with nothing due is met by new problems.
+func (d DayProgress) ReviewTarget() int { return min(d.Goal.Review, d.Available) }
+
 // Met reports whether the day reached both targets.
-func (d DayProgress) Met() bool { return d.New() >= d.Goal.New && d.Reviews() >= d.Goal.Review }
+func (d DayProgress) Met() bool { return d.New() >= d.Goal.New && d.Reviews() >= d.ReviewTarget() }
 
 // NewLeft and ReviewsLeft are what the goal still needs.
 func (d DayProgress) NewLeft() int     { return max(0, d.Goal.New-d.New()) }
-func (d DayProgress) ReviewsLeft() int { return max(0, d.Goal.Review-d.Reviews()) }
+func (d DayProgress) ReviewsLeft() int { return max(0, d.ReviewTarget()-d.Reviews()) }
 
 // Remaining is the work left to meet the goal.
 func (d DayProgress) Remaining() int { return d.NewLeft() + d.ReviewsLeft() }
@@ -73,38 +81,88 @@ func (d DayProgress) Remaining() int { return d.NewLeft() + d.ReviewsLeft() }
 // Bonus counts work beyond the goal: extra new problems, extra reviews,
 // and practice.
 func (d DayProgress) Bonus() int {
-	return max(0, d.New()-d.Goal.New) + max(0, d.Reviews()-d.Goal.Review) + d.Practice()
+	return max(0, d.New()-d.Goal.New) + max(0, d.Reviews()-d.ReviewTarget()) + d.Practice()
 }
 
 // History classifies every attempt by local day in loc, using the frozen
 // goals and review plans in state. The result has an entry for every day
-// with an attempt.
-func History(state State, loc *time.Location) map[time.Time]*DayProgress {
+// with an attempt and for each of extra.
+func History(state State, loc *time.Location, extra ...time.Time) map[time.Time]*DayProgress {
 	days := map[time.Time]*DayProgress{}
-	for slug, list := range attemptsBySlug(state.Attempts) {
+	day := func(date time.Time) *DayProgress {
+		d := days[date]
+		if d == nil {
+			d = &DayProgress{Date: date, Goal: state.GoalFor(date), Kinds: map[string]string{}}
+			days[date] = d
+		}
+		return d
+	}
+	for _, date := range extra {
+		day(date)
+	}
+	type snapshot struct {
+		date  time.Time
+		after Card
+	}
+	bySlug := attemptsBySlug(state.Attempts)
+	history := map[string][]snapshot{}
+	for slug, list := range bySlug {
 		problem := state.Problem(slug)
-		replaySlug(problem, list, loc, func(date time.Time, before Card) {
-			day := days[date]
-			if day == nil {
-				day = &DayProgress{Date: date, Goal: state.GoalFor(date), Kinds: map[string]string{}}
-				days[date] = day
-			}
-			day.Kinds[slug] = classify(state, slug, problem, date, before, loc)
+		var dates []time.Time
+		var befores []Card
+		final := replaySlug(problem, list, loc, func(date time.Time, before Card) {
+			day(date).Kinds[slug] = classify(state, slug, problem, date, before, loc)
+			dates, befores = append(dates, date), append(befores, before)
 		})
+		for i, date := range dates {
+			after := final
+			if i+1 < len(befores) {
+				after = befores[i+1]
+			}
+			history[slug] = append(history[slug], snapshot{date, after})
+		}
+	}
+	// Available counts problems due or flagged by the end of each day, as
+	// they stood before it, plus reviews counted through a pick.
+	for date, d := range days {
+		count := 0
+		for slug, snaps := range history {
+			if d.Kinds[slug] == KindReview {
+				count++
+				continue
+			}
+			i := sort.Search(len(snaps), func(i int) bool { return !snaps[i].date.Before(date) })
+			if i > 0 && dueBy(snaps[i-1].after, state, date, loc) {
+				count++
+			}
+		}
+		d.Available = count
 	}
 	return days
 }
 
+// dueBy reports whether a card as it stood before date is due or flagged by
+// the end of date.
+func dueBy(before Card, state State, date time.Time, loc *time.Location) bool {
+	if before.Reviews == 0 {
+		return false
+	}
+	if before.FSRSDue.Before(EndOfDate(date, loc)) {
+		return true
+	}
+	f := flagFor(before.Last, before.Problem, state.Analyses, loc)
+	return f != nil && f.Date.Before(date)
+}
+
 // classify decides the kind of a problem's attempts on date, given its card
 // as it stood before that day.
+// A flag counts only when its analysis finished before date; a later
+// re-analysis moves that date, so a past day can change with it.
 func classify(state State, slug string, problem Problem, date time.Time, before Card, loc *time.Location) string {
 	if before.Reviews == 0 {
 		return KindNew
 	}
-	if before.FSRSDue.Before(EndOfDate(date, loc)) {
-		return KindReview
-	}
-	if f := flagFor(before.Last, problem, state.Analyses, loc); f != nil && f.Date.Before(date) {
+	if dueBy(before, state, date, loc) {
 		return KindReview
 	}
 	for _, pick := range state.Plans[date] {
