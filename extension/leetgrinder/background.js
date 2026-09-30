@@ -84,8 +84,9 @@ ext.storage.onChanged.addListener((changes, area) => {
 });
 ext.permissions.onAdded.addListener(() => refreshBadge());
 ext.permissions.onRemoved.addListener(() => refreshBadge());
-// Every worker start (browser startup, install, or waking for an event)
-// refreshes once.
+// Chrome starts the worker at browser launch only for an onStartup
+// listener; the top-level refresh below then runs once per worker start.
+ext.runtime.onStartup.addListener(() => {});
 refreshBadge();
 
 // Timers live in storage.session so page reloads keep them but a browser
