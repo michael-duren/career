@@ -35,13 +35,36 @@ func ReviewRating(a Attempt) fsrs.Rating {
 // by replaying attempts, never stored, so corrections flow through.
 type Card struct {
 	Problem Problem
-	// Last is the attempt that counted most recently.
+	// Last is the attempt that counted most recently: the newest attempt.
 	Last    Attempt
 	Reviews int
-	Due     time.Time
-	fsrs    fsrs.Card
-	loc     *time.Location
+	// Due is the effective due time: the FSRS due time, or the flag's due
+	// time when that is earlier.
+	Due time.Time
+	// FSRSDue is when FSRS alone schedules the next review.
+	FSRSDue time.Time
+	// Flag is set when the analysis of Last found a mistake.
+	Flag *Flag
+	fsrs fsrs.Card
+	loc  *time.Location
 }
+
+// Flag marks a problem whose latest attempt's analysis judged a stated
+// complexity wrong or the solution not optimal. It makes the problem due the
+// day after the analysis finished, and clears with the next attempt or a
+// re-analysis without those verdicts.
+type Flag struct {
+	// Date is the local date the analysis finished.
+	Date                  time.Time
+	TimeWrong, SpaceWrong bool
+	NotOptimal            bool
+	// Actual and optimal complexities, for the not-optimal reason.
+	ActualTime, ActualSpace   string
+	OptimalTime, OptimalSpace string
+}
+
+// Flagged reports whether the card carries a complexity flag.
+func (c Card) Flagged() bool { return c.Flag != nil }
 
 // go-fsrs counts elapsed days between UTC calendar dates. Feeding it local
 // wall-clock times labelled as UTC makes those days the learner's local days.
@@ -67,42 +90,127 @@ func (c Card) Retrievability(t time.Time) float64 {
 	return r
 }
 
-// BuildCards replays attempts through FSRS, one card per attempted problem,
-// taking each card's problem from problems. Only the last attempt on each
-// local day counts. Cards come back ordered by due time.
-func BuildCards(attempts []Attempt, problems map[string]Problem, loc *time.Location) []Card {
+// flagFor derives the flag of an attempt from its analysis, or nil.
+func flagFor(a Attempt, problem Problem, analyses map[string]Analysis, loc *time.Location) *Flag {
+	an, ok := analyses[a.ID]
+	if !ok || !an.Done() {
+		return nil
+	}
+	f := &Flag{Date: Date(an.UpdatedAt, loc), TimeWrong: isFalse(an.TimeMatches), SpaceWrong: isFalse(an.SpaceMatches), NotOptimal: isFalse(an.Optimal),
+		ActualTime: an.ActualTime, ActualSpace: an.ActualSpace, OptimalTime: problem.OptimalTime, OptimalSpace: problem.OptimalSpace}
+	if !f.TimeWrong && !f.SpaceWrong && !f.NotOptimal {
+		return nil
+	}
+	return f
+}
+
+// DueAt is the start of the local day after the analysis.
+func (f Flag) DueAt(loc *time.Location) time.Time {
+	return time.Date(f.Date.Year(), f.Date.Month(), f.Date.Day()+1, 0, 0, 0, 0, loc)
+}
+
+// Reason explains the flag, e.g. "Time complexity judged wrong 2 days ago"
+// or "Not optimal: O(n²) vs O(n)".
+func (f Flag) Reason(now time.Time, loc *time.Location) string {
+	when := daysAgo(f.Date, Date(now, loc))
+	switch {
+	case f.TimeWrong && f.SpaceWrong:
+		return "Time and space complexity judged wrong " + when
+	case f.TimeWrong:
+		return "Time complexity judged wrong " + when
+	case f.SpaceWrong:
+		return "Space complexity judged wrong " + when
+	case f.OptimalTime != "" && f.ActualTime != "" && f.ActualTime != f.OptimalTime:
+		return fmt.Sprintf("Not optimal: %s vs %s", f.ActualTime, f.OptimalTime)
+	case f.OptimalSpace != "" && f.ActualSpace != "" && f.ActualSpace != f.OptimalSpace:
+		return fmt.Sprintf("Not optimal: space %s vs %s", f.ActualSpace, f.OptimalSpace)
+	}
+	return "Not optimal"
+}
+
+// Label is a short form for badges, e.g. "Flagged: time complexity judged wrong".
+func (f Flag) Label() string {
+	switch {
+	case f.TimeWrong && f.SpaceWrong:
+		return "Flagged: time and space complexity judged wrong"
+	case f.TimeWrong:
+		return "Flagged: time complexity judged wrong"
+	case f.SpaceWrong:
+		return "Flagged: space complexity judged wrong"
+	}
+	return "Flagged: not optimal"
+}
+
+func daysAgo(from, to time.Time) string {
+	switch days := DaysBetween(from, to); days {
+	case 0:
+		return "today"
+	case 1:
+		return "yesterday"
+	default:
+		return fmt.Sprintf("%d days ago", days)
+	}
+}
+
+// replaySlug replays one problem's attempts, sorted oldest first, through
+// FSRS. Only the last attempt on each local day counts. visit, when set,
+// sees each local day with the card as it stood before that day.
+func replaySlug(problem Problem, list []Attempt, loc *time.Location, visit func(date time.Time, before Card)) Card {
+	card := Card{Problem: problem, loc: loc}
+	for i, a := range list {
+		date := Date(a.CreatedAt, loc)
+		if i+1 < len(list) && Date(list[i+1].CreatedAt, loc).Equal(date) {
+			continue
+		}
+		if visit != nil {
+			visit(date, card)
+		}
+		state := card.fsrs
+		if card.Reviews == 0 {
+			state = fsrs.NewCard(wallClock(a.CreatedAt, loc))
+		}
+		info, err := scheduler.Next(state, wallClock(a.CreatedAt, loc), ReviewRating(a))
+		if err != nil {
+			continue
+		}
+		card.fsrs, card.Last = info.Card, a
+		card.FSRSDue = fromWallClock(info.Card.Due, loc)
+		card.Due = card.FSRSDue
+		card.Reviews++
+	}
+	return card
+}
+
+// attemptsBySlug groups attempts by problem, each list oldest first.
+func attemptsBySlug(attempts []Attempt) map[string][]Attempt {
 	bySlug := map[string][]Attempt{}
 	for _, a := range attempts {
 		bySlug[a.ProblemSlug] = append(bySlug[a.ProblemSlug], a)
 	}
-	cards := make([]Card, 0, len(bySlug))
-	for slug, list := range bySlug {
+	for _, list := range bySlug {
 		slices.SortFunc(list, func(a, b Attempt) int {
 			return cmp.Or(a.CreatedAt.Compare(b.CreatedAt), cmp.Compare(a.ID, b.ID))
 		})
-		problem, ok := problems[slug]
-		if !ok {
-			problem = Problem{Slug: slug}
+	}
+	return bySlug
+}
+
+// BuildCards replays state's attempts through FSRS, one card per attempted
+// problem, and applies complexity flags. Cards come back ordered by due time.
+func BuildCards(state State, loc *time.Location) []Card {
+	cards := make([]Card, 0)
+	for slug, list := range attemptsBySlug(state.Attempts) {
+		card := replaySlug(state.Problem(slug), list, loc, nil)
+		if card.Reviews == 0 {
+			continue
 		}
-		card := Card{Problem: problem, loc: loc}
-		for i, a := range list {
-			if i+1 < len(list) && Date(list[i+1].CreatedAt, loc).Equal(Date(a.CreatedAt, loc)) {
-				continue
+		if f := flagFor(card.Last, card.Problem, state.Analyses, loc); f != nil {
+			card.Flag = f
+			if due := f.DueAt(loc); due.Before(card.Due) {
+				card.Due = due
 			}
-			state := card.fsrs
-			if card.Reviews == 0 {
-				state = fsrs.NewCard(wallClock(a.CreatedAt, loc))
-			}
-			info, err := scheduler.Next(state, wallClock(a.CreatedAt, loc), ReviewRating(a))
-			if err != nil {
-				continue
-			}
-			card.fsrs, card.Last, card.Due = info.Card, a, fromWallClock(info.Card.Due, loc)
-			card.Reviews++
 		}
-		if card.Reviews > 0 {
-			cards = append(cards, card)
-		}
+		cards = append(cards, card)
 	}
 	slices.SortFunc(cards, func(a, b Card) int {
 		return cmp.Or(a.Due.Compare(b.Due), cmp.Compare(a.Problem.Slug, b.Problem.Slug))
@@ -110,12 +218,8 @@ func BuildCards(attempts []Attempt, problems map[string]Problem, loc *time.Locat
 	return cards
 }
 
-// ReviewSlots is how many reviews a day gets: one, plus the extra slots
-// from daily time.
-func ReviewSlots(hours float64) int { return 1 + ExtraReviewSlots(hours) }
-
-// DueCards lists cards due by the end of date, lowest estimated recall
-// first, then the most overdue. Cards in skip are left out.
+// DueCards lists cards due by the end of date, flagged first, then lowest
+// estimated recall, then the most overdue. Cards in skip are left out.
 func DueCards(cards []Card, date time.Time, loc *time.Location, skip map[string]bool) []Card {
 	end := EndOfDate(date, loc)
 	type candidate struct {
@@ -128,8 +232,14 @@ func DueCards(cards []Card, date time.Time, loc *time.Location, skip map[string]
 			candidates = append(candidates, candidate{c, c.Retrievability(end)})
 		}
 	}
+	flagRank := func(c Card) int {
+		if c.Flagged() {
+			return 0
+		}
+		return 1
+	}
 	slices.SortFunc(candidates, func(a, b candidate) int {
-		return cmp.Or(cmp.Compare(a.r, b.r), a.card.Due.Compare(b.card.Due), cmp.Compare(a.card.Problem.Slug, b.card.Problem.Slug))
+		return cmp.Or(cmp.Compare(flagRank(a.card), flagRank(b.card)), cmp.Compare(a.r, b.r), a.card.Due.Compare(b.card.Due), cmp.Compare(a.card.Problem.Slug, b.card.Problem.Slug))
 	})
 	out := make([]Card, 0, len(candidates))
 	for _, c := range candidates {
@@ -169,21 +279,15 @@ func (c Card) firstAttemptOn(date time.Time) bool {
 	return c.Reviews == 1 && Date(c.Last.CreatedAt, c.loc).Equal(date)
 }
 
-// ReviewReason explains a pick in plain text, e.g.
-// "Struggled 9 days ago · recall estimate 62%".
+// ReviewReason explains a card in plain text: its flag, or its last counted
+// attempt and recall, e.g. "Struggled 9 days ago · recall estimate 62%".
 func ReviewReason(c Card, now time.Time, loc *time.Location) string {
+	if c.Flag != nil {
+		return c.Flag.Reason(now, loc)
+	}
 	label := OutcomeLabel(c.Last.Outcome)
 	if c.Last.Outcome == "solved" && c.Last.Assisted {
 		label = "Solved with help"
 	}
-	var when string
-	switch days := DaysBetween(Date(c.Last.CreatedAt, loc), Date(now, loc)); days {
-	case 0:
-		when = "today"
-	case 1:
-		when = "yesterday"
-	default:
-		when = fmt.Sprintf("%d days ago", days)
-	}
-	return fmt.Sprintf("%s %s · recall estimate %d%%", label, when, int(c.Retrievability(now)*100+0.5))
+	return fmt.Sprintf("%s %s · recall estimate %d%%", label, daysAgo(Date(c.Last.CreatedAt, loc), Date(now, loc)), int(c.Retrievability(now)*100+0.5))
 }

@@ -176,7 +176,8 @@ func TestLeetgrinderExtensionAPI(t *testing.T) {
 		t.Fatalf("review save: %d %s", w.Code, w.Body.String())
 	}
 	state, _ = db.LeetgrinderState(ctx)
-	if len(state.Attempts) != 2 || !state.Attempts[0].IsReview || state.Attempts[0].Source != "extension" || !state.Attempts[0].Assisted {
+	// The client's isReview is ignored: a first attempt is never a review.
+	if len(state.Attempts) != 2 || state.Attempts[0].IsReview || state.Attempts[0].Source != "extension" || !state.Attempts[0].Assisted {
 		t.Fatalf("review flag: %+v", state.Attempts)
 	}
 	// An attempt on any problem is saved, with its metadata.

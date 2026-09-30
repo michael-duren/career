@@ -29,6 +29,7 @@ type ProblemRow struct {
 // Status filter keys, in the order the filter lists them.
 var problemStatuses = []struct{ Key, Label string }{
 	{"due", "Due for review"},
+	{"flagged", "Flagged"},
 	{"solved", "Solved"},
 	{"struggled", "Struggled"},
 	{"unfinished", "Unfinished"},
@@ -113,6 +114,8 @@ func (f ProblemFilter) match(r ProblemRow) bool {
 	switch f.Status {
 	case "due":
 		return r.Due
+	case "flagged":
+		return r.Card.Flagged()
 	case "solved":
 		return strings.HasPrefix(r.Status, "Solved")
 	case "struggled":

@@ -2,6 +2,7 @@ package notify
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -133,11 +134,25 @@ func TestSendTimeoutAndRedirects(t *testing.T) {
 func TestCompose(t *testing.T) {
 	loc, _ := time.LoadLocation("America/Chicago")
 	now := time.Date(2026, 9, 10, 17, 0, 0, 0, loc)
+	date := leetgrinder.Date(now, loc)
 	settings := leetgrinder.DefaultSettings()
-	two := leetgrinder.Problem{Slug: "two-sum", Number: 1, Title: "Two Sum"}
-	bare := leetgrinder.Problem{Slug: "some-problem"}
-	today := leetgrinder.NewToday(settings, leetgrinder.State{}, nil, now)
-	today.Reviews = []leetgrinder.ReviewItem{{Slot: 1, Problem: two}, {Slot: 2, Problem: bare}}
+	at := func(daysAgo int) time.Time { return now.AddDate(0, 0, -daysAgo) }
+	a := func(slug, outcome string, when time.Time) leetgrinder.Attempt {
+		return leetgrinder.Attempt{ID: slug + when.String(), ProblemSlug: slug, Outcome: outcome, Minutes: 20, CreatedAt: when}
+	}
+	problems := map[string]leetgrinder.Problem{"two-sum": {Slug: "two-sum", Title: "Two Sum"}}
+	// Goal 1 new + 2 reviews was met yesterday and the day before; today two
+	// picks are open and one more card is due.
+	goals := map[time.Time]leetgrinder.DailyGoal{}
+	var attempts []leetgrinder.Attempt
+	for d := 1; d <= 2; d++ {
+		goals[date.AddDate(0, 0, -d)] = leetgrinder.DailyGoal{New: 1}
+		attempts = append(attempts, a(fmt.Sprintf("warmup-%d", d), "solved", at(d)))
+	}
+	goals[date] = leetgrinder.DailyGoal{New: 1, Review: 2}
+	attempts = append(attempts, a("two-sum", "unfinished", at(20)), a("some-problem", "unfinished", at(20)), a("extra-due", "unfinished", at(20)))
+	state := leetgrinder.State{Problems: problems, Attempts: attempts, Goals: goals, Plans: map[time.Time][]string{date: {"two-sum", "some-problem"}}}
+	today := leetgrinder.NewToday(settings, state, now)
 	pref := func(kind string, threshold int) leetgrinder.NotificationPref {
 		p := settings.NotificationPref(kind)
 		p.Threshold = threshold
@@ -145,41 +160,47 @@ func TestCompose(t *testing.T) {
 	}
 	origin := "https://app.example"
 
-	m, ok := Compose(leetgrinder.NotifyMissingWork, pref(leetgrinder.NotifyMissingWork, 0), today, nil, origin)
-	if !ok || m.Body != "Review: Two Sum\nReview: some-problem" || m.Click != origin+"/leetgrinder" || m.Priority != "default" {
-		t.Fatalf("missing: %+v", m)
-	}
-	if m, ok = Compose(leetgrinder.NotifyLateEscalation, pref(leetgrinder.NotifyLateEscalation, 0), today, nil, origin); !ok || m.Priority != "high" {
-		t.Fatalf("late: %+v", m)
-	}
-	if _, ok = Compose(leetgrinder.NotifyBehindSchedule, pref(leetgrinder.NotifyBehindSchedule, 3), today, nil, origin); ok {
-		t.Fatal("retired behind_schedule composed")
-	}
-	if m, ok = Compose(leetgrinder.NotifyMorningPlan, pref(leetgrinder.NotifyMorningPlan, 0), today, nil, origin); !ok || m.Body != "Review: Two Sum\nReview: some-problem" {
+	m, ok := Compose(leetgrinder.NotifyMorningPlan, pref(leetgrinder.NotifyMorningPlan, 0), today, origin)
+	if !ok || m.Body != "Goal: 1 new + 2 reviews\nReview: Two Sum\nReview: some-problem\nAlso due: 1\nStreak: 2 days" || m.Click != origin+"/leetgrinder" {
 		t.Fatalf("morning: %q", m.Body)
 	}
-	empty := leetgrinder.NewToday(settings, leetgrinder.State{}, nil, now)
-	if m, ok = Compose(leetgrinder.NotifyMorningPlan, pref(leetgrinder.NotifyMorningPlan, 0), empty, nil, origin); !ok || m.Body != "Nothing is scheduled today." {
-		t.Fatalf("empty morning: %q", m.Body)
+	m, ok = Compose(leetgrinder.NotifyGoalIncomplete, pref(leetgrinder.NotifyGoalIncomplete, 0), today, origin)
+	if !ok || m.Body != "Left: 1 new, review: Two Sum, some-problem" || m.Priority != "default" {
+		t.Fatalf("goal incomplete: %+v", m)
 	}
-	var due []leetgrinder.Card
-	for _, slug := range []string{"contains-duplicate", "valid-anagram"} {
-		due = append(due, leetgrinder.Card{Problem: leetgrinder.Problem{Slug: slug}, Due: now.Add(-time.Hour)})
+	if m, ok = Compose(leetgrinder.NotifyStreakAtRisk, pref(leetgrinder.NotifyStreakAtRisk, 2), today, origin); !ok || m.Title != "Leetgrinder: 2-day streak at risk" || m.Priority != "high" {
+		t.Fatalf("streak at risk: %+v", m)
 	}
-	if m, ok = Compose(leetgrinder.NotifyReviewBacklog, pref(leetgrinder.NotifyReviewBacklog, 2), empty, due, origin); !ok || m.Title != "Leetgrinder: 2 reviews waiting" || m.Click != origin+"/leetgrinder/reviews" {
+	if _, ok = Compose(leetgrinder.NotifyStreakAtRisk, pref(leetgrinder.NotifyStreakAtRisk, 3), today, origin); ok {
+		t.Fatal("streak below threshold")
+	}
+	if m, ok = Compose(leetgrinder.NotifyReviewBacklog, pref(leetgrinder.NotifyReviewBacklog, 1), today, origin); !ok || m.Title != "Leetgrinder: 1 reviews waiting" || m.Click != origin+"/leetgrinder/reviews" {
 		t.Fatalf("backlog: %+v", m)
 	}
-	if _, ok = Compose(leetgrinder.NotifyReviewBacklog, pref(leetgrinder.NotifyReviewBacklog, 3), empty, due, origin); ok {
+	if _, ok = Compose(leetgrinder.NotifyReviewBacklog, pref(leetgrinder.NotifyReviewBacklog, 2), today, origin); ok {
 		t.Fatal("backlog below threshold")
 	}
+	// More reviews left than open picks are counted.
+	state.Goals[date] = leetgrinder.DailyGoal{New: 0, Review: 3}
+	if m, _ = Compose(leetgrinder.NotifyGoalIncomplete, pref(leetgrinder.NotifyGoalIncomplete, 0), leetgrinder.NewToday(settings, state, now), origin); m.Body != "Left: review: Two Sum, some-problem, 1 more review" {
+		t.Fatalf("extra reviews: %q", m.Body)
+	}
+	// With a zero threshold, an unmet goal sends even without a streak.
+	state.Goals = map[time.Time]leetgrinder.DailyGoal{date: {New: 1, Review: 2}}
+	if m, ok = Compose(leetgrinder.NotifyStreakAtRisk, pref(leetgrinder.NotifyStreakAtRisk, 0), leetgrinder.NewToday(settings, state, now), origin); !ok || m.Title != "Leetgrinder: today's goal is still open" {
+		t.Fatalf("zero threshold: %+v", m)
+	}
 
-	// Finished work: missing and late have nothing to say.
-	for _, kind := range []string{leetgrinder.NotifyMissingWork, leetgrinder.NotifyLateEscalation} {
-		if _, ok = Compose(kind, pref(kind, 0), empty, nil, origin); ok {
-			t.Fatalf("%s sent with nothing missing", kind)
+	// Met goal: incomplete and streak reminders have nothing to say.
+	state.Goals[date] = leetgrinder.DailyGoal{New: 1}
+	state.Attempts = append(state.Attempts, a("brand-new", "solved", now.Add(-time.Hour)))
+	met := leetgrinder.NewToday(settings, state, now)
+	for _, kind := range []string{leetgrinder.NotifyGoalIncomplete, leetgrinder.NotifyStreakAtRisk} {
+		if _, ok = Compose(kind, pref(kind, 0), met, origin); ok {
+			t.Fatalf("%s sent with the goal met", kind)
 		}
 	}
-	if _, ok = Compose("unknown", leetgrinder.NotificationPref{}, today, nil, origin); ok {
-		t.Fatal("unknown kind composed")
+	if _, ok = Compose("missing_work", leetgrinder.NotificationPref{}, today, origin); ok {
+		t.Fatal("retired kind composed")
 	}
 }

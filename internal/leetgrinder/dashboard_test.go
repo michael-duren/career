@@ -13,8 +13,8 @@ func TestDashboard(t *testing.T) {
 	settings := DefaultSettings()
 	settings.Timezone = "UTC"
 
-	fresh := OverviewPage{Today: NewToday(settings, State{}, nil, now)}
-	if fresh.Started() || fresh.ActiveStreak() != 0 || fresh.IndependentRate() != "—" {
+	fresh := OverviewPage{Today: NewToday(settings, State{}, now)}
+	if fresh.Started() || fresh.Today.Streaks != (Streaks{}) || fresh.IndependentRate() != "—" {
 		t.Fatal("fresh learner has progress")
 	}
 	var out bytes.Buffer
@@ -39,10 +39,10 @@ func TestDashboard(t *testing.T) {
 		attempt("two-sum", "struggled", 30, false, now.AddDate(0, 0, -3)),
 		attempt("brand-new-slug", "unfinished", 30, false, now.AddDate(0, 0, -20)),
 	}}
-	today := NewToday(settings, state, nil, now)
-	page := OverviewPage{Today: today, Due: today.DueOptional(today.Cards()), LogRef: "nope", LogError: "Enter a LeetCode problem link"}
-	if page.ActiveStreak() != 2 || page.IndependentRate() != "50%" || len(page.Recent(2)) != 2 || len(page.DueSoon(10)) != 1 {
-		t.Fatalf("streak %d, rate %s, due %d", page.ActiveStreak(), page.IndependentRate(), len(page.DueSoon(10)))
+	today := NewToday(settings, state, now)
+	page := OverviewPage{Today: today, LogRef: "nope", LogError: "Enter a LeetCode problem link"}
+	if _, due := DueSoon(today, 10); today.Streaks.Active != 2 || page.IndependentRate() != "50%" || len(page.Recent(2)) != 2 || due != 1 {
+		t.Fatalf("streak %d, rate %s, due %d", today.Streaks.Active, page.IndependentRate(), due)
 	}
 	out.Reset()
 	if err := Overview(page).Render(context.Background(), &out); err != nil {
@@ -66,11 +66,11 @@ func TestActiveStreakUsesLocalDates(t *testing.T) {
 		attempt("two-sum", "solved", 15, false, time.Date(2026, 10, 19, 23, 30, 0, 0, loc)),
 		attempt("ransom-note", "solved", 15, false, time.Date(2026, 10, 18, 9, 0, 0, 0, loc)),
 	}}
-	page := OverviewPage{Today: NewToday(settings, state, nil, now)}
+	today := NewToday(settings, state, now)
 	if DayUnit(1) != "day" || DayUnit(0) != "days" || DayUnit(2) != "days" {
 		t.Fatal("day unit")
 	}
-	if got := page.ActiveStreak(); got != 2 {
+	if got := today.Streaks.Active; got != 2 {
 		t.Fatalf("streak %d, want 2 local days ending yesterday", got)
 	}
 }

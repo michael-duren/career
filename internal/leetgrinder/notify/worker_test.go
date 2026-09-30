@@ -145,7 +145,7 @@ func newFixture(t *testing.T) *fixture {
 	box, _ := leetgrinder.NewSecretBox(testKey)
 	sealed, _ := box.Seal([]byte(testToken))
 	f.configure(t, func(s *leetgrinder.Settings) {
-		s.NtfyURL, s.NtfyTopic, s.NtfyTokenCiphertext, s.DailyHours = f.ntfy.URL, "grind", sealed, 2.5
+		s.NtfyURL, s.NtfyTopic, s.NtfyTokenCiphertext = f.ntfy.URL, "grind", sealed
 	})
 	return f
 }
@@ -195,16 +195,26 @@ func titles(requests []sent) map[string]sent {
 	return out
 }
 
+// quiet turns off the morning plan, which otherwise sends whenever its time
+// has passed, and sets the daily goal.
+func (f *fixture) quiet(t *testing.T, goal leetgrinder.DailyGoal) {
+	f.configure(t, func(s *leetgrinder.Settings) {
+		s.Goal = goal
+		s.Notifications = map[string]leetgrinder.NotificationPref{leetgrinder.NotifyMorningPlan: {Enabled: false, Time: "08:00", Priority: "default"}}
+	})
+}
+
 func TestWorkerSendsEachKindOnceAtItsTime(t *testing.T) {
 	f := newFixture(t)
-	// Six problems struggled 20 days ago are all due, more than today's slots.
+	// Six problems struggled 20 days ago are all due, more than today's pick.
 	f.seedDue(t, "two-sum", "contains-duplicate", "valid-anagram", "ransom-note", "majority-element", "group-anagrams")
 	f.configure(t, func(s *leetgrinder.Settings) {
 		s.Notifications = map[string]leetgrinder.NotificationPref{
-			leetgrinder.NotifyMorningPlan:    {Enabled: true, Time: "08:00", Priority: "low"},
-			leetgrinder.NotifyReviewBacklog:  {Enabled: true, Time: "17:00", Threshold: 1, Priority: "default"},
-			leetgrinder.NotifyLateEscalation: {Enabled: true, Time: "21:00", Priority: "high"},
-			// missing_work and behind_schedule use their defaults: on at 17:00.
+			leetgrinder.NotifyMorningPlan:   {Enabled: true, Time: "08:00", Priority: "low"},
+			leetgrinder.NotifyReviewBacklog: {Enabled: true, Time: "18:00", Threshold: 1, Priority: "default"},
+			// No streak yet, so a threshold of 0 is needed for it to send.
+			leetgrinder.NotifyStreakAtRisk: {Enabled: true, Time: "21:00", Priority: "high"},
+			// goal_incomplete uses its default: on at 18:00.
 		}
 	})
 
@@ -220,33 +230,26 @@ func TestWorkerSendsEachKindOnceAtItsTime(t *testing.T) {
 		morning.Header.Get("Click") != "https://app.example/leetgrinder" || morning.Header.Get("Authorization") != "Bearer "+testToken {
 		t.Fatalf("morning headers: %v %v", morning.Path, morning.Header)
 	}
-	if !strings.Contains(morning.Body, "Review: ") {
-		t.Fatalf("morning body: %q", morning.Body)
+	for _, want := range []string{"Goal: 2 new + 1 review", "Review: ", "Also due: 5", "Streak: 0 days"} {
+		if !strings.Contains(morning.Body, want) {
+			t.Fatalf("morning body lacks %q: %q", want, morning.Body)
+		}
 	}
-	if got := f.step(t, at(10, "16:59")); len(got) != 0 {
+	if got := f.step(t, at(10, "17:59")); len(got) != 0 {
 		t.Fatalf("sent early: %v", got)
 	}
 
-	byTitle := titles(f.step(t, at(10, "17:00")))
-	missing, ok := byTitle["Leetgrinder: work left today"]
+	byTitle := titles(f.step(t, at(10, "18:00")))
+	incomplete, ok := byTitle["Leetgrinder: goal not met yet"]
 	if !ok || len(byTitle) != 2 {
-		t.Fatalf("17:00 sends: %v", byTitle)
+		t.Fatalf("18:00 sends: %v", byTitle)
 	}
-	if !strings.Contains(missing.Body, "Review: ") || missing.Header.Get("Tags") != "hourglass" {
-		t.Fatalf("missing body: %q", missing.Body)
+	if !strings.HasPrefix(incomplete.Body, "Left: 2 new, review: ") || incomplete.Header.Get("Tags") != "hourglass" {
+		t.Fatalf("incomplete body: %q", incomplete.Body)
 	}
-	var backlog sent
-	for title, r := range byTitle {
-		if strings.HasSuffix(title, "reviews waiting") {
-			backlog = r
-		}
-	}
-	if backlog.Header.Get("Click") != "https://app.example/leetgrinder/reviews" {
+	backlog, ok := byTitle["Leetgrinder: 5 reviews waiting"]
+	if !ok || backlog.Header.Get("Click") != "https://app.example/leetgrinder/reviews" {
 		t.Fatalf("backlog: %v", byTitle)
-	}
-	// The retired schedule reminder never sends.
-	if e := f.logEntry(t, leetgrinder.NotifyBehindSchedule, at(10, "17:00")); e.Status != leetgrinder.NotifySkipped {
-		t.Fatalf("behind_schedule: %+v", e)
 	}
 
 	// A restarted worker reads the log and sends nothing twice.
@@ -255,14 +258,14 @@ func TestWorkerSendsEachKindOnceAtItsTime(t *testing.T) {
 		t.Fatalf("resent after restart: %v", got)
 	}
 	got = f.step(t, at(10, "21:00"))
-	if len(got) != 1 || got[0].Header.Get("Priority") != "high" || got[0].Header.Get("Title") != "Leetgrinder: today is still unfinished" {
-		t.Fatalf("late: %+v", got)
+	if len(got) != 1 || got[0].Header.Get("Priority") != "high" || got[0].Header.Get("Title") != "Leetgrinder: today's goal is still open" {
+		t.Fatalf("streak at risk: %+v", got)
 	}
 	if got := f.step(t, at(10, "23:59")); len(got) != 0 {
 		t.Fatalf("resent: %v", got)
 	}
-	e := f.logEntry(t, leetgrinder.NotifyMissingWork, at(10, "17:00"))
-	if e.Status != leetgrinder.NotifySent || e.Attempts != 1 || !strings.Contains(e.Detail, "Review: ") {
+	e := f.logEntry(t, leetgrinder.NotifyGoalIncomplete, at(10, "18:00"))
+	if e.Status != leetgrinder.NotifySent || e.Attempts != 1 || !strings.Contains(e.Detail, "Left: ") {
 		t.Fatalf("log: %+v", e)
 	}
 	// The next local day starts fresh.
@@ -271,38 +274,32 @@ func TestWorkerSendsEachKindOnceAtItsTime(t *testing.T) {
 	}
 }
 
-func TestWorkerSkipsWhenNothingIsMissing(t *testing.T) {
+func TestWorkerSkipsWhenGoalIsMet(t *testing.T) {
 	f := newFixture(t)
-	if got := f.step(t, at(10, "17:00")); len(got) != 0 {
-		t.Fatalf("sent with nothing missing: %v", got)
+	f.quiet(t, leetgrinder.DailyGoal{New: 1})
+	f.review(t, "two-sum", at(10, "09:00"))
+	if got := f.step(t, at(10, "22:00")); len(got) != 0 {
+		t.Fatalf("sent with the goal met: %v", got)
 	}
-	for _, kind := range []string{leetgrinder.NotifyMissingWork, leetgrinder.NotifyBehindSchedule} {
-		if e := f.logEntry(t, kind, at(10, "17:00")); e.Status != leetgrinder.NotifySkipped {
+	for _, kind := range []string{leetgrinder.NotifyGoalIncomplete, leetgrinder.NotifyStreakAtRisk} {
+		if e := f.logEntry(t, kind, at(10, "18:00")); e.Status != leetgrinder.NotifySkipped {
 			t.Fatalf("%s: %+v", kind, e)
 		}
-	}
-	// It was evaluated at 17:00, so work that falls due later sends nothing.
-	f.seedDue(t, "two-sum")
-	if got := f.step(t, at(10, "18:00")); len(got) != 0 {
-		t.Fatalf("re-evaluated: %v", got)
 	}
 }
 
 func TestWorkerRetriesFailuresUpToTheCap(t *testing.T) {
 	f := newFixture(t)
-	f.seedDue(t, "two-sum")
-	f.configure(t, func(s *leetgrinder.Settings) {
-		s.Notifications = map[string]leetgrinder.NotificationPref{leetgrinder.NotifyBehindSchedule: {Enabled: false, Time: "17:00", Threshold: 3, Priority: "default"}}
-	})
+	f.quiet(t, leetgrinder.DefaultGoal)
 	f.ntfy.respond(500, true)
 	sends := 0
 	for minute := 0; minute <= 40; minute++ {
-		sends += len(f.step(t, at(10, "17:00").Add(time.Duration(minute)*time.Minute)))
+		sends += len(f.step(t, at(10, "18:00").Add(time.Duration(minute)*time.Minute)))
 	}
 	if sends != leetgrinder.NotifyMaxAttempts {
 		t.Fatalf("sends: %d", sends)
 	}
-	e := f.logEntry(t, leetgrinder.NotifyMissingWork, at(10, "17:00"))
+	e := f.logEntry(t, leetgrinder.NotifyGoalIncomplete, at(10, "18:00"))
 	if e.Status != leetgrinder.NotifyFailed || e.Attempts != leetgrinder.NotifyMaxAttempts || !strings.Contains(e.Detail, "ntfy returned 500") || strings.Contains(e.Detail, testToken) {
 		t.Fatalf("log: %+v", e)
 	}
@@ -312,69 +309,66 @@ func TestWorkerRetriesFailuresUpToTheCap(t *testing.T) {
 	if _, err := f.db.DB.Exec("UPDATE leetgrinder_notification_log SET attempts=2"); err != nil {
 		t.Fatal(err)
 	}
-	if got := f.step(t, at(10, "18:00")); len(got) != 1 {
+	if got := f.step(t, at(10, "19:00")); len(got) != 1 {
 		t.Fatalf("retry: %v", got)
 	}
-	if e = f.logEntry(t, leetgrinder.NotifyMissingWork, at(10, "17:00")); e.Status != leetgrinder.NotifySent || e.Attempts != 3 {
+	if e = f.logEntry(t, leetgrinder.NotifyGoalIncomplete, at(10, "18:00")); e.Status != leetgrinder.NotifySent || e.Attempts != 3 {
 		t.Fatalf("after retry: %+v", e)
 	}
 }
 
 func TestWorkerReclaimsAbandonedSends(t *testing.T) {
 	f := newFixture(t)
-	f.seedDue(t, "two-sum")
+	f.quiet(t, leetgrinder.DefaultGoal)
 	ctx := context.Background()
-	date := leetgrinder.Date(at(10, "17:00"), chicago)
+	date := leetgrinder.Date(at(10, "18:00"), chicago)
 	// A crash after claiming leaves a "sending" row behind.
-	if _, ok, err := f.db.ClaimLeetgrinderNotification(ctx, leetgrinder.NotifyMissingWork, date, at(10, "17:00")); !ok || err != nil {
+	if _, ok, err := f.db.ClaimLeetgrinderNotification(ctx, leetgrinder.NotifyGoalIncomplete, date, at(10, "18:00")); !ok || err != nil {
 		t.Fatal(ok, err)
 	}
-	if got := f.step(t, at(10, "17:01")); len(got) != 0 {
+	if got := f.step(t, at(10, "18:01")); len(got) != 0 {
 		t.Fatalf("nothing should send while the claim is fresh: %v", got)
 	}
-	if got := f.step(t, at(10, "17:05")); len(got) != 1 || got[0].Header.Get("Title") != "Leetgrinder: work left today" {
+	if got := f.step(t, at(10, "18:05")); len(got) != 1 || got[0].Header.Get("Title") != "Leetgrinder: goal not met yet" {
 		t.Fatalf("abandoned send not retried: %v", got)
 	}
 }
 
 func TestWorkerSkipsAbandonedSendWhoseConditionCleared(t *testing.T) {
 	f := newFixture(t)
-	f.seedDue(t, "two-sum")
+	f.quiet(t, leetgrinder.DailyGoal{New: 1})
 	ctx := context.Background()
-	date := leetgrinder.Date(at(10, "17:00"), chicago)
-	// The first evaluation plans today's review.
-	f.step(t, at(10, "08:00"))
-	if _, ok, err := f.db.ClaimLeetgrinderNotification(ctx, leetgrinder.NotifyMissingWork, date, at(10, "17:00")); !ok || err != nil {
+	date := leetgrinder.Date(at(10, "18:00"), chicago)
+	if _, ok, err := f.db.ClaimLeetgrinderNotification(ctx, leetgrinder.NotifyGoalIncomplete, date, at(10, "18:00")); !ok || err != nil {
 		t.Fatal(ok, err)
 	}
-	f.review(t, "two-sum", at(10, "16:00"))
-	f.step(t, at(10, "17:01"))
-	if e := f.logEntry(t, leetgrinder.NotifyMissingWork, at(10, "17:00")); e.Status != leetgrinder.NotifySending {
+	f.review(t, "two-sum", at(10, "17:00"))
+	f.step(t, at(10, "18:01"))
+	if e := f.logEntry(t, leetgrinder.NotifyGoalIncomplete, at(10, "18:00")); e.Status != leetgrinder.NotifySending {
 		t.Fatalf("fresh claim overwritten: %+v", e)
 	}
-	f.step(t, at(10, "17:05"))
-	if e := f.logEntry(t, leetgrinder.NotifyMissingWork, at(10, "17:00")); e.Status != leetgrinder.NotifySkipped {
+	f.step(t, at(10, "18:05"))
+	if e := f.logEntry(t, leetgrinder.NotifyGoalIncomplete, at(10, "18:00")); e.Status != leetgrinder.NotifySkipped {
 		t.Fatalf("abandoned send not skipped: %+v", e)
 	}
 }
 
 func TestWorkerNeedsATopic(t *testing.T) {
 	f := newFixture(t)
-	f.seedDue(t, "two-sum")
 	f.configure(t, func(s *leetgrinder.Settings) { s.NtfyTopic = "" })
-	if got := f.step(t, at(12, "18:00")); len(got) != 0 {
+	if got := f.step(t, at(12, "22:00")); len(got) != 0 {
 		t.Fatalf("sent without topic: %v", got)
 	}
 }
 
 func TestWorkerLogsUnreadableToken(t *testing.T) {
 	f := newFixture(t)
-	f.seedDue(t, "two-sum")
+	f.quiet(t, leetgrinder.DefaultGoal)
 	f.worker.SecretKey = bytes.Repeat([]byte{1}, 32)
-	if got := f.step(t, at(10, "17:00")); len(got) != 0 {
+	if got := f.step(t, at(10, "18:00")); len(got) != 0 {
 		t.Fatalf("sent without a readable token: %v", got)
 	}
-	if e := f.logEntry(t, leetgrinder.NotifyMissingWork, at(10, "17:00")); e.Status != leetgrinder.NotifyFailed || !strings.Contains(e.Detail, "re-enter it") {
+	if e := f.logEntry(t, leetgrinder.NotifyGoalIncomplete, at(10, "18:00")); e.Status != leetgrinder.NotifyFailed || !strings.Contains(e.Detail, "re-enter it") {
 		t.Fatalf("log: %+v", e)
 	}
 }

@@ -29,7 +29,7 @@ func TestLeetgrinderNtfySettings(t *testing.T) {
 
 	w := request("GET", "/leetgrinder/settings", nil)
 	body := w.Body.String()
-	for _, want := range []string{"No topic set", "No reminders will be sent", `id="ntfy"`, `id="notifications"`, `id="notification-log"`, "No token set.", "No notifications yet.", `name="missing_work_enabled" value="true" checked`, `name="behind_schedule_threshold" min="1" max="84" required value="3"`, `name="late_escalation_time" required value="21:00"`} {
+	for _, want := range []string{"No topic set", "No reminders will be sent", `id="ntfy"`, `id="notifications"`, `id="notification-log"`, "No token set.", "No notifications yet.", `name="goal_incomplete_enabled" value="true" checked`, `name="streak_at_risk_threshold" min="0" max="365" required value="1"`, `name="streak_at_risk_time" required value="21:00"`} {
 		if !strings.Contains(body, want) {
 			t.Fatalf("settings page lacks %q", want)
 		}
@@ -128,7 +128,7 @@ func TestLeetgrinderNotificationSettings(t *testing.T) {
 		for _, k := range leetgrinder.NotificationKinds {
 			v.Set(k.Key+"_time", k.Default.Time)
 			v.Set(k.Key+"_priority", k.Default.Priority)
-			if k.MaxThreshold > 0 {
+			if k.HasThreshold() {
 				v.Set(k.Key+"_threshold", "5")
 			}
 		}
@@ -137,7 +137,8 @@ func TestLeetgrinderNotificationSettings(t *testing.T) {
 	v := values()
 	v.Set("morning_plan_enabled", "true")
 	v.Set("morning_plan_time", "07:30")
-	v.Set("late_escalation_priority", "urgent")
+	v.Set("streak_at_risk_priority", "urgent")
+	v.Set("streak_at_risk_threshold", "0")
 	if w := request("POST", "/leetgrinder/settings/notifications", v); w.Code != 303 || w.Header().Get("Location") != "/leetgrinder/settings?saved=notifications#notifications" {
 		t.Fatalf("save: %d %s", w.Code, w.Body.String())
 	}
@@ -145,26 +146,27 @@ func TestLeetgrinderNotificationSettings(t *testing.T) {
 	if p := settings.NotificationPref(leetgrinder.NotifyMorningPlan); !p.Enabled || p.Time != "07:30" {
 		t.Fatalf("morning: %+v", p)
 	}
-	if p := settings.NotificationPref(leetgrinder.NotifyMissingWork); p.Enabled {
+	if p := settings.NotificationPref(leetgrinder.NotifyGoalIncomplete); p.Enabled {
 		t.Fatal("unchecked kind stayed enabled")
 	}
 	if p := settings.NotificationPref(leetgrinder.NotifyReviewBacklog); p.Threshold != 5 {
 		t.Fatalf("backlog: %+v", p)
 	}
-	if p := settings.NotificationPref(leetgrinder.NotifyLateEscalation); p.Priority != "urgent" {
-		t.Fatalf("late: %+v", p)
+	if p := settings.NotificationPref(leetgrinder.NotifyStreakAtRisk); p.Priority != "urgent" || p.Threshold != 0 {
+		t.Fatalf("streak: %+v", p)
 	}
 
 	for name, change := range map[string]func(url.Values){
-		"threshold": func(v url.Values) { v.Set("behind_schedule_threshold", "0") },
-		"time":      func(v url.Values) { v.Set("missing_work_time", "5pm") },
-		"priority":  func(v url.Values) { v.Set("missing_work_priority", "loud") },
+		"threshold":        func(v url.Values) { v.Set("review_backlog_threshold", "0") },
+		"streak threshold": func(v url.Values) { v.Set("streak_at_risk_threshold", "-1") },
+		"time":             func(v url.Values) { v.Set("goal_incomplete_time", "5pm") },
+		"priority":         func(v url.Values) { v.Set("goal_incomplete_priority", "loud") },
 	} {
 		v := values()
-		v.Set("review_backlog_threshold", "42")
+		v.Set("streak_at_risk_threshold", "42")
 		change(v)
 		w := request("POST", "/leetgrinder/settings/notifications", v)
-		if w.Code != 400 || !strings.Contains(w.Body.String(), `name="review_backlog_threshold" min="1" max="300" required value="42"`) {
+		if w.Code != 400 || !strings.Contains(w.Body.String(), `name="streak_at_risk_threshold" min="0" max="365" required value="`+v.Get("streak_at_risk_threshold")+`"`) {
 			t.Errorf("%s: %d draft not kept", name, w.Code)
 		}
 	}

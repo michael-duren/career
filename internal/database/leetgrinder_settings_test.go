@@ -61,7 +61,7 @@ func TestLeetgrinderScheduleMigrationKeepsAttempts(t *testing.T) {
 		t.Fatalf("existing attempt changed: %+v %v", state, err)
 	}
 	settings, err := s.LeetgrinderSettings(ctx)
-	if err != nil || settings.Timezone != "America/Chicago" || settings.DailyHours != 2 || settings.NtfyURL != "https://ntfy.sh" || settings.TokenSet() || len(settings.Notifications) != 0 {
+	if err != nil || settings.Timezone != "America/Chicago" || settings.Goal != leetgrinder.DefaultGoal || settings.NtfyURL != "https://ntfy.sh" || settings.TokenSet() || len(settings.Notifications) != 0 {
 		t.Fatalf("default settings: %+v %v", settings, err)
 	}
 	for _, table := range []string{"leetgrinder_api_tokens", "leetgrinder_review_plan", "leetgrinder_notification_log"} {
@@ -71,7 +71,9 @@ func TestLeetgrinderScheduleMigrationKeepsAttempts(t *testing.T) {
 	}
 	for _, bad := range []string{
 		"INSERT INTO leetgrinder_settings(id,revision) VALUES(2,gen_random_uuid())",
-		"UPDATE leetgrinder_settings SET daily_hours=4.5",
+		"UPDATE leetgrinder_settings SET goal_new=11",
+		"UPDATE leetgrinder_settings SET goal_review=-1",
+		"INSERT INTO leetgrinder_daily_goal VALUES('2026-10-01',2,1),('2026-10-01',3,1)",
 		"UPDATE leetgrinder_attempts SET source='mobile'",
 		"INSERT INTO leetgrinder_review_plan VALUES('2026-10-01','two-sum',1),('2026-10-01','two-sum',2)",
 		"INSERT INTO leetgrinder_notification_log(kind,local_date,status) VALUES('missing_work','2026-10-01','sent'),('missing_work','2026-10-01','sent')",
@@ -90,15 +92,15 @@ func TestLeetgrinderSettingsRevisions(t *testing.T) {
 		t.Fatal(err)
 	}
 	saved, err := s.UpdateLeetgrinderSettings(ctx, original.Revision, func(v *leetgrinder.Settings) error {
-		v.Timezone, v.DailyHours = "Asia/Tokyo", 3.5
+		v.Timezone, v.Goal = "Asia/Tokyo", leetgrinder.DailyGoal{New: 3, Review: 0}
 		v.NtfyTokenCiphertext = []byte{1, 2, 3}
-		v.Notifications = map[string]leetgrinder.NotificationPref{"missing_work": {Enabled: true, Time: "17:00", Priority: "default"}}
+		v.Notifications = map[string]leetgrinder.NotificationPref{"goal_incomplete": {Enabled: true, Time: "17:00", Priority: "default"}}
 		return nil
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if saved.Revision == original.Revision || saved.Timezone != "Asia/Tokyo" || saved.DailyHours != 3.5 || !saved.TokenSet() || !saved.Notifications["missing_work"].Enabled {
+	if saved.Revision == original.Revision || saved.Timezone != "Asia/Tokyo" || saved.Goal != (leetgrinder.DailyGoal{New: 3}) || !saved.TokenSet() || !saved.Notifications["goal_incomplete"].Enabled {
 		t.Fatalf("saved: %+v", saved)
 	}
 	loaded, err := s.LeetgrinderSettings(ctx)
@@ -114,8 +116,8 @@ func TestLeetgrinderSettingsRevisions(t *testing.T) {
 	if _, err = s.UpdateLeetgrinderSettings(ctx, "not-a-uuid", func(*leetgrinder.Settings) error { return nil }); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("bad revision: %v", err)
 	}
-	if _, err = s.UpdateLeetgrinderSettings(ctx, saved.Revision, func(v *leetgrinder.Settings) error { v.DailyHours = 5; return nil }); !errors.Is(err, ErrInvalid) {
-		t.Fatalf("invalid hours: %v", err)
+	if _, err = s.UpdateLeetgrinderSettings(ctx, saved.Revision, func(v *leetgrinder.Settings) error { v.Goal = leetgrinder.DailyGoal{}; return nil }); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("empty goal: %v", err)
 	}
 	sentinel := errors.New("rejected by caller")
 	if _, err = s.UpdateLeetgrinderSettings(ctx, saved.Revision, func(*leetgrinder.Settings) error { return sentinel }); !errors.Is(err, sentinel) {
@@ -204,16 +206,22 @@ func TestLeetgrinderTodayFreezesReviewPlan(t *testing.T) {
 			t.Fatalf("concurrent plans disagree: %v", plan)
 		}
 	}
-	// More hours add picks after the frozen one.
-	if _, err = s.UpdateLeetgrinderSettings(ctx, settings.Revision, func(v *leetgrinder.Settings) error { v.DailyHours = 2.5; return nil }); err != nil {
+	// Today's goal is frozen: raising the review target changes only later days.
+	if _, err = s.UpdateLeetgrinderSettings(ctx, settings.Revision, func(v *leetgrinder.Settings) error { v.Goal.Review = 2; return nil }); err != nil {
 		t.Fatal(err)
 	}
 	today, err := s.LeetgrinderToday(ctx, now)
-	if err != nil || len(today.Reviews) != 2 || today.Reviews[0].Problem.Slug != "binary-search" || today.Reviews[1].Problem.Slug != "isomorphic-strings" || today.Reviews[0].Problem.Title != "Binary Search" {
-		t.Fatalf("topped-up plan: %+v %v", today.Reviews, err)
+	if err != nil || today.Goal != leetgrinder.DefaultGoal || len(today.Reviews) != 1 || today.Reviews[0].Problem.Title != "Binary Search" {
+		t.Fatalf("frozen goal: %+v %+v %v", today.Goal, today.Reviews, err)
 	}
-	// Logging the review marks it done and keeps the plan.
-	review := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "binary-search", Outcome: "solved", Minutes: 20, IsReview: true, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}
+	if g, ok, err := s.LeetgrinderDailyGoal(ctx, today.Date); err != nil || !ok || g != leetgrinder.DefaultGoal {
+		t.Fatalf("stored goal %+v %v %v", g, ok, err)
+	}
+	if _, ok, err := s.LeetgrinderDailyGoal(ctx, today.Date.AddDate(0, 0, 1)); err != nil || ok {
+		t.Fatalf("tomorrow frozen early: %v %v", ok, err)
+	}
+	// Logging the review marks it done, keeps the plan, and counts toward the goal.
+	review := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "binary-search", Outcome: "solved", Minutes: 20, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}
 	if _, err = s.SaveLeetgrinderAttempt(ctx, review, ""); err != nil {
 		t.Fatal(err)
 	}
@@ -221,37 +229,51 @@ func TestLeetgrinderTodayFreezesReviewPlan(t *testing.T) {
 		t.Fatal(err)
 	}
 	today, err = s.LeetgrinderToday(ctx, now)
-	if err != nil || len(today.Reviews) != 2 || !today.Reviews[0].Done || today.Reviews[1].Done || len(today.MissingReviews()) != 1 {
+	if err != nil || len(today.Reviews) != 1 || !today.Reviews[0].Done || len(today.MissingReviews()) != 0 || today.Progress.Reviews() != 1 || today.Kind("binary-search") != leetgrinder.KindReview {
 		t.Fatalf("plan changed or done state wrong: %+v %v", today.Reviews, err)
-	}
-	var planned int
-	if err = s.DB.QueryRow("SELECT count(*) FROM leetgrinder_review_plan WHERE plan_date='2026-10-02'").Scan(&planned); err != nil || planned != 2 {
-		t.Fatalf("persisted %d picks: %v", planned, err)
 	}
 	var isReview bool
 	if err = s.DB.QueryRow("SELECT is_review FROM leetgrinder_attempts WHERE id=$1", review.ID).Scan(&isReview); err != nil || !isReview {
-		t.Fatalf("is_review not saved: %v", err)
+		t.Fatalf("is_review not decided by the server: %v", err)
+	}
+	// The next day freezes the new goal and picks two reviews.
+	tomorrow, err := s.LeetgrinderToday(ctx, now.AddDate(0, 0, 1))
+	if err != nil || tomorrow.Goal.Review != 2 || len(tomorrow.Reviews) != 2 {
+		t.Fatalf("next day: %+v %+v %v", tomorrow.Goal, tomorrow.Reviews, err)
+	}
+	var planned int
+	if err = s.DB.QueryRow("SELECT count(*) FROM leetgrinder_review_plan WHERE plan_date='2026-10-02'").Scan(&planned); err != nil || planned != 1 {
+		t.Fatalf("persisted %d picks: %v", planned, err)
 	}
 }
 
 func TestLeetgrinderAttemptSource(t *testing.T) {
 	s := testStore(t)
 	ctx := context.Background()
+	// The client's review flag is ignored: a first attempt is never a review.
 	a := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "two-sum", Outcome: "solved", Minutes: 12, Source: "extension", IsReview: true, TimeComplexity: "O(n)", SpaceComplexity: "O(1)", Code: "class Solution: pass", CodeLanguage: "python3"}
 	saved, err := s.SaveLeetgrinderAttempt(ctx, a, "")
-	if err != nil || saved.Source != "extension" || !saved.IsReview {
+	if err != nil || saved.Source != "extension" || saved.IsReview {
 		t.Fatalf("saved %+v %v", saved, err)
 	}
 	retry := a
 	retry.IsReview = false
-	if _, err = s.SaveLeetgrinderAttempt(ctx, retry, ""); !errors.Is(err, ErrConflict) {
-		t.Fatalf("changed retry: %v", err)
+	if again, err := s.SaveLeetgrinderAttempt(ctx, retry, ""); err != nil || again.Revision != saved.Revision {
+		t.Fatalf("retry with another review flag: %v", err)
 	}
 	correction := saved
-	correction.Minutes, correction.Source, correction.IsReview = 13, "web", false
+	correction.Minutes, correction.Source, correction.IsReview = 13, "web", true
 	corrected, err := s.SaveLeetgrinderAttempt(ctx, correction, saved.Revision)
-	if err != nil || corrected.Source != "extension" || !corrected.IsReview || corrected.Minutes != 13 {
+	if err != nil || corrected.Source != "extension" || corrected.IsReview || corrected.Minutes != 13 {
 		t.Fatalf("correction changed provenance: %+v %v", corrected, err)
+	}
+	// An attempt after one on an earlier local day is a review.
+	if _, err = s.DB.Exec("UPDATE leetgrinder_attempts SET created_at=now()-interval '3 days'"); err != nil {
+		t.Fatal(err)
+	}
+	later, err := s.SaveLeetgrinderAttempt(ctx, leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "two-sum", Outcome: "unfinished", Minutes: 5}, "")
+	if err != nil || !later.IsReview {
+		t.Fatalf("later attempt: %+v %v", later, err)
 	}
 	a.ID, a.Source = uuid.NewString(), "mobile"
 	if _, err = s.SaveLeetgrinderAttempt(ctx, a, ""); !errors.Is(err, ErrInvalid) {

@@ -89,6 +89,10 @@ type State struct {
 	Problems map[string]Problem
 	// Analyses maps attempt IDs to their LLM analysis.
 	Analyses map[string]Analysis
+	// Plans are the frozen review picks, and Goals the frozen daily goals,
+	// by local date (see Date).
+	Plans map[time.Time][]string
+	Goals map[time.Time]DailyGoal
 }
 
 // Problem returns the catalog row for slug, or a bare problem when the slug

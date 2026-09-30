@@ -43,7 +43,7 @@ func TestLeetgrinderAccess(t *testing.T) {
 		want   int
 	}{
 		{"/leetgrinder/problem/two-sum/attempts", url.Values{}, "https://evil.com", 403},
-		{"/leetgrinder/settings/general", url.Values{"hours": {"2.0"}}, "https://evil.com", 403},
+		{"/leetgrinder/settings/general", url.Values{"goalNew": {"2"}}, "https://evil.com", 403},
 	} {
 		r := httptest.NewRequest("POST", test.path, strings.NewReader(test.values.Encode()))
 		r.AddCookie(&http.Cookie{Name: "session", Value: s.token()})

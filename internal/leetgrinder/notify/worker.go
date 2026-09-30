@@ -84,11 +84,7 @@ func (w *Worker) Step(ctx context.Context) error {
 			}
 			today = &t
 		}
-		var cards []leetgrinder.Card
-		if kind.Key == leetgrinder.NotifyReviewBacklog {
-			cards = today.Cards()
-		}
-		msg, due := Compose(kind.Key, pref, *today, cards, w.Origin)
+		msg, due := Compose(kind.Key, pref, *today, w.Origin)
 		if !due {
 			if err = w.Store.SkipLeetgrinderNotification(ctx, kind.Key, date, "Nothing to report", now); err != nil {
 				errs = append(errs, err)

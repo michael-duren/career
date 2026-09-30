@@ -72,7 +72,7 @@ templ notificationSettings(panel NotifyPanel) {
 					<div class="form-row">
 						<label>Time<input type="time" name={ item.Kind.Key + "_time" } required value={ item.Time }/></label>
 						if item.Kind.ThresholdLabel != "" {
-							<label>{ item.Kind.ThresholdLabel }<input type="number" name={ item.Kind.Key + "_threshold" } min="1" max={ Count(item.Kind.MaxThreshold) } required value={ item.Threshold }/></label>
+							<label>{ item.Kind.ThresholdLabel }<input type="number" name={ item.Kind.Key + "_threshold" } min={ Count(item.Kind.MinThreshold) } max={ Count(item.Kind.MaxThreshold) } required value={ item.Threshold }/></label>
 						}
 						<label>
 							Priority

@@ -47,7 +47,7 @@ func NewNotificationsForm(s Settings) NotificationsForm {
 	for _, kind := range NotificationKinds {
 		p := s.NotificationPref(kind.Key)
 		d := NotificationDraft{Kind: kind, Enabled: p.Enabled, Time: p.Time, Priority: p.Priority}
-		if kind.MaxThreshold > 0 {
+		if kind.HasThreshold() {
 			d.Threshold = strconv.Itoa(p.Threshold)
 		}
 		f.Items = append(f.Items, d)

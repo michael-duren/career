@@ -31,6 +31,7 @@ func (s *Server) registerLeetgrinderExtension(r chi.Router) {
 		r.Post("/api/leetgrinder/attempts", s.leetgrinderAPIAttempt)
 		r.Get("/api/leetgrinder/problem/{slug}", s.leetgrinderAPIProblem)
 		r.Put("/api/leetgrinder/problem/{slug}", s.leetgrinderAPIProblemMetadata)
+		r.Get("/api/leetgrinder/today", s.leetgrinderAPIToday)
 	})
 }
 
@@ -126,7 +127,9 @@ type leetgrinderAPIAttemptInput struct {
 	Minutes     int    `json:"minutes"`
 	Assisted    bool   `json:"assisted"`
 	Notes       string `json:"notes"`
-	IsReview    *bool  `json:"isReview"`
+	// IsReview is accepted from older extensions and ignored: the server
+	// decides whether an attempt is a review.
+	IsReview *bool `json:"isReview"`
 	// Complexity is required for solved and struggled attempts; code is the
 	// judged submission and its LeetCode language slug.
 	TimeComplexity  string `json:"timeComplexity"`
@@ -174,7 +177,7 @@ func (s *Server) leetgrinderAPIAttempt(w http.ResponseWriter, r *http.Request) {
 	if input.Problem != nil && (input.Problem.Normalize() != nil || input.Problem.Title == "") {
 		input.Problem = nil
 	}
-	attempt := leetgrinder.Attempt{ID: input.ID, ProblemSlug: input.ProblemSlug, Outcome: input.Outcome, Minutes: input.Minutes, Assisted: input.Assisted, Notes: input.Notes, Source: "extension", IsReview: input.IsReview != nil && *input.IsReview,
+	attempt := leetgrinder.Attempt{ID: input.ID, ProblemSlug: input.ProblemSlug, Outcome: input.Outcome, Minutes: input.Minutes, Assisted: input.Assisted, Notes: input.Notes, Source: "extension",
 		TimeComplexity: input.TimeComplexity, SpaceComplexity: input.SpaceComplexity, Code: input.Code, CodeLanguage: input.CodeLanguage}
 	switch err := attempt.NormalizeDetails(); {
 	case errors.Is(err, leetgrinder.ErrComplexityRequired), errors.Is(err, leetgrinder.ErrComplexityFormat):
@@ -187,10 +190,18 @@ func (s *Server) leetgrinderAPIAttempt(w http.ResponseWriter, r *http.Request) {
 		bad("code must be valid UTF-8 text with a LeetCode language, or both must be empty.")
 		return
 	}
+	// Freeze today's goal and picks before the attempt, so a first access
+	// that is itself a review still plans that review.
+	_, _ = s.db.LeetgrinderToday(r.Context(), s.clock())
 	saved, err := s.db.SaveLeetgrinderAttemptWithProblem(r.Context(), attempt, "", input.Problem, s.clock())
 	switch {
 	case err == nil:
-		respond(w, 200, map[string]any{"attempt": saved})
+		// The kind is how today counts the problem; "" if today cannot load.
+		kind := ""
+		if today, err := s.db.LeetgrinderToday(r.Context(), s.clock()); err == nil {
+			kind = today.Kind(saved.ProblemSlug)
+		}
+		respond(w, 200, map[string]any{"attempt": saved, "kind": kind})
 	case errors.Is(err, database.ErrConflict):
 		respond(w, 409, map[string]string{"error": "This attempt id was already used for a different attempt. Correct it in the app instead."})
 	case errors.Is(err, database.ErrInvalid):
@@ -214,6 +225,7 @@ type leetgrinderAPIProblem struct {
 	Status          string               `json:"status"`
 	Recall          *float64             `json:"recall,omitempty"`
 	DueDate         string               `json:"dueDate,omitempty"`
+	FlagReason      string               `json:"flagReason,omitempty"`
 	TodaysPick      bool                 `json:"todaysPick"`
 	NextDue         string               `json:"nextDue,omitempty"`
 	LastAttemptedAt *time.Time           `json:"lastAttemptedAt,omitempty"`
@@ -251,16 +263,16 @@ func (s *Server) leetgrinderAPIProblem(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	loc := today.Settings.Location()
-	for _, card := range today.Cards() {
-		if card.Problem.Slug != slug {
-			continue
-		}
+	if card, ok := today.Card(slug); ok {
 		recall := card.Retrievability(today.Now)
 		due := leetgrinder.Date(card.Due, loc).Format(time.DateOnly)
 		last := card.Last.CreatedAt
 		out.Recall, out.LastAttemptedAt = &recall, &last
-		if card.Due.Before(leetgrinder.EndOfDate(today.Date, loc)) || out.TodaysPick {
+		if today.Due(card) || out.TodaysPick {
 			out.Status, out.DueDate = "due", due
+			if card.Flag != nil {
+				out.FlagReason = card.Flag.Label()
+			}
 		} else {
 			out.Status, out.NextDue = "notDue", due
 		}
@@ -292,4 +304,56 @@ func (s *Server) leetgrinderAPIProblemMetadata(w http.ResponseWriter, r *http.Re
 	default:
 		respond(w, 503, map[string]string{"error": "The problem could not be saved; please retry."})
 	}
+}
+
+type leetgrinderAPIReview struct {
+	Slug       string  `json:"slug"`
+	Title      string  `json:"title"`
+	Difficulty string  `json:"difficulty,omitempty"`
+	Recall     float64 `json:"recall"`
+	Reason     string  `json:"reason"`
+	Done       bool    `json:"done"`
+}
+
+type leetgrinderAPIToday struct {
+	Date string                `json:"date"`
+	Goal leetgrinder.DailyGoal `json:"goal"`
+	Done struct {
+		New    int `json:"new"`
+		Review int `json:"review"`
+		Bonus  int `json:"bonus"`
+	} `json:"done"`
+	Met       bool                   `json:"met"`
+	Remaining int                    `json:"remaining"`
+	Streak    int                    `json:"streak"`
+	Picks     []leetgrinderAPIReview `json:"picks"`
+	Due       []leetgrinderAPIReview `json:"due"`
+	DueCount  int                    `json:"dueCount"`
+}
+
+// leetgrinderAPIToday is today's goal and reviews for the extension's badge
+// and popup. Like the dashboard, it freezes today's goal and plan.
+func (s *Server) leetgrinderAPIToday(w http.ResponseWriter, r *http.Request) {
+	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
+	if err != nil {
+		respond(w, 503, map[string]string{"error": "Your progress is unavailable; please retry."})
+		return
+	}
+	loc := today.Settings.Location()
+	// The review goal is capped at the reviews that can count today.
+	out := leetgrinderAPIToday{Date: today.Date.Format(time.DateOnly), Goal: today.Progress.Target(), Met: today.Progress.Met(), Remaining: today.Progress.Remaining(), Streak: today.Streaks.Current, Picks: []leetgrinderAPIReview{}, Due: []leetgrinderAPIReview{}}
+	out.Done.New, out.Done.Review, out.Done.Bonus = today.Progress.New(), today.Progress.Reviews(), today.Progress.Bonus()
+	for _, item := range today.Reviews {
+		recall := 0.0
+		if card, ok := today.Card(item.Problem.Slug); ok {
+			recall = card.Retrievability(today.Now)
+		}
+		out.Picks = append(out.Picks, leetgrinderAPIReview{item.Problem.Slug, item.Problem.DisplayTitle(), item.Problem.Difficulty, recall, item.Reason, item.Done})
+	}
+	due := today.DueOptional()
+	out.DueCount = len(due)
+	for _, card := range due[:min(20, len(due))] {
+		out.Due = append(out.Due, leetgrinderAPIReview{card.Problem.Slug, card.Problem.DisplayTitle(), card.Problem.Difficulty, card.Retrievability(today.Now), leetgrinder.ReviewReason(card, today.Now, loc), false})
+	}
+	respond(w, 200, out)
 }

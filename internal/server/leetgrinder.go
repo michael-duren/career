@@ -89,7 +89,7 @@ func (s *Server) renderOverview(w http.ResponseWriter, r *http.Request, status i
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your saved progress is unavailable. Please retry."))
 		return
 	}
-	page := leetgrinder.OverviewPage{Today: today, IDs: reviewIDs(map[string]string{}, today), Due: today.DueOptional(today.Cards()), LogRef: ref, LogError: message}
+	page := leetgrinder.OverviewPage{Today: today, IDs: reviewIDs(map[string]string{}, today), LogRef: ref, LogError: message}
 	renderLeetgrinder(w, r, status, leetgrinder.Overview(page))
 }
 
@@ -119,7 +119,7 @@ func (s *Server) leetgrinderProblems(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	now, loc := s.clock(), settings.Location()
-	rows := leetgrinder.ProblemRows(state, leetgrinder.BuildCards(state.Attempts, state.Problems, loc), now, loc)
+	rows := leetgrinder.ProblemRows(state, leetgrinder.BuildCards(state, loc), now, loc)
 	filter := leetgrinder.ParseProblemFilter(r.URL.Query())
 	renderLeetgrinder(w, r, 200, leetgrinder.Problems(leetgrinder.ProblemsPage{Rows: leetgrinder.FilterProblems(rows, filter), Total: len(rows), Topics: leetgrinder.ProblemTopics(rows), Filter: filter, Location: loc}))
 }
@@ -129,7 +129,7 @@ func (s *Server) leetgrinderReviews(w http.ResponseWriter, r *http.Request) {
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your review queue is unavailable. Please retry."))
 		return
 	}
-	renderLeetgrinder(w, r, 200, leetgrinder.Reviews(leetgrinder.ReviewsPage{Today: today, Cards: today.Cards(), IDs: reviewIDs(map[string]string{}, today)}))
+	renderLeetgrinder(w, r, 200, leetgrinder.Reviews(leetgrinder.ReviewsPage{Today: today, IDs: reviewIDs(map[string]string{}, today)}))
 }
 
 // leetgrinderRouteProblem validates the route's slug and returns its catalog
@@ -159,7 +159,17 @@ func (s *Server) leetgrinderProblem(w http.ResponseWriter, r *http.Request) {
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your attempt history is unavailable. Please retry."))
 		return
 	}
-	renderLeetgrinder(w, r, 200, leetgrinder.ProblemHistory(problem, state, leetgrinder.NewForm(uuid.NewString()), s.historyAnalysis(r)))
+	renderLeetgrinder(w, r, 200, leetgrinder.ProblemHistory(problem, state, leetgrinder.NewForm(uuid.NewString()), s.historyAnalysis(r), s.problemReview(r, state, problem.Slug)))
+}
+
+// problemReview is slug's review state for its page. It reads today without
+// freezing today's goal or plan; a settings failure only hides it.
+func (s *Server) problemReview(r *http.Request, state leetgrinder.State, slug string) leetgrinder.ProblemReview {
+	settings, err := s.db.LeetgrinderSettings(r.Context())
+	if err != nil {
+		return leetgrinder.ProblemReview{}
+	}
+	return leetgrinder.NewProblemReview(leetgrinder.NewToday(settings, state, s.clock()), slug)
 }
 
 // historyAnalysis reports whether analysis runs, for the history page. A
@@ -225,7 +235,7 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			form.Error += " Your history could not be loaded; your draft is retained below."
 		}
-		renderLeetgrinder(w, r, status, leetgrinder.ProblemHistory(problem, state, form, s.historyAnalysis(r)))
+		renderLeetgrinder(w, r, status, leetgrinder.ProblemHistory(problem, state, form, s.historyAnalysis(r), leetgrinder.ProblemReview{}))
 	}
 	if _, err := uuid.Parse(form.ID); err != nil {
 		form.ID = uuid.NewString()
@@ -255,7 +265,7 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 		reject(400, "Choose whether you used hints or a solution.")
 		return
 	}
-	attempt := leetgrinder.Attempt{ID: form.ID, ProblemSlug: problem.Slug, Outcome: form.Outcome, Minutes: minutes, Assisted: form.Assisted, Notes: form.Notes, Source: "web", IsReview: form.Review, TimeComplexity: form.Time.Value(), SpaceComplexity: form.Space.Value()}
+	attempt := leetgrinder.Attempt{ID: form.ID, ProblemSlug: problem.Slug, Outcome: form.Outcome, Minutes: minutes, Assisted: form.Assisted, Notes: form.Notes, Source: "web", TimeComplexity: form.Time.Value(), SpaceComplexity: form.Space.Value()}
 	switch err := attempt.NormalizeDetails(); {
 	case errors.Is(err, leetgrinder.ErrComplexityRequired):
 		reject(400, "Choose the time and space complexity of your solution. They are required for solved and struggled attempts.")
@@ -263,6 +273,10 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 	case err != nil:
 		reject(400, "Write complexity in big-O notation, such as O(m·n): start with O( and end with ), in 40 characters or fewer.")
 		return
+	}
+	if form.Revision == "" {
+		// Freeze today's goal and picks first, as the extension API does.
+		_, _ = s.db.LeetgrinderToday(r.Context(), s.clock())
 	}
 	_, err = s.db.SaveLeetgrinderAttempt(r.Context(), attempt, form.Revision)
 	if err != nil {
@@ -302,6 +316,7 @@ func (s *Server) leetgrinderSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	page := s.withNotify(r.Context(), leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), General: leetgrinder.NewGeneralForm(settings), Saved: r.URL.Query().Get("saved") != ""})
+	page.TodayGoal = s.todayGoal(r, settings)
 	page.Notify.TestSent = r.URL.Query().Get("tested") != ""
 	renderLeetgrinder(w, r, 200, leetgrinder.SettingsView(s.withAPITokens(r, page)))
 }
@@ -311,28 +326,44 @@ type settingsError string
 
 func (e settingsError) Error() string { return string(e) }
 
+// todayGoal is today's frozen goal, or nil when today has none yet or it
+// cannot be read.
+func (s *Server) todayGoal(r *http.Request, settings leetgrinder.Settings) *leetgrinder.DailyGoal {
+	if settings.Revision == "" {
+		return nil
+	}
+	goal, ok, err := s.db.LeetgrinderDailyGoal(r.Context(), leetgrinder.Date(s.clock(), settings.Location()))
+	if err != nil || !ok {
+		return nil
+	}
+	return &goal
+}
+
 func (s *Server) leetgrinderSaveGeneral(w http.ResponseWriter, r *http.Request) {
 	if !s.leetgrinderForm(w, r) {
 		return
 	}
-	form := leetgrinder.GeneralForm{Timezone: strings.TrimSpace(r.PostForm.Get("timezone")), Hours: r.PostForm.Get("hours"), Revision: r.PostForm.Get("revision")}
+	form := leetgrinder.GeneralForm{Timezone: strings.TrimSpace(r.PostForm.Get("timezone")), GoalNew: r.PostForm.Get("goalNew"), GoalReview: r.PostForm.Get("goalReview"), Revision: r.PostForm.Get("revision")}
 	reject := func(status int, message string) {
 		settings, err := s.db.LeetgrinderSettings(r.Context())
 		if err != nil {
 			message += " Your settings could not be reloaded; your draft is retained below."
 		}
-		renderLeetgrinder(w, r, status, leetgrinder.SettingsView(s.withAPITokens(r, s.withNotify(r.Context(), leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), General: form, Error: message}))))
+		page := leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), General: form, Error: message, TodayGoal: s.todayGoal(r, settings)}
+		renderLeetgrinder(w, r, status, leetgrinder.SettingsView(s.withAPITokens(r, s.withNotify(r.Context(), page))))
 	}
-	hours, err := strconv.ParseFloat(form.Hours, 64)
-	if err != nil || !leetgrinder.ValidDailyHours(hours) {
-		reject(400, "Choose between 2 and 4 hours in half-hour steps.")
+	goalNew, errNew := strconv.Atoi(form.GoalNew)
+	goalReview, errReview := strconv.Atoi(form.GoalReview)
+	goal := leetgrinder.DailyGoal{New: goalNew, Review: goalReview}
+	if errNew != nil || errReview != nil || goal.Validate() != nil {
+		reject(400, "Choose daily targets from 0 to 10, with at least one above 0.")
 		return
 	}
-	_, err = s.db.UpdateLeetgrinderSettings(r.Context(), form.Revision, func(settings *leetgrinder.Settings) error {
+	_, err := s.db.UpdateLeetgrinderSettings(r.Context(), form.Revision, func(settings *leetgrinder.Settings) error {
 		if _, err := leetgrinder.LoadTimezone(form.Timezone); err != nil {
 			return settingsError("Choose an IANA time zone such as America/Chicago.")
 		}
-		settings.Timezone, settings.DailyHours = form.Timezone, hours
+		settings.Timezone, settings.Goal = form.Timezone, goal
 		if err := settings.Validate(); err != nil {
 			return settingsError("Check the settings: " + err.Error() + ".")
 		}
@@ -388,5 +419,15 @@ func (s *Server) leetgrinderExport(w http.ResponseWriter, r *http.Request) {
 	}
 	slices.SortFunc(problems, func(a, b exportProblem) int { return strings.Compare(a.Slug, b.Slug) })
 	w.Header().Set("Content-Disposition", `attachment; filename="leetgrinder-history.json"`)
-	respond(w, 200, map[string]any{"attempts": state.Attempts, "problems": problems})
+	type exportGoal struct {
+		Date   string `json:"date"`
+		New    int    `json:"new"`
+		Review int    `json:"review"`
+	}
+	goals := []exportGoal{}
+	for date, g := range state.Goals {
+		goals = append(goals, exportGoal{date.Format(time.DateOnly), g.New, g.Review})
+	}
+	slices.SortFunc(goals, func(a, b exportGoal) int { return strings.Compare(a.Date, b.Date) })
+	respond(w, 200, map[string]any{"attempts": state.Attempts, "problems": problems, "dailyGoals": goals})
 }

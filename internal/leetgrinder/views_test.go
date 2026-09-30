@@ -14,7 +14,7 @@ func TestAttemptDraftEscapesAndRetainsInput(t *testing.T) {
 	problem := Problem{Number: 1, Slug: "two-sum", Title: "Two Sum"}
 	form := AttemptForm{ID: uuid.NewString(), Revision: uuid.NewString(), Outcome: "struggled", Minutes: "26", Assisted: true, Notes: "<script>alert(1)</script>", Error: "Please retry"}
 	var out bytes.Buffer
-	if err := ProblemHistory(problem, State{}, form, AnalysisAvailability{}).Render(context.Background(), &out); err != nil {
+	if err := ProblemHistory(problem, State{}, form, AnalysisAvailability{}, ProblemReview{}).Render(context.Background(), &out); err != nil {
 		t.Fatal(err)
 	}
 	html := out.String()
@@ -31,7 +31,7 @@ func TestAttemptDraftEscapesAndRetainsInput(t *testing.T) {
 func TestProblemHistoryForAnyProblem(t *testing.T) {
 	render := func(p Problem, state State) string {
 		var out bytes.Buffer
-		if err := ProblemHistory(p, state, NewForm(uuid.NewString()), AnalysisAvailability{}).Render(context.Background(), &out); err != nil {
+		if err := ProblemHistory(p, state, NewForm(uuid.NewString()), AnalysisAvailability{}, ProblemReview{}).Render(context.Background(), &out); err != nil {
 			t.Fatal(err)
 		}
 		return out.String()
@@ -81,5 +81,32 @@ func TestRetiredPage(t *testing.T) {
 	}
 	if !strings.Contains(out.String(), `href="/leetgrinder"`) || !strings.Contains(out.String(), "retired") {
 		t.Fatal("retired page lacks dashboard link")
+	}
+}
+
+func TestProblemHistoryReviewState(t *testing.T) {
+	now := time.Date(2026, 10, 20, 12, 0, 0, 0, time.UTC)
+	solve := attempt("two-sum", "solved", 10, false, now.AddDate(0, 0, -3))
+	state := State{Problems: testProblems, Attempts: []Attempt{solve}, Analyses: map[string]Analysis{
+		solve.ID: {Status: AnalysisDone, Current: true, SpaceMatches: boolPtr(false), UpdatedAt: now.AddDate(0, 0, -3)},
+	}, Plans: map[time.Time][]string{Date(now, time.UTC): {"two-sum"}}}
+	settings := DefaultSettings()
+	settings.Timezone = "UTC"
+	review := NewProblemReview(NewToday(settings, state, now), "two-sum")
+	if !review.Due || !review.Pick || review.FlagReason != "Space complexity judged wrong 3 days ago" {
+		t.Fatalf("review %+v", review)
+	}
+	var out bytes.Buffer
+	if err := ProblemHistory(testProblems["two-sum"], state, NewForm(uuid.NewString()), AnalysisAvailability{}, review).Render(context.Background(), &out); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"Today's review", "Recall now", "Next due", "Sun 18 Oct 2026", "Space complexity judged wrong 3 days ago"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("history missing %q", want)
+		}
+	}
+	rows := ProblemRows(state, BuildCards(state, time.UTC), now, time.UTC)
+	if got := FilterProblems(rows, ParseProblemFilter(map[string][]string{"status": {"flagged"}})); len(got) != 1 {
+		t.Fatalf("flagged filter: %d", len(got))
 	}
 }

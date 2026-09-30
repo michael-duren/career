@@ -47,14 +47,11 @@ func TestLeetgrinderMigrationPreservesProgress(t *testing.T) {
 		}
 	}
 	var notes string
-	var minutes, day int
+	var minutes int
 	if err = s.DB.QueryRow("SELECT notes,minutes FROM leetgrinder_attempts WHERE problem_slug='two-sum'").Scan(&notes, &minutes); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.DB.QueryRow("SELECT day FROM leetgrinder_completed_days").Scan(&day); err != nil {
-		t.Fatal(err)
-	}
-	if notes != "Keep this history" || minutes != 23 || day != 1 {
+	if notes != "Keep this history" || minutes != 23 {
 		t.Fatal("migration changed saved progress")
 	}
 	var oldNames int

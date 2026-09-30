@@ -17,7 +17,7 @@ func problemFixture(now time.Time) (State, []ProblemRow) {
 		attempt("two-sum", "struggled", 30, false, now.AddDate(0, 0, -3)),
 		attempt("binary-search", "struggled", 30, false, now.AddDate(0, 0, -40)),
 	}}
-	return state, ProblemRows(state, BuildCards(state.Attempts, state.Problems, time.UTC), now, time.UTC)
+	return state, ProblemRows(state, BuildCards(state, time.UTC), now, time.UTC)
 }
 
 func TestProblemRowsAndFilters(t *testing.T) {
@@ -41,6 +41,7 @@ func TestProblemRowsAndFilters(t *testing.T) {
 		"status=struggled":          1,
 		"status=unfinished":         1,
 		"status=due":                2,
+		"status=flagged":            0,
 		"q=ransom+NOTE":             1,
 		"q=hash":                    1,
 		"q=mystery":                 1,
