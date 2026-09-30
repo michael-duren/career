@@ -1,7 +1,7 @@
 -- The learner's own assessment of an attempt: whether they want to review
 -- the problem again soon, and whether they reached the optimal approach or
 -- took a simpler one for time. Existing attempts keep "not stated".
--- marked_at is when either mark was last raised, so a mark added by a later
+-- marked_at is when the first mark was raised, so a mark added by a later
 -- correction flags from then on rather than from the attempt's day.
 ALTER TABLE leetgrinder_attempts
     ADD COLUMN wants_review BOOLEAN NOT NULL DEFAULT false,
