@@ -18,6 +18,7 @@ import (
 	"github.com/michael-duren/career-strategy/internal/config"
 	"github.com/michael-duren/career-strategy/internal/database"
 	"github.com/michael-duren/career-strategy/internal/leetgrinder/analysis"
+	"github.com/michael-duren/career-strategy/internal/leetgrinder/leetcode"
 	"github.com/michael-duren/career-strategy/internal/leetgrinder/notify"
 	"github.com/michael-duren/career-strategy/internal/otel"
 	"github.com/michael-duren/career-strategy/internal/running"
@@ -177,6 +178,8 @@ func run() error {
 		go notifier.Run(ctx)
 		analyser := &analysis.Worker{Store: db, Key: c.AnthropicAPIKey.Reveal(), Model: c.AnalysisModel, DailyLimit: c.AnalysisDailyLimit}
 		go analyser.Run(ctx)
+		fetcher := &leetcode.Worker{Store: db, Client: &leetcode.Client{}}
+		go fetcher.Run(ctx)
 		go server.RunScheduler(ctx, c, db)
 		srv := server.NewServer(c, db)
 		done := make(chan error, 1)

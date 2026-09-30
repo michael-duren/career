@@ -132,6 +132,6 @@ test("languageLabel and formatBytes", () => {
 
 test("describeStatus uses the app's message for 422 and explains 413", () => {
   assert.equal(lib.describeStatus(422, "time and space complexity are required."), "time and space complexity are required.");
-  assert.match(lib.describeStatus(422, ""), /curriculum/);
+  assert.match(lib.describeStatus(422, ""), /could not accept/);
   assert.match(lib.describeStatus(413, ""), /too large/);
 });

@@ -101,8 +101,7 @@ func testStore(t *testing.T) *database.Store {
 
 var chicago, _ = time.LoadLocation("America/Chicago")
 
-// at is a wall-clock time on 2026-09-10 in Chicago, which is Day 10 of a
-// schedule starting 2026-09-01.
+// at is a wall-clock time on 2026-09-<day> in Chicago.
 func at(day int, clock string) time.Time {
 	c, _ := time.Parse("15:04", clock)
 	return time.Date(2026, 9, day, c.Hour(), c.Minute(), 0, 0, chicago)
@@ -145,11 +144,38 @@ func newFixture(t *testing.T) *fixture {
 	f.worker = f.newWorker()
 	box, _ := leetgrinder.NewSecretBox(testKey)
 	sealed, _ := box.Seal([]byte(testToken))
-	start := time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC)
 	f.configure(t, func(s *leetgrinder.Settings) {
-		s.StartDate, s.NtfyURL, s.NtfyTopic, s.NtfyTokenCiphertext, s.DailyHours = &start, f.ntfy.URL, "grind", sealed, 2.5
+		s.NtfyURL, s.NtfyTopic, s.NtfyTokenCiphertext, s.DailyHours = f.ntfy.URL, "grind", sealed, 2.5
 	})
 	return f
+}
+
+// seedDue logs a struggled attempt on each slug 20 days before 2026-09-10,
+// so all of them are due for review then.
+func (f *fixture) seedDue(t *testing.T, slugs ...string) {
+	t.Helper()
+	ctx := context.Background()
+	for _, slug := range slugs {
+		a, err := f.db.SaveLeetgrinderAttempt(ctx, leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: slug, Outcome: "struggled", Minutes: 30, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := f.db.DB.Exec("UPDATE leetgrinder_attempts SET created_at=$1 WHERE id=$2", at(10, "12:00").AddDate(0, 0, -20), a.ID); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+// review logs a solve of slug at now.
+func (f *fixture) review(t *testing.T, slug string, now time.Time) {
+	t.Helper()
+	a, err := f.db.SaveLeetgrinderAttempt(context.Background(), leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: slug, Outcome: "solved", Minutes: 10, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.db.DB.Exec("UPDATE leetgrinder_attempts SET created_at=$1 WHERE id=$2", now, a.ID); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func (f *fixture) logEntry(t *testing.T, kind string, date time.Time) leetgrinder.NotificationLogEntry {
@@ -171,16 +197,8 @@ func titles(requests []sent) map[string]sent {
 
 func TestWorkerSendsEachKindOnceAtItsTime(t *testing.T) {
 	f := newFixture(t)
-	ctx := context.Background()
-	// Six early problems struggled 20 days ago are all due, more than today's slots.
-	for _, slug := range []string{"two-sum", "contains-duplicate", "valid-anagram", "ransom-note", "majority-element", "group-anagrams"} {
-		if _, err := f.db.SaveLeetgrinderAttempt(ctx, leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: slug, Outcome: "struggled", Minutes: 30, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}, ""); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if _, err := f.db.DB.Exec("UPDATE leetgrinder_attempts SET created_at=$1", at(10, "12:00").AddDate(0, 0, -20)); err != nil {
-		t.Fatal(err)
-	}
+	// Six problems struggled 20 days ago are all due, more than today's slots.
+	f.seedDue(t, "two-sum", "contains-duplicate", "valid-anagram", "ransom-note", "majority-element", "group-anagrams")
 	f.configure(t, func(s *leetgrinder.Settings) {
 		s.Notifications = map[string]leetgrinder.NotificationPref{
 			leetgrinder.NotifyMorningPlan:    {Enabled: true, Time: "08:00", Priority: "low"},
@@ -199,10 +217,10 @@ func TestWorkerSendsEachKindOnceAtItsTime(t *testing.T) {
 	}
 	morning := got[0]
 	if morning.Path != "/grind" || morning.Header.Get("Priority") != "low" || morning.Header.Get("Tags") != "sunrise" ||
-		morning.Header.Get("Click") != "https://app.example/leetgrinder/day/10" || morning.Header.Get("Authorization") != "Bearer "+testToken {
+		morning.Header.Get("Click") != "https://app.example/leetgrinder" || morning.Header.Get("Authorization") != "Bearer "+testToken {
 		t.Fatalf("morning headers: %v %v", morning.Path, morning.Header)
 	}
-	if !strings.Contains(morning.Body, "Session 10: Lower and upper boundaries") || !strings.Contains(morning.Body, "Review: ") {
+	if !strings.Contains(morning.Body, "Review: ") {
 		t.Fatalf("morning body: %q", morning.Body)
 	}
 	if got := f.step(t, at(10, "16:59")); len(got) != 0 {
@@ -211,15 +229,11 @@ func TestWorkerSendsEachKindOnceAtItsTime(t *testing.T) {
 
 	byTitle := titles(f.step(t, at(10, "17:00")))
 	missing, ok := byTitle["Leetgrinder: work left today"]
-	if !ok || len(byTitle) != 3 {
+	if !ok || len(byTitle) != 2 {
 		t.Fatalf("17:00 sends: %v", byTitle)
 	}
-	if !strings.Contains(missing.Body, "Session 10: ") || !strings.Contains(missing.Body, "Review: ") || missing.Header.Get("Tags") != "hourglass" {
+	if !strings.Contains(missing.Body, "Review: ") || missing.Header.Get("Tags") != "hourglass" {
 		t.Fatalf("missing body: %q", missing.Body)
-	}
-	behind, ok := byTitle["Leetgrinder: 10 sessions behind"]
-	if !ok || behind.Header.Get("Click") != "https://app.example/leetgrinder" || !strings.Contains(behind.Body, "0 of 10 expected sessions") {
-		t.Fatalf("behind: %v", byTitle)
 	}
 	var backlog sent
 	for title, r := range byTitle {
@@ -229,6 +243,10 @@ func TestWorkerSendsEachKindOnceAtItsTime(t *testing.T) {
 	}
 	if backlog.Header.Get("Click") != "https://app.example/leetgrinder/reviews" {
 		t.Fatalf("backlog: %v", byTitle)
+	}
+	// The retired schedule reminder never sends.
+	if e := f.logEntry(t, leetgrinder.NotifyBehindSchedule, at(10, "17:00")); e.Status != leetgrinder.NotifySkipped {
+		t.Fatalf("behind_schedule: %+v", e)
 	}
 
 	// A restarted worker reads the log and sends nothing twice.
@@ -244,7 +262,7 @@ func TestWorkerSendsEachKindOnceAtItsTime(t *testing.T) {
 		t.Fatalf("resent: %v", got)
 	}
 	e := f.logEntry(t, leetgrinder.NotifyMissingWork, at(10, "17:00"))
-	if e.Status != leetgrinder.NotifySent || e.Attempts != 1 || !strings.Contains(e.Detail, "Session 10") {
+	if e.Status != leetgrinder.NotifySent || e.Attempts != 1 || !strings.Contains(e.Detail, "Review: ") {
 		t.Fatalf("log: %+v", e)
 	}
 	// The next local day starts fresh.
@@ -255,12 +273,6 @@ func TestWorkerSendsEachKindOnceAtItsTime(t *testing.T) {
 
 func TestWorkerSkipsWhenNothingIsMissing(t *testing.T) {
 	f := newFixture(t)
-	ctx := context.Background()
-	for day := 1; day <= 10; day++ {
-		if err := f.db.SetLeetgrinderDay(ctx, day, true); err != nil {
-			t.Fatal(err)
-		}
-	}
 	if got := f.step(t, at(10, "17:00")); len(got) != 0 {
 		t.Fatalf("sent with nothing missing: %v", got)
 	}
@@ -269,10 +281,8 @@ func TestWorkerSkipsWhenNothingIsMissing(t *testing.T) {
 			t.Fatalf("%s: %+v", kind, e)
 		}
 	}
-	// It was evaluated at 17:00, so reopening the day later sends nothing.
-	if err := f.db.SetLeetgrinderDay(ctx, 10, false); err != nil {
-		t.Fatal(err)
-	}
+	// It was evaluated at 17:00, so work that falls due later sends nothing.
+	f.seedDue(t, "two-sum")
 	if got := f.step(t, at(10, "18:00")); len(got) != 0 {
 		t.Fatalf("re-evaluated: %v", got)
 	}
@@ -280,6 +290,7 @@ func TestWorkerSkipsWhenNothingIsMissing(t *testing.T) {
 
 func TestWorkerRetriesFailuresUpToTheCap(t *testing.T) {
 	f := newFixture(t)
+	f.seedDue(t, "two-sum")
 	f.configure(t, func(s *leetgrinder.Settings) {
 		s.Notifications = map[string]leetgrinder.NotificationPref{leetgrinder.NotifyBehindSchedule: {Enabled: false, Time: "17:00", Threshold: 3, Priority: "default"}}
 	})
@@ -311,14 +322,15 @@ func TestWorkerRetriesFailuresUpToTheCap(t *testing.T) {
 
 func TestWorkerReclaimsAbandonedSends(t *testing.T) {
 	f := newFixture(t)
+	f.seedDue(t, "two-sum")
 	ctx := context.Background()
 	date := leetgrinder.Date(at(10, "17:00"), chicago)
 	// A crash after claiming leaves a "sending" row behind.
 	if _, ok, err := f.db.ClaimLeetgrinderNotification(ctx, leetgrinder.NotifyMissingWork, date, at(10, "17:00")); !ok || err != nil {
 		t.Fatal(ok, err)
 	}
-	if got := titles(f.step(t, at(10, "17:01"))); len(got) != 1 {
-		t.Fatalf("only behind_schedule should send while the claim is fresh: %v", got)
+	if got := f.step(t, at(10, "17:01")); len(got) != 0 {
+		t.Fatalf("nothing should send while the claim is fresh: %v", got)
 	}
 	if got := f.step(t, at(10, "17:05")); len(got) != 1 || got[0].Header.Get("Title") != "Leetgrinder: work left today" {
 		t.Fatalf("abandoned send not retried: %v", got)
@@ -327,14 +339,15 @@ func TestWorkerReclaimsAbandonedSends(t *testing.T) {
 
 func TestWorkerSkipsAbandonedSendWhoseConditionCleared(t *testing.T) {
 	f := newFixture(t)
+	f.seedDue(t, "two-sum")
 	ctx := context.Background()
 	date := leetgrinder.Date(at(10, "17:00"), chicago)
+	// The first evaluation plans today's review.
+	f.step(t, at(10, "08:00"))
 	if _, ok, err := f.db.ClaimLeetgrinderNotification(ctx, leetgrinder.NotifyMissingWork, date, at(10, "17:00")); !ok || err != nil {
 		t.Fatal(ok, err)
 	}
-	if err := f.db.SetLeetgrinderDay(ctx, 10, true); err != nil {
-		t.Fatal(err)
-	}
+	f.review(t, "two-sum", at(10, "16:00"))
 	f.step(t, at(10, "17:01"))
 	if e := f.logEntry(t, leetgrinder.NotifyMissingWork, at(10, "17:00")); e.Status != leetgrinder.NotifySending {
 		t.Fatalf("fresh claim overwritten: %+v", e)
@@ -343,44 +356,20 @@ func TestWorkerSkipsAbandonedSendWhoseConditionCleared(t *testing.T) {
 	if e := f.logEntry(t, leetgrinder.NotifyMissingWork, at(10, "17:00")); e.Status != leetgrinder.NotifySkipped {
 		t.Fatalf("abandoned send not skipped: %+v", e)
 	}
-	// Reopening the day later sends nothing.
-	if err := f.db.SetLeetgrinderDay(ctx, 10, false); err != nil {
-		t.Fatal(err)
-	}
-	for _, r := range f.step(t, at(10, "22:00")) {
-		if r.Header.Get("Title") == "Leetgrinder: work left today" {
-			t.Fatal("sent after the day was skipped")
-		}
-	}
 }
 
-func TestWorkerRespectsScheduleBounds(t *testing.T) {
+func TestWorkerNeedsATopic(t *testing.T) {
 	f := newFixture(t)
-	// Before the start date.
-	if got := f.step(t, time.Date(2026, 8, 31, 18, 0, 0, 0, chicago)); len(got) != 0 {
-		t.Fatalf("sent before start: %v", got)
-	}
-	// The day after the end still reports being behind.
-	end := time.Date(2026, 11, 23, 18, 0, 0, 0, chicago) // start + 83 days
-	if got := titles(f.step(t, end.AddDate(0, 0, 1))); len(got) != 1 {
-		t.Fatalf("end + 1 day: %v", got)
-	}
-	if got := f.step(t, end.AddDate(0, 0, 2)); len(got) != 0 {
-		t.Fatalf("sent after end + 1 day: %v", got)
-	}
-	// No topic, or no schedule, means nothing is sent.
+	f.seedDue(t, "two-sum")
 	f.configure(t, func(s *leetgrinder.Settings) { s.NtfyTopic = "" })
 	if got := f.step(t, at(12, "18:00")); len(got) != 0 {
 		t.Fatalf("sent without topic: %v", got)
-	}
-	f.configure(t, func(s *leetgrinder.Settings) { s.NtfyTopic, s.StartDate = "grind", nil })
-	if got := f.step(t, at(13, "18:00")); len(got) != 0 {
-		t.Fatalf("sent without schedule: %v", got)
 	}
 }
 
 func TestWorkerLogsUnreadableToken(t *testing.T) {
 	f := newFixture(t)
+	f.seedDue(t, "two-sum")
 	f.worker.SecretKey = bytes.Repeat([]byte{1}, 32)
 	if got := f.step(t, at(10, "17:00")); len(got) != 0 {
 		t.Fatalf("sent without a readable token: %v", got)

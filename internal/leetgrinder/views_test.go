@@ -5,52 +5,13 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 )
 
-func TestSessionRendersLessonAndPracticeForms(t *testing.T) {
-	day, ok := FindDay(1)
-	if !ok {
-		t.Fatal("missing first day")
-	}
-	ids := map[string]string{}
-	for _, p := range day.Core {
-		ids[p.Slug] = uuid.NewString()
-	}
-	for _, p := range day.Optional {
-		ids[p.Slug] = uuid.NewString()
-	}
-	var body bytes.Buffer
-	if err := Session(DayPage{Day: day, IDs: ids}).Render(context.Background(), &body); err != nil {
-		t.Fatal(err)
-	}
-	html := body.String()
-	for _, want := range []string{"Before you start", "/leetgrinder/day/1/complete", `name="minutes"`, `name="assisted"`, `name="notes"`, `name="id"`, `name="revision"`} {
-		if !strings.Contains(html, want) {
-			t.Errorf("missing %q", want)
-		}
-	}
-	for _, p := range day.Core {
-		if !strings.Contains(html, p.URL()) || !strings.Contains(html, ids[p.Slug]) {
-			t.Errorf("missing assignment/form for %s", p.Slug)
-		}
-	}
-	var lesson bytes.Buffer
-	if err := Lesson(day.Lesson).Render(context.Background(), &lesson); err != nil {
-		t.Fatal(err)
-	}
-	if lesson.Len() < 200 || !strings.Contains(html, lesson.String()) {
-		t.Fatal("lesson not rendered inside session")
-	}
-	for _, unexpected := range []string{"@Lesson", "@attemptFields", "if form.", "if reading."} {
-		if strings.Contains(html, unexpected) {
-			t.Errorf("template syntax leaked: %s", unexpected)
-		}
-	}
-}
 func TestAttemptDraftEscapesAndRetainsInput(t *testing.T) {
-	problem := Problem{ID: 1, Slug: "two-sum", Title: "Two Sum"}
+	problem := Problem{Number: 1, Slug: "two-sum", Title: "Two Sum"}
 	form := AttemptForm{ID: uuid.NewString(), Revision: uuid.NewString(), Outcome: "struggled", Minutes: "26", Assisted: true, Notes: "<script>alert(1)</script>", Error: "Please retry"}
 	var out bytes.Buffer
 	if err := ProblemHistory(problem, State{}, form, AnalysisAvailability{}).Render(context.Background(), &out); err != nil {
@@ -67,22 +28,55 @@ func TestAttemptDraftEscapesAndRetainsInput(t *testing.T) {
 	}
 }
 
-func TestMockKeepsPatternGuidanceBehindReview(t *testing.T) {
-	day, _ := FindDay(84)
+func TestProblemHistoryForAnyProblem(t *testing.T) {
+	render := func(p Problem, state State) string {
+		var out bytes.Buffer
+		if err := ProblemHistory(p, state, NewForm(uuid.NewString()), AnalysisAvailability{}).Render(context.Background(), &out); err != nil {
+			t.Fatal(err)
+		}
+		return out.String()
+	}
+	// An unknown slug shows its slug and waits for metadata.
+	html := render(Problem{Slug: "some-new-problem"}, State{})
+	for _, want := range []string{"<h1>some-new-problem</h1>", "Fetching details from LeetCode…", `action="/leetgrinder/problem/some-new-problem/attempts"`, "No attempts recorded yet.", "appears after your first attempt"} {
+		if !strings.Contains(html, want) {
+			t.Errorf("unknown problem page missing %q", want)
+		}
+	}
+	if html = render(Problem{Slug: "gone", NotFound: true}, State{}); !strings.Contains(html, "Not found on LeetCode") || strings.Contains(html, "Fetching details") {
+		t.Error("not-found problem not marked")
+	}
+	if html = render(Problem{Slug: "given-up", FetchAttempts: MaxFetchAttempts}, State{}); strings.Contains(html, "Fetching details") {
+		t.Error("gave-up fetch still says fetching")
+	}
+	now := time.Date(2026, 10, 20, 12, 0, 0, 0, time.UTC)
+	tried := State{Attempts: []Attempt{attempt("ransom-note", "solved", 10, false, now)}}
+	html = render(testProblems["ransom-note"], tried)
+	for _, want := range []string{"LEETCODE 383", "Ransom Note", "O(m + n)", "Claude's estimate"} {
+		if !strings.Contains(html, want) {
+			t.Errorf("model optimum page missing %q", want)
+		}
+	}
+	html = render(testProblems["two-sum"], State{Attempts: []Attempt{attempt("two-sum", "solved", 10, false, now)}})
+	for _, want := range []string{"Best-known bounds", `href="/leetgrinder/problems?topic=hash-table"`, "Hash Table"} {
+		if !strings.Contains(html, want) {
+			t.Errorf("curated optimum page missing %q", want)
+		}
+	}
+	if strings.Contains(html, "Claude's estimate") {
+		t.Error("curated optimum labelled as an estimate")
+	}
+	if html = render(Problem{Slug: "x", Title: "X"}, State{Attempts: []Attempt{attempt("x", "solved", 10, false, now)}}); !strings.Contains(html, "Not known yet") {
+		t.Error("missing optimum not explained")
+	}
+}
+
+func TestRetiredPage(t *testing.T) {
 	var out bytes.Buffer
-	if err := Session(DayPage{Day: day, IDs: map[string]string{}}).Render(context.Background(), &out); err != nil {
+	if err := Retired().Render(context.Background(), &out); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(out.String(), `<details class="review-guidance"><summary>Review after your attempts</summary>`) {
-		t.Fatal("mock exposes pattern guidance before attempting")
-	}
-	body := out.String()
-	start := strings.Index(body, `<details class="review-guidance">`)
-	end := start + strings.Index(body[start:], "</details>")
-	if strings.Contains(body, "Reading path") {
-		t.Fatal("duplicate reading panel remains")
-	}
-	if references := strings.Index(body, `<footer class="lesson-references"`); references < start || references > end {
-		t.Fatal("mixed-practice references must stay inside the review disclosure")
+	if !strings.Contains(out.String(), `href="/leetgrinder"`) || !strings.Contains(out.String(), "retired") {
+		t.Fatal("retired page lacks dashboard link")
 	}
 }

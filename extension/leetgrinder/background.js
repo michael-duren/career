@@ -134,6 +134,11 @@ async function handle(message, sender) {
     case "timer:restart":
       if (!lib.validSlug(slug)) return { ok: false, status: 0, error: "Invalid problem." };
       return { ok: true, status: 200, data: await restartTimer(slug) };
+    case "metadata": {
+      const meta = lib.cleanMetadata(message.metadata);
+      if (!lib.validSlug(slug) || !meta || !meta.title) return { ok: false, status: 0, error: "Invalid problem details." };
+      return api("PUT", `/api/leetgrinder/problem/${encodeURIComponent(slug)}`, meta);
+    }
     case "attempt": {
       const attempt = lib.cleanAttempt(message.attempt);
       if (!attempt) return { ok: false, status: 400, error: "Check the attempt fields and try again." };

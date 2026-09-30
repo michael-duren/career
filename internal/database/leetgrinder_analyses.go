@@ -115,13 +115,26 @@ func (s *Store) FinishLeetgrinderAnalysis(ctx context.Context, job LeetgrinderAn
 	if status == leetgrinder.AnalysisDone {
 		optimal = result.Optimal
 	}
-	_, err := s.DB.ExecContext(ctx, `INSERT INTO leetgrinder_analyses(attempt_id,code_sha256,status,tries,actual_time,actual_space,time_matches,space_matches,optimal,explanation,model,error,updated_at)
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	_, err = tx.ExecContext(ctx, `INSERT INTO leetgrinder_analyses(attempt_id,code_sha256,status,tries,actual_time,actual_space,time_matches,space_matches,optimal,explanation,model,error,updated_at)
 VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
 ON CONFLICT (attempt_id) DO UPDATE SET code_sha256=EXCLUDED.code_sha256,status=EXCLUDED.status,tries=EXCLUDED.tries,actual_time=EXCLUDED.actual_time,actual_space=EXCLUDED.actual_space,
 time_matches=EXCLUDED.time_matches,space_matches=EXCLUDED.space_matches,optimal=EXCLUDED.optimal,explanation=EXCLUDED.explanation,model=EXCLUDED.model,error=EXCLUDED.error,updated_at=EXCLUDED.updated_at`,
 		job.Attempt.ID, job.Hash, status, tries, result.ActualTime, result.ActualSpace, result.TimeMatches, result.SpaceMatches, optimal,
 		leetgrinder.CleanAnalysisText(result.Explanation, leetgrinder.MaxAnalysisExplanation), leetgrinder.CleanAnalysisText(model, 100), leetgrinder.CleanAnalysisText(detail, leetgrinder.MaxAnalysisError), now)
-	return err
+	if err != nil {
+		return err
+	}
+	if status == leetgrinder.AnalysisDone {
+		if err = saveLeetgrinderModelOptimal(ctx, tx, job.Attempt.ProblemSlug, result); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
 }
 
 // RequeueLeetgrinderAnalysis resets an attempt's analysis to pending with no

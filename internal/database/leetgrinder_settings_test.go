@@ -61,7 +61,7 @@ func TestLeetgrinderScheduleMigrationKeepsAttempts(t *testing.T) {
 		t.Fatalf("existing attempt changed: %+v %v", state, err)
 	}
 	settings, err := s.LeetgrinderSettings(ctx)
-	if err != nil || settings.StartDate != nil || settings.Timezone != "America/Chicago" || settings.DailyHours != 2 || settings.NtfyURL != "https://ntfy.sh" || settings.TokenSet() || len(settings.Notifications) != 0 {
+	if err != nil || settings.Timezone != "America/Chicago" || settings.DailyHours != 2 || settings.NtfyURL != "https://ntfy.sh" || settings.TokenSet() || len(settings.Notifications) != 0 {
 		t.Fatalf("default settings: %+v %v", settings, err)
 	}
 	for _, table := range []string{"leetgrinder_api_tokens", "leetgrinder_review_plan", "leetgrinder_notification_log"} {
@@ -89,9 +89,8 @@ func TestLeetgrinderSettingsRevisions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	start := time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)
 	saved, err := s.UpdateLeetgrinderSettings(ctx, original.Revision, func(v *leetgrinder.Settings) error {
-		v.StartDate, v.Timezone, v.DailyHours = &start, "Asia/Tokyo", 3.5
+		v.Timezone, v.DailyHours = "Asia/Tokyo", 3.5
 		v.NtfyTokenCiphertext = []byte{1, 2, 3}
 		v.Notifications = map[string]leetgrinder.NotificationPref{"missing_work": {Enabled: true, Time: "17:00", Priority: "default"}}
 		return nil
@@ -99,7 +98,7 @@ func TestLeetgrinderSettingsRevisions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if saved.Revision == original.Revision || !saved.StartDate.Equal(start) || saved.Timezone != "Asia/Tokyo" || saved.DailyHours != 3.5 || !saved.TokenSet() || !saved.Notifications["missing_work"].Enabled {
+	if saved.Revision == original.Revision || saved.Timezone != "Asia/Tokyo" || saved.DailyHours != 3.5 || !saved.TokenSet() || !saved.Notifications["missing_work"].Enabled {
 		t.Fatalf("saved: %+v", saved)
 	}
 	loaded, err := s.LeetgrinderSettings(ctx)
@@ -123,10 +122,10 @@ func TestLeetgrinderSettingsRevisions(t *testing.T) {
 		t.Fatalf("caller error: %v", err)
 	}
 	cleared, err := s.UpdateLeetgrinderSettings(ctx, saved.Revision, func(v *leetgrinder.Settings) error {
-		v.StartDate, v.NtfyTokenCiphertext = nil, nil
+		v.NtfyTokenCiphertext = nil
 		return nil
 	})
-	if err != nil || cleared.StartDate != nil || cleared.TokenSet() {
+	if err != nil || cleared.TokenSet() {
 		t.Fatalf("clear: %+v %v", cleared, err)
 	}
 	// Concurrent writers with one revision: exactly one wins.
@@ -163,10 +162,9 @@ func TestLeetgrinderTodayFreezesReviewPlan(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	start := time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)
-	// Day 2 has only optional reading, so it has one base review slot.
+	// Two hours a day gives one review slot.
 	if settings, err = s.UpdateLeetgrinderSettings(ctx, settings.Revision, func(v *leetgrinder.Settings) error {
-		v.StartDate, v.Timezone = &start, "UTC"
+		v.Timezone = "UTC"
 		return nil
 	}); err != nil {
 		t.Fatal(err)
@@ -202,7 +200,7 @@ func TestLeetgrinderTodayFreezesReviewPlan(t *testing.T) {
 	wg.Wait()
 	close(plans)
 	for plan := range plans {
-		if !reflect.DeepEqual(plan, []string{"isomorphic-strings"}) {
+		if !reflect.DeepEqual(plan, []string{"binary-search"}) {
 			t.Fatalf("concurrent plans disagree: %v", plan)
 		}
 	}
@@ -211,11 +209,11 @@ func TestLeetgrinderTodayFreezesReviewPlan(t *testing.T) {
 		t.Fatal(err)
 	}
 	today, err := s.LeetgrinderToday(ctx, now)
-	if err != nil || len(today.Reviews) != 2 || today.Reviews[0].Problem.Slug != "isomorphic-strings" || today.Reviews[1].Problem.Slug != "two-sum" || today.Session != 2 {
+	if err != nil || len(today.Reviews) != 2 || today.Reviews[0].Problem.Slug != "binary-search" || today.Reviews[1].Problem.Slug != "isomorphic-strings" || today.Reviews[0].Problem.Title != "Binary Search" {
 		t.Fatalf("topped-up plan: %+v %v", today.Reviews, err)
 	}
 	// Logging the review marks it done and keeps the plan.
-	review := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "isomorphic-strings", Outcome: "solved", Minutes: 20, IsReview: true, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}
+	review := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "binary-search", Outcome: "solved", Minutes: 20, IsReview: true, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}
 	if _, err = s.SaveLeetgrinderAttempt(ctx, review, ""); err != nil {
 		t.Fatal(err)
 	}
@@ -223,7 +221,7 @@ func TestLeetgrinderTodayFreezesReviewPlan(t *testing.T) {
 		t.Fatal(err)
 	}
 	today, err = s.LeetgrinderToday(ctx, now)
-	if err != nil || len(today.Reviews) != 2 || !today.Reviews[0].Done || today.Reviews[1].Done || len(today.Missing().Reviews) != 1 {
+	if err != nil || len(today.Reviews) != 2 || !today.Reviews[0].Done || today.Reviews[1].Done || len(today.MissingReviews()) != 1 {
 		t.Fatalf("plan changed or done state wrong: %+v %v", today.Reviews, err)
 	}
 	var planned int

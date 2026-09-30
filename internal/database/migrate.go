@@ -14,7 +14,7 @@ import (
 //go:embed migrations/*.sql
 var migrations embed.FS
 
-const SchemaVersion = 18
+const SchemaVersion = 19
 
 func (s *Store) Migrate(ctx context.Context) error {
 	tx, err := s.DB.BeginTx(ctx, nil)
@@ -68,6 +68,9 @@ func (s *Store) Migrate(ctx context.Context) error {
 			return err
 		}
 
+	}
+	if err = seedLeetgrinderProblems(ctx, tx); err != nil {
+		return fmt.Errorf("seed leetgrinder problems: %w", err)
 	}
 	return tx.Commit()
 }

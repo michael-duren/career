@@ -54,16 +54,12 @@ func (w *Worker) Step(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	schedule, ok := settings.Schedule()
-	if !ok || settings.NtfyTopic == "" {
+	if settings.NtfyTopic == "" {
 		return nil
 	}
 	now := w.now()
 	loc := settings.Location()
 	date := leetgrinder.Date(now, loc)
-	if date.Before(schedule.Start) || date.After(schedule.End().AddDate(0, 0, 1)) {
-		return nil
-	}
 	var today *leetgrinder.Today
 	var errs []error
 	for _, kind := range leetgrinder.NotificationKinds {
@@ -90,7 +86,7 @@ func (w *Worker) Step(ctx context.Context) error {
 		}
 		var cards []leetgrinder.Card
 		if kind.Key == leetgrinder.NotifyReviewBacklog {
-			cards = leetgrinder.BuildCards(today.State.Attempts, loc)
+			cards = today.Cards()
 		}
 		msg, due := Compose(kind.Key, pref, *today, cards, w.Origin)
 		if !due {

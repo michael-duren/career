@@ -40,8 +40,8 @@ func TestCardsReplayAttempts(t *testing.T) {
 	collapsed := BuildCards([]Attempt{
 		attempt("two-sum", "struggled", 30, false, morning.Add(10*time.Hour)),
 		attempt("two-sum", "solved", 10, false, morning),
-	}, chicago)
-	struggledOnly := BuildCards([]Attempt{attempt("two-sum", "struggled", 30, false, morning.Add(10*time.Hour))}, chicago)
+	}, testProblems, chicago)
+	struggledOnly := BuildCards([]Attempt{attempt("two-sum", "struggled", 30, false, morning.Add(10*time.Hour))}, testProblems, chicago)
 	if len(collapsed) != 1 || collapsed[0].Reviews != 1 || collapsed[0].Last.Outcome != "struggled" || !collapsed[0].Due.Equal(struggledOnly[0].Due) {
 		t.Fatalf("same-day attempts not collapsed: %+v", collapsed)
 	}
@@ -49,7 +49,7 @@ func TestCardsReplayAttempts(t *testing.T) {
 	split := BuildCards([]Attempt{
 		attempt("two-sum", "struggled", 30, false, time.Date(2026, 10, 1, 23, 30, 0, 0, chicago)),
 		attempt("two-sum", "solved", 20, false, time.Date(2026, 10, 2, 0, 30, 0, 0, chicago)),
-	}, chicago)
+	}, testProblems, chicago)
 	if split[0].Reviews != 2 {
 		t.Fatalf("local days merged: %d", split[0].Reviews)
 	}
@@ -58,39 +58,41 @@ func TestCardsReplayAttempts(t *testing.T) {
 	chicagoDays := BuildCards([]Attempt{
 		attempt("two-sum", "struggled", 30, false, time.Date(2026, 10, 5, 20, 0, 0, 0, chicago)),
 		attempt("two-sum", "solved", 20, false, time.Date(2026, 10, 6, 18, 0, 0, 0, chicago)),
-	}, chicago)
+	}, testProblems, chicago)
 	utcDays := BuildCards([]Attempt{
 		attempt("two-sum", "struggled", 30, false, time.Date(2026, 10, 5, 20, 0, 0, 0, time.UTC)),
 		attempt("two-sum", "solved", 20, false, time.Date(2026, 10, 6, 18, 0, 0, 0, time.UTC)),
-	}, time.UTC)
+	}, testProblems, time.UTC)
 	if got, want := Date(chicagoDays[0].Due, chicago), Date(utcDays[0].Due, time.UTC); !got.Equal(want) {
 		t.Fatalf("local due %s, want %s", got, want)
 	}
 	// A correction from unfinished to easy solved pushes the due date out.
-	before := BuildCards([]Attempt{attempt("two-sum", "unfinished", 25, false, morning)}, chicago)
-	after := BuildCards([]Attempt{attempt("two-sum", "solved", 12, false, morning)}, chicago)
+	before := BuildCards([]Attempt{attempt("two-sum", "unfinished", 25, false, morning)}, testProblems, chicago)
+	after := BuildCards([]Attempt{attempt("two-sum", "solved", 12, false, morning)}, testProblems, chicago)
 	if !after[0].Due.After(before[0].Due) || before[0].Due.Sub(morning) > 48*time.Hour {
 		t.Fatalf("correction did not move due: %s -> %s", before[0].Due, after[0].Due)
 	}
 	if r := after[0].Retrievability(after[0].Due.Add(30 * 24 * time.Hour)); r <= 0 || r >= after[0].Retrievability(morning.Add(24*time.Hour)) {
 		t.Fatalf("recall should decay: %v", r)
 	}
-	if cards := BuildCards([]Attempt{attempt("not-in-curriculum", "solved", 5, false, morning)}, chicago); len(cards) != 0 {
-		t.Fatal("unknown slug became a card")
+	// Any problem gets a card; one missing from the catalog has just its slug.
+	if cards := BuildCards([]Attempt{attempt("not-in-catalog", "solved", 5, false, morning)}, testProblems, chicago); len(cards) != 1 || cards[0].Problem.Slug != "not-in-catalog" || cards[0].Problem.Known() {
+		t.Fatalf("unknown slug card: %+v", cards)
+	}
+	if cards := BuildCards([]Attempt{attempt("two-sum", "solved", 5, false, morning)}, testProblems, chicago); cards[0].Problem.Title != "Two Sum" {
+		t.Fatalf("card problem not from catalog: %+v", cards[0].Problem)
 	}
 }
 
 func TestReviewSlots(t *testing.T) {
-	// Day 1 has required reading; day 2 only an optional refresher.
 	for _, test := range []struct {
-		session int
-		hours   float64
-		want    int
+		hours float64
+		want  int
 	}{
-		{1, 2, 0}, {2, 2, 1}, {0, 2, 1}, {2, 2.5, 2}, {2, 3, 3}, {1, 3.5, 3}, {2, 4, 5},
+		{2, 1}, {2.5, 2}, {3, 3}, {3.5, 4}, {4, 5},
 	} {
-		if got := ReviewSlots(test.session, test.hours); got != test.want {
-			t.Errorf("session %d at %.1fh: %d, want %d", test.session, test.hours, got, test.want)
+		if got := ReviewSlots(test.hours); got != test.want {
+			t.Errorf("%.1fh: %d, want %d", test.hours, got, test.want)
 		}
 	}
 }
@@ -100,70 +102,67 @@ func TestPlanReviews(t *testing.T) {
 	date := day("2026-11-01")
 	old := date.AddDate(0, 0, -30)
 	cards := BuildCards([]Attempt{
-		attempt("two-sum", "solved", 10, false, old),                // week 1, easy: highest recall
-		attempt("binary-search", "unfinished", 25, false, old),      // week 2, again
-		attempt("isomorphic-strings", "unfinished", 25, false, old), // week 1, again: ties binary-search
-		attempt("ransom-note", "struggled", 25, false, old),         // week 1, hard (day 2 assignment)
-		attempt("valid-anagram", "solved", 10, false, date),         // attempted today: not due
-	}, loc)
-	// Session 2 (optional reading only) at 3 hours: 1 base + 2 extra slots.
-	plan := PlanReviews(cards, date, loc, 2, 3, nil)
-	want := []string{"isomorphic-strings", "binary-search", "two-sum"}
+		attempt("two-sum", "solved", 10, false, old),                // easy: highest recall
+		attempt("binary-search", "unfinished", 25, false, old),      // again
+		attempt("isomorphic-strings", "unfinished", 25, false, old), // again: ties binary-search
+		attempt("ransom-note", "struggled", 25, false, old),         // hard
+		attempt("valid-anagram", "solved", 10, false, date),         // first attempted today: never picked
+	}, testProblems, loc)
+	plan := PlanReviews(cards, date, loc, 3, nil)
+	want := []string{"binary-search", "isomorphic-strings", "ransom-note"}
 	if !reflect.DeepEqual(plan, want) {
-		t.Fatalf("plan = %v, want %v (ransom-note is assigned today)", plan, want)
+		t.Fatalf("plan = %v, want %v", plan, want)
 	}
 	// The plan is frozen: new state never reorders or removes existing picks.
-	if got := PlanReviews(nil, date, loc, 2, 2, want); !reflect.DeepEqual(got, want) {
+	if got := PlanReviews(nil, date, loc, 1, want); !reflect.DeepEqual(got, want) {
 		t.Fatalf("frozen plan changed: %v", got)
 	}
-	// Fewer hours never drop picks; more hours add to the end.
-	if got := PlanReviews(cards, date, loc, 2, 2, want[:1]); !reflect.DeepEqual(got, want[:1]) {
+	// Fewer slots never drop picks; more slots add to the end.
+	if got := PlanReviews(cards, date, loc, 1, want[:1]); !reflect.DeepEqual(got, want[:1]) {
 		t.Fatalf("plan without new slots: %v", got)
 	}
-	if got := PlanReviews(cards, date, loc, 2, 4, []string{"two-sum"}); !reflect.DeepEqual(got, []string{"two-sum", "isomorphic-strings", "binary-search"}) {
+	if got := PlanReviews(cards, date, loc, 3, []string{"two-sum"}); !reflect.DeepEqual(got, []string{"two-sum", "binary-search", "isomorphic-strings"}) {
 		t.Fatalf("topped-up plan: %v", got)
 	}
-	// Reading day at 2 hours has no slots.
-	if got := PlanReviews(cards, date, loc, 1, 2, nil); len(got) != 0 {
-		t.Fatalf("reading day planned %v", got)
-	}
 	// Nothing due in the future is picked.
-	if got := PlanReviews(cards, old, loc, 0, 4, nil); len(got) != 0 {
+	if got := PlanReviews(cards, old, loc, 5, nil); len(got) != 0 {
 		t.Fatalf("planned undue cards: %v", got)
 	}
 }
 
-func TestTodayReviewsAndMissingWork(t *testing.T) {
+func TestTodayReviewsAndDueList(t *testing.T) {
 	loc := time.UTC
-	start := day("2026-10-01")
 	now := time.Date(2026, 10, 20, 18, 0, 0, 0, loc)
 	settings := DefaultSettings()
-	settings.Timezone, settings.StartDate = "UTC", &start
-	state := State{CompletedDays: []int{1, 2}, Attempts: []Attempt{
+	settings.Timezone = "UTC"
+	state := State{Problems: testProblems, Attempts: []Attempt{
 		attempt("two-sum", "solved", 12, false, now.Add(-time.Hour)),
 		attempt("two-sum", "struggled", 30, false, now.AddDate(0, 0, -9)),
 		attempt("binary-search", "unfinished", 25, true, now.AddDate(0, 0, -3)),
+		attempt("ransom-note", "unfinished", 25, true, now.AddDate(0, 0, -5)),
+		attempt("valid-anagram", "unfinished", 25, true, now.AddDate(0, 0, -5)),
 	}}
 	today := NewToday(settings, state, []string{"two-sum", "binary-search"}, now)
-	if today.Session != 20 || today.Status() != "18 sessions behind" {
-		t.Fatalf("session %d, status %q", today.Session, today.Status())
-	}
-	if len(today.Reviews) != 2 || !today.Reviews[0].Done || today.Reviews[1].Done || today.Reviews[0].Slot != 1 {
+	if len(today.Reviews) != 2 || !today.Reviews[0].Done || today.Reviews[1].Done || today.Reviews[0].Slot != 1 || today.Reviews[0].Problem.Title != "Two Sum" {
 		t.Fatalf("reviews: %+v", today.Reviews)
 	}
 	if reason := today.Reviews[0].Reason; !strings.HasPrefix(reason, "Struggled 9 days ago · recall estimate ") || !strings.HasSuffix(reason, "%") {
 		t.Fatalf("reason %q describes today's attempt or is malformed", reason)
 	}
-	missing := today.Missing()
-	if missing.Session != 20 || len(missing.Reviews) != 1 || missing.Reviews[0].Problem.Slug != "binary-search" || missing.Empty() {
+	if missing := today.MissingReviews(); len(missing) != 1 || missing[0].Problem.Slug != "binary-search" {
 		t.Fatalf("missing: %+v", missing)
 	}
-	state.CompletedDays = append(state.CompletedDays, 20)
-	state.Attempts = append(state.Attempts, attempt("binary-search", "solved", 20, false, now))
-	if m := NewToday(settings, state, []string{"two-sum", "binary-search"}, now).Missing(); !m.Empty() {
-		t.Fatalf("finished day still missing %+v", m)
+	due := today.DueOptional(today.Cards())
+	if len(due) != 2 || today.Backlog(today.Cards()) != 2 {
+		t.Fatalf("due list: %+v", due)
 	}
-	if unset := NewToday(DefaultSettings(), state, nil, now); unset.Session != 0 || unset.Status() != "" || !unset.Missing().Empty() {
-		t.Fatal("unset schedule reported work")
+	for _, c := range due {
+		if c.Problem.Slug == "two-sum" || c.Problem.Slug == "binary-search" {
+			t.Fatalf("due list has a planned or attempted card: %s", c.Problem.Slug)
+		}
+	}
+	state.Attempts = append(state.Attempts, attempt("binary-search", "solved", 20, false, now))
+	if m := NewToday(settings, state, []string{"two-sum", "binary-search"}, now).MissingReviews(); len(m) != 0 {
+		t.Fatalf("finished reviews still missing %+v", m)
 	}
 }

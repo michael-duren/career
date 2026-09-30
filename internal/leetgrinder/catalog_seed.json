@@ -1,0 +1,2949 @@
+[
+  {
+    "slug": "two-sum",
+    "number": 1,
+    "title": "Two Sum",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "pairs-of-songs-with-total-durations-divisible-by-60",
+    "number": 1010,
+    "title": "Pairs of Songs With Total Durations Divisible by 60",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "n songs; 60 fixed remainder buckets. Look up the complementary remainder before recording the current one.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "valid-anagram",
+    "number": 242,
+    "title": "Valid Anagram",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Counts over a fixed 26-letter alphabet.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "ransom-note",
+    "number": 383,
+    "title": "Ransom Note",
+    "difficulty": "Easy",
+    "optimalTime": "O(m + n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m, n: ransomNote and magazine lengths; 26-letter counts.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "brick-wall",
+    "number": 554,
+    "title": "Brick Wall",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "n: total bricks across all rows; count cumulative offsets excluding the wall edges.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "majority-element",
+    "number": 169,
+    "title": "Majority Element",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Boyer–Moore voting.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "group-anagrams",
+    "number": 49,
+    "title": "Group Anagrams",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·k)",
+    "optimalSpace": "O(n·k)",
+    "optimalNote": "n strings of length up to k; letter-count keys (sorting keys gives O(n·k log k)).",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "isomorphic-strings",
+    "number": 205,
+    "title": "Isomorphic Strings",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Maps over the fixed ASCII alphabet.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "word-pattern",
+    "number": 290,
+    "title": "Word Pattern",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "n: length of s; the maps hold at most the distinct words.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "intersection-of-two-arrays-ii",
+    "number": 350,
+    "title": "Intersection of Two Arrays II",
+    "difficulty": "Easy",
+    "optimalTime": "O(m + n)",
+    "optimalSpace": "O(min(m, n))",
+    "optimalNote": "m, n: array lengths; count the smaller array.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "happy-number",
+    "number": 202,
+    "title": "Happy Number",
+    "difficulty": "Easy",
+    "optimalTime": "O(log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Floyd cycle detection on the digit-square sequence.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "valid-sudoku",
+    "number": 36,
+    "title": "Valid Sudoku",
+    "difficulty": "Medium",
+    "optimalTime": "O(1)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "The board is a fixed 9×9 grid.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "intersection-of-two-arrays",
+    "number": 349,
+    "title": "Intersection of Two Arrays",
+    "difficulty": "Easy",
+    "optimalTime": "O(m + n)",
+    "optimalSpace": "O(min(m, n))",
+    "optimalNote": "m, n: array lengths; hash the smaller array.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "merge-sorted-array",
+    "number": 88,
+    "title": "Merge Sorted Array",
+    "difficulty": "Easy",
+    "optimalTime": "O(m + n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Merge from the back.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "sort-an-array",
+    "number": 912,
+    "title": "Sort an Array",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "The statement requires O(n log n); heapsort sorts in place (merge sort needs O(n); counting sort over the value range is O(n + r)).",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "sort-colors",
+    "number": 75,
+    "title": "Sort Colors",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Dutch national flag partition.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "multiply-strings",
+    "number": 43,
+    "title": "Multiply Strings",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(m + n)",
+    "optimalNote": "m, n: lengths of num1 and num2; digit accumulator sized to the product length, carries resolved after the pass.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "running-sum-of-1d-array",
+    "number": 1480,
+    "title": "Running Sum of 1d Array",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Prefix sums in place.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "plus-one",
+    "number": 66,
+    "title": "Plus One",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "pascals-triangle",
+    "number": 118,
+    "title": "Pascal's Triangle",
+    "difficulty": "Easy",
+    "optimalTime": "O(n²)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "n: numRows; the returned triangle is output.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "pascals-triangle-ii",
+    "number": 119,
+    "title": "Pascal's Triangle II",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "n: rowIndex; binomial recurrence C(n, k) = C(n, k−1)·(n−k+1)/k. The row DP is O(n²).",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "spiral-matrix",
+    "number": 54,
+    "title": "Spiral Matrix",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m × n matrix.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "rotate-image",
+    "number": 48,
+    "title": "Rotate Image",
+    "difficulty": "Medium",
+    "optimalTime": "O(n²)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "n × n matrix; transpose then reverse rows.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "set-matrix-zeroes",
+    "number": 73,
+    "title": "Set Matrix Zeroes",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m × n matrix; first row and column as markers.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "rotate-array",
+    "number": 189,
+    "title": "Rotate Array",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Three reversals.",
+    "curriculumTopic": "Fundamentals"
+  },
+  {
+    "slug": "binary-search",
+    "number": 704,
+    "title": "Binary Search",
+    "difficulty": "Easy",
+    "optimalTime": "O(log n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "search-insert-position",
+    "number": 35,
+    "title": "Search Insert Position",
+    "difficulty": "Easy",
+    "optimalTime": "O(log n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "single-element-in-a-sorted-array",
+    "number": 540,
+    "title": "Single Element in a Sorted Array",
+    "difficulty": "Medium",
+    "optimalTime": "O(log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Binary search on pair parity at even indices.",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "first-bad-version",
+    "number": 278,
+    "title": "First Bad Version",
+    "difficulty": "Easy",
+    "optimalTime": "O(log n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "sum-of-mutated-array-closest-to-target",
+    "number": 1300,
+    "title": "Sum of Mutated Array Closest to Target",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log m)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m: max value in arr; binary search the clamp value against the monotone summed result.",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "sqrtx",
+    "number": 69,
+    "title": "Sqrt(x)",
+    "difficulty": "Easy",
+    "optimalTime": "O(log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "n: x.",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "find-first-and-last-position-of-element-in-sorted-array",
+    "number": 34,
+    "title": "Find First and Last Position of Element in Sorted Array",
+    "difficulty": "Medium",
+    "optimalTime": "O(log n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "find-smallest-letter-greater-than-target",
+    "number": 744,
+    "title": "Find Smallest Letter Greater Than Target",
+    "difficulty": "Easy",
+    "optimalTime": "O(log n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "count-negative-numbers-in-a-sorted-matrix",
+    "number": 1351,
+    "title": "Count Negative Numbers in a Sorted Matrix",
+    "difficulty": "Easy",
+    "optimalTime": "O(m + n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m × n matrix; staircase walk.",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "search-a-2d-matrix",
+    "number": 74,
+    "title": "Search a 2D Matrix",
+    "difficulty": "Medium",
+    "optimalTime": "O(log(m·n))",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m × n matrix searched as one sorted list.",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "search-a-2d-matrix-ii",
+    "number": 240,
+    "title": "Search a 2D Matrix II",
+    "difficulty": "Medium",
+    "optimalTime": "O(m + n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m × n matrix; staircase from a corner.",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "find-minimum-in-rotated-sorted-array",
+    "number": 153,
+    "title": "Find Minimum in Rotated Sorted Array",
+    "difficulty": "Medium",
+    "optimalTime": "O(log n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "search-in-rotated-sorted-array",
+    "number": 33,
+    "title": "Search in Rotated Sorted Array",
+    "difficulty": "Medium",
+    "optimalTime": "O(log n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "search-in-rotated-sorted-array-ii",
+    "number": 81,
+    "title": "Search in Rotated Sorted Array II",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Worst case with duplicates; O(log n) when values are distinct.",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "find-peak-element",
+    "number": 162,
+    "title": "Find Peak Element",
+    "difficulty": "Medium",
+    "optimalTime": "O(log n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "find-minimum-in-rotated-sorted-array-ii",
+    "number": 154,
+    "title": "Find Minimum in Rotated Sorted Array II",
+    "difficulty": "Hard",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Worst case with duplicates; O(log n) when values are distinct.",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "koko-eating-bananas",
+    "number": 875,
+    "title": "Koko Eating Bananas",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log m)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m: largest pile.",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "capacity-to-ship-packages-within-d-days",
+    "number": 1011,
+    "title": "Capacity To Ship Packages Within D Days",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log s)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "s: sum of weights.",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "find-the-smallest-divisor-given-a-threshold",
+    "number": 1283,
+    "title": "Find the Smallest Divisor Given a Threshold",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log m)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m: largest value.",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "split-array-largest-sum",
+    "number": 410,
+    "title": "Split Array Largest Sum",
+    "difficulty": "Hard",
+    "optimalTime": "O(n log s)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "s: sum of nums; binary search on the answer.",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "minimum-number-of-days-to-make-m-bouquets",
+    "number": 1482,
+    "title": "Minimum Number of Days to Make m Bouquets",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log d)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "n: flowers; d: latest bloom day (m is the bouquet count).",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "maximum-distance-between-a-pair-of-values",
+    "number": 1855,
+    "title": "Maximum Distance Between a Pair of Values",
+    "difficulty": "Medium",
+    "optimalTime": "O(m + n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m, n: array lengths; two pointers.",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "successful-pairs-of-spells-and-potions",
+    "number": 2300,
+    "title": "Successful Pairs of Spells and Potions",
+    "difficulty": "Medium",
+    "optimalTime": "O((m + n) log m)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "n spells, m potions; sort potions in place, binary search per spell.",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "minimum-limit-of-balls-in-a-bag",
+    "number": 1760,
+    "title": "Minimum Limit of Balls in a Bag",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log m)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m: largest bag.",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "minimized-maximum-of-products-distributed-to-any-store",
+    "number": 2064,
+    "title": "Minimized Maximum of Products Distributed to Any Store",
+    "difficulty": "Medium",
+    "optimalTime": "O(m log k)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m: product types; k: largest quantity.",
+    "curriculumTopic": "Binary search"
+  },
+  {
+    "slug": "valid-palindrome",
+    "number": 125,
+    "title": "Valid Palindrome",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "reverse-string",
+    "number": 344,
+    "title": "Reverse String",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "two-sum-ii-input-array-is-sorted",
+    "number": 167,
+    "title": "Two Sum II - Input Array Is Sorted",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "remove-duplicates-from-sorted-array",
+    "number": 26,
+    "title": "Remove Duplicates from Sorted Array",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "remove-duplicates-from-sorted-array-ii",
+    "number": 80,
+    "title": "Remove Duplicates from Sorted Array II",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Write pointer allows up to two of each value.",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "move-zeroes",
+    "number": 283,
+    "title": "Move Zeroes",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "container-with-most-water",
+    "number": 11,
+    "title": "Container With Most Water",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "3sum",
+    "number": 15,
+    "title": "3Sum",
+    "difficulty": "Medium",
+    "optimalTime": "O(n²)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Sort in place, then two pointers.",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "3sum-closest",
+    "number": 16,
+    "title": "3Sum Closest",
+    "difficulty": "Medium",
+    "optimalTime": "O(n²)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Sort in place, then two pointers.",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "4sum",
+    "number": 18,
+    "title": "4Sum",
+    "difficulty": "Medium",
+    "optimalTime": "O(n³)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Sort in place, two fixed indices, then two pointers.",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "maximum-average-subarray-i",
+    "number": 643,
+    "title": "Maximum Average Subarray I",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "maximum-number-of-vowels-in-a-substring-of-given-length",
+    "number": 1456,
+    "title": "Maximum Number of Vowels in a Substring of Given Length",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "number-of-sub-arrays-of-size-k-and-average-greater-than-or-equal-to-threshold",
+    "number": 1343,
+    "title": "Number of Sub-arrays of Size K and Average Greater than or Equal to Threshold",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "find-all-anagrams-in-a-string",
+    "number": 438,
+    "title": "Find All Anagrams in a String",
+    "difficulty": "Medium",
+    "optimalTime": "O(m + n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m, n: lengths of s and p; 26-letter window counts.",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "longest-substring-without-repeating-characters",
+    "number": 3,
+    "title": "Longest Substring Without Repeating Characters",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "The character set is bounded (letters, digits, symbols, spaces).",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "minimum-size-subarray-sum",
+    "number": 209,
+    "title": "Minimum Size Subarray Sum",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "max-consecutive-ones-iii",
+    "number": 1004,
+    "title": "Max Consecutive Ones III",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "longest-repeating-character-replacement",
+    "number": 424,
+    "title": "Longest Repeating Character Replacement",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Counts over 26 uppercase letters.",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "fruit-into-baskets",
+    "number": 904,
+    "title": "Fruit Into Baskets",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "The window holds at most two fruit types.",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "range-sum-query-immutable",
+    "number": 303,
+    "title": "Range Sum Query - Immutable",
+    "difficulty": "Easy",
+    "optimalTime": "O(1)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Per sumRange query; the constructor builds prefix sums in O(n).",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "find-pivot-index",
+    "number": 724,
+    "title": "Find Pivot Index",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "subarray-sum-equals-k",
+    "number": 560,
+    "title": "Subarray Sum Equals K",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Prefix sums with a hash map of counts.",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "product-of-array-except-self",
+    "number": 238,
+    "title": "Product of Array Except Self",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "The output array holds the prefix products.",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "continuous-subarray-sum",
+    "number": 523,
+    "title": "Continuous Subarray Sum",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(min(n, k))",
+    "optimalNote": "Map of first index per prefix remainder mod k.",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "subarray-sums-divisible-by-k",
+    "number": 974,
+    "title": "Subarray Sums Divisible by K",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(min(n, k))",
+    "optimalNote": "Counts per prefix remainder mod k (an array of k counts gives O(n + k) time).",
+    "curriculumTopic": "Two pointers, windows, and prefix sums"
+  },
+  {
+    "slug": "reverse-linked-list",
+    "number": 206,
+    "title": "Reverse Linked List",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Iterative; recursion uses O(n) stack.",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "merge-two-sorted-lists",
+    "number": 21,
+    "title": "Merge Two Sorted Lists",
+    "difficulty": "Easy",
+    "optimalTime": "O(m + n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m, n: list lengths; splice existing nodes.",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "reverse-linked-list-ii",
+    "number": 92,
+    "title": "Reverse Linked List II",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Reverse only the bounded sublist, splicing it back with saved boundary nodes.",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "middle-of-the-linked-list",
+    "number": 876,
+    "title": "Middle of the Linked List",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "linked-list-cycle",
+    "number": 141,
+    "title": "Linked List Cycle",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Floyd cycle detection.",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "delete-the-middle-node-of-a-linked-list",
+    "number": 2095,
+    "title": "Delete the Middle Node of a Linked List",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Fast/slow pointers with a trailing pointer to unlink the middle.",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "remove-nth-node-from-end-of-list",
+    "number": 19,
+    "title": "Remove Nth Node From End of List",
+    "difficulty": "Medium",
+    "optimalTime": "O(L)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "L: list length (the problem's n is the position from the end); one pass with a gap of n.",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "linked-list-cycle-ii",
+    "number": 142,
+    "title": "Linked List Cycle II",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Floyd cycle detection.",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "palindrome-linked-list",
+    "number": 234,
+    "title": "Palindrome Linked List",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Reverse the second half in place.",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "remove-linked-list-elements",
+    "number": 203,
+    "title": "Remove Linked List Elements",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "odd-even-linked-list",
+    "number": 328,
+    "title": "Odd Even Linked List",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "swap-nodes-in-pairs",
+    "number": 24,
+    "title": "Swap Nodes in Pairs",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Iterative.",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "add-two-numbers-ii",
+    "number": 445,
+    "title": "Add Two Numbers II",
+    "difficulty": "Medium",
+    "optimalTime": "O(m + n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m, n: list lengths; reverses the inputs. Without modifying them (the follow-up), stacks use O(m + n).",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "reorder-list",
+    "number": 143,
+    "title": "Reorder List",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Find the middle, reverse, and merge.",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "design-linked-list",
+    "number": 707,
+    "title": "Design Linked List",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Per index-based operation (O(min(k, n − k)) doubly linked, k: index); addAtHead and addAtTail are O(1) with sentinels. Space is the stored list.",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "valid-parentheses",
+    "number": 20,
+    "title": "Valid Parentheses",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "min-stack",
+    "number": 155,
+    "title": "Min Stack",
+    "difficulty": "Medium",
+    "optimalTime": "O(1)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Per operation.",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "evaluate-reverse-polish-notation",
+    "number": 150,
+    "title": "Evaluate Reverse Polish Notation",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "decode-string",
+    "number": 394,
+    "title": "Decode String",
+    "difficulty": "Medium",
+    "optimalTime": "O(n + L)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "L: decoded length. A stack of partial strings can recopy nested text, costing more.",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "implement-queue-using-stacks",
+    "number": 232,
+    "title": "Implement Queue using Stacks",
+    "difficulty": "Easy",
+    "optimalTime": "O(1)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Amortised per operation.",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "implement-stack-using-queues",
+    "number": 225,
+    "title": "Implement Stack using Queues",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "push is O(n) with one queue; pop, top, and empty are O(1).",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "design-circular-queue",
+    "number": 622,
+    "title": "Design Circular Queue",
+    "difficulty": "Medium",
+    "optimalTime": "O(1)",
+    "optimalSpace": "O(k)",
+    "optimalNote": "k: capacity; time is per operation over a fixed-size array.",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "fibonacci-number",
+    "number": 509,
+    "title": "Fibonacci Number",
+    "difficulty": "Easy",
+    "optimalTime": "O(log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Matrix exponentiation or fast doubling; the iterative DP is O(n).",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "powx-n",
+    "number": 50,
+    "title": "Pow(x, n)",
+    "difficulty": "Medium",
+    "optimalTime": "O(log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Iterative fast exponentiation.",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "k-th-symbol-in-grammar",
+    "number": 779,
+    "title": "K-th Symbol in Grammar",
+    "difficulty": "Medium",
+    "optimalTime": "O(log k)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Parity of the set bits of k − 1; k ≤ 2ⁿ⁻¹, so recursion on the row (O(n)) is never better.",
+    "curriculumTopic": "Linked lists, stacks, and recursion"
+  },
+  {
+    "slug": "maximum-depth-of-binary-tree",
+    "number": 104,
+    "title": "Maximum Depth of Binary Tree",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(h)",
+    "optimalNote": "h: tree height.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "populating-next-right-pointers-in-each-node",
+    "number": 116,
+    "title": "Populating Next Right Pointers in Each Node",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Perfect binary tree; established next pointers serve as the traversal queue. Recursion instead costs O(h) stack.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "invert-binary-tree",
+    "number": 226,
+    "title": "Invert Binary Tree",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(h)",
+    "optimalNote": "h: tree height.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "same-tree",
+    "number": 100,
+    "title": "Same Tree",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(h)",
+    "optimalNote": "n: nodes in the smaller tree; h: its height.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "find-duplicate-subtrees",
+    "number": 652,
+    "title": "Find Duplicate Subtrees",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Expected, with hashmap-keyed subtree serialisations; string-key concatenation costs O(n²) total length.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "subtree-of-another-tree",
+    "number": 572,
+    "title": "Subtree of Another Tree",
+    "difficulty": "Easy",
+    "optimalTime": "O(m + n)",
+    "optimalSpace": "O(m + n)",
+    "optimalNote": "m, n: node counts; serialise and string-match (KMP) or hash subtrees. Direct comparison is O(m·n).",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "path-sum",
+    "number": 112,
+    "title": "Path Sum",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(h)",
+    "optimalNote": "h: tree height.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "path-sum-ii",
+    "number": 113,
+    "title": "Path Sum II",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·h)",
+    "optimalSpace": "O(h)",
+    "optimalNote": "h: tree height; each matching root-to-leaf path is copied.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "binary-tree-paths",
+    "number": 257,
+    "title": "Binary Tree Paths",
+    "difficulty": "Easy",
+    "optimalTime": "O(n·h)",
+    "optimalSpace": "O(h)",
+    "optimalNote": "h: tree height; each root-to-leaf path is built as a string.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "sum-root-to-leaf-numbers",
+    "number": 129,
+    "title": "Sum Root to Leaf Numbers",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(h)",
+    "optimalNote": "h: tree height.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "binary-tree-level-order-traversal",
+    "number": 102,
+    "title": "Binary Tree Level Order Traversal",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "DFS by depth uses O(h), BFS uses O(w) for the widest level; both are O(n) in the worst case.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "binary-tree-level-order-traversal-ii",
+    "number": 107,
+    "title": "Binary Tree Level Order Traversal II",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "DFS by depth uses O(h), BFS uses O(w) for the widest level; both are O(n) in the worst case.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "binary-tree-right-side-view",
+    "number": 199,
+    "title": "Binary Tree Right Side View",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "DFS by depth uses O(h), BFS uses O(w) for the widest level; both are O(n) in the worst case.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "validate-binary-search-tree",
+    "number": 98,
+    "title": "Validate Binary Search Tree",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(h)",
+    "optimalNote": "h: tree height.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "search-in-a-binary-search-tree",
+    "number": 700,
+    "title": "Search in a Binary Search Tree",
+    "difficulty": "Easy",
+    "optimalTime": "O(h)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "h: tree height; iterative.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "insert-into-a-binary-search-tree",
+    "number": 701,
+    "title": "Insert into a Binary Search Tree",
+    "difficulty": "Medium",
+    "optimalTime": "O(h)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "h: tree height; iterative.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "lowest-common-ancestor-of-a-binary-search-tree",
+    "number": 235,
+    "title": "Lowest Common Ancestor of a Binary Search Tree",
+    "difficulty": "Medium",
+    "optimalTime": "O(h)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "h: tree height; iterative.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "lowest-common-ancestor-of-a-binary-tree",
+    "number": 236,
+    "title": "Lowest Common Ancestor of a Binary Tree",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(h)",
+    "optimalNote": "h: tree height.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "kth-smallest-element-in-a-bst",
+    "number": 230,
+    "title": "Kth Smallest Element in a BST",
+    "difficulty": "Medium",
+    "optimalTime": "O(h + k)",
+    "optimalSpace": "O(h)",
+    "optimalNote": "h: tree height; k: the requested rank. Iterative inorder stops at the kth node.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "diameter-of-binary-tree",
+    "number": 543,
+    "title": "Diameter of Binary Tree",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(h)",
+    "optimalNote": "h: tree height.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "balanced-binary-tree",
+    "number": 110,
+    "title": "Balanced Binary Tree",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(h)",
+    "optimalNote": "h: tree height; return height and balance together.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "path-sum-iii",
+    "number": 437,
+    "title": "Path Sum III",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Prefix path-sum counts in a hashmap; the O(n²) approach resums each downward path from every node.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "construct-binary-tree-from-preorder-and-inorder-traversal",
+    "number": 105,
+    "title": "Construct Binary Tree from Preorder and Inorder Traversal",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Hash map of inorder positions.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "construct-binary-tree-from-inorder-and-postorder-traversal",
+    "number": 106,
+    "title": "Construct Binary Tree from Inorder and Postorder Traversal",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Hash map of inorder positions.",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "serialize-and-deserialize-binary-tree",
+    "number": 297,
+    "title": "Serialize and Deserialize Binary Tree",
+    "difficulty": "Hard",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "curriculumTopic": "Trees"
+  },
+  {
+    "slug": "letter-case-permutation",
+    "number": 784,
+    "title": "Letter Case Permutation",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·2ⁿ)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "n: string length; up to 2ⁿ outputs of length n.",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "sum-of-all-subset-xor-totals",
+    "number": 1863,
+    "title": "Sum of All Subset XOR Totals",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "OR of all values times 2ⁿ⁻¹; enumerating subsets is O(2ⁿ).",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "binary-watch",
+    "number": 401,
+    "title": "Binary Watch",
+    "difficulty": "Easy",
+    "optimalTime": "O(1)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Only 12 × 60 times exist.",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "subsets",
+    "number": 78,
+    "title": "Subsets",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·2ⁿ)",
+    "optimalSpace": "O(n)",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "combinations",
+    "number": 77,
+    "title": "Combinations",
+    "difficulty": "Medium",
+    "optimalTime": "O(k·C(n, k))",
+    "optimalSpace": "O(k)",
+    "optimalNote": "k: combination size; C(n, k) combinations of length k.",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "permutations",
+    "number": 46,
+    "title": "Permutations",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·n!)",
+    "optimalSpace": "O(n)",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "subsets-ii",
+    "number": 90,
+    "title": "Subsets II",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·2ⁿ)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Sort in place, skip equal siblings.",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "permutations-ii",
+    "number": 47,
+    "title": "Permutations II",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·n!)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Sort in place, skip equal siblings.",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "non-decreasing-subsequences",
+    "number": 491,
+    "title": "Non-decreasing Subsequences",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·2ⁿ)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "A used set per recursion level; open levels cover separate index ranges, so the sets hold O(n) values in total.",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "combination-sum",
+    "number": 39,
+    "title": "Combination Sum",
+    "difficulty": "Medium",
+    "optimalTime": "O(n^(t/m + 1))",
+    "optimalSpace": "O(t/m)",
+    "optimalNote": "t: target; m: smallest candidate (the depth bound).",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "combination-sum-ii",
+    "number": 40,
+    "title": "Combination Sum II",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·2ⁿ)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Sort in place, skip equal siblings.",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "combination-sum-iii",
+    "number": 216,
+    "title": "Combination Sum III",
+    "difficulty": "Medium",
+    "optimalTime": "O(k·C(9, k))",
+    "optimalSpace": "O(k)",
+    "optimalNote": "k: numbers per combination (the problem's n is the target sum). Digits 1–9 only, so bounded by a constant.",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "letter-combinations-of-a-phone-number",
+    "number": 17,
+    "title": "Letter Combinations of a Phone Number",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·4ⁿ)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "n: digits (at most 4); up to 4ⁿ outputs of length n.",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "restore-ip-addresses",
+    "number": 93,
+    "title": "Restore IP Addresses",
+    "difficulty": "Medium",
+    "optimalTime": "O(1)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "At most 3⁴ splits of a string of at most 12 useful digits.",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "palindrome-partitioning",
+    "number": 131,
+    "title": "Palindrome Partitioning",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·2ⁿ)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "A palindrome table adds O(n²) space without changing the time bound.",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "word-search",
+    "number": 79,
+    "title": "Word Search",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n·3^L)",
+    "optimalSpace": "O(L)",
+    "optimalNote": "m × n board; L: word length.",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "additive-number",
+    "number": 306,
+    "title": "Additive Number",
+    "difficulty": "Medium",
+    "optimalTime": "O(n³)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "O(n²) choices of the first two numbers, each checked in O(n).",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "path-with-maximum-gold",
+    "number": 1219,
+    "title": "Path with Maximum Gold",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n + g·3^g)",
+    "optimalSpace": "O(g)",
+    "optimalNote": "m × n grid; g: gold cells (at most 25).",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "beautiful-arrangement",
+    "number": 526,
+    "title": "Beautiful Arrangement",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·2ⁿ)",
+    "optimalSpace": "O(2ⁿ)",
+    "optimalNote": "Bitmask DP over used numbers; pruned backtracking also passes.",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "matchsticks-to-square",
+    "number": 473,
+    "title": "Matchsticks to Square",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·2ⁿ)",
+    "optimalSpace": "O(2ⁿ)",
+    "optimalNote": "Bitmask DP over used matchsticks.",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "maximum-length-of-a-concatenated-string-with-unique-characters",
+    "number": 1239,
+    "title": "Maximum Length of a Concatenated String with Unique Characters",
+    "difficulty": "Medium",
+    "optimalTime": "O(2ⁿ)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "After reducing each string to a letter bitmask.",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "n-queens",
+    "number": 51,
+    "title": "N-Queens",
+    "difficulty": "Hard",
+    "optimalTime": "O(n!)",
+    "optimalSpace": "O(n)",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "generate-parentheses",
+    "number": 22,
+    "title": "Generate Parentheses",
+    "difficulty": "Medium",
+    "optimalTime": "O(4ⁿ/√n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "The nth Catalan number bounds the outputs.",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "sudoku-solver",
+    "number": 37,
+    "title": "Sudoku Solver",
+    "difficulty": "Hard",
+    "optimalTime": "O(9^m)",
+    "optimalSpace": "O(m)",
+    "optimalNote": "m: empty cells (at most 81); on the fixed board this is formally O(1).",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "partition-to-k-equal-sum-subsets",
+    "number": 698,
+    "title": "Partition to K Equal Sum Subsets",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·2ⁿ)",
+    "optimalSpace": "O(2ⁿ)",
+    "optimalNote": "Bitmask DP over used numbers.",
+    "curriculumTopic": "Backtracking"
+  },
+  {
+    "slug": "flood-fill",
+    "number": 733,
+    "title": "Flood Fill",
+    "difficulty": "Easy",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(m·n)",
+    "optimalNote": "m × n image.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "number-of-islands",
+    "number": 200,
+    "title": "Number of Islands",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(m·n)",
+    "optimalNote": "m × n grid.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "max-area-of-island",
+    "number": 695,
+    "title": "Max Area of Island",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(m·n)",
+    "optimalNote": "m × n grid.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "island-perimeter",
+    "number": 463,
+    "title": "Island Perimeter",
+    "difficulty": "Easy",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m × n grid.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "number-of-provinces",
+    "number": 547,
+    "title": "Number of Provinces",
+    "difficulty": "Medium",
+    "optimalTime": "O(n²)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "n × n adjacency matrix.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "surrounded-regions",
+    "number": 130,
+    "title": "Surrounded Regions",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(m·n)",
+    "optimalNote": "m × n board; mark from the border.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "rotting-oranges",
+    "number": 994,
+    "title": "Rotting Oranges",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(m·n)",
+    "optimalNote": "m × n grid; multi-source BFS.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "01-matrix",
+    "number": 542,
+    "title": "01 Matrix",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m × n matrix; two DP passes over the output. Multi-source BFS uses O(m·n).",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "shortest-path-in-binary-matrix",
+    "number": 1091,
+    "title": "Shortest Path in Binary Matrix",
+    "difficulty": "Medium",
+    "optimalTime": "O(n²)",
+    "optimalSpace": "O(n²)",
+    "optimalNote": "n × n grid; BFS.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "word-ladder",
+    "number": 127,
+    "title": "Word Ladder",
+    "difficulty": "Hard",
+    "optimalTime": "O(m²·n)",
+    "optimalSpace": "O(m·n)",
+    "optimalNote": "n: dictionary words; m: word length.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "all-paths-from-source-to-target",
+    "number": 797,
+    "title": "All Paths From Source to Target",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·2ⁿ)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "n: nodes in the DAG.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "keys-and-rooms",
+    "number": 841,
+    "title": "Keys and Rooms",
+    "difficulty": "Medium",
+    "optimalTime": "O(V + E)",
+    "optimalSpace": "O(V)",
+    "optimalNote": "V: rooms; E: keys.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "find-if-path-exists-in-graph",
+    "number": 1971,
+    "title": "Find if Path Exists in Graph",
+    "difficulty": "Easy",
+    "optimalTime": "O(V + E)",
+    "optimalSpace": "O(V + E)",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "evaluate-division",
+    "number": 399,
+    "title": "Evaluate Division",
+    "difficulty": "Medium",
+    "optimalTime": "O((e + q)·α(e))",
+    "optimalSpace": "O(e)",
+    "optimalNote": "e: equations; q: queries; weighted union-find.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "course-schedule",
+    "number": 207,
+    "title": "Course Schedule",
+    "difficulty": "Medium",
+    "optimalTime": "O(V + E)",
+    "optimalSpace": "O(V + E)",
+    "optimalNote": "V: courses; E: prerequisites.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "course-schedule-ii",
+    "number": 210,
+    "title": "Course Schedule II",
+    "difficulty": "Medium",
+    "optimalTime": "O(V + E)",
+    "optimalSpace": "O(V + E)",
+    "optimalNote": "V: courses; E: prerequisites.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "find-eventual-safe-states",
+    "number": 802,
+    "title": "Find Eventual Safe States",
+    "difficulty": "Medium",
+    "optimalTime": "O(V + E)",
+    "optimalSpace": "O(V)",
+    "optimalNote": "Three-colour DFS on the given adjacency list.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "minimum-number-of-vertices-to-reach-all-nodes",
+    "number": 1557,
+    "title": "Minimum Number of Vertices to Reach All Nodes",
+    "difficulty": "Medium",
+    "optimalTime": "O(V + E)",
+    "optimalSpace": "O(V)",
+    "optimalNote": "Nodes with in-degree zero.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "redundant-connection",
+    "number": 684,
+    "title": "Redundant Connection",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·α(n))",
+    "optimalSpace": "O(n)",
+    "optimalNote": "n: edges; union-find.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "accounts-merge",
+    "number": 721,
+    "title": "Accounts Merge",
+    "difficulty": "Medium",
+    "optimalTime": "O(a log a)",
+    "optimalSpace": "O(a)",
+    "optimalNote": "a: total emails; union-find plus sorting each merged account.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "satisfiability-of-equality-equations",
+    "number": 990,
+    "title": "Satisfiability of Equality Equations",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "n: equations; union-find over 26 letters.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "number-of-operations-to-make-network-connected",
+    "number": 1319,
+    "title": "Number of Operations to Make Network Connected",
+    "difficulty": "Medium",
+    "optimalTime": "O(V + E)",
+    "optimalSpace": "O(V + E)",
+    "optimalNote": "V: computers; E: cables. Union-find needs O(V) space.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "network-delay-time",
+    "number": 743,
+    "title": "Network Delay Time",
+    "difficulty": "Medium",
+    "optimalTime": "O(E log V)",
+    "optimalSpace": "O(V + E)",
+    "optimalNote": "Dijkstra with a binary heap.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "cheapest-flights-within-k-stops",
+    "number": 787,
+    "title": "Cheapest Flights Within K Stops",
+    "difficulty": "Medium",
+    "optimalTime": "O(k·(V + E))",
+    "optimalSpace": "O(V)",
+    "optimalNote": "k: maximum stops; V: cities; E: flights. Bellman–Ford limited to k + 1 rounds.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "path-with-minimum-effort",
+    "number": 1631,
+    "title": "Path With Minimum Effort",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n log(m·n))",
+    "optimalSpace": "O(m·n)",
+    "optimalNote": "m × n grid; Dijkstra on the maximum edge.",
+    "curriculumTopic": "Graphs"
+  },
+  {
+    "slug": "kth-largest-element-in-a-stream",
+    "number": 703,
+    "title": "Kth Largest Element in a Stream",
+    "difficulty": "Easy",
+    "optimalTime": "O(log k)",
+    "optimalSpace": "O(k)",
+    "optimalNote": "Per add; the constructor is O(n log k).",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "last-stone-weight",
+    "number": 1046,
+    "title": "Last Stone Weight",
+    "difficulty": "Easy",
+    "optimalTime": "O(n log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Max-heap built in place over the input; a separate heap uses O(n).",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "kth-largest-element-in-an-array",
+    "number": 215,
+    "title": "Kth Largest Element in an Array",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Average-case quickselect; a size-k heap gives O(n log k).",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "top-k-frequent-elements",
+    "number": 347,
+    "title": "Top K Frequent Elements",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Bucket by frequency.",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "top-k-frequent-words",
+    "number": 692,
+    "title": "Top K Frequent Words",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Bucket by frequency plus a trie per bucket; a size-k heap gives O(n log k).",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "k-closest-points-to-origin",
+    "number": 973,
+    "title": "K Closest Points to Origin",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Average-case quickselect; a size-k heap gives O(n log k).",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "sort-characters-by-frequency",
+    "number": 451,
+    "title": "Sort Characters By Frequency",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Counts over the bounded letter and digit alphabet.",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "reduce-array-size-to-the-half",
+    "number": 1338,
+    "title": "Reduce Array Size to The Half",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Bucket by frequency.",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "sort-array-by-increasing-frequency",
+    "number": 1636,
+    "title": "Sort Array by Increasing Frequency",
+    "difficulty": "Easy",
+    "optimalTime": "O(n log n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Count, then sort by (frequency, −value).",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "remove-stones-to-minimize-the-total",
+    "number": 1962,
+    "title": "Remove Stones to Minimize the Total",
+    "difficulty": "Medium",
+    "optimalTime": "O(n + k log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "k: operations. Heapify piles in place in O(n), then k heap operations; a copied heap uses O(n).",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "kth-smallest-element-in-a-sorted-matrix",
+    "number": 378,
+    "title": "Kth Smallest Element in a Sorted Matrix",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log r)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "n × n matrix; r: max − min value. Binary search on value with a staircase count.",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "find-k-pairs-with-smallest-sums",
+    "number": 373,
+    "title": "Find K Pairs with Smallest Sums",
+    "difficulty": "Medium",
+    "optimalTime": "O(k log k)",
+    "optimalSpace": "O(k)",
+    "optimalNote": "k: pairs requested. Heap frontier of at most k pairs.",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "k-th-smallest-prime-fraction",
+    "number": 786,
+    "title": "K-th Smallest Prime Fraction",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log m)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m: largest value; binary search on the fraction with a two-pointer count.",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "implement-trie-prefix-tree",
+    "number": 208,
+    "title": "Implement Trie (Prefix Tree)",
+    "difficulty": "Medium",
+    "optimalTime": "O(L)",
+    "optimalSpace": "O(T)",
+    "optimalNote": "Per operation, L: word length; T: total inserted characters.",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "design-add-and-search-words-data-structure",
+    "number": 211,
+    "title": "Design Add and Search Words Data Structure",
+    "difficulty": "Medium",
+    "optimalTime": "O(L)",
+    "optimalSpace": "O(T)",
+    "optimalNote": "L: word length; T: total characters. search with at most 2 dots is O(26²·L).",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "map-sum-pairs",
+    "number": 677,
+    "title": "Map Sum Pairs",
+    "difficulty": "Medium",
+    "optimalTime": "O(L)",
+    "optimalSpace": "O(T)",
+    "optimalNote": "Per operation, L: key length; T: total key characters. Nodes store prefix sums.",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "replace-words",
+    "number": 648,
+    "title": "Replace Words",
+    "difficulty": "Medium",
+    "optimalTime": "O(d + s)",
+    "optimalSpace": "O(d)",
+    "optimalNote": "d: dictionary characters; s: sentence length.",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "longest-word-in-dictionary",
+    "number": 720,
+    "title": "Longest Word in Dictionary",
+    "difficulty": "Medium",
+    "optimalTime": "O(t)",
+    "optimalSpace": "O(t)",
+    "optimalNote": "t: total characters; trie built from the words.",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "search-suggestions-system",
+    "number": 1268,
+    "title": "Search Suggestions System",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log n + m)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "n products, m: searchWord length; sort, then shrink a window. String compares count as O(1).",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "word-search-ii",
+    "number": 212,
+    "title": "Word Search II",
+    "difficulty": "Hard",
+    "optimalTime": "O(t + m·n·3^L)",
+    "optimalSpace": "O(t)",
+    "optimalNote": "m × n board; L: longest word; t: total word characters, to build the trie.",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "single-threaded-cpu",
+    "number": 1834,
+    "title": "Single-Threaded CPU",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log n)",
+    "optimalSpace": "O(n)",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "reorganize-string",
+    "number": 767,
+    "title": "Reorganize String",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Place the most frequent letter at even indices; 26 letters.",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "task-scheduler",
+    "number": 621,
+    "title": "Task Scheduler",
+    "difficulty": "Medium",
+    "optimalTime": "O(t)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "t: tasks; the cooldown n does not affect the bound. Counting formula over 26 task types.",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "find-median-from-data-stream",
+    "number": 295,
+    "title": "Find Median from Data Stream",
+    "difficulty": "Hard",
+    "optimalTime": "O(log n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Per addNum; findMedian is O(1). Two heaps.",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "longest-happy-string",
+    "number": 1405,
+    "title": "Longest Happy String",
+    "difficulty": "Medium",
+    "optimalTime": "O(a + b + c)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Heaps and tries"
+  },
+  {
+    "slug": "climbing-stairs",
+    "number": 70,
+    "title": "Climbing Stairs",
+    "difficulty": "Easy",
+    "optimalTime": "O(log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Fibonacci by matrix exponentiation; the iterative DP is O(n).",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "unique-binary-search-trees",
+    "number": 96,
+    "title": "Unique Binary Search Trees",
+    "difficulty": "Medium",
+    "optimalTime": "O(n²)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "DP over split points; the closed-form Catalan number gives O(n).",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "min-cost-climbing-stairs",
+    "number": 746,
+    "title": "Min Cost Climbing Stairs",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "house-robber",
+    "number": 198,
+    "title": "House Robber",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "house-robber-ii",
+    "number": 213,
+    "title": "House Robber II",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "delete-and-earn",
+    "number": 740,
+    "title": "Delete and Earn",
+    "difficulty": "Medium",
+    "optimalTime": "O(n + m)",
+    "optimalSpace": "O(m)",
+    "optimalNote": "m: largest value; sorting in place gives O(n log n) time and O(1) space instead.",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "coin-change",
+    "number": 322,
+    "title": "Coin Change",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·a)",
+    "optimalSpace": "O(a)",
+    "optimalNote": "n coins; a: amount.",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "perfect-squares",
+    "number": 279,
+    "title": "Perfect Squares",
+    "difficulty": "Medium",
+    "optimalTime": "O(√n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Lagrange's four-square and Legendre's three-square theorems; the DP is O(n·√n).",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "decode-ways",
+    "number": 91,
+    "title": "Decode Ways",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "combination-sum-iv",
+    "number": 377,
+    "title": "Combination Sum IV",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·t)",
+    "optimalSpace": "O(t)",
+    "optimalNote": "n: numbers; t: target.",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "word-break",
+    "number": 139,
+    "title": "Word Break",
+    "difficulty": "Medium",
+    "optimalTime": "O((n + m)·k)",
+    "optimalSpace": "O(n + m·k)",
+    "optimalNote": "n: length of s; m: words; k: longest word. Trie walk from each start.",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "best-time-to-buy-and-sell-stock-with-cooldown",
+    "number": 309,
+    "title": "Best Time to Buy and Sell Stock with Cooldown",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "best-time-to-buy-and-sell-stock-with-transaction-fee",
+    "number": 714,
+    "title": "Best Time to Buy and Sell Stock with Transaction Fee",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "longest-increasing-subsequence",
+    "number": 300,
+    "title": "Longest Increasing Subsequence",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Patience sorting tails.",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "maximum-length-of-pair-chain",
+    "number": 646,
+    "title": "Maximum Length of Pair Chain",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Sort by end in place, then greedy.",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "number-of-longest-increasing-subsequence",
+    "number": 673,
+    "title": "Number of Longest Increasing Subsequence",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Segment tree or Fenwick tree over values; the DP is O(n²).",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "partition-equal-subset-sum",
+    "number": 416,
+    "title": "Partition Equal Subset Sum",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·s)",
+    "optimalSpace": "O(s)",
+    "optimalNote": "s: half the total sum.",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "target-sum",
+    "number": 494,
+    "title": "Target Sum",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·s)",
+    "optimalSpace": "O(s)",
+    "optimalNote": "s: sum of the absolute values.",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "last-stone-weight-ii",
+    "number": 1049,
+    "title": "Last Stone Weight II",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·s)",
+    "optimalSpace": "O(s)",
+    "optimalNote": "s: total weight.",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "coin-change-ii",
+    "number": 518,
+    "title": "Coin Change II",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·a)",
+    "optimalSpace": "O(a)",
+    "optimalNote": "n coins; a: amount.",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "maximum-product-subarray",
+    "number": 152,
+    "title": "Maximum Product Subarray",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "maximum-subarray",
+    "number": 53,
+    "title": "Maximum Subarray",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Kadane.",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "best-time-to-buy-and-sell-stock",
+    "number": 121,
+    "title": "Best Time to Buy and Sell Stock",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "integer-break",
+    "number": 343,
+    "title": "Integer Break",
+    "difficulty": "Medium",
+    "optimalTime": "O(log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Split into 3s; fast power. The DP is O(n²).",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "arithmetic-slices",
+    "number": 413,
+    "title": "Arithmetic Slices",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Basic dynamic programming"
+  },
+  {
+    "slug": "unique-paths",
+    "number": 62,
+    "title": "Unique Paths",
+    "difficulty": "Medium",
+    "optimalTime": "O(min(m, n))",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Binomial coefficient C(m + n − 2, min(m, n) − 1); the DP is O(m·n).",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "unique-paths-ii",
+    "number": 63,
+    "title": "Unique Paths II",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m × n grid; DP in place over the grid (a rolling row uses O(n)).",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "minimum-path-sum",
+    "number": 64,
+    "title": "Minimum Path Sum",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m × n grid; DP in place over the grid (a rolling row uses O(n)).",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "triangle",
+    "number": 120,
+    "title": "Triangle",
+    "difficulty": "Medium",
+    "optimalTime": "O(n²)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "n: rows; bottom-up in place (a rolling row uses O(n)).",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "minimum-falling-path-sum",
+    "number": 931,
+    "title": "Minimum Falling Path Sum",
+    "difficulty": "Medium",
+    "optimalTime": "O(n²)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "n × n matrix; DP in place (a rolling row uses O(n)).",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "maximal-square",
+    "number": 221,
+    "title": "Maximal Square",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(min(m, n))",
+    "optimalNote": "m × n matrix; rolling row along the shorter side. The input holds characters, so it is not reused as DP storage.",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "count-square-submatrices-with-all-ones",
+    "number": 1277,
+    "title": "Count Square Submatrices with All Ones",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m × n matrix; DP in place (a rolling row uses O(n)).",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "longest-common-subsequence",
+    "number": 1143,
+    "title": "Longest Common Subsequence",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(min(m, n))",
+    "optimalNote": "m, n: string lengths; rolling row.",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "delete-operation-for-two-strings",
+    "number": 583,
+    "title": "Delete Operation for Two Strings",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(min(m, n))",
+    "optimalNote": "m, n: string lengths; rolling row.",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "uncrossed-lines",
+    "number": 1035,
+    "title": "Uncrossed Lines",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(min(m, n))",
+    "optimalNote": "m, n: array lengths; rolling row.",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "edit-distance",
+    "number": 72,
+    "title": "Edit Distance",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(min(m, n))",
+    "optimalNote": "m, n: string lengths; rolling row.",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "longest-palindromic-subsequence",
+    "number": 516,
+    "title": "Longest Palindromic Subsequence",
+    "difficulty": "Medium",
+    "optimalTime": "O(n²)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Interval DP with a rolling row.",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "palindromic-substrings",
+    "number": 647,
+    "title": "Palindromic Substrings",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Manacher's algorithm; expanding around centres is O(n²) time, O(1) space.",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "distinct-subsequences",
+    "number": 115,
+    "title": "Distinct Subsequences",
+    "difficulty": "Hard",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "m: length of s; n: length of t.",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "maximum-length-of-repeated-subarray",
+    "number": 718,
+    "title": "Maximum Length of Repeated Subarray",
+    "difficulty": "Medium",
+    "optimalTime": "O((m + n)·log(min(m, n)))",
+    "optimalSpace": "O(min(m, n))",
+    "optimalNote": "m, n: array lengths; binary search on length with rolling hashes (expected). The DP is O(m·n).",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "interleaving-string",
+    "number": 97,
+    "title": "Interleaving String",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(min(m, n))",
+    "optimalNote": "m, n: lengths of s1 and s2; rolling row.",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "ones-and-zeroes",
+    "number": 474,
+    "title": "Ones and Zeroes",
+    "difficulty": "Medium",
+    "optimalTime": "O(L + l·m·n)",
+    "optimalSpace": "O(m·n)",
+    "optimalNote": "l: strings; L: their total length; m, n: zero and one budgets.",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "profitable-schemes",
+    "number": 879,
+    "title": "Profitable Schemes",
+    "difficulty": "Hard",
+    "optimalTime": "O(g·n·p)",
+    "optimalSpace": "O(n·p)",
+    "optimalNote": "g: crimes; n: members; p: minProfit.",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "number-of-dice-rolls-with-target-sum",
+    "number": 1155,
+    "title": "Number of Dice Rolls With Target Sum",
+    "difficulty": "Medium",
+    "optimalTime": "O(n·t)",
+    "optimalSpace": "O(t)",
+    "optimalNote": "n dice; k: faces; t: target. Sliding-window sums over faces; the plain DP is O(n·k·t).",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "cherry-pickup",
+    "number": 741,
+    "title": "Cherry Pickup",
+    "difficulty": "Hard",
+    "optimalTime": "O(n³)",
+    "optimalSpace": "O(n²)",
+    "optimalNote": "n × n grid; two walkers moving together.",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "cherry-pickup-ii",
+    "number": 1463,
+    "title": "Cherry Pickup II",
+    "difficulty": "Hard",
+    "optimalTime": "O(m·n²)",
+    "optimalSpace": "O(n²)",
+    "optimalNote": "m rows, n columns; both robots' columns per row.",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "stone-game",
+    "number": 877,
+    "title": "Stone Game",
+    "difficulty": "Medium",
+    "optimalTime": "O(1)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "The first player always wins; the interval DP is O(n²).",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "predict-the-winner",
+    "number": 486,
+    "title": "Predict the Winner",
+    "difficulty": "Medium",
+    "optimalTime": "O(n²)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Interval DP with a rolling row.",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "burst-balloons",
+    "number": 312,
+    "title": "Burst Balloons",
+    "difficulty": "Hard",
+    "optimalTime": "O(n³)",
+    "optimalSpace": "O(n²)",
+    "optimalNote": "Interval DP on the last balloon burst.",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "minimum-difficulty-of-a-job-schedule",
+    "number": 1335,
+    "title": "Minimum Difficulty of a Job Schedule",
+    "difficulty": "Hard",
+    "optimalTime": "O(n·d)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "d: days; monotonic stack per day. The plain DP is O(n²·d).",
+    "curriculumTopic": "Multidimensional dynamic programming"
+  },
+  {
+    "slug": "assign-cookies",
+    "number": 455,
+    "title": "Assign Cookies",
+    "difficulty": "Easy",
+    "optimalTime": "O(n log n + m log m)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "n children, m cookies; sort both in place.",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "score-after-flipping-matrix",
+    "number": 861,
+    "title": "Score After Flipping Matrix",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m × n matrix; flip rows so column 0 is all 1s, then flip each column only if it gains more 1s than it loses.",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "maximum-units-on-a-truck",
+    "number": 1710,
+    "title": "Maximum Units on a Truck",
+    "difficulty": "Easy",
+    "optimalTime": "O(n log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "n: box types; sort in place. Bucketing by units per box (at most 1000) gives O(n + r), r: value range.",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "array-partition",
+    "number": 561,
+    "title": "Array Partition",
+    "difficulty": "Easy",
+    "optimalTime": "O(n log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Sort in place; counting sort over the value range is O(n + r).",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "boats-to-save-people",
+    "number": 881,
+    "title": "Boats to Save People",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Sort in place, then two pointers.",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "two-city-scheduling",
+    "number": 1029,
+    "title": "Two City Scheduling",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Sort by cost difference; quickselect on the difference gives O(n) average.",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "hand-of-straights",
+    "number": 846,
+    "title": "Hand of Straights",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Hash map counts; walk back to each run start and consume whole groups. A sorted map gives O(n log n).",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "queue-reconstruction-by-height",
+    "number": 406,
+    "title": "Queue Reconstruction by Height",
+    "difficulty": "Medium",
+    "optimalTime": "O(n²)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Sort, then insert by k into the output list. A Fenwick tree gives O(n log n).",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "non-overlapping-intervals",
+    "number": 435,
+    "title": "Non-overlapping Intervals",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Sort by end in place, then greedy.",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "minimum-number-of-arrows-to-burst-balloons",
+    "number": 452,
+    "title": "Minimum Number of Arrows to Burst Balloons",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Sort by end in place, then greedy.",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "partition-labels",
+    "number": 763,
+    "title": "Partition Labels",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Last index per letter over 26 letters.",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "merge-intervals",
+    "number": 56,
+    "title": "Merge Intervals",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Sort in place.",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "insert-interval",
+    "number": 57,
+    "title": "Insert Interval",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "interval-list-intersections",
+    "number": 986,
+    "title": "Interval List Intersections",
+    "difficulty": "Medium",
+    "optimalTime": "O(m + n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m, n: list lengths.",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "monotone-increasing-digits",
+    "number": 738,
+    "title": "Monotone Increasing Digits",
+    "difficulty": "Medium",
+    "optimalTime": "O(log n)",
+    "optimalSpace": "O(log n)",
+    "optimalNote": "n: the input number; its digits.",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "gas-station",
+    "number": 134,
+    "title": "Gas Station",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "jump-game-ii",
+    "number": 45,
+    "title": "Jump Game II",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "daily-temperatures",
+    "number": 739,
+    "title": "Daily Temperatures",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Scan right to left, jumping through the answer array. A monotonic stack uses O(n).",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "next-greater-element-i",
+    "number": 496,
+    "title": "Next Greater Element I",
+    "difficulty": "Easy",
+    "optimalTime": "O(m + n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "m: nums1 length; n: nums2 length; monotonic stack and map.",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "next-greater-element-ii",
+    "number": 503,
+    "title": "Next Greater Element II",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "largest-rectangle-in-histogram",
+    "number": 84,
+    "title": "Largest Rectangle in Histogram",
+    "difficulty": "Hard",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "online-stock-span",
+    "number": 901,
+    "title": "Online Stock Span",
+    "difficulty": "Medium",
+    "optimalTime": "O(1)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Amortised per next call.",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "car-fleet",
+    "number": 853,
+    "title": "Car Fleet",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log n)",
+    "optimalSpace": "O(n)",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "remove-k-digits",
+    "number": 402,
+    "title": "Remove K Digits",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "The monotonic stack is built in the output buffer; counted as working space it is O(n).",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "trapping-rain-water",
+    "number": 42,
+    "title": "Trapping Rain Water",
+    "difficulty": "Hard",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Two pointers.",
+    "curriculumTopic": "Greedy, intervals, and monotonic stacks"
+  },
+  {
+    "slug": "longest-consecutive-sequence",
+    "number": 128,
+    "title": "Longest Consecutive Sequence",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "find-the-duplicate-number",
+    "number": 287,
+    "title": "Find the Duplicate Number",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Floyd cycle detection without modifying the array.",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "counting-bits",
+    "number": 338,
+    "title": "Counting Bits",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "find-k-closest-elements",
+    "number": 658,
+    "title": "Find K Closest Elements",
+    "difficulty": "Medium",
+    "optimalTime": "O(log(n − k) + k)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Binary search for the window start.",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "count-number-of-nice-subarrays",
+    "number": 1248,
+    "title": "Count Number of Nice Subarrays",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "atMost(k) − atMost(k − 1) sliding windows.",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "binary-subarrays-with-sum",
+    "number": 930,
+    "title": "Binary Subarrays With Sum",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "atMost(goal) − atMost(goal − 1) sliding windows.",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "minimum-window-substring",
+    "number": 76,
+    "title": "Minimum Window Substring",
+    "difficulty": "Hard",
+    "optimalTime": "O(m + n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "m, n: lengths of s and t; counts over the bounded letter alphabet.",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "rotate-list",
+    "number": 61,
+    "title": "Rotate List",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "binary-tree-inorder-traversal",
+    "number": 94,
+    "title": "Binary Tree Inorder Traversal",
+    "difficulty": "Easy",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(h)",
+    "optimalNote": "h: tree height. Morris traversal uses O(1) by threading the tree temporarily.",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "flatten-a-multilevel-doubly-linked-list",
+    "number": 430,
+    "title": "Flatten a Multilevel Doubly Linked List",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Splice each child list in place; each node is walked at most twice.",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "merge-k-sorted-lists",
+    "number": 23,
+    "title": "Merge k Sorted Lists",
+    "difficulty": "Hard",
+    "optimalTime": "O(n log k)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "n: total nodes; iterative pairwise merging. A heap uses O(k).",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "pacific-atlantic-water-flow",
+    "number": 417,
+    "title": "Pacific Atlantic Water Flow",
+    "difficulty": "Medium",
+    "optimalTime": "O(m·n)",
+    "optimalSpace": "O(m·n)",
+    "optimalNote": "m × n grid; search inward from both oceans.",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "clone-graph",
+    "number": 133,
+    "title": "Clone Graph",
+    "difficulty": "Medium",
+    "optimalTime": "O(V + E)",
+    "optimalSpace": "O(V)",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "minimum-height-trees",
+    "number": 310,
+    "title": "Minimum Height Trees",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Trim leaves layer by layer.",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "magnetic-force-between-two-balls",
+    "number": 1552,
+    "title": "Magnetic Force Between Two Balls",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log n + n log r)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "r: position range; sort, then binary search on the distance.",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "furthest-building-you-can-reach",
+    "number": 1642,
+    "title": "Furthest Building You Can Reach",
+    "difficulty": "Medium",
+    "optimalTime": "O(n log k)",
+    "optimalSpace": "O(k)",
+    "optimalNote": "k: ladders; min-heap of the largest climbs.",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "find-unique-binary-string",
+    "number": 1980,
+    "title": "Find Unique Binary String",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Cantor diagonal: flip the ith bit of the ith string.",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "minimum-difference-between-highest-and-lowest-of-k-scores",
+    "number": 1984,
+    "title": "Minimum Difference Between Highest and Lowest of K Scores",
+    "difficulty": "Easy",
+    "optimalTime": "O(n log n)",
+    "optimalSpace": "O(1)",
+    "optimalNote": "Sort in place, then a window of k.",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "stone-game-ii",
+    "number": 1140,
+    "title": "Stone Game II",
+    "difficulty": "Medium",
+    "optimalTime": "O(n³)",
+    "optimalSpace": "O(n²)",
+    "optimalNote": "DP over (index, M) with suffix sums.",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "video-stitching",
+    "number": 1024,
+    "title": "Video Stitching",
+    "difficulty": "Medium",
+    "optimalTime": "O(n + t)",
+    "optimalSpace": "O(t)",
+    "optimalNote": "n clips; t: time. Farthest reach per start, then a jump-game scan.",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "lru-cache",
+    "number": 146,
+    "title": "LRU Cache",
+    "difficulty": "Medium",
+    "optimalTime": "O(1)",
+    "optimalSpace": "O(c)",
+    "optimalNote": "Per operation; c: capacity. Hash map plus doubly linked list.",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "possible-bipartition",
+    "number": 886,
+    "title": "Possible Bipartition",
+    "difficulty": "Medium",
+    "optimalTime": "O(V + E)",
+    "optimalSpace": "O(V + E)",
+    "optimalNote": "V: people; E: dislikes.",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "remove-all-adjacent-duplicates-in-string-ii",
+    "number": 1209,
+    "title": "Remove All Adjacent Duplicates in String II",
+    "difficulty": "Medium",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(n)",
+    "optimalNote": "Stack of (character, count).",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "binary-tree-maximum-path-sum",
+    "number": 124,
+    "title": "Binary Tree Maximum Path Sum",
+    "difficulty": "Hard",
+    "optimalTime": "O(n)",
+    "optimalSpace": "O(h)",
+    "optimalNote": "h: tree height.",
+    "curriculumTopic": "Mixed practice"
+  },
+  {
+    "slug": "minimum-interval-to-include-each-query",
+    "number": 1851,
+    "title": "Minimum Interval to Include Each Query",
+    "difficulty": "Hard",
+    "optimalTime": "O(n log n + q log q)",
+    "optimalSpace": "O(n + q)",
+    "optimalNote": "n intervals; q queries; sort both and sweep with a min-heap.",
+    "curriculumTopic": "Mixed practice"
+  }
+]

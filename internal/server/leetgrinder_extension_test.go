@@ -103,16 +103,49 @@ func TestLeetgrinderExtensionAPI(t *testing.T) {
 		return w
 	}
 
-	// Unknown problem: reported, not an error.
+	// Any slug is accepted; an unknown one is reported as new and not known.
 	w = api("GET", "/api/leetgrinder/problem/not-a-problem", plain, nil)
 	var info leetgrinderAPIProblem
-	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &info) != nil || info.InCurriculum {
+	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &info) != nil || info.Known || info.Status != "new" || info.HistoryURL != "/leetgrinder/problem/not-a-problem" {
 		t.Fatalf("unknown problem: %d %s", w.Code, w.Body.String())
+	}
+	if w = api("GET", "/api/leetgrinder/problem/Not_A_Slug", plain, nil); w.Code != 400 {
+		t.Fatalf("bad slug: %d", w.Code)
 	}
 	w = api("GET", "/api/leetgrinder/problem/two-sum", plain, nil)
 	info = leetgrinderAPIProblem{}
-	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &info) != nil || !info.InCurriculum || info.Session != leetgrinder.ProblemDay("two-sum") || info.Week != 1 || info.Latest != nil || info.TodaysReview {
+	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &info) != nil || !info.Known || info.Title != "Two Sum" || info.Number != 1 || info.Difficulty != "Easy" || info.Status != "new" || info.Latest != nil || info.TodaysPick {
 		t.Fatalf("two-sum: %d %s", w.Code, w.Body.String())
+	}
+	for _, gone := range []string{"inCurriculum", "session", "week", "todaysReview", "reviewDone"} {
+		if strings.Contains(w.Body.String(), `"`+gone+`"`) {
+			t.Errorf("response still has %q", gone)
+		}
+	}
+
+	// Metadata from the extension fills in an unknown problem.
+	meta := map[string]any{"number": 146, "title": "LRU Cache", "difficulty": "Medium", "topics": []map[string]string{{"slug": "design", "name": "Design"}, {"slug": "hash-table", "name": "Hash Table"}}}
+	if w = api("PUT", "/api/leetgrinder/problem/design-lru", plain, meta); w.Code != 204 {
+		t.Fatalf("put metadata: %d %s", w.Code, w.Body.String())
+	}
+	w = api("GET", "/api/leetgrinder/problem/design-lru", plain, nil)
+	info = leetgrinderAPIProblem{}
+	if json.Unmarshal(w.Body.Bytes(), &info) != nil || !info.Known || info.Title != "LRU Cache" || info.Number != 146 || strings.Join(info.Topics, ",") != "design,hash-table" {
+		t.Fatalf("metadata not stored: %s", w.Body.String())
+	}
+	for _, bad := range []map[string]any{
+		{"difficulty": "Trivial"},
+		{"number": -3},
+		{"title": strings.Repeat("x", 201)},
+		{"topics": []map[string]string{{"slug": "Not A Slug", "name": "x"}}},
+		{"unknown": true},
+	} {
+		if w = api("PUT", "/api/leetgrinder/problem/design-lru", plain, bad); w.Code != 400 {
+			t.Errorf("bad metadata %v: %d", bad, w.Code)
+		}
+	}
+	if w = api("PUT", "/api/leetgrinder/problem/Bad_Slug", plain, meta); w.Code != 400 {
+		t.Errorf("bad slug metadata: %d", w.Code)
 	}
 
 	id := uuid.NewString()
@@ -144,13 +177,23 @@ func TestLeetgrinderExtensionAPI(t *testing.T) {
 	if len(state.Attempts) != 2 || !state.Attempts[0].IsReview || state.Attempts[0].Source != "extension" || !state.Attempts[0].Assisted {
 		t.Fatalf("review flag: %+v", state.Attempts)
 	}
+	// An attempt on any problem is saved, with its metadata.
+	other := map[string]any{"id": uuid.NewString(), "problemSlug": "min-cost-to-connect-all-points-ii", "outcome": "unfinished", "minutes": 40, "assisted": false, "notes": "",
+		"problem": map[string]any{"number": 9999, "title": "Min Cost II", "difficulty": "Hard", "topics": []map[string]string{{"slug": "graph", "name": "Graph"}}}}
+	if w = api("POST", "/api/leetgrinder/attempts", plain, other); w.Code != 200 {
+		t.Fatalf("any-problem save: %d %s", w.Code, w.Body.String())
+	}
+	if p, _ := db.LeetgrinderProblem(ctx, "min-cost-to-connect-all-points-ii"); p.Title != "Min Cost II" || p.Number != 9999 || p.Difficulty != "Hard" {
+		t.Fatalf("attempt metadata not stored: %+v", p)
+	}
 
 	for _, test := range []struct {
 		body any
 		raw  string
 		want int
 	}{
-		{body: map[string]any{"id": uuid.NewString(), "problemSlug": "not-a-problem", "outcome": "solved", "minutes": 10}, want: 422},
+		{body: map[string]any{"id": uuid.NewString(), "problemSlug": "Not A Slug", "outcome": "unfinished", "minutes": 10}, want: 400},
+		{body: map[string]any{"id": uuid.NewString(), "problemSlug": "two-sum", "outcome": "unfinished", "minutes": 10, "problem": map[string]any{"difficulty": "Trivial"}}, want: 400},
 		{body: map[string]any{"id": "nope", "problemSlug": "two-sum", "outcome": "solved", "minutes": 10}, want: 400},
 		{body: map[string]any{"id": uuid.NewString(), "problemSlug": "two-sum", "outcome": "great", "minutes": 10}, want: 400},
 		{body: map[string]any{"id": uuid.NewString(), "problemSlug": "two-sum", "outcome": "solved", "minutes": 0}, want: 400},
@@ -246,7 +289,7 @@ func TestLeetgrinderAPIReviewStatus(t *testing.T) {
 		}
 		return info
 	}
-	if info := get(); !info.TodaysReview || info.ReviewDone || info.Latest == nil {
+	if info := get(); info.Status != "due" || !info.TodaysPick || info.AttemptedToday || info.Latest == nil || info.Recall == nil || *info.Recall <= 0 || info.DueDate == "" || info.LastAttemptedAt == nil {
 		t.Fatalf("due review not reported: %+v", info)
 	}
 	review := uuid.NewString()
@@ -256,7 +299,13 @@ func TestLeetgrinderAPIReviewStatus(t *testing.T) {
 	if _, err := db.DB.ExecContext(ctx, "UPDATE leetgrinder_attempts SET created_at=$1 WHERE id=$2", now.Add(-time.Hour), review); err != nil {
 		t.Fatal(err)
 	}
-	if info := get(); !info.ReviewDone {
+	// Still today's pick, now attempted today.
+	if info := get(); !info.AttemptedToday || !info.TodaysPick {
 		t.Fatalf("done review not reported: %+v", info)
+	}
+	// The next day it is no longer due.
+	now = now.AddDate(0, 0, 1)
+	if info := get(); info.Status != "notDue" || info.TodaysPick || info.NextDue == "" || info.DueDate != "" {
+		t.Fatalf("not-due status: %+v", info)
 	}
 }

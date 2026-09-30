@@ -133,7 +133,9 @@ func TestLeetgrinderAPIComplexityAndCode(t *testing.T) {
 	}
 	// The export carries all four fields.
 	w = request("GET", "/leetgrinder/export", nil)
-	var exported leetgrinder.State
+	var exported struct {
+		Attempts []leetgrinder.Attempt `json:"attempts"`
+	}
 	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &exported) != nil {
 		t.Fatalf("export: %d", w.Code)
 	}

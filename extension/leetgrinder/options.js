@@ -45,7 +45,7 @@
     show("Testing…");
     const res = await ext.runtime.sendMessage({ type: "test" }).catch(() => null);
     if (!res) return show("The extension's background worker did not answer.", true);
-    if (res.ok && res.data && res.data.inCurriculum) return show("Connected. The token works.");
+    if (res.ok && res.data && res.data.slug === "two-sum") return show("Connected. The token works.");
     show(res.error || lib.describeStatus(res.status, ""), true);
   });
 })();

@@ -52,7 +52,14 @@ type AnalysisResult struct {
 	TimeMatches, SpaceMatches *bool
 	Optimal                   bool
 	Explanation               string
+	// OptimalTime, OptimalSpace and OptimalNote are the model's estimate of
+	// the problem's optimum, asked for only when no reference is known.
+	// They are all "" otherwise.
+	OptimalTime, OptimalSpace, OptimalNote string
 }
+
+// MaxOptimalNote caps a model-estimated optimal note, in characters.
+const MaxOptimalNote = 300
 
 // Analysable reports whether an attempt can be analysed: it has code and at
 // least one stated complexity.

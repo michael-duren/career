@@ -1,0 +1,166 @@
+package leetgrinder
+
+// The About and day (session) pages of the 84-day curriculum, as they were
+// in internal/leetgrinder/views.templ before the tracker replaced them.
+
+templ About(state State) {
+	@layout("About", "about") {
+		<section class="hero">
+			<div><p class="eyebrow">THE DAILY PRACTICE</p><h1>Build the habits.<br/>Learn the patterns.</h1><p class="lead">A 12-week DSA curriculum for programmers getting back into problem solving. One focused session at a time.</p></div>
+			<aside class="resume">
+				<p class="eyebrow">HOW IT WORKS</p>
+				<h2>84 sessions</h2>
+				<p>252 core problems and 48 optional ones.<br/>Two hours a day: 90 minutes of practice, 30 to read and review.</p>
+				<a class="button primary" href="/leetgrinder">Go to your dashboard <span aria-hidden="true">→</span></a>
+			</aside>
+		</section>
+		<details class="guide" open><summary>How to use your two hours</summary><div class="prose"><p>Start with the lesson and any required reading. Attempt each core problem for up to 25 minutes, leaving 15 minutes of your practice budget for debugging or another attempt. Spend the separate 30-minute block on reading and reviewing solutions.</p><p>Record “Solved” when your solution passes on LeetCode. Record “Struggled” when you need to revisit the approach, or “Unfinished” when you stop without completing it. Mark solution help separately, including hints. Reviewed solutions do not count as independent solves.</p><p>Optional problems are for days when core practice finishes early. The 300-problem target is a stretch goal, not a deadline. Finish a day when your session is over, even if some problems remain unfinished.</p></div></details>
+		<section id="curriculum">
+			<div class="section-heading"><h2>Your curriculum</h2><p class="muted">12 weeks of progressively harder patterns</p></div>
+			<div class="weeks">
+				for _, week := range Curriculum() {
+					<section class="week-card">
+						<div class="week-heading">
+							<p class="eyebrow">
+								{ WeekLabel(week.Number) }
+							</p><span class="small muted">21 core · 4 optional</span>
+						</div>
+						<h3>
+							{ week.Title }
+						</h3>
+						<p class="muted">
+							{ week.Summary }
+						</p>
+						<ol class="days">
+							for _, day := range week.Days {
+								<li>
+									<a
+										href={ templ.SafeURL(DayURL(day.Number)) }
+									>
+										<span class="day-number">
+											{ Count(day.Number) }
+										</span>
+										<span>
+											{ day.Title }
+										</span>
+										if state.DayCompleted(day.Number) {
+											<span class="day-status done">Finished</span>
+										} else if Summarize(state).NextDay == day.Number {
+											<span class="day-status">Next</span>
+										}
+									</a>
+								</li>
+							}
+						</ol>
+					</section>
+				}
+			</div>
+		</section>
+	}
+}
+
+templ Session(page DayPage) {
+	@layout(DayLabel(page.Day.Number)+" · "+page.Day.Title, "") {
+		<nav class="breadcrumb" aria-label="Breadcrumb">
+			<a href="/leetgrinder/about#curriculum">Curriculum</a><span>/</span>
+			<span>
+				{ WeekLabel(WeekNumber(page.Day.Number)) }
+			</span><span>/</span>
+			<span>
+				{ DayLabel(page.Day.Number) }
+			</span>
+		</nav>
+		<div class="session-title">
+			<div>
+				<p class="eyebrow">
+					{ WeekLabel(WeekNumber(page.Day.Number)) } · { DayLabel(page.Day.Number) } OF 84
+				</p>
+				<h1>
+					{ page.Day.Title }
+				</h1>
+			</div>
+			if page.State.DayCompleted(page.Day.Number) {
+				<span class="badge">Session finished</span>
+			}
+		</div>
+		if page.Error != "" {
+			<p class="error" role="alert">
+				{ page.Error }
+			</p>
+		}
+		<section class="lesson panel" aria-labelledby="lesson-title">
+			if page.Day.MixedPractice() {
+				<p class="eyebrow">01 / CHOOSE AN APPROACH</p>
+				<h2 id="lesson-title">Attempt first, then review</h2>
+				<p class="muted">For mixed practice, choose a technique before opening the guidance. Explain your baseline and invariant before coding.</p>
+				<details class="review-guidance">
+					<summary>Review after your attempts</summary>
+					<div class="prose">
+						@Lesson(page.Day.Lesson)
+					</div>
+				</details>
+			} else {
+				<p class="eyebrow">01 / UNDERSTAND</p>
+				<h2 id="lesson-title">Before you start</h2>
+				<div class="prose">
+					@Lesson(page.Day.Lesson)
+				</div>
+			}
+		</section>
+		<div class="session-grid">
+			<div>
+				if page.ShowReviews() {
+					@todaysReviews(*page.Today, page.IDs, page.Day.Number, "")
+				}
+				<section aria-labelledby="practice-title">
+					<p class="eyebrow">02 / PRACTICE</p>
+					<h2 id="practice-title">Three core problems</h2>
+					<p class="muted">Try each for up to 25 minutes. Solve on LeetCode, then record your attempt here.</p>
+					for _, problem := range page.Day.Core {
+						@problemCard(problem, page.State, NewForm(page.IDs[problem.Slug], page.Day.Number))
+					}
+				</section>
+				if len(page.Day.Optional)>0 {
+					<section class="optional" aria-labelledby="optional-title">
+						<p class="eyebrow">GO FURTHER</p>
+						<h2 id="optional-title">Optional practice</h2>
+						<p class="muted">Only if you have time left. These count toward your 300-problem stretch goal.</p>
+						for _, problem := range page.Day.Optional {
+							@problemCard(problem, page.State, NewForm(page.IDs[problem.Slug], page.Day.Number))
+						}
+					</section>
+				}
+				<section class="panel finish">
+					<p class="eyebrow">03 / REVIEW</p>
+					<h2>Close the session</h2>
+					<p>Explain your approach and its complexity out loud. For anything you struggled with, review a solution and write down what you missed. Record any use of hints or solutions.</p>
+					<p class="muted">Finishing this day does not mark its problems solved. You can return to them anytime.</p>
+					<form method="post" action={ templ.SafeURL(DayURL(page.Day.Number) + "/complete") }>
+						if page.State.DayCompleted(page.Day.Number) {
+							<input type="hidden" name="completed" value="false"/><button class="button" type="submit">Reopen this day</button>
+						} else {
+							<input type="hidden" name="completed" value="true"/><button class="button primary" type="submit">Finish day <span aria-hidden="true">→</span></button>
+						}
+					</form>
+				</section>
+			</div>
+			<aside class="session-aside">
+				<div class="panel"><p class="eyebrow">TODAY'S BUDGET</p><h3>Two focused hours</h3><dl><dt>Core attempts</dt><dd>3 × 25 min</dd><dt>Debug or retry</dt><dd>15 min</dd><dt>Read &amp; review</dt><dd>30 min</dd></dl><p class="small muted">Stop at the time limit and record where you got stuck. A useful attempt matters more than rushing to mark a solve.</p></div>
+				<nav class="session-nav" aria-label="Session navigation">
+					if page.Day.Number>1 {
+						<a
+							href={ templ.SafeURL(DayURL(page.Day.Number - 1)) }
+						>← Previous day</a>
+					}
+					if page.Day.Number<84 {
+						<a
+							href={ templ.SafeURL(DayURL(page.Day.Number + 1)) }
+						>Next day →</a>
+					}
+					<a href="/leetgrinder/about#curriculum">All 84 sessions</a>
+				</nav>
+			</aside>
+		</div>
+	}
+}
+
