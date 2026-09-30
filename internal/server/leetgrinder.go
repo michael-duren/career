@@ -133,14 +133,15 @@ func (s *Server) leetgrinderReviews(w http.ResponseWriter, r *http.Request) {
 }
 
 // leetgrinderRouteProblem validates the route's slug and returns its catalog
-// row, adding a bare row for a new slug so its metadata gets fetched.
+// row, or a bare problem for a slug not in the catalog. Only saving an
+// attempt adds a row, so a GET never queues a LeetCode fetch.
 func (s *Server) leetgrinderRouteProblem(w http.ResponseWriter, r *http.Request) (leetgrinder.Problem, bool) {
 	slug := chi.URLParam(r, "slug")
 	if !leetgrinder.ValidSlug(slug) {
 		http.NotFound(w, r)
 		return leetgrinder.Problem{}, false
 	}
-	problem, err := s.db.EnsureLeetgrinderProblem(r.Context(), slug)
+	problem, err := s.db.LeetgrinderProblem(r.Context(), slug)
 	if err != nil {
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("This problem is unavailable. Please retry."))
 		return leetgrinder.Problem{}, false

@@ -220,11 +220,13 @@ func TestLeetgrinderLogForm(t *testing.T) {
 	if w.Code != 400 || !strings.Contains(w.Body.String(), "Enter a LeetCode problem link") || !strings.Contains(w.Body.String(), "https://example.com/&lt;b&gt;") {
 		t.Fatalf("bad reference: %d", w.Code)
 	}
-	// Opening a new problem's page adds it to the catalog for the fetcher.
-	if w = request("GET", "/leetgrinder/problem/brand-new-problem", nil); w.Code != 200 {
+	// Opening a new problem's page adds no catalog row, so a GET never
+	// queues a LeetCode fetch; saving an attempt does.
+	if w = request("GET", "/leetgrinder/problem/brand-new-problem", nil); w.Code != 200 || !strings.Contains(w.Body.String(), "Fetching details") {
 		t.Fatal(w.Code)
 	}
-	if p, err := db.LeetgrinderProblem(context.Background(), "brand-new-problem"); err != nil || !p.Fetching() {
-		t.Fatalf("catalog row: %+v %v", p, err)
+	var rows int
+	if err := db.DB.QueryRow("SELECT count(*) FROM leetgrinder_problems WHERE slug='brand-new-problem'").Scan(&rows); err != nil || rows != 0 {
+		t.Fatalf("GET added a catalog row: %d %v", rows, err)
 	}
 }

@@ -107,9 +107,10 @@ ON CONFLICT (slug) DO UPDATE SET
 }
 
 // SaveLeetgrinderMetadata validates and stores metadata the extension read
-// from LeetCode.
+// from LeetCode. A title is required: a fetched row without one means
+// LeetCode has no such problem.
 func (s *Store) SaveLeetgrinderMetadata(ctx context.Context, slug string, m leetgrinder.ProblemMetadata, now time.Time) error {
-	if !leetgrinder.ValidSlug(slug) || m.Normalize() != nil {
+	if !leetgrinder.ValidSlug(slug) || m.Normalize() != nil || m.Title == "" {
 		return ErrInvalid
 	}
 	return upsertLeetgrinderMetadata(ctx, s.DB, slug, m, "extension", now)

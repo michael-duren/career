@@ -79,7 +79,7 @@ func (s *Store) SaveLeetgrinderAttemptWithProblem(ctx context.Context, a leetgri
 	if a.NormalizeDetails() != nil {
 		return leetgrinder.Attempt{}, ErrInvalid
 	}
-	if meta != nil && meta.Normalize() != nil {
+	if meta != nil && (meta.Normalize() != nil || meta.Title == "") {
 		return leetgrinder.Attempt{}, ErrInvalid
 	}
 	if a.Source == "" {

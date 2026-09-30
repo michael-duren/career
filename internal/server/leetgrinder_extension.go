@@ -169,9 +169,10 @@ func (s *Server) leetgrinderAPIAttempt(w http.ResponseWriter, r *http.Request) {
 		bad("problemSlug must be a LeetCode problem slug.")
 		return
 	}
-	if input.Problem != nil && input.Problem.Normalize() != nil {
-		bad("problem must have a valid number, title, difficulty, and at most 20 topics.")
-		return
+	// Metadata is optional and the server can fetch it itself, so invalid
+	// metadata is dropped rather than failing the attempt.
+	if input.Problem != nil && (input.Problem.Normalize() != nil || input.Problem.Title == "") {
+		input.Problem = nil
 	}
 	attempt := leetgrinder.Attempt{ID: input.ID, ProblemSlug: input.ProblemSlug, Outcome: input.Outcome, Minutes: input.Minutes, Assisted: input.Assisted, Notes: input.Notes, Source: "extension", IsReview: input.IsReview != nil && *input.IsReview,
 		TimeComplexity: input.TimeComplexity, SpaceComplexity: input.SpaceComplexity, Code: input.Code, CodeLanguage: input.CodeLanguage}
@@ -279,7 +280,7 @@ func (s *Server) leetgrinderAPIProblemMetadata(w http.ResponseWriter, r *http.Re
 	if !decode(w, r, 16<<10, &input) {
 		return
 	}
-	if !leetgrinder.ValidSlug(slug) || input.Normalize() != nil {
+	if !leetgrinder.ValidSlug(slug) || input.Normalize() != nil || input.Title == "" {
 		respond(w, 400, map[string]string{"error": "Send a valid slug, number, title, difficulty, and at most 20 topics."})
 		return
 	}

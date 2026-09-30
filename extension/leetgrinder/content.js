@@ -52,7 +52,8 @@
   // It resolves to cleaned metadata or null and never rejects.
   async function readMetadata(slug) {
     try {
-      const res = await fetch("/graphql", {
+      // Absolute: Firefox resolves relative content-script URLs against the extension.
+      const res = await fetch(location.origin + "/graphql", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ operationName: "questionData", query: lib.GRAPHQL_QUERY, variables: { titleSlug: slug } }),
@@ -113,6 +114,7 @@
     if (found.status === "error" && current === state && !ui) {
       state.lookup = lookup(state.slug);
       found = await state.lookup;
+      if (found.status === "ok" && current === state) describe(state, found.info);
     }
     if (current !== state) return;
     const res = await send({ type: "timer:get", slug: state.slug });
@@ -130,6 +132,7 @@
     state.lookup = lookup(state.slug);
     const found = await state.lookup;
     if (current !== state || busy()) return;
+    if (found.status === "ok") describe(state, found.info);
     // Accepted ends the nudge window even if the panel is dismissed or the
     // app is unreachable.
     const res = await send({ type: "timer:update", slug: state.slug, patch: { nudged: true } });

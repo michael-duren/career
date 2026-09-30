@@ -107,15 +107,16 @@ func TestLeetgrinderMetadataPrecedence(t *testing.T) {
 		t.Fatalf("curated row after metadata: %+v", p)
 	}
 	// Empty values never erase known ones.
-	if err := s.SaveLeetgrinderMetadata(ctx, "two-sum", leetgrinder.ProblemMetadata{}, now); err != nil {
+	if err := s.SaveLeetgrinderMetadata(ctx, "two-sum", leetgrinder.ProblemMetadata{Title: "Two Sum"}, now); err != nil {
 		t.Fatal(err)
 	}
 	if p, _ = s.LeetgrinderProblem(ctx, "two-sum"); p.Title != "Two Sum" || p.Number != 1 || len(p.Topics) != 1 {
 		t.Fatalf("empty metadata erased values: %+v", p)
 	}
 	for name, bad := range map[string]leetgrinder.ProblemMetadata{
-		"difficulty": {Difficulty: "Impossible"},
-		"topics":     {Topics: []leetgrinder.TopicTag{{Slug: "Bad Tag"}}},
+		"difficulty": {Title: "X", Difficulty: "Impossible"},
+		"topics":     {Title: "X", Topics: []leetgrinder.TopicTag{{Slug: "Bad Tag"}}},
+		"no title":   {Number: 1, Difficulty: "Easy"},
 	} {
 		if err := s.SaveLeetgrinderMetadata(ctx, "two-sum", bad, now); !errors.Is(err, ErrInvalid) {
 			t.Errorf("%s: %v", name, err)

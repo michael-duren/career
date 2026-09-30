@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -138,6 +139,7 @@ func TestLeetgrinderExtensionAPI(t *testing.T) {
 		{"number": -3},
 		{"title": strings.Repeat("x", 201)},
 		{"topics": []map[string]string{{"slug": "Not A Slug", "name": "x"}}},
+		{"number": 3, "difficulty": "Easy"},
 		{"unknown": true},
 	} {
 		if w = api("PUT", "/api/leetgrinder/problem/design-lru", plain, bad); w.Code != 400 {
@@ -186,6 +188,17 @@ func TestLeetgrinderExtensionAPI(t *testing.T) {
 	if p, _ := db.LeetgrinderProblem(ctx, "min-cost-to-connect-all-points-ii"); p.Title != "Min Cost II" || p.Number != 9999 || p.Difficulty != "Hard" {
 		t.Fatalf("attempt metadata not stored: %+v", p)
 	}
+	// Invalid or untitled metadata is dropped; the attempt is still saved.
+	for i, meta := range []map[string]any{{"difficulty": "Trivial", "title": "X"}, {"number": 7}} {
+		slug := fmt.Sprintf("dropped-metadata-%d", i)
+		body := map[string]any{"id": uuid.NewString(), "problemSlug": slug, "outcome": "unfinished", "minutes": 10, "problem": meta}
+		if w = api("POST", "/api/leetgrinder/attempts", plain, body); w.Code != 200 {
+			t.Fatalf("attempt with bad metadata: %d %s", w.Code, w.Body.String())
+		}
+		if p, _ := db.LeetgrinderProblem(ctx, slug); p.Known() || p.NotFound || !p.Fetching() {
+			t.Fatalf("bad metadata stored: %+v", p)
+		}
+	}
 
 	for _, test := range []struct {
 		body any
@@ -193,7 +206,7 @@ func TestLeetgrinderExtensionAPI(t *testing.T) {
 		want int
 	}{
 		{body: map[string]any{"id": uuid.NewString(), "problemSlug": "Not A Slug", "outcome": "unfinished", "minutes": 10}, want: 400},
-		{body: map[string]any{"id": uuid.NewString(), "problemSlug": "two-sum", "outcome": "unfinished", "minutes": 10, "problem": map[string]any{"difficulty": "Trivial"}}, want: 400},
+		{body: map[string]any{"id": uuid.NewString(), "problemSlug": "two-sum", "outcome": "unfinished", "minutes": 10, "problem": map[string]any{"title": 5}}, want: 400},
 		{body: map[string]any{"id": "nope", "problemSlug": "two-sum", "outcome": "solved", "minutes": 10}, want: 400},
 		{body: map[string]any{"id": uuid.NewString(), "problemSlug": "two-sum", "outcome": "great", "minutes": 10}, want: 400},
 		{body: map[string]any{"id": uuid.NewString(), "problemSlug": "two-sum", "outcome": "solved", "minutes": 0}, want: 400},
