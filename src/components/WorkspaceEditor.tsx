@@ -11,12 +11,13 @@ import { THOUGHT_PLACEHOLDER, isAutoTitle, thoughtDate, thoughtExcerpt, thoughtT
 import { AudioLines, CalendarPlus, Clock, ListChecks, PencilLine, Trash2 } from 'lucide-react';
 import { entryTone, tagChipClass } from '../lib/tag-colors';
 import { noteDate, noteStats } from '../lib/note-card';
+import type { BookType } from '../lib/books';
 import { pauseSync, queuedClips, removeClip, syncClips, takesForThought, type QueuedClip } from '../lib/running-queue';
 
 const field = 'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
 const button = 'rounded-lg border border-zinc-700 px-3 py-2 text-sm hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed';
 const primary = `${button} bg-blue-600 border-blue-500 text-white hover:bg-blue-500`;
-const labels = { run: 'audio thought', personal: 'personal journal entry', note: 'note', week: 'week', book: 'book or course', company: 'company', document: 'page' };
+const labels = { run: 'audio thought', personal: 'personal journal entry', note: 'note', week: 'week', book: 'book, course, or paper', company: 'company', document: 'page' };
 
 type EntryResult = { entry: Entry; revision: string };
 function signInAgain(): never {
@@ -201,13 +202,13 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
     setEntry(previous => previous ? { ...previous, ...patch } as Entry : previous);
     setDirty(true); setStatus('Unsaved changes');
   }
-  function create() {
+  function create(bookType: BookType = 'book') {
     if (!entries) return;
     const id = crypto.randomUUID();
     if (kind === 'run') choose({ id, title: THOUGHT_PLACEHOLDER, runDate: localDate(), startedAt: new Date().toISOString(), tags: [], body: '' }, true);
     else if (kind === 'personal') choose({ id, title: '', date: localDate(), description: '', tags: [], body: '' }, true);
     else if (kind === 'note') choose({ id, title: '', topic: selectedTopics?.length === 1 ? selectedTopics[0] : 'General', description: '', tags: [], body: '' }, true);
-    else if (kind === 'book') choose({ slug: id, title: '', authors: [], category: 'Computer Science', type: 'book', status: 'backlog', featured: false, priority: 'medium', tags: [], body: '## Chapters\n\n- [ ] First chapter\n\n## Log\n' }, true);
+    else if (kind === 'book') choose({ slug: id, title: '', authors: [], category: 'Computer Science', type: bookType, status: 'backlog', featured: false, priority: 'medium', tags: [], body: bookType === 'paper' ? '## Notes\n' : bookType === 'course' ? '## Modules\n\n- [ ] First module\n\n## Log\n' : '## Chapters\n\n- [ ] First chapter\n\n## Log\n' }, true);
     else if (kind === 'company') choose({ slug: id, title: '', category: 'Observability / Infra', type: 'company', url: '', status: 'not_started', featured: false, priority: 'medium', tags: [], body: '## Why\n\n## Steps\n\n- [ ] Identify one person at the company to connect with\n- [ ] Reach out and start building a relationship\n- [ ] Research team & open roles\n- [ ] Tailor resume/cover letter\n- [ ] Apply\n\n## Log\n' }, true);
     else if (kind === 'document') choose({ id, title: '', description: '', tags: [], body: '' }, true);
     else {
@@ -388,7 +389,7 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
     </div>}
     <div hidden={reading}>
       <div className="flex flex-wrap gap-2">
-      <button type="button" className={primary} disabled={!entries || busy} onClick={create}>{kind === 'week' ? '+ This week' : `+ New ${labels[kind]}`} </button>
+      {kind === 'book' ? (['book', 'course', 'paper'] as const).map(type => <button key={type} type="button" className={primary} disabled={!entries || busy} onClick={() => create(type)}>+ New {type === 'course' ? 'video course' : type}</button>) : <button type="button" className={primary} disabled={!entries || busy} onClick={() => create()}>{kind === 'week' ? '+ This week' : `+ New ${labels[kind]}`}</button>}
       <a className={button} href="/api/export" download={`career-workspace-${localDate()}.json`}>Export all data</a>
       <button type="button" className={button} disabled={busy} onClick={() => void load()}>Reload latest</button>
       </div>

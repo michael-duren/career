@@ -38,8 +38,8 @@ const booksCollection = defineCollection({
     edition: z.string().optional(),
     authors: z.array(z.string()).default([]),
     category: z.enum(BOOK_CATEGORIES),
-    // "book" or "course" — courses are tracked the same way (modules instead of chapters).
-    type: z.enum(['book', 'course']).default('book'),
+    // Short articles, blog posts, and research papers use the "paper" type.
+    type: z.enum(['book', 'course', 'paper']).default('book'),
     url: z.string().url().optional(),
     cover: z.string().url().optional(),
     isbn: z.string().optional(),

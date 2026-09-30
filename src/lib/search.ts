@@ -16,7 +16,7 @@ export function searchEntries(data: Workspace): SearchEntry[] {
     ...data.notes.map(n => ({ title: n.title, href: `/notes/${path(n.id)}`, kind: 'Note', body: `${n.topic} ${n.description} ${n.tags.join(' ')} ${n.body}` })),
     ...data.weeks.map(w => ({ title: `Week ${w.week} · ${w.dates}`, href: `/journal?id=${encodeURIComponent(w.slug)}`, kind: 'Work journal', body: `${w.tags.join(' ')} ${w.body}` })),
     ...(data.personalJournal ?? []).map(e => ({ title: e.title, href: `/personal-journal?id=${encodeURIComponent(e.id)}`, kind: 'Personal journal', body: `${e.date} ${e.description} ${e.tags.join(' ')} ${e.body}` })),
-    ...data.books.map(b => ({ title: b.title, href: `/manage/books?id=${encodeURIComponent(b.slug)}`, kind: 'Book / course', body: `${b.authors.join(' ')} ${b.category} ${b.tags.join(' ')} ${b.body}` })),
+    ...data.books.map(b => ({ title: b.title, href: `/manage/books?id=${encodeURIComponent(b.slug)}`, kind: b.type === 'paper' ? 'Paper' : b.type === 'course' ? 'Video course' : 'Book', body: `${b.authors.join(' ')} ${b.category} ${b.tags.join(' ')} ${b.body}` })),
     ...data.companies.map(c => ({ title: c.title, href: `/companies/${c.slug.split('/').map(encodeURIComponent).join('/')}`, kind: 'Company', body: `${c.category} ${c.tags.join(' ')} ${c.body}` })),
     ...(data.goals ?? []).map(g => ({ title: g.title, href: '/timeline', kind: 'Goal', body: `${g.notes.map(n => n.body).join(' ')} ${g.steps.map(s => s.title).join(' ')} ${Object.entries(g.metadata).flat().join(' ')}` })),
   ];

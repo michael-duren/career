@@ -34,6 +34,21 @@ func TestSaveNormalization(t *testing.T) {
 	}
 }
 
+func TestPaperCanBeSavedAsBookshelfItem(t *testing.T) {
+	var w Entity
+	if err := json.Unmarshal(fixture(t), &w); err != nil {
+		t.Fatal(err)
+	}
+	paper := w["books"].([]any)[0].(map[string]any)
+	paper["type"] = "paper"
+	paper["title"] = "Short article"
+	paper["body"] = "## Notes\n"
+	paper["url"] = "https://example.com/article"
+	if _, err := PrepareSave("book", paper); err != nil {
+		t.Fatalf("paper rejected: %v", err)
+	}
+}
+
 func TestGoalSelectedWeekdaysDefaultAndValidation(t *testing.T) {
 	goal := dependencyGoal("11111111-1111-4111-8111-111111111111")
 	prepared, err := PrepareSave("goal", goal)

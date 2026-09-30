@@ -72,14 +72,21 @@ Kinds: `goal`, `work_journal`, `personal_journal`, `note`, `page`, `book`, `comp
 `connection`, `audio_thought`. Audio thoughts are private and only returned when
 requested by kind. Prompt `career_conversation` offers a guided entry point.
 
+Books, video courses, and papers (including short articles and blog posts) all use
+`kind: "book"`. The entry's `type` field is `book`, `course`, or `paper`. List, search,
+and read use `kind: "book"` for all three. To create a paper, pass
+`{"kind":"book","entry":{"title":"...","type":"paper","category":"Systems","url":"https://..."}}`
+to `create_career_entry`. For updates and deletes, read the item first and pass its
+`id` and returned `revision` with `kind: "book"`.
+
 Write tools (need **Allow read and edit**):
 
-- `create_career_entry`: create a goal, company, note, book or connection. IDs, slugs and
+- `create_career_entry`: create a goal, company, note, bookshelf item or connection. IDs, slugs and
   timestamps are generated as random UUIDs, like the website.
-- `update_career_entry`: patch a goal, company, note, book or connection. Pass the
+- `update_career_entry`: patch a goal, company, note, bookshelf item or connection. Pass the
   `revision` from `read_career_entry` and only changed fields. A stale revision is
   rejected instead of overwriting newer edits. New steps, notes and todos may omit IDs.
-- `delete_career_entry`: delete a goal, company, note, book or connection. Needs the
+- `delete_career_entry`: delete a goal, company, note, bookshelf item or connection. Needs the
   `revision` from `read_career_entry`; a stale revision is rejected instead of deleting
   the wrong version. Cannot be undone.
 - `add_companies_to_queue`: batch-add 1-50 companies to the companies board as

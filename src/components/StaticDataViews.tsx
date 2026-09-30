@@ -38,13 +38,45 @@ function useJSON<T>(url: string) {
   return { data, error };
 }
 
+function usePagedEntries<T>(url: string) {
+  const [data, setData] = useState<T[]>();
+  const [error, setError] = useState('');
+  useEffect(() => {
+    const controller = new AbortController();
+    let latestRequest = 0;
+    const load = () => {
+      const request = ++latestRequest;
+      void (async () => {
+        const entries: T[] = [];
+        let offset: number | null = 0;
+        while (offset !== null) {
+          const response = await fetch(`${url}&offset=${offset}`, { cache: 'no-store', signal: controller.signal });
+          if (expired(response)) return;
+          const value = await response.json();
+          if (!response.ok) throw new Error(value.error || 'Could not load this page.');
+          const page: Page<T> = value;
+          entries.push(...page.entries.map(item => item.entry));
+          offset = page.nextOffset;
+        }
+        if (request === latestRequest) { setData(entries); setError(''); }
+      })().catch(value => {
+        if (request === latestRequest && value.name !== 'AbortError') setError(value instanceof Error ? value.message : 'Could not load this page.');
+      });
+    };
+    load();
+    window.addEventListener('workspace-saved', load);
+    return () => { controller.abort(); window.removeEventListener('workspace-saved', load); };
+  }, [url]);
+  return { data, error };
+}
+
 function State({ error }: { error: string }) {
   return <p role={error ? 'alert' : 'status'} className={error ? 'text-red-300' : 'text-zinc-400'}>{error || 'Loading…'}</p>;
 }
 
 export function BooksView() {
-  const { data, error } = useJSON<Page<RawBook>>('/api/entries/book?limit=100&view=detail');
-  return data ? <BookShelf data={buildShelf(data.entries.map(item => item.entry))} /> : <State error={error} />;
+  const { data, error } = usePagedEntries<RawBook>('/api/entries/book?limit=100&view=detail');
+  return data ? <BookShelf data={buildShelf(data)} /> : <State error={error} />;
 }
 
 export function CompaniesView({ detail = false }: { detail?: boolean }) {

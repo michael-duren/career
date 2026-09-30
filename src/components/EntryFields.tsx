@@ -36,7 +36,7 @@ export default function EntryFields({ entry, change, topics = [] }: { entry: Wor
       <label className="flex gap-2 text-sm"><input type="checkbox" checked={entry.featured} onChange={e => change({ featured: e.target.checked })} />Featured</label>
     </>}
     {'authors' in entry && <>
-      <Select label="Type" value={entry.type} options={['book', 'course']} onChange={type => change({ type } as Partial<WorkspaceEntry>)} />
+      <Select label="Type" value={entry.type} options={['book', 'course', 'paper']} onChange={type => change({ type } as Partial<WorkspaceEntry>)} />
       <label className="block text-sm">Authors<textarea aria-label="Authors, one per line" className={field} value={entry.authors.join('\n')} onChange={e => change({ authors: e.target.value.split('\n') })} /></label>
       <div className="grid gap-3 sm:grid-cols-2"><Text label="Edition" value={entry.edition} onChange={edition => change({ edition })} /><Text label="ISBN" value={entry.isbn} onChange={isbn => change({ isbn })} /><Text label="Started" type="date" value={entry.started} onChange={started => change({ started })} /><Text label="Finished" type="date" value={entry.finished} onChange={finished => change({ finished })} /></div>
       <label className="block text-sm">Rating (0–5)<input className={field} type="number" min="0" max="5" step="0.5" value={entry.rating ?? ''} onChange={e => change({ rating: e.target.value === '' ? undefined : Number(e.target.value) })} /></label>
