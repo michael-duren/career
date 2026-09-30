@@ -102,5 +102,19 @@ jobs:
             exit 1
           fi
           python3 scripts/release.py payload "$SOURCE_TAG" "$SOURCE_SHA" "$IMAGE_DIGEST" > "$RUNNER_TEMP/promotion.json"
-          gh api --method POST repos/michael-duren/home-infra/actions/workflows/gitops-promote.yml/dispatches --input "$RUNNER_TEMP/promotion.json"
+          # The tag push and the published release both run this workflow and
+          # dispatch the same promotion; home-infra records an identical
+          # release as a no-op, so retrying a failed dispatch is safe. GitHub
+          # occasionally answers a dispatch with an empty error body, which gh
+          # reports as "unexpected end of JSON input".
+          for attempt in 1 2 3 4 5; do
+            if gh api --method POST repos/michael-duren/home-infra/actions/workflows/gitops-promote.yml/dispatches --input "$RUNNER_TEMP/promotion.json"; then
+              break
+            fi
+            if [[ "$attempt" == 5 ]]; then
+              echo 'Promotion dispatch failed after 5 attempts' >&2
+              exit 1
+            fi
+            sleep $((attempt * 15))
+          done
           echo 'Dispatch accepted. Check home-infra promotion run and gitops ledger for completion.' >> "$GITHUB_STEP_SUMMARY"
