@@ -29,6 +29,9 @@ type Problem struct {
 	NotFound bool
 	// FetchAttempts counts server-side metadata fetches; see MaxFetchAttempts.
 	FetchAttempts int
+	// InCatalog reports that the problem has a catalog row. Rows are added
+	// when the first attempt is saved; only they are fetched.
+	InCatalog bool
 }
 
 func (p Problem) URL() string { return "https://leetcode.com/problems/" + p.Slug + "/" }
@@ -47,7 +50,7 @@ func (p Problem) DisplayTitle() string {
 // Fetching reports that metadata is missing and the server will still try
 // to fetch it from LeetCode.
 func (p Problem) Fetching() bool {
-	return !p.Known() && !p.NotFound && p.FetchAttempts < MaxFetchAttempts
+	return p.InCatalog && !p.Known() && !p.NotFound && p.FetchAttempts < MaxFetchAttempts
 }
 
 // HasOptimal reports whether an optimal time and space are known.

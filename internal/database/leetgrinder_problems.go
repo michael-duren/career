@@ -21,6 +21,7 @@ func scanLeetgrinderProblem(row interface{ Scan(...any) error }) (leetgrinder.Pr
 	if err := json.Unmarshal([]byte(topics), &p.Topics); err != nil {
 		return p, err
 	}
+	p.InCatalog = true
 	return p, nil
 }
 
@@ -72,18 +73,6 @@ func ensureLeetgrinderProblem(ctx context.Context, tx interface {
 }, slug string) error {
 	_, err := tx.ExecContext(ctx, "INSERT INTO leetgrinder_problems(slug) VALUES($1) ON CONFLICT (slug) DO NOTHING", slug)
 	return err
-}
-
-// EnsureLeetgrinderProblem adds a bare catalog row for slug, so the metadata
-// fetcher picks it up, and returns the row.
-func (s *Store) EnsureLeetgrinderProblem(ctx context.Context, slug string) (leetgrinder.Problem, error) {
-	if !leetgrinder.ValidSlug(slug) {
-		return leetgrinder.Problem{}, ErrInvalid
-	}
-	if err := ensureLeetgrinderProblem(ctx, s.DB, slug); err != nil {
-		return leetgrinder.Problem{}, err
-	}
-	return s.LeetgrinderProblem(ctx, slug)
 }
 
 // upsertLeetgrinderMetadata stores LeetCode metadata for slug. Empty values

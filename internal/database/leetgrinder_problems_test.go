@@ -150,10 +150,7 @@ func TestLeetgrinderMetadataPrecedence(t *testing.T) {
 	if p, _ = s.LeetgrinderProblem(ctx, "design-hit-counter"); p.Slug != "design-hit-counter" || p.Known() || !p.Fetching() {
 		t.Fatalf("bare row: %+v", p)
 	}
-	if p, err := s.LeetgrinderProblem(ctx, "never-seen"); err != nil || p.Slug != "never-seen" || p.Known() {
+	if p, err := s.LeetgrinderProblem(ctx, "never-seen"); err != nil || p.Slug != "never-seen" || p.Known() || p.InCatalog || p.Fetching() {
 		t.Fatalf("missing row: %+v %v", p, err)
-	}
-	if _, err := s.EnsureLeetgrinderProblem(ctx, "Bad Slug"); !errors.Is(err, ErrInvalid) {
-		t.Fatalf("ensure bad slug: %v", err)
 	}
 }

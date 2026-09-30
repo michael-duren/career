@@ -222,7 +222,7 @@ func TestLeetgrinderLogForm(t *testing.T) {
 	}
 	// Opening a new problem's page adds no catalog row, so a GET never
 	// queues a LeetCode fetch; saving an attempt does.
-	if w = request("GET", "/leetgrinder/problem/brand-new-problem", nil); w.Code != 200 || !strings.Contains(w.Body.String(), "Fetching details") {
+	if w = request("GET", "/leetgrinder/problem/brand-new-problem", nil); w.Code != 200 || !strings.Contains(w.Body.String(), "after you log an attempt") {
 		t.Fatal(w.Code)
 	}
 	var rows int

@@ -199,6 +199,8 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, avail Analy
 			<p class="notice" role="status">Not found on LeetCode. Check the slug; attempts are kept either way.</p>
 		} else if problem.Fetching() {
 			<p class="muted small" role="status">Fetching details from LeetCode…</p>
+		} else if !problem.InCatalog {
+			<p class="muted small" role="status">Details load from LeetCode after you log an attempt.</p>
 		}
 		<div class="history-links">
 			<a

@@ -78,7 +78,7 @@ How a problem gets in:
 1. **Seed.** Migration 015 inserts every slug from `catalog_seed.json` with `optimal_source = 'curated'` and `metadata_source = 'seed'`, plus a bare row for any attempted slug not in the seed.
 2. **Extension.** The extension runs on leetcode.com, so it reads metadata same-origin from `https://leetcode.com/graphql` (`question(titleSlug) { questionFrontendId title difficulty topicTags { slug name } }`) and sends it with the attempt or a new `PUT /api/leetgrinder/problem/{slug}` call. The server validates it (lengths, difficulty enum, tag slug format, at most 20 tags) and upserts; it never overwrites curated optimal values.
 3. **Server fetch.** For slugs with no title (web-logged, or extension metadata failed), a background job calls the same GraphQL query once per minute at most, one slug at a time, with a 10 s timeout and backoff after 1, 10, and 60 minutes, then gives up (`fetch_attempts = 4`). A failed fetch never blocks saving an attempt; pages fall back to the slug as the title.
-4. **Web form.** A "Log an attempt" form on the dashboard takes a LeetCode URL or slug, normalises it to a slug, and opens the problem page, which creates the row.
+4. **Web form.** A "Log an attempt" form on the dashboard takes a LeetCode URL or slug, normalises it to a slug, and opens the problem page. Saving the first attempt creates the row (a GET never does, so a cross-site request cannot queue fetches).
 
 Unknown slugs are allowed everywhere; the 422 "not in the curriculum" response goes away. A slug that LeetCode reports as nonexistent is kept, marked in the UI as "Not found on LeetCode".
 

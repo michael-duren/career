@@ -174,7 +174,7 @@ func TestWorker(t *testing.T) {
 		t.Fatalf("fetched with nothing to do: %v", got)
 	}
 	for _, slug := range []string{"no-such-problem", "flaky"} {
-		if _, err := db.EnsureLeetgrinderProblem(ctx, slug); err != nil {
+		if _, err := db.DB.Exec("INSERT INTO leetgrinder_problems(slug) VALUES($1)", slug); err != nil {
 			t.Fatal(err)
 		}
 		now = now.Add(time.Second)

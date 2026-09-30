@@ -38,15 +38,18 @@ func TestProblemHistoryForAnyProblem(t *testing.T) {
 	}
 	// An unknown slug shows its slug and waits for metadata.
 	html := render(Problem{Slug: "some-new-problem"}, State{})
-	for _, want := range []string{"<h1>some-new-problem</h1>", "Fetching details from LeetCode…", `action="/leetgrinder/problem/some-new-problem/attempts"`, "No attempts recorded yet.", "appears after your first attempt"} {
+	for _, want := range []string{"<h1>some-new-problem</h1>", "Details load from LeetCode after you log an attempt.", `action="/leetgrinder/problem/some-new-problem/attempts"`, "No attempts recorded yet.", "appears after your first attempt"} {
 		if !strings.Contains(html, want) {
 			t.Errorf("unknown problem page missing %q", want)
 		}
 	}
-	if html = render(Problem{Slug: "gone", NotFound: true}, State{}); !strings.Contains(html, "Not found on LeetCode") || strings.Contains(html, "Fetching details") {
+	if html = render(Problem{Slug: "queued", InCatalog: true}, State{}); !strings.Contains(html, "Fetching details from LeetCode…") {
+		t.Error("catalogued problem does not say it is fetching")
+	}
+	if html = render(Problem{Slug: "gone", InCatalog: true, NotFound: true}, State{}); !strings.Contains(html, "Not found on LeetCode") || strings.Contains(html, "Fetching details") {
 		t.Error("not-found problem not marked")
 	}
-	if html = render(Problem{Slug: "given-up", FetchAttempts: MaxFetchAttempts}, State{}); strings.Contains(html, "Fetching details") {
+	if html = render(Problem{Slug: "given-up", InCatalog: true, FetchAttempts: MaxFetchAttempts}, State{}); strings.Contains(html, "Fetching details") {
 		t.Error("gave-up fetch still says fetching")
 	}
 	now := time.Date(2026, 10, 20, 12, 0, 0, 0, time.UTC)
