@@ -50,7 +50,7 @@ func TestAnalysisCardUnknownStatus(t *testing.T) {
 	problem := testProblems["two-sum"]
 	state := State{Attempts: []Attempt{{ID: "11111111-1111-4111-8111-111111111111", ProblemSlug: "two-sum", Outcome: "solved", Minutes: 5, TimeComplexity: "O(n)", Code: "pass", CodeLanguage: "python3"}}}
 	var out strings.Builder
-	if err := ProblemHistory(problem, state, AttemptForm{}, AnalysisAvailability{KeyConfigured: true, Unknown: true}).Render(context.Background(), &out); err != nil {
+	if err := ProblemHistory(problem, state, AttemptForm{}, AnalysisAvailability{KeyConfigured: true, Unknown: true}, ProblemReview{}).Render(context.Background(), &out); err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(out.String(), "analysis status could not be loaded") || strings.Contains(out.String(), "turned off") {
@@ -58,7 +58,7 @@ func TestAnalysisCardUnknownStatus(t *testing.T) {
 	}
 	// A daily limit of 0 never runs, so nothing promises tomorrow.
 	out.Reset()
-	if err := ProblemHistory(problem, state, AttemptForm{}, AnalysisAvailability{KeyConfigured: true, Enabled: true, ZeroLimit: true, LimitReached: true}).Render(context.Background(), &out); err != nil {
+	if err := ProblemHistory(problem, state, AttemptForm{}, AnalysisAvailability{KeyConfigured: true, Enabled: true, ZeroLimit: true, LimitReached: true}, ProblemReview{}).Render(context.Background(), &out); err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(out.String(), "daily request limit is 0") || strings.Contains(out.String(), "tomorrow") {

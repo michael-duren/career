@@ -96,19 +96,15 @@ templ Overview(page OverviewPage) {
 				<p class="muted">{ DateLabel(page.Today.Date) }</p>
 			</div>
 		</header>
-		<section class="stats" aria-label="Your progress">
-			<div><strong>{ Count(Summarize(page.Today.State).Attempted) }</strong><p>Problems attempted</p></div>
-			<div><strong>{ Count(Summarize(page.Today.State).Solved) }</strong><p>Problems solved</p></div>
-			<div><strong>{ page.IndependentRate() }</strong><p>Solved independently</p></div>
-			<div><strong>{ Count(page.ActiveStreak()) }<span>{ DayUnit(page.ActiveStreak()) }</span></strong><p>Active days in a row</p></div>
-		</section>
+		@goalCard(page.Today)
 		@logAttemptForm(page.LogRef, page.LogError)
 		<div class="dash-grid">
 			<div>
 				@todaysReviews(page.Today, page.IDs, "overview")
 			</div>
 			<div>
-				@dueList(page.DueSoon(10), len(page.Due), page.Today)
+				@dueList(page.Today, 10)
+				@progressPanel(page)
 				<section class="panel side-list" aria-labelledby="recent-title">
 					<h2 id="recent-title">Recent attempts</h2>
 					if recent := page.Recent(5); len(recent) > 0 {
@@ -117,6 +113,9 @@ templ Overview(page OverviewPage) {
 								<li>
 									<a href={ templ.SafeURL(ProblemURL(a.ProblemSlug)) }>{ page.Today.State.Problem(a.ProblemSlug).DisplayTitle() }</a>
 									<span class="small muted">{ OutcomeLabel(a.Outcome) } · { Count(a.Minutes) } min</span>
+									if a.IsReview {
+										<span class="small muted">· Review</span>
+									}
 									if page.Today.State.StatedWrong(a.ID) {
 										@complexityBadge()
 									}
@@ -151,19 +150,68 @@ templ logAttemptForm(ref string, message string) {
 	</section>
 }
 
+// goalCard shows today's goal, what is done, and the streak.
+templ goalCard(today Today) {
+	<section class="panel goal-card" aria-labelledby="goal-title">
+		<div>
+			<p class="eyebrow">TODAY'S GOAL · { GoalLabel(today.Goal) }</p>
+			<h2 id="goal-title">
+				if today.Progress.Met() {
+					Goal met
+				} else {
+					{ Count(today.Progress.Remaining()) } to go
+				}
+			</h2>
+			<ul class="goal-progress">
+				<li class={ templ.KV("done", today.Progress.NewLeft() == 0) }><strong>{ Count(today.Progress.New()) }/{ Count(today.Goal.New) }</strong> new</li>
+				<li class={ templ.KV("done", today.Progress.ReviewsLeft() == 0) }><strong>{ Count(today.Progress.Reviews()) }/{ Count(today.Goal.Review) }</strong> review</li>
+				<li><strong>{ Count(today.Progress.Bonus()) }</strong> bonus</li>
+			</ul>
+		</div>
+		<dl class="streaks">
+			<dt>Streak</dt>
+			<dd><strong>{ Count(today.Streaks.Current) }</strong> { DayUnit(today.Streaks.Current) }</dd>
+			<dt>Longest</dt>
+			<dd>{ Count(today.Streaks.Longest) } { DayUnit(today.Streaks.Longest) }</dd>
+			<dt>Active days</dt>
+			<dd>{ Count(today.Streaks.Active) } in a row</dd>
+		</dl>
+	</section>
+}
+
+// progressPanel is the all-time summary.
+templ progressPanel(page OverviewPage) {
+	<section class="panel side-list" aria-labelledby="progress-title">
+		<h2 id="progress-title">All time</h2>
+		<dl class="summary">
+			<dt>Problems attempted</dt>
+			<dd>{ Count(Summarize(page.Today.State).Attempted) }</dd>
+			<dt>Problems solved</dt>
+			<dd>{ Count(Summarize(page.Today.State).Solved) }</dd>
+			<dt>Solved independently</dt>
+			<dd>{ page.IndependentRate() }</dd>
+		</dl>
+	</section>
+}
+
 // dueList is the optional list of due cards beyond today's plan.
-templ dueList(cards []Card, total int, today Today) {
+templ dueList(today Today, n int) {
+	{{ cards, total := DueSoon(today, n) }}
 	<section class="panel side-list" aria-labelledby="due-title">
 		<h2 id="due-title">Also due</h2>
 		if total == 0 {
 			<p class="muted small">Nothing else is due today.</p>
 		} else {
-			<p class="muted small">Optional: { Count(total) } more due by the end of today.</p>
+			<p class="muted small">Optional: { Count(total) } more due by the end of today. They count toward the review goal and as bonus.</p>
 			<ol>
 				for _, c := range cards {
 					<li>
 						<a href={ templ.SafeURL(ProblemURL(c.Problem.Slug)) }>{ c.Problem.DisplayTitle() }</a>
-						<span class="small muted">{ OutcomeLabel(c.Last.Outcome) } · recall { Percent(c.Retrievability(today.Now)) }</span>
+						if c.Flag != nil {
+							<span class="small flag">{ c.Flag.Label() }</span>
+						} else {
+							<span class="small muted">{ OutcomeLabel(c.Last.Outcome) } · recall { Percent(c.Retrievability(today.Now)) }</span>
+						}
 					</li>
 				}
 			</ol>
@@ -188,7 +236,7 @@ templ problemMeta(p Problem) {
 }
 
 // avail says whether the analysis worker is sending requests, and if not, why.
-templ ProblemHistory(problem Problem, state State, form AttemptForm, avail AnalysisAvailability) {
+templ ProblemHistory(problem Problem, state State, form AttemptForm, avail AnalysisAvailability, review ProblemReview) {
 	@layout(problem.DisplayTitle(), "") {
 		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder/problems">Problems</a><span>/</span><span>Attempt history</span></nav>
 		@problemMeta(problem)
@@ -212,7 +260,23 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, avail Analy
 			<span class="badge">
 				{ state.ProblemStatus(problem.Slug) }
 			</span>
+			if review.Pick {
+				<span class="badge">Today's review</span>
+			} else if review.Due {
+				<span class="badge">Due for review</span>
+			}
 		</div>
+		if review.Card.Reviews > 0 {
+			<dl class="review-state">
+				<dt>Recall now</dt>
+				<dd>{ Percent(review.Recall) }</dd>
+				<dt>Next due</dt>
+				<dd>{ DateLabel(Date(review.Card.Due, review.Location)) }</dd>
+			</dl>
+			if review.FlagReason != "" {
+				<p class="flag" role="status">{ review.FlagReason }</p>
+			}
+		}
 		<div class="history-grid">
 			<section class="panel">
 				<h2>
@@ -364,7 +428,7 @@ templ reviewCard(item ReviewItem, form AttemptForm) {
 			<p class="reason">{ item.Reason }</p>
 		}
 		<div class="problem-actions">
-			<a href={ templ.SafeURL(ProblemURL(item.Problem.Slug)) }>Attempt history</a>
+			<a href={ templ.SafeURL(ProblemURL(item.Problem.Slug)) }>Log attempt</a>
 		</div>
 		if !item.Done && form.ID != "" {
 			<details class="log-attempt">
@@ -378,29 +442,44 @@ templ Reviews(page ReviewsPage) {
 	@layout("Reviews", "reviews") {
 		<p class="eyebrow">SPACED REPETITION</p>
 		<h1>Reviews</h1>
-		<p class="lead">Every problem you have attempted, scheduled by how likely you are to recall it.</p>
+		<p class="lead">Every problem you have attempted, scheduled by how likely you are to recall it. Problems whose analysis found a complexity mistake are due the next day.</p>
 		<section class="stats" aria-label="Review summary">
-			<div><strong>{ Count(len(page.Today.Reviews)) }</strong><p>Planned today</p></div>
-			<div><strong>{ Count(page.Today.Backlog(page.Cards)) }</strong><p>Due but not planned</p></div>
-			<div><strong>{ Count(len(page.Cards)) }</strong><p>Problems tracked</p></div>
-			<div><strong>{ Count(ReviewSlots(page.Today.Settings.DailyHours)) }</strong><p>Review slots today</p></div>
+			<div><strong>{ Count(len(page.Today.Reviews)) }</strong><p>Picked today</p></div>
+			<div><strong>{ Count(page.Today.Backlog()) }</strong><p>Backlog</p></div>
+			<div><strong>{ Count(len(page.Today.Cards)) }</strong><p>Problems tracked</p></div>
+			<div><strong>{ Count(page.Today.Progress.Reviews()) }/{ Count(page.Today.Goal.Review) }</strong><p>Reviews toward today's goal</p></div>
 		</section>
 		@todaysReviews(page.Today, page.IDs, "reviews")
 		<section class="queue" aria-labelledby="queue-title">
 			<h2 id="queue-title">All cards</h2>
-			if len(page.Cards) == 0 {
+			if len(page.Today.Cards) == 0 {
 				<p class="muted">Record an attempt on any problem to start its review schedule.</p>
 			} else {
 				<div class="table-scroll">
 					<table>
-						<thead><tr><th scope="col">Problem</th><th scope="col">Last counted attempt</th><th scope="col">Due</th><th scope="col">Recall now</th></tr></thead>
+						<thead><tr><th scope="col">Problem</th><th scope="col">Last counted attempt</th><th scope="col">Due</th><th scope="col">Recall now</th><th scope="col">Flag</th></tr></thead>
 						<tbody>
-							for _, card := range page.Cards {
+							for _, card := range page.Today.Cards {
 								<tr>
-									<td><a href={ templ.SafeURL(ProblemURL(card.Problem.Slug)) }>{ card.Problem.DisplayTitle() }</a></td>
+									<td>
+										<a href={ templ.SafeURL(ProblemURL(card.Problem.Slug)) }>{ card.Problem.DisplayTitle() }</a>
+										if page.Today.Picked(card.Problem.Slug) {
+											<span class="badge">Today's pick</span>
+										}
+									</td>
 									<td>{ OutcomeLabel(card.Last.Outcome) } · { DateLabel(Date(card.Last.CreatedAt, page.Today.Settings.Location())) }</td>
-									<td>{ DateLabel(Date(card.Due, page.Today.Settings.Location())) }</td>
+									<td>
+										{ DateLabel(Date(card.Due, page.Today.Settings.Location())) }
+										if page.Today.Due(card) {
+											<span class="small overdue">Due</span>
+										}
+									</td>
 									<td>{ Percent(card.Retrievability(page.Today.Now)) }</td>
+									<td>
+										if card.Flag != nil {
+											<span class="small flag">{ card.Flag.Reason(page.Today.Now, page.Today.Settings.Location()) }</span>
+										}
+									</td>
 								</tr>
 							}
 						</tbody>
@@ -431,29 +510,44 @@ templ SettingsView(page SettingsPage) {
 
 templ generalSettings(page SettingsPage) {
 	<section class="panel" id="general" aria-labelledby="general-settings-title">
-		<h2 id="general-settings-title">General</h2>
+		<h2 id="general-settings-title">Daily goal</h2>
 		<form class="attempt-form settings-form" method="post" action="/leetgrinder/settings/general">
 			<input type="hidden" name="revision" value={ page.General.Revision }/>
 			<div class="form-row">
 				<label>
-					Time zone
-					<input type="text" name="timezone" list="timezones" required value={ page.General.Timezone } autocomplete="off" spellcheck="false"/>
+					New problems a day
+					<select name="goalNew" required>
+						for _, n := range GoalOptions() {
+							<option value={ n } selected?={ page.General.GoalNew == n }>{ n }</option>
+						}
+					</select>
 				</label>
 				<label>
-					Daily time
-					<select name="hours" required>
-						for _, h := range HoursOptions() {
-							<option value={ HoursValue(h) } selected?={ page.General.Hours == HoursValue(h) }>{ HoursLabel(h) } · { ReviewSlotsLabel(ReviewSlots(h)) }</option>
+					Reviews a day
+					<select name="goalReview" required>
+						for _, n := range GoalOptions() {
+							<option value={ n } selected?={ page.General.GoalReview == n }>{ n }</option>
 						}
 					</select>
 				</label>
 			</div>
+			<label>
+				Time zone
+				<input type="text" name="timezone" list="timezones" required value={ page.General.Timezone } autocomplete="off" spellcheck="false"/>
+			</label>
 			<datalist id="timezones">
 				for _, tz := range timezoneSuggestions {
 					<option value={ tz }></option>
 				}
 			</datalist>
-			<p class="small muted">Days, reviews and reminders follow this time zone. Two hours gives one review a day; every extra 25 minutes adds a review slot.</p>
+			<p class="small muted">
+				A new problem is one you have never attempted before today. A review counts toward the goal when the problem was due, flagged, or today's pick; other re-solves count as practice. Extra work is bonus, and each goal-met day extends your streak.
+				if page.TodayGoal != nil {
+					Today's goal is already set to { GoalLabel(*page.TodayGoal) }, so changes apply from tomorrow.
+				} else {
+					Changes apply from today.
+				}
+			</p>
 			<button class="button primary" type="submit">Save</button>
 		</form>
 	</section>
@@ -564,6 +658,9 @@ templ Problems(page ProblemsPage) {
 									<span class={ StatusClass(row.Status) }>{ row.Status }</span>
 									if row.Due {
 										<span class="badge">Due</span>
+									}
+									if row.Card.Flag != nil {
+										<span class="small flag">{ row.Card.Flag.Label() }</span>
 									}
 									if row.ComplexityWrong {
 										@complexityBadge()

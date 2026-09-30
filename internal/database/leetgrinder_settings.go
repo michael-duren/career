@@ -12,12 +12,12 @@ import (
 	"github.com/michael-duren/career-strategy/internal/leetgrinder"
 )
 
-const leetgrinderSettingsColumns = "timezone,daily_hours::float8,ntfy_url,ntfy_topic,ntfy_token_ciphertext,notifications,analysis_enabled,revision"
+const leetgrinderSettingsColumns = "timezone,goal_new,goal_review,ntfy_url,ntfy_topic,ntfy_token_ciphertext,notifications,analysis_enabled,revision"
 
 func scanLeetgrinderSettings(row interface{ Scan(...any) error }) (leetgrinder.Settings, error) {
 	var s leetgrinder.Settings
 	var notifications []byte
-	if err := row.Scan(&s.Timezone, &s.DailyHours, &s.NtfyURL, &s.NtfyTopic, &s.NtfyTokenCiphertext, &notifications, &s.AnalysisEnabled, &s.Revision); err != nil {
+	if err := row.Scan(&s.Timezone, &s.Goal.New, &s.Goal.Review, &s.NtfyURL, &s.NtfyTopic, &s.NtfyTokenCiphertext, &notifications, &s.AnalysisEnabled, &s.Revision); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return s, ErrNotFound
 		}
@@ -71,8 +71,8 @@ func (s *Store) UpdateLeetgrinderSettings(ctx context.Context, expectedRevision 
 	if len(next.NtfyTokenCiphertext) > 0 {
 		token = next.NtfyTokenCiphertext
 	}
-	saved, err := scanLeetgrinderSettings(tx.QueryRowContext(ctx, `UPDATE leetgrinder_settings SET timezone=$1,daily_hours=$2,ntfy_url=$3,ntfy_topic=$4,ntfy_token_ciphertext=$5,notifications=$6,analysis_enabled=$7,revision=$8 WHERE id=1 RETURNING `+leetgrinderSettingsColumns,
-		next.Timezone, next.DailyHours, next.NtfyURL, next.NtfyTopic, token, notifications, next.AnalysisEnabled, uuid.NewString()))
+	saved, err := scanLeetgrinderSettings(tx.QueryRowContext(ctx, `UPDATE leetgrinder_settings SET timezone=$1,goal_new=$2,goal_review=$3,ntfy_url=$4,ntfy_topic=$5,ntfy_token_ciphertext=$6,notifications=$7,analysis_enabled=$8,revision=$9 WHERE id=1 RETURNING `+leetgrinderSettingsColumns,
+		next.Timezone, next.Goal.New, next.Goal.Review, next.NtfyURL, next.NtfyTopic, token, notifications, next.AnalysisEnabled, uuid.NewString()))
 	if err != nil {
 		return leetgrinder.Settings{}, err
 	}
@@ -90,8 +90,9 @@ func (s *Store) LeetgrinderNtfyTokenStored(ctx context.Context) (bool, error) {
 }
 
 // LeetgrinderToday loads settings and history and returns today's view for
-// now. On first access for a local date, it plans that date's reviews and
-// freezes them; later accesses only add picks when more slots opened up.
+// now. On first access for a local date it freezes that date's goal from
+// settings and plans its review picks; later accesses only add picks when
+// the frozen review target has more slots than the plan.
 func (s *Store) LeetgrinderToday(ctx context.Context, now time.Time) (leetgrinder.Today, error) {
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
@@ -106,32 +107,18 @@ func (s *Store) LeetgrinderToday(ctx context.Context, now time.Time) (leetgrinde
 	if err != nil {
 		return leetgrinder.Today{}, err
 	}
+	loc := settings.Location()
+	date := leetgrinder.Date(now, loc)
+	day := date.Format(time.DateOnly)
+	if _, err = tx.ExecContext(ctx, "INSERT INTO leetgrinder_daily_goal(local_date,goal_new,goal_review) VALUES($1,$2,$3) ON CONFLICT (local_date) DO NOTHING", day, settings.Goal.New, settings.Goal.Review); err != nil {
+		return leetgrinder.Today{}, err
+	}
 	state, err := loadLeetgrinderState(ctx, tx)
 	if err != nil {
 		return leetgrinder.Today{}, err
 	}
-	loc := settings.Location()
-	date := leetgrinder.Date(now, loc)
-	day := date.Format(time.DateOnly)
-	rows, err := tx.QueryContext(ctx, "SELECT problem_slug FROM leetgrinder_review_plan WHERE plan_date=$1 ORDER BY slot", day)
-	if err != nil {
-		return leetgrinder.Today{}, err
-	}
-	var existing []string
-	for rows.Next() {
-		var slug string
-		if err = rows.Scan(&slug); err != nil {
-			rows.Close()
-			return leetgrinder.Today{}, err
-		}
-		existing = append(existing, slug)
-	}
-	err = rows.Err()
-	rows.Close()
-	if err != nil {
-		return leetgrinder.Today{}, err
-	}
-	plan := leetgrinder.PlanReviews(leetgrinder.BuildCards(state.Attempts, state.Problems, loc), date, loc, leetgrinder.ReviewSlots(settings.DailyHours), existing)
+	existing := state.Plans[date]
+	plan := leetgrinder.PlanReviews(leetgrinder.BuildCards(state, loc), date, loc, state.GoalFor(date).Review, existing)
 	for slot := len(existing); slot < len(plan); slot++ {
 		if _, err = tx.ExecContext(ctx, "INSERT INTO leetgrinder_review_plan(plan_date,problem_slug,slot) VALUES($1,$2,$3)", day, plan[slot], slot+1); err != nil {
 			return leetgrinder.Today{}, err
@@ -140,5 +127,18 @@ func (s *Store) LeetgrinderToday(ctx context.Context, now time.Time) (leetgrinde
 	if err = tx.Commit(); err != nil {
 		return leetgrinder.Today{}, err
 	}
-	return leetgrinder.NewToday(settings, state, plan, now), nil
+	if len(plan) > 0 {
+		state.Plans[date] = plan
+	}
+	return leetgrinder.NewToday(settings, state, now), nil
+}
+
+// LeetgrinderDailyGoal returns the goal frozen for a local date, if any.
+func (s *Store) LeetgrinderDailyGoal(ctx context.Context, date time.Time) (leetgrinder.DailyGoal, bool, error) {
+	var g leetgrinder.DailyGoal
+	err := s.DB.QueryRowContext(ctx, "SELECT goal_new,goal_review FROM leetgrinder_daily_goal WHERE local_date=$1", date.Format(time.DateOnly)).Scan(&g.New, &g.Review)
+	if errors.Is(err, sql.ErrNoRows) {
+		return g, false, nil
+	}
+	return g, err == nil, err
 }

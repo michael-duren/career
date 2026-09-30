@@ -1383,3 +1383,53 @@ dd {
 .estimate {
   display: block;
 }
+
+/* Daily goal card, streaks, and complexity flags. */
+.goal-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+.goal-progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+}
+.goal-progress strong {
+  color: var(--ink);
+  font-size: 1.25rem;
+}
+.goal-progress li.done strong {
+  color: var(--accent);
+}
+.streaks,
+.summary,
+.review-state {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 16px;
+  margin: 0;
+}
+.streaks dt,
+.summary dt,
+.review-state dt {
+  color: var(--muted);
+}
+.streaks dd,
+.summary dd,
+.review-state dd {
+  margin: 0;
+}
+.review-state {
+  margin-bottom: 12px;
+}
+.flag {
+  color: #fbbf24;
+}

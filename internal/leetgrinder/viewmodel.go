@@ -55,25 +55,64 @@ func (c ComplexityInput) Value() string {
 type OverviewPage struct {
 	Today Today
 	IDs   map[string]string
-	// Due is the optional due list: cards due today beyond the plan.
-	Due []Card
 	// LogRef and LogError keep a rejected "Log an attempt" entry.
 	LogRef, LogError string
 }
 
 type ReviewsPage struct {
 	Today Today
-	Cards []Card
 	IDs   map[string]string
 }
 
 // GeneralForm keeps the submitted text so a rejected save can be retried.
 type GeneralForm struct {
-	Timezone, Hours, Revision string
+	Timezone, GoalNew, GoalReview, Revision string
 }
 
 func NewGeneralForm(s Settings) GeneralForm {
-	return GeneralForm{Timezone: s.Timezone, Hours: HoursValue(s.DailyHours), Revision: s.Revision}
+	return GeneralForm{Timezone: s.Timezone, GoalNew: strconv.Itoa(s.Goal.New), GoalReview: strconv.Itoa(s.Goal.Review), Revision: s.Revision}
+}
+
+// GoalOptions are the choices for each daily target.
+func GoalOptions() []string {
+	out := make([]string, 0, MaxGoal+1)
+	for n := 0; n <= MaxGoal; n++ {
+		out = append(out, strconv.Itoa(n))
+	}
+	return out
+}
+
+// GoalLabel reads "2 new + 1 review".
+func GoalLabel(g DailyGoal) string {
+	review := "reviews"
+	if g.Review == 1 {
+		review = "review"
+	}
+	return fmt.Sprintf("%d new + %d %s", g.New, g.Review, review)
+}
+
+// ProblemReview is the review state shown on a problem's page; Card.Reviews
+// is 0 for a problem without attempts.
+type ProblemReview struct {
+	Card   Card
+	Due    bool
+	Recall float64
+	// FlagReason explains a complexity flag, or is "".
+	FlagReason string
+	Pick       bool
+	Location   *time.Location
+}
+
+// NewProblemReview reads slug's review state from today.
+func NewProblemReview(today Today, slug string) ProblemReview {
+	r := ProblemReview{Location: today.Settings.Location(), Pick: today.Picked(slug)}
+	if c, ok := today.Card(slug); ok {
+		r.Card, r.Due, r.Recall = c, today.Due(c), c.Retrievability(today.Now)
+		if c.Flag != nil {
+			r.FlagReason = c.Flag.Reason(today.Now, r.Location)
+		}
+	}
+	return r
 }
 
 var timezoneSuggestions = []string{"America/Chicago", "America/New_York", "America/Denver", "America/Phoenix", "America/Los_Angeles", "America/Anchorage", "Pacific/Honolulu", "Europe/London", "Europe/Berlin", "Asia/Kolkata", "Asia/Tokyo", "Australia/Sydney", "UTC"}
@@ -82,8 +121,11 @@ type SettingsPage struct {
 	Settings Settings
 	Now      time.Time
 	General  GeneralForm
-	Error    string
-	Saved    bool
+	// TodayGoal is today's frozen goal, or nil when today has not started,
+	// so the page can say when goal changes apply.
+	TodayGoal *DailyGoal
+	Error     string
+	Saved     bool
 	// Notify holds the ntfy and notification sections.
 	Notify NotifyPanel
 	// APITokens is the extension token section; see apitokens.templ.
@@ -95,14 +137,6 @@ type SettingsPage struct {
 func ReviewKey(slug string) string { return "review-" + slug }
 func DateLabel(t time.Time) string { return t.Format("Mon 2 Jan 2006") }
 func Percent(f float64) string     { return strconv.Itoa(int(f*100+0.5)) + "%" }
-func HoursValue(h float64) string  { return strconv.FormatFloat(h, 'f', 1, 64) }
-func HoursLabel(h float64) string  { return strconv.FormatFloat(h, 'f', -1, 64) + " hours" }
-func ReviewSlotsLabel(n int) string {
-	if n == 1 {
-		return "1 review slot"
-	}
-	return fmt.Sprintf("%d review slots", n)
-}
 
 func ProblemURL(slug string) string { return "/leetgrinder/problem/" + slug }
 func Count(n int) string            { return strconv.Itoa(n) }

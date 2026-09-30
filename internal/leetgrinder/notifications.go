@@ -8,10 +8,9 @@ import (
 
 // Notification kinds. Each is configured separately in Settings.Notifications.
 const (
-	NotifyMissingWork    = "missing_work"
-	NotifyBehindSchedule = "behind_schedule"
 	NotifyMorningPlan    = "morning_plan"
-	NotifyLateEscalation = "late_escalation"
+	NotifyGoalIncomplete = "goal_incomplete"
+	NotifyStreakAtRisk   = "streak_at_risk"
 	NotifyReviewBacklog  = "review_backlog"
 )
 
@@ -20,26 +19,36 @@ type NotificationKind struct {
 	Key         string
 	Label       string
 	Description string
-	// ThresholdLabel is empty for kinds without a threshold.
-	ThresholdLabel string
-	MaxThreshold   int
-	Default        NotificationPref
+	// ThresholdLabel is empty for kinds without a threshold, which run from
+	// MinThreshold to MaxThreshold.
+	ThresholdLabel             string
+	MinThreshold, MaxThreshold int
+	Default                    NotificationPref
 }
+
+// HasThreshold reports whether the kind takes a threshold.
+func (k NotificationKind) HasThreshold() bool { return k.ThresholdLabel != "" }
 
 // NotificationKinds lists every kind in display order.
 var NotificationKinds = []NotificationKind{
-	{Key: NotifyMorningPlan, Label: "Morning plan", Description: "Today's review problems.",
-		Default: NotificationPref{Enabled: false, Time: "08:00", Priority: "default"}},
-	{Key: NotifyMissingWork, Label: "Missing work", Description: "Today's planned reviews are still unfinished.",
-		Default: NotificationPref{Enabled: true, Time: "17:00", Priority: "default"}},
-	{Key: NotifyBehindSchedule, Label: "Behind schedule", Description: "Retired with the curriculum schedule; it no longer sends.",
-		ThresholdLabel: "Sessions behind", MaxThreshold: 84,
-		Default: NotificationPref{Enabled: true, Time: "17:00", Threshold: 3, Priority: "default"}},
-	{Key: NotifyReviewBacklog, Label: "Review backlog", Description: "At least the threshold number of due reviews did not fit in today's plan.",
-		ThresholdLabel: "Due reviews", MaxThreshold: 300,
-		Default: NotificationPref{Enabled: false, Time: "17:00", Threshold: 10, Priority: "default"}},
-	{Key: NotifyLateEscalation, Label: "Late escalation", Description: "A second, louder reminder when work is still missing late in the day.",
-		Default: NotificationPref{Enabled: false, Time: "21:00", Priority: "high"}},
+	{Key: NotifyMorningPlan, Label: "Morning plan", Description: "Today's targets, review picks, due count, and current streak.",
+		Default: NotificationPref{Enabled: true, Time: "08:00", Priority: "default"}},
+	{Key: NotifyGoalIncomplete, Label: "Goal incomplete", Description: "Today's goal is not met yet; lists what is left.",
+		Default: NotificationPref{Enabled: true, Time: "18:00", Priority: "default"}},
+	{Key: NotifyStreakAtRisk, Label: "Streak at risk", Description: "Today's goal is not met and your streak is at least the threshold (0 sends whenever the goal is not met).",
+		ThresholdLabel: "Streak days", MinThreshold: 0, MaxThreshold: 365,
+		Default: NotificationPref{Enabled: true, Time: "21:00", Threshold: 1, Priority: "high"}},
+	{Key: NotifyReviewBacklog, Label: "Review backlog", Description: "At least the threshold number of due reviews are outside today's picks.",
+		ThresholdLabel: "Due reviews", MinThreshold: 1, MaxThreshold: 500,
+		Default: NotificationPref{Enabled: false, Time: "18:00", Threshold: 10, Priority: "default"}},
+}
+
+// legacyKindLabels name kinds retired with the curriculum, which old log
+// rows still carry.
+var legacyKindLabels = map[string]string{
+	"missing_work":    "Missing work",
+	"behind_schedule": "Behind schedule",
+	"late_escalation": "Late escalation",
 }
 
 // NotificationPriorities are the ntfy priority names, lowest first.
@@ -83,10 +92,10 @@ func validNotificationPrefs(prefs map[string]NotificationPref) error {
 		if clock, err := time.Parse("15:04", p.Time); err != nil || clock.Format("15:04") != p.Time {
 			return fmt.Errorf("%s: time must be HH:MM", kind.Label)
 		}
-		if kind.MaxThreshold > 0 && (p.Threshold < 1 || p.Threshold > kind.MaxThreshold) {
-			return fmt.Errorf("%s: threshold must be 1 to %d", kind.Label, kind.MaxThreshold)
+		if kind.HasThreshold() && (p.Threshold < kind.MinThreshold || p.Threshold > kind.MaxThreshold) {
+			return fmt.Errorf("%s: threshold must be %d to %d", kind.Label, kind.MinThreshold, kind.MaxThreshold)
 		}
-		if kind.MaxThreshold == 0 && p.Threshold != 0 {
+		if !kind.HasThreshold() && p.Threshold != 0 {
 			return fmt.Errorf("%s: takes no threshold", kind.Label)
 		}
 		valid := false
@@ -130,6 +139,9 @@ func NotificationKindLabel(key string) string {
 	}
 	if k, ok := FindNotificationKind(key); ok {
 		return k.Label
+	}
+	if label, ok := legacyKindLabels[key]; ok {
+		return label
 	}
 	return key
 }

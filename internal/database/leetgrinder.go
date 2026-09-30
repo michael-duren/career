@@ -55,8 +55,51 @@ func loadLeetgrinderState(ctx context.Context, tx queryer) (leetgrinder.State, e
 	if state.Analyses, err = loadLeetgrinderAnalyses(ctx, tx); err != nil {
 		return state, err
 	}
-	state.Problems, err = loadLeetgrinderProblems(ctx, tx)
+	if state.Problems, err = loadLeetgrinderProblems(ctx, tx); err != nil {
+		return state, err
+	}
+	if state.Plans, err = loadLeetgrinderPlans(ctx, tx); err != nil {
+		return state, err
+	}
+	state.Goals, err = loadLeetgrinderGoals(ctx, tx)
 	return state, err
+}
+
+func loadLeetgrinderPlans(ctx context.Context, tx queryer) (map[time.Time][]string, error) {
+	rows, err := tx.QueryContext(ctx, "SELECT plan_date,problem_slug FROM leetgrinder_review_plan ORDER BY plan_date,slot")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	plans := map[time.Time][]string{}
+	for rows.Next() {
+		var date time.Time
+		var slug string
+		if err = rows.Scan(&date, &slug); err != nil {
+			return nil, err
+		}
+		d := leetgrinder.Date(date, time.UTC)
+		plans[d] = append(plans[d], slug)
+	}
+	return plans, rows.Err()
+}
+
+func loadLeetgrinderGoals(ctx context.Context, tx queryer) (map[time.Time]leetgrinder.DailyGoal, error) {
+	rows, err := tx.QueryContext(ctx, "SELECT local_date,goal_new,goal_review FROM leetgrinder_daily_goal")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	goals := map[time.Time]leetgrinder.DailyGoal{}
+	for rows.Next() {
+		var date time.Time
+		var g leetgrinder.DailyGoal
+		if err = rows.Scan(&date, &g.New, &g.Review); err != nil {
+			return nil, err
+		}
+		goals[leetgrinder.Date(date, time.UTC)] = g
+	}
+	return goals, rows.Err()
 }
 
 func (s *Store) SaveLeetgrinderAttempt(ctx context.Context, a leetgrinder.Attempt, expectedRevision string) (leetgrinder.Attempt, error) {
@@ -108,7 +151,12 @@ func (s *Store) SaveLeetgrinderAttemptWithProblem(ctx context.Context, a leetgri
 		}
 	}
 	if expectedRevision == "" {
-		_, err = tx.ExecContext(ctx, `INSERT INTO leetgrinder_attempts(id,problem_slug,outcome,minutes,assisted,notes,revision,source,is_review,time_complexity,space_complexity,code,code_language) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) ON CONFLICT(id) DO NOTHING`, a.ID, a.ProblemSlug, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString(), a.Source, a.IsReview, a.TimeComplexity, a.SpaceComplexity, a.Code, a.CodeLanguage)
+		// is_review is decided here: the problem has an attempt on an earlier
+		// local day in the settings time zone.
+		_, err = tx.ExecContext(ctx, `INSERT INTO leetgrinder_attempts(id,problem_slug,outcome,minutes,assisted,notes,revision,source,is_review,time_complexity,space_complexity,code,code_language)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8,EXISTS (SELECT 1 FROM leetgrinder_attempts b, leetgrinder_settings s WHERE s.id=1 AND b.problem_slug=$2
+	AND (b.created_at AT TIME ZONE s.timezone)::date < (clock_timestamp() AT TIME ZONE s.timezone)::date),$9,$10,$11,$12) ON CONFLICT(id) DO NOTHING`,
+			a.ID, a.ProblemSlug, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString(), a.Source, a.TimeComplexity, a.SpaceComplexity, a.Code, a.CodeLanguage)
 		if err != nil {
 			return leetgrinder.Attempt{}, err
 		}
@@ -116,7 +164,7 @@ func (s *Store) SaveLeetgrinderAttemptWithProblem(ctx context.Context, a leetgri
 		if readErr != nil {
 			return leetgrinder.Attempt{}, readErr
 		}
-		if saved.ProblemSlug != a.ProblemSlug || saved.Outcome != a.Outcome || saved.Minutes != a.Minutes || saved.Assisted != a.Assisted || saved.Notes != a.Notes || saved.Source != a.Source || saved.IsReview != a.IsReview ||
+		if saved.ProblemSlug != a.ProblemSlug || saved.Outcome != a.Outcome || saved.Minutes != a.Minutes || saved.Assisted != a.Assisted || saved.Notes != a.Notes || saved.Source != a.Source ||
 			saved.TimeComplexity != a.TimeComplexity || saved.SpaceComplexity != a.SpaceComplexity || saved.Code != a.Code || saved.CodeLanguage != a.CodeLanguage {
 			return leetgrinder.Attempt{}, ErrConflict
 		}

@@ -3,7 +3,6 @@ package leetgrinder
 import (
 	"errors"
 	"fmt"
-	"math"
 	"net/url"
 	"regexp"
 	"strings"
@@ -11,12 +10,12 @@ import (
 )
 
 const (
-	DefaultTimezone   = "America/Chicago"
-	DefaultNtfyURL    = "https://ntfy.sh"
-	MinDailyHours     = 2.0
-	MaxDailyHours     = 4.0
-	DailyHoursStep    = 0.5
+	DefaultTimezone = "America/Chicago"
+	DefaultNtfyURL  = "https://ntfy.sh"
+	// ReviewSlotMinutes is the time an unassisted solve may take to rate Easy.
 	ReviewSlotMinutes = 25
+	// MaxGoal caps each daily target.
+	MaxGoal = 10
 )
 
 // NotificationPref configures one notification kind. Unused fields stay zero.
@@ -30,8 +29,9 @@ type NotificationPref struct {
 // Settings is the singleton Leetgrinder settings row. The ntfy token is only
 // ever held encrypted here; see SecretBox.
 type Settings struct {
-	Timezone            string
-	DailyHours          float64
+	Timezone string
+	// Goal is the daily target: new problems and reviews.
+	Goal                DailyGoal
 	NtfyURL             string
 	NtfyTopic           string
 	NtfyTokenCiphertext []byte
@@ -43,7 +43,7 @@ type Settings struct {
 }
 
 func DefaultSettings() Settings {
-	return Settings{Timezone: DefaultTimezone, DailyHours: MinDailyHours, NtfyURL: DefaultNtfyURL, Notifications: map[string]NotificationPref{}, AnalysisEnabled: true}
+	return Settings{Timezone: DefaultTimezone, Goal: DefaultGoal, NtfyURL: DefaultNtfyURL, Notifications: map[string]NotificationPref{}, AnalysisEnabled: true}
 }
 
 // LoadTimezone accepts IANA names only; "Local" would depend on the host.
@@ -67,17 +67,12 @@ func (s Settings) TokenSet() bool { return len(s.NtfyTokenCiphertext) > 0 }
 
 var ntfyTopic = regexp.MustCompile(`^[A-Za-z0-9_-]{0,64}$`)
 
-func ValidDailyHours(h float64) bool {
-	steps := (h - MinDailyHours) / DailyHoursStep
-	return h >= MinDailyHours && h <= MaxDailyHours && steps == math.Trunc(steps)
-}
-
 func (s Settings) Validate() error {
 	if _, err := LoadTimezone(s.Timezone); err != nil {
 		return fmt.Errorf("time zone: %w", err)
 	}
-	if !ValidDailyHours(s.DailyHours) {
-		return errors.New("daily hours must be 2 to 4 in half-hour steps")
+	if err := s.Goal.Validate(); err != nil {
+		return err
 	}
 	if u, err := url.Parse(s.NtfyURL); err != nil || u.Host == "" || (u.Scheme != "http" && u.Scheme != "https") || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
 		return errors.New("ntfy server must be an absolute http(s) URL")
@@ -86,17 +81,4 @@ func (s Settings) Validate() error {
 		return errors.New("ntfy topic may use up to 64 letters, digits, - and _")
 	}
 	return validNotificationPrefs(s.Notifications)
-}
-
-// ExtraReviewSlots converts time beyond the base two hours into 25-minute review slots.
-func ExtraReviewSlots(hours float64) int {
-	return max(0, int(math.Floor((hours-MinDailyHours)*60/ReviewSlotMinutes+1e-9)))
-}
-
-func HoursOptions() []float64 {
-	var out []float64
-	for h := MinDailyHours; h <= MaxDailyHours; h += DailyHoursStep {
-		out = append(out, h)
-	}
-	return out
 }

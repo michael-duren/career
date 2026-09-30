@@ -146,11 +146,11 @@ func (s *Server) leetgrinderSaveNotifications(w http.ResponseWriter, r *http.Req
 	for _, kind := range leetgrinder.NotificationKinds {
 		d := leetgrinder.NotificationDraft{Kind: kind, Enabled: r.PostForm.Get(kind.Key+"_enabled") == "true", Time: strings.TrimSpace(r.PostForm.Get(kind.Key + "_time")), Priority: r.PostForm.Get(kind.Key + "_priority")}
 		pref := leetgrinder.NotificationPref{Enabled: d.Enabled, Time: d.Time, Priority: d.Priority}
-		if kind.MaxThreshold > 0 {
+		if kind.HasThreshold() {
 			d.Threshold = strings.TrimSpace(r.PostForm.Get(kind.Key + "_threshold"))
 			n, err := strconv.Atoi(d.Threshold)
-			if (err != nil || n < 1 || n > kind.MaxThreshold) && problem == "" {
-				problem = kind.Label + ": enter a threshold from 1 to " + strconv.Itoa(kind.MaxThreshold) + "."
+			if (err != nil || n < kind.MinThreshold || n > kind.MaxThreshold) && problem == "" {
+				problem = kind.Label + ": enter a threshold from " + strconv.Itoa(kind.MinThreshold) + " to " + strconv.Itoa(kind.MaxThreshold) + "."
 			}
 			pref.Threshold = n
 		}
