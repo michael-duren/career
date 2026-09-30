@@ -1,6 +1,6 @@
 # Leetgrinder browser extension
 
-Logs LeetCode submissions to your Leetgrinder app and shows today's goal. The toolbar badge counts what is left of today's goal, the popup lists today's progress and reviews, and a small banner on each problem page says whether it is new, due, or flagged. When a submission is Accepted, a panel opens on the LeetCode page with the outcome, minutes, and hint use filled in. You state the time and space complexity, and the code LeetCode judged is attached unless you untick it. Nothing is sent until you press **Log attempt**; **Dismiss** sends nothing.
+Logs LeetCode and NeetCode submissions to your Leetgrinder app and shows today's goal. The toolbar badge counts what is left of today's goal, the popup lists today's progress and reviews, and a small banner on each problem page says whether it is new, due, or flagged. When a submission is Accepted, a panel opens on the problem page with the outcome, minutes, and hint use filled in. You state the time and space complexity, and the code LeetCode judged is attached unless you untick it. Nothing is sent until you press **Log attempt**; **Dismiss** sends nothing.
 
 Manifest V3, plain JavaScript, no build step. One `manifest.json` works in Chrome 121+ and Firefox 128+. It is loaded unpacked; it is not published to any store.
 
@@ -19,13 +19,13 @@ To stop using a token, revoke it on the same settings page. Revocation takes eff
 2. Press **Load unpacked** and pick this `extension/leetgrinder` directory.
 3. Open the extension's **Details → Extension options**.
 
-After pulling changes, press the reload icon on the extension's card, then reload open LeetCode tabs.
+After pulling changes, press the reload icon on the extension's card, then reload open LeetCode and NeetCode tabs.
 
 ### Firefox
 
 1. Open `about:debugging#/runtime/this-firefox`.
 2. Press **Load Temporary Add-on…** and pick `extension/leetgrinder/manifest.json`.
-3. Open `about:addons`, choose Leetgrinder, and under **Permissions** make sure access to `leetcode.com` is on (Firefox treats Manifest V3 host access as opt-in).
+3. Open `about:addons`, choose Leetgrinder, and under **Permissions** make sure access to `leetcode.com` and `neetcode.io` is on (Firefox treats Manifest V3 host access as opt-in).
 4. Open **Options** from the same page.
 
 Temporary add-ons are removed when Firefox restarts; load it again afterwards. Your options stay in `storage.local` as long as the add-on id (`leetgrinder@career-strategy.local`) is unchanged.
@@ -41,6 +41,8 @@ Temporary add-ons are removed when Firefox restarts; load it again afterwards. Y
 | `lib.js` | Pure helpers (slug parsing, timer rounding, outcome inference, complexity normalisation, message and payload validation). Tested with `node --test`. |
 | `background.js` | The only code that reads the token and calls the app. Validates who sent each message and what it contains. Keeps per-problem timers in `storage.session`, and keeps the toolbar badge current from `GET /api/leetgrinder/today`. |
 | `leetcode-detect.js` | Runs in LeetCode's page world. Records the JSON body of `POST /problems/<slug>/submit/` (`lang`, `typed_code`) with the `submission_id` from its response, and watches `/submissions/detail/<id>/check/` responses. When a check finishes it posts `{slug, submissionId, status, lang, code}`, then an Accepted message if `status_msg` is `"Accepted"`. A DOM fallback on the result panel covers Accepted without code. All LeetCode-specific detection lives here. |
+| `neetcode-detect.js` | Runs in NeetCode's page world. Watches `POST /api/executeCodeFunctionHttp` (Submit; Run uses `runCodeFunctionHttp` and is ignored): the request's `data` has `problemId` (NeetCode's slug), `rawCode` and `lang`, and the response's `data.status.description` is the verdict (a pass also needs `correct_test_case_count` to equal `test_case_count` when both are present). It posts the same messages as `leetcode-detect.js`, numbering submissions itself since NeetCode returns no id. All NeetCode-specific detection lives here. |
+| `neetcode-slugs.js` | Generated map from NeetCode slug to `[LeetCode slug, number, title, difficulty]`, taken from the problem list neetcode.io ships in its main bundle (the `ncLink` → `link` pairs NeetCode itself uses). Regenerate with `node scripts/update-neetcode-slugs.js`. |
 | `content.js` | Tracks the open problem and timer, validates page-world messages, and shows the confirm panel and the 25-minute nudge. |
 | `options.html`, `options.js` | App origin, token, and Test connection. |
 | `popup.html`, `popup.js`, `popup.css` | The toolbar popup: today's progress, streak, review picks, the due list (top 10), and a dashboard link. Read-only. |
@@ -48,6 +50,7 @@ Temporary add-ons are removed when Firefox restarts; load it again afterwards. Y
 Behavior:
 
 - **Any problem.** Every `leetcode.com/problems/<slug>/` page gets a timer, the confirm panel, and the nudge. On each problem page the extension asks the app what it knows about the slug (new, due for review, or not due). If the app cannot be reached, the timer still starts; an Accepted submission then shows the error with **Try again**.
+- **NeetCode.** `neetcode.io/problems/<slug>` pages behave the same, keyed by the LeetCode slug the NeetCode problem mirrors (`two-integer-sum` is `two-sum`), so a problem shares its timer and history across both sites. NeetCode-only problems (courses, problems missing from `neetcode-slugs.js`) are ignored; regenerate the table when NeetCode adds problems. The title, number and difficulty come from the table; the app keeps the problem queued for its LeetCode fetcher, which adds the topics. The Solution tab marks the attempt assisted. Popup links still open LeetCode.
 - **Problem details.** When the app does not know a problem's title or topics yet, the content script reads them same-origin from `https://leetcode.com/graphql` (`question(titleSlug) { questionFrontendId title difficulty topicTags { slug name } }`), sends them to `PUT /api/leetgrinder/problem/<slug>`, and attaches them to logged attempts. Nothing else is read from LeetCode's API.
 - **Timer.** Starts when a problem first opens and survives page reloads (it lives in `storage.session`, so a browser restart clears it). It resets after an attempt is logged. It also restarts when the problem has not been open for 30 minutes, or when it is more than 12 hours old, so a later visit (for example a review days later) starts fresh.
 - **Assisted.** Opening the problem's Solutions or Editorial tab marks the attempt as assisted.
@@ -109,3 +112,7 @@ Run through this after loading the extension in each browser, with the app runni
 - [ ] The banner appears under the title of any problem, says "New" for a problem never logged, and after logging an attempt switches to "Reviewed today · next due …" (or "Today's review · done" for today's pick) with the attempt summary. Clicking it opens the problem's history page in the app. With no token configured, no banner appears.
 - [ ] Navigate between problems inside LeetCode without a full reload: the panel follows the new problem.
 - [ ] Notes containing `<b>html</b>` display as plain text in the app and in the panel.
+- [ ] NeetCode: open `https://neetcode.io/problems/two-integer-sum/question` signed in. The banner shows Two Sum's status (the same one as on `leetcode.com/problems/two-sum/`). Submit an accepted solution: the panel opens with the code captured (Python, …) and logging records it under `two-sum` in the app.
+- [ ] NeetCode: press **Run** with passing tests: no panel opens. Submit a wrong answer, then wait for the nudge: **Log as unfinished** offers that code.
+- [ ] NeetCode: open the Solution tab, then submit an accepted solution: assisted is checked.
+- [ ] NeetCode: open a course or NeetCode-only problem: no banner, no timer.

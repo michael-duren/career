@@ -41,6 +41,7 @@
     csharp: "C#",
     dart: "Dart",
     elixir: "Elixir",
+    go: "Go",
     erlang: "Erlang",
     golang: "Go",
     java: "Java",
@@ -195,15 +196,58 @@
     return a;
   }
 
-  // slugFromPath returns the problem slug for a LeetCode problem URL path.
-  function slugFromPath(path) {
+  // siteOf names the problem site a page URL belongs to: "leetcode",
+  // "neetcode", or null.
+  function siteOf(url) {
+    let u;
+    try {
+      u = new URL(String(url || ""));
+    } catch {
+      return null;
+    }
+    if (u.protocol !== "https:" || u.port) return null;
+    if (u.hostname === "leetcode.com") return "leetcode";
+    if (u.hostname === "neetcode.io") return "neetcode";
+    return null;
+  }
+
+  function pathSlug(path) {
     const m = /^\/problems\/([^/]+)(?:\/|$)/.exec(path || "");
     return m && SLUG.test(m[1]) && m[1].length <= 100 ? m[1] : null;
   }
 
-  // isAssistPath is true on a problem's Solutions or Editorial tab.
-  function isAssistPath(path) {
-    return /^\/problems\/[^/]+\/(?:solutions|editorial)(?:\/|$)/.test(path || "");
+  // neetcodeProblem maps a NeetCode problem slug to the LeetCode problem it
+  // mirrors: {slug, metadata}, or null for NeetCode-only problems. The app
+  // only knows LeetCode slugs. The table is neetcode-slugs.js.
+  function neetcodeProblem(ncSlug) {
+    const table = root.LeetgrinderNeetCodeSlugs;
+    if (!table || typeof ncSlug !== "string" || !Object.prototype.hasOwnProperty.call(table, ncSlug)) return null;
+    const [slug, number, title, difficulty] = table[ncSlug];
+    const metadata = cleanMetadata({ number, title, difficulty, topics: [] });
+    return validSlug(slug) && metadata ? { slug, metadata } : null;
+  }
+
+  // problemFromPath returns the problem at a URL path on the given site as
+  // {slug, metadata}: its LeetCode slug, and on NeetCode the metadata known
+  // from the slug table (null on LeetCode, which is asked instead).
+  function problemFromPath(path, site = "leetcode") {
+    const slug = pathSlug(path);
+    if (!slug) return null;
+    if (site === "leetcode") return { slug, metadata: null };
+    return site === "neetcode" ? neetcodeProblem(slug) : null;
+  }
+
+  // slugFromPath returns the LeetCode slug of the problem at a URL path.
+  function slugFromPath(path, site = "leetcode") {
+    const p = problemFromPath(path, site);
+    return p ? p.slug : null;
+  }
+
+  // isAssistPath is true on a problem's Solutions or Editorial tab
+  // (LeetCode), or its Solution tab (NeetCode).
+  function isAssistPath(path, site = "leetcode") {
+    const tabs = site === "neetcode" ? /^\/problems\/[^/]+\/solution(?:\/|$)/ : /^\/problems\/[^/]+\/(?:solutions|editorial)(?:\/|$)/;
+    return tabs.test(path || "");
   }
 
   // elapsedMinutes rounds a timer to whole minutes within the API's range.
@@ -399,6 +443,9 @@
     NUDGE_MINUTES,
     MAX_MINUTES,
     MAX_NOTES,
+    siteOf,
+    neetcodeProblem,
+    problemFromPath,
     slugFromPath,
     isAssistPath,
     elapsedMinutes,

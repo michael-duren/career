@@ -76,13 +76,19 @@ func ensureLeetgrinderProblem(ctx context.Context, tx interface {
 }
 
 // upsertLeetgrinderMetadata stores LeetCode metadata for slug. Empty values
-// never replace known ones, and the optimal columns are never touched.
+// never replace known ones, and the optimal columns are never touched. An
+// extension save without topics (NeetCode pages have none) does not mark the
+// row fetched, so the fetcher still asks LeetCode for its topics.
 func upsertLeetgrinderMetadata(ctx context.Context, tx interface {
 	ExecContext(context.Context, string, ...any) (sql.Result, error)
 }, slug string, m leetgrinder.ProblemMetadata, source string, now time.Time) error {
 	var number any
 	if m.Number > 0 {
 		number = m.Number
+	}
+	var fetchedAt any = now
+	if source == "extension" && len(m.Topics) == 0 {
+		fetchedAt = nil
 	}
 	_, err := tx.ExecContext(ctx, `INSERT INTO leetgrinder_problems(slug,number,title,difficulty,topics,metadata_source,fetched_at) VALUES($1,$2,$3,$4,$5::text[],$6,$7)
 ON CONFLICT (slug) DO UPDATE SET
@@ -91,7 +97,7 @@ ON CONFLICT (slug) DO UPDATE SET
 	difficulty=COALESCE(NULLIF(EXCLUDED.difficulty,''),leetgrinder_problems.difficulty),
 	topics=CASE WHEN cardinality(EXCLUDED.topics)>0 THEN EXCLUDED.topics ELSE leetgrinder_problems.topics END,
 	metadata_source=EXCLUDED.metadata_source,
-	fetched_at=EXCLUDED.fetched_at`, slug, number, m.Title, m.Difficulty, m.TopicSlugs(), source, now)
+	fetched_at=COALESCE(EXCLUDED.fetched_at,leetgrinder_problems.fetched_at)`, slug, number, m.Title, m.Difficulty, m.TopicSlugs(), source, fetchedAt)
 	return err
 }
 
@@ -122,14 +128,14 @@ WHERE slug=$1 AND optimal_source='' AND optimal_time='' AND optimal_space=''`, s
 }
 
 // NextLeetgrinderFetch picks one slug whose metadata the server should ask
-// LeetCode for: a row with no title, or a seeded row of an attempted problem
-// that has no topic tags yet, that LeetCode has not answered for, that is
+// LeetCode for: a row with no title, or a seeded or extension-saved row of an
+// attempted problem that has no topic tags yet, that LeetCode has not answered for, that is
 // under the attempt cap and past its backoff. Newest rows go first.
 func (s *Store) NextLeetgrinderFetch(ctx context.Context, now time.Time) (string, bool, error) {
 	var slug string
 	err := s.DB.QueryRowContext(ctx, `SELECT p.slug FROM leetgrinder_problems p
 WHERE p.fetched_at IS NULL AND p.fetch_attempts < $1 AND p.fetch_after <= $2
-  AND (p.title='' OR (p.metadata_source='seed' AND cardinality(p.topics)=0 AND EXISTS (SELECT 1 FROM leetgrinder_attempts a WHERE a.problem_slug=p.slug)))
+  AND (p.title='' OR (p.metadata_source IN ('seed','extension') AND cardinality(p.topics)=0 AND EXISTS (SELECT 1 FROM leetgrinder_attempts a WHERE a.problem_slug=p.slug)))
 ORDER BY p.title='' DESC, p.created_at DESC, p.slug LIMIT 1`, leetgrinder.MaxFetchAttempts, now).Scan(&slug)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", false, nil

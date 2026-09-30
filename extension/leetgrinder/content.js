@@ -1,4 +1,5 @@
-// Isolated-world content script on leetcode.com. It tracks the open problem,
+// Isolated-world content script on leetcode.com and neetcode.io. It tracks
+// the open problem (always by its LeetCode slug, which is what the app knows),
 // keeps its timer (via the background worker), and shows the confirm panel
 // and the 25-minute nudge. It never talks to the app directly and builds all
 // UI with DOM APIs and textContent, never HTML strings.
@@ -9,10 +10,14 @@
 
   const lib = globalThis.LeetgrinderLib;
   const DETECT_SOURCE = "leetgrinder-detect";
+  // "leetcode" or "neetcode"; NeetCode pages use their own slugs, mapped
+  // to LeetCode's by lib.problemFromPath.
+  const site = lib.siteOf(location.href);
 
-  // current is the problem on screen: {slug, lookup: Promise<lookup>, meta}.
-  // A lookup is {status: "ok", info} or {status: "error", error} when the
-  // app could not answer. meta is the problem's LeetCode metadata once read.
+  // current is the problem on screen: {slug, lookup: Promise<lookup>, meta,
+  // known}. A lookup is {status: "ok", info} or {status: "error", error}
+  // when the app could not answer. meta is the problem's LeetCode metadata
+  // once read; known is the metadata NeetCode's slug table has, if any.
   let current = null;
   let lastPath = "";
   // ui is the mounted panel: {host, root, locked}. A locked panel holds an
@@ -49,8 +54,11 @@
   }
 
   // readMetadata asks LeetCode's GraphQL API, same-origin, about the problem.
-  // It resolves to cleaned metadata or null and never rejects.
-  async function readMetadata(slug) {
+  // On NeetCode it uses the slug table instead; the app fetches topics
+  // itself. It resolves to cleaned metadata or null and never rejects.
+  async function readMetadata(state) {
+    if (site !== "leetcode") return state.known || null;
+    const slug = state.slug;
     try {
       // Absolute: Firefox resolves relative content-script URLs against the extension.
       const res = await fetch(location.origin + "/graphql", {
@@ -66,11 +74,13 @@
   }
 
   // describe sends LeetCode's metadata to the app when it lacks the title or
-  // topics, and keeps it to attach to attempts.
+  // topics (on NeetCode, which has no topics, only when it lacks the
+  // problem), and keeps it to attach to attempts.
   async function describe(state, info) {
-    if (state.meta !== undefined || (info.known && Array.isArray(info.topics) && info.topics.length > 0)) return;
+    const described = info.known && (site !== "leetcode" || (Array.isArray(info.topics) && info.topics.length > 0));
+    if (state.meta !== undefined || described) return;
     state.meta = null;
-    const meta = await readMetadata(state.slug);
+    const meta = await readMetadata(state);
     if (!meta || current !== state) return;
     state.meta = meta;
     await send({ type: "metadata", slug: state.slug, metadata: meta });
@@ -78,9 +88,10 @@
 
   const busy = () => Boolean(ui && ui.locked);
 
-  // onPath runs on first load and on LeetCode's client-side navigation.
+  // onPath runs on first load and on the site's client-side navigation.
   async function onPath(path) {
-    const slug = lib.slugFromPath(path);
+    const problem = lib.problemFromPath(path, site);
+    const slug = problem && problem.slug;
     if (!slug) {
       current = null;
       if (!busy()) closeUI();
@@ -90,7 +101,7 @@
     if (!current || current.slug !== slug) {
       if (!busy()) closeUI();
       removeBanner();
-      current = { slug, lookup: lookup(slug) };
+      current = { slug, lookup: lookup(slug), known: problem.metadata };
     }
     const state = current;
     const found = await state.lookup;
@@ -99,7 +110,7 @@
     showBanner(state, found);
     if (found.status === "ok") describe(state, found.info);
     await send({ type: "timer:get", slug });
-    if (lib.isAssistPath(path)) await send({ type: "timer:update", slug, patch: { assisted: true } });
+    if (lib.isAssistPath(path, site)) await send({ type: "timer:update", slug, patch: { assisted: true } });
   }
 
   function watchLocation() {
@@ -127,7 +138,7 @@
       if (found.status === "ok" && current === state) describe(state, found.info);
     }
     if (current !== state) return;
-    // LeetCode re-renders the title; put the banner back if it was removed.
+    // The site re-renders the title; put the banner back if it was removed.
     showBanner(state, found);
     const res = await send({ type: "timer:get", slug: state.slug });
     if (found.status !== "ok" || !res.ok || !lib.shouldNudge(res.data, Date.now()) || ui || current !== state) return;
@@ -167,7 +178,9 @@
     const data = event.data;
     if (!data || typeof data !== "object" || data.source !== DETECT_SOURCE) return;
     if (data.type === "submission") {
-      const cleaned = lib.cleanCapture(data, current && current.slug);
+      // NeetCode's detector reports NeetCode's slug.
+      const nc = site === "neetcode" ? lib.neetcodeProblem(data.slug) : null;
+      const cleaned = lib.cleanCapture(site === "neetcode" ? { ...data, slug: nc ? nc.slug : "" } : data, current && current.slug);
       if (cleaned) capture = cleaned;
     } else if (data.type === "accepted" && typeof data.submissionId === "string" && data.submissionId.length <= 64) {
       onAccepted(data.submissionId);
@@ -258,10 +271,11 @@
     banner = null;
   }
 
-  // titleAnchor finds the problem title to sit under; LeetCode's markup
+  // titleAnchor finds the problem title to sit under; the sites' markup
   // changes, so several selectors are tried before a fixed corner.
   function titleAnchor(slug) {
-    for (const selector of [".text-title-large", '[data-cy="question-title"]', `a[href="/problems/${slug}/"]`]) {
+    const selectors = site === "neetcode" ? [".problem-title-row"] : [".text-title-large", '[data-cy="question-title"]', `a[href="/problems/${slug}/"]`];
+    for (const selector of selectors) {
       const node = document.querySelector(selector);
       if (node) return node;
     }
@@ -398,7 +412,7 @@
     dismiss.addEventListener("click", closeUI);
     form.addEventListener("keydown", (event) => {
       if (event.key === "Escape") closeUI();
-      // Keep LeetCode's editor shortcuts from firing while typing here.
+      // Keep the site's editor shortcuts from firing while typing here.
       event.stopPropagation();
     });
     form.addEventListener("submit", async (event) => {
@@ -475,7 +489,7 @@
     outcome.focus();
   }
 
-  // LeetCode is a single-page app; poll the path to follow its navigation.
+  // Both sites are single-page apps; poll the path to follow navigation.
   watchLocation();
   setInterval(watchLocation, 1000);
   setInterval(tick, 30000);
