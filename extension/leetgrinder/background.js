@@ -57,6 +57,33 @@ async function api(method, path, body) {
   }
 }
 
+// ---- Toolbar badge -------------------------------------------------------
+
+// refreshBadge shows today's remaining goal: a number, a check when the goal
+// is met, or a grey "?" when the app is not set up or cannot be reached.
+async function refreshBadge() {
+  const res = await api("GET", "/api/leetgrinder/today");
+  const badge = lib.badgeState(res.ok ? res.data : null);
+  await Promise.all([
+    ext.action.setBadgeText({ text: badge.text }),
+    ext.action.setBadgeBackgroundColor({ color: badge.color }),
+    ext.action.setTitle({ title: badge.title }),
+  ]).catch(() => {});
+  return res;
+}
+
+const BADGE_ALARM = "leetgrinder-today";
+ext.alarms.create(BADGE_ALARM, { periodInMinutes: 15 });
+ext.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === BADGE_ALARM) refreshBadge();
+});
+ext.runtime.onStartup.addListener(() => refreshBadge());
+ext.runtime.onInstalled.addListener(() => refreshBadge());
+ext.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && (changes.origin || changes.token)) refreshBadge();
+});
+refreshBadge();
+
 // Timers live in storage.session so page reloads keep them but a browser
 // restart clears them. Only this worker touches that storage area.
 const timerKey = (slug) => `timer:${slug}`;
@@ -111,6 +138,10 @@ function fromOptions(sender) {
   return typeof sender.url === "string" && sender.url.startsWith(ext.runtime.getURL("options.html"));
 }
 
+function fromPopup(sender) {
+  return typeof sender.url === "string" && sender.url.startsWith(ext.runtime.getURL("popup.html"));
+}
+
 async function handle(message, sender) {
   if (sender.id !== ext.runtime.id || !message || typeof message !== "object") {
     return { ok: false, status: 0, error: "Unexpected sender." };
@@ -118,6 +149,12 @@ async function handle(message, sender) {
   if (message.type === "test") {
     if (!fromOptions(sender)) return { ok: false, status: 0, error: "Unexpected sender." };
     return api("GET", "/api/leetgrinder/problem/two-sum");
+  }
+  if (message.type === "today") {
+    if (!fromPopup(sender)) return { ok: false, status: 0, error: "Unexpected sender." };
+    const res = await refreshBadge();
+    const cfg = await config();
+    return { ...res, origin: cfg.origin || "" };
   }
   if (!fromLeetCode(sender)) return { ok: false, status: 0, error: "Unexpected sender." };
   const slug = message.slug;
@@ -142,7 +179,16 @@ async function handle(message, sender) {
     case "attempt": {
       const attempt = lib.cleanAttempt(message.attempt);
       if (!attempt) return { ok: false, status: 400, error: "Check the attempt fields and try again." };
-      return api("POST", "/api/leetgrinder/attempts", attempt);
+      const res = await api("POST", "/api/leetgrinder/attempts", attempt);
+      if (res.ok) refreshBadge();
+      return res;
+    }
+    case "open-history": {
+      if (!lib.validSlug(slug)) return { ok: false, status: 0, error: "Invalid problem." };
+      const cfg = await config();
+      if (cfg.error) return { ok: false, status: 0, error: cfg.error };
+      await ext.tabs.create({ url: `${cfg.origin}/leetgrinder/problem/${encodeURIComponent(slug)}` });
+      return { ok: true, status: 200 };
     }
     default:
       return { ok: false, status: 0, error: "Unknown request." };

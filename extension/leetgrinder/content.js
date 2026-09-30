@@ -84,16 +84,19 @@
     if (!slug) {
       current = null;
       if (!busy()) closeUI();
+      removeBanner();
       return;
     }
     if (!current || current.slug !== slug) {
       if (!busy()) closeUI();
+      removeBanner();
       current = { slug, lookup: lookup(slug) };
     }
     const state = current;
     const found = await state.lookup;
     // When the app is unreachable the timer still starts, so the minutes stay right.
     if (current !== state) return;
+    showBanner(state, found);
     if (found.status === "ok") describe(state, found.info);
     await send({ type: "timer:get", slug });
     if (lib.isAssistPath(path)) await send({ type: "timer:update", slug, patch: { assisted: true } });
@@ -117,6 +120,8 @@
       if (found.status === "ok" && current === state) describe(state, found.info);
     }
     if (current !== state) return;
+    // LeetCode re-renders the title; put the banner back if it was removed.
+    showBanner(state, found);
     const res = await send({ type: "timer:get", slug: state.slug });
     if (found.status !== "ok" || !res.ok || !lib.shouldNudge(res.data, Date.now()) || ui || current !== state) return;
     await send({ type: "timer:update", slug: state.slug, patch: { nudged: true } });
@@ -132,6 +137,7 @@
     state.lookup = lookup(state.slug);
     const found = await state.lookup;
     if (current !== state || busy()) return;
+    showBanner(state, found);
     if (found.status === "ok") describe(state, found.info);
     // Accepted ends the nudge window even if the panel is dismissed or the
     // app is unreachable.
@@ -225,6 +231,61 @@
     );
   }
 
+  // ---- Banner --------------------------------------------------------------
+
+  const BANNER_STYLE = `
+    :host { all: initial; }
+    .pill { display: inline-flex; flex-direction: column; gap: 0; max-width: 360px; margin: 6px 0; padding: 4px 10px;
+      border: 1px solid #56704a; border-radius: 999px; background: #191d1b; color: #edf3ed; cursor: pointer;
+      font: 12px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; text-align: left; }
+    .pill:hover, .pill:focus-visible { border-color: #bee48a; outline: none; }
+    .label { color: #bee48a; font-weight: 600; }
+    .summary { color: #a7b4a9; }
+    .fixed { position: fixed; top: 64px; right: 20px; z-index: 2147483646; }
+  `;
+  // banner is the mounted pill: {host, slug, text}.
+  let banner = null;
+
+  function removeBanner() {
+    if (banner) banner.host.remove();
+    banner = null;
+  }
+
+  // titleAnchor finds the problem title to sit under; LeetCode's markup
+  // changes, so several selectors are tried before a fixed corner.
+  function titleAnchor(slug) {
+    for (const selector of [".text-title-large", '[data-cy="question-title"]', `a[href="/problems/${slug}/"]`]) {
+      const node = document.querySelector(selector);
+      if (node) return node;
+    }
+    return null;
+  }
+
+  // showBanner shows the problem's status from a lookup. It is hidden when
+  // the extension is not set up or the app cannot be reached.
+  function showBanner(state, found) {
+    const view = found && found.status === "ok" ? lib.bannerState(found.info, Date.now()) : null;
+    if (!view) {
+      removeBanner();
+      return;
+    }
+    const text = `${view.label}|${view.summary}`;
+    const anchor = titleAnchor(state.slug);
+    if (banner && banner.slug === state.slug && banner.text === text && banner.host.isConnected && banner.anchored === Boolean(anchor)) return;
+    removeBanner();
+    const host = el("div", { id: "leetgrinder-banner-root" });
+    const root = host.attachShadow({ mode: "closed" });
+    const pill = el("button", { type: "button", className: anchor ? "pill" : "pill fixed", title: "Open this problem's history in Leetgrinder" }, [
+      el("span", { className: "label", text: view.label }),
+      ...(view.summary ? [el("span", { className: "summary", text: view.summary })] : []),
+    ]);
+    pill.addEventListener("click", () => send({ type: "open-history", slug: state.slug }));
+    root.append(el("style", { text: BANNER_STYLE }), pill);
+    if (anchor) anchor.after(host);
+    else document.documentElement.append(host);
+    banner = { host, slug: state.slug, text, anchored: Boolean(anchor) };
+  }
+
   function closeUI() {
     if (ui) ui.host.remove();
     ui = null;
@@ -232,7 +293,8 @@
 
   function heading(state, info) {
     const title = el("h2", { text: info.title || (state.meta && state.meta.title) || state.slug });
-    const label = info.todaysPick ? "Today's review" : info.status === "due" ? "Review due" : info.status === "new" ? "New" : "";
+    // The kind this attempt will count as today, as the app decides it.
+    const label = lib.kindLabel(info.todayKind);
     if (label) title.append(el("span", { className: "badge", text: label }));
     const where = el("p", { className: "muted", text: "Leetgrinder" });
     return [title, where];
@@ -294,7 +356,6 @@
     outcome.value = prefill.outcome;
     const minutes = el("input", { type: "number", name: "minutes", min: 1, max: lib.MAX_MINUTES, step: 1, required: true, value: String(prefill.minutes) });
     const assisted = el("input", { type: "checkbox", name: "assisted", checked: prefill.assisted });
-    const review = el("input", { type: "checkbox", name: "review", checked: Boolean(info.todaysPick && !info.attemptedToday) });
     const notes = el("textarea", { name: "notes", maxLength: lib.MAX_NOTES, placeholder: "What to remember next time" });
     const status = el("p", { className: "status", role: "status" });
     const submit = el("button", { type: "submit", className: "primary", text: "Log attempt" });
@@ -311,7 +372,7 @@
     const codeRow = captured
       ? [el("label", { className: "check" }, [includeCode, `Code captured (${lib.languageLabel(captured.lang)}, ${lib.formatBytes(lib.utf8Bytes(captured.code))})`])]
       : [];
-    const fields = [outcome, minutes, ...time.fields, ...space.fields, assisted, review, includeCode, notes];
+    const fields = [outcome, minutes, ...time.fields, ...space.fields, assisted, includeCode, notes];
     // After an ambiguous failure the server may have saved the entry, so the
     // fields lock and retries resend exactly the same attempt.
     let locked = null;
@@ -323,7 +384,6 @@
       required,
       ...codeRow,
       el("label", { className: "check" }, [assisted, "Used a hint or solution"]),
-      ...(info.todaysPick ? [el("label", { className: "check" }, [review, "Count as today's review"])] : []),
       el("label", {}, ["Notes", notes]),
       el("div", { className: "actions" }, [dismiss, submit]),
       status,
@@ -346,7 +406,8 @@
             minutes: Number(minutes.value),
             assisted: assisted.checked,
             notes: notes.value,
-            isReview: Boolean(info.todaysPick && review.checked),
+            // The app decides whether an attempt is a review.
+            isReview: false,
             problem: state.meta || undefined,
             timeComplexity: time.value(),
             spaceComplexity: space.value(),
@@ -372,7 +433,14 @@
       panel.locked = Boolean(locked);
       if (res.ok) {
         panel.locked = false;
-        status.textContent = droppedCode ? "Logged to Leetgrinder without the code, which was too large to send." : "Logged to Leetgrinder.";
+        const kind = lib.kindLabel(res.data && res.data.kind);
+        const logged = kind ? `Logged to Leetgrinder as ${kind}.` : "Logged to Leetgrinder.";
+        status.textContent = droppedCode ? `${logged} The code was too large to send.` : logged;
+        // Refresh the banner with the new attempt.
+        state.lookup = lookup(slug);
+        state.lookup.then((found) => {
+          if (current === state) showBanner(state, found);
+        });
         // Start a fresh timer for the next attempt on this problem.
         await send({ type: "timer:restart", slug });
         setTimeout(() => {

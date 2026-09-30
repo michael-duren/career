@@ -230,6 +230,9 @@ type leetgrinderAPIProblem struct {
 	NextDue         string               `json:"nextDue,omitempty"`
 	LastAttemptedAt *time.Time           `json:"lastAttemptedAt,omitempty"`
 	AttemptedToday  bool                 `json:"attemptedToday"`
+	// TodayKind is how today counts an attempt on the problem: "new",
+	// "review" or "practice".
+	TodayKind string `json:"todayKind"`
 	Latest          *leetgrinder.Attempt `json:"latestAttempt"`
 	HistoryURL      string               `json:"historyUrl"`
 }
@@ -247,11 +250,7 @@ func (s *Server) leetgrinderAPIProblem(w http.ResponseWriter, r *http.Request) {
 	}
 	problem := today.State.Problem(slug)
 	out := leetgrinderAPIProblem{Slug: slug, Known: problem.Known(), Number: problem.Number, Title: problem.Title, Difficulty: problem.Difficulty, Topics: problem.Topics, Status: "new", HistoryURL: leetgrinder.ProblemURL(slug), AttemptedToday: today.AttemptedOn(slug)}
-	for _, item := range today.Reviews {
-		if item.Problem.Slug == slug {
-			out.TodaysPick = true
-		}
-	}
+	out.TodaysPick = today.Picked(slug)
 	// Attempts are loaded newest first.
 	for _, a := range today.State.Attempts {
 		if a.ProblemSlug == slug {
@@ -275,6 +274,17 @@ func (s *Server) leetgrinderAPIProblem(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			out.Status, out.NextDue = "notDue", due
+		}
+	}
+	out.TodayKind = today.Kind(slug)
+	if out.TodayKind == "" {
+		switch out.Status {
+		case "new":
+			out.TodayKind = leetgrinder.KindNew
+		case "due":
+			out.TodayKind = leetgrinder.KindReview
+		default:
+			out.TodayKind = leetgrinder.KindPractice
 		}
 	}
 	respond(w, 200, out)

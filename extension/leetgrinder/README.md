@@ -1,6 +1,6 @@
 # Leetgrinder browser extension
 
-Logs LeetCode submissions to your Leetgrinder app. When a submission is Accepted, a panel opens on the LeetCode page with the outcome, minutes, and hint use filled in. You state the time and space complexity, and the code LeetCode judged is attached unless you untick it. Nothing is sent until you press **Log attempt**; **Dismiss** sends nothing.
+Logs LeetCode submissions to your Leetgrinder app and shows today's goal. The toolbar badge counts what is left of today's goal, the popup lists today's progress and reviews, and a small banner on each problem page says whether it is new, due, or flagged. When a submission is Accepted, a panel opens on the LeetCode page with the outcome, minutes, and hint use filled in. You state the time and space complexity, and the code LeetCode judged is attached unless you untick it. Nothing is sent until you press **Log attempt**; **Dismiss** sends nothing.
 
 Manifest V3, plain JavaScript, no build step. One `manifest.json` works in Chrome 121+ and Firefox 128+. It is loaded unpacked; it is not published to any store.
 
@@ -39,10 +39,11 @@ Temporary add-ons are removed when Firefox restarts; load it again afterwards. Y
 | `manifest.json` | Declares both `background.service_worker` (Chrome) and `background.scripts` (Firefox). Host access to your app is an optional permission requested at runtime for that origin only. |
 | `browser-shim.js` | `ext` = `browser` in Firefox, `chrome` in Chrome. |
 | `lib.js` | Pure helpers (slug parsing, timer rounding, outcome inference, complexity normalisation, message and payload validation). Tested with `node --test`. |
-| `background.js` | The only code that reads the token and calls the app. Validates who sent each message and what it contains. Keeps per-problem timers in `storage.session`. |
+| `background.js` | The only code that reads the token and calls the app. Validates who sent each message and what it contains. Keeps per-problem timers in `storage.session`, and keeps the toolbar badge current from `GET /api/leetgrinder/today`. |
 | `leetcode-detect.js` | Runs in LeetCode's page world. Records the JSON body of `POST /problems/<slug>/submit/` (`lang`, `typed_code`) with the `submission_id` from its response, and watches `/submissions/detail/<id>/check/` responses. When a check finishes it posts `{slug, submissionId, status, lang, code}`, then an Accepted message if `status_msg` is `"Accepted"`. A DOM fallback on the result panel covers Accepted without code. All LeetCode-specific detection lives here. |
 | `content.js` | Tracks the open problem and timer, validates page-world messages, and shows the confirm panel and the 25-minute nudge. |
 | `options.html`, `options.js` | App origin, token, and Test connection. |
+| `popup.html`, `popup.js`, `popup.css` | The toolbar popup: today's progress, streak, review picks, the due list (top 10), and a dashboard link. Read-only. |
 
 Behavior:
 
@@ -53,7 +54,10 @@ Behavior:
 - **Prefill.** Solved if the timer shows 25 minutes or less, otherwise struggled. Every field is editable.
 - **Complexity.** Time and Space each offer the common classes (`O(1)` to `O(n!)`) or **Other…**, which shows a text field for values such as `O(m·n)` or `O(V + E)`. Other values must start with `O(`, end with `)`, and fit in 40 characters; `n^2`, `nlogn` and `logn` are rewritten as `n²`, `n log n` and `log n`. Both are required for solved and struggled attempts and optional for unfinished ones; the panel refuses to send without them. The same rules run in the app.
 - **Code.** When the judged submission's code was captured, the panel shows "Code captured (Python3, 1.2 KB)" with a checkbox, ticked by default, to include it. The Accepted panel attaches the code of the submission it reports; the unfinished panel attaches the latest submission on the problem, whatever its result. Code over 64 KiB is never captured, and code whose request would exceed the app's 96 KiB body limit is left out (the panel says so after saving). Code goes only to the configured app origin, through the background worker.
-- **Reviews.** The panel's badge says "New", "Review due", or "Today's review". For today's review it also shows a "Count as today's review" checkbox, checked unless the problem was already attempted today.
+- **Kind.** The panel's badge says how the app will count the attempt today: "New", "Review", or "Practice" (from `todayKind` in the status call). The app decides; after saving, the panel says "Logged to Leetgrinder as Review." with the kind the app reported. The extension still sends `isReview: false` for older apps, which the app ignores.
+- **Badge.** The background worker reads `GET /api/leetgrinder/today` on startup, after every logged attempt, when the options change, and every 15 minutes (`chrome.alarms`, hence the `alarms` permission). The badge shows how many new problems and reviews are left, a green ✓ when the goal is met, or a grey `?` (with a "not connected" title) when the extension is not set up or the app cannot be reached.
+- **Popup.** Clicking the toolbar icon shows today's goal progress (new x/n, review x/n, bonus), the streak, today's review picks and the due list (top 10) with LeetCode links, and a link to the dashboard. It never writes.
+- **Banner.** A pill under the problem title (or fixed top-right when the title cannot be found), isolated in a closed shadow root: "New", "Review due · recall 62%", "Today's review", "Flagged: time complexity judged wrong", or "Reviewed 3 d ago · next due Oct 14", with the last attempt ("Struggled · 32 min · O(n log n)/O(n)"). Clicking it opens the problem's history in the app. It is hidden when the extension is not set up or the app cannot be reached, and updates after logging.
 - **Nudge.** After 25 minutes without an Accepted submission, a small panel offers **Log as unfinished** (opens the confirm panel prefilled as unfinished) or **Keep going**. It appears once per problem timer, and never after an Accepted submission on that timer (logged or dismissed). The timer that starts after logging an attempt does not nudge either.
 - **Retries.** Each panel has one attempt id. After a network or server error the fields lock and **Retry** resends the identical attempt, so the app never records it twice. While a save is in flight or waiting for Retry, a new Accepted submission does not replace the panel. A 409 means that id was already saved with different values; correct the attempt in the app.
 
@@ -97,6 +101,9 @@ Run through this after loading the extension in each browser, with the app runni
 - [ ] Open a problem you have never logged (for example `https://leetcode.com/problems/design-hit-counter/`) and submit an accepted solution: the panel opens with the "New" badge. After logging, the app's problem page shows its title, number, difficulty, and topics.
 - [ ] Keep a problem open for 25 minutes without submitting: the nudge appears once. **Log as unfinished** opens the panel with Unfinished.
 - [ ] Solve a problem in under 25 minutes, then log or dismiss the panel and leave the tab open past the 25-minute mark: no nudge appears.
-- [ ] With a problem planned as today's review (see `/leetgrinder/reviews`), the panel shows "Today's review" and the attempt is recorded as a review.
+- [ ] With a problem picked as today's review (see `/leetgrinder/reviews`), the banner says "Today's review", the panel badge says "Review", and after logging the panel says "Logged to Leetgrinder as Review." Re-solving a problem that is not due shows "Practice".
+- [ ] The toolbar badge shows the number left for today's goal; logging a new problem lowers it within a few seconds; meeting the goal shows a green ✓. Revoke the token (or stop the app) and wait for the next refresh, or reload the extension: the badge shows a grey `?`.
+- [ ] The popup lists today's progress, streak, picks and due problems; each link opens LeetCode; "Open the dashboard" opens the app.
+- [ ] The banner appears under the title of any problem, says "New" for a problem never logged, and after logging an attempt switches to "Reviewed today · next due …" with the attempt summary. Clicking it opens the problem's history page in the app. With no token configured, no banner appears.
 - [ ] Navigate between problems inside LeetCode without a full reload: the panel follows the new problem.
 - [ ] Notes containing `<b>html</b>` display as plain text in the app and in the panel.

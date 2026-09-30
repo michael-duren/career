@@ -46,6 +46,7 @@ func (s *Server) registerLeetgrinder(r chi.Router) {
 		r.Post("/leetgrinder/problem/{slug}/attempts", s.leetgrinderAttempt)
 		r.Get("/leetgrinder/problems", s.leetgrinderProblems)
 		r.Get("/leetgrinder/reviews", s.leetgrinderReviews)
+		r.Get("/leetgrinder/stats", s.leetgrinderStats)
 		r.Get("/leetgrinder/settings", s.leetgrinderSettings)
 		r.Post("/leetgrinder/settings/general", s.leetgrinderSaveGeneral)
 		s.registerLeetgrinderNotify(r)
@@ -130,6 +131,18 @@ func (s *Server) leetgrinderReviews(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	renderLeetgrinder(w, r, 200, leetgrinder.Reviews(leetgrinder.ReviewsPage{Today: today, IDs: reviewIDs(map[string]string{}, today)}))
+}
+
+// statsWeeks is how many weeks the goal calendar shows.
+const statsWeeks = 12
+
+func (s *Server) leetgrinderStats(w http.ResponseWriter, r *http.Request) {
+	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
+	if err != nil {
+		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your stats are unavailable. Please retry."))
+		return
+	}
+	renderLeetgrinder(w, r, 200, leetgrinder.Stats(leetgrinder.NewStatsPage(today, leetgrinder.ParseStatsFilter(r.URL.Query()), statsWeeks)))
 }
 
 // leetgrinderRouteProblem validates the route's slug and returns its catalog

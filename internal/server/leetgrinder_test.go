@@ -20,7 +20,7 @@ import (
 func TestLeetgrinderAccess(t *testing.T) {
 	s := &Server{config: config.Config{Username: "admin", JWTSecret: "test", PublicOrigin: "https://example.com"}}
 	handler := s.RegisterRoutes()
-	for _, path := range []string{"/leetgrinder", "/leetgrinder/day/1", "/leetgrinder/problem/two-sum", "/leetgrinder/export", "/leetgrinder/reviews", "/leetgrinder/settings", "/leetgrinder/about", "/leetgrinder/problems", "/leetgrinder/log?problem=two-sum"} {
+	for _, path := range []string{"/leetgrinder", "/leetgrinder/day/1", "/leetgrinder/problem/two-sum", "/leetgrinder/export", "/leetgrinder/reviews", "/leetgrinder/settings", "/leetgrinder/about", "/leetgrinder/problems", "/leetgrinder/log?problem=two-sum", "/leetgrinder/stats"} {
 		w := httptest.NewRecorder()
 		handler.ServeHTTP(w, httptest.NewRequest("GET", path, nil))
 		if w.Code != 303 {
@@ -101,7 +101,7 @@ func leetgrinderTestServer(t *testing.T) (*Server, *database.Store, func(method,
 
 func TestLeetgrinderWorkflow(t *testing.T) {
 	_, db, request := leetgrinderTestServer(t)
-	for _, path := range []string{"/leetgrinder", "/leetgrinder/problem/two-sum", "/leetgrinder/problem/any-problem-at-all", "/leetgrinder/reviews", "/leetgrinder/settings", "/leetgrinder/problems"} {
+	for _, path := range []string{"/leetgrinder", "/leetgrinder/problem/two-sum", "/leetgrinder/problem/any-problem-at-all", "/leetgrinder/reviews", "/leetgrinder/settings", "/leetgrinder/problems", "/leetgrinder/stats", "/leetgrinder/stats?sort=due&all=1"} {
 		w := request("GET", path, nil)
 		if w.Code != 200 {
 			t.Fatalf("%s: %d %s", path, w.Code, w.Body.String())

@@ -1433,3 +1433,33 @@ dd {
 .flag {
   color: #fbbf24;
 }
+
+/* Stats: goal calendar. */
+.goal-calendar {
+  border-collapse: separate;
+  border-spacing: 4px;
+}
+.goal-calendar th {
+  font-weight: 400;
+  text-align: left;
+}
+.cal-day,
+.cal-key {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  background: var(--line);
+}
+.cal-key {
+  display: inline-block;
+  vertical-align: middle;
+}
+.cal-active {
+  background: var(--soft);
+}
+.cal-met {
+  background: var(--accent);
+}
+.cal-future {
+  background: transparent;
+}

@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-14",
+  "goal": { "new": 2, "review": 1 },
+  "done": { "new": 1, "review": 0, "bonus": 1 },
+  "met": false,
+  "remaining": 2,
+  "streak": 5,
+  "picks": [{ "slug": "two-sum", "title": "Two Sum", "difficulty": "Easy", "recall": 0.62, "reason": "Struggled 9 days ago · recall estimate 62%", "done": false }],
+  "due": [
+    { "slug": "lru-cache", "title": "LRU Cache", "difficulty": "Medium", "recall": 0.5, "reason": "Time complexity judged wrong yesterday", "done": false },
+    { "slug": "Bad Slug", "title": "<b>x</b>", "recall": 0.1, "reason": "", "done": false }
+  ],
+  "dueCount": 2
+}
