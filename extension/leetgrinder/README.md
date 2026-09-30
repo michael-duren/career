@@ -103,7 +103,9 @@ Run through this after loading the extension in each browser, with the app runni
 - [ ] Solve a problem in under 25 minutes, then log or dismiss the panel and leave the tab open past the 25-minute mark: no nudge appears.
 - [ ] With a problem picked as today's review (see `/leetgrinder/reviews`), the banner says "Today's review", the panel badge says "Review", and after logging the panel says "Logged to Leetgrinder as Review." Re-solving a problem that is not due shows "Practice".
 - [ ] The toolbar badge shows the number left for today's goal; logging a new problem lowers it within a few seconds; meeting the goal shows a green ✓. Revoke the token (or stop the app) and wait for the next refresh, or reload the extension: the badge shows a grey `?`.
+- [ ] From the browser console of a LeetCode page, `chrome.runtime.sendMessage({type: "today"})` is refused ("Unexpected sender."); from the popup it works. `open-history` with an invalid slug is refused.
+- [ ] Revoke the app origin's site access in the browser's extension settings: the badge turns to a grey `?` right away.
 - [ ] The popup lists today's progress, streak, picks and due problems; each link opens LeetCode; "Open the dashboard" opens the app.
-- [ ] The banner appears under the title of any problem, says "New" for a problem never logged, and after logging an attempt switches to "Reviewed today · next due …" with the attempt summary. Clicking it opens the problem's history page in the app. With no token configured, no banner appears.
+- [ ] The banner appears under the title of any problem, says "New" for a problem never logged, and after logging an attempt switches to "Reviewed today · next due …" (or "Today's review · done" for today's pick) with the attempt summary. Clicking it opens the problem's history page in the app. With no token configured, no banner appears.
 - [ ] Navigate between problems inside LeetCode without a full reload: the panel follows the new problem.
 - [ ] Notes containing `<b>html</b>` display as plain text in the app and in the panel.

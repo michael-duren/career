@@ -103,6 +103,13 @@
   }
 
   function watchLocation() {
+    // The title often renders after the status arrives; move a corner
+    // banner under it as soon as it appears.
+    if (banner && !banner.anchored && current && current.slug === banner.slug && titleAnchor(current.slug)) {
+      current.lookup.then((found) => {
+        if (current && banner && !banner.anchored) showBanner(current, found);
+      });
+    }
     if (location.pathname === lastPath) return;
     lastPath = location.pathname;
     onPath(lastPath);

@@ -348,7 +348,8 @@
   function bannerState(info, now) {
     if (!info || typeof info !== "object") return null;
     let label;
-    if (info.todaysPick) label = "Today's review";
+    if (info.todaysPick && info.attemptedToday) label = "Today's review · done";
+    else if (info.todaysPick) label = "Today's review";
     else if (info.status === "due" && info.flagReason) label = info.flagReason;
     else if (info.status === "due") label = `Review due · recall ${percent(info.recall)}`;
     else if (info.status === "notDue") {

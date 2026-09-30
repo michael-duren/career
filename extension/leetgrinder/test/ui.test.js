@@ -18,6 +18,7 @@ test("bannerState", () => {
   assert.deepEqual(lib.bannerState({ status: "new", latestAttempt: null }, now), { label: "New", summary: "" });
   assert.equal(lib.bannerState({ status: "due", recall: 0.62, latestAttempt: latest }, now).label, "Review due · recall 62%");
   assert.equal(lib.bannerState({ status: "due", todaysPick: true, recall: 0.62 }, now).label, "Today's review");
+  assert.equal(lib.bannerState({ status: "due", todaysPick: true, attemptedToday: true }, now).label, "Today's review · done");
   assert.equal(lib.bannerState({ status: "due", flagReason: "Flagged: time complexity judged wrong" }, now).label, "Flagged: time complexity judged wrong");
   const notDue = lib.bannerState({ status: "notDue", nextDue: "2026-10-17", lastAttemptedAt: new Date(2026, 9, 11, 20).toISOString(), latestAttempt: latest }, now);
   assert.deepEqual(notDue, { label: "Reviewed 3 d ago · next due Oct 17", summary: "Struggled · 32 min · O(n log n)/O(n)" });

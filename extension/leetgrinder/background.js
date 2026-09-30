@@ -73,15 +73,19 @@ async function refreshBadge() {
 }
 
 const BADGE_ALARM = "leetgrinder-today";
-ext.alarms.create(BADGE_ALARM, { periodInMinutes: 15 });
+// Create the alarm once; recreating it on every worker start would restart
+// its countdown.
+ext.alarms.get(BADGE_ALARM).then((alarm) => alarm || ext.alarms.create(BADGE_ALARM, { periodInMinutes: 15 }));
 ext.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === BADGE_ALARM) refreshBadge();
 });
-ext.runtime.onStartup.addListener(() => refreshBadge());
-ext.runtime.onInstalled.addListener(() => refreshBadge());
 ext.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && (changes.origin || changes.token)) refreshBadge();
 });
+ext.permissions.onAdded.addListener(() => refreshBadge());
+ext.permissions.onRemoved.addListener(() => refreshBadge());
+// Every worker start (browser startup, install, or waking for an event)
+// refreshes once.
 refreshBadge();
 
 // Timers live in storage.session so page reloads keep them but a browser

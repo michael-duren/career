@@ -73,3 +73,17 @@ func TestStatsPage(t *testing.T) {
 		t.Fatalf("empty stats: %v", err)
 	}
 }
+
+func TestStatsCalendarUsesLocalDate(t *testing.T) {
+	settings := DefaultSettings()
+	settings.Timezone = "America/Los_Angeles"
+	loc := settings.Location()
+	// 23:30 Sunday 18 Oct in Los Angeles is already Monday in UTC.
+	now := time.Date(2026, 10, 18, 23, 30, 0, 0, loc)
+	state := State{Attempts: []Attempt{attempt("two-sum", "solved", 10, false, now.Add(-time.Hour))}}
+	cal := NewStatsPage(NewToday(settings, state, now), StatsFilter{Sort: "recall"}, 2).Calendar
+	last := cal[1]
+	if last[0].Date.Weekday() != time.Monday || !last[6].Date.Equal(time.Date(2026, 10, 18, 0, 0, 0, 0, time.UTC)) || !last[6].Active {
+		t.Fatalf("last week %+v", last)
+	}
+}
