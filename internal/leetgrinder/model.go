@@ -81,13 +81,35 @@ type Attempt struct {
 	Code         string `json:"code"`
 	CodeLanguage string `json:"codeLanguage"`
 	// WantsReview and Approach are the learner's own assessment. Approach is
-	// ApproachOptimal, ApproachSuboptimal, or "" when not stated. Either
-	// WantsReview or a suboptimal approach flags the problem for review.
+	// ApproachOptimal, ApproachSuboptimal, or "" when not stated. Either one,
+	// like a struggle, flags the problem for review (see SelfFlagged).
 	WantsReview bool   `json:"wantsReview"`
 	Approach    string `json:"approach"`
-	// MarkedAt is when the first mark was raised, or re-raised after both
-	// were cleared: the attempt's time, or the correction that raised it.
+	// MarkedAt is when the attempt first flagged the problem, or flagged it
+	// again after a correction cleared it: the attempt's time, or the
+	// correction that raised the flag.
 	MarkedAt time.Time `json:"markedAt"`
+}
+
+// Struggle labels an attempt that was not an unassisted solve, the same
+// struggles the stats page counts: "Struggled", "Unfinished" or "Solved with
+// help". It is "" for an unassisted solve.
+func Struggle(a Attempt) string {
+	switch {
+	case a.Outcome == "struggled":
+		return "Struggled"
+	case a.Outcome == "unfinished":
+		return "Unfinished"
+	case a.Assisted:
+		return "Solved with help"
+	}
+	return ""
+}
+
+// SelfFlagged reports whether the attempt itself flags its problem for
+// review: a struggle, a review request, or a simpler approach.
+func (a Attempt) SelfFlagged() bool {
+	return Struggle(a) != "" || a.WantsReview || a.Approach == ApproachSuboptimal
 }
 
 const (

@@ -31,17 +31,18 @@ func TestProblemRowsAndFilters(t *testing.T) {
 		return FilterProblems(rows, ParseProblemFilter(q))
 	}
 	for query, want := range map[string]int{
-		"":                          4,
-		"difficulty=Easy":           3,
-		"difficulty=Hard":           0,
-		"topic=hash-table":          1,
-		"topic=untagged":            2,
-		"topic=Bad Topic":           4,
-		"status=solved":             2,
-		"status=struggled":          1,
-		"status=unfinished":         1,
-		"status=due":                2,
-		"status=flagged":            0,
+		"":                  4,
+		"difficulty=Easy":   3,
+		"difficulty=Hard":   0,
+		"topic=hash-table":  1,
+		"topic=untagged":    2,
+		"topic=Bad Topic":   4,
+		"status=solved":     2,
+		"status=struggled":  1,
+		"status=unfinished": 1,
+		"status=due":        2,
+		// Struggles flag: with help, unfinished, struggled; not the re-solve.
+		"status=flagged":            3,
 		"q=ransom+NOTE":             1,
 		"q=hash":                    1,
 		"q=mystery":                 1,
@@ -87,7 +88,7 @@ func TestProblemsPageRenders(t *testing.T) {
 		t.Fatal(err)
 	}
 	html := out.String()
-	for _, want := range []string{"Showing 1 of 4 problems", `href="/leetgrinder/problem/two-sum"`, `href="https://leetcode.com/problems/two-sum/"`, `value="Easy" selected`, `value="hash-table" selected`, `value="solved" selected`, "Clear filters", "status-solved", "Mon 19 Oct 2026", `<a href="/leetgrinder/problems" aria-current="page">`, "Hash Table"} {
+	for _, want := range []string{"Showing 1 of 4 problems", `href="/leetgrinder/problem/two-sum"`, `href="https://leetcode.com/problems/two-sum/"`, `value="Easy" selected`, `value="hash-table" selected`, `value="solved" selected`, "Clear filters", "status-solved", "19 Oct 2026", `<a href="/leetgrinder/problems" aria-current="page">`, "Hash Table"} {
 		if !strings.Contains(html, want) {
 			t.Errorf("problems page missing %q", want)
 		}

@@ -516,9 +516,10 @@ dd {
   grid-template-columns: 1fr 1fr;
   gap: 18px;
 }
-.attempt-form input:not([type="checkbox"]),
+.attempt-form input:not([type="checkbox"]):not([type="radio"]),
 .attempt-form select,
-.attempt-form textarea {
+.attempt-form textarea,
+.log-problem-form input {
   display: block;
   width: 100%;
   margin-top: 6px;
@@ -536,6 +537,9 @@ dd {
   align-items: center;
   gap: 10px;
   margin: 18px 0;
+}
+.checkbox input[type="radio"] {
+  border-radius: 50%;
 }
 .checkbox input {
   accent-color: var(--accent);
@@ -1195,7 +1199,7 @@ dd {
 .problem-table th[scope="row"] {
   font-weight: 500;
   white-space: normal;
-  min-width: 14em;
+  min-width: 11em;
 }
 .problem-table th[scope="row"] a {
   color: var(--ink);
@@ -1204,12 +1208,35 @@ dd {
 .problem-table th[scope="row"] a:hover {
   color: var(--accent);
 }
-.problem-table td.topic {
-  white-space: normal;
-  min-width: 14em;
+.row-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
 }
-.problem-table td.topic .small {
-  display: block;
+.problem-table th[scope="row"] .row-topics a {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 11px;
+}
+.problem-table th[scope="row"] .row-topics a:hover {
+  color: var(--accent);
+}
+.problem-table td.status {
+  white-space: normal;
+  min-width: 15em;
+}
+.status-tags > span:not(.flag) {
+  white-space: nowrap;
+}
+.status-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.status-tags .flag {
+  flex-basis: 100%;
 }
 .problem-table .num {
   font-variant-numeric: tabular-nums;
@@ -1364,11 +1391,6 @@ dd {
 .topic-tag:hover {
   color: var(--accent);
   border-color: var(--accent);
-}
-.problem-table .topic {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 8px;
 }
 .log-problem {
   margin-bottom: 24px;

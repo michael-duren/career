@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	fsrs "github.com/open-spaced-repetition/go-fsrs/v4"
@@ -43,17 +44,19 @@ type Card struct {
 	Due time.Time
 	// FSRSDue is when FSRS alone schedules the next review.
 	FSRSDue time.Time
-	// Flag is set when Last was marked for review or its analysis found a mistake.
+	// Flag is set when Last was a struggle, was marked for review, or its
+	// analysis found a mistake.
 	Flag *Flag
 	fsrs fsrs.Card
 	loc  *time.Location
 }
 
 // Flag marks a problem for review the day after its latest attempt said so:
-// its analysis judged a stated complexity wrong or the solution not optimal,
-// or the learner asked to review it or took a simpler approach for time. It
-// clears with the next attempt, or a re-analysis without those verdicts when
-// the analysis alone raised it.
+// the attempt was a struggle (see Struggle), its analysis judged a stated
+// complexity wrong or the solution not optimal, or the learner asked to
+// review it or took a simpler approach for time. It clears with the next
+// attempt, or a re-analysis without those verdicts when the analysis alone
+// raised it.
 type Flag struct {
 	// Date is the earliest local date that raised the flag, of MarkedDate
 	// and AnalysisDate; the other two are zero when that source is absent.
@@ -63,8 +66,10 @@ type Flag struct {
 	// Actual and optimal complexities, for the not-optimal reason.
 	ActualTime, ActualSpace   string
 	OptimalTime, OptimalSpace string
-	// WantsReview and Suboptimal are the learner's own marks.
+	// WantsReview and Suboptimal are the learner's own marks, and Struggle
+	// the attempt's struggle label, or "".
 	WantsReview, Suboptimal bool
+	Struggle                string
 }
 
 // Flagged reports whether the card carries a flag.
@@ -94,11 +99,11 @@ func (c Card) Retrievability(t time.Time) float64 {
 	return r
 }
 
-// flagFor derives the flag of an attempt from the learner's marks and its
-// analysis, or nil.
+// flagFor derives the flag of an attempt from its outcome, the learner's
+// marks and its analysis, or nil.
 func flagFor(a Attempt, problem Problem, analyses map[string]Analysis, loc *time.Location) *Flag {
-	f := &Flag{WantsReview: a.WantsReview, Suboptimal: a.Approach == ApproachSuboptimal}
-	if f.WantsReview || f.Suboptimal {
+	f := &Flag{WantsReview: a.WantsReview, Suboptimal: a.Approach == ApproachSuboptimal, Struggle: Struggle(a)}
+	if a.SelfFlagged() {
 		marked := a.MarkedAt
 		if marked.IsZero() {
 			marked = a.CreatedAt
@@ -144,6 +149,8 @@ func (f Flag) Reason(now time.Time, loc *time.Location) string {
 		return fmt.Sprintf("Not optimal: space %s vs %s", f.ActualSpace, f.OptimalSpace)
 	case f.NotOptimal:
 		return "Not optimal"
+	case f.Struggle != "":
+		return f.Struggle + " " + daysAgo(f.MarkedDate, today)
 	case f.Suboptimal:
 		return "Took a simpler approach " + daysAgo(f.MarkedDate, today)
 	}
@@ -161,6 +168,8 @@ func (f Flag) Label() string {
 		return "Flagged: space complexity judged wrong"
 	case f.NotOptimal:
 		return "Flagged: not optimal"
+	case f.Struggle != "":
+		return "Flagged: " + strings.ToLower(f.Struggle)
 	case f.Suboptimal:
 		return "Flagged: simpler approach taken"
 	}
@@ -308,7 +317,8 @@ func (c Card) firstAttemptOn(date time.Time) bool {
 // ReviewReason explains a card in plain text: its flag, or its last counted
 // attempt and recall, e.g. "Struggled 9 days ago · recall estimate 62%".
 func ReviewReason(c Card, now time.Time, loc *time.Location) string {
-	if c.Flag != nil {
+	// A struggle reads with its recall, as unflagged cards do.
+	if c.Flag != nil && (c.Flag.Struggle == "" || c.Flag.TimeWrong || c.Flag.SpaceWrong || c.Flag.NotOptimal) {
 		return c.Flag.Reason(now, loc)
 	}
 	label := OutcomeLabel(c.Last.Outcome)

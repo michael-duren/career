@@ -454,7 +454,7 @@ templ Reviews(page ReviewsPage) {
 	@layout("Reviews", "reviews") {
 		<p class="eyebrow">SPACED REPETITION</p>
 		<h1>Reviews</h1>
-		<p class="lead">Every problem you have attempted, scheduled by how likely you are to recall it. Problems whose analysis found a complexity mistake are due the next day.</p>
+		<p class="lead">Every problem you have attempted, scheduled by how likely you are to recall it. A struggle, a simpler approach, a review request, or a complexity mistake found by the analysis makes a problem due the next day.</p>
 		<section class="stats" aria-label="Review summary">
 			<div><strong>{ Count(len(page.Today.Reviews)) }</strong><p>Picked today</p></div>
 			<div><strong>{ Count(page.Today.Backlog()) }</strong><p>Backlog</p></div>
@@ -631,7 +631,6 @@ templ Problems(page ProblemsPage) {
 							<th scope="col">#</th>
 							<th scope="col">Problem</th>
 							<th scope="col">Difficulty</th>
-							<th scope="col">Topics</th>
 							<th scope="col">Optimal time / space</th>
 							<th scope="col">Status</th>
 							<th scope="col">Attempts</th>
@@ -653,36 +652,40 @@ templ Problems(page ProblemsPage) {
 									if row.Problem.NotFound {
 										<span class="small muted">Not found on LeetCode</span>
 									}
+									if len(row.Problem.Topics) > 0 {
+										<span class="row-topics">
+											for _, t := range row.Problem.Topics {
+												<a class="topic-tag" href={ templ.SafeURL("/leetgrinder/problems?topic=" + t) }>{ TopicLabel(t) }</a>
+											}
+										</span>
+									}
 								</th>
 								<td>
 									if row.Problem.Difficulty != "" {
 										<span class={ DifficultyClass(row.Problem.Difficulty) }>{ row.Problem.Difficulty }</span>
 									}
 								</td>
-								<td class="topic">
-									for _, t := range row.Problem.Topics {
-										<span class="small">{ TopicLabel(t) }</span>
-									}
-								</td>
 								<td class="optimal">@optimalCell(row.Problem)
 </td>
-								<td>
-									<span class={ StatusClass(row.Status) }>{ row.Status }</span>
-									if row.Due {
-										<span class="badge">Due</span>
-									}
-									if row.Card.Flag != nil {
-										<span class="small flag">{ row.Card.Flag.Label() }</span>
-									}
-									if row.ComplexityWrong {
-										@complexityBadge()
-									}
+								<td class="status">
+									<div class="status-tags">
+										<span class={ StatusClass(row.Status) }>{ row.Status }</span>
+										if row.Due {
+											<span class="badge">Due</span>
+										}
+										if row.ComplexityWrong {
+											@complexityBadge()
+										}
+										if row.Card.Flag != nil {
+											<span class="small flag">{ row.Card.Flag.Label() }</span>
+										}
+									</div>
 								</td>
 								<td class="num">{ Count(row.Attempts) }</td>
-								<td>{ DateLabel(Date(row.Last.CreatedAt, page.Location)) }</td>
+								<td>{ CompactDate(Date(row.Last.CreatedAt, page.Location)) }</td>
 								<td>
 									if row.Card.Reviews > 0 {
-										{ DateLabel(Date(row.Card.Due, page.Location)) }
+										{ CompactDate(Date(row.Card.Due, page.Location)) }
 									}
 								</td>
 								<td>
@@ -733,7 +736,7 @@ templ attemptFields(problem Problem, form AttemptForm) {
 				{ form.Notes }
 			</textarea>
 		</label>
-		<p class="small muted">Solved means your solution passed on LeetCode. Mark help even if you wrote the final code yourself. A simpler approach, or asking to review, flags the problem for review the next day.</p>
+		<p class="small muted">Solved means your solution passed on LeetCode. Mark help even if you wrote the final code yourself. Anything but an unassisted solve, a simpler approach, or asking to review flags the problem for review the next day.</p>
 		<button class="button primary" type="submit">
 			if form.Revision!="" {
 				Save correction
