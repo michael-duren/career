@@ -114,8 +114,26 @@ func TestLeetgrinderAttemptDetails(t *testing.T) {
 	// Corrections change the learner's own assessment.
 	correction = corrected
 	correction.WantsReview, correction.Approach = true, leetgrinder.ApproachSuboptimal
+	if saved.MarkedAt.IsZero() {
+		t.Fatal("marked_at not set on insert")
+	}
 	if corrected, err = s.SaveLeetgrinderAttempt(ctx, correction, corrected.Revision); err != nil || !corrected.WantsReview || corrected.Approach != leetgrinder.ApproachSuboptimal {
 		t.Fatalf("assessment correction %+v %v", corrected, err)
+	}
+	// Raising a mark moves marked_at; keeping one raised does not.
+	if !corrected.MarkedAt.After(saved.MarkedAt) {
+		t.Fatalf("raised mark kept marked_at %s (was %s)", corrected.MarkedAt, saved.MarkedAt)
+	}
+	correction = corrected
+	correction.Approach = leetgrinder.ApproachOptimal
+	kept, err := s.SaveLeetgrinderAttempt(ctx, correction, corrected.Revision)
+	if err != nil || !kept.MarkedAt.Equal(corrected.MarkedAt) {
+		t.Fatalf("kept mark moved marked_at: %+v %v", kept, err)
+	}
+	correction = kept
+	correction.Approach = leetgrinder.ApproachSuboptimal
+	if corrected, err = s.SaveLeetgrinderAttempt(ctx, correction, kept.Revision); err != nil || !corrected.MarkedAt.Equal(kept.MarkedAt) {
+		t.Fatalf("second mark moved marked_at: %+v %v", corrected, err)
 	}
 	if state, err := s.LeetgrinderState(ctx); err != nil || !state.Attempts[0].WantsReview || state.Attempts[0].Approach != leetgrinder.ApproachSuboptimal {
 		t.Fatalf("state %+v %v", state.Attempts, err)

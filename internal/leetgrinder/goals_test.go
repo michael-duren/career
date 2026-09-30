@@ -152,14 +152,33 @@ func TestLearnerMarksFlagProblem(t *testing.T) {
 			t.Errorf("%s: flag survived a newer attempt", test.name)
 		}
 	}
-	// The analysis's verdict reads first; the earlier date raises the flag.
+	// The analysis's verdict reads first, with its own date; the earlier
+	// date raises the flag.
 	marked := solve
 	marked.WantsReview = true
 	state.Attempts = []Attempt{marked}
 	state.Analyses = map[string]Analysis{marked.ID: {AttemptID: marked.ID, Status: AnalysisDone, Current: true, TimeMatches: boolPtr(false), SpaceMatches: boolPtr(true), Optimal: boolPtr(true), ActualTime: "O(n²)", UpdatedAt: now.AddDate(0, 0, -1)}}
 	c := BuildCards(state, loc)[0]
-	if c.Flag == nil || c.Flag.Reason(now, loc) != "Time complexity judged wrong 3 days ago" || !c.Due.Equal(time.Date(2026, 10, 8, 0, 0, 0, 0, loc)) {
+	if c.Flag == nil || c.Flag.Reason(now, loc) != "Time complexity judged wrong yesterday" || !c.Due.Equal(time.Date(2026, 10, 8, 0, 0, 0, 0, loc)) {
 		t.Fatalf("combined flag %+v due %s", c.Flag, c.Due)
+	}
+	state.Analyses = nil
+
+	// A mark raised later by a correction flags from then on, so past days
+	// keep their kinds.
+	practice := attempt("two-sum", "solved", 5, false, now.AddDate(0, 0, -2))
+	marked.MarkedAt = now.AddDate(0, 0, -1)
+	state.Attempts = []Attempt{marked}
+	c = BuildCards(state, loc)[0]
+	if c.Flag == nil || c.Flag.Reason(now, loc) != "Marked for review yesterday" || !c.Due.Equal(time.Date(2026, 10, 10, 0, 0, 0, 0, loc)) {
+		t.Fatalf("late mark %+v due %s", c.Flag, c.Due)
+	}
+	// Nothing was due two days ago, so the re-solve then was practice, and
+	// the later mark does not turn it into a review.
+	marked.MarkedAt = now
+	state.Attempts = []Attempt{practice, marked}
+	if k := History(state, loc)[Date(practice.CreatedAt, loc)].Kinds["two-sum"]; k != KindPractice {
+		t.Fatalf("backdated mark changed a past day: %s", k)
 	}
 }
 

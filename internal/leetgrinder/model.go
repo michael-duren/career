@@ -85,6 +85,9 @@ type Attempt struct {
 	// WantsReview or a suboptimal approach flags the problem for review.
 	WantsReview bool   `json:"wantsReview"`
 	Approach    string `json:"approach"`
+	// MarkedAt is when either mark was last raised: the attempt's time,
+	// or the correction that raised it.
+	MarkedAt time.Time `json:"markedAt"`
 }
 
 const (

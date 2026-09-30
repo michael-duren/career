@@ -109,10 +109,11 @@ test("cleanAttempt", () => {
   ]);
   assert.equal(cleaned.wantsReview, true);
   assert.equal(cleaned.approach, "suboptimal");
-  // Attempts saved by an older version carry neither field.
-  const older = lib.cleanAttempt({ ...good, wantsReview: undefined, approach: undefined });
-  assert.equal(older.wantsReview, false);
-  assert.equal(older.approach, "");
+  // Unset self-assessments are left out, for servers that predate them.
+  for (const unset of [{ wantsReview: undefined, approach: undefined }, { wantsReview: false, approach: "" }]) {
+    const plain = lib.cleanAttempt({ ...good, ...unset });
+    assert.ok(!("wantsReview" in plain) && !("approach" in plain), JSON.stringify(unset));
+  }
   assert.equal(cleaned.spaceComplexity, "O(n²)");
   assert.equal(cleaned.code, "");
   for (const bad of [

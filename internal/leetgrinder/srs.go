@@ -55,11 +55,11 @@ type Card struct {
 // clears with the next attempt, or a re-analysis without those verdicts when
 // the analysis alone raised it.
 type Flag struct {
-	// Date is the earliest local date that raised the flag: the attempt's
-	// for the learner's own marks, the analysis's for its verdicts.
-	Date                  time.Time
-	TimeWrong, SpaceWrong bool
-	NotOptimal            bool
+	// Date is the earliest local date that raised the flag, of MarkedDate
+	// and AnalysisDate; the other two are zero when that source is absent.
+	Date, MarkedDate, AnalysisDate time.Time
+	TimeWrong, SpaceWrong          bool
+	NotOptimal                     bool
 	// Actual and optimal complexities, for the not-optimal reason.
 	ActualTime, ActualSpace   string
 	OptimalTime, OptimalSpace string
@@ -99,13 +99,19 @@ func (c Card) Retrievability(t time.Time) float64 {
 func flagFor(a Attempt, problem Problem, analyses map[string]Analysis, loc *time.Location) *Flag {
 	f := &Flag{WantsReview: a.WantsReview, Suboptimal: a.Approach == ApproachSuboptimal}
 	if f.WantsReview || f.Suboptimal {
-		f.Date = Date(a.CreatedAt, loc)
+		marked := a.MarkedAt
+		if marked.IsZero() {
+			marked = a.CreatedAt
+		}
+		f.MarkedDate = Date(marked, loc)
+		f.Date = f.MarkedDate
 	}
 	if an, ok := analyses[a.ID]; ok && an.Done() && (isFalse(an.TimeMatches) || isFalse(an.SpaceMatches) || isFalse(an.Optimal)) {
 		f.TimeWrong, f.SpaceWrong, f.NotOptimal = isFalse(an.TimeMatches), isFalse(an.SpaceMatches), isFalse(an.Optimal)
 		f.ActualTime, f.ActualSpace, f.OptimalTime, f.OptimalSpace = an.ActualTime, an.ActualSpace, problem.OptimalTime, problem.OptimalSpace
-		if date := Date(an.UpdatedAt, loc); f.Date.IsZero() || date.Before(f.Date) {
-			f.Date = date
+		f.AnalysisDate = Date(an.UpdatedAt, loc)
+		if f.Date.IsZero() || f.AnalysisDate.Before(f.Date) {
+			f.Date = f.AnalysisDate
 		}
 	}
 	if f.Date.IsZero() {
@@ -114,7 +120,7 @@ func flagFor(a Attempt, problem Problem, analyses map[string]Analysis, loc *time
 	return f
 }
 
-// DueAt is the start of the local day after the analysis.
+// DueAt is the start of the local day after the flag was raised.
 func (f Flag) DueAt(loc *time.Location) time.Time {
 	return time.Date(f.Date.Year(), f.Date.Month(), f.Date.Day()+1, 0, 0, 0, 0, loc)
 }
@@ -123,7 +129,8 @@ func (f Flag) DueAt(loc *time.Location) time.Time {
 // "Not optimal: O(n²) vs O(n)" or "Marked for review yesterday". The
 // analysis's verdicts come first, being the most specific.
 func (f Flag) Reason(now time.Time, loc *time.Location) string {
-	when := daysAgo(f.Date, Date(now, loc))
+	today := Date(now, loc)
+	when := daysAgo(f.AnalysisDate, today)
 	switch {
 	case f.TimeWrong && f.SpaceWrong:
 		return "Time and space complexity judged wrong " + when
@@ -138,9 +145,9 @@ func (f Flag) Reason(now time.Time, loc *time.Location) string {
 	case f.NotOptimal:
 		return "Not optimal"
 	case f.Suboptimal:
-		return "Took a simpler approach " + when
+		return "Took a simpler approach " + daysAgo(f.MarkedDate, today)
 	}
-	return "Marked for review " + when
+	return "Marked for review " + daysAgo(f.MarkedDate, today)
 }
 
 // Label is a short form for badges, e.g. "Flagged: time complexity judged wrong".
