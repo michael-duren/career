@@ -45,7 +45,7 @@ func (t TopicStat) Recall() float64 {
 
 // DifficultyStat counts problems attempted and solved at one difficulty.
 type DifficultyStat struct {
-	Difficulty       string
+	Difficulty        string
 	Attempted, Solved int
 }
 

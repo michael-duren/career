@@ -222,19 +222,19 @@ type leetgrinderAPIProblem struct {
 	Topics     []string `json:"topics,omitempty"`
 	// Status is "new" (never attempted), "due" (due for review by the end of
 	// today), or "notDue".
-	Status          string               `json:"status"`
-	Recall          *float64             `json:"recall,omitempty"`
-	DueDate         string               `json:"dueDate,omitempty"`
-	FlagReason      string               `json:"flagReason,omitempty"`
-	TodaysPick      bool                 `json:"todaysPick"`
-	NextDue         string               `json:"nextDue,omitempty"`
-	LastAttemptedAt *time.Time           `json:"lastAttemptedAt,omitempty"`
-	AttemptedToday  bool                 `json:"attemptedToday"`
+	Status          string     `json:"status"`
+	Recall          *float64   `json:"recall,omitempty"`
+	DueDate         string     `json:"dueDate,omitempty"`
+	FlagReason      string     `json:"flagReason,omitempty"`
+	TodaysPick      bool       `json:"todaysPick"`
+	NextDue         string     `json:"nextDue,omitempty"`
+	LastAttemptedAt *time.Time `json:"lastAttemptedAt,omitempty"`
+	AttemptedToday  bool       `json:"attemptedToday"`
 	// TodayKind is how today counts an attempt on the problem: "new",
 	// "review" or "practice".
-	TodayKind string `json:"todayKind"`
-	Latest          *leetgrinder.Attempt `json:"latestAttempt"`
-	HistoryURL      string               `json:"historyUrl"`
+	TodayKind  string               `json:"todayKind"`
+	Latest     *leetgrinder.Attempt `json:"latestAttempt"`
+	HistoryURL string               `json:"historyUrl"`
 }
 
 func (s *Server) leetgrinderAPIProblem(w http.ResponseWriter, r *http.Request) {
