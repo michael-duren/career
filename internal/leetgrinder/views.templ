@@ -167,6 +167,9 @@ templ goalCard(today Today) {
 				<li class={ templ.KV("done", today.Progress.ReviewsLeft() == 0) }><strong>{ Count(today.Progress.Reviews()) }/{ Count(today.Progress.ReviewTarget()) }</strong> review</li>
 				<li><strong>{ Count(today.Progress.Bonus()) }</strong> bonus</li>
 			</ul>
+			if !today.Progress.Met() && today.Progress.NewLeft() == 0 && today.Progress.ReviewsLeft() == 0 {
+				<p class="small muted">Log any attempt to meet today's goal.</p>
+			}
 		</div>
 		<dl class="streaks">
 			<dt>Streak</dt>

@@ -77,6 +77,9 @@ func leftToDo(today leetgrinder.Today) string {
 			parts = append(parts, fmt.Sprintf("%d more reviews", extra))
 		}
 	}
+	if len(parts) == 0 {
+		return "one attempt of any kind"
+	}
 	return strings.Join(parts, ", ")
 }
 
