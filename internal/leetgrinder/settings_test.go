@@ -55,14 +55,12 @@ func TestSettingsValidation(t *testing.T) {
 			t.Errorf("rejected %.1f hours", h)
 		}
 	}
-	far := time.Date(2200, 1, 1, 0, 0, 0, 0, time.UTC)
 	for name, change := range map[string]func(*Settings){
 		"local zone":    func(s *Settings) { s.Timezone = "Local" },
 		"unknown zone":  func(s *Settings) { s.Timezone = "Mars/Olympus" },
 		"few hours":     func(s *Settings) { s.DailyHours = 1.5 },
 		"many hours":    func(s *Settings) { s.DailyHours = 4.5 },
 		"odd step":      func(s *Settings) { s.DailyHours = 2.25 },
-		"far start":     func(s *Settings) { s.StartDate = &far },
 		"ntfy scheme":   func(s *Settings) { s.NtfyURL = "javascript:alert(1)" },
 		"ntfy userinfo": func(s *Settings) { s.NtfyURL = "https://user:pass@ntfy.sh" },
 		"ntfy topic":    func(s *Settings) { s.NtfyTopic = "has spaces" },
@@ -79,25 +77,24 @@ func TestSettingsValidation(t *testing.T) {
 }
 
 func TestSettingsAndReviewPagesRender(t *testing.T) {
-	start := day("2026-10-01")
 	settings := DefaultSettings()
-	settings.StartDate, settings.Revision = &start, "11111111-1111-4111-8111-111111111111"
+	settings.Revision = "11111111-1111-4111-8111-111111111111"
 	settings.NtfyTokenCiphertext = []byte("sealed-token-bytes")
 	var out bytes.Buffer
-	if err := SettingsView(SettingsPage{Settings: settings, Schedule: NewScheduleForm(settings)}).Render(context.Background(), &out); err != nil {
+	if err := SettingsView(SettingsPage{Settings: settings, General: NewGeneralForm(settings)}).Render(context.Background(), &out); err != nil {
 		t.Fatal(err)
 	}
 	html := out.String()
-	for _, want := range []string{`name="start" value="2026-10-01"`, `name="end" value="2026-12-23"`, `value="America/Chicago"`, `value="2.0" selected`, settings.Revision, `action="/leetgrinder/settings/schedule"`} {
+	for _, want := range []string{`value="America/Chicago"`, `value="2.0" selected`, settings.Revision, `action="/leetgrinder/settings/general"`} {
 		if !strings.Contains(html, want) {
 			t.Errorf("settings missing %q", want)
 		}
 	}
-	if strings.Contains(html, "sealed-token-bytes") {
-		t.Fatal("settings page rendered the token ciphertext")
+	if strings.Contains(html, "sealed-token-bytes") || strings.Contains(html, "/leetgrinder/settings/schedule") {
+		t.Fatal("settings page rendered the token ciphertext or the retired schedule form")
 	}
 	now := time.Date(2026, 10, 20, 12, 0, 0, 0, time.UTC)
-	state := State{Attempts: []Attempt{attempt("two-sum", "struggled", 30, false, now.AddDate(0, 0, -9))}}
+	state := State{Problems: testProblems, Attempts: []Attempt{attempt("two-sum", "struggled", 30, false, now.AddDate(0, 0, -9))}}
 	today := NewToday(settings, state, []string{"two-sum"}, now)
 	ids := map[string]string{ReviewKey("two-sum"): "22222222-2222-4222-8222-222222222222"}
 	out.Reset()
@@ -105,24 +102,16 @@ func TestSettingsAndReviewPagesRender(t *testing.T) {
 		t.Fatal(err)
 	}
 	html = out.String()
-	for _, want := range []string{"20 sessions behind", "Today is Day 20 of 84.", `id="reviews-title"`, "Struggled 9 days ago", `name="review" value="true"`, `name="return" value="overview"`, ids[ReviewKey("two-sum")], `id="review-two-sum"`} {
+	for _, want := range []string{`id="reviews-title"`, "Struggled 9 days ago", `name="review" value="true"`, `name="return" value="overview"`, ids[ReviewKey("two-sum")], `id="review-two-sum"`, "LEETCODE 1"} {
 		if !strings.Contains(html, want) {
 			t.Errorf("overview missing %q", want)
 		}
 	}
 	out.Reset()
-	if err := Reviews(ReviewsPage{Today: today, Cards: BuildCards(state.Attempts, time.UTC), IDs: ids}).Render(context.Background(), &out); err != nil {
+	if err := Reviews(ReviewsPage{Today: today, Cards: today.Cards(), IDs: ids}).Render(context.Background(), &out); err != nil {
 		t.Fatal(err)
 	}
 	if html = out.String(); !strings.Contains(html, "All cards") || !strings.Contains(html, "Two Sum") || !strings.Contains(html, "Due but not planned") {
 		t.Fatal("review queue missing cards")
-	}
-	unset := NewToday(DefaultSettings(), State{}, nil, now)
-	out.Reset()
-	if err := Overview(OverviewPage{Today: unset}).Render(context.Background(), &out); err != nil {
-		t.Fatal(err)
-	}
-	if html = out.String(); !strings.Contains(html, "Set your schedule") || !strings.Contains(html, "Nothing is due for review today.") {
-		t.Fatal("unset schedule prompt missing")
 	}
 }

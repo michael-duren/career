@@ -28,12 +28,12 @@ type NotificationKind struct {
 
 // NotificationKinds lists every kind in display order.
 var NotificationKinds = []NotificationKind{
-	{Key: NotifyMorningPlan, Label: "Morning plan", Description: "Today's session, required reading, and review problems.",
+	{Key: NotifyMorningPlan, Label: "Morning plan", Description: "Today's review problems.",
 		Default: NotificationPref{Enabled: false, Time: "08:00", Priority: "default"}},
-	{Key: NotifyMissingWork, Label: "Missing work", Description: "Today's session or planned reviews are still unfinished.",
+	{Key: NotifyMissingWork, Label: "Missing work", Description: "Today's planned reviews are still unfinished.",
 		Default: NotificationPref{Enabled: true, Time: "17:00", Priority: "default"}},
-	{Key: NotifyBehindSchedule, Label: "Behind schedule", Description: "You are at least the threshold number of sessions behind.",
-		ThresholdLabel: "Sessions behind", MaxThreshold: SessionCount,
+	{Key: NotifyBehindSchedule, Label: "Behind schedule", Description: "Retired with the curriculum schedule; it no longer sends.",
+		ThresholdLabel: "Sessions behind", MaxThreshold: 84,
 		Default: NotificationPref{Enabled: true, Time: "17:00", Threshold: 3, Priority: "default"}},
 	{Key: NotifyReviewBacklog, Label: "Review backlog", Description: "At least the threshold number of due reviews did not fit in today's plan.",
 		ThresholdLabel: "Due reviews", MaxThreshold: 300,

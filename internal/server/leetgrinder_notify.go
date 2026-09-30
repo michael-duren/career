@@ -52,7 +52,7 @@ func (s *Server) rejectNotify(w http.ResponseWriter, r *http.Request, status int
 	if err != nil {
 		message += " Your settings could not be reloaded; your draft is retained below."
 	}
-	page := leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), Schedule: leetgrinder.NewScheduleForm(settings), Error: message, Notify: draft}
+	page := leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), General: leetgrinder.NewGeneralForm(settings), Error: message, Notify: draft}
 	renderLeetgrinder(w, r, status, leetgrinder.SettingsView(s.withAPITokens(r, s.withNotify(r.Context(), page))))
 }
 

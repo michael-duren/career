@@ -120,12 +120,12 @@ func (w *Worker) Step(ctx context.Context) error {
 // without counting the try, so fixing the environment needs no re-analyse.
 func (w *Worker) analyse(ctx context.Context, job database.LeetgrinderAnalysisJob) (bool, error) {
 	a := job.Attempt
-	problem, known := leetgrinder.FindProblem(a.ProblemSlug)
-	if !known {
-		problem = leetgrinder.Problem{Slug: a.ProblemSlug}
+	problem, err := w.Store.LeetgrinderProblem(ctx, a.ProblemSlug)
+	if err != nil {
+		return false, err
 	}
 	client := w.api()
-	result, err := client.Analyze(ctx, Input{Problem: problem, Known: known, Language: a.CodeLanguage, Code: a.Code, StatedTime: a.TimeComplexity, StatedSpace: a.SpaceComplexity})
+	result, err := client.Analyze(ctx, Input{Problem: problem, Language: a.CodeLanguage, Code: a.Code, StatedTime: a.TimeComplexity, StatedSpace: a.SpaceComplexity})
 	if err != nil && ctx.Err() != nil {
 		return false, nil
 	}

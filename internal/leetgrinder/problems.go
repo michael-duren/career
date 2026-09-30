@@ -9,38 +9,38 @@ import (
 	"time"
 )
 
-// ProblemRow is one curriculum problem with the learner's progress on it.
+// ProblemRow is one attempted problem with the learner's progress on it.
 type ProblemRow struct {
 	Problem  Problem
-	Week     Week
-	Day      Day
-	Optional bool
-	// Order is the problem's position in the curriculum, starting at 1.
-	Order    int
 	Status   string
 	Attempts int
-	// Last is the newest attempt; it is zero when Attempts is 0.
+	// Last is the newest attempt.
 	Last Attempt
 	// ComplexityWrong reports that the analysis of Last judged a stated
 	// complexity wrong.
 	ComplexityWrong bool
+	Card            Card
+	// Due reports that the card is due by the end of today.
+	Due bool
+	// Recall is the estimated recall now.
+	Recall float64
 }
 
 // Status filter keys, in the order the filter lists them.
 var problemStatuses = []struct{ Key, Label string }{
-	{"not-attempted", "Not attempted"},
-	{"unfinished", "Unfinished"},
+	{"due", "Due for review"},
+	{"solved", "Solved"},
 	{"struggled", "Struggled"},
-	{"solved-help", "Solved with help"},
-	{"solved", "Solved independently"},
+	{"unfinished", "Unfinished"},
 }
 
 var problemSorts = []struct{ Key, Label string }{
-	{"curriculum", "Curriculum"},
-	{"difficulty", "Difficulty"},
+	{"recent", "Last attempt"},
+	{"due", "Next due"},
 	{"number", "LeetCode number"},
 	{"title", "Title"},
-	{"recent", "Recently attempted"},
+	{"difficulty", "Difficulty"},
+	{"recall", "Recall"},
 }
 
 var difficultyRank = map[string]int{"Easy": 1, "Medium": 2, "Hard": 3}
@@ -49,31 +49,27 @@ var difficultyRank = map[string]int{"Easy": 1, "Medium": 2, "Hard": 3}
 type ProblemFilter struct {
 	Query      string
 	Difficulty string
-	Week       int
+	Topic      string
 	Status     string
-	Kind       string // "", "core", or "optional"
 	Sort       string
 }
 
 // ParseProblemFilter reads the search form, ignoring values it does not know.
 func ParseProblemFilter(q url.Values) ProblemFilter {
-	f := ProblemFilter{Query: strings.TrimSpace(q.Get("q")), Sort: "curriculum"}
+	f := ProblemFilter{Query: strings.TrimSpace(q.Get("q")), Sort: "recent"}
 	if r := []rune(f.Query); len(r) > 100 {
 		f.Query = string(r[:100])
 	}
 	if _, ok := difficultyRank[q.Get("difficulty")]; ok {
 		f.Difficulty = q.Get("difficulty")
 	}
-	if week, err := strconv.Atoi(q.Get("week")); err == nil && week >= 1 && week <= 12 {
-		f.Week = week
+	if topic := q.Get("topic"); topic == untaggedTopic || (len(topic) <= MaxTopicLength && topicPattern.MatchString(topic)) {
+		f.Topic = topic
 	}
 	for _, s := range problemStatuses {
 		if q.Get("status") == s.Key {
 			f.Status = s.Key
 		}
-	}
-	if kind := q.Get("kind"); kind == "core" || kind == "optional" {
-		f.Kind = kind
 	}
 	for _, s := range problemSorts {
 		if q.Get("sort") == s.Key {
@@ -83,63 +79,70 @@ func ParseProblemFilter(q url.Values) ProblemFilter {
 	return f
 }
 
+// untaggedTopic is the topic filter value for problems without tags.
+const untaggedTopic = "untagged"
+
 // Active reports whether any filter narrows the list.
 func (f ProblemFilter) Active() bool {
-	return f.Query != "" || f.Difficulty != "" || f.Week != 0 || f.Status != "" || f.Kind != ""
+	return f.Query != "" || f.Difficulty != "" || f.Topic != "" || f.Status != ""
 }
 
 func (f ProblemFilter) match(r ProblemRow) bool {
 	if f.Query != "" {
 		// A bare number is a LeetCode number; anything else searches the text.
 		if n, err := strconv.Atoi(f.Query); err == nil {
-			if r.Problem.ID != n {
+			if r.Problem.Number != n {
 				return false
 			}
-		} else if !strings.Contains(strings.ToLower(r.Problem.Title+" "+r.Problem.Slug+" "+r.Week.Title+" "+r.Day.Title), strings.ToLower(f.Query)) {
-			return false
+		} else {
+			text := r.Problem.Title + " " + r.Problem.Slug
+			for _, t := range r.Problem.Topics {
+				text += " " + t + " " + TopicLabel(t)
+			}
+			if !strings.Contains(strings.ToLower(text), strings.ToLower(f.Query)) {
+				return false
+			}
 		}
 	}
-	switch {
-	case f.Difficulty != "" && r.Problem.Difficulty != f.Difficulty,
-		f.Week != 0 && r.Week.Number != f.Week,
-		f.Status != "" && statusKey(r.Status) != f.Status,
-		f.Kind == "core" && r.Optional,
-		f.Kind == "optional" && !r.Optional:
+	if f.Difficulty != "" && r.Problem.Difficulty != f.Difficulty {
 		return false
+	}
+	if f.Topic == untaggedTopic && len(r.Problem.Topics) > 0 || f.Topic != "" && f.Topic != untaggedTopic && !slices.Contains(r.Problem.Topics, f.Topic) {
+		return false
+	}
+	switch f.Status {
+	case "due":
+		return r.Due
+	case "solved":
+		return strings.HasPrefix(r.Status, "Solved")
+	case "struggled":
+		return r.Status == "Struggled"
+	case "unfinished":
+		return r.Status == "Unfinished"
 	}
 	return true
 }
 
-func statusKey(label string) string {
-	for _, s := range problemStatuses {
-		if s.Label == label {
-			return s.Key
-		}
+// ProblemRows lists every attempted problem, newest attempt first.
+func ProblemRows(state State, cards []Card, now time.Time, loc *time.Location) []ProblemRow {
+	byCard := map[string]Card{}
+	for _, c := range cards {
+		byCard[c.Problem.Slug] = c
 	}
-	return "not-attempted"
-}
-
-// ProblemRows lists every curriculum problem in curriculum order.
-func ProblemRows(state State) []ProblemRow {
+	end := EndOfDate(Date(now, loc), loc)
+	seen := map[string]bool{}
 	var rows []ProblemRow
-	for _, week := range Curriculum() {
-		for _, day := range week.Days {
-			add := func(p Problem, optional bool) {
-				attempts := state.ProblemAttempts(p.Slug)
-				row := ProblemRow{Problem: p, Week: week, Day: day, Optional: optional, Order: len(rows) + 1, Status: state.ProblemStatus(p.Slug), Attempts: len(attempts)}
-				if len(attempts) > 0 {
-					row.Last = attempts[0]
-					row.ComplexityWrong = state.StatedWrong(row.Last.ID)
-				}
-				rows = append(rows, row)
-			}
-			for _, p := range day.Core {
-				add(p, false)
-			}
-			for _, p := range day.Optional {
-				add(p, true)
-			}
+	// Attempts are newest first, so rows come out by last attempt.
+	for _, a := range state.Attempts {
+		if seen[a.ProblemSlug] {
+			continue
 		}
+		seen[a.ProblemSlug] = true
+		row := ProblemRow{Problem: state.Problem(a.ProblemSlug), Status: state.ProblemStatus(a.ProblemSlug), Attempts: len(state.ProblemAttempts(a.ProblemSlug)), Last: a, ComplexityWrong: state.StatedWrong(a.ID)}
+		if c, ok := byCard[a.ProblemSlug]; ok {
+			row.Card, row.Due, row.Recall = c, c.Due.Before(end), c.Retrievability(now)
+		}
+		rows = append(rows, row)
 	}
 	return rows
 }
@@ -154,25 +157,59 @@ func FilterProblems(rows []ProblemRow, f ProblemFilter) []ProblemRow {
 	}
 	slices.SortStableFunc(result, func(a, b ProblemRow) int {
 		switch f.Sort {
+		case "due":
+			return a.Card.Due.Compare(b.Card.Due)
+		case "number":
+			// Unknown numbers sort last.
+			return cmp.Compare(numberKey(a.Problem.Number), numberKey(b.Problem.Number))
+		case "title":
+			return cmp.Compare(strings.ToLower(a.Problem.DisplayTitle()), strings.ToLower(b.Problem.DisplayTitle()))
 		case "difficulty":
 			return cmp.Compare(difficultyRank[a.Problem.Difficulty], difficultyRank[b.Problem.Difficulty])
-		case "number":
-			return cmp.Compare(a.Problem.ID, b.Problem.ID)
-		case "title":
-			return cmp.Compare(strings.ToLower(a.Problem.Title), strings.ToLower(b.Problem.Title))
-		case "recent":
-			// Newest attempt first; never-attempted problems keep curriculum order at the end.
-			return b.Last.CreatedAt.Compare(a.Last.CreatedAt)
+		case "recall":
+			return cmp.Compare(a.Recall, b.Recall)
 		}
-		return cmp.Compare(a.Order, b.Order)
+		return b.Last.CreatedAt.Compare(a.Last.CreatedAt)
 	})
 	return result
 }
 
-// ProblemsPage is the searchable list of every curriculum problem.
+func numberKey(n int) int {
+	if n == 0 {
+		return MaxNumber + 1
+	}
+	return n
+}
+
+// ProblemTopics lists the topic tags on rows, by label, with "untagged"
+// last when any row has no tags.
+func ProblemTopics(rows []ProblemRow) []FilterOption {
+	seen := map[string]bool{}
+	var out []FilterOption
+	untagged := false
+	for _, r := range rows {
+		if len(r.Problem.Topics) == 0 {
+			untagged = true
+		}
+		for _, t := range r.Problem.Topics {
+			if !seen[t] {
+				seen[t] = true
+				out = append(out, FilterOption{t, TopicLabel(t)})
+			}
+		}
+	}
+	slices.SortFunc(out, func(a, b FilterOption) int { return cmp.Compare(a.Label, b.Label) })
+	if untagged {
+		out = append(out, FilterOption{untaggedTopic, "Untagged"})
+	}
+	return out
+}
+
+// ProblemsPage is the searchable list of every attempted problem.
 type ProblemsPage struct {
 	Rows     []ProblemRow
 	Total    int
+	Topics   []FilterOption
 	Filter   ProblemFilter
 	Location *time.Location
 }
@@ -197,4 +234,16 @@ func ProblemSortOptions() []FilterOption {
 }
 
 // StatusClass maps a progress label to its pill class.
-func StatusClass(label string) string { return "status-pill status-" + statusKey(label) }
+func StatusClass(label string) string {
+	switch label {
+	case "Solved independently":
+		return "status-pill status-solved"
+	case "Solved with help":
+		return "status-pill status-solved-help"
+	case "Struggled":
+		return "status-pill status-struggled"
+	case "Unfinished":
+		return "status-pill status-unfinished"
+	}
+	return "status-pill status-not-attempted"
+}

@@ -15,9 +15,7 @@
     "test:mcp:deferred": "node --test tests/mcp.test.ts tests/mcp-oauth.test.ts tests/mcp-bridge.test.mjs",
     "test:e2e": "playwright test",
     "mcp": "node scripts/career-mcp.mjs",
-    "check:mcp-oauth": "node scripts/check-mcp-oauth.mjs",
-    "test:leetgrinder:player": "node --test tests/leetgrinder-player.test.mjs",
-    "test:leetgrinder:browser": "node --test tests/leetgrinder-lessons.browser.test.mjs"
+    "check:mcp-oauth": "node scripts/check-mcp-oauth.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",

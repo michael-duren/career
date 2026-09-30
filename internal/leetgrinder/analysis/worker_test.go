@@ -2,6 +2,7 @@ package analysis
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"strings"
 	"testing"
@@ -395,5 +396,36 @@ func TestWorkerDailyLimitToggleAndKey(t *testing.T) {
 	}
 	if n := len(api.take()); n != 0 {
 		t.Fatalf("requests while another worker held the lock: %d", n)
+	}
+}
+
+func TestWorkerStoresEstimatedOptimumOnce(t *testing.T) {
+	db := testStore(t)
+	ctx := context.Background()
+	api := newFakeAPI(t)
+	c := newClock()
+	w := c.worker(db, api)
+	api.answer(`{"actualTime":"O(n)","actualSpace":"O(n)","timeMatches":true,"spaceMatches":true,"optimal":false,"explanation":"x","optimalTime":"O(n)","optimalSpace":"O(1)","optimalNote":"Two pointers."}`, "end_turn")
+	saveAttempt(t, db, leetgrinder.Attempt{ProblemSlug: "not-seeded-problem", TimeComplexity: "O(n)", SpaceComplexity: "O(n)", Code: "a", CodeLanguage: "python3", Source: "extension"})
+	step(t, w)
+	p, err := db.LeetgrinderProblem(ctx, "not-seeded-problem")
+	if err != nil || p.OptimalTime != "O(n)" || p.OptimalSpace != "O(1)" || p.OptimalNote != "Two pointers." || p.OptimalSource != "model" {
+		t.Fatalf("estimate not stored: %+v %v", p, err)
+	}
+	// A known optimum is sent as the reference, and later estimates never replace it.
+	api.answer(`{"actualTime":"O(n)","actualSpace":"O(n)","timeMatches":true,"spaceMatches":true,"optimal":false,"explanation":"x"}`, "end_turn")
+	saveAttempt(t, db, leetgrinder.Attempt{ProblemSlug: "not-seeded-problem", TimeComplexity: "O(n)", SpaceComplexity: "O(n)", Code: "b", CodeLanguage: "python3", Source: "extension"})
+	step(t, w)
+	reqs := api.take()
+	user, _ := json.Marshal(reqs[len(reqs)-1].Body["messages"])
+	if !strings.Contains(string(user), "Reference optimal space: O(1)") {
+		t.Fatalf("second request lacks the stored estimate: %s", user)
+	}
+	// Curated optima are never replaced.
+	api.answer(`{"actualTime":"O(n)","actualSpace":"O(n)","timeMatches":true,"spaceMatches":true,"optimal":true,"explanation":"x"}`, "end_turn")
+	saveAttempt(t, db, leetgrinder.Attempt{ProblemSlug: "two-sum", TimeComplexity: "O(n)", SpaceComplexity: "O(n)", Code: "c", CodeLanguage: "python3", Source: "extension"})
+	step(t, w)
+	if p, _ = db.LeetgrinderProblem(ctx, "two-sum"); p.OptimalSource != "curated" || p.OptimalTime != "O(n)" {
+		t.Fatalf("curated optimum changed: %+v", p)
 	}
 }

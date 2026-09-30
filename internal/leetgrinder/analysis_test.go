@@ -47,7 +47,7 @@ func TestAnalysisStatedWrong(t *testing.T) {
 }
 
 func TestAnalysisCardUnknownStatus(t *testing.T) {
-	problem, _ := FindProblem("two-sum")
+	problem := testProblems["two-sum"]
 	state := State{Attempts: []Attempt{{ID: "11111111-1111-4111-8111-111111111111", ProblemSlug: "two-sum", Outcome: "solved", Minutes: 5, TimeComplexity: "O(n)", Code: "pass", CodeLanguage: "python3"}}}
 	var out strings.Builder
 	if err := ProblemHistory(problem, state, AttemptForm{}, AnalysisAvailability{KeyConfigured: true, Unknown: true}).Render(context.Background(), &out); err != nil {

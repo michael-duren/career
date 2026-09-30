@@ -6,7 +6,7 @@ templ layout(title string, active string) {
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<meta name="description" content="A self-paced, twelve-week data structures and algorithms curriculum in Leetgrinder."/>
+			<meta name="description" content="Track LeetCode practice with a daily goal and spaced-repetition reviews."/>
 			<title>{ title } · Leetgrinder</title>
 			<link rel="icon" href="/favicon.svg"/>
 			<link rel="stylesheet" href="/leetgrinder/style.css"/>
@@ -15,25 +15,29 @@ templ layout(title string, active string) {
 			<a class="skip" href="#main">Skip to content</a>
 			<div class="shell">
 				<nav class="sidenav" aria-label="Leetgrinder">
-					<a class="sidenav-back" href="/">@icon("arrow-left")
-Career Strategy</a>
-					<p class="sidenav-brand">@icon("terminal")
-Leetgrinder</p>
+					<a class="sidenav-back" href="/">
+						@icon("arrow-left")
+						Career Strategy
+					</a>
+					<p class="sidenav-brand">
+						@icon("terminal")
+						Leetgrinder
+					</p>
 					<div class="sidenav-links">
 						@navLink("/leetgrinder", "Dashboard", "dashboard", active)
 						@navLink("/leetgrinder/problems", "Problems", "problems", active)
-						@navLink("/leetgrinder/reviews", "Review queue", "reviews", active)
-						@navLink("/leetgrinder/about", "About", "about", active)
+						@navLink("/leetgrinder/reviews", "Reviews", "reviews", active)
 						@navLink("/leetgrinder/settings", "Settings", "settings", active)
 					</div>
-					<a class="sidenav-foot" href="/leetgrinder/export">@icon("download")
-Export history</a>
+					<a class="sidenav-foot" href="/leetgrinder/export">
+						@icon("download")
+						Export history
+					</a>
 				</nav>
 				<main id="main">
 					{ children... }
 				</main>
 			</div>
-			<script type="module" src="/leetgrinder/lesson-player.js"></script>
 			@complexityScript()
 		</body>
 	</html>
@@ -41,11 +45,15 @@ Export history</a>
 
 templ navLink(href string, label string, key string, active string) {
 	if key == active {
-		<a href={ templ.SafeURL(href) } aria-current="page">@icon(key)
-<span>{ label }</span></a>
+		<a href={ templ.SafeURL(href) } aria-current="page">
+			@icon(key)
+			<span>{ label }</span>
+		</a>
 	} else {
-		<a href={ templ.SafeURL(href) }>@icon(key)
-<span>{ label }</span></a>
+		<a href={ templ.SafeURL(href) }>
+			@icon(key)
+			<span>{ label }</span>
+		</a>
 	}
 }
 
@@ -59,8 +67,6 @@ templ icon(name string) {
 				<path d="M3 5h.01"></path><path d="M3 12h.01"></path><path d="M3 19h.01"></path><path d="M8 5h13"></path><path d="M8 12h13"></path><path d="M8 19h13"></path>
 			case "reviews":
 				<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path>
-			case "about":
-				<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path>
 			case "settings":
 				<path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle>
 			case "download":
@@ -90,102 +96,26 @@ templ Overview(page OverviewPage) {
 				<p class="muted">{ DateLabel(page.Today.Date) }</p>
 			</div>
 		</header>
-		<section class="panel dash-hero" aria-labelledby="next-title">
-			if next, ok := page.NextSession(); ok {
-				<div>
-					<p class="eyebrow">UP NEXT · { WeekLabel(WeekNumber(next.Number)) } · { DayLabel(next.Number) }</p>
-					<h2 id="next-title">{ next.Title }</h2>
-					<p class="muted small">
-						{ Count(len(next.Core)) } core problems
-						if next.RequiredReading() > 0 {
-							· { Count(next.RequiredReading()) } min required reading
-						}
-						if page.ReviewsLeft() > 0 {
-							· { Count(page.ReviewsLeft()) } to review today
-						}
-					</p>
-					<ul class="upnext">
-						for _, problem := range next.Core {
-							<li>
-								<a href={ templ.SafeURL(problem.URL()) } target="_blank" rel="noopener noreferrer">{ problem.Title } <span aria-hidden="true">↗</span><span class="visually-hidden">(opens in a new tab)</span></a>
-								<span class={ DifficultyClass(problem.Difficulty) }>{ problem.Difficulty }</span>
-								<span class="small muted">{ page.Today.State.ProblemStatus(problem.Slug) }</span>
-							</li>
-						}
-					</ul>
-				</div>
-				<div class="dash-cta">
-					<a class="button primary" href={ templ.SafeURL(DayURL(next.Number)) }>
-						if page.Started() {
-							Resume { DayLabel(next.Number) }
-						} else {
-							Start { DayLabel(next.Number) }
-						}
-						<span aria-hidden="true">→</span>
-					</a>
-					<p class="small muted">90 minutes of practice, 30 to read and review.</p>
-				</div>
-			} else {
-				<div>
-					<p class="eyebrow">ALL SESSIONS FINISHED</p>
-					<h2 id="next-title">84 sessions complete</h2>
-					<p class="muted">Keep your recall sharp with the review queue, or revisit optional problems.</p>
-				</div>
-				<div class="dash-cta"><a class="button primary" href="/leetgrinder/reviews">Open review queue <span aria-hidden="true">→</span></a></div>
-			}
-		</section>
 		<section class="stats" aria-label="Your progress">
-			<div>
-				<strong>{ Count(Summarize(page.Today.State).Completed) }<span>/ 84</span></strong>
-				<p>Sessions finished</p>
-				<progress aria-hidden="true" value={ Count(Summarize(page.Today.State).Completed) } max="84">{ Count(Summarize(page.Today.State).Completed) } of 84</progress>
-			</div>
-			<div>
-				<strong>{ Count(Summarize(page.Today.State).Solved) }<span>/ 300</span></strong>
-				<p>Unique problems solved</p>
-				<progress aria-hidden="true" value={ Count(Summarize(page.Today.State).Solved) } max="300">{ Count(Summarize(page.Today.State).Solved) } of 300</progress>
-			</div>
+			<div><strong>{ Count(Summarize(page.Today.State).Attempted) }</strong><p>Problems attempted</p></div>
+			<div><strong>{ Count(Summarize(page.Today.State).Solved) }</strong><p>Problems solved</p></div>
 			<div><strong>{ page.IndependentRate() }</strong><p>Solved independently</p></div>
-			<div><strong>{ Count(page.Streak()) }<span>{ DayUnit(page.Streak()) }</span></strong><p>Practice streak</p></div>
+			<div><strong>{ Count(page.ActiveStreak()) }<span>{ DayUnit(page.ActiveStreak()) }</span></strong><p>Active days in a row</p></div>
 		</section>
-		@scheduleCard(page.Today)
+		@logAttemptForm(page.LogRef, page.LogError)
 		<div class="dash-grid">
 			<div>
-				@todaysReviews(page.Today, page.IDs, 0, "overview")
+				@todaysReviews(page.Today, page.IDs, "overview")
 			</div>
 			<div>
-				if upcoming := page.Upcoming(4); len(upcoming) > 0 {
-					<section class="panel side-list" aria-labelledby="upcoming-title">
-						<h2 id="upcoming-title">Coming up</h2>
-						<ol>
-							for _, u := range upcoming {
-								<li>
-									<a href={ templ.SafeURL(DayURL(u.Day.Number)) }>
-										<span class="day-number">{ Count(u.Day.Number) }</span>
-										<span>{ u.Day.Title }</span>
-									</a>
-									if u.Overdue(page.Today.Date) {
-										<span class="small overdue">Overdue · was { DateLabel(u.Date) }</span>
-									} else if u.Scheduled() {
-										<span class="small muted">{ DateLabel(u.Date) }</span>
-									}
-								</li>
-							}
-						</ol>
-						<a class="small" href="/leetgrinder/about#curriculum">Full curriculum</a>
-					</section>
-				}
+				@dueList(page.DueSoon(10), len(page.Due), page.Today)
 				<section class="panel side-list" aria-labelledby="recent-title">
 					<h2 id="recent-title">Recent attempts</h2>
 					if recent := page.Recent(5); len(recent) > 0 {
 						<ol>
 							for _, a := range recent {
 								<li>
-									if problem, ok := FindProblem(a.ProblemSlug); ok {
-										<a href={ templ.SafeURL(ProblemURL(a.ProblemSlug)) }>{ problem.Title }</a>
-									} else {
-										<span>{ a.ProblemSlug }</span>
-									}
+									<a href={ templ.SafeURL(ProblemURL(a.ProblemSlug)) }>{ page.Today.State.Problem(a.ProblemSlug).DisplayTitle() }</a>
 									<span class="small muted">{ OutcomeLabel(a.Outcome) } · { Count(a.Minutes) } min</span>
 									if page.Today.State.StatedWrong(a.ID) {
 										@complexityBadge()
@@ -202,202 +132,465 @@ templ Overview(page OverviewPage) {
 	}
 }
 
-templ About(state State) {
-	@layout("About", "about") {
-		<section class="hero">
-			<div><p class="eyebrow">THE DAILY PRACTICE</p><h1>Build the habits.<br/>Learn the patterns.</h1><p class="lead">A 12-week DSA curriculum for programmers getting back into problem solving. One focused session at a time.</p></div>
-			<aside class="resume">
-				<p class="eyebrow">HOW IT WORKS</p>
-				<h2>84 sessions</h2>
-				<p>252 core problems and 48 optional ones.<br/>Two hours a day: 90 minutes of practice, 30 to read and review.</p>
-				<a class="button primary" href="/leetgrinder">Go to your dashboard <span aria-hidden="true">→</span></a>
-			</aside>
-		</section>
-		<details class="guide" open><summary>How to use your two hours</summary><div class="prose"><p>Start with the lesson and any required reading. Attempt each core problem for up to 25 minutes, leaving 15 minutes of your practice budget for debugging or another attempt. Spend the separate 30-minute block on reading and reviewing solutions.</p><p>Record “Solved” when your solution passes on LeetCode. Record “Struggled” when you need to revisit the approach, or “Unfinished” when you stop without completing it. Mark solution help separately, including hints. Reviewed solutions do not count as independent solves.</p><p>Optional problems are for days when core practice finishes early. The 300-problem target is a stretch goal, not a deadline. Finish a day when your session is over, even if some problems remain unfinished.</p></div></details>
-		<section id="curriculum">
-			<div class="section-heading"><h2>Your curriculum</h2><p class="muted">12 weeks of progressively harder patterns</p></div>
-			<div class="weeks">
-				for _, week := range Curriculum() {
-					<section class="week-card">
-						<div class="week-heading">
-							<p class="eyebrow">
-								{ WeekLabel(week.Number) }
-							</p><span class="small muted">21 core · 4 optional</span>
-						</div>
-						<h3>
-							{ week.Title }
-						</h3>
-						<p class="muted">
-							{ week.Summary }
-						</p>
-						<ol class="days">
-							for _, day := range week.Days {
-								<li>
-									<a
-										href={ templ.SafeURL(DayURL(day.Number)) }
-									>
-										<span class="day-number">
-											{ Count(day.Number) }
-										</span>
-										<span>
-											{ day.Title }
-										</span>
-										if state.DayCompleted(day.Number) {
-											<span class="day-status done">Finished</span>
-										} else if Summarize(state).NextDay == day.Number {
-											<span class="day-status">Next</span>
-										}
-									</a>
-								</li>
-							}
-						</ol>
-					</section>
-				}
-			</div>
-		</section>
-	}
+// logAttemptForm opens any LeetCode problem's page in the app from its URL
+// or slug; the problem page records the attempt.
+templ logAttemptForm(ref string, message string) {
+	<section class="panel log-problem" id="log-attempt" aria-labelledby="log-title">
+		<h2 id="log-title">Log an attempt</h2>
+		<p class="muted small">Paste a LeetCode problem link or slug, such as <code>two-sum</code>, to open its page and record an attempt.</p>
+		<form class="log-problem-form" method="get" action="/leetgrinder/log">
+			if message != "" {
+				<p class="error" role="alert">{ message }</p>
+			}
+			<label>
+				Problem
+				<input type="text" name="problem" required maxlength="300" value={ ref } placeholder="https://leetcode.com/problems/two-sum/" autocomplete="off" spellcheck="false"/>
+			</label>
+			<button class="button primary" type="submit">Open problem</button>
+		</form>
+	</section>
 }
 
-templ Session(page DayPage) {
-	@layout(DayLabel(page.Day.Number)+" · "+page.Day.Title, "") {
-		<nav class="breadcrumb" aria-label="Breadcrumb">
-			<a href="/leetgrinder/about#curriculum">Curriculum</a><span>/</span>
-			<span>
-				{ WeekLabel(WeekNumber(page.Day.Number)) }
-			</span><span>/</span>
-			<span>
-				{ DayLabel(page.Day.Number) }
-			</span>
-		</nav>
-		<div class="session-title">
-			<div>
-				<p class="eyebrow">
-					{ WeekLabel(WeekNumber(page.Day.Number)) } · { DayLabel(page.Day.Number) } OF 84
-				</p>
-				<h1>
-					{ page.Day.Title }
-				</h1>
-			</div>
-			if page.State.DayCompleted(page.Day.Number) {
-				<span class="badge">Session finished</span>
-			}
-		</div>
-		if page.Error != "" {
-			<p class="error" role="alert">
-				{ page.Error }
-			</p>
+// dueList is the optional list of due cards beyond today's plan.
+templ dueList(cards []Card, total int, today Today) {
+	<section class="panel side-list" aria-labelledby="due-title">
+		<h2 id="due-title">Also due</h2>
+		if total == 0 {
+			<p class="muted small">Nothing else is due today.</p>
+		} else {
+			<p class="muted small">Optional: { Count(total) } more due by the end of today.</p>
+			<ol>
+				for _, c := range cards {
+					<li>
+						<a href={ templ.SafeURL(ProblemURL(c.Problem.Slug)) }>{ c.Problem.DisplayTitle() }</a>
+						<span class="small muted">{ OutcomeLabel(c.Last.Outcome) } · recall { Percent(c.Retrievability(today.Now)) }</span>
+					</li>
+				}
+			</ol>
+			<a class="small" href="/leetgrinder/reviews">All reviews</a>
 		}
-		<section class="lesson panel" aria-labelledby="lesson-title">
-			if page.Day.MixedPractice() {
-				<p class="eyebrow">01 / CHOOSE AN APPROACH</p>
-				<h2 id="lesson-title">Attempt first, then review</h2>
-				<p class="muted">For mixed practice, choose a technique before opening the guidance. Explain your baseline and invariant before coding.</p>
-				<details class="review-guidance">
-					<summary>Review after your attempts</summary>
-					<div class="prose">
-						@Lesson(page.Day.Lesson)
-					</div>
-				</details>
-			} else {
-				<p class="eyebrow">01 / UNDERSTAND</p>
-				<h2 id="lesson-title">Before you start</h2>
-				<div class="prose">
-					@Lesson(page.Day.Lesson)
-				</div>
-			}
-		</section>
-		<div class="session-grid">
-			<div>
-				if page.ShowReviews() {
-					@todaysReviews(*page.Today, page.IDs, page.Day.Number, "")
-				}
-				<section aria-labelledby="practice-title">
-					<p class="eyebrow">02 / PRACTICE</p>
-					<h2 id="practice-title">Three core problems</h2>
-					<p class="muted">Try each for up to 25 minutes. Solve on LeetCode, then record your attempt here.</p>
-					for _, problem := range page.Day.Core {
-						@problemCard(problem, page.State, NewForm(page.IDs[problem.Slug], page.Day.Number))
-					}
-				</section>
-				if len(page.Day.Optional)>0 {
-					<section class="optional" aria-labelledby="optional-title">
-						<p class="eyebrow">GO FURTHER</p>
-						<h2 id="optional-title">Optional practice</h2>
-						<p class="muted">Only if you have time left. These count toward your 300-problem stretch goal.</p>
-						for _, problem := range page.Day.Optional {
-							@problemCard(problem, page.State, NewForm(page.IDs[problem.Slug], page.Day.Number))
-						}
-					</section>
-				}
-				<section class="panel finish">
-					<p class="eyebrow">03 / REVIEW</p>
-					<h2>Close the session</h2>
-					<p>Explain your approach and its complexity out loud. For anything you struggled with, review a solution and write down what you missed. Record any use of hints or solutions.</p>
-					<p class="muted">Finishing this day does not mark its problems solved. You can return to them anytime.</p>
-					<form method="post" action={ templ.SafeURL(DayURL(page.Day.Number) + "/complete") }>
-						if page.State.DayCompleted(page.Day.Number) {
-							<input type="hidden" name="completed" value="false"/><button class="button" type="submit">Reopen this day</button>
-						} else {
-							<input type="hidden" name="completed" value="true"/><button class="button primary" type="submit">Finish day <span aria-hidden="true">→</span></button>
-						}
-					</form>
-				</section>
-			</div>
-			<aside class="session-aside">
-				<div class="panel"><p class="eyebrow">TODAY'S BUDGET</p><h3>Two focused hours</h3><dl><dt>Core attempts</dt><dd>3 × 25 min</dd><dt>Debug or retry</dt><dd>15 min</dd><dt>Read &amp; review</dt><dd>30 min</dd></dl><p class="small muted">Stop at the time limit and record where you got stuck. A useful attempt matters more than rushing to mark a solve.</p></div>
-				<nav class="session-nav" aria-label="Session navigation">
-					if page.Day.Number>1 {
-						<a
-							href={ templ.SafeURL(DayURL(page.Day.Number - 1)) }
-						>← Previous day</a>
-					}
-					if page.Day.Number<84 {
-						<a
-							href={ templ.SafeURL(DayURL(page.Day.Number + 1)) }
-						>Next day →</a>
-					}
-					<a href="/leetgrinder/about#curriculum">All 84 sessions</a>
-				</nav>
-			</aside>
-		</div>
-	}
+	</section>
 }
 
-templ problemCard(problem Problem, state State, form AttemptForm) {
-	<article class="problem-card" id={ problem.Slug }>
-		<div class="problem-heading">
-			<div>
-				<p class="small muted">
-					LEETCODE { Count(problem.ID) } · { problem.Difficulty }
-				</p>
-				<h3>
-					<a
-						href={ templ.SafeURL(problem.URL()) }
-						target="_blank"
-						rel="noopener noreferrer"
-					>{ problem.Title } <span aria-hidden="true">↗</span><span class="visually-hidden">(opens in a new tab)</span></a>
-				</h3>
-			</div>
+// problemMeta is the eyebrow line: number, difficulty and topics.
+templ problemMeta(p Problem) {
+	<p class="small muted problem-meta">
+		if NumberLabel(p.Number) != "" {
+			<span>{ NumberLabel(p.Number) }</span>
+		}
+		if p.Difficulty != "" {
+			<span class={ DifficultyClass(p.Difficulty) }>{ p.Difficulty }</span>
+		}
+		for _, t := range p.Topics {
+			<a class="topic-tag" href={ templ.SafeURL("/leetgrinder/problems?topic=" + t) }>{ TopicLabel(t) }</a>
+		}
+	</p>
+}
+
+// avail says whether the analysis worker is sending requests, and if not, why.
+templ ProblemHistory(problem Problem, state State, form AttemptForm, avail AnalysisAvailability) {
+	@layout(problem.DisplayTitle(), "") {
+		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder/problems">Problems</a><span>/</span><span>Attempt history</span></nav>
+		@problemMeta(problem)
+		<h1>
+			{ problem.DisplayTitle() }
+		</h1>
+		if problem.NotFound {
+			<p class="notice" role="status">Not found on LeetCode. Check the slug; attempts are kept either way.</p>
+		} else if problem.Fetching() {
+			<p class="muted small" role="status">Fetching details from LeetCode…</p>
+		} else if !problem.InCatalog {
+			<p class="muted small" role="status">Details load from LeetCode after you log an attempt.</p>
+		}
+		<div class="history-links">
+			<a
+				class="button"
+				href={ templ.SafeURL(problem.URL()) }
+				target="_blank"
+				rel="noopener noreferrer"
+			>Open on LeetCode ↗</a>
 			<span class="badge">
 				{ state.ProblemStatus(problem.Slug) }
 			</span>
 		</div>
-		<div class="problem-actions">
-			<a
-				href={ templ.SafeURL(ProblemURL(problem.Slug)) }
-			>
-				Attempt history ({ Count(len(state.ProblemAttempts(problem.Slug))) })
-			</a>
+		<div class="history-grid">
+			<section class="panel">
+				<h2>
+					if form.Revision!="" {
+						Correct your attempt
+					} else {
+						Record an attempt
+					}
+				</h2>@attemptFields(problem, form)
+				if form.Error!="" && form.Revision!="" {
+					<p>
+						<a
+							href={ templ.SafeURL(ProblemURL(problem.Slug)) }
+						>Reload current history</a> before reapplying a conflicting correction. Your draft is shown above.
+					</p>
+				}
+			</section>
+			<section>
+				@optimalPanel(problem, len(state.ProblemAttempts(problem.Slug)) > 0)
+				<h2>Previous attempts</h2>
+				if len(state.ProblemAttempts(problem.Slug))==0 {
+					<p class="muted">No attempts recorded yet.</p>
+				}
+				for _, a:=range state.ProblemAttempts(problem.Slug) {
+					<article class="panel attempt" id={ AttemptAnchor(a.ID) }>
+						<div class="problem-heading">
+							<h3>
+								{ OutcomeLabel(a.Outcome) }
+							</h3><span>{ Count(a.Minutes) } min</span>
+						</div>
+						<p class="small muted">
+							<time datetime={ a.CreatedAt.Format("2006-01-02T15:04:05Z07:00") }>
+								{ a.CreatedAt.UTC().Format("02 Jan 2006 · 15:04 UTC") }
+							</time> ·
+							if a.Assisted {
+								Used solution help
+							} else {
+								No solution help
+							}
+							if a.IsReview {
+								· Review
+							}
+						</p>
+						@statedComplexity(a)
+						if a.Notes!="" {
+							<p class="notes">
+								{ a.Notes }
+							</p>
+						}
+						@attemptCode(a)
+						@analysisCard(problem.Slug, a, state, avail)
+						<details>
+							<summary>Correct this attempt</summary>@attemptFields(problem, EditForm(a))
+						</details>
+					</article>
+				}
+			</section>
 		</div>
-		<details class="log-attempt">
-			<summary>Record an attempt</summary>@attemptFields(problem, form)
-		</details>
+	}
+}
+
+// optimalCell shows a problem's optimal time and space in the problems table.
+templ optimalCell(p Problem) {
+	if p.HasOptimal() {
+		<span class="optimal-value"><abbr title="Time" aria-hidden="true">T</abbr><span class="visually-hidden">Time</span> { p.OptimalTime }</span>
+		<span class="optimal-value"><abbr title="Space" aria-hidden="true">S</abbr><span class="visually-hidden">Space</span> { p.OptimalSpace }</span>
+		if p.OptimalEstimated() {
+			<span class="small muted estimate">Claude's estimate</span>
+		}
+	} else {
+		<span class="muted" aria-hidden="true">—</span><span class="visually-hidden">Not known yet</span>
+	}
+}
+
+// optimalPanel reveals the optimal complexity only once the learner has
+// attempted the problem, so the answer's shape is not given away beforehand.
+templ optimalPanel(p Problem, attempted bool) {
+	<div class="panel optimal-panel">
+		<h2>Optimal complexity</h2>
+		if !attempted {
+			<p class="small muted">The optimal time and space complexity appears after your first attempt.</p>
+		} else if p.HasOptimal() {
+			<dl>
+				<dt>Optimal time</dt>
+				<dd class="optimal-value">{ p.OptimalTime }</dd>
+				<dt>Optimal space</dt>
+				<dd class="optimal-value">{ p.OptimalSpace }</dd>
+			</dl>
+			if p.OptimalNote != "" {
+				<p class="small muted">{ p.OptimalNote }</p>
+			}
+			if p.OptimalEstimated() {
+				<p class="small muted">Claude's estimate from the first analysed attempt. Space excludes the returned output.</p>
+			} else {
+				<p class="small muted">Best-known bounds under the problem's constraints. Space excludes the returned output.</p>
+			}
+		} else {
+			<p class="small muted">Not known yet. Claude estimates it when it analyses an attempt with captured code.</p>
+		}
+	</div>
+}
+
+// Retired is shown for pages of the retired 84-day curriculum.
+templ Retired() {
+	@layout("Page retired", "") {
+		<section class="panel">
+			<h1>This page was retired</h1>
+			<p>The 84-day curriculum, with its day pages and lessons, has been replaced by a daily goal and reviews. Your attempts are all still here.</p>
+			<p><a class="button primary" href="/leetgrinder">Go to the dashboard</a></p>
+		</section>
+	}
+}
+
+templ todaysReviews(today Today, ids map[string]string, ret string) {
+	<section class="reviews" aria-labelledby="reviews-title">
+		<p class="eyebrow">SPACED REPETITION</p>
+		<h2 id="reviews-title">Today's review</h2>
+		if len(today.Reviews) == 0 {
+			<p class="muted">Nothing is due for review today. <a href="/leetgrinder/reviews">See all reviews</a></p>
+		} else {
+			<p class="muted">Re-solve each problem from scratch before looking at your old solution. <a href="/leetgrinder/reviews">All reviews</a></p>
+			for _, item := range today.Reviews {
+				@reviewCard(item, NewReviewForm(ids[ReviewKey(item.Problem.Slug)], ret))
+			}
+		}
+	</section>
+}
+
+templ reviewCard(item ReviewItem, form AttemptForm) {
+	<article class="problem-card review-card" id={ ReviewKey(item.Problem.Slug) }>
+		<div class="problem-heading">
+			<div>
+				@problemMeta(item.Problem)
+				<h3>
+					<a
+						href={ templ.SafeURL(item.Problem.URL()) }
+						target="_blank"
+						rel="noopener noreferrer"
+					>{ item.Problem.DisplayTitle() } <span aria-hidden="true">↗</span><span class="visually-hidden">(opens in a new tab)</span></a>
+				</h3>
+			</div>
+			if item.Done {
+				<span class="badge done">Reviewed today</span>
+			} else {
+				<span class="badge">Review</span>
+			}
+		</div>
+		if item.Reason != "" {
+			<p class="reason">{ item.Reason }</p>
+		}
+		<div class="problem-actions">
+			<a href={ templ.SafeURL(ProblemURL(item.Problem.Slug)) }>Attempt history</a>
+		</div>
+		if !item.Done && form.ID != "" {
+			<details class="log-attempt">
+				<summary>Record your review</summary>@attemptFields(item.Problem, form)
+			</details>
+		}
 	</article>
+}
+
+templ Reviews(page ReviewsPage) {
+	@layout("Reviews", "reviews") {
+		<p class="eyebrow">SPACED REPETITION</p>
+		<h1>Reviews</h1>
+		<p class="lead">Every problem you have attempted, scheduled by how likely you are to recall it.</p>
+		<section class="stats" aria-label="Review summary">
+			<div><strong>{ Count(len(page.Today.Reviews)) }</strong><p>Planned today</p></div>
+			<div><strong>{ Count(page.Today.Backlog(page.Cards)) }</strong><p>Due but not planned</p></div>
+			<div><strong>{ Count(len(page.Cards)) }</strong><p>Problems tracked</p></div>
+			<div><strong>{ Count(ReviewSlots(page.Today.Settings.DailyHours)) }</strong><p>Review slots today</p></div>
+		</section>
+		@todaysReviews(page.Today, page.IDs, "reviews")
+		<section class="queue" aria-labelledby="queue-title">
+			<h2 id="queue-title">All cards</h2>
+			if len(page.Cards) == 0 {
+				<p class="muted">Record an attempt on any problem to start its review schedule.</p>
+			} else {
+				<div class="table-scroll">
+					<table>
+						<thead><tr><th scope="col">Problem</th><th scope="col">Last counted attempt</th><th scope="col">Due</th><th scope="col">Recall now</th></tr></thead>
+						<tbody>
+							for _, card := range page.Cards {
+								<tr>
+									<td><a href={ templ.SafeURL(ProblemURL(card.Problem.Slug)) }>{ card.Problem.DisplayTitle() }</a></td>
+									<td>{ OutcomeLabel(card.Last.Outcome) } · { DateLabel(Date(card.Last.CreatedAt, page.Today.Settings.Location())) }</td>
+									<td>{ DateLabel(Date(card.Due, page.Today.Settings.Location())) }</td>
+									<td>{ Percent(card.Retrievability(page.Today.Now)) }</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			}
+		</section>
+	}
+}
+
+templ SettingsView(page SettingsPage) {
+	@layout("Settings", "settings") {
+		<h1>Settings</h1>
+		if page.Error != "" {
+			<p class="error" role="alert">{ page.Error }</p>
+		}
+		if page.Saved {
+			<p class="notice" role="status">Settings saved.</p>
+		}
+		<div class="settings-sections">
+			@generalSettings(page)
+			@notifySettings(page.Notify)
+			@analysisSettings(page.Analysis)
+			@apiTokenSettings(page)
+		</div>
+	}
+}
+
+templ generalSettings(page SettingsPage) {
+	<section class="panel" id="general" aria-labelledby="general-settings-title">
+		<h2 id="general-settings-title">General</h2>
+		<form class="attempt-form settings-form" method="post" action="/leetgrinder/settings/general">
+			<input type="hidden" name="revision" value={ page.General.Revision }/>
+			<div class="form-row">
+				<label>
+					Time zone
+					<input type="text" name="timezone" list="timezones" required value={ page.General.Timezone } autocomplete="off" spellcheck="false"/>
+				</label>
+				<label>
+					Daily time
+					<select name="hours" required>
+						for _, h := range HoursOptions() {
+							<option value={ HoursValue(h) } selected?={ page.General.Hours == HoursValue(h) }>{ HoursLabel(h) } · { ReviewSlotsLabel(ReviewSlots(h)) }</option>
+						}
+					</select>
+				</label>
+			</div>
+			<datalist id="timezones">
+				for _, tz := range timezoneSuggestions {
+					<option value={ tz }></option>
+				}
+			</datalist>
+			<p class="small muted">Days, reviews and reminders follow this time zone. Two hours gives one review a day; every extra 25 minutes adds a review slot.</p>
+			<button class="button primary" type="submit">Save</button>
+		</form>
+	</section>
+}
+
+templ Problems(page ProblemsPage) {
+	@layout("Problems", "problems") {
+		<p class="eyebrow">PROBLEMS</p>
+		<h1>Problems</h1>
+		<p class="lead">Every LeetCode problem you have attempted. Search by title, LeetCode number, or topic, and filter by difficulty, topic, or your progress.</p>
+		<form class="problem-filters" method="get" action="/leetgrinder/problems" role="search" aria-label="Filter problems">
+			<label class="filter-search">
+				Search
+				<input type="search" name="q" value={ page.Filter.Query } maxlength="100" placeholder="Title, number, or topic" autocomplete="off"/>
+			</label>
+			<label>
+				Difficulty
+				<select name="difficulty">
+					<option value="">All</option>
+					for _, d := range []string{"Easy", "Medium", "Hard"} {
+						<option value={ d } selected?={ page.Filter.Difficulty == d }>{ d }</option>
+					}
+				</select>
+			</label>
+			<label>
+				Topic
+				<select name="topic">
+					<option value="">All topics</option>
+					for _, t := range page.Topics {
+						<option value={ t.Key } selected?={ page.Filter.Topic == t.Key }>{ t.Label }</option>
+					}
+				</select>
+			</label>
+			<label>
+				Status
+				<select name="status">
+					<option value="">Any</option>
+					for _, s := range ProblemStatusOptions() {
+						<option value={ s.Key } selected?={ page.Filter.Status == s.Key }>{ s.Label }</option>
+					}
+				</select>
+			</label>
+			<label>
+				Sort
+				<select name="sort">
+					for _, s := range ProblemSortOptions() {
+						<option value={ s.Key } selected?={ page.Filter.Sort == s.Key }>{ s.Label }</option>
+					}
+				</select>
+			</label>
+			<div class="filter-actions">
+				<button class="button primary" type="submit">Apply</button>
+				if page.Filter.Active() {
+					<a href="/leetgrinder/problems">Clear filters</a>
+				}
+			</div>
+		</form>
+		<p class="small muted" role="status">Showing { Count(len(page.Rows)) } of { Count(page.Total) } problems</p>
+		if page.Total == 0 {
+			<p class="panel muted">No attempts yet. <a href="/leetgrinder#log-attempt">Log an attempt</a> on any LeetCode problem to see it here.</p>
+		} else if len(page.Rows) == 0 {
+			<p class="panel muted">No problems match these filters. <a href="/leetgrinder/problems">Clear filters</a></p>
+		} else {
+			<div class="table-scroll queue problem-table">
+				<table>
+					<caption class="visually-hidden">Attempted problems</caption>
+					<thead>
+						<tr>
+							<th scope="col">#</th>
+							<th scope="col">Problem</th>
+							<th scope="col">Difficulty</th>
+							<th scope="col">Topics</th>
+							<th scope="col">Optimal time / space</th>
+							<th scope="col">Status</th>
+							<th scope="col">Attempts</th>
+							<th scope="col">Last attempt</th>
+							<th scope="col">Next due</th>
+							<th scope="col">LeetCode</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, row := range page.Rows {
+							<tr>
+								<td class="num">
+									if row.Problem.Number > 0 {
+										{ Count(row.Problem.Number) }
+									}
+								</td>
+								<th scope="row">
+									<a href={ templ.SafeURL(ProblemURL(row.Problem.Slug)) }>{ row.Problem.DisplayTitle() }</a>
+									if row.Problem.NotFound {
+										<span class="small muted">Not found on LeetCode</span>
+									}
+								</th>
+								<td>
+									if row.Problem.Difficulty != "" {
+										<span class={ DifficultyClass(row.Problem.Difficulty) }>{ row.Problem.Difficulty }</span>
+									}
+								</td>
+								<td class="topic">
+									for _, t := range row.Problem.Topics {
+										<span class="small">{ TopicLabel(t) }</span>
+									}
+								</td>
+								<td class="optimal">@optimalCell(row.Problem)
+</td>
+								<td>
+									<span class={ StatusClass(row.Status) }>{ row.Status }</span>
+									if row.Due {
+										<span class="badge">Due</span>
+									}
+									if row.ComplexityWrong {
+										@complexityBadge()
+									}
+								</td>
+								<td class="num">{ Count(row.Attempts) }</td>
+								<td>{ DateLabel(Date(row.Last.CreatedAt, page.Location)) }</td>
+								<td>
+									if row.Card.Reviews > 0 {
+										{ DateLabel(Date(row.Card.Due, page.Location)) }
+									}
+								</td>
+								<td>
+									<a href={ templ.SafeURL(row.Problem.URL()) } target="_blank" rel="noopener noreferrer">Open<span aria-hidden="true"> ↗</span><span class="visually-hidden"> { row.Problem.DisplayTitle() } on LeetCode (opens in a new tab)</span></a>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+	}
 }
 
 templ attemptFields(problem Problem, form AttemptForm) {
 	<form class="attempt-form" method="post" action={ templ.SafeURL(ProblemURL(problem.Slug) + "/attempts") }>
-		<input type="hidden" name="id" value={ form.ID }/><input type="hidden" name="revision" value={ form.Revision }/><input type="hidden" name="returnDay" value={ Count(form.ReturnDay) }/>
+		<input type="hidden" name="id" value={ form.ID }/><input type="hidden" name="revision" value={ form.Revision }/>
 		if form.Review {
 			<input type="hidden" name="review" value="true"/>
 		}
@@ -491,99 +684,6 @@ templ attemptCode(a Attempt) {
 	}
 }
 
-// avail says whether the analysis worker is sending requests, and if not, why.
-templ ProblemHistory(problem Problem, state State, form AttemptForm, avail AnalysisAvailability) {
-	@layout(problem.Title, "") {
-		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder/about#curriculum">Curriculum</a><span>/</span><span>Attempt history</span></nav>
-		<p class="eyebrow">
-			LEETCODE { Count(problem.ID) } · { problem.Difficulty }
-		</p>
-		<h1>
-			{ problem.Title }
-		</h1>
-		<div class="history-links">
-			<a
-				class="button"
-				href={ templ.SafeURL(problem.URL()) }
-				target="_blank"
-				rel="noopener noreferrer"
-			>Open on LeetCode ↗</a>
-			<span class="badge">
-				{ state.ProblemStatus(problem.Slug) }
-			</span>
-			for _, week:= range Curriculum() {
-				for _, day:=range week.Days {
-					for _, p:=range append(day.Core,day.Optional...) {
-						if p.Slug==problem.Slug {
-							<a href={ templ.SafeURL(DayURL(day.Number) + "#" + problem.Slug) }>
-								Back to { DayLabel(day.Number) }
-							</a>
-						}
-					}
-				}
-			}
-		</div>
-		<div class="history-grid">
-			<section class="panel">
-				<h2>
-					if form.Revision!="" {
-						Correct your attempt
-					} else {
-						Record an attempt
-					}
-				</h2>@attemptFields(problem, form)
-				if form.Error!="" && form.Revision!="" {
-					<p>
-						<a
-							href={ templ.SafeURL(ProblemURL(problem.Slug)) }
-						>Reload current history</a> before reapplying a conflicting correction. Your draft is shown above.
-					</p>
-				}
-			</section>
-			<section>
-				@optimalPanel(problem, len(state.ProblemAttempts(problem.Slug)) > 0)
-				<h2>Previous attempts</h2>
-				if len(state.ProblemAttempts(problem.Slug))==0 {
-					<p class="muted">No attempts recorded yet.</p>
-				}
-				for _, a:=range state.ProblemAttempts(problem.Slug) {
-					<article class="panel attempt" id={ AttemptAnchor(a.ID) }>
-						<div class="problem-heading">
-							<h3>
-								{ OutcomeLabel(a.Outcome) }
-							</h3><span>{ Count(a.Minutes) } min</span>
-						</div>
-						<p class="small muted">
-							<time datetime={ a.CreatedAt.Format("2006-01-02T15:04:05Z07:00") }>
-								{ a.CreatedAt.UTC().Format("02 Jan 2006 · 15:04 UTC") }
-							</time> ·
-							if a.Assisted {
-								Used solution help
-							} else {
-								No solution help
-							}
-							if a.IsReview {
-								· Review
-							}
-						</p>
-						@statedComplexity(a)
-						if a.Notes!="" {
-							<p class="notes">
-								{ a.Notes }
-							</p>
-						}
-						@attemptCode(a)
-						@analysisCard(problem.Slug, a, state, avail)
-						<details>
-							<summary>Correct this attempt</summary>@attemptFields(problem, EditForm(a))
-						</details>
-					</article>
-				}
-			</section>
-		</div>
-	}
-}
-
 templ Unavailable(message string) {
 	@layout("Unable to load", "") {
 		<section class="panel">
@@ -593,305 +693,5 @@ templ Unavailable(message string) {
 			</p>
 			<p><a href="/leetgrinder">Try again</a></p>
 		</section>
-	}
-}
-
-templ scheduleCard(today Today) {
-	<section class="panel schedule-card" aria-labelledby="schedule-title">
-		if schedule, ok := today.Schedule(); ok {
-			<div>
-				<p class="eyebrow">YOUR SCHEDULE</p>
-				<h2 id="schedule-title">{ today.Status() }</h2>
-				<p class="muted">
-					if today.Session > 0 {
-						Today is { DayLabel(today.Session) } of 84.
-					} else if today.Date.Before(schedule.Start) {
-						{ DayLabel(1) } is on { DateLabel(schedule.Start) }.
-					} else {
-						The scheduled 84 days are over. Keep reviewing at your own pace.
-					}
-					{ Count(Summarize(today.State).Completed) } of { Count(schedule.ExpectedSessions(today.Now)) } expected sessions finished.
-				</p>
-			</div>
-			<dl>
-				<dt>Start</dt>
-				<dd>{ DateLabel(schedule.Start) }</dd>
-				<dt>End</dt>
-				<dd>{ DateLabel(schedule.End()) }</dd>
-				<dt>Daily time</dt>
-				<dd>{ HoursLabel(today.Settings.DailyHours) }</dd>
-			</dl>
-			<a href="/leetgrinder/settings">Adjust schedule</a>
-		} else {
-			<div>
-				<p class="eyebrow">YOUR SCHEDULE</p>
-				<h2 id="schedule-title">Set a start date</h2>
-				<p class="muted">Pick when you start the 84 sessions to see whether you are ahead or behind.</p>
-			</div>
-			<a class="button" href="/leetgrinder/settings">Set your schedule</a>
-		}
-	</section>
-}
-
-templ todaysReviews(today Today, ids map[string]string, day int, ret string) {
-	<section class="reviews" aria-labelledby="reviews-title">
-		<p class="eyebrow">SPACED REPETITION</p>
-		<h2 id="reviews-title">Today's review</h2>
-		if len(today.Reviews) == 0 {
-			<p class="muted">Nothing is due for review today. <a href="/leetgrinder/reviews">See the review queue</a></p>
-		} else {
-			<p class="muted">Re-solve each problem from scratch before looking at your old solution. <a href="/leetgrinder/reviews">Review queue</a></p>
-			for _, item := range today.Reviews {
-				@reviewCard(item, NewReviewForm(ids[ReviewKey(item.Problem.Slug)], day, ret))
-			}
-		}
-	</section>
-}
-
-templ reviewCard(item ReviewItem, form AttemptForm) {
-	<article class="problem-card review-card" id={ ReviewKey(item.Problem.Slug) }>
-		<div class="problem-heading">
-			<div>
-				<p class="small muted">
-					LEETCODE { Count(item.Problem.ID) } · { item.Problem.Difficulty } · { WeekLabel(WeekNumber(ProblemDay(item.Problem.Slug))) }
-				</p>
-				<h3>
-					<a
-						href={ templ.SafeURL(item.Problem.URL()) }
-						target="_blank"
-						rel="noopener noreferrer"
-					>{ item.Problem.Title } <span aria-hidden="true">↗</span><span class="visually-hidden">(opens in a new tab)</span></a>
-				</h3>
-			</div>
-			if item.Done {
-				<span class="badge done">Reviewed today</span>
-			} else {
-				<span class="badge">Review</span>
-			}
-		</div>
-		if item.Reason != "" {
-			<p class="reason">{ item.Reason }</p>
-		}
-		<div class="problem-actions">
-			<a href={ templ.SafeURL(ProblemURL(item.Problem.Slug)) }>Attempt history</a>
-		</div>
-		if !item.Done && form.ID != "" {
-			<details class="log-attempt">
-				<summary>Record your review</summary>@attemptFields(item.Problem, form)
-			</details>
-		}
-	</article>
-}
-
-templ Reviews(page ReviewsPage) {
-	@layout("Review queue", "reviews") {
-		<p class="eyebrow">SPACED REPETITION</p>
-		<h1>Review queue</h1>
-		<p class="lead">Every problem you have attempted, scheduled by how likely you are to recall it.</p>
-		<section class="stats" aria-label="Review summary">
-			<div><strong>{ Count(len(page.Today.Reviews)) }</strong><p>Planned today</p></div>
-			<div><strong>{ Count(page.Today.Backlog(page.Cards)) }</strong><p>Due but not planned</p></div>
-			<div><strong>{ Count(len(page.Cards)) }</strong><p>Problems tracked</p></div>
-			<div><strong>{ Count(ReviewSlots(page.Today.Session, page.Today.Settings.DailyHours)) }</strong><p>Review slots today</p></div>
-		</section>
-		@todaysReviews(page.Today, page.IDs, 0, "reviews")
-		<section class="queue" aria-labelledby="queue-title">
-			<h2 id="queue-title">All cards</h2>
-			if len(page.Cards) == 0 {
-				<p class="muted">Record an attempt on any problem to start its review schedule.</p>
-			} else {
-				<div class="table-scroll">
-					<table>
-						<thead><tr><th scope="col">Problem</th><th scope="col">Week</th><th scope="col">Last counted attempt</th><th scope="col">Due</th><th scope="col">Recall now</th></tr></thead>
-						<tbody>
-							for _, card := range page.Cards {
-								<tr>
-									<td><a href={ templ.SafeURL(ProblemURL(card.Problem.Slug)) }>{ card.Problem.Title }</a></td>
-									<td>{ WeekLabel(card.Week()) }</td>
-									<td>{ OutcomeLabel(card.Last.Outcome) } · { DateLabel(Date(card.Last.CreatedAt, page.Today.Settings.Location())) }</td>
-									<td>{ DateLabel(Date(card.Due, page.Today.Settings.Location())) }</td>
-									<td>{ Percent(card.Retrievability(page.Today.Now)) }</td>
-								</tr>
-							}
-						</tbody>
-					</table>
-				</div>
-			}
-		</section>
-	}
-}
-
-templ SettingsView(page SettingsPage) {
-	@layout("Settings", "settings") {
-		<h1>Settings</h1>
-		if page.Error != "" {
-			<p class="error" role="alert">{ page.Error }</p>
-		}
-		if page.Saved {
-			<p class="notice" role="status">Settings saved.</p>
-		}
-		<div class="settings-sections">
-			@scheduleSettings(page)
-			@notifySettings(page.Notify)
-			@analysisSettings(page.Analysis)
-			@apiTokenSettings(page)
-		</div>
-	}
-}
-
-templ scheduleSettings(page SettingsPage) {
-	<section class="panel" id="schedule" aria-labelledby="schedule-settings-title">
-		<h2 id="schedule-settings-title">Schedule</h2>
-		<p class="muted">The 84 sessions run on consecutive days. Change the start or the end date; the other follows.</p>
-		<form class="attempt-form settings-form" method="post" action="/leetgrinder/settings/schedule">
-			<input type="hidden" name="revision" value={ page.Schedule.Revision }/>
-			<div class="form-row">
-				<label>Start date<input type="date" name="start" value={ page.Schedule.Start }/></label>
-				<label>End date<input type="date" name="end" value={ page.Schedule.End }/></label>
-			</div>
-			<div class="form-row">
-				<label>
-					Time zone
-					<input type="text" name="timezone" list="timezones" required value={ page.Schedule.Timezone } autocomplete="off" spellcheck="false"/>
-				</label>
-				<label>
-					Daily time
-					<select name="hours" required>
-						for _, h := range HoursOptions() {
-							<option value={ HoursValue(h) } selected?={ page.Schedule.Hours == HoursValue(h) }>{ HoursLabel(h) } · { ReviewSlotsLabel(ExtraReviewSlots(h)) } extra</option>
-						}
-					</select>
-				</label>
-			</div>
-			<datalist id="timezones">
-				for _, tz := range timezoneSuggestions {
-					<option value={ tz }></option>
-				}
-			</datalist>
-			<p class="small muted">Two hours covers each session plus one review, or the reading on days with required reading. Every extra 25 minutes adds a review slot. Clear both dates to remove the schedule.</p>
-			<button class="button primary" type="submit">Save schedule</button>
-		</form>
-	</section>
-}
-
-
-templ Problems(page ProblemsPage) {
-	@layout("Problems", "problems") {
-		<p class="eyebrow">PROBLEM BANK</p>
-		<h1>Problems</h1>
-		<p class="lead">Every LeetCode problem in the curriculum. Search by title, LeetCode number, or topic, and filter by difficulty, week, or your progress.</p>
-		<form class="problem-filters" method="get" action="/leetgrinder/problems" role="search" aria-label="Filter problems">
-			<label class="filter-search">
-				Search
-				<input type="search" name="q" value={ page.Filter.Query } maxlength="100" placeholder="Title, number, or topic" autocomplete="off"/>
-			</label>
-			<label>
-				Difficulty
-				<select name="difficulty">
-					<option value="">All</option>
-					for _, d := range []string{"Easy", "Medium", "Hard"} {
-						<option value={ d } selected?={ page.Filter.Difficulty == d }>{ d }</option>
-					}
-				</select>
-			</label>
-			<label>
-				Topic
-				<select name="week">
-					<option value="">All topics</option>
-					for _, week := range Curriculum() {
-						<option value={ Count(week.Number) } selected?={ page.Filter.Week == week.Number }>{ WeekLabel(week.Number) } · { week.Title }</option>
-					}
-				</select>
-			</label>
-			<label>
-				Status
-				<select name="status">
-					<option value="">Any</option>
-					for _, s := range ProblemStatusOptions() {
-						<option value={ s.Key } selected?={ page.Filter.Status == s.Key }>{ s.Label }</option>
-					}
-				</select>
-			</label>
-			<label>
-				Type
-				<select name="kind">
-					<option value="">All</option>
-					<option value="core" selected?={ page.Filter.Kind == "core" }>Core</option>
-					<option value="optional" selected?={ page.Filter.Kind == "optional" }>Optional</option>
-				</select>
-			</label>
-			<label>
-				Sort
-				<select name="sort">
-					for _, s := range ProblemSortOptions() {
-						<option value={ s.Key } selected?={ page.Filter.Sort == s.Key }>{ s.Label }</option>
-					}
-				</select>
-			</label>
-			<div class="filter-actions">
-				<button class="button primary" type="submit">Apply</button>
-				if page.Filter.Active() {
-					<a href="/leetgrinder/problems">Clear filters</a>
-				}
-			</div>
-		</form>
-		<p class="small muted" role="status">Showing { Count(len(page.Rows)) } of { Count(page.Total) } problems</p>
-		if len(page.Rows) == 0 {
-			<p class="panel muted">No problems match these filters. <a href="/leetgrinder/problems">Clear filters</a></p>
-		} else {
-			<div class="table-scroll queue problem-table">
-				<table>
-					<caption class="visually-hidden">Curriculum problems</caption>
-					<thead>
-						<tr>
-							<th scope="col">#</th>
-							<th scope="col">Problem</th>
-							<th scope="col">Difficulty</th>
-							<th scope="col">Optimal time / space</th>
-							<th scope="col">Topic</th>
-							<th scope="col">Session</th>
-							<th scope="col">Status</th>
-							<th scope="col">Attempts</th>
-							<th scope="col">Last attempt</th>
-							<th scope="col">LeetCode</th>
-						</tr>
-					</thead>
-					<tbody>
-						for _, row := range page.Rows {
-							<tr>
-								<td class="num">{ Count(row.Problem.ID) }</td>
-								<th scope="row">
-									<a href={ templ.SafeURL(ProblemURL(row.Problem.Slug)) }>{ row.Problem.Title }</a>
-									if row.Optional {
-										<span class="badge optional-badge">Optional</span>
-									}
-								</th>
-								<td><span class={ DifficultyClass(row.Problem.Difficulty) }>{ row.Problem.Difficulty }</span></td>
-								<td class="optimal">@optimalCell(row.Problem, row.Attempts > 0)</td>
-								<td class="topic">{ row.Week.Title }<span class="small muted">{ row.Day.Title }</span></td>
-								<td><a href={ templ.SafeURL(DayURL(row.Day.Number)) }>{ DayLabel(row.Day.Number) }</a></td>
-								<td>
-									<span class={ StatusClass(row.Status) }>{ row.Status }</span>
-									if row.ComplexityWrong {
-										@complexityBadge()
-									}
-								</td>
-								<td class="num">{ Count(row.Attempts) }</td>
-								<td>
-									if row.Attempts > 0 {
-										{ DateLabel(Date(row.Last.CreatedAt, page.Location)) }
-									} else {
-										<span class="muted">—</span>
-									}
-								</td>
-								<td>
-									<a href={ templ.SafeURL(row.Problem.URL()) } target="_blank" rel="noopener noreferrer">Open<span aria-hidden="true"> ↗</span><span class="visually-hidden"> { row.Problem.Title } on LeetCode (opens in a new tab)</span></a>
-								</td>
-							</tr>
-						}
-					</tbody>
-				</table>
-			</div>
-		}
 	}
 }

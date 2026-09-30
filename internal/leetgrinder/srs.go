@@ -4,7 +4,6 @@ import (
 	"cmp"
 	"fmt"
 	"slices"
-	"sync"
 	"time"
 
 	fsrs "github.com/open-spaced-repetition/go-fsrs/v4"
@@ -17,29 +16,6 @@ var scheduler = func() *fsrs.FSRS {
 	p.EnableShortTerm = false
 	return fsrs.NewFSRS(p)
 }()
-
-type problemPlace struct {
-	Problem Problem
-	Day     int
-}
-
-// problemIndex maps each curriculum slug to its first assigning session.
-var problemIndex = sync.OnceValue(func() map[string]problemPlace {
-	index := map[string]problemPlace{}
-	for _, week := range Curriculum() {
-		for _, day := range week.Days {
-			for _, p := range slices.Concat(day.Core, day.Optional) {
-				if _, ok := index[p.Slug]; !ok {
-					index[p.Slug] = problemPlace{p, day.Number}
-				}
-			}
-		}
-	}
-	return index
-})
-
-// ProblemDay is the first session that assigns slug, or 0 outside the curriculum.
-func ProblemDay(slug string) int { return problemIndex()[slug].Day }
 
 // ReviewRating maps an attempt onto an FSRS rating.
 func ReviewRating(a Attempt) fsrs.Rating {
@@ -59,7 +35,6 @@ func ReviewRating(a Attempt) fsrs.Rating {
 // by replaying attempts, never stored, so corrections flow through.
 type Card struct {
 	Problem Problem
-	Day     int
 	// Last is the attempt that counted most recently.
 	Last    Attempt
 	Reviews int
@@ -79,33 +54,37 @@ func fromWallClock(t time.Time, loc *time.Location) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), loc)
 }
 
-func (c Card) Week() int { return WeekNumber(c.Day) }
-
 // Retrievability is the estimated recall probability at t.
 func (c Card) Retrievability(t time.Time) float64 {
-	r, err := scheduler.Retrievability(c.fsrs, wallClock(t, c.loc))
+	loc := c.loc
+	if loc == nil {
+		loc = time.UTC
+	}
+	r, err := scheduler.Retrievability(c.fsrs, wallClock(t, loc))
 	if err != nil {
 		return 0
 	}
 	return r
 }
 
-// BuildCards replays attempts on curriculum problems through FSRS. Only the
-// last attempt on each local day counts. Cards come back ordered by due time.
-func BuildCards(attempts []Attempt, loc *time.Location) []Card {
+// BuildCards replays attempts through FSRS, one card per attempted problem,
+// taking each card's problem from problems. Only the last attempt on each
+// local day counts. Cards come back ordered by due time.
+func BuildCards(attempts []Attempt, problems map[string]Problem, loc *time.Location) []Card {
 	bySlug := map[string][]Attempt{}
 	for _, a := range attempts {
-		if _, ok := problemIndex()[a.ProblemSlug]; ok {
-			bySlug[a.ProblemSlug] = append(bySlug[a.ProblemSlug], a)
-		}
+		bySlug[a.ProblemSlug] = append(bySlug[a.ProblemSlug], a)
 	}
 	cards := make([]Card, 0, len(bySlug))
 	for slug, list := range bySlug {
 		slices.SortFunc(list, func(a, b Attempt) int {
 			return cmp.Or(a.CreatedAt.Compare(b.CreatedAt), cmp.Compare(a.ID, b.ID))
 		})
-		place := problemIndex()[slug]
-		card := Card{Problem: place.Problem, Day: place.Day, loc: loc}
+		problem, ok := problems[slug]
+		if !ok {
+			problem = Problem{Slug: slug}
+		}
+		card := Card{Problem: problem, loc: loc}
 		for i, a := range list {
 			if i+1 < len(list) && Date(list[i+1].CreatedAt, loc).Equal(Date(a.CreatedAt, loc)) {
 				continue
@@ -131,39 +110,13 @@ func BuildCards(attempts []Attempt, loc *time.Location) []Card {
 	return cards
 }
 
-// ReviewSlots is how many reviews date gets. Sessions with required reading
-// spend the base review time reading; extra daily hours add slots.
-func ReviewSlots(session int, hours float64) int {
-	base := 1
-	if day, ok := FindDay(session); ok {
-		for _, r := range day.Readings {
-			if !r.Optional {
-				base = 0
-				break
-			}
-		}
-	}
-	return base + ExtraReviewSlots(hours)
-}
+// ReviewSlots is how many reviews a day gets: one, plus the extra slots
+// from daily time.
+func ReviewSlots(hours float64) int { return 1 + ExtraReviewSlots(hours) }
 
-// PlanReviews extends a frozen plan for date. Existing picks are kept in
-// order; new picks fill any remaining slots, lowest recall first, preferring
-// earlier curriculum weeks, then the most overdue.
-func PlanReviews(cards []Card, date time.Time, loc *time.Location, session int, hours float64, existing []string) []string {
-	plan := slices.Clone(existing)
-	slots := ReviewSlots(session, hours)
-	if len(plan) >= slots {
-		return plan
-	}
-	skip := map[string]bool{}
-	for _, slug := range plan {
-		skip[slug] = true
-	}
-	if day, ok := FindDay(session); ok {
-		for _, p := range slices.Concat(day.Core, day.Optional) {
-			skip[p.Slug] = true
-		}
-	}
+// DueCards lists cards due by the end of date, lowest estimated recall
+// first, then the most overdue. Cards in skip are left out.
+func DueCards(cards []Card, date time.Time, loc *time.Location, skip map[string]bool) []Card {
 	end := EndOfDate(date, loc)
 	type candidate struct {
 		card Card
@@ -176,15 +129,44 @@ func PlanReviews(cards []Card, date time.Time, loc *time.Location, session int, 
 		}
 	}
 	slices.SortFunc(candidates, func(a, b candidate) int {
-		return cmp.Or(cmp.Compare(a.r, b.r), cmp.Compare(a.card.Week(), b.card.Week()), a.card.Due.Compare(b.card.Due), cmp.Compare(a.card.Problem.Slug, b.card.Problem.Slug))
+		return cmp.Or(cmp.Compare(a.r, b.r), a.card.Due.Compare(b.card.Due), cmp.Compare(a.card.Problem.Slug, b.card.Problem.Slug))
 	})
+	out := make([]Card, 0, len(candidates))
 	for _, c := range candidates {
+		out = append(out, c.card)
+	}
+	return out
+}
+
+// PlanReviews extends a frozen plan for date to slots picks. Existing picks
+// are kept in order; new picks come from DueCards, leaving out problems first
+// attempted on date.
+func PlanReviews(cards []Card, date time.Time, loc *time.Location, slots int, existing []string) []string {
+	plan := slices.Clone(existing)
+	if len(plan) >= slots {
+		return plan
+	}
+	skip := map[string]bool{}
+	for _, slug := range plan {
+		skip[slug] = true
+	}
+	for _, c := range cards {
+		if c.firstAttemptOn(date) {
+			skip[c.Problem.Slug] = true
+		}
+	}
+	for _, c := range DueCards(cards, date, loc, skip) {
 		if len(plan) == slots {
 			break
 		}
-		plan = append(plan, c.card.Problem.Slug)
+		plan = append(plan, c.Problem.Slug)
 	}
 	return plan
+}
+
+// firstAttemptOn reports whether the card's first counted attempt was on date.
+func (c Card) firstAttemptOn(date time.Time) bool {
+	return c.Reviews == 1 && Date(c.Last.CreatedAt, c.loc).Equal(date)
 }
 
 // ReviewReason explains a pick in plain text, e.g.

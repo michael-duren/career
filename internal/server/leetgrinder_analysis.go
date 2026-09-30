@@ -51,7 +51,7 @@ func (s *Server) leetgrinderSaveAnalysis(w http.ResponseWriter, r *http.Request)
 		if err != nil {
 			message += " Your settings could not be reloaded; your draft is retained below."
 		}
-		page := s.withNotify(r.Context(), leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), Schedule: leetgrinder.NewScheduleForm(settings), Error: message})
+		page := s.withNotify(r.Context(), leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), General: leetgrinder.NewGeneralForm(settings), Error: message})
 		page.Analysis.Enabled, page.Analysis.Revision = enabled == "true", revision
 		renderLeetgrinder(w, r, status, leetgrinder.SettingsView(s.withAPITokens(r, page)))
 	}
@@ -80,10 +80,15 @@ func (s *Server) leetgrinderReanalyse(w http.ResponseWriter, r *http.Request) {
 	if !s.leetgrinderForm(w, r) {
 		return
 	}
-	problem, ok := leetgrinder.FindProblem(chi.URLParam(r, "slug"))
+	slug := chi.URLParam(r, "slug")
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
-	if !ok || err != nil {
+	if !leetgrinder.ValidSlug(slug) || err != nil {
 		http.NotFound(w, r)
+		return
+	}
+	problem, err := s.db.LeetgrinderProblem(r.Context(), slug)
+	if err != nil {
+		renderLeetgrinder(w, r, http.StatusServiceUnavailable, leetgrinder.ReanalyseError(leetgrinder.Problem{Slug: slug}, id.String(), "The problem could not be loaded, so nothing was changed. Please retry."))
 		return
 	}
 	// Requeueing clears the current result, so it is refused whenever the

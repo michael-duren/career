@@ -27,10 +27,8 @@ const (
 
 // Input is one attempt to analyse.
 type Input struct {
-	// Problem is the curriculum problem; Known is false for a slug that is
-	// no longer in the curriculum, which leaves only Problem.Slug set.
+	// Problem is the catalog entry; it may have only Slug set.
 	Problem     leetgrinder.Problem
-	Known       bool
 	Language    string
 	Code        string
 	StatedTime  string
@@ -53,6 +51,10 @@ type Error struct {
 }
 
 func (e *Error) Error() string { return e.Message }
+
+// Reference reports whether the problem has a known optimum to compare
+// with. Without one the model estimates it.
+func (in Input) Reference() bool { return in.Problem.HasOptimal() }
 
 // Client calls the Messages API with one model.
 type Client struct {
@@ -100,7 +102,7 @@ func (c *Client) Analyze(ctx context.Context, in Input) (leetgrinder.AnalysisRes
 		Thinking:  anthropic.ThinkingConfigParamUnion{OfAdaptive: &adaptive},
 		OutputConfig: anthropic.OutputConfigParam{
 			Effort: anthropic.OutputConfigEffortMedium,
-			Format: anthropic.JSONOutputFormatParam{Schema: resultSchema},
+			Format: anthropic.JSONOutputFormatParam{Schema: in.schema()},
 		},
 	})
 	if err != nil {

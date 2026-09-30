@@ -30,7 +30,6 @@ type NotificationPref struct {
 // Settings is the singleton Leetgrinder settings row. The ntfy token is only
 // ever held encrypted here; see SecretBox.
 type Settings struct {
-	StartDate           *time.Time
 	Timezone            string
 	DailyHours          float64
 	NtfyURL             string
@@ -64,13 +63,6 @@ func (s Settings) Location() *time.Location {
 	return loc
 }
 
-func (s Settings) Schedule() (Schedule, bool) {
-	if s.StartDate == nil {
-		return Schedule{}, false
-	}
-	return NewSchedule(*s.StartDate, s.Location()), true
-}
-
 func (s Settings) TokenSet() bool { return len(s.NtfyTokenCiphertext) > 0 }
 
 var ntfyTopic = regexp.MustCompile(`^[A-Za-z0-9_-]{0,64}$`)
@@ -86,9 +78,6 @@ func (s Settings) Validate() error {
 	}
 	if !ValidDailyHours(s.DailyHours) {
 		return errors.New("daily hours must be 2 to 4 in half-hour steps")
-	}
-	if s.StartDate != nil && (s.StartDate.Year() < 2000 || s.StartDate.Year() > 2100) {
-		return errors.New("start date must be between 2000 and 2100")
 	}
 	if u, err := url.Parse(s.NtfyURL); err != nil || u.Host == "" || (u.Scheme != "http" && u.Scheme != "https") || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
 		return errors.New("ntfy server must be an absolute http(s) URL")

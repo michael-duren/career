@@ -17,18 +17,13 @@ type Today struct {
 	State    State
 	Now      time.Time
 	Date     time.Time
-	// Session is today's scheduled session, or 0 when unset or out of range.
-	Session int
-	Reviews []ReviewItem
+	Reviews  []ReviewItem
 }
 
 // NewToday combines saved state with the frozen review plan for now's local date.
 func NewToday(settings Settings, state State, plan []string, now time.Time) Today {
 	loc := settings.Location()
 	t := Today{Settings: settings, State: state, Now: now, Date: Date(now, loc)}
-	if schedule, ok := settings.Schedule(); ok {
-		t.Session = schedule.SessionForDate(t.Date)
-	}
 	// Reasons describe each card as it stood before today, so they stay
 	// stable after today's review is logged.
 	var before []Attempt
@@ -38,12 +33,11 @@ func NewToday(settings Settings, state State, plan []string, now time.Time) Toda
 		}
 	}
 	cards := map[string]Card{}
-	for _, c := range BuildCards(before, loc) {
+	for _, c := range BuildCards(before, state.Problems, loc) {
 		cards[c.Problem.Slug] = c
 	}
 	for i, slug := range plan {
-		item := ReviewItem{Slot: i + 1, Card: cards[slug], Done: t.AttemptedOn(slug)}
-		item.Problem, _ = FindProblem(slug)
+		item := ReviewItem{Slot: i + 1, Problem: state.Problem(slug), Card: cards[slug], Done: t.AttemptedOn(slug)}
 		if item.Card.Reviews > 0 {
 			item.Reason = ReviewReason(item.Card, now, loc)
 		}
@@ -63,51 +57,37 @@ func (t Today) AttemptedOn(slug string) bool {
 	return false
 }
 
-func (t Today) Schedule() (Schedule, bool) { return t.Settings.Schedule() }
-
-// Status is the on/off-track label, or "" when no schedule is set.
-func (t Today) Status() string {
-	s, ok := t.Schedule()
-	if !ok {
-		return ""
-	}
-	return s.Status(Summarize(t.State).Completed, t.Now)
+// Cards replays every attempt into review cards.
+func (t Today) Cards() []Card {
+	return BuildCards(t.State.Attempts, t.State.Problems, t.Settings.Location())
 }
 
-// MissingWork lists what today still needs: the scheduled session if it is
-// unfinished, and any planned review without an attempt today.
-type MissingWork struct {
-	Session int
-	Reviews []ReviewItem
-}
-
-func (m MissingWork) Empty() bool { return m.Session == 0 && len(m.Reviews) == 0 }
-
-func (t Today) Missing() MissingWork {
-	var m MissingWork
-	if t.Session > 0 && !t.State.DayCompleted(t.Session) {
-		m.Session = t.Session
-	}
+// MissingReviews lists today's planned reviews without an attempt today.
+func (t Today) MissingReviews() []ReviewItem {
+	var m []ReviewItem
 	for _, r := range t.Reviews {
 		if !r.Done {
-			m.Reviews = append(m.Reviews, r)
+			m = append(m, r)
 		}
 	}
 	return m
 }
 
-// Backlog counts cards due by the end of today that today's plan left out.
-func (t Today) Backlog(cards []Card) int {
-	planned := map[string]bool{}
+// DueOptional lists cards due by the end of today that are neither in
+// today's plan nor attempted today, in review order.
+func (t Today) DueOptional(cards []Card) []Card {
+	skip := map[string]bool{}
 	for _, r := range t.Reviews {
-		planned[r.Problem.Slug] = true
+		skip[r.Problem.Slug] = true
 	}
-	end := EndOfDate(t.Date, t.Settings.Location())
-	n := 0
 	for _, c := range cards {
-		if !planned[c.Problem.Slug] && c.Due.Before(end) {
-			n++
+		if t.AttemptedOn(c.Problem.Slug) {
+			skip[c.Problem.Slug] = true
 		}
 	}
-	return n
+	return DueCards(cards, t.Date, t.Settings.Location(), skip)
 }
+
+// Backlog counts cards due by the end of today that today's plan left out
+// and that have no attempt today.
+func (t Today) Backlog(cards []Card) int { return len(t.DueOptional(cards)) }

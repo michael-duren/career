@@ -61,8 +61,8 @@ func TestLeetgrinderAttempts(t *testing.T) {
 	if !reflect.DeepEqual(state.Attempts, []leetgrinder.Attempt{second, corrected}) {
 		t.Fatalf("persisted history: %+v", state.Attempts)
 	}
-	if len(state.CompletedDays) != 0 {
-		t.Fatal("attempt completed a day")
+	if p := state.Problem("two-sum"); p.Title != "Two Sum" || p.OptimalSource != "curated" {
+		t.Fatalf("catalog not loaded: %+v", p)
 	}
 }
 
@@ -95,33 +95,6 @@ func TestLeetgrinderConcurrentCreate(t *testing.T) {
 	}
 }
 
-func TestLeetgrinderDayCompletion(t *testing.T) {
-	s := testStore(t)
-	ctx := context.Background()
-	for _, day := range []int{84, 2, 2, 1} {
-		if err := s.SetLeetgrinderDay(ctx, day, true); err != nil {
-			t.Fatal(err)
-		}
-	}
-	for range 2 {
-		if err := s.SetLeetgrinderDay(ctx, 2, false); err != nil {
-			t.Fatal(err)
-		}
-	}
-	state, err := s.LeetgrinderState(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !reflect.DeepEqual(state.CompletedDays, []int{1, 84}) || len(state.Attempts) != 0 {
-		t.Fatalf("day state: %+v", state)
-	}
-	for _, day := range []int{0, 85} {
-		if err := s.SetLeetgrinderDay(ctx, day, true); !errors.Is(err, ErrInvalid) {
-			t.Fatalf("day %d: %v", day, err)
-		}
-	}
-}
-
 func TestLeetgrinderInvalidAttempts(t *testing.T) {
 	s := testStore(t)
 	valid := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "two-sum", Outcome: "solved", Minutes: 240, Notes: strings.Repeat("界", 2000), TimeComplexity: "O(" + strings.Repeat("m", 37) + ")", SpaceComplexity: "O(1)"}
@@ -129,6 +102,7 @@ func TestLeetgrinderInvalidAttempts(t *testing.T) {
 		"id":           func(a *leetgrinder.Attempt) { a.ID = "bad" },
 		"slug":         func(a *leetgrinder.Attempt) { a.ProblemSlug = "../two-sum" },
 		"empty slug":   func(a *leetgrinder.Attempt) { a.ProblemSlug = "" },
+		"long slug":    func(a *leetgrinder.Attempt) { a.ProblemSlug = strings.Repeat("a", 101) },
 		"outcome":      func(a *leetgrinder.Attempt) { a.Outcome = "failed" },
 		"zero minutes": func(a *leetgrinder.Attempt) { a.Minutes = 0 },
 		"many minutes": func(a *leetgrinder.Attempt) { a.Minutes = 241 },

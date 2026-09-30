@@ -133,12 +133,11 @@ func TestSendTimeoutAndRedirects(t *testing.T) {
 func TestCompose(t *testing.T) {
 	loc, _ := time.LoadLocation("America/Chicago")
 	now := time.Date(2026, 9, 10, 17, 0, 0, 0, loc)
-	start := time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC)
 	settings := leetgrinder.DefaultSettings()
-	settings.StartDate = &start
-	two, _ := leetgrinder.FindProblem("two-sum")
-	today := leetgrinder.NewToday(settings, leetgrinder.State{CompletedDays: []int{1, 2, 3, 4, 5, 6, 7}}, nil, now)
-	today.Reviews = []leetgrinder.ReviewItem{{Slot: 1, Problem: two}}
+	two := leetgrinder.Problem{Slug: "two-sum", Number: 1, Title: "Two Sum"}
+	bare := leetgrinder.Problem{Slug: "some-problem"}
+	today := leetgrinder.NewToday(settings, leetgrinder.State{}, nil, now)
+	today.Reviews = []leetgrinder.ReviewItem{{Slot: 1, Problem: two}, {Slot: 2, Problem: bare}}
 	pref := func(kind string, threshold int) leetgrinder.NotificationPref {
 		p := settings.NotificationPref(kind)
 		p.Threshold = threshold
@@ -147,45 +146,36 @@ func TestCompose(t *testing.T) {
 	origin := "https://app.example"
 
 	m, ok := Compose(leetgrinder.NotifyMissingWork, pref(leetgrinder.NotifyMissingWork, 0), today, nil, origin)
-	if !ok || m.Body != "Session 10: Lower and upper boundaries\nReview: Two Sum" || m.Click != origin+"/leetgrinder/day/10" || m.Priority != "default" {
+	if !ok || m.Body != "Review: Two Sum\nReview: some-problem" || m.Click != origin+"/leetgrinder" || m.Priority != "default" {
 		t.Fatalf("missing: %+v", m)
 	}
 	if m, ok = Compose(leetgrinder.NotifyLateEscalation, pref(leetgrinder.NotifyLateEscalation, 0), today, nil, origin); !ok || m.Priority != "high" {
 		t.Fatalf("late: %+v", m)
 	}
-	// Three behind (7 of 10) meets a threshold of 3 but not 4.
-	if m, ok = Compose(leetgrinder.NotifyBehindSchedule, pref(leetgrinder.NotifyBehindSchedule, 3), today, nil, origin); !ok || m.Title != "Leetgrinder: 3 sessions behind" {
-		t.Fatalf("behind: %+v", m)
+	if _, ok = Compose(leetgrinder.NotifyBehindSchedule, pref(leetgrinder.NotifyBehindSchedule, 3), today, nil, origin); ok {
+		t.Fatal("retired behind_schedule composed")
 	}
-	if _, ok = Compose(leetgrinder.NotifyBehindSchedule, pref(leetgrinder.NotifyBehindSchedule, 4), today, nil, origin); ok {
-		t.Fatal("behind below threshold")
-	}
-	m, ok = Compose(leetgrinder.NotifyMorningPlan, pref(leetgrinder.NotifyMorningPlan, 0), today, nil, origin)
-	if !ok || !strings.HasPrefix(m.Body, "Session 10: Lower and upper boundaries\n") || !strings.HasSuffix(m.Body, "\nReview: Two Sum") {
+	if m, ok = Compose(leetgrinder.NotifyMorningPlan, pref(leetgrinder.NotifyMorningPlan, 0), today, nil, origin); !ok || m.Body != "Review: Two Sum\nReview: some-problem" {
 		t.Fatalf("morning: %q", m.Body)
 	}
-	day10, _ := leetgrinder.FindDay(10)
-	for _, r := range day10.Readings {
-		if !r.Optional && !strings.Contains(m.Body, "Reading: "+r.Title) {
-			t.Fatalf("morning misses reading %q: %q", r.Title, m.Body)
-		}
+	empty := leetgrinder.NewToday(settings, leetgrinder.State{}, nil, now)
+	if m, ok = Compose(leetgrinder.NotifyMorningPlan, pref(leetgrinder.NotifyMorningPlan, 0), empty, nil, origin); !ok || m.Body != "Nothing is scheduled today." {
+		t.Fatalf("empty morning: %q", m.Body)
 	}
-	due := []leetgrinder.Card{{Problem: two, Due: now.Add(-time.Hour)}}
+	var due []leetgrinder.Card
 	for _, slug := range []string{"contains-duplicate", "valid-anagram"} {
-		p, _ := leetgrinder.FindProblem(slug)
-		due = append(due, leetgrinder.Card{Problem: p, Due: now.Add(-time.Hour)})
+		due = append(due, leetgrinder.Card{Problem: leetgrinder.Problem{Slug: slug}, Due: now.Add(-time.Hour)})
 	}
-	if m, ok = Compose(leetgrinder.NotifyReviewBacklog, pref(leetgrinder.NotifyReviewBacklog, 2), today, due, origin); !ok || m.Title != "Leetgrinder: 2 reviews waiting" || m.Click != origin+"/leetgrinder/reviews" {
+	if m, ok = Compose(leetgrinder.NotifyReviewBacklog, pref(leetgrinder.NotifyReviewBacklog, 2), empty, due, origin); !ok || m.Title != "Leetgrinder: 2 reviews waiting" || m.Click != origin+"/leetgrinder/reviews" {
 		t.Fatalf("backlog: %+v", m)
 	}
-	if _, ok = Compose(leetgrinder.NotifyReviewBacklog, pref(leetgrinder.NotifyReviewBacklog, 3), today, due, origin); ok {
+	if _, ok = Compose(leetgrinder.NotifyReviewBacklog, pref(leetgrinder.NotifyReviewBacklog, 3), empty, due, origin); ok {
 		t.Fatal("backlog below threshold")
 	}
 
 	// Finished work: missing and late have nothing to say.
-	done := leetgrinder.NewToday(settings, leetgrinder.State{CompletedDays: []int{10}}, nil, now)
 	for _, kind := range []string{leetgrinder.NotifyMissingWork, leetgrinder.NotifyLateEscalation} {
-		if _, ok = Compose(kind, pref(kind, 0), done, nil, origin); ok {
+		if _, ok = Compose(kind, pref(kind, 0), empty, nil, origin); ok {
 			t.Fatalf("%s sent with nothing missing", kind)
 		}
 	}

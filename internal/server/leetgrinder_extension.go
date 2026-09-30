@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/go-chi/chi/v5"
@@ -29,6 +30,7 @@ func (s *Server) registerLeetgrinderExtension(r chi.Router) {
 		r.Use(s.leetgrinderBearer)
 		r.Post("/api/leetgrinder/attempts", s.leetgrinderAPIAttempt)
 		r.Get("/api/leetgrinder/problem/{slug}", s.leetgrinderAPIProblem)
+		r.Put("/api/leetgrinder/problem/{slug}", s.leetgrinderAPIProblemMetadata)
 	})
 }
 
@@ -45,7 +47,7 @@ func (s *Server) renderTokenSettings(w http.ResponseWriter, r *http.Request, sta
 	// A settings load failure must not hide the token section: after a
 	// create it holds the only copy of the new token.
 	settings, err := s.db.LeetgrinderSettings(r.Context())
-	page := leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), Schedule: leetgrinder.NewScheduleForm(settings), APITokens: section}
+	page := leetgrinder.SettingsPage{Settings: settings, Now: s.clock(), General: leetgrinder.NewGeneralForm(settings), APITokens: section}
 	if err != nil {
 		page.Error = "Your other settings could not be loaded. Reload the page before changing them."
 	}
@@ -131,6 +133,8 @@ type leetgrinderAPIAttemptInput struct {
 	SpaceComplexity string `json:"spaceComplexity"`
 	Code            string `json:"code"`
 	CodeLanguage    string `json:"codeLanguage"`
+	// Problem is optional LeetCode metadata read by the extension.
+	Problem *leetgrinder.ProblemMetadata `json:"problem"`
 }
 
 func (s *Server) leetgrinderAPIAttempt(w http.ResponseWriter, r *http.Request) {
@@ -161,12 +165,16 @@ func (s *Server) leetgrinderAPIAttempt(w http.ResponseWriter, r *http.Request) {
 		bad("notes must be 2,000 characters or fewer.")
 		return
 	}
-	problem, ok := leetgrinder.FindProblem(input.ProblemSlug)
-	if !ok {
-		respond(w, 422, map[string]string{"error": "This problem is not in the Leetgrinder curriculum."})
+	if !leetgrinder.ValidSlug(input.ProblemSlug) {
+		bad("problemSlug must be a LeetCode problem slug.")
 		return
 	}
-	attempt := leetgrinder.Attempt{ID: input.ID, ProblemSlug: problem.Slug, Outcome: input.Outcome, Minutes: input.Minutes, Assisted: input.Assisted, Notes: input.Notes, Source: "extension", IsReview: input.IsReview != nil && *input.IsReview,
+	// Metadata is optional and the server can fetch it itself, so invalid
+	// metadata is dropped rather than failing the attempt.
+	if input.Problem != nil && (input.Problem.Normalize() != nil || input.Problem.Title == "") {
+		input.Problem = nil
+	}
+	attempt := leetgrinder.Attempt{ID: input.ID, ProblemSlug: input.ProblemSlug, Outcome: input.Outcome, Minutes: input.Minutes, Assisted: input.Assisted, Notes: input.Notes, Source: "extension", IsReview: input.IsReview != nil && *input.IsReview,
 		TimeComplexity: input.TimeComplexity, SpaceComplexity: input.SpaceComplexity, Code: input.Code, CodeLanguage: input.CodeLanguage}
 	switch err := attempt.NormalizeDetails(); {
 	case errors.Is(err, leetgrinder.ErrComplexityRequired), errors.Is(err, leetgrinder.ErrComplexityFormat):
@@ -179,7 +187,7 @@ func (s *Server) leetgrinderAPIAttempt(w http.ResponseWriter, r *http.Request) {
 		bad("code must be valid UTF-8 text with a LeetCode language, or both must be empty.")
 		return
 	}
-	saved, err := s.db.SaveLeetgrinderAttempt(r.Context(), attempt, "")
+	saved, err := s.db.SaveLeetgrinderAttemptWithProblem(r.Context(), attempt, "", input.Problem, s.clock())
 	switch {
 	case err == nil:
 		respond(w, 200, map[string]any{"attempt": saved})
@@ -192,24 +200,32 @@ func (s *Server) leetgrinderAPIAttempt(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// leetgrinderAPIProblem is what the extension learns about a problem.
 type leetgrinderAPIProblem struct {
-	Slug         string               `json:"slug"`
-	InCurriculum bool                 `json:"inCurriculum"`
-	Title        string               `json:"title,omitempty"`
-	Difficulty   string               `json:"difficulty,omitempty"`
-	Session      int                  `json:"session,omitempty"`
-	Week         int                  `json:"week,omitempty"`
-	TodaysReview bool                 `json:"todaysReview"`
-	ReviewDone   bool                 `json:"reviewDone"`
-	Latest       *leetgrinder.Attempt `json:"latestAttempt"`
-	HistoryURL   string               `json:"historyUrl,omitempty"`
+	Slug string `json:"slug"`
+	// Known reports whether the app has the problem's metadata.
+	Known      bool     `json:"known"`
+	Number     int      `json:"number,omitempty"`
+	Title      string   `json:"title,omitempty"`
+	Difficulty string   `json:"difficulty,omitempty"`
+	Topics     []string `json:"topics,omitempty"`
+	// Status is "new" (never attempted), "due" (due for review by the end of
+	// today), or "notDue".
+	Status          string               `json:"status"`
+	Recall          *float64             `json:"recall,omitempty"`
+	DueDate         string               `json:"dueDate,omitempty"`
+	TodaysPick      bool                 `json:"todaysPick"`
+	NextDue         string               `json:"nextDue,omitempty"`
+	LastAttemptedAt *time.Time           `json:"lastAttemptedAt,omitempty"`
+	AttemptedToday  bool                 `json:"attemptedToday"`
+	Latest          *leetgrinder.Attempt `json:"latestAttempt"`
+	HistoryURL      string               `json:"historyUrl"`
 }
 
 func (s *Server) leetgrinderAPIProblem(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
-	problem, ok := leetgrinder.FindProblem(slug)
-	if !ok {
-		respond(w, 200, leetgrinderAPIProblem{Slug: slug})
+	if !leetgrinder.ValidSlug(slug) {
+		respond(w, 400, map[string]string{"error": "Invalid problem slug."})
 		return
 	}
 	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
@@ -217,16 +233,16 @@ func (s *Server) leetgrinderAPIProblem(w http.ResponseWriter, r *http.Request) {
 		respond(w, 503, map[string]string{"error": "Your progress is unavailable; please retry."})
 		return
 	}
-	session := leetgrinder.ProblemDay(problem.Slug)
-	out := leetgrinderAPIProblem{Slug: problem.Slug, InCurriculum: true, Title: problem.Title, Difficulty: problem.Difficulty, Session: session, Week: leetgrinder.WeekNumber(session), HistoryURL: leetgrinder.ProblemURL(problem.Slug)}
+	problem := today.State.Problem(slug)
+	out := leetgrinderAPIProblem{Slug: slug, Known: problem.Known(), Number: problem.Number, Title: problem.Title, Difficulty: problem.Difficulty, Topics: problem.Topics, Status: "new", HistoryURL: leetgrinder.ProblemURL(slug), AttemptedToday: today.AttemptedOn(slug)}
 	for _, item := range today.Reviews {
-		if item.Problem.Slug == problem.Slug {
-			out.TodaysReview, out.ReviewDone = true, item.Done
+		if item.Problem.Slug == slug {
+			out.TodaysPick = true
 		}
 	}
 	// Attempts are loaded newest first.
 	for _, a := range today.State.Attempts {
-		if a.ProblemSlug == problem.Slug {
+		if a.ProblemSlug == slug {
 			latest := a
 			// The extension never needs the code back; keep the reply small.
 			latest.Code = ""
@@ -234,5 +250,46 @@ func (s *Server) leetgrinderAPIProblem(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
+	loc := today.Settings.Location()
+	for _, card := range today.Cards() {
+		if card.Problem.Slug != slug {
+			continue
+		}
+		recall := card.Retrievability(today.Now)
+		due := leetgrinder.Date(card.Due, loc).Format(time.DateOnly)
+		last := card.Last.CreatedAt
+		out.Recall, out.LastAttemptedAt = &recall, &last
+		if card.Due.Before(leetgrinder.EndOfDate(today.Date, loc)) || out.TodaysPick {
+			out.Status, out.DueDate = "due", due
+		} else {
+			out.Status, out.NextDue = "notDue", due
+		}
+	}
 	respond(w, 200, out)
+}
+
+// leetgrinderAPIProblemMetadata stores metadata the extension read from
+// LeetCode. Curated optimal values are never touched.
+func (s *Server) leetgrinderAPIProblemMetadata(w http.ResponseWriter, r *http.Request) {
+	if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
+		respond(w, 415, map[string]string{"error": "application/json required"})
+		return
+	}
+	slug := chi.URLParam(r, "slug")
+	var input leetgrinder.ProblemMetadata
+	if !decode(w, r, 16<<10, &input) {
+		return
+	}
+	if !leetgrinder.ValidSlug(slug) || input.Normalize() != nil || input.Title == "" {
+		respond(w, 400, map[string]string{"error": "Send a valid slug, number, title, difficulty, and at most 20 topics."})
+		return
+	}
+	switch err := s.db.SaveLeetgrinderMetadata(r.Context(), slug, input, s.clock()); {
+	case err == nil:
+		w.WriteHeader(http.StatusNoContent)
+	case errors.Is(err, database.ErrInvalid):
+		respond(w, 400, map[string]string{"error": "Send a valid slug, number, title, difficulty, and at most 20 topics."})
+	default:
+		respond(w, 503, map[string]string{"error": "The problem could not be saved; please retry."})
+	}
 }

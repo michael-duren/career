@@ -29,6 +29,12 @@
   const CODE_LANGUAGE = /^[A-Za-z0-9_+#.-]{1,32}$/;
   const SUBMISSION_ID = /^[0-9]{1,20}$/;
   const MAX_STATUS = 64;
+  // Problem metadata limits mirror internal/leetgrinder/catalog.go.
+  const MAX_TITLE = 200;
+  const MAX_TOPICS = 20;
+  const MAX_TOPIC = 60;
+  const MAX_NUMBER = 100000;
+  const DIFFICULTIES = ["", "Easy", "Medium", "Hard"];
   const LANGUAGE_LABELS = {
     c: "C",
     cpp: "C++",
@@ -101,6 +107,46 @@
     return n < 1024 ? `${n} B` : `${(n / 1024).toFixed(1)} KB`;
   }
 
+  // cleanMetadata returns {number, title, difficulty, topics:[{slug,name}]}
+  // with only valid, bounded values, or null when the shape is wrong. The
+  // app validates the same rules again.
+  function cleanMetadata(m) {
+    if (!m || typeof m !== "object" || Array.isArray(m)) return null;
+    const title = typeof m.title === "string" ? m.title.trim() : "";
+    const number = m.number === undefined ? 0 : m.number;
+    const difficulty = m.difficulty === undefined ? "" : m.difficulty;
+    if (!Number.isInteger(number) || number < 0 || number > MAX_NUMBER) return null;
+    if ([...title].length > MAX_TITLE || CONTROL.test(title)) return null;
+    if (!DIFFICULTIES.includes(difficulty)) return null;
+    const topics = [];
+    const seen = new Set();
+    for (const t of Array.isArray(m.topics) ? m.topics : []) {
+      if (!t || typeof t.slug !== "string" || typeof t.name !== "string") return null;
+      const name = t.name.trim();
+      if (!SLUG.test(t.slug) || t.slug.length > MAX_TOPIC || [...name].length > MAX_TOPIC || CONTROL.test(name)) return null;
+      if (!seen.has(t.slug)) {
+        seen.add(t.slug);
+        topics.push({ slug: t.slug, name });
+      }
+    }
+    if (topics.length > MAX_TOPICS) return null;
+    return { number, title, difficulty, topics };
+  }
+
+  // metadataFromGraphQL reads LeetCode's question(titleSlug) response, or
+  // returns null when it names no problem or has an unexpected shape.
+  function metadataFromGraphQL(json) {
+    const q = json && json.data && json.data.question;
+    if (!q || typeof q !== "object") return null;
+    const id = /^[0-9]{1,6}$/.test(String(q.questionFrontendId || "")) ? Number(q.questionFrontendId) : 0;
+    const topics = Array.isArray(q.topicTags) ? q.topicTags.map((t) => ({ slug: t && t.slug, name: t && t.name })) : [];
+    const m = cleanMetadata({ number: id, title: q.title, difficulty: q.difficulty, topics });
+    return m && m.title ? m : null;
+  }
+
+  // GRAPHQL_QUERY asks LeetCode for one problem's metadata.
+  const GRAPHQL_QUERY = "query questionData($titleSlug: String!) { question(titleSlug: $titleSlug) { questionFrontendId title difficulty topicTags { slug name } } }";
+
   // attemptProblem explains why an attempt cannot be sent, or returns "".
   function attemptProblem(a) {
     if (!a || typeof a !== "object") return "Invalid attempt.";
@@ -115,6 +161,7 @@
     if (time === null || space === null) return "Write complexity like O(m·n): start with O( and end with ), in 40 characters or fewer.";
     if (needsComplexity(a.outcome) && (time === "" || space === "")) return "Choose the time and space complexity. Both are required for solved and struggled attempts.";
     if (!validCode(a.code, a.codeLanguage)) return "The captured code is invalid or over 64 KB. Leave it out and try again.";
+    if (a.problem !== undefined && !cleanMetadata(a.problem)) return "Invalid problem details.";
     return "";
   }
 
@@ -139,6 +186,8 @@
       code: "",
       codeLanguage: "",
     };
+    const meta = cleanMetadata(fields.problem);
+    if (meta) a.problem = meta;
     if (includeCode && capture && capture.slug === fields.problemSlug) {
       const withCode = { ...a, code: capture.code, codeLanguage: capture.lang };
       if (!bodyTooLarge(withCode)) return withCode;
@@ -230,7 +279,9 @@
       code: text(a.code),
       codeLanguage: text(a.codeLanguage),
     };
+    if (a.problem !== undefined) out.problem = a.problem;
     if (attemptProblem(out)) return null;
+    if (out.problem !== undefined) out.problem = cleanMetadata(out.problem);
     out.timeComplexity = normalizeComplexity(out.timeComplexity);
     out.spaceComplexity = normalizeComplexity(out.spaceComplexity);
     return bodyTooLarge(out) ? null : out;
@@ -248,7 +299,7 @@
       case 413:
         return "The attempt is too large to save. Leave the code out and try again.";
       case 422:
-        return error || "This problem is not in the Leetgrinder curriculum.";
+        return error || "The app could not accept this attempt.";
       default:
         return error || `The app answered with status ${status}.`;
     }
@@ -281,6 +332,9 @@
     formatBytes,
     attemptProblem,
     buildAttempt,
+    cleanMetadata,
+    metadataFromGraphQL,
+    GRAPHQL_QUERY,
     validSlug: (s) => typeof s === "string" && SLUG.test(s) && s.length <= 100,
   };
   root.LeetgrinderLib = lib;

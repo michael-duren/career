@@ -10,9 +10,9 @@
   const lib = globalThis.LeetgrinderLib;
   const DETECT_SOURCE = "leetgrinder-detect";
 
-  // current is the problem on screen: {slug, lookup: Promise<lookup>}.
-  // A lookup is {status: "in", info} for curriculum problems, {status: "out"}
-  // for others, or {status: "error", error} when the app could not answer.
+  // current is the problem on screen: {slug, lookup: Promise<lookup>, meta}.
+  // A lookup is {status: "ok", info} or {status: "error", error} when the
+  // app could not answer. meta is the problem's LeetCode metadata once read.
   let current = null;
   let lastPath = "";
   // ui is the mounted panel: {host, root, locked}. A locked panel holds an
@@ -45,7 +45,35 @@
   async function lookup(slug) {
     const res = await send({ type: "problem", slug });
     if (!res.ok || !res.data) return { status: "error", error: res.error || lib.describeStatus(res.status, "") };
-    return res.data.inCurriculum ? { status: "in", info: res.data } : { status: "out" };
+    return { status: "ok", info: res.data };
+  }
+
+  // readMetadata asks LeetCode's GraphQL API, same-origin, about the problem.
+  // It resolves to cleaned metadata or null and never rejects.
+  async function readMetadata(slug) {
+    try {
+      // Absolute: Firefox resolves relative content-script URLs against the extension.
+      const res = await fetch(location.origin + "/graphql", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ operationName: "questionData", query: lib.GRAPHQL_QUERY, variables: { titleSlug: slug } }),
+        credentials: "same-origin",
+      });
+      return res.ok ? lib.metadataFromGraphQL(await res.json()) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  // describe sends LeetCode's metadata to the app when it lacks the title or
+  // topics, and keeps it to attach to attempts.
+  async function describe(state, info) {
+    if (state.meta !== undefined || (info.known && Array.isArray(info.topics) && info.topics.length > 0)) return;
+    state.meta = null;
+    const meta = await readMetadata(state.slug);
+    if (!meta || current !== state) return;
+    state.meta = meta;
+    await send({ type: "metadata", slug: state.slug, metadata: meta });
   }
 
   const busy = () => Boolean(ui && ui.locked);
@@ -64,9 +92,9 @@
     }
     const state = current;
     const found = await state.lookup;
-    // Problems outside the curriculum get no timer and no panel. When the app
-    // is unreachable the timer still starts, so the minutes stay right.
-    if (found.status === "out" || current !== state) return;
+    // When the app is unreachable the timer still starts, so the minutes stay right.
+    if (current !== state) return;
+    if (found.status === "ok") describe(state, found.info);
     await send({ type: "timer:get", slug });
     if (lib.isAssistPath(path)) await send({ type: "timer:update", slug, patch: { assisted: true } });
   }
@@ -86,14 +114,15 @@
     if (found.status === "error" && current === state && !ui) {
       state.lookup = lookup(state.slug);
       found = await state.lookup;
+      if (found.status === "ok" && current === state) describe(state, found.info);
     }
-    if (found.status === "out" || current !== state) return;
+    if (current !== state) return;
     const res = await send({ type: "timer:get", slug: state.slug });
-    if (found.status !== "in" || !res.ok || !lib.shouldNudge(res.data, Date.now()) || ui || current !== state) return;
+    if (found.status !== "ok" || !res.ok || !lib.shouldNudge(res.data, Date.now()) || ui || current !== state) return;
     await send({ type: "timer:update", slug: state.slug, patch: { nudged: true } });
     // An Accepted panel may have opened while the update was in flight.
     if (ui || current !== state) return;
-    showNudge(state.slug, found.info);
+    showNudge(state, found.info);
   }
 
   async function onAccepted(submissionId) {
@@ -102,7 +131,8 @@
     // Refresh so review status reflects anything logged since page load.
     state.lookup = lookup(state.slug);
     const found = await state.lookup;
-    if (found.status === "out" || current !== state || busy()) return;
+    if (current !== state || busy()) return;
+    if (found.status === "ok") describe(state, found.info);
     // Accepted ends the nudge window even if the panel is dismissed or the
     // app is unreachable.
     const res = await send({ type: "timer:update", slug: state.slug, patch: { nudged: true } });
@@ -113,7 +143,7 @@
     }
     const timer = res.ok ? res.data : { startedAt: Date.now(), assisted: false };
     const minutes = lib.elapsedMinutes(timer.startedAt, Date.now());
-    showPanel(state.slug, found.info, { outcome: lib.inferOutcome(minutes), minutes, assisted: Boolean(timer.assisted) }, captureFor(state.slug, submissionId));
+    showPanel(state, found.info, { outcome: lib.inferOutcome(minutes), minutes, assisted: Boolean(timer.assisted) }, captureFor(state.slug, submissionId));
   }
 
   window.addEventListener("message", (event) => {
@@ -200,26 +230,28 @@
     ui = null;
   }
 
-  function heading(info) {
-    const title = el("h2", { text: info.title });
-    if (info.todaysReview) title.append(el("span", { className: "badge", text: "Today's review" }));
-    const where = el("p", { className: "muted", text: `Leetgrinder · Session ${info.session} · Week ${info.week}` });
+  function heading(state, info) {
+    const title = el("h2", { text: info.title || (state.meta && state.meta.title) || state.slug });
+    const label = info.todaysPick ? "Today's review" : info.status === "due" ? "Review due" : info.status === "new" ? "New" : "";
+    if (label) title.append(el("span", { className: "badge", text: label }));
+    const where = el("p", { className: "muted", text: "Leetgrinder" });
     return [title, where];
   }
 
-  function showNudge(slug, info) {
+  function showNudge(state, info) {
+    const slug = state.slug;
     const root = mount();
     const unfinished = el("button", { type: "button", className: "primary", text: "Log as unfinished" });
     const later = el("button", { type: "button", text: "Keep going" });
     unfinished.addEventListener("click", async () => {
       const res = await send({ type: "timer:get", slug });
       const minutes = lib.elapsedMinutes(res.ok ? res.data.startedAt : Date.now(), Date.now());
-      showPanel(slug, info, { outcome: "unfinished", minutes, assisted: Boolean(res.ok && res.data.assisted) }, captureFor(slug));
+      showPanel(state, info, { outcome: "unfinished", minutes, assisted: Boolean(res.ok && res.data.assisted) }, captureFor(slug));
     });
     later.addEventListener("click", closeUI);
     root.append(
       el("section", { className: "box", role: "dialog", "aria-label": "Leetgrinder time check" }, [
-        ...heading(info),
+        ...heading(state, info),
         el("p", { text: `${lib.NUDGE_MINUTES} minutes on this problem. Log it as unfinished and look at a hint, or keep going.` }),
         el("div", { className: "actions" }, [later, unfinished]),
       ]),
@@ -249,7 +281,8 @@
     };
   }
 
-  function showPanel(slug, info, prefill, captured) {
+  function showPanel(state, info, prefill, captured) {
+    const slug = state.slug;
     const root = mount();
     // One id per panel: retries of the same entry are idempotent on the server.
     const id = crypto.randomUUID();
@@ -261,7 +294,7 @@
     outcome.value = prefill.outcome;
     const minutes = el("input", { type: "number", name: "minutes", min: 1, max: lib.MAX_MINUTES, step: 1, required: true, value: String(prefill.minutes) });
     const assisted = el("input", { type: "checkbox", name: "assisted", checked: prefill.assisted });
-    const review = el("input", { type: "checkbox", name: "review", checked: Boolean(info.todaysReview && !info.reviewDone) });
+    const review = el("input", { type: "checkbox", name: "review", checked: Boolean(info.todaysPick && !info.attemptedToday) });
     const notes = el("textarea", { name: "notes", maxLength: lib.MAX_NOTES, placeholder: "What to remember next time" });
     const status = el("p", { className: "status", role: "status" });
     const submit = el("button", { type: "submit", className: "primary", text: "Log attempt" });
@@ -284,13 +317,13 @@
     let locked = null;
 
     const form = el("form", { className: "box", "aria-label": "Log this attempt to Leetgrinder" }, [
-      ...heading(info),
+      ...heading(state, info),
       el("div", { className: "row" }, [el("label", {}, ["Outcome", outcome]), el("label", {}, ["Minutes", minutes])]),
       el("div", { className: "row" }, [time.node, space.node]),
       required,
       ...codeRow,
       el("label", { className: "check" }, [assisted, "Used a hint or solution"]),
-      ...(info.todaysReview ? [el("label", { className: "check" }, [review, "Count as today's review"])] : []),
+      ...(info.todaysPick ? [el("label", { className: "check" }, [review, "Count as today's review"])] : []),
       el("label", {}, ["Notes", notes]),
       el("div", { className: "actions" }, [dismiss, submit]),
       status,
@@ -313,7 +346,8 @@
             minutes: Number(minutes.value),
             assisted: assisted.checked,
             notes: notes.value,
-            isReview: Boolean(info.todaysReview && review.checked),
+            isReview: Boolean(info.todaysPick && review.checked),
+            problem: state.meta || undefined,
             timeComplexity: time.value(),
             spaceComplexity: space.value(),
           },

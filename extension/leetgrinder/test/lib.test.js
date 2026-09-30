@@ -123,3 +123,48 @@ test("cleanAttempt", () => {
   assert.ok(lib.cleanAttempt({ ...good, notes: "🙂".repeat(2000) }));
   assert.equal(lib.cleanAttempt(null), null);
 });
+
+test("cleanMetadata", () => {
+  const good = { number: 1, title: " Two Sum ", difficulty: "Easy", topics: [{ slug: "array", name: "Array" }, { slug: "array", name: "Array" }, { slug: "hash-table", name: "Hash Table" }] };
+  assert.deepEqual(lib.cleanMetadata(good), { number: 1, title: "Two Sum", difficulty: "Easy", topics: [{ slug: "array", name: "Array" }, { slug: "hash-table", name: "Hash Table" }] });
+  assert.deepEqual(lib.cleanMetadata({}), { number: 0, title: "", difficulty: "", topics: [] });
+  for (const bad of [
+    null,
+    [],
+    { number: -1 },
+    { number: 1.5 },
+    { number: 100001 },
+    { difficulty: "easy" },
+    { title: "x".repeat(201) },
+    { title: "a\u0000b" },
+    { topics: [{ slug: "Bad Slug", name: "x" }] },
+    { topics: [{ slug: "array" }] },
+    { topics: Array.from({ length: 21 }, (_, i) => ({ slug: `t${i}`, name: "T" })) },
+  ]) {
+    assert.equal(lib.cleanMetadata(bad), null, JSON.stringify(bad));
+  }
+});
+
+test("metadataFromGraphQL", () => {
+  const json = { data: { question: { questionFrontendId: "146", title: "LRU Cache", difficulty: "Medium", topicTags: [{ slug: "design", name: "Design" }] } } };
+  assert.deepEqual(lib.metadataFromGraphQL(json), { number: 146, title: "LRU Cache", difficulty: "Medium", topics: [{ slug: "design", name: "Design" }] });
+  // Non-numeric ids (contest problems) leave the number unknown.
+  json.data.question.questionFrontendId = "LCP 01";
+  assert.equal(lib.metadataFromGraphQL(json).number, 0);
+  assert.equal(lib.metadataFromGraphQL({ data: { question: null } }), null);
+  assert.equal(lib.metadataFromGraphQL({ errors: [] }), null);
+  assert.equal(lib.metadataFromGraphQL({ data: { question: { title: "", difficulty: "Easy" } } }), null);
+  assert.ok(lib.GRAPHQL_QUERY.includes("topicTags"));
+});
+
+test("attempts carry optional problem metadata", () => {
+  const fields = { id: "3f2504e0-4f89-41d3-9a0c-0305e82c3301", problemSlug: "lru-cache", outcome: "unfinished", minutes: 30, assisted: false, notes: "", isReview: false, timeComplexity: "", spaceComplexity: "" };
+  const withMeta = lib.buildAttempt({ ...fields, problem: { number: 146, title: "LRU Cache", difficulty: "Medium", topics: [] } }, null, false);
+  assert.equal(withMeta.problem.title, "LRU Cache");
+  assert.equal(lib.cleanAttempt(withMeta).problem.number, 146);
+  assert.equal(lib.buildAttempt(fields, null, false).problem, undefined);
+  assert.equal(lib.cleanAttempt(lib.buildAttempt(fields, null, false)).problem, undefined);
+  assert.equal(lib.cleanAttempt({ ...lib.buildAttempt(fields, null, false), problem: { difficulty: "Trivial" } }), null);
+  // Invalid metadata is left off rather than blocking the attempt.
+  assert.equal(lib.buildAttempt({ ...fields, problem: { number: -1 } }, null, false).problem, undefined);
+});
