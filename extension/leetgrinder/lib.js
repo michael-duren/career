@@ -305,6 +305,96 @@
     }
   }
 
+  // ---- Badge, banner and popup (pure, so they can be tested) -------------
+
+  const OUTCOME_LABELS = { solved: "Solved", struggled: "Struggled", unfinished: "Unfinished" };
+  const KIND_LABELS = { new: "New", review: "Review", practice: "Practice" };
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  function kindLabel(kind) {
+    return Object.prototype.hasOwnProperty.call(KIND_LABELS, kind) ? KIND_LABELS[kind] : "";
+  }
+
+  function percent(f) {
+    return `${Math.round((Number(f) || 0) * 100)}%`;
+  }
+
+  // shortDate turns "2026-10-14" into "Oct 14".
+  function shortDate(iso) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ""));
+    return m ? `${MONTHS[Number(m[2]) - 1]} ${Number(m[3])}` : "";
+  }
+
+  // daysAgo counts whole days between an ISO instant and now, both in local time.
+  function daysAgo(iso, now) {
+    const then = new Date(iso);
+    if (Number.isNaN(then.getTime())) return null;
+    const start = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    return Math.max(0, Math.round((start(new Date(now)) - start(then)) / 86400000));
+  }
+
+  // badgeState is the toolbar badge for a /today response, or for an error
+  // when today is null.
+  function badgeState(today) {
+    if (!today || typeof today !== "object") {
+      return { text: "?", color: "#71717a", title: "Leetgrinder: not connected. Check the extension options." };
+    }
+    if (today.met) return { text: "✓", color: "#16a34a", title: "Leetgrinder: today's goal is met." };
+    const n = Math.max(0, Number(today.remaining) || 0);
+    return { text: String(n), color: "#2563eb", title: `Leetgrinder: ${n} left for today's goal.` };
+  }
+
+  // bannerState is the on-page pill for a problem status response.
+  function bannerState(info, now) {
+    if (!info || typeof info !== "object") return null;
+    let label;
+    if (info.todaysPick && info.attemptedToday) label = "Today's review · done";
+    else if (info.todaysPick) label = "Today's review";
+    else if (info.status === "due" && info.flagReason) label = info.flagReason;
+    else if (info.status === "due") label = `Review due · recall ${percent(info.recall)}`;
+    else if (info.status === "notDue") {
+      const days = daysAgo(info.lastAttemptedAt, now);
+      const when = days === null ? "Reviewed" : days === 0 ? "Reviewed today" : `Reviewed ${days} d ago`;
+      label = info.nextDue ? `${when} · next due ${shortDate(info.nextDue)}` : when;
+    } else label = "New";
+    return { label, summary: attemptSummary(info.latestAttempt) };
+  }
+
+  // attemptSummary reads "Struggled · 32 min · O(n log n)/O(n)".
+  function attemptSummary(a) {
+    if (!a || typeof a !== "object") return "";
+    const parts = [OUTCOME_LABELS[a.outcome] || "Attempt"];
+    if (Number.isInteger(a.minutes)) parts.push(`${a.minutes} min`);
+    if (a.timeComplexity || a.spaceComplexity) parts.push(`${a.timeComplexity || "?"}/${a.spaceComplexity || "?"}`);
+    return parts.join(" · ");
+  }
+
+  // popupModel shapes a /today response for the popup: progress lines, the
+  // picks and the first ten due problems with LeetCode links.
+  function popupModel(today, origin) {
+    const item = (r) => ({
+      title: String(r.title || r.slug),
+      url: `https://leetcode.com/problems/${encodeURIComponent(r.slug)}/`,
+      reason: String(r.reason || ""),
+      done: Boolean(r.done),
+    });
+    const goal = today.goal || {};
+    const done = today.done || {};
+    return {
+      status: today.met ? "Goal met" : `${Number(today.remaining) || 0} to go`,
+      progress: [`New ${done.new || 0}/${goal.new || 0}`, `Review ${done.review || 0}/${goal.review || 0}`, `Bonus ${done.bonus || 0}`],
+      streak: `Streak ${today.streak || 0} ${today.streak === 1 ? "day" : "days"}`,
+      picks: (Array.isArray(today.picks) ? today.picks : []).filter((r) => r && validSlug(r.slug)).map(item),
+      due: (Array.isArray(today.due) ? today.due : []).filter((r) => r && validSlug(r.slug)).slice(0, 10).map(item),
+      dueCount: Number(today.dueCount) || 0,
+      dashboard: origin ? `${origin}/leetgrinder` : "",
+    };
+  }
+
+  function validSlug(s) {
+    return typeof s === "string" && SLUG.test(s) && s.length <= 100;
+  }
+
   const lib = {
     NUDGE_MINUTES,
     MAX_MINUTES,
@@ -335,7 +425,14 @@
     cleanMetadata,
     metadataFromGraphQL,
     GRAPHQL_QUERY,
-    validSlug: (s) => typeof s === "string" && SLUG.test(s) && s.length <= 100,
+    validSlug,
+    kindLabel,
+    shortDate,
+    daysAgo,
+    badgeState,
+    bannerState,
+    attemptSummary,
+    popupModel,
   };
   root.LeetgrinderLib = lib;
   if (typeof module === "object" && module.exports) module.exports = lib;

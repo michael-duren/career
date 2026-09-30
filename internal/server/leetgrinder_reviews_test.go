@@ -188,6 +188,11 @@ func TestLeetgrinderTodayAPIAndKinds(t *testing.T) {
 		Due      []struct{ Slug string }
 		DueCount int
 	}
+	for slug, kind := range map[string]string{"never-tried": "new", "two-sum": "review", "valid-anagram": "review"} {
+		if w := api("GET", "/api/leetgrinder/problem/"+slug, nil); !strings.Contains(w.Body.String(), `"todayKind":"`+kind+`"`) {
+			t.Errorf("%s: %s", slug, w.Body.String())
+		}
+	}
 	w := api("GET", "/api/leetgrinder/today", nil)
 	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &today) != nil {
 		t.Fatalf("today: %d %s", w.Code, w.Body.String())
@@ -217,7 +222,7 @@ func TestLeetgrinderTodayAPIAndKinds(t *testing.T) {
 	if json.Unmarshal(w.Body.Bytes(), &today) != nil || today.Done.New != 1 || today.Done.Review != 1 || today.Remaining != 1 || !today.Picks[0].Done {
 		t.Fatalf("after attempts: %s", w.Body.String())
 	}
-	if w = api("GET", "/api/leetgrinder/problem/"+pick, nil); !strings.Contains(w.Body.String(), `"todaysPick":true`) || !strings.Contains(w.Body.String(), `"attemptedToday":true`) {
+	if w = api("GET", "/api/leetgrinder/problem/"+pick, nil); !strings.Contains(w.Body.String(), `"todaysPick":true`) || !strings.Contains(w.Body.String(), `"attemptedToday":true`) || !strings.Contains(w.Body.String(), `"todayKind":"review"`) {
 		t.Fatalf("pick status: %s", w.Body.String())
 	}
 }

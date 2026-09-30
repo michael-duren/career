@@ -27,6 +27,7 @@ templ layout(title string, active string) {
 						@navLink("/leetgrinder", "Dashboard", "dashboard", active)
 						@navLink("/leetgrinder/problems", "Problems", "problems", active)
 						@navLink("/leetgrinder/reviews", "Reviews", "reviews", active)
+						@navLink("/leetgrinder/stats", "Stats", "stats", active)
 						@navLink("/leetgrinder/settings", "Settings", "settings", active)
 					</div>
 					<a class="sidenav-foot" href="/leetgrinder/export">
@@ -67,6 +68,8 @@ templ icon(name string) {
 				<path d="M3 5h.01"></path><path d="M3 12h.01"></path><path d="M3 19h.01"></path><path d="M8 5h13"></path><path d="M8 12h13"></path><path d="M8 19h13"></path>
 			case "reviews":
 				<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path>
+			case "stats":
+				<path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path>
 			case "settings":
 				<path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle>
 			case "download":
@@ -792,6 +795,95 @@ templ Unavailable(message string) {
 				{ message }
 			</p>
 			<p><a href="/leetgrinder">Try again</a></p>
+		</section>
+	}
+}
+
+templ Stats(page StatsPage) {
+	@layout("Stats", "stats") {
+		<p class="eyebrow">STATS</p>
+		<h1>Stats</h1>
+		<p class="lead">Where recall is weakest, by LeetCode topic, with your difficulty mix and goal calendar.</p>
+		<section class="queue" aria-labelledby="topics-title">
+			<div class="section-heading">
+				<h2 id="topics-title">Topics</h2>
+				<form class="problem-filters" method="get" action="/leetgrinder/stats" aria-label="Sort topics">
+					<label>
+						Sort
+						<select name="sort">
+							for _, s := range StatSortOptions() {
+								<option value={ s.Key } selected?={ page.Filter.Sort == s.Key }>{ s.Label }</option>
+							}
+						</select>
+					</label>
+					<label class="checkbox"><input type="checkbox" name="all" value="1" checked?={ page.Filter.All }/>List topics with fewer than 3 problems</label>
+					<div class="filter-actions"><button class="button primary" type="submit">Apply</button></div>
+				</form>
+			</div>
+			if len(page.Topics) == 0 {
+				<p class="muted">Log attempts to see how each topic is going.</p>
+			} else {
+				<div class="table-scroll">
+					<table>
+						<caption class="visually-hidden">Topics, weakest recall first by default</caption>
+						<thead><tr><th scope="col">Topic</th><th scope="col">Problems</th><th scope="col">Solved</th><th scope="col">Struggle rate</th><th scope="col">Average recall</th><th scope="col">Due</th></tr></thead>
+						<tbody>
+							for _, t := range page.Topics {
+								<tr>
+									<th scope="row">
+										if t.Key == "other" {
+											{ t.Label }
+										} else {
+											<a href={ templ.SafeURL("/leetgrinder/problems?topic=" + t.Key) }>{ t.Label }</a>
+										}
+									</th>
+									<td class="num">{ Count(t.Problems) }</td>
+									<td class="num">{ Count(t.Solved) }</td>
+									<td class="num">{ Percent(t.StruggleRate()) }</td>
+									<td class="num">{ Percent(t.Recall()) }</td>
+									<td class="num">{ Count(t.Due) }</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+				<p class="small muted">Struggle rate counts attempts that struggled, stayed unfinished, or used help. A problem counts under each of its topics; topics with fewer than 3 problems are grouped under Other.</p>
+			}
+		</section>
+		<section class="queue" aria-labelledby="difficulty-title">
+			<h2 id="difficulty-title">Difficulty mix</h2>
+			<div class="table-scroll">
+				<table>
+					<thead><tr><th scope="col">Difficulty</th><th scope="col">Attempted</th><th scope="col">Solved</th></tr></thead>
+					<tbody>
+						for _, d := range page.Difficulties {
+							<tr>
+								<th scope="row">{ DifficultyLabel(d.Difficulty) }</th>
+								<td class="num">{ Count(d.Attempted) }</td>
+								<td class="num">{ Count(d.Solved) }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</section>
+		<section aria-labelledby="calendar-title">
+			<h2 id="calendar-title">Goal calendar</h2>
+			<p class="small muted">The last { Count(len(page.Calendar)) } weeks. <span class="cal-key cal-met"></span> goal met · <span class="cal-key cal-active"></span> practised · <span class="cal-key"></span> no attempts</p>
+			<table class="goal-calendar">
+				<caption class="visually-hidden">Goal-met days by week</caption>
+				<thead><tr><th scope="col"><span class="visually-hidden">Week of</span></th><th scope="col">Mon</th><th scope="col">Tue</th><th scope="col">Wed</th><th scope="col">Thu</th><th scope="col">Fri</th><th scope="col">Sat</th><th scope="col">Sun</th></tr></thead>
+				<tbody>
+					for _, week := range page.Calendar {
+						<tr>
+							<th scope="row" class="small muted">{ week[0].Date.Format("2 Jan") }</th>
+							for _, d := range week {
+								<td class={ CalendarClass(d) } title={ CalendarTitle(d) }><span class="visually-hidden">{ CalendarTitle(d) }</span></td>
+							}
+						</tr>
+					}
+				</tbody>
+			</table>
 		</section>
 	}
 }
