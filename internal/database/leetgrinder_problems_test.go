@@ -134,6 +134,19 @@ func TestLeetgrinderMetadataPrecedence(t *testing.T) {
 	if p, _ = s.LeetgrinderProblem(ctx, "lru-cache"); p.Title != "LRU Cache" || p.Number != 146 || p.MetadataSource != "extension" || p.Fetching() {
 		t.Fatalf("attempt metadata: %+v", p)
 	}
+	// Metadata without topics (from NeetCode) keeps the title but leaves the
+	// row for the fetcher to add LeetCode's topics.
+	d := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "concatenation-of-array", Outcome: "unfinished", Minutes: 5, Source: "extension"}
+	concat := &leetgrinder.ProblemMetadata{Number: 1929, Title: "Concatenation of Array", Difficulty: "Easy"}
+	if _, err := s.SaveLeetgrinderAttemptWithProblem(ctx, d, "", concat, now); err != nil {
+		t.Fatal(err)
+	}
+	if p, _ = s.LeetgrinderProblem(ctx, "concatenation-of-array"); p.Title != "Concatenation of Array" || p.Number != 1929 {
+		t.Fatalf("topic-less metadata: %+v", p)
+	}
+	if slug, ok, err := s.NextLeetgrinderFetch(ctx, now); err != nil || !ok || slug != "concatenation-of-array" {
+		t.Fatalf("topic-less row not fetched: %q %v %v", slug, ok, err)
+	}
 	// Invalid metadata rejects the whole attempt.
 	b := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "lfu-cache", Outcome: "unfinished", Minutes: 30, Source: "extension"}
 	if _, err := s.SaveLeetgrinderAttemptWithProblem(ctx, b, "", &leetgrinder.ProblemMetadata{Number: -1}, now); !errors.Is(err, ErrInvalid) {

@@ -109,4 +109,7 @@ test("detector ignores runs, failures and other calls", () => {
   submit(FakeXHR, "https://evil.example/api/executeCodeFunctionHttp", sent, { data: { status: { description: "Accepted" } } });
   submit(FakeXHR, "/api/executeCodeFunctionHttp", { problemId: 1, rawCode: "x", lang: "python" }, { data: { status: { description: "Accepted" } } });
   assert.equal(posted.length, 1);
+  // "Accepted" with failing test cases is not a pass.
+  submit(FakeXHR, "/api/executeCodeFunctionHttp", sent, { data: { status: { description: "Accepted" }, test_case_count: 32, correct_test_case_count: 31 } });
+  assert.deepEqual(posted.slice(1).map((p) => p.msg.type), ["submission"]);
 });

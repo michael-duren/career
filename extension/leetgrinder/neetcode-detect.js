@@ -41,10 +41,13 @@
     const result = response && (response.data || response.result);
     const status = result && result.status && typeof result.status.description === "string" ? result.status.description.slice(0, 64) : "";
     if (!status) return;
+    // Belt and braces: a pass must also pass every test case it reports.
+    const counts = Number.isInteger(result.test_case_count) && Number.isInteger(result.correct_test_case_count);
+    const passed = status === "Accepted" && (!counts || result.correct_test_case_count === result.test_case_count);
     sequence = (sequence + 1) % 1000;
     const id = `${Date.now()}${String(sequence).padStart(3, "0")}`;
     window.postMessage({ source: SOURCE, type: "submission", slug: sent.problemId, submissionId: id, status, lang: sent.lang, code: sent.rawCode }, window.location.origin);
-    if (status === "Accepted") {
+    if (passed) {
       window.postMessage({ source: SOURCE, type: "accepted", submissionId: `submission-${id}`, via: "network" }, window.location.origin);
     }
   }
