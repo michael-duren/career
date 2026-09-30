@@ -220,3 +220,19 @@ func TestGoalWithNothingDue(t *testing.T) {
 		t.Fatalf("KindOf %s", k)
 	}
 }
+
+func TestZeroTargetsNeedAnAttempt(t *testing.T) {
+	now := time.Date(2026, 10, 10, 18, 0, 0, 0, time.UTC)
+	settings := DefaultSettings()
+	settings.Timezone = "UTC"
+	date := Date(now, time.UTC)
+	state := State{Problems: testProblems, Goals: map[time.Time]DailyGoal{date: {New: 0, Review: 1}}}
+	today := NewToday(settings, state, now)
+	if today.Progress.Met() || today.Progress.Remaining() != 1 || today.Streaks.Current != 0 {
+		t.Fatalf("empty day: met %v remaining %d", today.Progress.Met(), today.Progress.Remaining())
+	}
+	state.Attempts = []Attempt{attempt("two-sum", "unfinished", 10, false, now.Add(-time.Hour))}
+	if today = NewToday(settings, state, now); !today.Progress.Met() || today.Progress.Remaining() != 0 || today.Streaks.Current != 1 || today.Progress.Target() != (DailyGoal{}) {
+		t.Fatalf("one attempt: met %v target %+v", today.Progress.Met(), today.Progress.Target())
+	}
+}

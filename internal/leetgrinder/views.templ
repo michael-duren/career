@@ -154,7 +154,7 @@ templ logAttemptForm(ref string, message string) {
 templ goalCard(today Today) {
 	<section class="panel goal-card" aria-labelledby="goal-title">
 		<div>
-			<p class="eyebrow">TODAY'S GOAL · { GoalLabel(today.Goal) }</p>
+			<p class="eyebrow">TODAY'S GOAL · { GoalLabel(today.Progress.Target()) }</p>
 			<h2 id="goal-title">
 				if today.Progress.Met() {
 					Goal met

@@ -15,7 +15,7 @@ func Compose(kind string, pref leetgrinder.NotificationPref, today leetgrinder.T
 	switch kind {
 	case leetgrinder.NotifyMorningPlan:
 		m.Title, m.Tags = "Leetgrinder: today's plan", []string{"sunrise"}
-		lines := []string{"Goal: " + leetgrinder.GoalLabel(today.Goal)}
+		lines := []string{"Goal: " + leetgrinder.GoalLabel(today.Progress.Target())}
 		for _, r := range today.Reviews {
 			lines = append(lines, "Review: "+r.Problem.DisplayTitle())
 		}

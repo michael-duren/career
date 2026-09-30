@@ -340,7 +340,8 @@ func (s *Server) leetgrinderAPIToday(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	loc := today.Settings.Location()
-	out := leetgrinderAPIToday{Date: today.Date.Format(time.DateOnly), Goal: today.Goal, Met: today.Progress.Met(), Remaining: today.Progress.Remaining(), Streak: today.Streaks.Current, Picks: []leetgrinderAPIReview{}, Due: []leetgrinderAPIReview{}}
+	// The review goal is capped at the reviews that can count today.
+	out := leetgrinderAPIToday{Date: today.Date.Format(time.DateOnly), Goal: today.Progress.Target(), Met: today.Progress.Met(), Remaining: today.Progress.Remaining(), Streak: today.Streaks.Current, Picks: []leetgrinderAPIReview{}, Due: []leetgrinderAPIReview{}}
 	out.Done.New, out.Done.Review, out.Done.Bonus = today.Progress.New(), today.Progress.Reviews(), today.Progress.Bonus()
 	for _, item := range today.Reviews {
 		recall := 0.0

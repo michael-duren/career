@@ -68,15 +68,28 @@ func (d DayProgress) Practice() int { return d.count(KindPractice) }
 // any other pick reviewed. A day with nothing due is met by new problems.
 func (d DayProgress) ReviewTarget() int { return min(d.Goal.Review, d.Available) }
 
-// Met reports whether the day reached both targets.
-func (d DayProgress) Met() bool { return d.New() >= d.Goal.New && d.Reviews() >= d.ReviewTarget() }
+// Met reports whether the day reached both targets. It takes at least one
+// attempt, so a day whose capped targets are both 0 is not met by doing
+// nothing.
+func (d DayProgress) Met() bool {
+	return len(d.Kinds) > 0 && d.New() >= d.Goal.New && d.Reviews() >= d.ReviewTarget()
+}
+
+// Target is the day's goal with the review target capped.
+func (d DayProgress) Target() DailyGoal { return DailyGoal{New: d.Goal.New, Review: d.ReviewTarget()} }
 
 // NewLeft and ReviewsLeft are what the goal still needs.
 func (d DayProgress) NewLeft() int     { return max(0, d.Goal.New-d.New()) }
 func (d DayProgress) ReviewsLeft() int { return max(0, d.ReviewTarget()-d.Reviews()) }
 
-// Remaining is the work left to meet the goal.
-func (d DayProgress) Remaining() int { return d.NewLeft() + d.ReviewsLeft() }
+// Remaining is the work left to meet the goal: at least 1 until the day
+// has an attempt.
+func (d DayProgress) Remaining() int {
+	if n := d.NewLeft() + d.ReviewsLeft(); n > 0 || len(d.Kinds) > 0 {
+		return n
+	}
+	return 1
+}
 
 // Bonus counts work beyond the goal: extra new problems, extra reviews,
 // and practice.
