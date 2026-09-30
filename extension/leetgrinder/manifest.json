@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Leetgrinder",
-  "version": "2.0.0",
-  "description": "Logs LeetCode submissions to your Leetgrinder app after you confirm them.",
+  "version": "2.1.0",
+  "description": "Logs LeetCode and NeetCode submissions to your Leetgrinder app after you confirm them.",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
@@ -33,6 +33,17 @@
     {
       "matches": ["https://leetcode.com/*"],
       "js": ["browser-shim.js", "lib.js", "content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://neetcode.io/*"],
+      "js": ["neetcode-detect.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://neetcode.io/*"],
+      "js": ["browser-shim.js", "neetcode-slugs.js", "lib.js", "content.js"],
       "run_at": "document_idle"
     }
   ],

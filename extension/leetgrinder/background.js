@@ -133,8 +133,9 @@ const restartTimer = (slug) =>
     return timer;
   });
 
-function fromLeetCode(sender) {
-  return Boolean(sender.tab) && typeof sender.url === "string" && sender.url.startsWith("https://leetcode.com/");
+// fromProblemSite is true for content scripts on LeetCode or NeetCode.
+function fromProblemSite(sender) {
+  return Boolean(sender.tab) && lib.siteOf(sender.url) !== null;
 }
 
 // The options page opens in a tab, so sender.tab is set there too; its
@@ -161,7 +162,7 @@ async function handle(message, sender) {
     const cfg = await config();
     return { ...res, origin: cfg.origin || "" };
   }
-  if (!fromLeetCode(sender)) return { ok: false, status: 0, error: "Unexpected sender." };
+  if (!fromProblemSite(sender)) return { ok: false, status: 0, error: "Unexpected sender." };
   const slug = message.slug;
   switch (message.type) {
     case "problem":
