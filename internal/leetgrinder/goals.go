@@ -169,7 +169,7 @@ func dueBy(before Card, state State, date time.Time, loc *time.Location) bool {
 
 // classify decides the kind of a problem's attempts on date, given its card
 // as it stood before that day.
-// A flag counts only when its analysis finished before date; a later
+// A flag counts only when it was raised before date; a later
 // re-analysis moves that date, so a past day can change with it.
 func classify(state State, slug string, problem Problem, date time.Time, before Card, loc *time.Location) string {
 	if before.Reviews == 0 {

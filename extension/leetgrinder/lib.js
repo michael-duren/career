@@ -10,6 +10,8 @@
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const TOKEN = /^lg_[A-Za-z0-9_-]{43}$/;
   const OUTCOMES = ["solved", "struggled", "unfinished"];
+  // APPROACHES are the learner's own verdicts on their solution; "" is not stated.
+  const APPROACHES = ["", "optimal", "suboptimal"];
 
   // Complexity rules mirror internal/leetgrinder/complexity.go; both run
   // test/complexity-vectors.json.
@@ -156,6 +158,8 @@
     if (!OUTCOMES.includes(a.outcome)) return "Choose an outcome.";
     if (!Number.isInteger(a.minutes) || a.minutes < 1 || a.minutes > MAX_MINUTES) return `Minutes must be a whole number from 1 to ${MAX_MINUTES}.`;
     if (typeof a.assisted !== "boolean" || typeof a.isReview !== "boolean") return "Invalid attempt.";
+    // Both are optional, so the payload works with servers that predate them.
+    if ((a.wantsReview !== undefined && typeof a.wantsReview !== "boolean") || (a.approach !== undefined && !APPROACHES.includes(a.approach))) return "Invalid attempt.";
     if (typeof a.notes !== "string" || [...a.notes].length > MAX_NOTES || a.notes.includes("\u0000")) return `Keep notes to ${MAX_NOTES} characters or fewer.`;
     const time = normalizeComplexity(a.timeComplexity);
     const space = normalizeComplexity(a.spaceComplexity);
@@ -187,6 +191,10 @@
       code: "",
       codeLanguage: "",
     };
+    // Unset self-assessments are left out, so servers without them still
+    // accept the attempt.
+    if (fields.wantsReview) a.wantsReview = true;
+    if (fields.approach) a.approach = fields.approach;
     const meta = cleanMetadata(fields.problem);
     if (meta) a.problem = meta;
     if (includeCode && capture && capture.slug === fields.problemSlug) {
@@ -324,6 +332,8 @@
       codeLanguage: text(a.codeLanguage),
     };
     if (a.problem !== undefined) out.problem = a.problem;
+    if (a.wantsReview !== undefined && a.wantsReview !== false) out.wantsReview = a.wantsReview;
+    if (a.approach !== undefined && a.approach !== "") out.approach = a.approach;
     if (attemptProblem(out)) return null;
     if (out.problem !== undefined) out.problem = cleanMetadata(out.problem);
     out.timeComplexity = normalizeComplexity(out.timeComplexity);
@@ -474,6 +484,7 @@
     GRAPHQL_QUERY,
     validSlug,
     kindLabel,
+    APPROACHES,
     shortDate,
     daysAgo,
     badgeState,

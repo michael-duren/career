@@ -136,6 +136,10 @@ type leetgrinderAPIAttemptInput struct {
 	SpaceComplexity string `json:"spaceComplexity"`
 	Code            string `json:"code"`
 	CodeLanguage    string `json:"codeLanguage"`
+	// WantsReview and Approach are the learner's own assessment; Approach is
+	// "optimal", "suboptimal", or "" (not stated).
+	WantsReview bool   `json:"wantsReview"`
+	Approach    string `json:"approach"`
 	// Problem is optional LeetCode metadata read by the extension.
 	Problem *leetgrinder.ProblemMetadata `json:"problem"`
 }
@@ -172,13 +176,17 @@ func (s *Server) leetgrinderAPIAttempt(w http.ResponseWriter, r *http.Request) {
 		bad("problemSlug must be a LeetCode problem slug.")
 		return
 	}
+	if !leetgrinder.ValidApproach(input.Approach) {
+		bad("approach must be optimal, suboptimal, or empty.")
+		return
+	}
 	// Metadata is optional and the server can fetch it itself, so invalid
 	// metadata is dropped rather than failing the attempt.
 	if input.Problem != nil && (input.Problem.Normalize() != nil || input.Problem.Title == "") {
 		input.Problem = nil
 	}
 	attempt := leetgrinder.Attempt{ID: input.ID, ProblemSlug: input.ProblemSlug, Outcome: input.Outcome, Minutes: input.Minutes, Assisted: input.Assisted, Notes: input.Notes, Source: "extension",
-		TimeComplexity: input.TimeComplexity, SpaceComplexity: input.SpaceComplexity, Code: input.Code, CodeLanguage: input.CodeLanguage}
+		TimeComplexity: input.TimeComplexity, SpaceComplexity: input.SpaceComplexity, Code: input.Code, CodeLanguage: input.CodeLanguage, WantsReview: input.WantsReview, Approach: input.Approach}
 	switch err := attempt.NormalizeDetails(); {
 	case errors.Is(err, leetgrinder.ErrComplexityRequired), errors.Is(err, leetgrinder.ErrComplexityFormat):
 		respond(w, 422, map[string]string{"error": err.Error() + "."})

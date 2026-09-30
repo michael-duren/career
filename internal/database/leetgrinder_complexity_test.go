@@ -95,6 +95,8 @@ func TestLeetgrinderAttemptDetails(t *testing.T) {
 		"space":    func(a *leetgrinder.Attempt) { a.SpaceComplexity = "O(1)" },
 		"code":     func(a *leetgrinder.Attempt) { a.Code += "#" },
 		"language": func(a *leetgrinder.Attempt) { a.CodeLanguage = "python" },
+		"review":   func(a *leetgrinder.Attempt) { a.WantsReview = true },
+		"approach": func(a *leetgrinder.Attempt) { a.Approach = leetgrinder.ApproachOptimal },
 	} {
 		changed := input
 		change(&changed)
@@ -108,6 +110,33 @@ func TestLeetgrinderAttemptDetails(t *testing.T) {
 	corrected, err := s.SaveLeetgrinderAttempt(ctx, correction, saved.Revision)
 	if err != nil || corrected.TimeComplexity != "O(n²)" || corrected.Code != input.Code || corrected.CodeLanguage != "python3" {
 		t.Fatalf("corrected %+v %v", corrected, err)
+	}
+	// Corrections change the learner's own assessment.
+	correction = corrected
+	correction.WantsReview, correction.Approach = true, leetgrinder.ApproachSuboptimal
+	if saved.MarkedAt.IsZero() {
+		t.Fatal("marked_at not set on insert")
+	}
+	if corrected, err = s.SaveLeetgrinderAttempt(ctx, correction, corrected.Revision); err != nil || !corrected.WantsReview || corrected.Approach != leetgrinder.ApproachSuboptimal {
+		t.Fatalf("assessment correction %+v %v", corrected, err)
+	}
+	// Raising a mark moves marked_at; keeping one raised does not.
+	if !corrected.MarkedAt.After(saved.MarkedAt) {
+		t.Fatalf("raised mark kept marked_at %s (was %s)", corrected.MarkedAt, saved.MarkedAt)
+	}
+	correction = corrected
+	correction.Approach = leetgrinder.ApproachOptimal
+	kept, err := s.SaveLeetgrinderAttempt(ctx, correction, corrected.Revision)
+	if err != nil || !kept.MarkedAt.Equal(corrected.MarkedAt) {
+		t.Fatalf("kept mark moved marked_at: %+v %v", kept, err)
+	}
+	correction = kept
+	correction.Approach = leetgrinder.ApproachSuboptimal
+	if corrected, err = s.SaveLeetgrinderAttempt(ctx, correction, kept.Revision); err != nil || !corrected.MarkedAt.Equal(kept.MarkedAt) {
+		t.Fatalf("second mark moved marked_at: %+v %v", corrected, err)
+	}
+	if state, err := s.LeetgrinderState(ctx); err != nil || !state.Attempts[0].WantsReview || state.Attempts[0].Approach != leetgrinder.ApproachSuboptimal {
+		t.Fatalf("state %+v %v", state.Attempts, err)
 	}
 	// Corrections of solved or struggled attempts need both complexities.
 	correction = corrected
@@ -125,6 +154,7 @@ func TestLeetgrinderAttemptDetails(t *testing.T) {
 		"bad notation":  func(a *leetgrinder.Attempt) { a.TimeComplexity = "fast" },
 		"long code":     func(a *leetgrinder.Attempt) { a.Code = strings.Repeat("x", leetgrinder.MaxCodeBytes+1) },
 		"no language":   func(a *leetgrinder.Attempt) { a.CodeLanguage = "" },
+		"bad approach":  func(a *leetgrinder.Attempt) { a.Approach = "fast" },
 	} {
 		bad := input
 		bad.ID = uuid.NewString()

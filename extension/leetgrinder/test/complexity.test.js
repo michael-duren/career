@@ -73,6 +73,8 @@ const fields = {
   assisted: false,
   notes: "",
   isReview: false,
+  wantsReview: false,
+  approach: "optimal",
   timeComplexity: "O(nlogn)",
   spaceComplexity: "O(n)",
 };
@@ -85,6 +87,8 @@ test("buildAttempt attaches code only when kept, matching, and within the body l
   assert.equal(withCode.timeComplexity, "O(n log n)");
   assert.equal(lib.attemptProblem(withCode), "");
   assert.deepEqual(lib.cleanAttempt(withCode), withCode);
+  assert.equal(withCode.approach, "optimal");
+  assert.ok(!("wantsReview" in withCode));
 
   const optedOut = lib.buildAttempt(fields, captured, false);
   assert.equal(optedOut.code, "");

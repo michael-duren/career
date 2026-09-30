@@ -592,13 +592,18 @@ dd {
   border-top: 1px solid var(--line);
   padding-top: 12px;
 }
-.attempt-form .complexity {
+.attempt-form .complexity,
+.attempt-form .approach {
   margin: 18px 0 0;
   padding: 0;
   border: 0;
   min-width: 0;
 }
-.complexity legend {
+.attempt-form .approach .checkbox {
+  margin: 8px 0;
+}
+.complexity legend,
+.approach legend {
   padding: 0;
   margin-bottom: 8px;
   font-size: 0.85rem;

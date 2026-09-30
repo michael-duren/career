@@ -92,6 +92,7 @@ Run through this after loading the extension in each browser, with the app runni
 - [ ] Open a problem (for example `https://leetcode.com/problems/two-sum/`). Submit an accepted solution within a few minutes: the panel opens with Solved, the elapsed minutes, and assisted unchecked.
 - [ ] Log attempt without choosing Time or Space: the panel refuses with a message. Choose both (try **Other…** with `O(nlogn)`) and log: the panel says "Logged to Leetgrinder" and closes. The app's problem history shows the attempt with the right values, `O(n log n)`, and the submitted code under "Submitted code".
 - [ ] The Accepted panel shows "Code captured (<language>, <size>)". Untick it and log: the history shows no code.
+- [ ] Choose **Took a simpler approach for time** and tick **Review this again soon**, then log: the history shows both, and the next day the banner reads "Flagged: simpler approach taken" (or "Today's review" when it is one of the day's picks).
 - [ ] Submit a wrong answer, then wait for the 25-minute nudge and **Log as unfinished**: the panel offers the wrong answer's code and complexity is optional.
 - [ ] Reload the problem page mid-attempt: the next Accepted panel's minutes include time before the reload.
 - [ ] Close the problem tab, wait over 30 minutes, reopen it and submit: the minutes count from the reopen, and no nudge fires immediately.

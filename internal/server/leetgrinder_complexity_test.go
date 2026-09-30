@@ -71,6 +71,38 @@ func TestLeetgrinderFormComplexity(t *testing.T) {
 	}
 }
 
+func TestLeetgrinderFormSelfAssessment(t *testing.T) {
+	_, db, request := leetgrinderTestServer(t)
+	ctx := context.Background()
+	path := "/leetgrinder/problem/two-sum/attempts"
+	draft := url.Values{"id": {uuid.NewString()}, "outcome": {"solved"}, "minutes": {"20"}, "timeComplexity": {"O(n²)"}, "spaceComplexity": {"O(1)"}, "approach": {"brute-force"}, "wantsReview": {"true"}}
+	if w := request("POST", path, draft); w.Code != 400 || !strings.Contains(w.Body.String(), "simpler approach") || !strings.Contains(w.Body.String(), `name="wantsReview" value="true" checked`) {
+		t.Fatalf("bad approach: %d %s", w.Code, w.Body.String())
+	}
+	draft.Set("approach", "suboptimal")
+	if w := request("POST", path, draft); w.Code != 303 {
+		t.Fatalf("save: %d %s", w.Code, w.Body.String())
+	}
+	state, err := db.LeetgrinderState(ctx)
+	if err != nil || len(state.Attempts) != 1 || !state.Attempts[0].WantsReview || state.Attempts[0].Approach != leetgrinder.ApproachSuboptimal {
+		t.Fatalf("state: %+v %v", state.Attempts, err)
+	}
+	w := request("GET", "/leetgrinder/problem/two-sum", nil)
+	body := w.Body.String()
+	if w.Code != 200 || !strings.Contains(body, "Took a simpler approach for time") || !strings.Contains(body, "Marked for review") || !strings.Contains(body, `value="suboptimal" checked`) {
+		t.Fatalf("history: %d %s", w.Code, body)
+	}
+	// A correction can clear both.
+	a := state.Attempts[0]
+	correction := url.Values{"id": {a.ID}, "revision": {a.Revision}, "outcome": {"solved"}, "minutes": {"20"}, "timeComplexity": {"O(n)"}, "spaceComplexity": {"O(n)"}, "approach": {"optimal"}}
+	if w := request("POST", path, correction); w.Code != 303 {
+		t.Fatalf("correction: %d %s", w.Code, w.Body.String())
+	}
+	if state, _ = db.LeetgrinderState(ctx); state.Attempts[0].WantsReview || state.Attempts[0].Approach != leetgrinder.ApproachOptimal {
+		t.Fatalf("corrected: %+v", state.Attempts[0])
+	}
+}
+
 func TestLeetgrinderAPIComplexityAndCode(t *testing.T) {
 	s, db, request := leetgrinderTestServer(t)
 	ctx := context.Background()

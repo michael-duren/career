@@ -325,6 +325,12 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, avail Analy
 							if a.IsReview {
 								· Review
 							}
+							if a.Approach != "" {
+								· { ApproachLabel(a.Approach) }
+							}
+							if a.WantsReview {
+								· Marked for review
+							}
 						</p>
 						@statedComplexity(a)
 						if a.Notes!="" {
@@ -714,13 +720,20 @@ templ attemptFields(problem Problem, form AttemptForm) {
 			</div>
 		</fieldset>
 		<label class="checkbox"><input type="checkbox" name="assisted" value="true" checked?={ form.Assisted }/>I used hints or reviewed a solution</label>
+		<fieldset class="approach">
+			<legend>Approach <span class="muted">(optional)</span></legend>
+			<label class="checkbox"><input type="radio" name="approach" value="" checked?={ form.Approach=="" }/>Not stated</label>
+			<label class="checkbox"><input type="radio" name="approach" value={ ApproachOptimal } checked?={ form.Approach==ApproachOptimal }/>{ ApproachLabel(ApproachOptimal) }</label>
+			<label class="checkbox"><input type="radio" name="approach" value={ ApproachSuboptimal } checked?={ form.Approach==ApproachSuboptimal }/>{ ApproachLabel(ApproachSuboptimal) }</label>
+		</fieldset>
+		<label class="checkbox"><input type="checkbox" name="wantsReview" value="true" checked?={ form.WantsReview }/>I want to review this problem again soon</label>
 		<label>
 			Notes <span class="muted">(optional)</span>
 			<textarea name="notes" rows="3" maxlength="2000" placeholder="What worked? Where did you get stuck?">
 				{ form.Notes }
 			</textarea>
 		</label>
-		<p class="small muted">Solved means your solution passed on LeetCode. Mark help even if you wrote the final code yourself.</p>
+		<p class="small muted">Solved means your solution passed on LeetCode. Mark help even if you wrote the final code yourself. A simpler approach, or asking to review, flags the problem for review the next day.</p>
 		<button class="button primary" type="submit">
 			if form.Revision!="" {
 				Save correction

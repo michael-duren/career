@@ -43,27 +43,31 @@ type Card struct {
 	Due time.Time
 	// FSRSDue is when FSRS alone schedules the next review.
 	FSRSDue time.Time
-	// Flag is set when the analysis of Last found a mistake.
+	// Flag is set when Last was marked for review or its analysis found a mistake.
 	Flag *Flag
 	fsrs fsrs.Card
 	loc  *time.Location
 }
 
-// Flag marks a problem whose latest attempt's analysis judged a stated
-// complexity wrong or the solution not optimal. It makes the problem due the
-// day after the analysis finished, and clears with the next attempt or a
-// re-analysis without those verdicts.
+// Flag marks a problem for review the day after its latest attempt said so:
+// its analysis judged a stated complexity wrong or the solution not optimal,
+// or the learner asked to review it or took a simpler approach for time. It
+// clears with the next attempt, or a re-analysis without those verdicts when
+// the analysis alone raised it.
 type Flag struct {
-	// Date is the local date the analysis finished.
-	Date                  time.Time
-	TimeWrong, SpaceWrong bool
-	NotOptimal            bool
+	// Date is the earliest local date that raised the flag, of MarkedDate
+	// and AnalysisDate; the other two are zero when that source is absent.
+	Date, MarkedDate, AnalysisDate time.Time
+	TimeWrong, SpaceWrong          bool
+	NotOptimal                     bool
 	// Actual and optimal complexities, for the not-optimal reason.
 	ActualTime, ActualSpace   string
 	OptimalTime, OptimalSpace string
+	// WantsReview and Suboptimal are the learner's own marks.
+	WantsReview, Suboptimal bool
 }
 
-// Flagged reports whether the card carries a complexity flag.
+// Flagged reports whether the card carries a flag.
 func (c Card) Flagged() bool { return c.Flag != nil }
 
 // go-fsrs counts elapsed days between UTC calendar dates. Feeding it local
@@ -90,29 +94,43 @@ func (c Card) Retrievability(t time.Time) float64 {
 	return r
 }
 
-// flagFor derives the flag of an attempt from its analysis, or nil.
+// flagFor derives the flag of an attempt from the learner's marks and its
+// analysis, or nil.
 func flagFor(a Attempt, problem Problem, analyses map[string]Analysis, loc *time.Location) *Flag {
-	an, ok := analyses[a.ID]
-	if !ok || !an.Done() {
-		return nil
+	f := &Flag{WantsReview: a.WantsReview, Suboptimal: a.Approach == ApproachSuboptimal}
+	if f.WantsReview || f.Suboptimal {
+		marked := a.MarkedAt
+		if marked.IsZero() {
+			marked = a.CreatedAt
+		}
+		f.MarkedDate = Date(marked, loc)
+		f.Date = f.MarkedDate
 	}
-	f := &Flag{Date: Date(an.UpdatedAt, loc), TimeWrong: isFalse(an.TimeMatches), SpaceWrong: isFalse(an.SpaceMatches), NotOptimal: isFalse(an.Optimal),
-		ActualTime: an.ActualTime, ActualSpace: an.ActualSpace, OptimalTime: problem.OptimalTime, OptimalSpace: problem.OptimalSpace}
-	if !f.TimeWrong && !f.SpaceWrong && !f.NotOptimal {
+	if an, ok := analyses[a.ID]; ok && an.Done() && (isFalse(an.TimeMatches) || isFalse(an.SpaceMatches) || isFalse(an.Optimal)) {
+		f.TimeWrong, f.SpaceWrong, f.NotOptimal = isFalse(an.TimeMatches), isFalse(an.SpaceMatches), isFalse(an.Optimal)
+		f.ActualTime, f.ActualSpace, f.OptimalTime, f.OptimalSpace = an.ActualTime, an.ActualSpace, problem.OptimalTime, problem.OptimalSpace
+		f.AnalysisDate = Date(an.UpdatedAt, loc)
+		if f.Date.IsZero() || f.AnalysisDate.Before(f.Date) {
+			f.Date = f.AnalysisDate
+		}
+	}
+	if f.Date.IsZero() {
 		return nil
 	}
 	return f
 }
 
-// DueAt is the start of the local day after the analysis.
+// DueAt is the start of the local day after the flag was raised.
 func (f Flag) DueAt(loc *time.Location) time.Time {
 	return time.Date(f.Date.Year(), f.Date.Month(), f.Date.Day()+1, 0, 0, 0, 0, loc)
 }
 
-// Reason explains the flag, e.g. "Time complexity judged wrong 2 days ago"
-// or "Not optimal: O(n²) vs O(n)".
+// Reason explains the flag, e.g. "Time complexity judged wrong 2 days ago",
+// "Not optimal: O(n²) vs O(n)" or "Marked for review yesterday". The
+// analysis's verdicts come first, being the most specific.
 func (f Flag) Reason(now time.Time, loc *time.Location) string {
-	when := daysAgo(f.Date, Date(now, loc))
+	today := Date(now, loc)
+	when := daysAgo(f.AnalysisDate, today)
 	switch {
 	case f.TimeWrong && f.SpaceWrong:
 		return "Time and space complexity judged wrong " + when
@@ -120,12 +138,16 @@ func (f Flag) Reason(now time.Time, loc *time.Location) string {
 		return "Time complexity judged wrong " + when
 	case f.SpaceWrong:
 		return "Space complexity judged wrong " + when
-	case f.OptimalTime != "" && f.ActualTime != "" && f.ActualTime != f.OptimalTime:
+	case f.NotOptimal && f.OptimalTime != "" && f.ActualTime != "" && f.ActualTime != f.OptimalTime:
 		return fmt.Sprintf("Not optimal: %s vs %s", f.ActualTime, f.OptimalTime)
-	case f.OptimalSpace != "" && f.ActualSpace != "" && f.ActualSpace != f.OptimalSpace:
+	case f.NotOptimal && f.OptimalSpace != "" && f.ActualSpace != "" && f.ActualSpace != f.OptimalSpace:
 		return fmt.Sprintf("Not optimal: space %s vs %s", f.ActualSpace, f.OptimalSpace)
+	case f.NotOptimal:
+		return "Not optimal"
+	case f.Suboptimal:
+		return "Took a simpler approach " + daysAgo(f.MarkedDate, today)
 	}
-	return "Not optimal"
+	return "Marked for review " + daysAgo(f.MarkedDate, today)
 }
 
 // Label is a short form for badges, e.g. "Flagged: time complexity judged wrong".
@@ -137,8 +159,12 @@ func (f Flag) Label() string {
 		return "Flagged: time complexity judged wrong"
 	case f.SpaceWrong:
 		return "Flagged: space complexity judged wrong"
+	case f.NotOptimal:
+		return "Flagged: not optimal"
+	case f.Suboptimal:
+		return "Flagged: simpler approach taken"
 	}
-	return "Flagged: not optimal"
+	return "Flagged: marked for review"
 }
 
 func daysAgo(from, to time.Time) string {
@@ -196,7 +222,7 @@ func attemptsBySlug(attempts []Attempt) map[string][]Attempt {
 }
 
 // BuildCards replays state's attempts through FSRS, one card per attempted
-// problem, and applies complexity flags. Cards come back ordered by due time.
+// problem, and applies flags. Cards come back ordered by due time.
 func BuildCards(state State, loc *time.Location) []Card {
 	cards := make([]Card, 0)
 	for slug, list := range attemptsBySlug(state.Attempts) {

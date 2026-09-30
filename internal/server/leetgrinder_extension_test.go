@@ -171,7 +171,7 @@ func TestLeetgrinderExtensionAPI(t *testing.T) {
 	if w = api("POST", "/api/leetgrinder/attempts", plain, conflict); w.Code != 409 {
 		t.Fatalf("reused id: %d %s", w.Code, w.Body.String())
 	}
-	review := map[string]any{"id": uuid.NewString(), "problemSlug": "valid-anagram", "outcome": "unfinished", "minutes": 25, "assisted": true, "notes": "", "isReview": true}
+	review := map[string]any{"id": uuid.NewString(), "problemSlug": "valid-anagram", "outcome": "unfinished", "minutes": 25, "assisted": true, "notes": "", "isReview": true, "wantsReview": true, "approach": "suboptimal"}
 	if w = api("POST", "/api/leetgrinder/attempts", plain, review); w.Code != 200 {
 		t.Fatalf("review save: %d %s", w.Code, w.Body.String())
 	}
@@ -179,6 +179,9 @@ func TestLeetgrinderExtensionAPI(t *testing.T) {
 	// The client's isReview is ignored: a first attempt is never a review.
 	if len(state.Attempts) != 2 || state.Attempts[0].IsReview || state.Attempts[0].Source != "extension" || !state.Attempts[0].Assisted {
 		t.Fatalf("review flag: %+v", state.Attempts)
+	}
+	if !state.Attempts[0].WantsReview || state.Attempts[0].Approach != leetgrinder.ApproachSuboptimal || state.Attempts[1].WantsReview || state.Attempts[1].Approach != "" {
+		t.Fatalf("self-assessment: %+v", state.Attempts)
 	}
 	// An attempt on any problem is saved, with its metadata.
 	other := map[string]any{"id": uuid.NewString(), "problemSlug": "min-cost-to-connect-all-points-ii", "outcome": "unfinished", "minutes": 40, "assisted": false, "notes": "",
@@ -214,6 +217,8 @@ func TestLeetgrinderExtensionAPI(t *testing.T) {
 		{body: map[string]any{"id": uuid.NewString(), "problemSlug": "two-sum", "outcome": "solved", "minutes": 241}, want: 400},
 		{body: map[string]any{"id": uuid.NewString(), "problemSlug": "two-sum", "outcome": "solved", "minutes": 10, "notes": strings.Repeat("a", 2001)}, want: 400},
 		{body: map[string]any{"id": uuid.NewString(), "problemSlug": "two-sum", "outcome": "solved", "minutes": 10, "source": "web"}, want: 400},
+		{body: map[string]any{"id": uuid.NewString(), "problemSlug": "two-sum", "outcome": "unfinished", "minutes": 10, "approach": "brute-force"}, want: 400},
+		{body: map[string]any{"id": uuid.NewString(), "problemSlug": "two-sum", "outcome": "unfinished", "minutes": 10, "wantsReview": "yes"}, want: 400},
 		{raw: `{"id":`, want: 400},
 		{raw: `{"notes":"` + strings.Repeat("a", leetgrinderAPIBodyLimit) + `"}`, want: 413},
 	} {
