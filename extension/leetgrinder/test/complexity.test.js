@@ -73,6 +73,8 @@ const fields = {
   assisted: false,
   notes: "",
   isReview: false,
+  wantsReview: false,
+  approach: "optimal",
   timeComplexity: "O(nlogn)",
   spaceComplexity: "O(n)",
 };

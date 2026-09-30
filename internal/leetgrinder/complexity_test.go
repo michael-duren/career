@@ -71,6 +71,7 @@ func TestAttemptNormalizeDetails(t *testing.T) {
 		"long language":              {func(a *Attempt) { a.CodeLanguage = strings.Repeat("a", 33) }, ErrCodeInvalid},
 		"NUL in code":                {func(a *Attempt) { a.Code = "a\x00b" }, ErrCodeInvalid},
 		"invalid UTF-8 code":         {func(a *Attempt) { a.Code = "\xff" }, ErrCodeInvalid},
+		"unknown approach":           {func(a *Attempt) { a.Approach = "brute-force" }, ErrApproachInvalid},
 	} {
 		a := valid
 		test.change(&a)
@@ -81,6 +82,7 @@ func TestAttemptNormalizeDetails(t *testing.T) {
 	for _, a := range []Attempt{
 		{Outcome: "unfinished"},
 		{Outcome: "unfinished", Code: "x", CodeLanguage: "cpp"},
+		{Outcome: "unfinished", Approach: ApproachSuboptimal, WantsReview: true},
 		{Outcome: "solved", TimeComplexity: "O(1)", SpaceComplexity: "O(1)", Code: strings.Repeat("é", MaxCodeBytes/2), CodeLanguage: "c#"},
 	} {
 		if err := a.NormalizeDetails(); err != nil {

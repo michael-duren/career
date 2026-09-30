@@ -85,12 +85,15 @@ test("cleanAttempt", () => {
     assisted: false,
     notes: "hash map",
     isReview: true,
+    wantsReview: true,
+    approach: "suboptimal",
     timeComplexity: "O(n)",
     spaceComplexity: "O(n^2)",
     extra: "dropped",
   };
   const cleaned = lib.cleanAttempt(good);
   assert.deepEqual(Object.keys(cleaned).sort(), [
+    "approach",
     "assisted",
     "code",
     "codeLanguage",
@@ -102,7 +105,14 @@ test("cleanAttempt", () => {
     "problemSlug",
     "spaceComplexity",
     "timeComplexity",
+    "wantsReview",
   ]);
+  assert.equal(cleaned.wantsReview, true);
+  assert.equal(cleaned.approach, "suboptimal");
+  // Attempts saved by an older version carry neither field.
+  const older = lib.cleanAttempt({ ...good, wantsReview: undefined, approach: undefined });
+  assert.equal(older.wantsReview, false);
+  assert.equal(older.approach, "");
   assert.equal(cleaned.spaceComplexity, "O(n²)");
   assert.equal(cleaned.code, "");
   for (const bad of [
@@ -115,6 +125,8 @@ test("cleanAttempt", () => {
     { minutes: "20" },
     { assisted: "yes" },
     { isReview: undefined },
+    { wantsReview: "yes" },
+    { approach: "brute-force" },
     { notes: "a".repeat(2001) },
     { notes: "a\u0000b" },
   ]) {
@@ -158,7 +170,7 @@ test("metadataFromGraphQL", () => {
 });
 
 test("attempts carry optional problem metadata", () => {
-  const fields = { id: "3f2504e0-4f89-41d3-9a0c-0305e82c3301", problemSlug: "lru-cache", outcome: "unfinished", minutes: 30, assisted: false, notes: "", isReview: false, timeComplexity: "", spaceComplexity: "" };
+  const fields = { id: "3f2504e0-4f89-41d3-9a0c-0305e82c3301", problemSlug: "lru-cache", outcome: "unfinished", minutes: 30, assisted: false, notes: "", isReview: false, wantsReview: false, approach: "", timeComplexity: "", spaceComplexity: "" };
   const withMeta = lib.buildAttempt({ ...fields, problem: { number: 146, title: "LRU Cache", difficulty: "Medium", topics: [] } }, null, false);
   assert.equal(withMeta.problem.title, "LRU Cache");
   assert.equal(lib.cleanAttempt(withMeta).problem.number, 146);

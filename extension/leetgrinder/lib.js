@@ -10,6 +10,8 @@
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const TOKEN = /^lg_[A-Za-z0-9_-]{43}$/;
   const OUTCOMES = ["solved", "struggled", "unfinished"];
+  // APPROACHES are the learner's own verdicts on their solution; "" is not stated.
+  const APPROACHES = ["", "optimal", "suboptimal"];
 
   // Complexity rules mirror internal/leetgrinder/complexity.go; both run
   // test/complexity-vectors.json.
@@ -156,6 +158,7 @@
     if (!OUTCOMES.includes(a.outcome)) return "Choose an outcome.";
     if (!Number.isInteger(a.minutes) || a.minutes < 1 || a.minutes > MAX_MINUTES) return `Minutes must be a whole number from 1 to ${MAX_MINUTES}.`;
     if (typeof a.assisted !== "boolean" || typeof a.isReview !== "boolean") return "Invalid attempt.";
+    if (typeof a.wantsReview !== "boolean" || !APPROACHES.includes(a.approach)) return "Invalid attempt.";
     if (typeof a.notes !== "string" || [...a.notes].length > MAX_NOTES || a.notes.includes("\u0000")) return `Keep notes to ${MAX_NOTES} characters or fewer.`;
     const time = normalizeComplexity(a.timeComplexity);
     const space = normalizeComplexity(a.spaceComplexity);
@@ -182,6 +185,8 @@
       assisted: fields.assisted,
       notes: fields.notes,
       isReview: fields.isReview,
+      wantsReview: fields.wantsReview,
+      approach: fields.approach,
       timeComplexity: normalizeComplexity(fields.timeComplexity) ?? fields.timeComplexity,
       spaceComplexity: normalizeComplexity(fields.spaceComplexity) ?? fields.spaceComplexity,
       code: "",
@@ -318,6 +323,8 @@
       assisted: a.assisted,
       notes: a.notes,
       isReview: a.isReview,
+      wantsReview: a.wantsReview === undefined ? false : a.wantsReview,
+      approach: text(a.approach),
       timeComplexity: text(a.timeComplexity),
       spaceComplexity: text(a.spaceComplexity),
       code: text(a.code),
@@ -474,6 +481,7 @@
     GRAPHQL_QUERY,
     validSlug,
     kindLabel,
+    APPROACHES,
     shortDate,
     daysAgo,
     badgeState,

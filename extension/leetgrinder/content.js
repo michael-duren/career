@@ -377,6 +377,12 @@
     outcome.value = prefill.outcome;
     const minutes = el("input", { type: "number", name: "minutes", min: 1, max: lib.MAX_MINUTES, step: 1, required: true, value: String(prefill.minutes) });
     const assisted = el("input", { type: "checkbox", name: "assisted", checked: prefill.assisted });
+    const approach = el("select", { name: "approach" }, [
+      el("option", { value: "", text: "Not stated" }),
+      el("option", { value: "optimal", text: "Reached the optimal solution" }),
+      el("option", { value: "suboptimal", text: "Took a simpler approach for time" }),
+    ]);
+    const wantsReview = el("input", { type: "checkbox", name: "wantsReview", checked: false });
     const notes = el("textarea", { name: "notes", maxLength: lib.MAX_NOTES, placeholder: "What to remember next time" });
     const status = el("p", { className: "status", role: "status" });
     const submit = el("button", { type: "submit", className: "primary", text: "Log attempt" });
@@ -393,7 +399,7 @@
     const codeRow = captured
       ? [el("label", { className: "check" }, [includeCode, `Code captured (${lib.languageLabel(captured.lang)}, ${lib.formatBytes(lib.utf8Bytes(captured.code))})`])]
       : [];
-    const fields = [outcome, minutes, ...time.fields, ...space.fields, assisted, includeCode, notes];
+    const fields = [outcome, minutes, ...time.fields, ...space.fields, approach, assisted, wantsReview, includeCode, notes];
     // After an ambiguous failure the server may have saved the entry, so the
     // fields lock and retries resend exactly the same attempt.
     let locked = null;
@@ -404,7 +410,9 @@
       el("div", { className: "row" }, [time.node, space.node]),
       required,
       ...codeRow,
+      el("label", {}, ["Approach", approach]),
       el("label", { className: "check" }, [assisted, "Used a hint or solution"]),
+      el("label", { className: "check" }, [wantsReview, "Review this again soon"]),
       el("label", {}, ["Notes", notes]),
       el("div", { className: "actions" }, [dismiss, submit]),
       status,
@@ -426,6 +434,8 @@
             outcome: outcome.value,
             minutes: Number(minutes.value),
             assisted: assisted.checked,
+            wantsReview: wantsReview.checked,
+            approach: approach.value,
             notes: notes.value,
             // The app decides whether an attempt is a review.
             isReview: false,

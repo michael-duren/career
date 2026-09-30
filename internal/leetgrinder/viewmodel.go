@@ -17,6 +17,9 @@ type AttemptForm struct {
 	Minutes  string
 	Assisted bool
 	Notes    string
+	// WantsReview and Approach are the learner's own assessment.
+	WantsReview bool
+	Approach    string
 	// Review marks attempts logged from a review card; Return is "",
 	// "overview", or "reviews" and picks the page to go back to.
 	Review bool
@@ -97,7 +100,7 @@ type ProblemReview struct {
 	Card   Card
 	Due    bool
 	Recall float64
-	// FlagReason explains a complexity flag, or is "".
+	// FlagReason explains a flag, or is "".
 	FlagReason string
 	Pick       bool
 	Location   *time.Location
@@ -157,7 +160,7 @@ func NewReviewForm(id string, ret string) AttemptForm {
 	return f
 }
 func EditForm(a Attempt) AttemptForm {
-	return AttemptForm{ID: a.ID, Revision: a.Revision, Outcome: a.Outcome, Minutes: Count(a.Minutes), Assisted: a.Assisted, Notes: a.Notes, Time: NewComplexityInput(a.TimeComplexity), Space: NewComplexityInput(a.SpaceComplexity)}
+	return AttemptForm{ID: a.ID, Revision: a.Revision, Outcome: a.Outcome, Minutes: Count(a.Minutes), Assisted: a.Assisted, Notes: a.Notes, WantsReview: a.WantsReview, Approach: a.Approach, Time: NewComplexityInput(a.TimeComplexity), Space: NewComplexityInput(a.SpaceComplexity)}
 }
 func orDash(s string) string {
 	if s == "" {

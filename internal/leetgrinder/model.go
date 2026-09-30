@@ -80,6 +80,33 @@ type Attempt struct {
 	// LeetCode language slug; both are "" for web-logged attempts.
 	Code         string `json:"code"`
 	CodeLanguage string `json:"codeLanguage"`
+	// WantsReview and Approach are the learner's own assessment. Approach is
+	// ApproachOptimal, ApproachSuboptimal, or "" when not stated. Either
+	// WantsReview or a suboptimal approach flags the problem for review.
+	WantsReview bool   `json:"wantsReview"`
+	Approach    string `json:"approach"`
+}
+
+const (
+	ApproachOptimal = "optimal"
+	// ApproachSuboptimal means a simpler solution was taken for time.
+	ApproachSuboptimal = "suboptimal"
+)
+
+// ValidApproach reports whether s is a stored approach value.
+func ValidApproach(s string) bool {
+	return s == "" || s == ApproachOptimal || s == ApproachSuboptimal
+}
+
+// ApproachLabel describes a stated approach, or "" when not stated.
+func ApproachLabel(s string) string {
+	switch s {
+	case ApproachOptimal:
+		return "Reached the optimal solution"
+	case ApproachSuboptimal:
+		return "Took a simpler approach for time"
+	}
+	return ""
 }
 
 type State struct {

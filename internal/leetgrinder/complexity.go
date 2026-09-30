@@ -24,6 +24,7 @@ var (
 	ErrComplexityFormat   = errors.New("complexity must start with O( and end with ), in 40 characters or fewer")
 	ErrCodeTooLarge       = errors.New("code is over 64 KiB")
 	ErrCodeInvalid        = errors.New("code and its language are invalid")
+	ErrApproachInvalid    = errors.New("approach must be optimal, suboptimal, or empty")
 )
 
 var codeLanguage = regexp.MustCompile(`^[A-Za-z0-9_+#.-]{1,32}$`)
@@ -98,6 +99,9 @@ func (a *Attempt) NormalizeDetails() error {
 	}
 	if a.Code == "" && a.CodeLanguage != "" || a.Code != "" && !codeLanguage.MatchString(a.CodeLanguage) {
 		return ErrCodeInvalid
+	}
+	if !ValidApproach(a.Approach) {
+		return ErrApproachInvalid
 	}
 	return nil
 }

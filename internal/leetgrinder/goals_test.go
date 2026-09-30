@@ -105,6 +105,64 @@ func TestFlagMakesProblemDueAndCounts(t *testing.T) {
 	}
 }
 
+func TestLearnerMarksFlagProblem(t *testing.T) {
+	loc := time.UTC
+	now := time.Date(2026, 10, 10, 12, 0, 0, 0, loc)
+	solve := attempt("two-sum", "solved", 5, false, now.AddDate(0, 0, -3))
+	state := State{Problems: testProblems, Attempts: []Attempt{solve}}
+	if c := BuildCards(state, loc)[0]; c.Flag != nil {
+		t.Fatalf("unmarked attempt flagged: %+v", c.Flag)
+	}
+	optimal := solve
+	optimal.Approach = ApproachOptimal
+	state.Attempts = []Attempt{optimal}
+	if c := BuildCards(state, loc)[0]; c.Flag != nil {
+		t.Fatalf("optimal approach flagged: %+v", c.Flag)
+	}
+	for _, test := range []struct {
+		name          string
+		mark          func(*Attempt)
+		reason, label string
+	}{
+		{"wants review", func(a *Attempt) { a.WantsReview = true }, "Marked for review 3 days ago", "Flagged: marked for review"},
+		{"suboptimal", func(a *Attempt) { a.Approach = ApproachSuboptimal }, "Took a simpler approach 3 days ago", "Flagged: simpler approach taken"},
+		{"both", func(a *Attempt) { a.WantsReview, a.Approach = true, ApproachSuboptimal }, "Took a simpler approach 3 days ago", "Flagged: simpler approach taken"},
+	} {
+		marked := solve
+		test.mark(&marked)
+		state.Attempts = []Attempt{marked}
+		card := BuildCards(state, loc)[0]
+		// Due the day after the attempt, well before FSRS would schedule it.
+		if card.Flag == nil || !card.Due.Equal(time.Date(2026, 10, 8, 0, 0, 0, 0, loc)) || !card.FSRSDue.After(now) {
+			t.Fatalf("%s: flag %+v due %s", test.name, card.Flag, card.Due)
+		}
+		if got := card.Flag.Reason(now, loc); got != test.reason {
+			t.Errorf("%s: reason %q", test.name, got)
+		}
+		if got := card.Flag.Label(); got != test.label {
+			t.Errorf("%s: label %q", test.name, got)
+		}
+		// A re-solve the next day counts as a review.
+		later := attempt("two-sum", "solved", 5, false, now.AddDate(0, 0, -2))
+		state.Attempts = []Attempt{later, marked}
+		if k := History(state, loc)[Date(later.CreatedAt, loc)].Kinds["two-sum"]; k != KindReview {
+			t.Errorf("%s: re-solve kind %s", test.name, k)
+		}
+		if c := BuildCards(state, loc)[0]; c.Flag != nil {
+			t.Errorf("%s: flag survived a newer attempt", test.name)
+		}
+	}
+	// The analysis's verdict reads first; the earlier date raises the flag.
+	marked := solve
+	marked.WantsReview = true
+	state.Attempts = []Attempt{marked}
+	state.Analyses = map[string]Analysis{marked.ID: {AttemptID: marked.ID, Status: AnalysisDone, Current: true, TimeMatches: boolPtr(false), SpaceMatches: boolPtr(true), Optimal: boolPtr(true), ActualTime: "O(n²)", UpdatedAt: now.AddDate(0, 0, -1)}}
+	c := BuildCards(state, loc)[0]
+	if c.Flag == nil || c.Flag.Reason(now, loc) != "Time complexity judged wrong 3 days ago" || !c.Due.Equal(time.Date(2026, 10, 8, 0, 0, 0, 0, loc)) {
+		t.Fatalf("combined flag %+v due %s", c.Flag, c.Due)
+	}
+}
+
 func TestPlanPutsFlaggedFirst(t *testing.T) {
 	loc := time.UTC
 	date := day("2026-11-01")

@@ -236,6 +236,7 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	form := leetgrinder.AttemptForm{ID: r.PostForm.Get("id"), Revision: r.PostForm.Get("revision"), Outcome: r.PostForm.Get("outcome"), Minutes: r.PostForm.Get("minutes"), Assisted: r.PostForm.Get("assisted") == "true", Notes: r.PostForm.Get("notes"), Review: r.PostForm.Get("review") == "true",
+		WantsReview: r.PostForm.Get("wantsReview") == "true", Approach: r.PostForm.Get("approach"),
 		Time:  leetgrinder.ComplexityInput{Choice: r.PostForm.Get("timeComplexity"), Other: r.PostForm.Get("timeComplexityOther")},
 		Space: leetgrinder.ComplexityInput{Choice: r.PostForm.Get("spaceComplexity"), Other: r.PostForm.Get("spaceComplexityOther")}}
 	switch ret := r.PostForm.Get("return"); ret {
@@ -278,7 +279,15 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 		reject(400, "Choose whether you used hints or a solution.")
 		return
 	}
-	attempt := leetgrinder.Attempt{ID: form.ID, ProblemSlug: problem.Slug, Outcome: form.Outcome, Minutes: minutes, Assisted: form.Assisted, Notes: form.Notes, Source: "web", TimeComplexity: form.Time.Value(), SpaceComplexity: form.Space.Value()}
+	if v := r.PostForm.Get("wantsReview"); v != "" && v != "true" && v != "false" {
+		reject(400, "Choose whether you want to review this problem.")
+		return
+	}
+	if !leetgrinder.ValidApproach(form.Approach) {
+		reject(400, "Choose whether you reached the optimal solution or took a simpler approach.")
+		return
+	}
+	attempt := leetgrinder.Attempt{ID: form.ID, ProblemSlug: problem.Slug, Outcome: form.Outcome, Minutes: minutes, Assisted: form.Assisted, Notes: form.Notes, Source: "web", WantsReview: form.WantsReview, Approach: form.Approach, TimeComplexity: form.Time.Value(), SpaceComplexity: form.Space.Value()}
 	switch err := attempt.NormalizeDetails(); {
 	case errors.Is(err, leetgrinder.ErrComplexityRequired):
 		reject(400, "Choose the time and space complexity of your solution. They are required for solved and struggled attempts.")

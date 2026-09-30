@@ -12,11 +12,11 @@ import (
 	"github.com/michael-duren/career-strategy/internal/leetgrinder"
 )
 
-const leetgrinderAttemptColumns = "id,problem_slug,outcome,minutes,assisted,notes,created_at,revision,source,is_review,time_complexity,space_complexity,code,code_language"
+const leetgrinderAttemptColumns = "id,problem_slug,outcome,minutes,assisted,notes,created_at,revision,source,is_review,time_complexity,space_complexity,code,code_language,wants_review,approach"
 
 func scanLeetgrinderAttempt(row interface{ Scan(...any) error }) (leetgrinder.Attempt, error) {
 	var a leetgrinder.Attempt
-	err := row.Scan(&a.ID, &a.ProblemSlug, &a.Outcome, &a.Minutes, &a.Assisted, &a.Notes, &a.CreatedAt, &a.Revision, &a.Source, &a.IsReview, &a.TimeComplexity, &a.SpaceComplexity, &a.Code, &a.CodeLanguage)
+	err := row.Scan(&a.ID, &a.ProblemSlug, &a.Outcome, &a.Minutes, &a.Assisted, &a.Notes, &a.CreatedAt, &a.Revision, &a.Source, &a.IsReview, &a.TimeComplexity, &a.SpaceComplexity, &a.Code, &a.CodeLanguage, &a.WantsReview, &a.Approach)
 	return a, err
 }
 
@@ -159,10 +159,10 @@ func (s *Store) SaveLeetgrinderAttemptWithProblem(ctx context.Context, a leetgri
 	if expectedRevision == "" {
 		// is_review is decided here: the problem has an attempt on an earlier
 		// local day in the settings time zone.
-		_, err = tx.ExecContext(ctx, `INSERT INTO leetgrinder_attempts(id,problem_slug,outcome,minutes,assisted,notes,revision,source,is_review,time_complexity,space_complexity,code,code_language)
+		_, err = tx.ExecContext(ctx, `INSERT INTO leetgrinder_attempts(id,problem_slug,outcome,minutes,assisted,notes,revision,source,is_review,time_complexity,space_complexity,code,code_language,wants_review,approach)
 VALUES($1,$2,$3,$4,$5,$6,$7,$8,EXISTS (SELECT 1 FROM leetgrinder_attempts b, leetgrinder_settings s WHERE s.id=1 AND b.problem_slug=$2
-	AND (b.created_at AT TIME ZONE s.timezone)::date < (clock_timestamp() AT TIME ZONE s.timezone)::date),$9,$10,$11,$12) ON CONFLICT(id) DO NOTHING`,
-			a.ID, a.ProblemSlug, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString(), a.Source, a.TimeComplexity, a.SpaceComplexity, a.Code, a.CodeLanguage)
+	AND (b.created_at AT TIME ZONE s.timezone)::date < (clock_timestamp() AT TIME ZONE s.timezone)::date),$9,$10,$11,$12,$13,$14) ON CONFLICT(id) DO NOTHING`,
+			a.ID, a.ProblemSlug, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString(), a.Source, a.TimeComplexity, a.SpaceComplexity, a.Code, a.CodeLanguage, a.WantsReview, a.Approach)
 		if err != nil {
 			return leetgrinder.Attempt{}, err
 		}
@@ -171,14 +171,15 @@ VALUES($1,$2,$3,$4,$5,$6,$7,$8,EXISTS (SELECT 1 FROM leetgrinder_attempts b, lee
 			return leetgrinder.Attempt{}, readErr
 		}
 		if saved.ProblemSlug != a.ProblemSlug || saved.Outcome != a.Outcome || saved.Minutes != a.Minutes || saved.Assisted != a.Assisted || saved.Notes != a.Notes || saved.Source != a.Source ||
-			saved.TimeComplexity != a.TimeComplexity || saved.SpaceComplexity != a.SpaceComplexity || saved.Code != a.Code || saved.CodeLanguage != a.CodeLanguage {
+			saved.TimeComplexity != a.TimeComplexity || saved.SpaceComplexity != a.SpaceComplexity || saved.Code != a.Code || saved.CodeLanguage != a.CodeLanguage ||
+			saved.WantsReview != a.WantsReview || saved.Approach != a.Approach {
 			return leetgrinder.Attempt{}, ErrConflict
 		}
 		return saved, tx.Commit()
 	}
 	// Corrections change only what the learner states; source, review flag,
 	// and captured code stay as first recorded.
-	saved, err := scanLeetgrinderAttempt(tx.QueryRowContext(ctx, `UPDATE leetgrinder_attempts SET outcome=$3,minutes=$4,assisted=$5,notes=$6,revision=$7,time_complexity=$9,space_complexity=$10 WHERE id=$1 AND revision=$2 AND problem_slug=$8 RETURNING `+leetgrinderAttemptColumns, a.ID, expectedRevision, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString(), a.ProblemSlug, a.TimeComplexity, a.SpaceComplexity))
+	saved, err := scanLeetgrinderAttempt(tx.QueryRowContext(ctx, `UPDATE leetgrinder_attempts SET outcome=$3,minutes=$4,assisted=$5,notes=$6,revision=$7,time_complexity=$9,space_complexity=$10,wants_review=$11,approach=$12 WHERE id=$1 AND revision=$2 AND problem_slug=$8 RETURNING `+leetgrinderAttemptColumns, a.ID, expectedRevision, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString(), a.ProblemSlug, a.TimeComplexity, a.SpaceComplexity, a.WantsReview, a.Approach))
 	if errors.Is(err, sql.ErrNoRows) {
 		return leetgrinder.Attempt{}, ErrConflict
 	}
