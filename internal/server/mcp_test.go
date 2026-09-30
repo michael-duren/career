@@ -499,6 +499,51 @@ func TestMCPWriteTools(t *testing.T) {
 	if _, err := db.Detail(ctx, "book", bookID); !errors.Is(err, database.ErrNotFound) {
 		t.Fatal("book not deleted", err)
 	}
+	for _, item := range []struct{ title, typ, url string }{
+		{"Video course", "course", "https://example.com/course"},
+		{"Short blog post", "paper", "https://example.com/article"},
+	} {
+		t.Run(item.typ, func(t *testing.T) {
+			created, isErr := call("create_career_entry", map[string]any{"kind": "book", "entry": map[string]any{"title": item.title, "type": item.typ, "category": "Systems", "url": item.url, "body": "## Notes\n"}})
+			if isErr {
+				t.Fatal("create bookshelf item", created)
+			}
+			id := created["id"].(string)
+			listed, isErr := call("list_career_entries", map[string]any{"kind": "book"})
+			if isErr {
+				t.Fatal("list bookshelf items", listed)
+			}
+			found := false
+			for _, raw := range listed["entries"].([]any) {
+				entry := raw.(map[string]any)
+				if entry["slug"] == id && entry["type"] == item.typ {
+					found = true
+				}
+			}
+			if !found {
+				t.Fatal("item absent from bookshelf list", listed)
+			}
+			read, isErr := call("read_career_entry", map[string]any{"kind": "book", "id": id})
+			if isErr || read["revision"] != created["revision"] || !strings.Contains(read["text"].(string), `"type": "`+item.typ+`"`) {
+				t.Fatal("read bookshelf item", read)
+			}
+			changed, isErr := call("update_career_entry", map[string]any{"kind": "book", "id": id, "revision": read["revision"], "fields": map[string]any{"status": "completed", "body": "## Notes\nRead and noted."}})
+			if isErr {
+				t.Fatal("update bookshelf item", changed)
+			}
+			saved, err := db.Detail(ctx, "book", id)
+			if err != nil || saved.Entry["type"] != item.typ || saved.Entry["status"] != "completed" || saved.Entry["body"] != "## Notes\nRead and noted." {
+				t.Fatal("bookshelf update not saved", saved, err)
+			}
+			deleted, isErr := call("delete_career_entry", map[string]any{"kind": "book", "id": id, "revision": changed["revision"]})
+			if isErr || deleted["deleted"] != true {
+				t.Fatal("delete bookshelf item", deleted)
+			}
+			if _, err := db.Detail(ctx, "book", id); !errors.Is(err, database.ErrNotFound) {
+				t.Fatal("bookshelf item remains after delete", err)
+			}
+		})
+	}
 	if out, isErr := call("delete_career_entry", map[string]any{"kind": "page", "id": "index", "revision": "r"}); !isErr {
 		t.Fatal("page kind deletable", out)
 	}

@@ -28,7 +28,7 @@ export const BOOK_CATEGORIES = [
 
 export type BookCategory = (typeof BOOK_CATEGORIES)[number];
 export type BookStatus = 'backlog' | 'reading' | 'paused' | 'completed' | 'reference';
-export type BookType = 'book' | 'course';
+export type BookType = 'book' | 'course' | 'paper';
 export type ProgressUnit = 'chapter' | 'page' | 'module' | 'section' | 'lecture';
 
 export const CATEGORY_COLORS: Record<string, string> = {
@@ -85,8 +85,7 @@ export interface LogNote {
   text: string;
 }
 
-export interface Book extends BookFrontmatter {
-  slug: string;
+export interface Book extends RawBook {
   chapters: ChapterItem[];
   log: LogNote[];
   /** Resolved progress unit (frontmatter override → else "chapter"). */
@@ -185,7 +184,7 @@ function toBook(raw: RawBook): Book {
   // A completed book is 100% even if the checklist wasn't fully ticked.
   if (raw.status === 'completed' && total > 0) completed = total;
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-  const unit = raw.progress?.unit ?? (raw.type === 'course' ? 'module' : 'chapter');
+  const unit = raw.progress?.unit ?? (raw.type === 'course' ? 'module' : raw.type === 'paper' ? 'section' : 'chapter');
 
   return {
     ...raw,

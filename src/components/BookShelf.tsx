@@ -2,7 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '../lib/utils';
-import { categoryColor, type Book, type ShelfData, type BookStatus } from '../lib/books';
+import { buildShelf, categoryColor, type Book, type BookType, type ShelfData, type BookStatus } from '../lib/books';
+
+const SHELF_ORDER: BookType[] = ['book', 'course', 'paper'];
+const SHELF_TABS: Record<BookType, { label: string; singular: string }> = {
+  book: { label: 'Books', singular: 'book' },
+  course: { label: 'Video courses', singular: 'video course' },
+  paper: { label: 'Papers', singular: 'paper or article' },
+};
 
 const STATUS_META: Record<BookStatus, { label: string; classes: string }> = {
   reading: { label: 'Reading', classes: 'border-blue-500/50 bg-blue-500/10 text-blue-300' },
@@ -106,7 +113,7 @@ function FeaturedHero({ book }: { book: Book }) {
             <p className="text-sm text-zinc-400 mt-0.5">{authorsLine(book)}</p>
           </div>
 
-          <div className="space-y-1.5 max-w-md">
+          {book.total > 0 && <div className="space-y-1.5 max-w-md">
             <div className="flex justify-between text-xs text-zinc-400">
               <span>
                 {book.completed} / {book.total} {book.unit}s
@@ -114,7 +121,7 @@ function FeaturedHero({ book }: { book: Book }) {
               <span className="font-semibold text-zinc-200">{book.percent}%</span>
             </div>
             <ProgressBar percent={book.percent} color={color} />
-          </div>
+          </div>}
 
           {book.lastNote && (
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3 max-w-xl">
@@ -170,12 +177,10 @@ function BookCard({ book, onOpen }: { book: Book; onOpen: (b: Book) => void }) {
         <p className="text-xs text-zinc-500 mt-0.5 truncate">{authorsLine(book)}</p>
         <div className="mt-auto pt-2 space-y-1">
           <div className="flex justify-between text-[10px] text-zinc-500">
-            <span>
-              {book.total > 0 ? `${book.completed}/${book.total} ${book.unit}s` : 'not started'}
-            </span>
-            <span>{book.rating ? <Stars rating={book.rating} /> : `${book.percent}%`}</span>
+            <span>{book.total > 0 ? `${book.completed}/${book.total} ${book.unit}s` : book.status === 'completed' ? 'Done' : book.status === 'reading' ? 'Reading' : 'Saved to read'}</span>
+            <span>{book.rating ? <Stars rating={book.rating} /> : book.total > 0 ? `${book.percent}%` : null}</span>
           </div>
-          <ProgressBar percent={book.percent} color={color} />
+          {book.total > 0 && <ProgressBar percent={book.percent} color={color} />}
         </div>
       </div>
     </button>
@@ -226,7 +231,7 @@ function BookModal({ book, onClose }: { book: Book; onClose: () => void }) {
           </div>
         </div>
 
-        <div className="mt-4 space-y-1.5">
+        {book.total > 0 && <div className="mt-4 space-y-1.5">
           <div className="flex justify-between text-xs text-zinc-400">
             <span>
               {book.completed} / {book.total} {book.unit}s
@@ -234,7 +239,7 @@ function BookModal({ book, onClose }: { book: Book; onClose: () => void }) {
             <span className="font-semibold">{book.percent}%</span>
           </div>
           <ProgressBar percent={book.percent} color={color} />
-        </div>
+        </div>}
 
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
           <Meta label="Started" value={book.started ?? '—'} />
@@ -323,38 +328,56 @@ interface Props {
 export function BookShelf({ data }: Props) {
   const [open, setOpen] = useState<Book | null>(null);
   const [filter, setFilter] = useState<string>('all');
+  const [activeType, setActiveType] = useState<BookType>('book');
+  const shelf = useMemo(() => buildShelf(data.all.filter(book => book.type === activeType)), [data.all, activeType]);
 
   const visibleGroups = useMemo(
-    () => (filter === 'all' ? data.groups : data.groups.filter((g) => g.category === filter)),
-    [data.groups, filter],
+    () => (filter === 'all' ? shelf.groups : shelf.groups.filter((g) => g.category === filter)),
+    [shelf.groups, filter],
   );
 
-  const { stats } = data;
+  const { stats } = shelf;
+  const activeTab = SHELF_TABS[activeType];
+  function selectTab(type: BookType) {
+    setActiveType(type);
+    setFilter('all');
+    setOpen(null);
+  }
 
   return (
     <div className="space-y-6">
-      {data.featured && <a className="inline-block text-sm text-blue-400 hover:underline" href={`/manage/books?id=${encodeURIComponent(data.featured.slug)}`}>Update {data.featured.title} →</a>}
+      <div role="tablist" aria-label="Bookshelf types" className="flex flex-wrap gap-2 border-b border-zinc-800 pb-3">
+        {SHELF_ORDER.map((type, index) => {
+          const count = data.all.filter(book => book.type === type).length;
+          return <button key={type} id={`shelf-tab-${type}`} type="button" role="tab" aria-controls="shelf-panel" aria-selected={activeType === type} tabIndex={activeType === type ? 0 : -1} onClick={() => selectTab(type)} onKeyDown={event => {
+            const next = event.key === 'ArrowRight' ? SHELF_ORDER[(index + 1) % SHELF_ORDER.length] : event.key === 'ArrowLeft' ? SHELF_ORDER[(index - 1 + SHELF_ORDER.length) % SHELF_ORDER.length] : event.key === 'Home' ? SHELF_ORDER[0] : event.key === 'End' ? SHELF_ORDER[SHELF_ORDER.length - 1] : null;
+            if (next) { event.preventDefault(); selectTab(next); document.getElementById(`shelf-tab-${next}`)?.focus(); }
+          }} className={cn('rounded-lg px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-blue-400', activeType === type ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white')}>{SHELF_TABS[type].label} <span className="ml-1 opacity-70">{count}</span></button>;
+        })}
+      </div>
+      <div id="shelf-panel" role="tabpanel" aria-labelledby={`shelf-tab-${activeType}`} className="space-y-6">
+      {shelf.all.length === 0 && <p className="rounded-lg border border-dashed border-zinc-700 p-6 text-sm text-zinc-400">No {activeTab.label.toLowerCase()} yet. <a className="text-blue-400 hover:underline" href="/manage/books">Add a {activeTab.singular} →</a></p>}
+      {shelf.featured && <a className="inline-block text-sm text-blue-400 hover:underline" href={`/manage/books?id=${encodeURIComponent(shelf.featured.slug)}`}>Update {shelf.featured.title} →</a>}
       {/* Featured hero */}
-      {data.featured && <FeaturedHero book={data.featured} />}
+      {shelf.featured && <FeaturedHero book={shelf.featured} />}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <StatCard label="Books" value={stats.totalBooks.toString()} accent="text-blue-400" />
-        <StatCard label="Courses" value={stats.totalCourses.toString()} accent="text-cyan-400" />
+      {shelf.all.length > 0 && <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard label={activeTab.label} value={shelf.all.length.toString()} accent="text-blue-400" />
         <StatCard label="Reading now" value={stats.reading.toString()} accent="text-yellow-400" />
         <StatCard label="Completed" value={stats.completed.toString()} accent="text-green-400" />
-        <StatCard
+        {stats.unitsTotal > 0 && <StatCard
           label="Units read"
           value={`${stats.unitsDone}/${stats.unitsTotal}`}
           accent="text-purple-400"
-        />
-      </div>
+        />}
+      </div>}
 
       {/* Category distribution bar */}
-      <div className="bg-zinc-900 rounded-lg p-4 border border-zinc-800">
+      {shelf.all.length > 0 && <div className="bg-zinc-900 rounded-lg p-4 border border-zinc-800">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-zinc-300">By category</h2>
-          <span className="text-xs text-zinc-500">{stats.avgCompletion}% avg completion</span>
+          {stats.unitsTotal > 0 && <span className="text-xs text-zinc-500">{stats.avgCompletion}% avg completion</span>}
         </div>
         <div className="flex flex-wrap gap-2">
           {stats.byCategory.map((c) => (
@@ -384,19 +407,19 @@ export function BookShelf({ data }: Props) {
             </button>
           )}
         </div>
-      </div>
+      </div>}
 
       {/* Currently reading row (excludes the hero) */}
-      {filter === 'all' && data.currentlyReading.length > 0 && (
+      {filter === 'all' && shelf.currentlyReading.length > 0 && (
         <section>
           <h2 className="text-lg font-semibold mb-3">
             Also reading{' '}
             <span className="text-xs text-zinc-500 font-normal">
-              ({data.currentlyReading.length})
+              ({shelf.currentlyReading.length})
             </span>
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {data.currentlyReading.map((b) => (
+            {shelf.currentlyReading.map((b) => (
               <BookCard key={b.slug} book={b} onOpen={setOpen} />
             ))}
           </div>
@@ -420,6 +443,7 @@ export function BookShelf({ data }: Props) {
       ))}
 
       {open && <BookModal book={open} onClose={() => setOpen(null)} />}
+      </div>
     </div>
   );
 }

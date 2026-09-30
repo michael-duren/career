@@ -233,7 +233,7 @@ func Validate(kind string, e Entity) error {
 			return fmt.Errorf("invalid priority")
 		}
 		if kind == "book" {
-			if !allowed(e["category"].(string), "Computer Science|Networking|OS|Systems|Distributed Systems|Languages|Career|Online Course") || !allowed(e["status"].(string), "backlog|reading|paused|completed|reference") || !allowed(e["type"].(string), "book|course") {
+			if !allowed(e["category"].(string), "Computer Science|Networking|OS|Systems|Distributed Systems|Languages|Career|Online Course") || !allowed(e["status"].(string), "backlog|reading|paused|completed|reference") || !allowed(e["type"].(string), "book|course|paper") {
 				return fmt.Errorf("invalid book enum")
 			}
 			known["progress"] = true

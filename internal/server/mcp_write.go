@@ -167,13 +167,13 @@ var deleteAnnotations = &mcp.ToolAnnotations{Title: "Delete career entry", Destr
 const fieldGuide = "Fields — goal: title, status (planned|active|done|dropped), startDate, endDate (YYYY-MM-DD), color (#rrggbb), dailyHours, selectedWeekdays (ISO weekdays 1=Monday through 7=Sunday; omitted means every day), dependsOn (goal IDs), steps [{title, done}] (mini goals: ordered, dateless sub-goals), notes [{body}], metadata {string: string}. " +
 	"company: title, category, url, status (not_started|applied|interviewing|offer|rejected|passed), priority (high|medium|low), featured, tags, body (markdown). " +
 	"note: title, topic, description, tags, body (markdown), todos [{title, done}]. " +
-	"book: title, type (book|course), category (Computer Science|Networking|OS|Systems|Distributed Systems|Languages|Career|Online Course), status (backlog|reading|paused|completed|reference), priority (high|medium|low), authors [string], edition, isbn, url, cover, started, finished (YYYY-MM-DD), rating (0-5), featured, tags, body (markdown; chapter checklist). " +
+	"bookshelf: use kind=book for books, video courses, and papers (including articles and blog posts). Set entry.type to book, course, or paper when creating; update and delete by kind=book and ID. Fields: title, type, category (Computer Science|Networking|OS|Systems|Distributed Systems|Languages|Career|Online Course), status (backlog|reading|paused|completed|reference), priority (high|medium|low), authors [string], edition, isbn, url, cover, started, finished (YYYY-MM-DD), rating (0-5), featured, tags, body (markdown; optional chapter or module checklist). " +
 	"connection: name, role, companyName, companySlug (linked company's ID: the trackedSlug from list_connection_companies, or a company's ID from search_career_context), email, url, connectedOn, lastContactedOn (YYYY-MM-DD), cadenceDays (check-in reminder interval), queued (in the outreach queue), notes, tags."
 
 func (s *Server) addWriteTools(server *mcp.Server) {
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "create_career_entry",
-		Description: "Create a goal, company, note, book or connection. Confirm with the user first. " + fieldGuide + " Returns the new ID and revision.",
+		Description: "Create a goal, company, note, bookshelf item or connection. Confirm with the user first. " + fieldGuide + " Returns the new ID and revision.",
 		InputSchema: writeSchema[createInput](),
 		Annotations: createAnnotations,
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in createInput) (*mcp.CallToolResult, any, error) {
@@ -193,7 +193,7 @@ func (s *Server) addWriteTools(server *mcp.Server) {
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "update_career_entry",
-		Description: "Change fields of a goal, company, note, book or connection. Confirm the change with the user first. Call read_career_entry first and pass its revision; send only changed fields. Existing steps, notes and todos keep their IDs; new ones may omit IDs. " + fieldGuide,
+		Description: "Change fields of a goal, company, note, bookshelf item or connection. Confirm the change with the user first. Call read_career_entry first and pass its revision; send only changed fields. Existing steps, notes and todos keep their IDs; new ones may omit IDs. " + fieldGuide,
 		InputSchema: writeSchema[updateInput](),
 		Annotations: updateAnnotations,
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in updateInput) (*mcp.CallToolResult, any, error) {
@@ -234,7 +234,7 @@ func (s *Server) addWriteTools(server *mcp.Server) {
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "delete_career_entry",
-		Description: "Delete a goal, company, note, book or connection. Confirm with the user first; this cannot be undone. Call read_career_entry first and pass its revision.",
+		Description: "Delete a goal, company, note, bookshelf item or connection. Books, video courses, and papers all use kind=book. Confirm with the user first; this cannot be undone. Call read_career_entry first and pass its revision.",
 		InputSchema: writeSchema[deleteInput](),
 		Annotations: deleteAnnotations,
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in deleteInput) (*mcp.CallToolResult, any, error) {
