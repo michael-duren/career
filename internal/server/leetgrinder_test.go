@@ -44,6 +44,10 @@ func TestLeetgrinderAccess(t *testing.T) {
 	}{
 		{"/leetgrinder/problem/two-sum/attempts", url.Values{}, "https://evil.com", 403},
 		{"/leetgrinder/settings/general", url.Values{"goalNew": {"2"}}, "https://evil.com", 403},
+		{"/leetgrinder/todos/sets", url.Values{"title": {"Bad"}}, "https://evil.com", 403},
+		{"/leetgrinder/todos/items", url.Values{"problem": {"two-sum"}}, "https://evil.com", 403},
+		{"/leetgrinder/todos/sets/11111111-1111-4111-8111-111111111111/delete", url.Values{}, "https://evil.com", 403},
+		{"/leetgrinder/todos/items/11111111-1111-4111-8111-111111111111/delete", url.Values{}, "https://evil.com", 403},
 	} {
 		r := httptest.NewRequest("POST", test.path, strings.NewReader(test.values.Encode()))
 		r.AddCookie(&http.Cookie{Name: "session", Value: s.token()})

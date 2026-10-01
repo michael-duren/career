@@ -23,8 +23,10 @@ type Problem struct {
 	// OptimalSource is "curated" for the reviewed table, "model" for
 	// Claude's estimate, or "" when no optimum is known.
 	OptimalSource string
-	// MetadataSource is "seed", "extension", "leetcode", or "" for a bare row.
+	// MetadataSource is "seed", "extension", "leetcode", "mcp", or "" for a bare row.
 	MetadataSource string
+	// ImportMetadata keeps source-specific problem snapshots keyed by todo item ID.
+	ImportMetadata map[string]any
 	// NotFound reports that LeetCode answered that no such problem exists.
 	NotFound bool
 	// FetchAttempts counts server-side metadata fetches; see MaxFetchAttempts.

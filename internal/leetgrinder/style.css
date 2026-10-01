@@ -393,6 +393,13 @@ details[open] > summary {
   padding: 26px;
   margin-bottom: 26px;
 }
+.todo-form label + label { margin-top: 16px; }
+.todo-form button { margin-top: 16px; }
+.todo-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.todo-heading h2 { margin: 0; }
+.side-list .todo-items li { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+.todo-items a { min-width: 0; overflow-wrap: anywhere; }
+.todo-items form { flex: none; }
 .prose {
   font-size: 0.95rem;
   line-height: 1.8;

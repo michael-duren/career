@@ -10,15 +10,19 @@ import (
 	"github.com/michael-duren/career-strategy/internal/leetgrinder"
 )
 
-const leetgrinderProblemColumns = "slug,COALESCE(number,0),title,difficulty,array_to_json(topics)::text,optimal_time,optimal_space,optimal_note,optimal_source,metadata_source,(fetched_at IS NOT NULL AND title=''),fetch_attempts"
+const leetgrinderProblemColumns = "slug,COALESCE(number,0),title,difficulty,array_to_json(topics)::text,optimal_time,optimal_space,optimal_note,optimal_source,metadata_source,(fetched_at IS NOT NULL AND title=''),fetch_attempts,import_metadata::text"
 
 func scanLeetgrinderProblem(row interface{ Scan(...any) error }) (leetgrinder.Problem, error) {
 	var p leetgrinder.Problem
 	var topics string
-	if err := row.Scan(&p.Slug, &p.Number, &p.Title, &p.Difficulty, &topics, &p.OptimalTime, &p.OptimalSpace, &p.OptimalNote, &p.OptimalSource, &p.MetadataSource, &p.NotFound, &p.FetchAttempts); err != nil {
+	var imported string
+	if err := row.Scan(&p.Slug, &p.Number, &p.Title, &p.Difficulty, &topics, &p.OptimalTime, &p.OptimalSpace, &p.OptimalNote, &p.OptimalSource, &p.MetadataSource, &p.NotFound, &p.FetchAttempts, &imported); err != nil {
 		return p, err
 	}
 	if err := json.Unmarshal([]byte(topics), &p.Topics); err != nil {
+		return p, err
+	}
+	if err := json.Unmarshal([]byte(imported), &p.ImportMetadata); err != nil {
 		return p, err
 	}
 	p.InCatalog = true
@@ -135,7 +139,7 @@ func (s *Store) NextLeetgrinderFetch(ctx context.Context, now time.Time) (string
 	var slug string
 	err := s.DB.QueryRowContext(ctx, `SELECT p.slug FROM leetgrinder_problems p
 WHERE p.fetched_at IS NULL AND p.fetch_attempts < $1 AND p.fetch_after <= $2
-  AND (p.title='' OR (p.metadata_source IN ('seed','extension') AND cardinality(p.topics)=0 AND EXISTS (SELECT 1 FROM leetgrinder_attempts a WHERE a.problem_slug=p.slug)))
+  AND (p.title='' OR (p.metadata_source IN ('seed','extension','mcp') AND cardinality(p.topics)=0 AND EXISTS (SELECT 1 FROM leetgrinder_attempts a WHERE a.problem_slug=p.slug)))
 ORDER BY p.title='' DESC, p.created_at DESC, p.slug LIMIT 1`, leetgrinder.MaxFetchAttempts, now).Scan(&slug)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", false, nil
