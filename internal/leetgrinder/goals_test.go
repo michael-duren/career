@@ -2,6 +2,7 @@ package leetgrinder
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -182,6 +183,55 @@ func TestLearnerMarksFlagProblem(t *testing.T) {
 	}
 }
 
+func TestStrugglesFlagProblem(t *testing.T) {
+	loc := time.UTC
+	now := time.Date(2026, 10, 10, 12, 0, 0, 0, loc)
+	for _, test := range []struct {
+		outcome       string
+		assisted      bool
+		reason, label string
+	}{
+		{"struggled", false, "Struggled 3 days ago", "Flagged: struggled"},
+		{"unfinished", false, "Unfinished 3 days ago", "Flagged: unfinished"},
+		{"solved", true, "Solved with help 3 days ago", "Flagged: solved with help"},
+	} {
+		a := attempt("two-sum", test.outcome, 30, test.assisted, now.AddDate(0, 0, -3))
+		state := State{Problems: testProblems, Attempts: []Attempt{a}}
+		c := BuildCards(state, loc)[0]
+		if c.Flag == nil || !c.Due.Equal(time.Date(2026, 10, 8, 0, 0, 0, 0, loc)) {
+			t.Fatalf("%s: flag %+v due %s", test.outcome, c.Flag, c.Due)
+		}
+		if got := c.Flag.Reason(now, loc); got != test.reason {
+			t.Errorf("%s: reason %q", test.outcome, got)
+		}
+		if got := c.Flag.Label(); got != test.label {
+			t.Errorf("%s: label %q", test.outcome, got)
+		}
+		// The review reason keeps the recall estimate.
+		if got := ReviewReason(c, now, loc); !strings.HasPrefix(got, test.reason+" · recall estimate ") {
+			t.Errorf("%s: review reason %q", test.outcome, got)
+		}
+		// A mark on the struggle still reads as the struggle, with recall.
+		a.WantsReview = true
+		state.Attempts = []Attempt{a}
+		if got := ReviewReason(BuildCards(state, loc)[0], now, loc); !strings.HasPrefix(got, test.reason+" · recall") {
+			t.Errorf("%s: marked struggle review reason %q", test.outcome, got)
+		}
+	}
+	// A struggle flagged later (migration 023, or a correction) still names
+	// the attempt's own day, and is dated from when it was flagged.
+	late := attempt("two-sum", "struggled", 30, false, now.AddDate(0, 0, -30))
+	late.MarkedAt = now.AddDate(0, 0, -1)
+	if c := BuildCards(State{Problems: testProblems, Attempts: []Attempt{late}}, loc)[0]; c.Flag == nil || c.Flag.Reason(now, loc) != "Struggled 30 days ago" || !c.Flag.Date.Equal(Date(late.MarkedAt, loc)) {
+		t.Fatalf("late struggle flag %+v due %s", c.Flag, c.Due)
+	}
+	// An unassisted solve does not flag.
+	state := State{Problems: testProblems, Attempts: []Attempt{attempt("two-sum", "solved", 30, false, now.AddDate(0, 0, -3))}}
+	if c := BuildCards(state, loc)[0]; c.Flag != nil {
+		t.Fatalf("clean solve flagged: %+v", c.Flag)
+	}
+}
+
 func TestPlanPutsFlaggedFirst(t *testing.T) {
 	loc := time.UTC
 	date := day("2026-11-01")
@@ -189,9 +239,13 @@ func TestPlanPutsFlaggedFirst(t *testing.T) {
 	recent := attempt("two-sum", "solved", 10, false, date.AddDate(0, 0, -2))
 	state := State{Problems: testProblems, Attempts: []Attempt{
 		recent,
-		attempt("binary-search", "unfinished", 25, false, old),
+		// Overdue and lower recall, but an unassisted solve, so not flagged.
+		attempt("binary-search", "solved", 20, false, old),
 	}, Analyses: map[string]Analysis{recent.ID: {Status: AnalysisDone, Current: true, SpaceMatches: boolPtr(false), UpdatedAt: date.AddDate(0, 0, -2)}}}
 	all := BuildCards(state, loc)
+	if due := DueCards(all, date, loc, nil); len(due) != 2 {
+		t.Fatalf("both should be due: %d", len(due))
+	}
 	if got := PlanReviews(all, date, loc, 1, nil); !reflect.DeepEqual(got, []string{"two-sum"}) {
 		t.Fatalf("plan %v, want the flagged problem first", got)
 	}

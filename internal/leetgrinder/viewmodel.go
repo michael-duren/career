@@ -139,7 +139,10 @@ type SettingsPage struct {
 
 func ReviewKey(slug string) string { return "review-" + slug }
 func DateLabel(t time.Time) string { return t.Format("Mon 2 Jan 2006") }
-func Percent(f float64) string     { return strconv.Itoa(int(f*100+0.5)) + "%" }
+
+// CompactDate drops the weekday, for dense tables.
+func CompactDate(t time.Time) string { return t.Format("2 Jan 2006") }
+func Percent(f float64) string       { return strconv.Itoa(int(f*100+0.5)) + "%" }
 
 func ProblemURL(slug string) string { return "/leetgrinder/problem/" + slug }
 func Count(n int) string            { return strconv.Itoa(n) }

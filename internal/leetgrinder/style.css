@@ -488,11 +488,11 @@ dd {
   color: var(--accent);
 }
 .badge {
-  padding: 4px 9px;
+  padding: 2px 8px;
   background: var(--soft);
   color: #bfdbfe;
-  border-radius: 5px;
-  font-size: 0.7rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
   white-space: nowrap;
 }
 .problem-actions {
@@ -516,9 +516,10 @@ dd {
   grid-template-columns: 1fr 1fr;
   gap: 18px;
 }
-.attempt-form input:not([type="checkbox"]),
+.attempt-form input:not([type="checkbox"]):not([type="radio"]),
 .attempt-form select,
-.attempt-form textarea {
+.attempt-form textarea,
+.log-problem-form input {
   display: block;
   width: 100%;
   margin-top: 6px;
@@ -565,7 +566,7 @@ dd {
 }
 .history-links {
   display: flex;
-  gap: 20px;
+  gap: 12px;
   align-items: center;
   flex-wrap: wrap;
   margin-bottom: 35px;
@@ -1103,7 +1104,7 @@ dd {
   width: 28px;
   height: 28px;
   padding: 0;
-  border: 1px solid var(--line);
+  border: 1px solid #3f3f46;
   border-radius: 50%;
   background: transparent;
   color: var(--muted);
@@ -1111,7 +1112,7 @@ dd {
 }
 .info-button:hover {
   color: var(--accent);
-  border-color: #3f3f46;
+  border-color: var(--accent);
 }
 .help-popover {
   width: min(520px, calc(100vw - 32px));
@@ -1173,6 +1174,17 @@ dd {
   font-size: 0.8rem;
   color: var(--muted);
 }
+.problem-filters label.checkbox {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+}
+.problem-filters label.checkbox input {
+  width: 17px;
+  padding: 0;
+}
 .problem-filters .filter-search {
   grid-column: 1 / -1;
 }
@@ -1195,7 +1207,17 @@ dd {
 .problem-table th[scope="row"] {
   font-weight: 500;
   white-space: normal;
-  min-width: 14em;
+  overflow-wrap: anywhere;
+  min-width: 10em;
+}
+/* Headers and dates may wrap so every column fits at desktop widths,
+   whatever the font's metrics. */
+.problem-table thead th,
+.problem-table td.date {
+  white-space: normal;
+}
+.problem-table td.date {
+  min-width: 5.5em;
 }
 .problem-table th[scope="row"] a {
   color: var(--ink);
@@ -1204,11 +1226,37 @@ dd {
 .problem-table th[scope="row"] a:hover {
   color: var(--accent);
 }
-.problem-table td.topic {
+.row-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+.problem-table th[scope="row"] .row-topics a {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 11px;
+}
+.problem-table th[scope="row"] .row-topics a:hover {
+  color: var(--accent);
+}
+.problem-table td.status {
   white-space: normal;
   min-width: 14em;
 }
-.problem-table td.topic .small {
+.status-tags > span:not(.flag) {
+  white-space: nowrap;
+}
+.status-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.status-tags .flag {
+  flex-basis: 100%;
+}
+.problem-table .not-found {
   display: block;
 }
 .problem-table .num {
@@ -1365,11 +1413,6 @@ dd {
   color: var(--accent);
   border-color: var(--accent);
 }
-.problem-table .topic {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 8px;
-}
 .log-problem {
   margin-bottom: 24px;
 }
@@ -1419,6 +1462,7 @@ dd {
 .review-state {
   display: grid;
   grid-template-columns: auto auto;
+  justify-content: start;
   gap: 4px 16px;
   margin: 0;
 }
@@ -1440,15 +1484,46 @@ dd {
 }
 
 /* Stats: goal calendar. */
+.stats-block {
+  margin-top: 40px;
+}
+.goal-calendar abbr {
+  text-decoration: none;
+}
+/* Fixed layout needs a set width: the week label, 7 days, 9 gaps. */
 .goal-calendar {
+  table-layout: fixed;
+  width: calc(52px + 7 * 22px + 9 * 4px);
   border-collapse: separate;
   border-spacing: 4px;
+}
+.goal-calendar th {
+  padding: 0;
+  line-height: 22px;
+}
+.goal-calendar thead th:first-child,
+.goal-calendar tbody th {
+  width: 52px;
+  white-space: nowrap;
 }
 .goal-calendar th {
   font-weight: 400;
   text-align: left;
 }
-.cal-day,
+.goal-calendar thead th:not(:first-child) {
+  width: 22px;
+  overflow: hidden;
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-align: center;
+}
+.cal-day {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 3px;
+  background: var(--line);
+}
 .cal-key {
   width: 18px;
   height: 18px;

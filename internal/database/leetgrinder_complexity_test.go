@@ -135,7 +135,19 @@ func TestLeetgrinderAttemptDetails(t *testing.T) {
 	if corrected, err = s.SaveLeetgrinderAttempt(ctx, correction, kept.Revision); err != nil || !corrected.MarkedAt.Equal(kept.MarkedAt) {
 		t.Fatalf("second mark moved marked_at: %+v %v", corrected, err)
 	}
-	if state, err := s.LeetgrinderState(ctx); err != nil || !state.Attempts[0].WantsReview || state.Attempts[0].Approach != leetgrinder.ApproachSuboptimal {
+	// Clearing every flag, then correcting to a struggle, raises it again.
+	correction = corrected
+	correction.WantsReview, correction.Approach = false, ""
+	cleared, err := s.SaveLeetgrinderAttempt(ctx, correction, corrected.Revision)
+	if err != nil || cleared.SelfFlagged() || !cleared.MarkedAt.Equal(corrected.MarkedAt) {
+		t.Fatalf("cleared: %+v %v", cleared, err)
+	}
+	correction = cleared
+	correction.Outcome = "struggled"
+	if corrected, err = s.SaveLeetgrinderAttempt(ctx, correction, cleared.Revision); err != nil || !corrected.MarkedAt.After(cleared.MarkedAt) {
+		t.Fatalf("struggle correction kept marked_at: %+v %v", corrected, err)
+	}
+	if state, err := s.LeetgrinderState(ctx); err != nil || state.Attempts[0].Outcome != "struggled" || !state.Attempts[0].MarkedAt.Equal(corrected.MarkedAt) {
 		t.Fatalf("state %+v %v", state.Attempts, err)
 	}
 	// Corrections of solved or struggled attempts need both complexities.
