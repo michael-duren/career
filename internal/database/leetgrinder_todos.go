@@ -208,18 +208,41 @@ WHERE i.set_id IS NOT DISTINCT FROM $1::uuid ORDER BY i.created_at,i.id`, nullab
 	if err != nil {
 		return nil, err
 	}
+	return scanLeetgrinderTodoItems(rows)
+}
+
+// LeetgrinderNextTodoItems returns the oldest queued entry for each problem.
+// A problem present in several sets appears only once on the dashboard.
+func (s *Store) LeetgrinderNextTodoItems(ctx context.Context, limit int) ([]leetgrinder.TodoItem, error) {
+	rows, err := s.DB.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,source_data
+FROM (
+  SELECT DISTINCT ON (p.slug) i.id,COALESCE(i.set_id::text,'') AS set_id,p.slug,
+    COALESCE(p.number,0) AS number,p.title,p.difficulty,
+    array_to_json(p.topics)::text AS topics,i.source_data::text AS source_data,
+    i.created_at
+  FROM leetgrinder_todo_items i JOIN leetgrinder_problems p ON p.slug=i.problem_slug
+  ORDER BY p.slug,i.created_at,i.id
+) next
+ORDER BY created_at,id LIMIT $1`, limit)
+	if err != nil {
+		return nil, err
+	}
+	return scanLeetgrinderTodoItems(rows)
+}
+
+func scanLeetgrinderTodoItems(rows *sql.Rows) ([]leetgrinder.TodoItem, error) {
 	defer rows.Close()
 	items := []leetgrinder.TodoItem{}
 	for rows.Next() {
 		var item leetgrinder.TodoItem
 		var topics, metadata string
-		if err = rows.Scan(&item.ID, &item.SetID, &item.Problem.Slug, &item.Problem.Number, &item.Problem.Title, &item.Problem.Difficulty, &topics, &metadata); err != nil {
+		if err := rows.Scan(&item.ID, &item.SetID, &item.Problem.Slug, &item.Problem.Number, &item.Problem.Title, &item.Problem.Difficulty, &topics, &metadata); err != nil {
 			return nil, err
 		}
-		if err = json.Unmarshal([]byte(topics), &item.Problem.Topics); err != nil {
+		if err := json.Unmarshal([]byte(topics), &item.Problem.Topics); err != nil {
 			return nil, err
 		}
-		if err = json.Unmarshal([]byte(metadata), &item.SourceData); err != nil {
+		if err := json.Unmarshal([]byte(metadata), &item.SourceData); err != nil {
 			return nil, err
 		}
 		items = append(items, item)

@@ -397,9 +397,13 @@ details[open] > summary {
 .todo-form button { margin-top: 16px; }
 .todo-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .todo-heading h2 { margin: 0; }
-.side-list .todo-items li { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
-.todo-items a { min-width: 0; overflow-wrap: anywhere; }
-.todo-items form { flex: none; }
+.todo-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.todo-actions form { margin: 0; }
+.todo-table th[scope="row"] a { color: var(--ink); text-decoration: none; }
+.todo-table th[scope="row"] a:hover { color: var(--accent); }
+.todo-table th[scope="row"] { min-width: 11rem; white-space: normal; overflow-wrap: anywhere; }
+.todo-table td:nth-child(4) { min-width: 12rem; white-space: normal; }
+.todo-table .row-topics { margin-top: 0; }
 .prose {
   font-size: 0.95rem;
   line-height: 1.8;

@@ -20,7 +20,7 @@ import (
 func TestLeetgrinderAccess(t *testing.T) {
 	s := &Server{config: config.Config{Username: "admin", JWTSecret: "test", PublicOrigin: "https://example.com"}}
 	handler := s.RegisterRoutes()
-	for _, path := range []string{"/leetgrinder", "/leetgrinder/day/1", "/leetgrinder/problem/two-sum", "/leetgrinder/export", "/leetgrinder/reviews", "/leetgrinder/settings", "/leetgrinder/about", "/leetgrinder/problems", "/leetgrinder/log?problem=two-sum", "/leetgrinder/stats"} {
+	for _, path := range []string{"/leetgrinder", "/leetgrinder/day/1", "/leetgrinder/problem/two-sum", "/leetgrinder/export", "/leetgrinder/reviews", "/leetgrinder/settings", "/leetgrinder/about", "/leetgrinder/problems", "/leetgrinder/log?problem=two-sum", "/leetgrinder/stats", "/leetgrinder/todos/add", "/leetgrinder/todos/sets/new"} {
 		w := httptest.NewRecorder()
 		handler.ServeHTTP(w, httptest.NewRequest("GET", path, nil))
 		if w.Code != 303 {

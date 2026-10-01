@@ -46,6 +46,8 @@ func (s *Server) registerLeetgrinder(r chi.Router) {
 		r.Post("/leetgrinder/problem/{slug}/attempts", s.leetgrinderAttempt)
 		r.Get("/leetgrinder/problems", s.leetgrinderProblems)
 		r.Get("/leetgrinder/todos", s.leetgrinderTodos)
+		r.Get("/leetgrinder/todos/add", s.leetgrinderTodoAddProblem)
+		r.Get("/leetgrinder/todos/sets/new", s.leetgrinderTodoAddSet)
 		r.Post("/leetgrinder/todos/sets", s.leetgrinderCreateTodoSet)
 		r.Post("/leetgrinder/todos/items", s.leetgrinderAddTodoItem)
 		r.Post("/leetgrinder/todos/sets/{id}/delete", s.leetgrinderDeleteTodoSet)
@@ -95,7 +97,12 @@ func (s *Server) renderOverview(w http.ResponseWriter, r *http.Request, status i
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your saved progress is unavailable. Please retry."))
 		return
 	}
-	page := leetgrinder.OverviewPage{Today: today, IDs: reviewIDs(map[string]string{}, today), LogRef: ref, LogError: message}
+	nextTodos, err := s.db.LeetgrinderNextTodoItems(r.Context(), 5)
+	if err != nil {
+		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your todos are unavailable. Please retry."))
+		return
+	}
+	page := leetgrinder.OverviewPage{Today: today, IDs: reviewIDs(map[string]string{}, today), NextTodos: nextTodos, LogRef: ref, LogError: message}
 	renderLeetgrinder(w, r, status, leetgrinder.Overview(page))
 }
 
