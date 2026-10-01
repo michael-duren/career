@@ -120,3 +120,67 @@ func TestMigrateExistingNoteCreationSchema(t *testing.T) {
 		t.Fatal("unknown checksum was accepted")
 	}
 }
+
+// Migration 023 dates existing struggles' flags from the migration, so past
+// days are not recounted; a mark keeps its own date, and clean solves stay.
+func TestLeetgrinderStruggleFlagMigration(t *testing.T) {
+	s := emptyStore(t)
+	ctx := context.Background()
+	if _, err := s.DB.Exec(`CREATE TABLE schema_migrations(version INTEGER PRIMARY KEY, checksum TEXT NOT NULL, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())`); err != nil {
+		t.Fatal(err)
+	}
+	files, err := migrations.ReadDir("migrations")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, file := range files {
+		version, err := strconv.Atoi(strings.SplitN(file.Name(), "_", 2)[0])
+		if err != nil {
+			t.Fatal(err)
+		}
+		if version > 22 {
+			continue
+		}
+		sql, err := migrations.ReadFile("migrations/" + file.Name())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err = s.DB.Exec(string(sql)); err != nil {
+			t.Fatalf("%s: %v", file.Name(), err)
+		}
+		if _, err = s.DB.Exec("INSERT INTO schema_migrations(version,checksum) VALUES($1,$2)", version, fmt.Sprintf("%x", sha256.Sum256(sql))); err != nil {
+			t.Fatal(err)
+		}
+	}
+	old := "now() - interval '30 days'"
+	if _, err = s.DB.Exec(`INSERT INTO leetgrinder_attempts(id,problem_slug,outcome,minutes,assisted,notes,revision,created_at,marked_at,wants_review) VALUES
+('11111111-1111-4111-8111-111111111111','two-sum','struggled',30,false,'','21111111-1111-4111-8111-111111111111',` + old + `,` + old + `,false),
+('11111111-1111-4111-8111-111111111112','valid-anagram','solved',10,true,'','21111111-1111-4111-8111-111111111112',` + old + `,` + old + `,false),
+('11111111-1111-4111-8111-111111111113','lru-cache','unfinished',30,false,'','21111111-1111-4111-8111-111111111113',` + old + `,` + old + `,true),
+('11111111-1111-4111-8111-111111111114','binary-search','solved',10,false,'','21111111-1111-4111-8111-111111111114',` + old + `,` + old + `,false)`); err != nil {
+		t.Fatal(err)
+	}
+	if err = s.Migrate(ctx); err != nil {
+		t.Fatal(err)
+	}
+	rows, err := s.DB.Query(`SELECT problem_slug, marked_at > now() - interval '1 hour' FROM leetgrinder_attempts`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+	got := map[string]bool{}
+	for rows.Next() {
+		var slug string
+		var recent bool
+		if err = rows.Scan(&slug, &recent); err != nil {
+			t.Fatal(err)
+		}
+		got[slug] = recent
+	}
+	want := map[string]bool{"two-sum": true, "valid-anagram": true, "lru-cache": false, "binary-search": false}
+	for slug, recent := range want {
+		if got[slug] != recent {
+			t.Errorf("%s: marked_at moved to now = %v, want %v", slug, got[slug], recent)
+		}
+	}
+}

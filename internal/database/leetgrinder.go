@@ -179,9 +179,10 @@ VALUES($1,$2,$3,$4,$5,$6,$7,$8,EXISTS (SELECT 1 FROM leetgrinder_attempts b, lee
 	}
 	// Corrections change only what the learner states; source, review flag,
 	// and captured code stay as first recorded. marked_at moves to now only
-	// when the correction raises a mark that was not raised before.
+	// when the correction makes the attempt flag its problem (a struggle or
+	// a mark, see Attempt.SelfFlagged) and it did not before.
 	saved, err := scanLeetgrinderAttempt(tx.QueryRowContext(ctx, `UPDATE leetgrinder_attempts SET outcome=$3,minutes=$4,assisted=$5,notes=$6,revision=$7,time_complexity=$9,space_complexity=$10,wants_review=$11,approach=$12,
-	marked_at=CASE WHEN ($11 OR $12='suboptimal') AND NOT (wants_review OR approach='suboptimal') THEN clock_timestamp() ELSE marked_at END WHERE id=$1 AND revision=$2 AND problem_slug=$8 RETURNING `+leetgrinderAttemptColumns, a.ID, expectedRevision, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString(), a.ProblemSlug, a.TimeComplexity, a.SpaceComplexity, a.WantsReview, a.Approach))
+	marked_at=CASE WHEN ($3<>'solved' OR $5 OR $11 OR $12='suboptimal') AND NOT (outcome<>'solved' OR assisted OR wants_review OR approach='suboptimal') THEN clock_timestamp() ELSE marked_at END WHERE id=$1 AND revision=$2 AND problem_slug=$8 RETURNING `+leetgrinderAttemptColumns, a.ID, expectedRevision, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString(), a.ProblemSlug, a.TimeComplexity, a.SpaceComplexity, a.WantsReview, a.Approach))
 	if errors.Is(err, sql.ErrNoRows) {
 		return leetgrinder.Attempt{}, ErrConflict
 	}

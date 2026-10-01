@@ -25,7 +25,8 @@ templ layout(title string, active string) {
 					</p>
 					<div class="sidenav-links">
 						@navLink("/leetgrinder", "Dashboard", "dashboard", active)
-						@navLink("/leetgrinder/problems", "Problems", "problems", active)
+					@navLink("/leetgrinder/problems", "Problems", "problems", active)
+					@navLink("/leetgrinder/todos", "Todos", "todos", active)
 						@navLink("/leetgrinder/reviews", "Reviews", "reviews", active)
 						@navLink("/leetgrinder/stats", "Stats", "stats", active)
 						@navLink("/leetgrinder/settings", "Settings", "settings", active)
@@ -68,6 +69,8 @@ templ icon(name string) {
 				<path d="M3 5h.01"></path><path d="M3 12h.01"></path><path d="M3 19h.01"></path><path d="M8 5h13"></path><path d="M8 12h13"></path><path d="M8 19h13"></path>
 			case "reviews":
 				<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path>
+			case "todos":
+				<path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"></path>
 			case "stats":
 				<path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path>
 			case "settings":
@@ -78,6 +81,8 @@ templ icon(name string) {
 				<path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path>
 			case "warning":
 				<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path>
+			case "about":
+				<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path>
 			case "terminal":
 				<path d="m4 17 6-6-6-6"></path><path d="M12 19h8"></path>
 		}
@@ -263,7 +268,7 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, avail Analy
 				target="_blank"
 				rel="noopener noreferrer"
 			>Open on LeetCode ↗</a>
-			<span class="badge">
+			<span class={ StatusClass(state.ProblemStatus(problem.Slug)) }>
 				{ state.ProblemStatus(problem.Slug) }
 			</span>
 			if review.Pick {
@@ -454,7 +459,7 @@ templ Reviews(page ReviewsPage) {
 	@layout("Reviews", "reviews") {
 		<p class="eyebrow">SPACED REPETITION</p>
 		<h1>Reviews</h1>
-		<p class="lead">Every problem you have attempted, scheduled by how likely you are to recall it. Problems whose analysis found a complexity mistake are due the next day.</p>
+		<p class="lead">Every problem you have attempted, scheduled by how likely you are to recall it. A struggle, a simpler approach, a review request, or a complexity mistake found by the analysis makes a problem due the next day.</p>
 		<section class="stats" aria-label="Review summary">
 			<div><strong>{ Count(len(page.Today.Reviews)) }</strong><p>Picked today</p></div>
 			<div><strong>{ Count(page.Today.Backlog()) }</strong><p>Backlog</p></div>
@@ -631,7 +636,6 @@ templ Problems(page ProblemsPage) {
 							<th scope="col">#</th>
 							<th scope="col">Problem</th>
 							<th scope="col">Difficulty</th>
-							<th scope="col">Topics</th>
 							<th scope="col">Optimal time / space</th>
 							<th scope="col">Status</th>
 							<th scope="col">Attempts</th>
@@ -651,38 +655,44 @@ templ Problems(page ProblemsPage) {
 								<th scope="row">
 									<a href={ templ.SafeURL(ProblemURL(row.Problem.Slug)) }>{ row.Problem.DisplayTitle() }</a>
 									if row.Problem.NotFound {
-										<span class="small muted">Not found on LeetCode</span>
+										<span class="small muted not-found">Not found on LeetCode</span>
+									}
+									if len(row.Problem.Topics) > 0 {
+										<span class="row-topics">
+											for _, t := range row.Problem.Topics {
+												<a class="topic-tag" href={ templ.SafeURL("/leetgrinder/problems?topic=" + t) }>{ TopicLabel(t) }</a>
+											}
+										</span>
 									}
 								</th>
 								<td>
 									if row.Problem.Difficulty != "" {
 										<span class={ DifficultyClass(row.Problem.Difficulty) }>{ row.Problem.Difficulty }</span>
-									}
-								</td>
-								<td class="topic">
-									for _, t := range row.Problem.Topics {
-										<span class="small">{ TopicLabel(t) }</span>
+									} else {
+										<span class="muted" aria-hidden="true">—</span><span class="visually-hidden">Not known yet</span>
 									}
 								</td>
 								<td class="optimal">@optimalCell(row.Problem)
 </td>
-								<td>
-									<span class={ StatusClass(row.Status) }>{ row.Status }</span>
-									if row.Due {
-										<span class="badge">Due</span>
-									}
-									if row.Card.Flag != nil {
-										<span class="small flag">{ row.Card.Flag.Label() }</span>
-									}
-									if row.ComplexityWrong {
-										@complexityBadge()
-									}
+								<td class="status">
+									<div class="status-tags">
+										<span class={ StatusClass(row.Status) }>{ row.Status }</span>
+										if row.Due {
+											<span class="badge">Due</span>
+										}
+										if row.ComplexityWrong {
+											@complexityBadge()
+										}
+										if row.Card.Flag != nil {
+											<span class="small flag">{ row.Card.Flag.Label() }</span>
+										}
+									</div>
 								</td>
 								<td class="num">{ Count(row.Attempts) }</td>
-								<td>{ DateLabel(Date(row.Last.CreatedAt, page.Location)) }</td>
-								<td>
+								<td class="date">{ CompactDate(Date(row.Last.CreatedAt, page.Location)) }</td>
+								<td class="date">
 									if row.Card.Reviews > 0 {
-										{ DateLabel(Date(row.Card.Due, page.Location)) }
+										{ CompactDate(Date(row.Card.Due, page.Location)) }
 									}
 								</td>
 								<td>
@@ -733,7 +743,7 @@ templ attemptFields(problem Problem, form AttemptForm) {
 				{ form.Notes }
 			</textarea>
 		</label>
-		<p class="small muted">Solved means your solution passed on LeetCode. Mark help even if you wrote the final code yourself. A simpler approach, or asking to review, flags the problem for review the next day.</p>
+		<p class="small muted">Solved means your solution passed on LeetCode. Mark help even if you wrote the final code yourself. Anything but an unassisted solve, a simpler approach, or asking to review flags the problem for review the next day.</p>
 		<button class="button primary" type="submit">
 			if form.Revision!="" {
 				Save correction
@@ -863,7 +873,7 @@ templ Stats(page StatsPage) {
 				<p class="small muted">Struggle rate counts attempts that struggled, stayed unfinished, or used help. A problem counts under each of its topics; topics with fewer than 3 problems are grouped under Other.</p>
 			}
 		</section>
-		<section class="queue" aria-labelledby="difficulty-title">
+		<section class="queue stats-block" aria-labelledby="difficulty-title">
 			<h2 id="difficulty-title">Difficulty mix</h2>
 			<div class="table-scroll">
 				<table>
@@ -880,12 +890,12 @@ templ Stats(page StatsPage) {
 				</table>
 			</div>
 		</section>
-		<section aria-labelledby="calendar-title">
+		<section class="stats-block" aria-labelledby="calendar-title">
 			<h2 id="calendar-title">Goal calendar</h2>
 			<p class="small muted">The last { Count(len(page.Calendar)) } weeks. <span class="cal-key cal-met"></span> goal met · <span class="cal-key cal-active"></span> practised · <span class="cal-key"></span> no attempts</p>
 			<table class="goal-calendar">
 				<caption class="visually-hidden">Goal-met days by week</caption>
-				<thead><tr><th scope="col"><span class="visually-hidden">Week of</span></th><th scope="col">Mon</th><th scope="col">Tue</th><th scope="col">Wed</th><th scope="col">Thu</th><th scope="col">Fri</th><th scope="col">Sat</th><th scope="col">Sun</th></tr></thead>
+				<thead><tr><th scope="col"><span class="visually-hidden">Week of</span></th><th scope="col"><abbr title="Monday">Mo</abbr></th><th scope="col"><abbr title="Tuesday">Tu</abbr></th><th scope="col"><abbr title="Wednesday">We</abbr></th><th scope="col"><abbr title="Thursday">Th</abbr></th><th scope="col"><abbr title="Friday">Fr</abbr></th><th scope="col"><abbr title="Saturday">Sa</abbr></th><th scope="col"><abbr title="Sunday">Su</abbr></th></tr></thead>
 				<tbody>
 					for _, week := range page.Calendar {
 						<tr>
