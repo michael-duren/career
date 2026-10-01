@@ -6,48 +6,32 @@ templ Todos(page TodosPage) {
 			<div>
 				<p class="eyebrow">PRACTICE QUEUE</p>
 				<h1>Todos</h1>
-				<p class="muted">Keep problems you want to work on, alone or in a named set.</p>
+				<p class="muted">Problems you want to work on, alone or in a named set.</p>
+			</div>
+			<div class="todo-actions">
+				<a class="button primary" href="/leetgrinder/todos/add">Add a problem</a>
+				<a class="button" href="/leetgrinder/todos/sets/new">Add a problem set</a>
 			</div>
 		</header>
 		if page.Error != "" {
 			<p class="error" role="alert">{ page.Error }</p>
 		}
-		<section class="panel" aria-labelledby="add-problem-title">
-			<h2 id="add-problem-title">Add a problem</h2>
-			<form class="attempt-form todo-form" method="post" action="/leetgrinder/todos/items">
-				<label>LeetCode link or slug<input type="text" name="problem" required maxlength="300" value={ page.Problem } placeholder="https://leetcode.com/problems/two-sum/"/></label>
-				<label>List
-					<select name="setID">
-						<option value="">Individual problems</option>
-						for _, set := range page.Sets {
-							<option value={ set.ID } selected?={ page.SetID == set.ID }>{ set.Title }</option>
-						}
-					</select>
-				</label>
-				<button class="button primary" type="submit">Add problem</button>
-			</form>
-		</section>
-		<section class="panel" aria-labelledby="add-set-title">
-			<h2 id="add-set-title">Add a problem set</h2>
-			<form class="attempt-form todo-form" method="post" action="/leetgrinder/todos/sets">
-				<label>Set name<input type="text" name="title" required maxlength="120" value={ page.Title } placeholder="Interview prep"/></label>
-				<label>Problems, one link or slug per line (optional)<textarea name="problems" rows="5" placeholder="two-sum&#10;valid-parentheses">{ page.Problems }</textarea></label>
-				<button class="button primary" type="submit">Add set</button>
-			</form>
-		</section>
-		<section class="panel side-list" aria-labelledby="individual-title">
+		<section class="panel" aria-labelledby="individual-title">
 			<h2 id="individual-title">Individual problems</h2>
 			if len(page.Standalone) == 0 {
 				<p class="muted small">No individual problems yet.</p>
 			} else {
-				@todoItems(page.Standalone)
+				@todoTable(page.Standalone, "Individual problems")
 			}
 		</section>
 		for _, set := range page.Sets {
-			<section class="panel side-list" aria-labelledby={ "set-" + set.ID }>
+			<section class="panel" aria-labelledby={ "set-" + set.ID }>
 				<div class="todo-heading">
 					<h2 id={ "set-" + set.ID }>{ set.Title }</h2>
-					<form method="post" action={ templ.SafeURL("/leetgrinder/todos/sets/" + set.ID + "/delete") }><button class="button" type="submit">Remove set</button></form>
+					<div class="todo-actions">
+						<a class="button" href={ templ.SafeURL("/leetgrinder/todos/add?setID=" + set.ID) }>Add problem</a>
+						<form method="post" action={ templ.SafeURL("/leetgrinder/todos/sets/" + set.ID + "/delete") }><button class="button" type="submit">Remove set</button></form>
+					</div>
 				</div>
 				if set.Description != "" {
 					<p class="muted small">{ set.Description }</p>
@@ -55,20 +39,90 @@ templ Todos(page TodosPage) {
 				if len(set.Items) == 0 {
 					<p class="muted small">No problems in this set.</p>
 				} else {
-					@todoItems(set.Items)
+					@todoTable(set.Items, set.Title)
 				}
 			</section>
 		}
 	}
 }
 
-templ todoItems(items []TodoItem) {
-	<ol class="todo-items">
-		for _, item := range items {
-			<li>
-				<a href={ templ.SafeURL(ProblemURL(item.Problem.Slug)) }>{ item.Problem.DisplayTitle() }</a>
-				<form method="post" action={ templ.SafeURL("/leetgrinder/todos/items/" + item.ID + "/delete") }><button class="button" type="submit" aria-label={ "Remove " + item.Problem.DisplayTitle() }>Remove</button></form>
-			</li>
-		}
-	</ol>
+templ todoTable(items []TodoItem, caption string) {
+	<div class="table-scroll queue todo-table">
+		<table>
+			<caption class="visually-hidden">{ caption }</caption>
+			<thead><tr><th scope="col">#</th><th scope="col">Problem</th><th scope="col">Difficulty</th><th scope="col">Type / topics</th><th scope="col">LeetCode</th><th scope="col">Remove</th></tr></thead>
+			<tbody>
+				for _, item := range items {
+					<tr>
+						<td class="num">
+								if item.Problem.Number > 0 {
+									{ Count(item.Problem.Number) }
+								} else {
+									<span class="muted">—</span>
+								}
+						</td>
+						<th scope="row"><a href={ templ.SafeURL(ProblemURL(item.Problem.Slug)) }>{ item.Problem.DisplayTitle() }</a></th>
+						<td>
+								if item.Problem.Difficulty != "" {
+									<span class={ DifficultyClass(item.Problem.Difficulty) }>{ item.Problem.Difficulty }</span>
+								} else {
+									<span class="muted">Unknown</span>
+								}
+						</td>
+						<td>
+								if len(item.Problem.Topics) == 0 {
+									<span class="muted">Unknown</span>
+								} else {
+									<span class="row-topics">
+										for _, topic := range item.Problem.Topics {
+											<span class="topic-tag">{ TopicLabel(topic) }</span>
+										}
+								</span>
+							}
+						</td>
+						<td><a href={ templ.SafeURL(item.Problem.URL()) } target="_blank" rel="noopener noreferrer">Open<span class="visually-hidden"> { item.Problem.DisplayTitle() } on LeetCode</span></a></td>
+						<td><form method="post" action={ templ.SafeURL("/leetgrinder/todos/items/" + item.ID + "/delete") }><button class="button" type="submit" aria-label={ "Remove " + item.Problem.DisplayTitle() }>Remove</button></form></td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+templ TodoAddProblem(page TodosPage) {
+	@layout("Add a problem", "todos") {
+		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder/todos">Todos</a><span>/</span><span>Add a problem</span></nav>
+		<header class="dash-head"><div><p class="eyebrow">PRACTICE QUEUE</p><h1>Add a problem</h1></div></header>
+		<section class="panel">
+				if page.Error != "" {
+					<p class="error" role="alert">{ page.Error }</p>
+				}
+			<form class="attempt-form todo-form" method="post" action="/leetgrinder/todos/items">
+				<label>LeetCode link or slug<input type="text" name="problem" required maxlength="300" value={ page.Problem } placeholder="https://leetcode.com/problems/two-sum/"/></label>
+				<label>List<select name="setID"><option value="">Individual problems</option>
+						for _, set := range page.Sets {
+							<option value={ set.ID } selected?={ page.SetID == set.ID }>{ set.Title }</option>
+						}
+				</select></label>
+				<button class="button primary" type="submit">Add problem</button>
+			</form>
+		</section>
+	}
+}
+
+templ TodoAddSet(page TodosPage) {
+	@layout("Add a problem set", "todos") {
+		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder/todos">Todos</a><span>/</span><span>Add a problem set</span></nav>
+		<header class="dash-head"><div><p class="eyebrow">PRACTICE QUEUE</p><h1>Add a problem set</h1></div></header>
+		<section class="panel">
+				if page.Error != "" {
+					<p class="error" role="alert">{ page.Error }</p>
+				}
+			<form class="attempt-form todo-form" method="post" action="/leetgrinder/todos/sets">
+				<label>Set name<input type="text" name="title" required maxlength="120" value={ page.Title } placeholder="Interview prep"/></label>
+				<label>Problems, one link or slug per line (optional)<textarea name="problems" rows="5" placeholder="two-sum&#10;valid-parentheses">{ page.Problems }</textarea></label>
+				<button class="button primary" type="submit">Add set</button>
+			</form>
+		</section>
+	}
 }

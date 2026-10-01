@@ -112,6 +112,7 @@ templ Overview(page OverviewPage) {
 			</div>
 			<div>
 				@dueList(page.Today, 10)
+				@nextTodos(page.NextTodos)
 				@progressPanel(page)
 				<section class="panel side-list" aria-labelledby="recent-title">
 					<h2 id="recent-title">Recent attempts</h2>
@@ -137,6 +138,27 @@ templ Overview(page OverviewPage) {
 			</div>
 		</div>
 	}
+}
+
+templ nextTodos(items []TodoItem) {
+	<section class="panel side-list" aria-labelledby="next-todos-title">
+		<h2 id="next-todos-title">Next 5 todo problems</h2>
+		if len(items) == 0 {
+			<p class="muted small">No todo problems yet. <a href="/leetgrinder/todos/add">Add a problem</a> to start your queue.</p>
+		} else {
+			<ol>
+				for _, item := range items {
+					<li>
+						<a href={ templ.SafeURL(ProblemURL(item.Problem.Slug)) }>{ item.Problem.DisplayTitle() }</a>
+						if item.Problem.Difficulty != "" {
+							<span class="small muted">{ item.Problem.Difficulty }</span>
+						}
+					</li>
+				}
+			</ol>
+		}
+		<a class="small" href="/leetgrinder/todos">All todos</a>
+	</section>
 }
 
 // logAttemptForm opens any LeetCode problem's page in the app from its URL

@@ -56,8 +56,9 @@ func (c ComplexityInput) Value() string {
 }
 
 type OverviewPage struct {
-	Today Today
-	IDs   map[string]string
+	Today     Today
+	IDs       map[string]string
+	NextTodos []TodoItem
 	// LogRef and LogError keep a rejected "Log an attempt" entry.
 	LogRef, LogError string
 }

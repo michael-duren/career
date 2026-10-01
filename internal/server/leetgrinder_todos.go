@@ -27,6 +27,24 @@ func (s *Server) leetgrinderTodos(w http.ResponseWriter, r *http.Request) {
 	s.todoPage(w, r, 200, leetgrinder.TodosPage{})
 }
 
+func (s *Server) todoAddProblemPage(w http.ResponseWriter, r *http.Request, status int, page leetgrinder.TodosPage) {
+	sets, err := s.db.LeetgrinderTodoSets(r.Context())
+	if err != nil {
+		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your todo sets are unavailable. Please retry."))
+		return
+	}
+	page.Sets = sets
+	renderLeetgrinder(w, r, status, leetgrinder.TodoAddProblem(page))
+}
+
+func (s *Server) leetgrinderTodoAddProblem(w http.ResponseWriter, r *http.Request) {
+	s.todoAddProblemPage(w, r, 200, leetgrinder.TodosPage{SetID: r.URL.Query().Get("setID")})
+}
+
+func (s *Server) leetgrinderTodoAddSet(w http.ResponseWriter, r *http.Request) {
+	renderLeetgrinder(w, r, 200, leetgrinder.TodoAddSet(leetgrinder.TodosPage{}))
+}
+
 func (s *Server) leetgrinderCreateTodoSet(w http.ResponseWriter, r *http.Request) {
 	if !s.leetgrinderForm(w, r) {
 		return
@@ -34,15 +52,15 @@ func (s *Server) leetgrinderCreateTodoSet(w http.ResponseWriter, r *http.Request
 	title, raw := r.PostForm.Get("title"), r.PostForm.Get("problems")
 	slugs, ok := leetgrinder.ParseTodoRefs(raw)
 	if !ok {
-		s.todoPage(w, r, 400, leetgrinder.TodosPage{Title: title, Problems: raw, Error: "Enter at most 200 valid LeetCode links or slugs, one per line."})
+		renderLeetgrinder(w, r, 400, leetgrinder.TodoAddSet(leetgrinder.TodosPage{Title: title, Problems: raw, Error: "Enter at most 200 valid LeetCode links or slugs, one per line."}))
 		return
 	}
 	if _, err := s.db.CreateLeetgrinderTodoSet(r.Context(), title, slugs); err != nil {
 		if errors.Is(err, database.ErrInvalid) {
-			s.todoPage(w, r, 400, leetgrinder.TodosPage{Title: title, Problems: raw, Error: "Enter a set name of at most 120 characters and valid problems."})
+			renderLeetgrinder(w, r, 400, leetgrinder.TodoAddSet(leetgrinder.TodosPage{Title: title, Problems: raw, Error: "Enter a set name of at most 120 characters and valid problems."}))
 			return
 		}
-		s.todoPage(w, r, 503, leetgrinder.TodosPage{Title: title, Problems: raw, Error: "The set could not be saved. Please retry."})
+		renderLeetgrinder(w, r, 503, leetgrinder.TodoAddSet(leetgrinder.TodosPage{Title: title, Problems: raw, Error: "The set could not be saved. Please retry."}))
 		return
 	}
 	http.Redirect(w, r, "/leetgrinder/todos", http.StatusSeeOther)
@@ -55,7 +73,7 @@ func (s *Server) leetgrinderAddTodoItem(w http.ResponseWriter, r *http.Request) 
 	ref, setID := r.PostForm.Get("problem"), r.PostForm.Get("setID")
 	slug, ok := leetgrinder.NormalizeProblemRef(ref)
 	if !ok {
-		s.todoPage(w, r, 400, leetgrinder.TodosPage{Problem: ref, SetID: setID, Error: "Enter a valid LeetCode link or slug."})
+		s.todoAddProblemPage(w, r, 400, leetgrinder.TodosPage{Problem: ref, SetID: setID, Error: "Enter a valid LeetCode link or slug."})
 		return
 	}
 	if _, err := s.db.AddLeetgrinderTodoItem(r.Context(), setID, slug); err != nil {
@@ -63,7 +81,7 @@ func (s *Server) leetgrinderAddTodoItem(w http.ResponseWriter, r *http.Request) 
 		if errors.Is(err, database.ErrInvalid) || errors.Is(err, database.ErrNotFound) {
 			status, message = 400, "Choose an existing set."
 		}
-		s.todoPage(w, r, status, leetgrinder.TodosPage{Problem: ref, SetID: setID, Error: message})
+		s.todoAddProblemPage(w, r, status, leetgrinder.TodosPage{Problem: ref, SetID: setID, Error: message})
 		return
 	}
 	http.Redirect(w, r, "/leetgrinder/todos", http.StatusSeeOther)
