@@ -67,6 +67,8 @@ login blocks the connector.
   already on the companies board. Filter by `query`, `role` (count only matching people),
   `minConnections` and `untracked`; sort by `connections`, `recent` or `name`; page with
   `offset`/`limit` (1-100).
+- `list_leetgrinder_todos`: named problem sets and individual problems. Returns set and
+  item IDs for removal.
 
 Kinds: `goal`, `work_journal`, `personal_journal`, `note`, `page`, `book`, `company`,
 `connection`, `audio_thought`. Audio thoughts are private and only returned when
@@ -105,6 +107,18 @@ Write tools (need **Allow read and edit**):
   employer best matches them among all companies; the total is returned as
   `linkedConnections` and last-talked dates are not changed. The batch is all or nothing
   if any company fails validation.
+- `create_leetgrinder_todo_set`: create a named set with up to 200 problems. Pass plain
+  links or slugs in `problems`. Pass objects in `problemDetails` to copy each problem's
+  `number`, `title`, `difficulty`, `topics`, and `metadata`. The set also accepts a
+  `description` and `metadata`. Omit both problem arrays to create an empty set.
+- `add_leetgrinder_todo_problem`: add a problem to a set with `setID`, or to the individual
+  list without it. It accepts the same problem fields. Adding the same problem twice to one
+  list keeps one entry. `list_leetgrinder_todos` returns each entry's `sourceProblem`
+  snapshot and catalog fields. Imported source snapshots stay on the catalog problem if
+  a todo is removed.
+- `remove_leetgrinder_todo_problem`: remove one todo entry by its ID.
+- `remove_leetgrinder_todo_set`: remove a set and its todo entries by set ID. These tools
+  do not delete attempt history or problem metadata.
 
 Saves and deletes use the website's validation. Claude clients ask before
 running write tools unless you allow them permanently. Request

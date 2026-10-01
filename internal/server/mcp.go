@@ -48,6 +48,7 @@ var mcpRules = append(slices.Clone(contextRules),
 	"Audio thoughts are private and are only returned when kind=audio_thought is requested explicitly.",
 	"Cite entry kinds and IDs when discussing evidence. Distinguish suggestions from saved changes.",
 	"create_career_entry, update_career_entry, delete_career_entry and add_companies_to_queue change saved data. Only save or delete when the user asked for the change or confirmed it. Read an entry and pass its revision before updating or deleting.",
+	"Leetgrinder todo tools change saved practice plans. Use them when the user asks to add or remove problems or sets.",
 )
 
 var readOnly = &mcp.ToolAnnotations{ReadOnlyHint: true, IdempotentHint: true, OpenWorldHint: new(bool)}
@@ -253,6 +254,7 @@ func (s *Server) newMCPServer() *mcp.Server {
 
 	s.addWriteTools(server)
 	s.addConnectionTools(server)
+	s.addLeetgrinderTodoTools(server)
 
 	server.AddPrompt(&mcp.Prompt{
 		Name:        "career_conversation",
