@@ -78,6 +78,8 @@ templ icon(name string) {
 				<path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path>
 			case "warning":
 				<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path>
+			case "about":
+				<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path>
 			case "terminal":
 				<path d="m4 17 6-6-6-6"></path><path d="M12 19h8"></path>
 		}
@@ -263,7 +265,7 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, avail Analy
 				target="_blank"
 				rel="noopener noreferrer"
 			>Open on LeetCode ↗</a>
-			<span class="badge">
+			<span class={ StatusClass(state.ProblemStatus(problem.Slug)) }>
 				{ state.ProblemStatus(problem.Slug) }
 			</span>
 			if review.Pick {
@@ -650,7 +652,7 @@ templ Problems(page ProblemsPage) {
 								<th scope="row">
 									<a href={ templ.SafeURL(ProblemURL(row.Problem.Slug)) }>{ row.Problem.DisplayTitle() }</a>
 									if row.Problem.NotFound {
-										<span class="small muted">Not found on LeetCode</span>
+										<span class="small muted not-found">Not found on LeetCode</span>
 									}
 									if len(row.Problem.Topics) > 0 {
 										<span class="row-topics">

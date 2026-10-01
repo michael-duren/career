@@ -60,9 +60,10 @@ type Card struct {
 type Flag struct {
 	// Date is the earliest local date that raised the flag, of MarkedDate
 	// and AnalysisDate; the other two are zero when that source is absent.
-	Date, MarkedDate, AnalysisDate time.Time
-	TimeWrong, SpaceWrong          bool
-	NotOptimal                     bool
+	// AttemptDate is the attempt's own day, which a struggle's reason names.
+	Date, MarkedDate, AnalysisDate, AttemptDate time.Time
+	TimeWrong, SpaceWrong                       bool
+	NotOptimal                                  bool
 	// Actual and optimal complexities, for the not-optimal reason.
 	ActualTime, ActualSpace   string
 	OptimalTime, OptimalSpace string
@@ -110,6 +111,7 @@ func flagFor(a Attempt, problem Problem, analyses map[string]Analysis, loc *time
 		}
 		f.MarkedDate = Date(marked, loc)
 		f.Date = f.MarkedDate
+		f.AttemptDate = Date(a.CreatedAt, loc)
 	}
 	if an, ok := analyses[a.ID]; ok && an.Done() && (isFalse(an.TimeMatches) || isFalse(an.SpaceMatches) || isFalse(an.Optimal)) {
 		f.TimeWrong, f.SpaceWrong, f.NotOptimal = isFalse(an.TimeMatches), isFalse(an.SpaceMatches), isFalse(an.Optimal)
@@ -150,7 +152,7 @@ func (f Flag) Reason(now time.Time, loc *time.Location) string {
 	case f.NotOptimal:
 		return "Not optimal"
 	case f.Struggle != "":
-		return f.Struggle + " " + daysAgo(f.MarkedDate, today)
+		return f.Struggle + " " + daysAgo(f.AttemptDate, today)
 	case f.Suboptimal:
 		return "Took a simpler approach " + daysAgo(f.MarkedDate, today)
 	}

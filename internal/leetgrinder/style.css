@@ -538,9 +538,6 @@ dd {
   gap: 10px;
   margin: 18px 0;
 }
-.checkbox input[type="radio"] {
-  border-radius: 50%;
-}
 .checkbox input {
   accent-color: var(--accent);
   width: 17px;
@@ -1107,7 +1104,7 @@ dd {
   width: 28px;
   height: 28px;
   padding: 0;
-  border: 1px solid var(--line);
+  border: 1px solid #3f3f46;
   border-radius: 50%;
   background: transparent;
   color: var(--muted);
@@ -1115,7 +1112,7 @@ dd {
 }
 .info-button:hover {
   color: var(--accent);
-  border-color: #3f3f46;
+  border-color: var(--accent);
 }
 .help-popover {
   width: min(520px, calc(100vw - 32px));
@@ -1177,6 +1174,17 @@ dd {
   font-size: 0.8rem;
   color: var(--muted);
 }
+.problem-filters label.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  align-self: center;
+  color: var(--ink);
+}
+.problem-filters label.checkbox input {
+  width: 17px;
+  padding: 0;
+}
 .problem-filters .filter-search {
   grid-column: 1 / -1;
 }
@@ -1237,6 +1245,14 @@ dd {
 }
 .status-tags .flag {
   flex-basis: 100%;
+}
+.status-tags .badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
+.problem-table .not-found {
+  display: block;
 }
 .problem-table .num {
   font-variant-numeric: tabular-nums;
@@ -1441,6 +1457,7 @@ dd {
 .review-state {
   display: grid;
   grid-template-columns: auto auto;
+  justify-content: start;
   gap: 4px 16px;
   margin: 0;
 }
@@ -1470,7 +1487,19 @@ dd {
   font-weight: 400;
   text-align: left;
 }
-.cal-day,
+.goal-calendar thead th:not(:first-child) {
+  width: 22px;
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-align: center;
+}
+.cal-day {
+  width: 22px;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  background: var(--line);
+}
 .cal-key {
   width: 18px;
   height: 18px;

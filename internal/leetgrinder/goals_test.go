@@ -218,6 +218,13 @@ func TestStrugglesFlagProblem(t *testing.T) {
 			t.Errorf("%s: marked struggle review reason %q", test.outcome, got)
 		}
 	}
+	// A struggle flagged later (migration 023, or a correction) still names
+	// the attempt's own day, and is dated from when it was flagged.
+	late := attempt("two-sum", "struggled", 30, false, now.AddDate(0, 0, -30))
+	late.MarkedAt = now.AddDate(0, 0, -1)
+	if c := BuildCards(State{Problems: testProblems, Attempts: []Attempt{late}}, loc)[0]; c.Flag == nil || c.Flag.Reason(now, loc) != "Struggled 30 days ago" || !c.Flag.Date.Equal(Date(late.MarkedAt, loc)) {
+		t.Fatalf("late struggle flag %+v due %s", c.Flag, c.Due)
+	}
 	// An unassisted solve does not flag.
 	state := State{Problems: testProblems, Attempts: []Attempt{attempt("two-sum", "solved", 30, false, now.AddDate(0, 0, -3))}}
 	if c := BuildCards(state, loc)[0]; c.Flag != nil {
