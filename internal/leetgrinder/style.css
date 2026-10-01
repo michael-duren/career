@@ -1207,7 +1207,17 @@ dd {
 .problem-table th[scope="row"] {
   font-weight: 500;
   white-space: normal;
-  min-width: 11em;
+  overflow-wrap: anywhere;
+  min-width: 10em;
+}
+/* Headers and dates may wrap so every column fits at desktop widths,
+   whatever the font's metrics. */
+.problem-table thead th,
+.problem-table td.date {
+  white-space: normal;
+}
+.problem-table td.date {
+  min-width: 5.5em;
 }
 .problem-table th[scope="row"] a {
   color: var(--ink);
@@ -1232,7 +1242,7 @@ dd {
 }
 .problem-table td.status {
   white-space: normal;
-  min-width: 15em;
+  min-width: 14em;
 }
 .status-tags > span:not(.flag) {
   white-space: nowrap;

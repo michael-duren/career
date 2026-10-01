@@ -686,8 +686,8 @@ templ Problems(page ProblemsPage) {
 									</div>
 								</td>
 								<td class="num">{ Count(row.Attempts) }</td>
-								<td>{ CompactDate(Date(row.Last.CreatedAt, page.Location)) }</td>
-								<td>
+								<td class="date">{ CompactDate(Date(row.Last.CreatedAt, page.Location)) }</td>
+								<td class="date">
 									if row.Card.Reviews > 0 {
 										{ CompactDate(Date(row.Card.Due, page.Location)) }
 									}
