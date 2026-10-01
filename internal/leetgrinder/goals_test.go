@@ -211,7 +211,7 @@ func TestStrugglesFlagProblem(t *testing.T) {
 		if got := ReviewReason(c, now, loc); !strings.HasPrefix(got, test.reason+" · recall estimate ") {
 			t.Errorf("%s: review reason %q", test.outcome, got)
 		}
-		// A later mark or analysis verdict reads first in the review reason.
+		// A mark on the struggle still reads as the struggle, with recall.
 		a.WantsReview = true
 		state.Attempts = []Attempt{a}
 		if got := ReviewReason(BuildCards(state, loc)[0], now, loc); !strings.HasPrefix(got, test.reason+" · recall") {

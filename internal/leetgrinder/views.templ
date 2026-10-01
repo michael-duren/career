@@ -665,6 +665,8 @@ templ Problems(page ProblemsPage) {
 								<td>
 									if row.Problem.Difficulty != "" {
 										<span class={ DifficultyClass(row.Problem.Difficulty) }>{ row.Problem.Difficulty }</span>
+									} else {
+										<span class="muted" aria-hidden="true">—</span><span class="visually-hidden">Not known yet</span>
 									}
 								</td>
 								<td class="optimal">@optimalCell(row.Problem)
@@ -868,7 +870,7 @@ templ Stats(page StatsPage) {
 				<p class="small muted">Struggle rate counts attempts that struggled, stayed unfinished, or used help. A problem counts under each of its topics; topics with fewer than 3 problems are grouped under Other.</p>
 			}
 		</section>
-		<section class="queue" aria-labelledby="difficulty-title">
+		<section class="queue stats-block" aria-labelledby="difficulty-title">
 			<h2 id="difficulty-title">Difficulty mix</h2>
 			<div class="table-scroll">
 				<table>
@@ -885,12 +887,12 @@ templ Stats(page StatsPage) {
 				</table>
 			</div>
 		</section>
-		<section aria-labelledby="calendar-title">
+		<section class="stats-block" aria-labelledby="calendar-title">
 			<h2 id="calendar-title">Goal calendar</h2>
 			<p class="small muted">The last { Count(len(page.Calendar)) } weeks. <span class="cal-key cal-met"></span> goal met · <span class="cal-key cal-active"></span> practised · <span class="cal-key"></span> no attempts</p>
 			<table class="goal-calendar">
 				<caption class="visually-hidden">Goal-met days by week</caption>
-				<thead><tr><th scope="col"><span class="visually-hidden">Week of</span></th><th scope="col">Mon</th><th scope="col">Tue</th><th scope="col">Wed</th><th scope="col">Thu</th><th scope="col">Fri</th><th scope="col">Sat</th><th scope="col">Sun</th></tr></thead>
+				<thead><tr><th scope="col"><span class="visually-hidden">Week of</span></th><th scope="col"><abbr title="Monday">Mo</abbr></th><th scope="col"><abbr title="Tuesday">Tu</abbr></th><th scope="col"><abbr title="Wednesday">We</abbr></th><th scope="col"><abbr title="Thursday">Th</abbr></th><th scope="col"><abbr title="Friday">Fr</abbr></th><th scope="col"><abbr title="Saturday">Sa</abbr></th><th scope="col"><abbr title="Sunday">Su</abbr></th></tr></thead>
 				<tbody>
 					for _, week := range page.Calendar {
 						<tr>
