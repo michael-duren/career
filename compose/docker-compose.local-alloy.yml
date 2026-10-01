@@ -23,6 +23,6 @@ services:
       - prometheus
 
 volumes:
-  career_postgres17:
+  career_postgres18:
   prometheus_data:
   grafana_data:

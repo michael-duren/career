@@ -9,7 +9,7 @@ Start PostgreSQL, apply versioned migrations, and verify a real SQL connection:
 make postgres-up migrate check-db
 ```
 
-Expected final line: `PostgreSQL is ready; schema version 1`. PostgreSQL 17 binds only to `127.0.0.1:5433`, using database/user `career_dev` and local-only password `career_dev_local`. `make postgres-check` also runs `pg_isready` inside the container. The named volume persists across container restarts and `docker compose down`; no command above removes it. A custom `POSTGRES_LOCAL_PORT` also requires a matching `DATABASE_URL`.
+Expected final line: `PostgreSQL is ready; schema version 1`. PostgreSQL 18 binds only to `127.0.0.1:5433`, using database/user `career_dev` and local-only password `career_dev_local`. `make postgres-check` also runs `pg_isready` inside the container. The named `migration_career_postgres18` volume persists across container restarts and `docker compose down`; no command above removes it. The old `migration_career_postgres17` volume is left untouched. A custom `POSTGRES_LOCAL_PORT` also requires a matching `DATABASE_URL`.
 
 ## Run the API
 
