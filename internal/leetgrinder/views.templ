@@ -341,16 +341,16 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, avail Analy
 							</h3><span>{ Count(a.Minutes) } min</span>
 						</div>
 						<p class="small muted">
-							<time datetime={ a.CreatedAt.Format("2006-01-02T15:04:05Z07:00") }>
-								{ a.CreatedAt.UTC().Format("02 Jan 2006 · 15:04 UTC") }
+							<time datetime={ a.CreatedAt.UTC().Format("2006-01-02T15:04:05Z07:00") }>
+								{ review.AttemptTime(a).Format("02 Jan 2006 · 15:04 MST") }
 							</time> ·
 							if a.Assisted {
 								Used solution help
 							} else {
 								No solution help
 							}
-							if a.IsReview {
-								· Review
+							if kind := review.AttemptKind(a); kind != "" {
+								· { kind }
 							}
 							if a.Approach != "" {
 								· { ApproachLabel(a.Approach) }

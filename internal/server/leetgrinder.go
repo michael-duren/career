@@ -259,10 +259,13 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 	reject := func(status int, message string) {
 		form.Error = message
 		state, err := s.db.LeetgrinderState(r.Context())
+		review := leetgrinder.ProblemReview{}
 		if err != nil {
 			form.Error += " Your history could not be loaded; your draft is retained below."
+		} else {
+			review = s.problemReview(r, state, problem.Slug)
 		}
-		renderLeetgrinder(w, r, status, leetgrinder.ProblemHistory(problem, state, form, s.historyAnalysis(r), leetgrinder.ProblemReview{}))
+		renderLeetgrinder(w, r, status, leetgrinder.ProblemHistory(problem, state, form, s.historyAnalysis(r), review))
 	}
 	if _, err := uuid.Parse(form.ID); err != nil {
 		form.ID = uuid.NewString()

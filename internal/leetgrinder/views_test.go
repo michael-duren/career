@@ -110,3 +110,39 @@ func TestProblemHistoryReviewState(t *testing.T) {
 		t.Fatalf("flagged filter: %d", len(got))
 	}
 }
+
+func TestAttemptHistoryUsesSettingsZoneAndDayKind(t *testing.T) {
+	settings := DefaultSettings()
+	settings.Timezone = "America/Chicago"
+	now := time.Date(2026, 10, 11, 4, 0, 0, 0, time.UTC)
+	first := attempt("valid-anagram", "solved", 5, false, time.Date(2026, 10, 9, 15, 0, 0, 0, time.UTC))
+	// 22:30 on 10 Oct in Chicago is already 11 Oct in UTC. The stored
+	// is_review flag is stale: the problem was not due, so the day counts it
+	// as practice.
+	second := attempt("valid-anagram", "solved", 5, false, time.Date(2026, 10, 11, 3, 30, 0, 0, time.UTC))
+	second.IsReview = true
+	state := State{Problems: testProblems, Attempts: []Attempt{second, first}}
+	review := NewProblemReview(NewToday(settings, state, now), "valid-anagram")
+	if got := review.AttemptKind(second); got != "Practice" {
+		t.Fatalf("kind %q", got)
+	}
+	if got := review.AttemptKind(first); got != "" {
+		t.Fatalf("a new problem has no label, got %q", got)
+	}
+	var out bytes.Buffer
+	if err := ProblemHistory(testProblems["valid-anagram"], state, NewForm(uuid.NewString()), AnalysisAvailability{}, review).Render(context.Background(), &out); err != nil {
+		t.Fatal(err)
+	}
+	html := out.String()
+	for _, want := range []string{"10 Oct 2026 · 22:30 CDT", "· Practice", `datetime="2026-10-11T03:30:00Z"`} {
+		if !strings.Contains(html, want) {
+			t.Errorf("history missing %q", want)
+		}
+	}
+	if strings.Contains(html, "· Review") || strings.Contains(html, "UTC</time>") {
+		t.Error("history still uses stale review flag or UTC times")
+	}
+	if got := (ProblemReview{}).AttemptTime(second).Format("15:04 MST"); got != "03:30 UTC" {
+		t.Fatalf("fallback %q", got)
+	}
+}

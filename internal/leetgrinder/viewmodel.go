@@ -105,11 +105,34 @@ type ProblemReview struct {
 	FlagReason string
 	Pick       bool
 	Location   *time.Location
+	// Kinds is how each local day counts an attempt; nil hides the labels.
+	Kinds func(Attempt) string
+}
+
+// AttemptTime is when a was logged, in the settings time zone (UTC when the
+// settings are unavailable).
+func (r ProblemReview) AttemptTime(a Attempt) time.Time {
+	if r.Location == nil {
+		return a.CreatedAt.UTC()
+	}
+	return a.CreatedAt.In(r.Location)
+}
+
+// AttemptKind is "" or the label of how a's day counted its problem, left out
+// for the first attempt (new).
+func (r ProblemReview) AttemptKind(a Attempt) string {
+	if r.Kinds == nil {
+		return ""
+	}
+	if kind := r.Kinds(a); kind != KindNew && kind != "" {
+		return KindLabel(kind)
+	}
+	return ""
 }
 
 // NewProblemReview reads slug's review state from today.
 func NewProblemReview(today Today, slug string) ProblemReview {
-	r := ProblemReview{Location: today.Settings.Location(), Pick: today.Picked(slug)}
+	r := ProblemReview{Location: today.Settings.Location(), Pick: today.Picked(slug), Kinds: today.KindOf}
 	if c, ok := today.Card(slug); ok {
 		r.Card, r.Due, r.Recall = c, today.Due(c), c.Retrievability(today.Now)
 		if c.Flag != nil {
