@@ -273,14 +273,17 @@ func (d *Document) sessionIDs() []string {
 	return ids
 }
 func (d *Document) validateActual(id string, a Actual) error {
+	if !ValidDate(a.Date) {
+		return fmt.Errorf("valid actual date required")
+	}
 	if a.Status == "skipped" {
 		return nil
 	}
 	if a.Status != "explicit" && a.Status != "assumed" {
 		return fmt.Errorf("actual status must be explicit, assumed or skipped")
 	}
-	if !ValidDate(a.Date) || !a.End.After(a.Start) {
-		return fmt.Errorf("valid actual date and positive interval required")
+	if !a.End.After(a.Start) {
+		return fmt.Errorf("positive actual interval required")
 	}
 	for key, s := range d.Sessions {
 		if key != id && s.Actual != nil && s.Actual.Status != "skipped" && overlap(Plan{Start: a.Start, End: a.End}, Plan{Start: s.Actual.Start, End: s.Actual.End}) {
@@ -654,10 +657,7 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 			if m.ID != "" || m.Session == nil {
 				return fmt.Errorf("session required for unplanned actual")
 			}
-			s = *m.Session
-			s.ID = uuid.NewString()
-			s.Plan = nil
-			s.State = "accepted"
+			s = Session{ID: uuid.NewString(), Date: d.ActualDate(m.Actual.Start), Assignment: m.Session.Assignment, State: "accepted"}
 			g, exists := d.Goals[s.Assignment.GoalID]
 			if !exists {
 				return fmt.Errorf("goal required")
@@ -676,6 +676,9 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 				return fmt.Errorf("subgoal not found for unplanned actual")
 			}
 		}
+		if s.State == "canceled" {
+			return fmt.Errorf("canceled session cannot record actual work; log unplanned actual work instead")
+		}
 		if s.Assignment.GoalID == "" {
 			return fmt.Errorf("actual work requires a goal")
 		}
@@ -691,8 +694,13 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 			a.End = s.Plan.End
 			a.Date = s.Date
 		}
-		if a.Status == "skipped" && a.Date == "" {
+		if a.Status == "skipped" {
+			if s.Plan == nil {
+				return fmt.Errorf("no original plan to skip")
+			}
 			a.Date = s.Date
+			a.Start = s.Plan.Start
+			a.End = s.Plan.End
 		}
 		if a.Status == "explicit" {
 			expected := d.ActualDate(a.Start)

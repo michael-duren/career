@@ -170,3 +170,65 @@ func TestSchedulerBackupRoundtripAndInitialTimeZone(t *testing.T) {
 		t.Fatal("schedule not restored")
 	}
 }
+
+func TestSchedulerAcceptedActualsSurviveExportImport(t *testing.T) {
+	s := imported(t)
+	ctx := context.Background()
+	week := "2026-09-14"
+	goalID := "22222222-2222-4222-8222-222222222222"
+	before := time.Date(2026, 9, 14, 8, 0, 0, 0, time.UTC)
+	w, err := s.SchedulerWeek(ctx, week, before, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	plan := scheduler.Session{Date: week, Assignment: scheduler.Assignment{GoalID: goalID}, Plan: &scheduler.Plan{Start: before.Add(time.Hour), End: before.Add(2 * time.Hour)}}
+	w, err = s.SchedulerMutate(ctx, scheduler.Mutation{Action: "session", Week: week, Revision: w.Revision, Session: &plan}, before, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(w.Sessions) != 1 {
+		t.Fatalf("planned sessions: %+v", w.Sessions)
+	}
+	plannedID := w.Sessions[0].ID
+	now := time.Date(2026, 9, 15, 12, 0, 0, 0, time.UTC)
+	w, err = s.SchedulerMutate(ctx, scheduler.Mutation{Action: "actual", Week: week, Revision: w.Revision, ID: plannedID, Actual: &scheduler.Actual{Status: "skipped", Date: "wrong-date"}}, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	forged := scheduler.Session{RuleID: "missing", OccurrenceDate: "bad", Date: "bad", Exception: true, Attention: "stale", ConflictIDs: []string{"other"}, Assignment: scheduler.Assignment{GoalID: goalID}}
+	explicit := scheduler.Actual{Status: "explicit", Date: week, Start: before.Add(3 * time.Hour), End: before.Add(4 * time.Hour)}
+	w, err = s.SchedulerMutate(ctx, scheduler.Mutation{Action: "actual", Week: week, Revision: w.Revision, Session: &forged, Actual: &explicit}, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(w.Sessions) != 2 {
+		t.Fatalf("actual sessions: %+v", w.Sessions)
+	}
+	var archive bytes.Buffer
+	if err = s.Export(ctx, &archive); err != nil {
+		t.Fatal(err)
+	}
+	dest := testStore(t)
+	if _, err = dest.Import(ctx, bytes.NewReader(archive.Bytes()), Source{}, false); err != nil {
+		t.Fatalf("accepted actuals rejected on import: %v", err)
+	}
+	restored, err := dest.SchedulerDocument(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(restored.Sessions) != 2 || restored.Sessions[plannedID].Actual == nil || restored.Sessions[plannedID].Actual.Status != "skipped" || restored.Sessions[plannedID].Actual.Date != week {
+		t.Fatalf("skipped actual lost: %+v", restored.Sessions)
+	}
+	var foundExplicit bool
+	for _, session := range restored.Sessions {
+		if session.Actual != nil && session.Actual.Status == "explicit" {
+			foundExplicit = true
+			if session.Date != week || session.RuleID != "" || session.OccurrenceDate != "" || session.Exception || session.Attention != "" || len(session.ConflictIDs) != 0 {
+				t.Fatalf("forged identity survived roundtrip: %+v", session)
+			}
+		}
+	}
+	if !foundExplicit {
+		t.Fatal("explicit actual lost")
+	}
+}

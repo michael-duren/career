@@ -65,12 +65,12 @@ Issues: S05, S06, S07.
 
 **Interfaces:** Retain `Document.Apply(Mutation, time.Time, []Busy) error` and `Document.Validate() error`. Successful actual mutations must always create structurally valid sessions.
 
-- [ ] Add `TestUnplannedActualIgnoresRecurringIdentity`. Submit missing `ruleId`, invalid `occurrenceDate`, invalid session date, and stale attention/conflict metadata. Assert accepted work has empty recurring identity, no exception, no attention/conflicts, and the date derived from actual start. Assert `Validate()` succeeds.
-- [ ] Add `TestSkippedActualUsesOriginalSchedulingDate`. Skip a planned record using invalid or unrelated supplied dates. Assert canonical plan date is retained, no hours are counted, and validation succeeds. Reject malformed dates for statuses that permit relocation.
-- [ ] Add `TestCanceledPlanCannotHideActualWork`. Choose the transition of rejecting actual writes on canceled records with a clear error requiring an unplanned log. Assert no actual is stored and totals stay zero.
-- [ ] Construct unplanned actual sessions from validated assignment and actual data. Clear recurring metadata. Validate shared identity/date fields before status-specific checks; canonicalize skipped plan fields.
-- [ ] Add a database export/import regression for accepted explicit and skipped actual records. Run `go test ./internal/scheduler ./internal/database ./internal/server -run 'Actual|Scheduler'` with the disposable database. Expected: new tests pass, import accepts every accepted actual, and historical-plan tests still pass.
-- [ ] Review the diff and commit this independently testable backend repair.
+- [x] Add `TestUnplannedActualIgnoresRecurringIdentity`. Submit missing `ruleId`, invalid `occurrenceDate`, invalid session date, and stale attention/conflict metadata. Assert accepted work has empty recurring identity, no exception, no attention/conflicts, and the date derived from actual start. Assert `Validate()` succeeds.
+- [x] Add `TestSkippedActualUsesOriginalSchedulingDate`. Skip a planned record using invalid or unrelated supplied dates. Assert canonical plan date is retained, no hours are counted, and validation succeeds. Reject malformed dates for statuses that permit relocation.
+- [x] Add `TestCanceledPlanCannotHideActualWork`. Choose the transition of rejecting actual writes on canceled records with a clear error requiring an unplanned log. Assert no actual is stored and totals stay zero.
+- [x] Construct unplanned actual sessions from validated assignment and actual data. Clear recurring metadata. Validate shared identity/date fields before status-specific checks; canonicalize skipped plan fields.
+- [x] Add a database export/import regression for accepted explicit and skipped actual records. Run `go test ./internal/scheduler ./internal/database ./internal/server -run 'Actual|Scheduler'` with the disposable database. Expected: new tests pass, import accepts every accepted actual, and historical-plan tests still pass.
+- [x] Review the diff and commit this independently testable backend repair.
 
 ## Task 3: Unify placement and preserve time semantics
 
