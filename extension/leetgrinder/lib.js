@@ -349,7 +349,7 @@
       case 401:
         return "The app rejected the API token. Check the extension options.";
       case 409:
-        return "This attempt was already saved with different values. Correct it in the app.";
+        return "Saved earlier with different values. Check the history, or save this as a new attempt.";
       case 413:
         return "The attempt is too large to save. Leave the code out and try again.";
       case 422:
@@ -364,6 +364,17 @@
   const OUTCOME_LABELS = { solved: "Solved", struggled: "Struggled", unfinished: "Unfinished" };
   const KIND_LABELS = { new: "New", review: "Review", practice: "Practice" };
   const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  const DISCARD_PROMPT = "This attempt may not be saved yet. Discard it?";
+
+  // panelCloses decides whether a close request ends the log panel. A locked
+  // panel holds an attempt that may not be saved: Escape never closes it and
+  // Dismiss needs the learner's confirmation, which confirmDiscard supplies.
+  function panelCloses(trigger, locked, confirmDiscard) {
+    if (!locked) return true;
+    if (trigger === "escape") return false;
+    return Boolean(confirmDiscard && confirmDiscard(DISCARD_PROMPT));
+  }
 
   function kindLabel(kind) {
     return Object.prototype.hasOwnProperty.call(KIND_LABELS, kind) ? KIND_LABELS[kind] : "";
@@ -484,6 +495,8 @@
     GRAPHQL_QUERY,
     validSlug,
     kindLabel,
+    panelCloses,
+    DISCARD_PROMPT,
     APPROACHES,
     shortDate,
     daysAgo,
