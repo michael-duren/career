@@ -467,8 +467,11 @@ test('held move and both resize edges preview the interval that the API stores',
   const session = await createPlannedSession(page, goal, date!, '06:00', '07:00');
   const nextDay = page.locator('[data-scheduler-date]').nth(1);
   const targetDate = (await nextDay.getAttribute('data-scheduler-date'))!;
+  await session.locator('.scheduler-block-main').scrollIntoViewIfNeeded();
+  await session.locator('.scheduler-block-main').evaluate(element => window.scrollBy(0, element.getBoundingClientRect().top - 370));
   const source = await visibleBox(session.locator('.scheduler-block-main'));
   const target = (await nextDay.boundingBox())!;
+  expect(target.y + 90).toBeLessThan(840);
   await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
   await page.mouse.down();
   await page.mouse.move(target.x + target.width / 2, target.y + 90, { steps: 8 });
@@ -729,16 +732,47 @@ test('mobile touch scrolls the requirement list and drags only from its handle',
   expect(writes).toBe(1);
 
   await page.evaluate(() => scrollTo(0, 0));
+  const title = await visibleBox(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`));
+  await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: title.x + title.width / 2, y: title.y + title.height / 2, id: 3 }] });
+  await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await expect(page.locator('.scheduler-editor-dialog')).toBeVisible();
+  await page.locator('.scheduler-editor-dialog').getByRole('button', { name: 'Discard draft' }).click();
+
+  await page.evaluate(() => scrollTo(0, 0));
   const cancelHandle = await visibleBox(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-handle`));
-  await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: cancelHandle.x + cancelHandle.width / 2, y: cancelHandle.y + cancelHandle.height / 2, id: 3 }] });
-  await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 220, y: 830, id: 3 }] });
+  await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: cancelHandle.x + cancelHandle.width / 2, y: cancelHandle.y + cancelHandle.height / 2, id: 4 }] });
+  await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 220, y: 830, id: 4 }] });
   await expect.poll(async () => (await day.boundingBox())?.y).toBeLessThan(650);
   const cancelDay = (await day.boundingBox())!;
-  await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: cancelDay.x + cancelDay.width / 2, y: cancelDay.y + 120, id: 3 }] });
+  await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: cancelDay.x + cancelDay.width / 2, y: cancelDay.y + 120, id: 4 }] });
   await expect(day.locator('.scheduler-drop-preview')).toBeVisible();
   await client.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
   await expect(day.locator('.scheduler-drop-preview')).toHaveCount(0);
   expect(writes).toBe(1);
+  await page.evaluate(() => scrollTo(0, 0));
+  const titleAfterCancel = await visibleBox(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`));
+  await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: titleAfterCancel.x + titleAfterCancel.width / 2, y: titleAfterCancel.y + titleAfterCancel.height / 2, id: 5 }] });
+  await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await expect(page.locator('.scheduler-editor-dialog')).toBeVisible();
+  expect(writes).toBe(1);
+});
+
+test('tablet touch can start a visible drag handle', async ({ page, request, baseURL }) => {
+  await page.setViewportSize({ width: 820, height: 1112 });
+  const client = await page.context().newCDPSession(page);
+  await client.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 });
+  const goal = await createGoal(request, baseURL!, { dailyHours: 0 });
+  const date = await goToNextWeek(page);
+  const handle = page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-handle`);
+  await expect(handle).toBeVisible();
+  const source = await visibleBox(handle);
+  const day = page.locator(`[data-scheduler-date="${date}"]`);
+  const target = (await day.boundingBox())!;
+  await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: source.x + source.width / 2, y: source.y + source.height / 2, id: 1 }] });
+  await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: target.x + target.width / 2, y: target.y + 60, id: 1 }] });
+  await expect(day.locator('.scheduler-drop-preview')).toHaveAttribute('data-start', '06:00');
+  await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await expect(page.locator('.scheduler-status')).toContainText('Saved.');
 });
 
 test('future actual work shows an invalid preview and sends no mutation', async ({ page, request, baseURL }) => {

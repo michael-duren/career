@@ -109,12 +109,12 @@ export const WeeklySchedulerGrid = forwardRef<SchedulerGridHandle, Props>(functi
       if (pointer.pointerId !== current.pointerId || gesture.current !== current) return;
       const moved = current.moved;
       const result = moved ? pointer.pointerType === 'touch' ? current.proposal : proposalAt(pointer.clientX, pointer.clientY) : null;
-      suppressClick.current = moved;
+      suppressClick.current = moved && !current.source.classList.contains('scheduler-touch-handle');
       clearGesture();
       if (result) place(result);
     };
     const cancel = (pointer: globalThis.PointerEvent) => { if (pointer.pointerId === current.pointerId) clearGesture(); };
-    const keydown = (key: KeyboardEvent) => { if (key.key === 'Escape') { suppressClick.current = true; clearGesture(); } };
+    const keydown = (key: KeyboardEvent) => { if (key.key === 'Escape') { suppressClick.current = !current.source.classList.contains('scheduler-touch-handle'); clearGesture(); } };
     const lost = () => { if (gesture.current === current) clearGesture(); };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
