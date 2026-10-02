@@ -354,6 +354,12 @@ func (d *Document) Reconcile(goals []Goal, now time.Time) {
 		if s.Plan == nil || !s.Plan.Start.After(now) || s.State == "canceled" {
 			continue
 		}
+		if s.Actual != nil {
+			s.State = "attention"
+			s.Attention = "Recorded actual work has replaced the future plan"
+			d.Sessions[id] = s
+			continue
+		}
 		if p, ok := stepParents[s.Assignment.StepID]; ok {
 			s.Assignment.GoalID = p
 		}
@@ -405,7 +411,7 @@ func (d *Document) Generate(from, to string, now time.Time, busy []Busy, sinceIn
 			}
 			sid := r.ID + ":" + date
 			old, exists := d.Sessions[sid]
-			if exists && (old.Exception || old.Plan != nil && !old.Plan.Start.After(now)) {
+			if exists && (old.Exception || old.Actual != nil || old.Plan != nil && !old.Plan.Start.After(now)) {
 				continue
 			}
 			a, e := d.assignment(r.Assignment, date)
@@ -452,7 +458,7 @@ func (d *Document) Revalidate(now time.Time, busy []Busy) {
 	})
 	for _, id := range ids {
 		s := d.Sessions[id]
-		if s.State == "canceled" || s.Plan == nil || !s.Plan.Start.After(now) {
+		if s.State == "canceled" || s.Plan == nil || s.Actual != nil || !s.Plan.Start.After(now) {
 			continue
 		}
 		s.State = "attention"
@@ -460,7 +466,7 @@ func (d *Document) Revalidate(now time.Time, busy []Busy) {
 	}
 	for _, id := range ids {
 		s := d.Sessions[id]
-		if s.State == "canceled" || s.Plan == nil || !s.Plan.Start.After(now) {
+		if s.State == "canceled" || s.Plan == nil || s.Actual != nil || !s.Plan.Start.After(now) {
 			continue
 		}
 		s.State = "accepted"
@@ -616,7 +622,7 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 			return fmt.Errorf("started plans are preserved; skip actual instead")
 		}
 		if s.Actual != nil {
-			if s.RuleID != "" {
+			if s.Plan != nil || s.RuleID != "" {
 				return fmt.Errorf("recorded actual work is preserved; use skip instead")
 			}
 			// An unplanned, non-recurring actual is a manual log entry with no
@@ -717,6 +723,10 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 		g := d.Goals[s.Assignment.GoalID]
 		a.OutsideTimeline = !Eligible(g, a.Date)
 		s.Actual = &a
+		if s.Plan != nil && s.Plan.Start.After(now) {
+			s.State = "attention"
+			s.Attention = "Recorded actual work has replaced the future plan"
+		}
 		d.Sessions[s.ID] = s
 	default:
 		return fmt.Errorf("unknown scheduler action")
