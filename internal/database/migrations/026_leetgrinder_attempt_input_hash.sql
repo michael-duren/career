@@ -18,8 +18,9 @@ CREATE OR REPLACE FUNCTION leetgrinder_attempts_input_sha256() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
     -- An update that leaves the inputs alone (a notes or marked_at change)
-    -- keeps the stored hash without rereading the code; any value written
-    -- to input_sha256 directly is replaced either way.
+    -- keeps the stored hash without hashing the code again (comparing it is
+    -- cheaper); any value written to input_sha256 directly is replaced either
+    -- way. The inputs are NOT NULL, so the comparisons and hash never see NULL.
     IF TG_OP = 'UPDATE'
        AND NEW.code_language = OLD.code_language AND NEW.time_complexity = OLD.time_complexity
        AND NEW.space_complexity = OLD.space_complexity AND NEW.code = OLD.code THEN
