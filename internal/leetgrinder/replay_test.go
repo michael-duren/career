@@ -12,8 +12,9 @@ import (
 )
 
 // The functions below are the previous implementations, which replayed every
-// problem once per BuildCards and History call. They stay as the reference
-// that the single replay must match exactly.
+// problem once per BuildCards and History call. They are kept on purpose as
+// the oracle the single replay must match exactly: do not delete them or
+// rewrite them in terms of the replay.
 
 func oldBuildCards(state State, loc *time.Location) []Card {
 	cards := make([]Card, 0)
@@ -269,6 +270,17 @@ func TestTodayBeforeCardWhenLocalDatesGoBack(t *testing.T) {
 		t.Fatalf("before card: %+v", got.Reviews[0].Card)
 	}
 	assertSameToday(t, "Casey", got, want)
+}
+
+// A replay made in another zone, or no replay, is not trusted.
+func TestNewTodayFromReplaysForOtherZone(t *testing.T) {
+	settings := Settings{Timezone: "America/Chicago"}
+	loc := settings.Location()
+	state := randomState(rand.New(rand.NewSource(7)), loc, time.Date(2026, 10, 2, 0, 0, 0, 0, loc), time.Date(2026, 11, 1, 7, 0, 0, 0, time.UTC))
+	now := time.Date(2026, 11, 1, 3, 30, 0, 0, time.UTC)
+	want := oldNewToday(settings, state, now)
+	assertSameToday(t, "UTC replay", NewTodayFrom(settings, state, now, ReplayAttempts(state, time.UTC)), want)
+	assertSameToday(t, "no replay", NewTodayFrom(settings, state, now, Replay{}), want)
 }
 
 func assertSameToday(t *testing.T, label string, got, want Today) {

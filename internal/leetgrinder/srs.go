@@ -4,7 +4,6 @@ import (
 	"cmp"
 	"fmt"
 	"slices"
-	"sort"
 	"strings"
 	"time"
 
@@ -242,7 +241,8 @@ type slugReplay struct {
 	befores []Card
 	final   Card
 	// ordered reports that the attempts' local dates never go back, as they
-	// can when a clock change moves back across midnight.
+	// can when a clock change moves back across midnight. While it holds,
+	// dates are strictly increasing, which before's binary search needs.
 	ordered bool
 }
 
@@ -277,7 +277,8 @@ func (r *slugReplay) before(date time.Time, loc *time.Location) Card {
 		}
 		return replaySlug(r.problem, earlier, loc, nil)
 	}
-	i := sort.Search(len(r.dates), func(i int) bool { return !r.dates[i].Before(date) })
+	// Counted days are distinct, so ordered dates are strictly increasing.
+	i, _ := slices.BinarySearchFunc(r.dates, date, time.Time.Compare)
 	if i < len(r.befores) {
 		return r.befores[i]
 	}
@@ -320,6 +321,7 @@ func BuildCards(state State, loc *time.Location) []Card {
 // zone. A request that plans reviews and then builds today's view shares it
 // (see NewTodayFrom) instead of replaying the history for each.
 type Replay struct {
+	loc     *time.Location
 	replays map[string]*slugReplay
 	cards   []Card
 }
@@ -329,7 +331,7 @@ type Replay struct {
 // change.
 func ReplayAttempts(state State, loc *time.Location) Replay {
 	replays := replayAll(state, loc)
-	return Replay{replays: replays, cards: cardsFrom(replays, state, loc)}
+	return Replay{loc: loc, replays: replays, cards: cardsFrom(replays, state, loc)}
 }
 
 // Cards are the replay's cards, as BuildCards returns them. They are
