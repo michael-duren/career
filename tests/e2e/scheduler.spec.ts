@@ -295,15 +295,14 @@ test('resizing a session by its bottom edge extends its duration', async ({ page
 
   await page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`).click();
   await dialog.getByLabel('Scheduling date').fill(sessionDate);
-  await dialog.getByLabel('Start time').fill('17:00');
-  await dialog.getByLabel('End time').fill('18:00');
+  await dialog.getByLabel('Start time').fill('09:00');
+  await dialog.getByLabel('End time').fill('10:00');
   await dialog.getByRole('button', { name: 'Save session' }).click();
   await expect(dialog).toBeHidden();
 
   // Resolve this goal's session rather than an unrelated session left by a retry.
   const sessionId = await sessionFor(page, goal.title).getAttribute('data-session-id');
   const edgeSelector = `[data-session-id="${sessionId}"] .scheduler-edge-bottom`;
-  await page.locator(edgeSelector).evaluate(element => element.scrollIntoView({ block: 'center' }));
   const box = (await page.locator(edgeSelector).boundingBox())!;
   await mouseDrag(page, { x: box.x + box.width / 2, y: box.y + box.height / 2 }, { x: box.x + box.width / 2, y: box.y + box.height / 2 + 60 }, 6);
   await expect(page.locator('[role="alert"]')).toHaveCount(0);
@@ -315,7 +314,7 @@ test('resizing a session by its bottom edge extends its duration', async ({ page
       end: localTimeOf(session.plan.end),
       minutes: (Date.parse(session.plan.end) - Date.parse(session.plan.start)) / 60000,
     };
-  }).toEqual({ end: '19:00', minutes: 120 });
+  }).toEqual({ end: '11:00', minutes: 120 });
 });
 
 test('overlapping sessions are flagged as a conflict and the failed draft is kept open for editing', async ({ page, request, baseURL }) => {
