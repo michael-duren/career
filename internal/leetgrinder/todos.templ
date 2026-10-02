@@ -246,7 +246,7 @@ templ TodoAddProblem(page TodosPage) {
 					<p class="error" role="alert">{ page.Error }</p>
 				}
 			<form class="attempt-form todo-form" method="post" action="/leetgrinder/todos/items">
-				<label>LeetCode link or slug<input type="text" name="problem" required maxlength="300" value={ page.Problem } placeholder="https://leetcode.com/problems/two-sum/"/></label>
+				<label>LeetCode or NeetCode link, or LeetCode slug<input type="text" name="problem" required maxlength="300" value={ page.Problem } placeholder="https://leetcode.com/problems/two-sum/"/></label>
 				<label>List<select name="setID"><option value="">Individual problems</option>
 						for _, set := range page.Sets {
 							<option value={ set.ID } selected?={ page.SetID == set.ID }>{ set.Title }</option>
@@ -268,7 +268,7 @@ templ TodoAddSet(page TodosPage) {
 				}
 			<form class="attempt-form todo-form" method="post" action="/leetgrinder/todos/sets">
 				<label>Set name<input type="text" name="title" required maxlength="120" value={ page.Title } placeholder="Interview prep"/></label>
-				<label>Problems, links or slugs separated by lines, commas or spaces (optional)<textarea name="problems" rows="5" placeholder="two-sum&#10;valid-parentheses">{ page.Problems }</textarea></label>
+				<label>Problems (LeetCode or NeetCode links, or LeetCode slugs) separated by lines, commas or spaces (optional)<textarea name="problems" rows="5" placeholder="two-sum&#10;valid-parentheses">{ page.Problems }</textarea></label>
 				<button class="button primary" type="submit">Add set</button>
 			</form>
 		</section>

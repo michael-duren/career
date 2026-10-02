@@ -214,6 +214,9 @@ func TestLeetgrinderLogForm(t *testing.T) {
 	for ref, want := range map[string]string{
 		"https://leetcode.com/problems/lru-cache/description/": "/leetgrinder/problem/lru-cache",
 		"Two-Sum": "/leetgrinder/problem/two-sum",
+		"https://neetcode.io/problems/two-integer-sum":             "/leetgrinder/problem/two-sum",
+		"https://www.neetcode.io/problems/anagram-groups/question": "/leetgrinder/problem/group-anagrams",
+		"https://leetcode.cn/problems/lru-cache/description/":      "/leetgrinder/problem/lru-cache",
 	} {
 		w := request("GET", "/leetgrinder/log?"+url.Values{"problem": {ref}}.Encode(), nil)
 		if w.Code != 303 || w.Header().Get("Location") != want {
@@ -221,8 +224,12 @@ func TestLeetgrinderLogForm(t *testing.T) {
 		}
 	}
 	w := request("GET", "/leetgrinder/log?"+url.Values{"problem": {"https://example.com/<b>"}}.Encode(), nil)
-	if w.Code != 400 || !strings.Contains(w.Body.String(), "Enter a LeetCode problem link") || !strings.Contains(w.Body.String(), "https://example.com/&lt;b&gt;") {
+	if w.Code != 400 || !strings.Contains(w.Body.String(), "Enter a LeetCode or NeetCode problem link") || !strings.Contains(w.Body.String(), "https://example.com/&lt;b&gt;") {
 		t.Fatalf("bad reference: %d", w.Code)
+	}
+	w = request("GET", "/leetgrinder/log?"+url.Values{"problem": {"https://neetcode.io/problems/no-such-neetcode-problem"}}.Encode(), nil)
+	if w.Code != 400 || !strings.Contains(w.Body.String(), "no known LeetCode match") {
+		t.Fatalf("unknown NeetCode problem: %d", w.Code)
 	}
 	// Opening a new problem's page adds no catalog row, so a GET never
 	// queues a LeetCode fetch; saving an attempt does.

@@ -191,13 +191,22 @@ const MaxTodoRefs = 200
 var ErrTooManyTodoRefs = errors.New("too many todo problems")
 
 // InvalidTodoRefError carries the first entry that is not a LeetCode problem.
-type InvalidTodoRefError struct{ Entry string }
+// UnknownNeetCode is set when it is a NeetCode link with no LeetCode mapping.
+type InvalidTodoRefError struct {
+	Entry           string
+	UnknownNeetCode bool
+}
 
-func (e InvalidTodoRefError) Error() string { return "invalid todo problem " + strconv.Quote(e.Entry) }
+func (e InvalidTodoRefError) Error() string {
+	if e.UnknownNeetCode {
+		return "unknown NeetCode problem " + strconv.Quote(e.Entry)
+	}
+	return "invalid todo problem " + strconv.Quote(e.Entry)
+}
 
-// ParseTodoRefs accepts LeetCode links or slugs separated by new lines,
-// commas, spaces or tabs. Empty entries are ignored. The error names the first
-// entry that is not a LeetCode problem.
+// ParseTodoRefs accepts LeetCode or NeetCode links, or LeetCode slugs,
+// separated by new lines, commas, spaces or tabs. Empty entries are ignored.
+// The error names the first entry that is not a known problem.
 func ParseTodoRefs(input string) ([]string, error) {
 	parts := strings.FieldsFunc(input, func(r rune) bool { return r == ',' || unicode.IsSpace(r) })
 	if len(parts) > MaxTodoRefs {
@@ -206,13 +215,10 @@ func ParseTodoRefs(input string) ([]string, error) {
 	out := make([]string, 0, len(parts))
 	seen := map[string]bool{}
 	for _, part := range parts {
-		slug, ok := NormalizeProblemRef(part)
-		if !ok {
-			// Keep the echoed entry short, cutting on a rune boundary.
-			if r := []rune(part); len(r) > 60 {
-				part = string(r[:60]) + "..."
-			}
-			return nil, InvalidTodoRefError{Entry: part}
+		slug, err := ResolveProblemRef(part)
+		if err != nil {
+			part = EchoRef(part)
+			return nil, InvalidTodoRefError{Entry: part, UnknownNeetCode: errors.Is(err, ErrUnknownNeetCodeProblem)}
 		}
 		if !seen[slug] {
 			out = append(out, slug)
