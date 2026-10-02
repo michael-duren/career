@@ -646,6 +646,9 @@ templ zoneConfirm(page SettingsPage) {
 				</tr>
 			</tbody>
 		</table>
+		if page.ZoneImpact.Goal != page.ZoneImpact.SavedGoal {
+			<p>Daily goal will change from { GoalLabel(page.ZoneImpact.SavedGoal) } to { GoalLabel(page.ZoneImpact.Goal) }.</p>
+		}
 		if !page.ZoneImpact.Changed() {
 			<p class="small muted">These figures do not change.</p>
 		}

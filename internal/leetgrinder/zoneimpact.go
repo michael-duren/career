@@ -21,6 +21,8 @@ type ZoneStats struct {
 // zone being chosen, so the settings page can say what changing it recounts.
 type ZoneImpact struct {
 	Before, After ZoneStats
+	// SavedGoal is the goal now; Goal is the one the save would apply.
+	SavedGoal, Goal DailyGoal
 }
 
 // NewZoneImpact reads state as the saved settings and as the settings with
@@ -30,7 +32,7 @@ type ZoneImpact struct {
 func NewZoneImpact(settings Settings, state State, now time.Time, zone string, goal DailyGoal) ZoneImpact {
 	after := settings
 	after.Timezone, after.Goal = zone, goal
-	return ZoneImpact{Before: zoneStats(settings, state, now), After: zoneStats(after, state, now)}
+	return ZoneImpact{Before: zoneStats(settings, state, now), After: zoneStats(after, state, now), SavedGoal: settings.Goal, Goal: goal}
 }
 
 func zoneStats(s Settings, state State, now time.Time) ZoneStats {

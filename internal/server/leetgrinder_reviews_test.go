@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/michael-duren/career-strategy/internal/database"
 	"github.com/michael-duren/career-strategy/internal/leetgrinder"
 )
 
@@ -327,11 +328,9 @@ func TestLeetgrinderTimezoneChangePreview(t *testing.T) {
 // zoneFixture saves UTC settings with frozen goals and a frozen pick keyed by
 // old dates, and attempts that move across midnight in Tokyo. now is Oct 10
 // 20:00 UTC, which is already Oct 11 in Tokyo.
-func zoneFixture(t *testing.T) (db interface {
-	LeetgrinderSettings(context.Context) (leetgrinder.Settings, error)
-	LeetgrinderToday(context.Context, time.Time) (leetgrinder.Today, error)
-	LeetgrinderDailyGoal(context.Context, time.Time) (leetgrinder.DailyGoal, bool, error)
-}, now time.Time, post func(url.Values) *httptest.ResponseRecorder) {
+// With frozenToday, Oct 10 (today in UTC) is already frozen at 5 + 0, unlike
+// the saved goal.
+func zoneFixture(t *testing.T, frozenToday bool) (db *database.Store, now time.Time, post func(url.Values) *httptest.ResponseRecorder) {
 	s, store, request := leetgrinderTestServer(t)
 	ctx := context.Background()
 	now = time.Date(2026, 10, 10, 20, 0, 0, 0, time.UTC)
@@ -355,7 +354,11 @@ func zoneFixture(t *testing.T) (db interface {
 	add("binary-search", utc(8, 22))
 	add("isomorphic-strings", utc(9, 20))
 	add("ransom-note", utc(9, 21))
-	for _, g := range []string{"INSERT INTO leetgrinder_daily_goal(local_date,goal_new,goal_review) VALUES('2026-10-08',1,0)", "INSERT INTO leetgrinder_daily_goal(local_date,goal_new,goal_review) VALUES('2026-10-09',2,1)", "INSERT INTO leetgrinder_review_plan(plan_date,problem_slug,slot) VALUES('2026-10-09','two-sum',1)"} {
+	goals := []string{"INSERT INTO leetgrinder_daily_goal(local_date,goal_new,goal_review) VALUES('2026-10-08',1,0)", "INSERT INTO leetgrinder_daily_goal(local_date,goal_new,goal_review) VALUES('2026-10-09',2,1)", "INSERT INTO leetgrinder_review_plan(plan_date,problem_slug,slot) VALUES('2026-10-09','two-sum',1)"}
+	if frozenToday {
+		goals = append(goals, "INSERT INTO leetgrinder_daily_goal(local_date,goal_new,goal_review) VALUES('2026-10-10',5,0)")
+	}
+	for _, g := range goals {
 		if _, err := store.DB.Exec(g); err != nil {
 			t.Fatal(err)
 		}
@@ -399,47 +402,47 @@ func TestLeetgrinderTimezonePreviewMatchesSavedResult(t *testing.T) {
 		return url.Values{"timezone": {"Asia/Tokyo"}, "goalNew": {"1"}, "goalReview": {"2"}}
 	}
 	day := func(s string) time.Time { d, _ := time.Parse(time.DateOnly, s); return d }
-
-	// After: the dashboard once the change is confirmed matches the preview.
-	db, now, post := zoneFixture(t)
-	w := post(values())
-	if w.Code != 200 || !strings.Contains(w.Body.String(), "Confirm the time zone change") {
-		t.Fatalf("preview: %d", w.Code)
-	}
-	b0, after := previewFigures(t, w.Body.String())
-	t.Logf("figures %v -> %v", b0, after)
-	for _, d := range []string{"2026-10-10", "2026-10-11"} {
-		if _, ok, _ := db.LeetgrinderDailyGoal(ctx, day(d)); ok {
-			t.Errorf("preview froze %s", d)
+	for _, frozen := range []bool{false, true} {
+		// After: the dashboard once the change is confirmed matches the preview.
+		db, now, post := zoneFixture(t, frozen)
+		w := post(values())
+		if w.Code != 200 || !strings.Contains(w.Body.String(), "Confirm the time zone change") || !strings.Contains(w.Body.String(), "Daily goal will change from 2 new + 1 review to 1 new + 2 reviews") {
+			t.Fatalf("frozen=%v preview: %d", frozen, w.Code)
 		}
-	}
-	confirm := values()
-	confirm.Set("confirm", "1")
-	if w := post(confirm); w.Code != 303 {
-		t.Fatalf("confirm: %d", w.Code)
-	}
-	today, err := db.LeetgrinderToday(ctx, now)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got := todayFigures(t, today); got != after {
-		t.Errorf("after the save the dashboard shows %v, the preview said %v", got, after)
-	}
+		_, after := previewFigures(t, w.Body.String())
+		if _, ok, _ := db.LeetgrinderDailyGoal(ctx, day("2026-10-11")); ok {
+			t.Errorf("frozen=%v: preview froze the new zone's today", frozen)
+		}
+		if _, ok, _ := db.LeetgrinderDailyGoal(ctx, day("2026-10-10")); ok != frozen {
+			t.Errorf("frozen=%v: preview changed whether Oct 10 is frozen", frozen)
+		}
+		confirm := values()
+		confirm.Set("confirm", "1")
+		if w := post(confirm); w.Code != 303 {
+			t.Fatalf("frozen=%v confirm: %d", frozen, w.Code)
+		}
+		today, err := db.LeetgrinderToday(ctx, now)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := todayFigures(t, today); got != after {
+			t.Errorf("frozen=%v: after the save the dashboard shows %v, the preview said %v", frozen, got, after)
+		}
 
-	// Before: the dashboard in the saved zone matches the preview's left side.
-	db, now, post = zoneFixture(t)
-	w = post(values())
-	before, _ := previewFigures(t, w.Body.String())
-	if today, err = db.LeetgrinderToday(ctx, now); err != nil {
-		t.Fatal(err)
-	}
-	if got := todayFigures(t, today); got != before {
-		t.Errorf("before the change the dashboard shows %v, the preview said %v", got, before)
+		// Before: the dashboard in the saved zone matches the preview's left side.
+		db, now, post = zoneFixture(t, frozen)
+		before, _ := previewFigures(t, post(values()).Body.String())
+		if today, err = db.LeetgrinderToday(ctx, now); err != nil {
+			t.Fatal(err)
+		}
+		if got := todayFigures(t, today); got != before {
+			t.Errorf("frozen=%v: before the change the dashboard shows %v, the preview said %v", frozen, got, before)
+		}
 	}
 }
 
-func TestLeetgrinderTimezoneDraftEscapedAndUnreadable(t *testing.T) {
-	_, _, post := zoneFixture(t)
+func TestLeetgrinderTimezoneDraftEscaped(t *testing.T) {
+	_, _, post := zoneFixture(t, false)
 	w := post(url.Values{"timezone": {`Foo"><b>x`}, "goalNew": {"2"}, "goalReview": {"1"}})
 	if w.Code != 400 || strings.Contains(w.Body.String(), `"><b>x`) || !strings.Contains(w.Body.String(), "Foo&#34;&gt;&lt;b&gt;x") {
 		t.Fatalf("zone not escaped: %d", w.Code)

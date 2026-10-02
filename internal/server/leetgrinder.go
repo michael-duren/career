@@ -404,7 +404,7 @@ func (s *Server) zoneImpact(r *http.Request, form leetgrinder.GeneralForm, goal 
 	if _, err := leetgrinder.LoadTimezone(form.Timezone); err != nil {
 		return zoneChange{}, false, nil
 	}
-	state, err := s.db.LeetgrinderState(r.Context())
+	state, err := s.db.LeetgrinderStateWithoutCode(r.Context())
 	if err != nil {
 		return zoneChange{}, false, err
 	}
