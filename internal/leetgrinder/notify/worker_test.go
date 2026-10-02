@@ -353,6 +353,35 @@ func TestWorkerSkipsAbandonedSendWhoseConditionCleared(t *testing.T) {
 	}
 }
 
+func TestWorkerSkipsStaleReminders(t *testing.T) {
+	f := newFixture(t)
+	f.seedDue(t, "two-sum")
+	f.configure(t, func(s *leetgrinder.Settings) {
+		s.Notifications = map[string]leetgrinder.NotificationPref{
+			leetgrinder.NotifyMorningPlan:  {Enabled: true, Time: "08:00", Priority: "default"},
+			leetgrinder.NotifyStreakAtRisk: {Enabled: true, Time: "18:00", Priority: "high"},
+		}
+	})
+	// The server was down until 22:00.
+	if got := f.step(t, at(10, "22:00")); len(got) != 0 {
+		t.Fatalf("stale reminders sent: %v", got)
+	}
+	for kind, when := range map[string]string{leetgrinder.NotifyMorningPlan: "08:00", leetgrinder.NotifyStreakAtRisk: "18:00", leetgrinder.NotifyGoalIncomplete: "18:00"} {
+		if e := f.logEntry(t, kind, at(10, when)); e.Status != leetgrinder.NotifySkipped || e.Detail != "Missed while the server was down" {
+			t.Fatalf("%s: %+v", kind, e)
+		}
+	}
+	// Inside the window a late reminder still sends, once.
+	f.configure(t, func(s *leetgrinder.Settings) {
+		s.Notifications = map[string]leetgrinder.NotificationPref{
+			leetgrinder.NotifyMorningPlan: {Enabled: true, Time: "08:00", Priority: "default"},
+		}
+	})
+	if got := f.step(t, at(11, "11:30")); len(got) != 1 || got[0].Header.Get("Title") != "Leetgrinder: today's plan" {
+		t.Fatalf("late but in window: %v", got)
+	}
+}
+
 func TestWorkerNeedsATopic(t *testing.T) {
 	f := newFixture(t)
 	f.configure(t, func(s *leetgrinder.Settings) { s.NtfyTopic = "" })

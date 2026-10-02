@@ -24,6 +24,9 @@ type NotificationKind struct {
 	ThresholdLabel             string
 	MinThreshold, MaxThreshold int
 	Default                    NotificationPref
+	// Window is how long after its time the kind may still send. Later than
+	// that the reminder is stale and is logged as skipped.
+	Window time.Duration
 }
 
 // HasThreshold reports whether the kind takes a threshold.
@@ -32,15 +35,15 @@ func (k NotificationKind) HasThreshold() bool { return k.ThresholdLabel != "" }
 // NotificationKinds lists every kind in display order.
 var NotificationKinds = []NotificationKind{
 	{Key: NotifyMorningPlan, Label: "Morning plan", Description: "Today's targets, review picks, due count, and current streak.",
-		Default: NotificationPref{Enabled: true, Time: "08:00", Priority: "default"}},
+		Default: NotificationPref{Enabled: true, Time: "08:00", Priority: "default"}, Window: 4 * time.Hour},
 	{Key: NotifyGoalIncomplete, Label: "Goal incomplete", Description: "Today's goal is not met yet; lists what is left.",
-		Default: NotificationPref{Enabled: true, Time: "18:00", Priority: "default"}},
+		Default: NotificationPref{Enabled: true, Time: "18:00", Priority: "default"}, Window: 2 * time.Hour},
 	{Key: NotifyStreakAtRisk, Label: "Streak at risk", Description: "Today's goal is not met and your streak is at least the threshold (0 sends whenever the goal is not met).",
 		ThresholdLabel: "Streak days", MinThreshold: 0, MaxThreshold: 365,
-		Default: NotificationPref{Enabled: true, Time: "21:00", Threshold: 1, Priority: "high"}},
+		Default: NotificationPref{Enabled: true, Time: "21:00", Threshold: 1, Priority: "high"}, Window: 2 * time.Hour},
 	{Key: NotifyReviewBacklog, Label: "Review backlog", Description: "At least the threshold number of due reviews are outside today's picks.",
 		ThresholdLabel: "Due reviews", MinThreshold: 1, MaxThreshold: 500,
-		Default: NotificationPref{Enabled: false, Time: "18:00", Threshold: 10, Priority: "default"}},
+		Default: NotificationPref{Enabled: false, Time: "18:00", Threshold: 10, Priority: "default"}, Window: 2 * time.Hour},
 }
 
 // legacyKindLabels name kinds retired with the curriculum, which old log

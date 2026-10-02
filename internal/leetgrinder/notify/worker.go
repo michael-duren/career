@@ -48,7 +48,9 @@ func (w *Worker) Run(ctx context.Context) {
 }
 
 // Step sends every enabled notification whose time has passed today and
-// that has not been sent, skipped, or retried to the cap yet.
+// that has not been sent, skipped, or retried to the cap yet. One that is
+// later than its kind's window, such as after the server was down, is logged
+// as skipped instead of sent.
 func (w *Worker) Step(ctx context.Context) error {
 	settings, err := w.Store.LeetgrinderSettings(ctx)
 	if err != nil {
@@ -75,6 +77,12 @@ func (w *Worker) Step(ctx context.Context) error {
 			errs = append(errs, err)
 			continue
 		case !retryable(entry, now):
+			continue
+		}
+		if now.Sub(at) > kind.Window {
+			if err = w.Store.SkipLeetgrinderNotification(ctx, kind.Key, date, "Missed while the server was down", now); err != nil {
+				errs = append(errs, err)
+			}
 			continue
 		}
 		if today == nil {
