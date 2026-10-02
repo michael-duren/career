@@ -109,3 +109,61 @@ func TestProblemsPageRenders(t *testing.T) {
 		t.Fatal("no-attempts state missing")
 	}
 }
+
+// ProblemRows groups attempts once; each row must still agree with the
+// per-slug State lookups it replaced.
+func TestProblemRowsMatchStateLookups(t *testing.T) {
+	settings, state, now := benchmarkState()
+	loc := settings.Location()
+	rows := ProblemRows(state, BuildCards(state, loc), now, loc)
+	if len(rows) == 0 {
+		t.Fatal("no rows")
+	}
+	seen := map[string]bool{}
+	for i, r := range rows {
+		slug := r.Problem.Slug
+		if seen[slug] {
+			t.Fatalf("%s listed twice", slug)
+		}
+		seen[slug] = true
+		attempts := state.ProblemAttempts(slug)
+		if r.Status != state.ProblemStatus(slug) || r.Attempts != len(attempts) || r.Last.ID != attempts[0].ID {
+			t.Fatalf("%s: row %q/%d/%s, state %q/%d/%s", slug, r.Status, r.Attempts, r.Last.ID, state.ProblemStatus(slug), len(attempts), attempts[0].ID)
+		}
+		if i > 0 && r.Last.CreatedAt.After(rows[i-1].Last.CreatedAt) {
+			t.Fatalf("%s: rows not newest first", slug)
+		}
+	}
+}
+
+func TestTodayCardLookup(t *testing.T) {
+	settings, state, now := benchmarkState()
+	today := NewToday(settings, state, now)
+	if len(today.Cards) == 0 {
+		t.Fatal("no cards")
+	}
+	for _, c := range today.Cards {
+		got, ok := today.Card(c.Problem.Slug)
+		if !ok || got.Problem.Slug != c.Problem.Slug || got.Reviews != c.Reviews {
+			t.Fatalf("%s: lookup %v %+v", c.Problem.Slug, ok, got)
+		}
+	}
+	if _, ok := today.Card("no-such-problem"); ok {
+		t.Fatal("unknown slug has a card")
+	}
+	// A Today built by hand has no index and still finds its cards.
+	manual := Today{Cards: today.Cards}
+	if c, ok := manual.Card(today.Cards[0].Problem.Slug); !ok || c.Reviews != today.Cards[0].Reviews {
+		t.Fatal("unindexed lookup failed")
+	}
+}
+
+func BenchmarkProblemRows(b *testing.B) {
+	settings, state, now := benchmarkState()
+	loc := settings.Location()
+	cards := BuildCards(state, loc)
+	b.ResetTimer()
+	for range b.N {
+		ProblemRows(state, cards, now, loc)
+	}
+}

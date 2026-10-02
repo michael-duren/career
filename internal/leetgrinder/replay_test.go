@@ -95,6 +95,7 @@ func oldNewToday(settings Settings, state State, now time.Time) Today {
 	t := Today{Settings: settings, State: state, Now: now, Date: Date(now, loc)}
 	t.Goal = state.GoalFor(t.Date)
 	t.Cards = oldBuildCards(state, loc)
+	t.cardBySlug = indexCards(t.Cards)
 	t.history = oldHistory(state, loc, t.Date)
 	t.Progress = *t.history[t.Date]
 	t.Streaks = ComputeStreaks(t.history, t.Progress)
