@@ -399,7 +399,8 @@ test("legacy timer keeps wall-clock time across a backward jump", () => {
   const t = lib.creditActive(legacy, { visible: true, lastInputAt: now }, now, 1);
   assert.equal(t.activeMs, 10 * MIN);
   assert.equal(t.carriedMs, 10 * MIN);
-  assert.equal(t.openedAt, T0);
+  // Observed open time (10 min) is preserved: openedAt shifts with the clock.
+  assert.equal(t.openedAt, now - 10 * MIN);
 });
 
 test("a small backward step only clamps marks and keeps open time", () => {
@@ -422,7 +423,7 @@ test("the jump tolerance is SAMPLE_MAX_CREDIT_MS", () => {
   const past = at - 1;
   const jumped = lib.creditActive(base, { visible: true, lastInputAt: past }, past, 1);
   assert.equal(jumped.startedAt, past);
-  assert.equal(jumped.openedAt, T0);
+  assert.equal(jumped.openedAt, past - 10 * MIN);
   assert.equal(jumped.carriedMs, 5 * MIN);
 });
 
@@ -431,4 +432,28 @@ test("a jump does not restart the max-age clock, which uses openedAt", () => {
   const now = T0 + 13 * 3600000;
   assert.ok(lib.timerExpired({ startedAt: now - MIN, openedAt: opened, lastSeenAt: now - MIN }, now));
   assert.ok(!lib.timerExpired({ startedAt: now - MIN, lastSeenAt: now - MIN }, now));
+});
+
+for (const hours of [2, 3]) {
+  test(`a ${hours}h backward step keeps open time and max age continuous`, () => {
+    const seen = T0 + 10 * MIN;
+    const timer = { startedAt: T0, openedAt: T0, lastSeenAt: seen, activeMs: 5 * MIN, tabs: { 1: seen }, creditedTo: seen };
+    const now = seen - hours * 3600000;
+    const t = lib.creditActive(timer, { visible: true, lastInputAt: now }, now, 1);
+    assert.ok(t.openedAt <= now);
+    assert.equal(lib.elapsedMinutes(lib.openedAt(t), now), 10);
+    assert.equal(lib.elapsedMinutes(lib.openedAt(t), now + 5 * MIN), 15);
+    // Expiry comes after 12 hours of observed time, not 12h plus the step.
+    const stored = { ...t, lastSeenAt: now };
+    const almost = now + 12 * 3600000 - 10 * MIN - MIN;
+    const over = now + 12 * 3600000 - 10 * MIN + MIN;
+    assert.ok(!lib.timerExpired({ ...stored, lastSeenAt: almost - MIN }, almost));
+    assert.ok(lib.timerExpired({ ...stored, lastSeenAt: over - MIN }, over));
+  });
+}
+
+test("a forward clock step over 30 minutes expires the timer like sleep", () => {
+  const timer = { startedAt: T0, openedAt: T0, lastSeenAt: T0 + MIN };
+  assert.ok(lib.timerExpired(timer, T0 + MIN + 31 * MIN));
+  assert.ok(!lib.timerExpired(timer, T0 + MIN + 29 * MIN));
 });

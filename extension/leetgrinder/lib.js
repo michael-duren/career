@@ -303,15 +303,21 @@
   // wall-clock cap on active time. A backward step within SAMPLE_MAX_CREDIT_MS
   // (NTP slew) only clamps the stored marks to now. A larger one is a clock
   // jump: startedAt moves to now and carriedMs keeps the active time earned
-  // so far. The first sample after a jump credits nothing (bounded loss of
+  // so far, and openedAt shifts by the step so open time and max age continue
+  // as if the gap never happened. The first sample after a jump credits nothing (bounded loss of
   // under one heartbeat).
   function creditActive(timer, sample, now, tabId = 0) {
     const finite = Number.isFinite;
     const origStart = finite(timer.startedAt) ? timer.startedAt : now;
-    const openedAt = finite(timer.openedAt) ? timer.openedAt : origStart;
+    const storedOpenedAt = finite(timer.openedAt) ? timer.openedAt : origStart;
     let ahead = Math.max(origStart, finite(timer.creditedTo) ? timer.creditedTo : 0) - now;
     for (const at of Object.values(timer.tabs || {})) if (finite(at)) ahead = Math.max(ahead, at - now);
     const jumped = ahead > SAMPLE_MAX_CREDIT_MS;
+    // On a jump the unobserved gap counts as zero: shift openedAt by the step
+    // so open time and the max age stay continuous (and never ahead of now).
+    let lastSeen = finite(timer.lastSeenAt) ? timer.lastSeenAt : Math.max(origStart, finite(timer.creditedTo) ? timer.creditedTo : 0);
+    for (const at of Object.values(timer.tabs || {})) if (!finite(timer.lastSeenAt) && finite(at)) lastSeen = Math.max(lastSeen, at);
+    const openedAt = jumped ? Math.min(now, storedOpenedAt + (now - lastSeen)) : storedOpenedAt;
     const tabs = {};
     for (const [id, at] of Object.entries(timer.tabs || {})) {
       if (!finite(at) || now - at > TAB_STALE_MS || (jumped && at > now)) continue;
