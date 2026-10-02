@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react';
 import { addDays, clockLabel, displayClock, draftMutation, localFields, localInstant, minuteOf, mondayOf, SchedulerError, schedulerRequest, snapMinutes, weekSchema, zonedDate, type Assignment, type Mutation, type SchedulerSession, type SchedulerWeek, type SessionDraft } from '../lib/scheduler';
+import { proposePlacement, type PlacementResult } from '../lib/scheduler-placement';
 import { WeeklySchedulerSettings } from './WeeklySchedulerSettings';
 import { WeeklySchedulerGoogle } from './WeeklySchedulerGoogle';
 import '../styles/weekly-scheduler.css';
@@ -7,7 +8,7 @@ const hours = (value: number) => `${Number(value.toFixed(2))}h`;
 const browserZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 const dayName = (date: string) => new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }).format(new Date(`${date}T12:00Z`));
 type DragItem = { kind: 'assignment'; assignment: Assignment } | { kind: 'session'; session: SchedulerSession };
-type PointerDragState = { item: DragItem; startX: number; startY: number; moved: boolean; hoverDate: string | null; hoverMinute: number | null };
+type PointerDragState = { item: DragItem; pointerId: number; startX: number; startY: number; grabOffsetMinutes: number; moved: boolean };
 
 export function WeeklyScheduler() {
   const [weekDate, setWeekDate] = useState(() => mondayOf(zonedDate(new Date(), browserZone())));
@@ -108,8 +109,10 @@ export function WeeklyScheduler() {
   // Drag/resize save immediately without opening the editor dialog - it would
   // otherwise flash open and shut on every successful move. Only surface the
   // dialog if the save actually fails, so the user can see and fix the draft.
-  function attemptPlace(proposal: SessionDraft) {
+  function attemptPlace(result: PlacementResult) {
     if (!week) return;
+    if (result.kind === 'invalid') { setError(result.message); return; }
+    const proposal = result.draft;
     try { void mutate(draftMutation(proposal, week)).then(ok => { if (!ok) setDraft(proposal); }); }
     catch (e) { setError(e instanceof Error ? e.message : 'Check the session times.'); setDraft(proposal); }
   }
@@ -121,24 +124,30 @@ export function WeeklyScheduler() {
   function beginPointerDrag(e: PointerEvent, item: DragItem) {
     if (e.button !== 0) return;
     e.currentTarget.setPointerCapture(e.pointerId);
-    drag.current = { item, startX: e.clientX, startY: e.clientY, moved: false, hoverDate: null, hoverMinute: null };
+    const block = e.currentTarget.closest<HTMLElement>('.scheduler-block');
+    const grabOffsetMinutes = item.kind === 'session' && block ? snapMinutes(e.clientY - block.getBoundingClientRect().top) : 0;
+    drag.current = { item, pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, grabOffsetMinutes, moved: false };
   }
   function pointerDragMove(e: PointerEvent) {
     const current = drag.current;
-    if (!current) return;
+    if (!current || current.pointerId !== e.pointerId) return;
     if (!current.moved && Math.hypot(e.clientX - current.startX, e.clientY - current.startY) < 4) return;
     current.moved = true;
-    const dayEl = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>('[data-scheduler-date]') ?? null;
-    current.hoverDate = dayEl?.dataset.schedulerDate ?? null;
-    current.hoverMinute = dayEl ? snapMinutes(e.clientY - dayEl.getBoundingClientRect().top + axisStart) : null;
     setPointerGhost({ x: e.clientX, y: e.clientY, label: current.item.kind === 'assignment' ? current.item.assignment.title : current.item.session.assignment.title });
   }
-  function pointerDragEnd() {
+  function pointerDragEnd(e: PointerEvent) {
     const current = drag.current; drag.current = null;
     setPointerGhost(null);
-    if (!current) return;
+    if (!current || current.pointerId !== e.pointerId || !week) return;
     suppressClick.current = current.moved;
-    if (current.moved && current.hoverDate && current.hoverMinute !== null) placeItem(current.item, current.hoverDate, current.hoverMinute);
+    if (!current.moved) return;
+    const dayEl = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>('[data-scheduler-date]');
+    const targetDate = dayEl?.dataset.schedulerDate;
+    if (!dayEl || !targetDate) return;
+    const startMinute = snapMinutes(e.clientY - dayEl.getBoundingClientRect().top + axisStart - current.grabOffsetMinutes);
+    attemptPlace(current.item.kind === 'assignment'
+      ? proposePlacement({ kind: 'assignment', assignment: current.item.assignment, targetDate, startMinute, durationMinutes: suggestedMinutes(current.item.assignment) }, week, new Date())
+      : proposePlacement({ kind: 'move', session: current.item.session, targetDate, startMinute }, week, new Date()));
   }
   function pointerDragCancel() { drag.current = null; setPointerGhost(null); }
   const intervalMinutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3));
@@ -155,33 +164,10 @@ export function WeeklyScheduler() {
   function activeInterval(session: SchedulerSession) {
     return session.actual && session.actual.status !== 'skipped' ? session.actual : session.plan;
   }
-  function intervalMode(session: SchedulerSession): 'plan' | 'actual' {
-    return !session.actual && session.plan && Date.parse(session.plan.start) > Date.now() ? 'plan' : 'actual';
-  }
-  function placeItem(item: DragItem, date: string, minute: number) {
-    if (!week) return;
-    try {
-      let proposal: SessionDraft;
-      if (item.kind === 'assignment') proposal = create(item.assignment, date, minute, undefined, suggestedMinutes(item.assignment));
-      else {
-        const session = item.session, interval = activeInterval(session);
-        if (!interval) return;
-        const mode = intervalMode(session);
-        const startDate = addDays(date, Math.floor(minute / 1440));
-        const start = localInstant(startDate, clockLabel(minute).slice(0, 5), week.settings.timeZone);
-        if (mode === 'actual' && Date.parse(start) > Date.now()) { setError('Actual work cannot be moved into the future.'); return; }
-        const startFields = localFields(start, week.settings.timeZone);
-        const end = localFields(new Date(Date.parse(start) + Date.parse(interval.end) - Date.parse(interval.start)).toISOString(), week.settings.timeZone);
-        proposal = { id: session.id, ruleId: session.ruleId, assignment: session.assignment, date: mode === 'actual' ? startFields.date : date, startDate: startFields.date, start: startFields.time, endDate: end.date, end: end.time, mode, repeat: false, scope: 'date' };
-      }
-      attemptPlace(proposal);
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not place the session.'); }
-  }
   function resizeEdge(e: PointerEvent<HTMLButtonElement>, session: SchedulerSession, edge: 'start' | 'end') {
     e.preventDefault(); e.stopPropagation();
     const interval = activeInterval(session);
     if (!week || !interval) return;
-    const mode = intervalMode(session);
     const target = e.currentTarget; target.setPointerCapture(e.pointerId);
     const y = e.clientY, startMs = Date.parse(interval.start), endMs = Date.parse(interval.end);
     const move = (event: globalThis.PointerEvent) => {
@@ -192,14 +178,8 @@ export function WeeklyScheduler() {
     const cleanup = () => { target.removeEventListener('pointermove', move); target.removeEventListener('pointerup', finish); target.removeEventListener('pointercancel', cleanup); target.textContent = ''; };
     const finish = (event: globalThis.PointerEvent) => {
       cleanup();
-      const deltaMs = snapMinutes(event.clientY - y) * 60000;
-      const newStartMs = edge === 'start' ? Math.min(endMs - 15 * 60000, startMs + deltaMs) : startMs;
-      const newEndMs = edge === 'end' ? Math.max(startMs + 15 * 60000, endMs + deltaMs) : endMs;
-      if (mode === 'actual' && newEndMs > Date.now()) { setError('Actual work cannot end in the future.'); return; }
-      const start = localFields(new Date(newStartMs).toISOString(), week.settings.timeZone);
-      const end = localFields(new Date(newEndMs).toISOString(), week.settings.timeZone);
-      const proposal: SessionDraft = { id: session.id, ruleId: session.ruleId, assignment: session.assignment, date: mode === 'actual' ? start.date : session.date, startDate: start.date, start: start.time, originalStart: edge === 'end' ? interval.start : undefined, endDate: end.date, end: end.time, originalEnd: edge === 'start' ? interval.end : undefined, mode, repeat: false, scope: 'date' };
-      attemptPlace(proposal);
+      const deltaMinutes = snapMinutes(event.clientY - y);
+      attemptPlace(proposePlacement({ kind: 'resize', session, edge, deltaMinutes }, week, new Date()));
     };
     target.addEventListener('pointermove', move); target.addEventListener('pointerup', finish); target.addEventListener('pointercancel', cleanup);
   }

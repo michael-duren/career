@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { addDays, mondayOf, snapMinutes, zonedDate, localInstant, localFields, clockLabel, displayClock } from '../src/lib/scheduler.ts';
+import { addDays, mondayOf, snapMinutes, zonedDate, localInstant, localFields, clockLabel, displayClock, draftMutation, weekSchema } from '../src/lib/scheduler.ts';
+import { proposePlacement } from '../src/lib/scheduler-placement.ts';
 
 test('Monday weeks cross month/year and leap-day boundaries without browser timezone', () => {
   assert.equal(mondayOf('2027-01-03'), '2026-12-28');
@@ -58,4 +59,106 @@ test('unchanged editor times retain the original instants across a repeated hour
   const mutation = draftMutation({ id: 'historical', assignment: { goalId: 'goal', title: 'Learn' }, date: '2026-11-01', start: '01:30', endDate: '2026-11-01', end: '01:30', originalStart: '2026-11-01T06:30:00Z', originalEnd: '2026-11-01T07:30:00Z', mode: 'actual', repeat: false, scope: 'date' }, week);
   assert.equal(mutation.action, 'actual');
   if (mutation.action === 'actual') assert.equal((Date.parse(mutation.actual.end) - Date.parse(mutation.actual.start)) / 3600000, 1);
+});
+
+const placementWeek = (day: string, zone = 'America/Chicago', start = '09:00', end = '17:00', nextDay = false) => {
+  const dayStart = localInstant(day, start, zone);
+  const dayEnd = localInstant(nextDay ? addDays(day, 1) : day, end, zone);
+  return weekSchema.parse({ revision: 'r1', week: mondayOf(day), settings: { timeZone: zone, defaultDay: { start, end, nextDay }, weekdays: {}, dates: {} }, days: [{ date: day, interval: { start, end, nextDay }, start: dayStart, end: dayEnd }], goals: [{ goal: { id: 'goal', title: 'Learn', color: '#123456', startDate: '2026-01-01', endDate: '2027-01-01', status: 'active', dailyHours: 1, selectedWeekdays: null, steps: [], dependsOn: [] }, requiredHours: 1, actualHours: 0, remainingScheduledHours: 0, uncoveredHours: 0, excessHours: 0, unscheduledStepIds: [] }], sessions: [], rules: [], busy: [], warnings: [], remainingCapacityHours: 8 });
+};
+
+test('moving a block subtracts the 30-minute grab offset before snapping', () => {
+  const week = placementWeek('2026-10-05');
+  const session = weekSchema.parse({ ...week, sessions: [{ id: 's', date: '2026-10-05', assignment: { goalId: 'goal', title: 'Learn' }, plan: { start: '2026-10-05T14:00:00Z', end: '2026-10-05T15:00:00Z' }, actual: null, state: 'accepted', exception: false, conflictIds: [] }] }).sessions[0];
+  const result = proposePlacement({ kind: 'move', session, targetDate: '2026-10-05', startMinute: 570 }, week, new Date('2026-10-01T00:00:00Z'));
+  assert.equal(result.kind, 'valid');
+  if (result.kind === 'valid') assert.deepEqual([result.start, result.end, result.draft.start, result.draft.end], ['2026-10-05T14:30:00.000Z', '2026-10-05T15:30:00.000Z', '09:30', '10:30']);
+});
+
+test('move and resize retain both computed fold instants and elapsed duration', () => {
+  const week = placementWeek('2026-11-01', 'America/Chicago', '00:00', '04:00');
+  const session = weekSchema.parse({ ...week, sessions: [{ id: 's', date: '2026-11-01', assignment: { goalId: 'goal', title: 'Learn' }, plan: { start: '2026-11-01T06:30:00Z', end: '2026-11-01T07:30:00Z' }, actual: null, state: 'accepted', exception: false, conflictIds: [] }] }).sessions[0];
+  const now = new Date('2026-10-01T00:00:00Z');
+  const moved = proposePlacement({ kind: 'move', session, targetDate: '2026-11-01', startMinute: 90 }, week, now);
+  assert.equal(moved.kind, 'valid');
+  if (moved.kind === 'valid') {
+    assert.deepEqual([moved.start, moved.end, moved.draft.originalStart, moved.draft.originalEnd], ['2026-11-01T06:30:00.000Z', '2026-11-01T07:30:00.000Z', '2026-11-01T06:30:00.000Z', '2026-11-01T07:30:00.000Z']);
+    const request = draftMutation(moved.draft, week);
+    if (request.action === 'session') {
+      assert.deepEqual([request.session.plan?.start, request.session.plan?.end], ['2026-11-01T06:30:00.000Z', '2026-11-01T07:30:00.000Z']);
+      assert.equal((Date.parse(request.session.plan!.end) - Date.parse(request.session.plan!.start)) / 60000, 60);
+    }
+  }
+  const resized = proposePlacement({ kind: 'resize', session, edge: 'start', deltaMinutes: 60 }, week, now);
+  assert.equal(resized.kind, 'invalid');
+  const secondFold = weekSchema.parse({ ...week, sessions: [{ ...session, plan: { start: '2026-11-01T07:30:00Z', end: '2026-11-01T08:30:00Z' } }] }).sessions[0];
+  const endResize = proposePlacement({ kind: 'resize', session: secondFold, edge: 'end', deltaMinutes: -30 }, week, now);
+  assert.equal(endResize.kind, 'valid');
+  if (endResize.kind === 'valid') {
+    assert.deepEqual([endResize.start, endResize.end], ['2026-11-01T07:30:00.000Z', '2026-11-01T08:00:00.000Z']);
+    const mutation = draftMutation(endResize.draft, week);
+    if (mutation.action === 'session') assert.deepEqual([mutation.session.plan?.start, mutation.session.plan?.end], ['2026-11-01T07:30:00.000Z', '2026-11-01T08:00:00.000Z']);
+  }
+});
+
+test('placement rejects nonexistent spring wall time', () => {
+  const week = placementWeek('2026-03-08', 'America/Chicago', '00:00', '04:00');
+  const result = proposePlacement({ kind: 'assignment', assignment: { goalId: 'goal', title: 'Learn' }, targetDate: '2026-03-08', startMinute: 150, durationMinutes: 60 }, week, new Date('2026-01-01T00:00:00Z'));
+  assert.equal(result.kind, 'invalid');
+  if (result.kind === 'invalid') assert.match(result.message, /does not exist/);
+});
+
+test('spring resize follows elapsed minutes across the clock jump', () => {
+  const week = placementWeek('2026-03-08', 'America/Chicago', '00:00', '04:00');
+  const session = weekSchema.parse({ ...week, sessions: [{ id: 's', date: '2026-03-08', assignment: { goalId: 'goal', title: 'Learn' }, plan: { start: '2026-03-08T07:30:00Z', end: '2026-03-08T08:00:00Z' }, actual: null, state: 'accepted', exception: false, conflictIds: [] }] }).sessions[0];
+  const result = proposePlacement({ kind: 'resize', session, edge: 'end', deltaMinutes: 30 }, week, new Date('2026-01-01T00:00:00Z'));
+  assert.equal(result.kind, 'valid');
+  if (result.kind === 'valid') {
+    assert.deepEqual([result.start, result.end, result.draft.start, result.draft.end], ['2026-03-08T07:30:00.000Z', '2026-03-08T08:30:00.000Z', '01:30', '03:30']);
+    const mutation = draftMutation(result.draft, week);
+    if (mutation.action === 'session') assert.deepEqual([mutation.session.plan?.start, mutation.session.plan?.end], ['2026-03-08T07:30:00.000Z', '2026-03-08T08:30:00.000Z']);
+  }
+});
+
+test('post-midnight actual proposal keeps the owning column date through submission', () => {
+  const week = placementWeek('2026-09-27', 'America/Chicago', '09:00', '02:00', true);
+  const session = weekSchema.parse({ ...week, sessions: [{ id: 's', date: '2026-09-27', assignment: { goalId: 'goal', title: 'Learn' }, plan: { start: '2026-09-27T14:00:00Z', end: '2026-09-27T15:00:00Z' }, actual: { status: 'explicit', date: '2026-09-27', start: '2026-09-27T14:00:00Z', end: '2026-09-27T15:00:00Z' }, state: 'accepted', exception: false, conflictIds: [] }] }).sessions[0];
+  const result = proposePlacement({ kind: 'move', session, targetDate: '2026-09-27', startMinute: 1500 }, week, new Date('2026-10-02T00:00:00Z'));
+  assert.equal(result.kind, 'valid');
+  if (result.kind === 'valid') {
+    assert.deepEqual([result.draft.date, result.draft.startDate, result.start, result.end], ['2026-09-27', '2026-09-28', '2026-09-28T06:00:00.000Z', '2026-09-28T07:00:00.000Z']);
+    const request = draftMutation(result.draft, week);
+    if (request.action === 'actual') assert.deepEqual([request.actual.date, request.actual.start, request.actual.end], ['2026-09-27', '2026-09-28T06:00:00.000Z', '2026-09-28T07:00:00.000Z']);
+  }
+});
+
+test('proposal marks overlap but rejects invalid plan geometry and future actual ends', () => {
+  const base = placementWeek('2026-10-05');
+  const week = weekSchema.parse({ ...base, sessions: [{ id: 'other', date: '2026-10-05', assignment: { title: 'Busy' }, plan: { start: '2026-10-05T14:00:00Z', end: '2026-10-05T15:00:00Z' }, actual: null, state: 'accepted', exception: false, conflictIds: [] }] });
+  const assignment = { goalId: 'goal', title: 'Learn' };
+  const now = new Date('2026-10-01T00:00:00Z');
+  const conflict = proposePlacement({ kind: 'assignment', assignment, targetDate: '2026-10-05', startMinute: 570, durationMinutes: 60 }, week, now);
+  assert.equal(conflict.kind, 'valid');
+  if (conflict.kind === 'valid') assert.deepEqual(conflict.conflictIds, ['other']);
+  const outside = proposePlacement({ kind: 'assignment', assignment, targetDate: '2026-10-05', startMinute: 1005, durationMinutes: 60 }, week, now);
+  assert.equal(outside.kind, 'invalid');
+  const actual = proposePlacement({ kind: 'assignment', assignment, targetDate: '2026-10-01', startMinute: 570, durationMinutes: 60 }, week, new Date('2026-10-01T15:00:00Z'));
+  assert.equal(actual.kind, 'invalid');
+  if (actual.kind === 'invalid') assert.match(actual.message, /future/);
+});
+
+test('actual placement allows outside-hours work and reports actual overlap', () => {
+  const base = placementWeek('2026-09-27');
+  const week = weekSchema.parse({ ...base, sessions: [{ id: 'other', date: '2026-09-27', assignment: { goalId: 'goal', title: 'Learn' }, plan: null, actual: { status: 'explicit', date: '2026-09-27', start: '2026-09-27T08:00:00Z', end: '2026-09-27T09:00:00Z' }, state: 'accepted', exception: false, conflictIds: [] }] });
+  const result = proposePlacement({ kind: 'assignment', assignment: { goalId: 'goal', title: 'Learn' }, targetDate: '2026-09-27', startMinute: 210, durationMinutes: 60 }, week, new Date('2026-10-02T00:00:00Z'));
+  assert.equal(result.kind, 'valid');
+  if (result.kind === 'valid') assert.deepEqual([result.draft.mode, result.start, result.end, result.conflictIds], ['actual', '2026-09-27T08:30:00.000Z', '2026-09-27T09:30:00.000Z', ['other']]);
+});
+
+test('planning rejects an ineligible goal date', () => {
+  const base = placementWeek('2026-10-05');
+  const week = weekSchema.parse({ ...base, goals: [{ ...base.goals[0], goal: { ...base.goals[0].goal, pauses: [{ from: '2026-10-05', to: '2026-10-05' }] } }] });
+  const result = proposePlacement({ kind: 'assignment', assignment: { goalId: 'goal', title: 'Learn' }, targetDate: '2026-10-05', startMinute: 570, durationMinutes: 60 }, week, new Date('2026-10-01T00:00:00Z'));
+  assert.equal(result.kind, 'invalid');
+  if (result.kind === 'invalid') assert.match(result.message, /not eligible/);
 });

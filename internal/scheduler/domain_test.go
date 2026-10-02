@@ -391,6 +391,26 @@ func TestOvernightActualAttributionAndCapacityUnion(t *testing.T) {
 		t.Fatalf("overlapping busy counted twice: %v", got)
 	}
 }
+
+func TestActualDateOvernightPrecedenceAcrossWeekAndOverrides(t *testing.T) {
+	d := testDocument()
+	d.Settings.TimeZone = "America/Chicago"
+	d.Settings.DefaultDay = DayInterval{Start: "09:00", End: "02:00", NextDay: true}
+	d.Settings.Dates = map[string]DayInterval{"2026-10-11": {Start: "09:00", End: "03:00", NextDay: true}}
+	cases := []struct{ name, instant, want string }{
+		{"Sunday into Monday", "2026-10-05T06:00:00Z", "2026-10-04"},
+		{"Monday outside configured hours", "2026-10-05T09:00:00Z", "2026-10-05"},
+		{"date override extends overnight ownership", "2026-10-12T07:30:00Z", "2026-10-11"},
+		{"after date override end", "2026-10-12T08:30:00Z", "2026-10-12"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := d.ActualDate(instant(tc.instant)); got != tc.want {
+				t.Fatalf("ActualDate(%s) = %s; want %s", tc.instant, got, tc.want)
+			}
+		})
+	}
+}
 func TestSubgoalMoveRetainsHistoricalParent(t *testing.T) {
 	d := testDocument()
 	old := d.Goals["goal"]
