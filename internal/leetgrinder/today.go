@@ -24,8 +24,11 @@ type Today struct {
 	// NewPicks are today's frozen new-problem picks from todos, empty while
 	// picking from todos is off.
 	NewPicks []NewPickItem
-	Progress DayProgress
-	Streaks  Streaks
+	// NewPicksFailed reports that today's new picks could not be planned
+	// on this access; NewPicks holds any planned earlier.
+	NewPicksFailed bool
+	Progress       DayProgress
+	Streaks        Streaks
 	// Cards are every problem's review card as of now.
 	Cards []Card
 	// cardBySlug indexes Cards; nil when Today was not built by NewTodayFrom.

@@ -213,16 +213,30 @@ func TestGoalCardNewPicks(t *testing.T) {
 	// Picks added after the new goal was met with other problems are listed
 	// without prompting for the next one.
 	state.NewPlans[date] = append(state.NewPlans[date], NewPick{Slug: "valid-anagram"})
-	if html = render(state); strings.Contains(html, "Next new problem") || !strings.Contains(html, "valid-anagram") {
+	if html = render(state); strings.Contains(html, "Next new problem") || strings.Contains(html, "picked new problems are done") || !strings.Contains(html, "valid-anagram") {
 		t.Errorf("late top-up after goal met: %s", html)
 	}
 	// No todo could be picked: the note explains the empty list.
-	if html = render(State{Goals: goals}); !strings.Contains(html, "Todos whose problem you attempted on an earlier day are skipped") || strings.Contains(html, "Next new problem") {
+	if html = render(State{Goals: goals}); !strings.Contains(html, "Todos already done, or attempted on an earlier day, are skipped") || strings.Contains(html, "Next new problem") {
 		t.Errorf("empty plan: %s", html)
 	}
-	// Off: nothing is shown.
+	// A full plan explains no shortfall.
+	full := State{Problems: problems, Goals: goals, NewPlans: map[time.Time][]NewPick{date: {{Slug: "two-sum"}, {Slug: "valid-anagram"}}}}
+	if html = render(full); strings.Contains(html, "Fewer todos") || !strings.Contains(html, "Next new problem") {
+		t.Errorf("full plan: %s", html)
+	}
+	// A failed plan says so instead of explaining a shortfall.
+	var out bytes.Buffer
+	failed := NewToday(settings, State{Goals: goals}, now)
+	failed.NewPicksFailed = true
+	if err := goalCard(failed).Render(context.Background(), &out); err != nil || !strings.Contains(out.String(), "could not be picked from your todos") || strings.Contains(out.String(), "Fewer todos") {
+		t.Errorf("failed plan: %s %v", out.String(), err)
+	}
+	// Off: nothing is shown, whether or not the goal is met.
 	settings.NewFromTodos = false
-	if html = render(state); strings.Contains(html, "new-picks") {
-		t.Errorf("off: %s", html)
+	for _, st := range []State{state, {Goals: goals}} {
+		if html = render(st); strings.Contains(html, "new-picks") {
+			t.Errorf("off: %s", html)
+		}
 	}
 }

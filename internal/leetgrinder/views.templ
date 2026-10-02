@@ -213,21 +213,24 @@ templ goalCard(today Today) {
 	</section>
 }
 
-// newPicks lists today's new problems picked from todos, naming the next one.
+// newPicks lists today's new problems picked from todos. While the new
+// target is open it names the next pick, or explains a short or failed plan.
 templ newPicks(today Today) {
-	if len(today.NewPicks) > 0 || (today.NewPicksShort() && today.Progress.NewLeft() > 0) {
+	if open := today.Progress.NewLeft() > 0; len(today.NewPicks) > 0 || (open && (today.NewPicksShort() || today.NewPicksFailed)) {
 		<div class="new-picks">
-			if next, ok := today.NextNewPick(); ok && today.Progress.NewLeft() > 0 {
+			if next, ok := today.NextNewPick(); ok && open {
 				<p class="small">
 					Next new problem: <a href={ templ.SafeURL(ProblemURL(next.Problem.Slug)) }>{ next.Problem.DisplayTitle() }</a>
 					if next.SetTitle != "" {
 						from { next.SetTitle }
 					}
 				</p>
-			} else if len(today.NewPicks) > 0 && today.Progress.NewLeft() == 0 {
-				<p class="small muted">Today's picked new problems are done.</p>
-			} else if len(today.NewPicks) > 0 {
-				<p class="small muted">Today's picked new problems are done. Any other new problem counts toward the goal.</p>
+			} else if !ok && len(today.NewPicks) > 0 {
+				if open {
+					<p class="small muted">Today's picked new problems are done. Any other new problem counts toward the goal.</p>
+				} else {
+					<p class="small muted">Today's picked new problems are done.</p>
+				}
 			}
 			if len(today.NewPicks) > 0 {
 				<ol class="small" aria-label="Today's new problems from todos">
@@ -244,8 +247,10 @@ templ newPicks(today Today) {
 					}
 				</ol>
 			}
-			if today.NewPicksShort() && today.Progress.NewLeft() > 0 {
-				<p class="small muted">Fewer todos than today's new target could be picked. Todos whose problem you attempted on an earlier day are skipped; <a href="/leetgrinder/todos/add">add todos</a> and they are picked on your next visit today.</p>
+			if open && today.NewPicksFailed {
+				<p class="small muted">Today's new problems could not be picked from your todos just now. They are picked on your next visit.</p>
+			} else if open && today.NewPicksShort() {
+				<p class="small muted">Fewer todos than today's new target could be picked. Todos already done, or attempted on an earlier day, are skipped; <a href="/leetgrinder/todos/add">add todos</a> and they are picked on your next visit today.</p>
 			}
 		</div>
 	}

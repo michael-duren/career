@@ -58,7 +58,8 @@ func TestLeetgrinderTodayPicksNewFromTodos(t *testing.T) {
 		{Slot: 1, Problem: leetgrinder.Problem{Slug: "binary-search"}},
 		{Slot: 2, Problem: leetgrinder.Problem{Slug: "two-sum"}, SetTitle: "Blind 75"},
 	}
-	// Concurrent first visits agree on one plan.
+	// Concurrent first visits return the same plan. (The planner lock itself
+	// is proven by waitsForPlannerLock in the top-up and delete tests.)
 	var wg sync.WaitGroup
 	got := make(chan []leetgrinder.NewPickItem, 4)
 	for range 4 {
@@ -126,6 +127,13 @@ func TestLeetgrinderTodayPicksNewFromTodos(t *testing.T) {
 	later := now.AddDate(0, 0, 2)
 	if today, err = s.LeetgrinderToday(ctx, later); err != nil || len(today.NewPicks) != 0 {
 		t.Fatalf("no todos left: %+v %v", today.NewPicks, err)
+	}
+	// A todo queued later that day fills the empty plan.
+	if _, err = s.AddLeetgrinderTodoItem(ctx, "", "house-robber"); err != nil {
+		t.Fatal(err)
+	}
+	if today, err = s.LeetgrinderToday(ctx, later); err != nil || !reflect.DeepEqual(picks(today), []leetgrinder.NewPickItem{{Slot: 1, Problem: leetgrinder.Problem{Slug: "house-robber"}}}) {
+		t.Fatalf("queued later: %+v %v", picks(today), err)
 	}
 	if _, ok, err := s.leetgrinderTodayPlanned(ctx, later); err != nil || !ok {
 		t.Fatalf("empty todo queue needs planning: %v %v", ok, err)
@@ -271,13 +279,13 @@ func waitsForPlannerLock(t *testing.T, s *Store, call func()) {
 		t.Fatal(err)
 	}
 	defer conn.Close()
-	if _, err = conn.ExecContext(ctx, "SELECT pg_advisory_lock(724193611)"); err != nil {
+	if _, err = conn.ExecContext(ctx, "SELECT pg_advisory_lock($1)", leetgrinderPlannerLock); err != nil {
 		t.Fatal(err)
 	}
 	go call()
 	for deadline := time.Now().Add(5 * time.Second); ; {
 		var waiting bool
-		if err = s.DB.QueryRow("SELECT EXISTS (SELECT 1 FROM pg_locks WHERE locktype='advisory' AND classid=0 AND objid=724193611 AND objsubid=1 AND NOT granted)").Scan(&waiting); err != nil {
+		if err = s.DB.QueryRow("SELECT EXISTS (SELECT 1 FROM pg_locks WHERE locktype='advisory' AND classid=0 AND objid=$1 AND objsubid=1 AND NOT granted)", leetgrinderPlannerLock).Scan(&waiting); err != nil {
 			t.Fatal(err)
 		}
 		if waiting {
@@ -288,7 +296,7 @@ func waitsForPlannerLock(t *testing.T, s *Store, call func()) {
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
-	if _, err = conn.ExecContext(ctx, "SELECT pg_advisory_unlock(724193611)"); err != nil {
+	if _, err = conn.ExecContext(ctx, "SELECT pg_advisory_unlock($1)", leetgrinderPlannerLock); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -423,18 +431,59 @@ func TestLeetgrinderNewPicksFailureKeepsReviewPlan(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if _, err = s.LeetgrinderToday(ctx, now); err == nil || !strings.Contains(err.Error(), "injected") {
+	if err = s.PlanLeetgrinderToday(ctx, now); err == nil || !strings.Contains(err.Error(), "injected") {
 		t.Fatalf("new-pick failure not reported: %v", err)
 	}
 	var goals, reviews, picks int
 	if err = s.DB.QueryRow("SELECT (SELECT count(*) FROM leetgrinder_daily_goal), (SELECT count(*) FROM leetgrinder_review_plan), (SELECT count(*) FROM leetgrinder_new_plan)").Scan(&goals, &reviews, &picks); err != nil || goals != 1 || reviews != 1 || picks != 0 {
 		t.Fatalf("after failure: goals %d reviews %d picks %d: %v", goals, reviews, picks, err)
 	}
+	// Today's view is still served, with the review pick and the failure.
+	today, err := s.LeetgrinderToday(ctx, now)
+	if err != nil || !today.NewPicksFailed || len(today.NewPicks) != 0 || len(today.Reviews) != 1 {
+		t.Fatalf("view after failure: %+v %v", today.Reviews, err)
+	}
 	if _, err = s.DB.Exec("DROP TRIGGER fail_new_pick ON leetgrinder_new_plan"); err != nil {
 		t.Fatal(err)
 	}
-	today, err := s.LeetgrinderToday(ctx, now)
-	if err != nil || !reflect.DeepEqual(newPickSlots(today), []string{"1:two-sum:"}) || len(today.Reviews) != 1 || today.Reviews[0].Problem.Slug != "binary-search" {
+	// A failing check on the read-only path also serves the planned day.
+	if _, err = s.DB.Exec("ALTER TABLE leetgrinder_todo_items RENAME TO todo_items_away"); err != nil {
+		t.Fatal(err)
+	}
+	if today, err = s.LeetgrinderToday(ctx, now); err != nil || !today.NewPicksFailed || len(today.Reviews) != 1 {
+		t.Fatalf("read-only failure: %+v %v", today.Reviews, err)
+	}
+	if _, err = s.DB.Exec("ALTER TABLE todo_items_away RENAME TO leetgrinder_todo_items"); err != nil {
+		t.Fatal(err)
+	}
+	today, err = s.LeetgrinderToday(ctx, now)
+	if err != nil || today.NewPicksFailed || !reflect.DeepEqual(newPickSlots(today), []string{"1:two-sum:"}) || len(today.Reviews) != 1 || today.Reviews[0].Problem.Slug != "binary-search" {
 		t.Fatalf("retry: %v %+v %v", newPickSlots(today), today.Reviews, err)
+	}
+}
+
+// Turning the option on after today's goal is frozen picks today.
+func TestLeetgrinderNewPicksTurnedOnSameDay(t *testing.T) {
+	s, _ := newPicksStore(t, "UTC", 1)
+	ctx := context.Background()
+	settings, err := s.LeetgrinderSettings(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if settings, err = s.UpdateLeetgrinderSettings(ctx, settings.Revision, func(v *leetgrinder.Settings) error { v.NewFromTodos = false; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	now := time.Date(2026, 10, 2, 12, 0, 0, 0, time.UTC)
+	if _, err = s.AddLeetgrinderTodoItem(ctx, "", "two-sum"); err != nil {
+		t.Fatal(err)
+	}
+	if today, err := s.LeetgrinderToday(ctx, now); err != nil || len(today.NewPicks) != 0 {
+		t.Fatalf("off: %v %v", newPickSlots(today), err)
+	}
+	if _, err = s.UpdateLeetgrinderSettings(ctx, settings.Revision, func(v *leetgrinder.Settings) error { v.NewFromTodos = true; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	if today, err := s.LeetgrinderToday(ctx, now); err != nil || !reflect.DeepEqual(newPickSlots(today), []string{"1:two-sum:"}) {
+		t.Fatalf("turned on: %v %v", newPickSlots(today), err)
 	}
 }
