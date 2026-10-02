@@ -107,6 +107,10 @@ test('move and resize retain both computed fold instants and elapsed duration', 
   const movedFromOrdinaryHour = proposePlacement({ kind: 'move', session: ordinarySameDay, targetDate: '2026-11-01', startMinute: 105 }, week, now);
   assert.equal(movedFromOrdinaryHour.kind, 'valid');
   if (movedFromOrdinaryHour.kind === 'valid') assert.deepEqual([movedFromOrdinaryHour.start, movedFromOrdinaryHour.end], ['2026-11-01T06:45:00.000Z', '2026-11-01T07:45:00.000Z']);
+  const earlyFoldWithSeconds = weekSchema.parse({ ...week, sessions: [{ ...secondFold, plan: { start: '2026-11-01T06:30:45Z', end: '2026-11-01T07:30:45Z' } }] }).sessions[0];
+  const movedFromEarlyFold = proposePlacement({ kind: 'move', session: earlyFoldWithSeconds, targetDate: '2026-11-01', startMinute: 105 }, week, now);
+  assert.equal(movedFromEarlyFold.kind, 'valid');
+  if (movedFromEarlyFold.kind === 'valid') assert.deepEqual([movedFromEarlyFold.start, movedFromEarlyFold.end], ['2026-11-01T06:45:00.000Z', '2026-11-01T07:45:00.000Z']);
   const endResize = proposePlacement({ kind: 'resize', session: secondFold, edge: 'end', deltaMinutes: -30 }, week, now);
   assert.equal(endResize.kind, 'valid');
   if (endResize.kind === 'valid') {
