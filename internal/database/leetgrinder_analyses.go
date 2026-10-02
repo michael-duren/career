@@ -11,12 +11,6 @@ import (
 	"github.com/michael-duren/career-strategy/internal/leetgrinder"
 )
 
-// leetgrinderAnalysisInputHash is the SQL for the SHA-256 of an attempt's
-// analysed inputs, for an attempts table aliased "a". None of the joined
-// fields can contain a newline except the code, which comes last, so the
-// encoding is unambiguous.
-const leetgrinderAnalysisInputHash = `sha256(convert_to(a.code_language || chr(10) || a.time_complexity || chr(10) || a.space_complexity || chr(10) || a.code, 'UTF8'))`
-
 // leetgrinderAnalysable matches attempts with code and a stated complexity.
 const leetgrinderAnalysable = `a.code <> '' AND (a.time_complexity <> '' OR a.space_complexity <> '')`
 
@@ -32,7 +26,12 @@ type LeetgrinderAnalysisJob struct {
 	Tries int
 }
 
-const leetgrinderAnalysisColumns = "an.attempt_id,an.status,an.tries,an.actual_time,an.actual_space,an.time_matches,an.space_matches,an.optimal,an.explanation,an.model,an.error,an.updated_at,an.code_sha256=" + leetgrinderAnalysisInputHash
+// leetgrinderAnalysisColumns reads an analysis joined to its attempt "a". An
+// analysis is current when its code_sha256 equals the attempt's input_sha256:
+// the SHA-256 of the analysed inputs (language, stated time and space, code),
+// which a trigger (migration 026) sets on insert and on updates that change
+// an input.
+const leetgrinderAnalysisColumns = "an.attempt_id,an.status,an.tries,an.actual_time,an.actual_space,an.time_matches,an.space_matches,an.optimal,an.explanation,an.model,an.error,an.updated_at,an.code_sha256=a.input_sha256"
 
 func scanLeetgrinderAnalysis(row interface{ Scan(...any) error }) (leetgrinder.Analysis, error) {
 	var a leetgrinder.Analysis
@@ -81,12 +80,11 @@ func (s *Store) NextLeetgrinderAnalysis(ctx context.Context, now time.Time) (Lee
 	var job LeetgrinderAnalysisJob
 	var current bool
 	a := &job.Attempt
-	err := s.DB.QueryRowContext(ctx, `SELECT a.id,a.problem_slug,a.outcome,a.created_at,a.time_complexity,a.space_complexity,a.code,a.code_language,h.hash,COALESCE(an.tries,0),COALESCE(an.code_sha256=h.hash,false)
+	err := s.DB.QueryRowContext(ctx, `SELECT a.id,a.problem_slug,a.outcome,a.created_at,a.time_complexity,a.space_complexity,a.code,a.code_language,a.input_sha256,COALESCE(an.tries,0),COALESCE(an.code_sha256=a.input_sha256,false)
 FROM leetgrinder_attempts a
-CROSS JOIN LATERAL (SELECT `+leetgrinderAnalysisInputHash+` AS hash) h
 LEFT JOIN leetgrinder_analyses an ON an.attempt_id=a.id
 WHERE `+leetgrinderAnalysable+`
-  AND (an.attempt_id IS NULL OR an.code_sha256<>h.hash
+  AND (an.attempt_id IS NULL OR an.code_sha256<>a.input_sha256
        OR (an.status='pending' AND an.tries<$2 AND an.updated_at <= $1::timestamptz - make_interval(mins => an.tries*an.tries)))
 ORDER BY a.created_at DESC, a.id
 LIMIT 1`, now, leetgrinder.AnalysisMaxTries).Scan(&a.ID, &a.ProblemSlug, &a.Outcome, &a.CreatedAt, &a.TimeComplexity, &a.SpaceComplexity, &a.Code, &a.CodeLanguage, &job.Hash, &job.Tries, &current)
@@ -145,7 +143,7 @@ func (s *Store) RequeueLeetgrinderAnalysis(ctx context.Context, slug, attemptID 
 		return ErrNotFound
 	}
 	res, err := s.DB.ExecContext(ctx, `INSERT INTO leetgrinder_analyses(attempt_id,code_sha256,status,tries,updated_at)
-SELECT a.id,`+leetgrinderAnalysisInputHash+`,'pending',0,$3 FROM leetgrinder_attempts a WHERE a.id=$1 AND a.problem_slug=$2 AND `+leetgrinderAnalysable+`
+SELECT a.id,a.input_sha256,'pending',0,$3 FROM leetgrinder_attempts a WHERE a.id=$1 AND a.problem_slug=$2 AND `+leetgrinderAnalysable+`
 ON CONFLICT (attempt_id) DO UPDATE SET code_sha256=EXCLUDED.code_sha256,status='pending',tries=0,actual_time='',actual_space='',time_matches=NULL,space_matches=NULL,optimal=NULL,explanation='',model='',error='',updated_at=EXCLUDED.updated_at`,
 		attemptID, slug, now)
 	if err != nil {
@@ -192,11 +190,10 @@ func (s *Store) LeetgrinderAnalysisUsage(ctx context.Context, date time.Time) (i
 func (s *Store) LeetgrinderAnalysisQueueCounts(ctx context.Context) (leetgrinder.AnalysisQueue, error) {
 	var q leetgrinder.AnalysisQueue
 	err := s.DB.QueryRowContext(ctx, `SELECT
-count(*) FILTER (WHERE an.attempt_id IS NULL OR an.code_sha256<>h.hash OR an.status='pending'),
-count(*) FILTER (WHERE an.code_sha256=h.hash AND an.status='failed'),
-count(*) FILTER (WHERE an.code_sha256=h.hash AND an.status='done')
+count(*) FILTER (WHERE an.attempt_id IS NULL OR an.code_sha256<>a.input_sha256 OR an.status='pending'),
+count(*) FILTER (WHERE an.code_sha256=a.input_sha256 AND an.status='failed'),
+count(*) FILTER (WHERE an.code_sha256=a.input_sha256 AND an.status='done')
 FROM leetgrinder_attempts a
-CROSS JOIN LATERAL (SELECT `+leetgrinderAnalysisInputHash+` AS hash) h
 LEFT JOIN leetgrinder_analyses an ON an.attempt_id=a.id
 WHERE `+leetgrinderAnalysable).Scan(&q.Queued, &q.Failed, &q.Done)
 	return q, err
