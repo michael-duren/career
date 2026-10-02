@@ -23,7 +23,7 @@ func TestLeetgrinderNewPicksFromTodos(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Off by default: the dashboard shows no picks.
+	// Off by default: the box is unticked and the dashboard shows no picks.
 	if strings.Contains(request("GET", "/leetgrinder/settings", nil).Body.String(), `name="newFromTodos" value="true" checked`) {
 		t.Fatal("picking from todos on by default")
 	}
@@ -32,7 +32,8 @@ func TestLeetgrinderNewPicksFromTodos(t *testing.T) {
 	if body := request("GET", "/leetgrinder", nil).Body.String(); strings.Contains(body, "Next new problem") {
 		t.Fatal("picks while off")
 	}
-	// The settings form turns it on; the day after picks from the oldest todos.
+	// The settings form turns it on; a later, unplanned day picks from the
+	// oldest todos.
 	s.now = func() time.Time { return now }
 	w := request("POST", "/leetgrinder/settings/general", url.Values{"timezone": {"UTC"}, "goalNew": {"2"}, "goalReview": {"1"}, "newFromTodos": {"true"}, "confirm": {"1"}, "revision": {settings.Revision}})
 	if w.Code != 303 {
@@ -79,6 +80,12 @@ func TestLeetgrinderNewPicksFromTodos(t *testing.T) {
 	if !reflect.DeepEqual(out.NewPicks, want) {
 		t.Fatalf("API picks %+v", out.NewPicks)
 	}
+	// A time zone change keeps the option through the confirm step.
+	settings, _ = db.LeetgrinderSettings(ctx)
+	w = request("POST", "/leetgrinder/settings/general", url.Values{"timezone": {"Asia/Tokyo"}, "goalNew": {"2"}, "goalReview": {"1"}, "newFromTodos": {"true"}, "revision": {settings.Revision}})
+	if w.Code != 200 || !strings.Contains(w.Body.String(), "Confirm the time zone change") || !strings.Contains(w.Body.String(), `<input type="hidden" name="newFromTodos" value="true">`) {
+		t.Fatalf("confirm step drops the option: %d %s", w.Code, w.Body.String())
+	}
 	// The export keeps the setting.
 	var exported struct {
 		Settings struct {
@@ -87,5 +94,10 @@ func TestLeetgrinderNewPicksFromTodos(t *testing.T) {
 	}
 	if w = request("GET", "/leetgrinder/export", nil); json.Unmarshal(w.Body.Bytes(), &exported) != nil || !exported.Settings.NewFromTodos {
 		t.Fatalf("export: %s", w.Body.String())
+	}
+	// Unticking the box turns it off.
+	w = request("POST", "/leetgrinder/settings/general", url.Values{"timezone": {"UTC"}, "goalNew": {"2"}, "goalReview": {"1"}, "revision": {settings.Revision}})
+	if settings, _ = db.LeetgrinderSettings(ctx); w.Code != 303 || settings.NewFromTodos {
+		t.Fatalf("turn off: %d %+v", w.Code, settings)
 	}
 }

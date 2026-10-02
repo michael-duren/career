@@ -170,3 +170,42 @@ func TestProblemHistoryShowsLatestAndBest(t *testing.T) {
 		t.Error("equal best and latest should show only the latest")
 	}
 }
+
+func TestGoalCardNewPicks(t *testing.T) {
+	now := time.Date(2026, 10, 2, 17, 0, 0, 0, time.UTC)
+	date := Date(now, time.UTC)
+	settings := DefaultSettings()
+	settings.Timezone, settings.NewFromTodos = "UTC", true
+	render := func(state State) string {
+		t.Helper()
+		var out bytes.Buffer
+		if err := goalCard(NewToday(settings, state, now)).Render(context.Background(), &out); err != nil {
+			t.Fatal(err)
+		}
+		return out.String()
+	}
+	goals := map[time.Time]DailyGoal{date: {New: 2}}
+	problems := map[string]Problem{"two-sum": {Slug: "two-sum", Title: "Two Sum"}}
+	// One pick for a goal of two: the next pick and the shortfall are shown.
+	state := State{Problems: problems, Goals: goals, NewPlans: map[time.Time][]NewPick{date: {{Slug: "two-sum", SetTitle: "Blind 75"}}}}
+	html := render(state)
+	for _, want := range []string{`Next new problem: <a href="/leetgrinder/problem/two-sum">Two Sum</a> from Blind 75`, "Fewer todos than today's new target could be picked"} {
+		if !strings.Contains(html, want) {
+			t.Errorf("short plan missing %q", want)
+		}
+	}
+	// Once the pick is done, the goal still needs another new problem.
+	state.Attempts = []Attempt{{ID: "a", ProblemSlug: "two-sum", Outcome: "unfinished", Minutes: 20, CreatedAt: now.Add(-time.Hour)}}
+	if html = render(state); !strings.Contains(html, "Any other new problem counts toward the goal.") || !strings.Contains(html, "· done") {
+		t.Errorf("done short plan: %s", html)
+	}
+	// No todo could be picked: the note explains the empty list.
+	if html = render(State{Goals: goals}); !strings.Contains(html, "Todos whose problem you attempted on an earlier day are skipped") || strings.Contains(html, "Next new problem") {
+		t.Errorf("empty plan: %s", html)
+	}
+	// Off: nothing is shown.
+	settings.NewFromTodos = false
+	if html = render(state); strings.Contains(html, "new-picks") {
+		t.Errorf("off: %s", html)
+	}
+}

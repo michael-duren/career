@@ -215,7 +215,7 @@ templ goalCard(today Today) {
 
 // newPicks lists today's new problems picked from todos, naming the next one.
 templ newPicks(today Today) {
-	if len(today.NewPicks) > 0 {
+	if len(today.NewPicks) > 0 || today.NewPicksShort() {
 		<div class="new-picks">
 			if next, ok := today.NextNewPick(); ok {
 				<p class="small">
@@ -224,22 +224,29 @@ templ newPicks(today Today) {
 						from { next.SetTitle }
 					}
 				</p>
-			} else {
+			} else if len(today.NewPicks) > 0 && today.Progress.NewLeft() == 0 {
 				<p class="small muted">Today's picked new problems are done.</p>
+			} else if len(today.NewPicks) > 0 {
+				<p class="small muted">Today's picked new problems are done. Any other new problem counts toward the goal.</p>
 			}
-			<ol class="small" aria-label="Today's new problems from todos">
-				for _, pick := range today.NewPicks {
-					<li class={ templ.KV("done", pick.Done) }>
-						<a href={ templ.SafeURL(ProblemURL(pick.Problem.Slug)) }>{ pick.Problem.DisplayTitle() }</a>
-						if pick.Done {
-							<span class="muted">· done</span>
-						}
-						if pick.SetTitle != "" {
-							<span class="muted">· { pick.SetTitle }</span>
-						}
-					</li>
-				}
-			</ol>
+			if len(today.NewPicks) > 0 {
+				<ol class="small" aria-label="Today's new problems from todos">
+					for _, pick := range today.NewPicks {
+						<li class={ templ.KV("done", pick.Done) }>
+							<a href={ templ.SafeURL(ProblemURL(pick.Problem.Slug)) }>{ pick.Problem.DisplayTitle() }</a>
+							if pick.Done {
+								<span class="muted">· done</span>
+							}
+							if pick.SetTitle != "" {
+								<span class="muted">· { pick.SetTitle }</span>
+							}
+						</li>
+					}
+				</ol>
+			}
+			if today.NewPicksShort() {
+				<p class="small muted">Fewer todos than today's new target could be picked. Todos whose problem you attempted on an earlier day are skipped; <a href="/leetgrinder/todos/add">add todos</a> and they are picked on your next visit today.</p>
+			}
 		</div>
 	}
 }
@@ -637,7 +644,7 @@ templ generalSettings(page SettingsPage) {
 				<input type="checkbox" name="newFromTodos" value="true" checked?={ page.General.NewFromTodos }/>
 				Pick today's new problems from my todos
 			</label>
-			<p class="small muted">Optional. Each day picks as many new problems as the goal asks for from the oldest todos you have not attempted, and keeps them for the day like review picks. Todos and the goal work the same without it.</p>
+			<p class="small muted">Optional. Each day picks as many new problems as the goal asks for from the oldest todos whose problem you have not attempted before that day, and keeps them for the day like review picks. Todos and the goal work the same without it.</p>
 			<p class="small muted">
 				A new problem is one you have never attempted before today. A review counts toward the goal when the problem was due, flagged, or today's pick; other re-solves count as practice. Extra work is bonus, and each goal-met day extends your streak.
 				if page.TodayGoal != nil {
