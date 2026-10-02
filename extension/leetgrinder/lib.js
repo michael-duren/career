@@ -318,10 +318,12 @@
       }
     }
     tabs[tabId] = now;
-    // Never above wall-clock time since start, and never below what was
-    // already earned (a rebased start must not erase it).
-    activeMs = Math.min(activeMs, Math.max(earned, now - startedAt));
-    return { ...timer, startedAt, activeMs, creditedTo, tabs };
+    // Never above wall-clock time since start plus carriedMs, the active time
+    // that a clock jump moved startedAt past.
+    const rebased = Number.isFinite(timer.startedAt) && timer.startedAt > now;
+    const carriedMs = (Number.isFinite(timer.carriedMs) ? timer.carriedMs : 0) + (rebased ? earned : 0);
+    activeMs = Math.min(activeMs, Math.max(0, now - startedAt) + carriedMs);
+    return { ...timer, startedAt, activeMs, carriedMs, creditedTo, tabs };
   }
 
   // activeMs is the active time recorded on a timer. Timers without one fall
