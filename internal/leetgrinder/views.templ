@@ -166,7 +166,7 @@ templ nextTodos(items []TodoItem) {
 templ logAttemptForm(ref string, message string) {
 	<section class="panel log-problem" id="log-attempt" aria-labelledby="log-title">
 		<h2 id="log-title">Log an attempt</h2>
-		<p class="muted small">Paste a LeetCode problem link or slug, such as <code>two-sum</code>, to open its page and record an attempt.</p>
+		<p class="muted small">Paste a LeetCode or NeetCode problem link, or a LeetCode slug such as <code>two-sum</code>, to open its page and record an attempt.</p>
 		<form class="log-problem-form" method="get" action="/leetgrinder/log">
 			if message != "" {
 				<p class="error" role="alert">{ message }</p>

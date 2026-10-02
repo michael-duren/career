@@ -79,7 +79,10 @@ func (s *Server) leetgrinderCreateTodoSet(w http.ResponseWriter, r *http.Request
 		message := fmt.Sprintf("Enter at most %d LeetCode links or slugs.", leetgrinder.MaxTodoRefs)
 		var invalid leetgrinder.InvalidTodoRefError
 		if errors.As(err, &invalid) {
-			message = fmt.Sprintf("%q is not a LeetCode link or slug.", invalid.Entry)
+			message = fmt.Sprintf("%q is not a LeetCode or NeetCode link or a LeetCode slug.", invalid.Entry)
+			if invalid.UnknownNeetCode {
+				message = fmt.Sprintf("%q: %s", invalid.Entry, leetgrinder.UnknownNeetCodeMessage)
+			}
 		}
 		renderLeetgrinder(w, r, 400, leetgrinder.TodoAddSet(leetgrinder.TodosPage{Title: title, Problems: raw, Error: message}))
 		return
@@ -101,9 +104,13 @@ func (s *Server) leetgrinderAddTodoItem(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	ref, setID := r.PostForm.Get("problem"), r.PostForm.Get("setID")
-	slug, ok := leetgrinder.NormalizeProblemRef(ref)
-	if !ok {
-		s.todoAddProblemPage(w, r, 400, leetgrinder.TodosPage{Problem: ref, SetID: setID, Error: "Enter a valid LeetCode link or slug."})
+	slug, err := leetgrinder.ResolveProblemRef(ref)
+	if err != nil {
+		message := "Enter a valid LeetCode or NeetCode link, or a LeetCode slug."
+		if errors.Is(err, leetgrinder.ErrUnknownNeetCodeProblem) {
+			message = leetgrinder.UnknownNeetCodeMessage
+		}
+		s.todoAddProblemPage(w, r, 400, leetgrinder.TodosPage{Problem: ref, SetID: setID, Error: message})
 		return
 	}
 	if _, err := s.db.AddLeetgrinderTodoItem(r.Context(), setID, slug); err != nil {

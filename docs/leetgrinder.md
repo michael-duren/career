@@ -20,7 +20,9 @@ The goal is a number of new problems plus a number of reviews each day, 2 + 1 by
 
 `is_review` on attempts is set by the server at save time (the problem has an attempt on an earlier local day); the client value is ignored.
 
-The dashboard shows today's goal card (new x/n, review x/n, bonus, met), the streak, today's review pick(s) with a reason and a form to log them, the optional "Also due" list (top 10), a **Log an attempt** form that takes a LeetCode URL or slug and opens its page, recent attempts, and all-time totals.
+The dashboard shows today's goal card (new x/n, review x/n, bonus, met), the streak, today's review pick(s) with a reason and a form to log them, the optional "Also due" list (top 10), a **Log an attempt** form that takes a LeetCode or NeetCode URL, or a LeetCode slug, and opens its page, recent attempts, and all-time totals.
+
+**Problem references.** The Log an attempt form, todo sets and the MCP todo tools take a problem as a `leetcode.com` or `leetcode.cn` URL (same slugs; `www.`, a trailing `/description/` or similar path, and query strings are fine), a `neetcode.io/problems/{slug}` URL, a `/problems/{slug}` path, or a bare LeetCode slug. A NeetCode slug is mapped to the LeetCode slug it mirrors (`two-integer-sum` is `two-sum`) through `internal/leetgrinder/neetcode_slugs.json`, which the extension's `neetcode-slugs.js` is generated alongside (`node scripts/update-neetcode-slugs.js` writes both, and a Go test fails if they differ). A NeetCode slug missing from the table is rejected with "no known LeetCode match" instead of guessed. A bare slug is always read as a LeetCode slug, so `two-integer-sum` alone is not mapped.
 
 ## Problems
 

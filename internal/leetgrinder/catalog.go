@@ -132,38 +132,102 @@ func printable(s string) bool {
 	return true
 }
 
-// NormalizeProblemRef turns a LeetCode problem URL, a path such as
-// /problems/two-sum/description/, or a bare slug into the problem's slug.
-func NormalizeProblemRef(input string) (string, bool) {
+//go:embed neetcode_slugs.json
+var neetcodeSlugsJSON []byte
+
+var neetcodeSlugs = func() map[string]string {
+	var m map[string]string
+	if err := json.Unmarshal(neetcodeSlugsJSON, &m); err != nil {
+		panic("leetgrinder: neetcode_slugs.json: " + err.Error())
+	}
+	return m
+}()
+
+// NeetCodeSlugs returns a copy of the NeetCode slug to LeetCode slug table.
+// It is generated with the extension's neetcode-slugs.js.
+func NeetCodeSlugs() map[string]string {
+	out := make(map[string]string, len(neetcodeSlugs))
+	for k, v := range neetcodeSlugs {
+		out[k] = v
+	}
+	return out
+}
+
+// ErrUnknownNeetCodeProblem is returned for a NeetCode link whose slug is not
+// in the NeetCode to LeetCode table.
+var ErrUnknownNeetCodeProblem = errors.New("unknown NeetCode problem")
+
+// ResolveProblemRef turns a problem link or slug into the LeetCode slug. It
+// accepts leetcode.com and leetcode.cn problem URLs, neetcode.io problem URLs
+// (mapped to the LeetCode slug they mirror), paths such as
+// /problems/two-sum/description/, and bare LeetCode slugs. A NeetCode slug
+// that is not in the table yields ErrUnknownNeetCodeProblem rather than a
+// guess; any other bad input yields ErrInvalidProblemRef.
+func ResolveProblemRef(input string) (string, error) {
 	s := strings.TrimSpace(input)
 	if s == "" {
-		return "", false
+		return "", ErrInvalidProblemRef
 	}
+	neetcode := false
 	if strings.Contains(s, "/") {
-		if !strings.Contains(s, "://") && strings.HasPrefix(strings.ToLower(s), "leetcode.com/") {
+		if !strings.Contains(s, "://") && refHostPrefix(s) {
 			s = "https://" + s
 		}
 		u, err := url.Parse(s)
 		if err != nil {
-			return "", false
+			return "", ErrInvalidProblemRef
 		}
 		if u.Host != "" {
-			host := strings.ToLower(u.Hostname())
-			if host != "leetcode.com" && host != "www.leetcode.com" {
-				return "", false
+			switch strings.TrimPrefix(strings.ToLower(u.Hostname()), "www.") {
+			case "leetcode.com", "leetcode.cn":
+			case "neetcode.io":
+				neetcode = true
+			default:
+				return "", ErrInvalidProblemRef
 			}
 		}
 		parts := strings.Split(strings.Trim(u.Path, "/"), "/")
 		if len(parts) < 2 || parts[0] != "problems" {
-			return "", false
+			return "", ErrInvalidProblemRef
 		}
 		s = parts[1]
 	}
 	s = strings.ToLower(s)
 	if !ValidSlug(s) {
-		return "", false
+		return "", ErrInvalidProblemRef
 	}
-	return s, true
+	if neetcode {
+		lc, ok := neetcodeSlugs[s]
+		if !ok {
+			return "", ErrUnknownNeetCodeProblem
+		}
+		return lc, nil
+	}
+	return s, nil
+}
+
+// UnknownNeetCodeMessage explains a refused NeetCode link.
+const UnknownNeetCodeMessage = "That NeetCode problem has no known LeetCode match. Use its LeetCode link or slug instead."
+
+// refHostPrefix reports whether a scheme-less reference starts with a
+// supported problem site host, such as "leetcode.cn/problems/two-sum".
+func refHostPrefix(s string) bool {
+	s = strings.ToLower(s)
+	for _, host := range []string{"leetcode.com/", "leetcode.cn/", "neetcode.io/"} {
+		if strings.HasPrefix(s, host) || strings.HasPrefix(s, "www."+host) {
+			return true
+		}
+	}
+	return false
+}
+
+// ErrInvalidProblemRef is returned for input that is not a problem link or slug.
+var ErrInvalidProblemRef = errors.New("invalid problem link or slug")
+
+// NormalizeProblemRef is ResolveProblemRef without the reason for a refusal.
+func NormalizeProblemRef(input string) (string, bool) {
+	slug, err := ResolveProblemRef(input)
+	return slug, err == nil
 }
 
 // TopicLabel is a readable name for a topic tag slug, built from the slug.

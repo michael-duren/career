@@ -56,6 +56,19 @@ func TestMCPLeetgrinderTodos(t *testing.T) {
 	if out, failed := call("add_leetgrinder_todo_problem", map[string]any{"problem": "https://example.com/problems/bad/"}); !failed || !strings.Contains(out["error"].(string), "invalid") {
 		t.Fatal(out)
 	}
+	neet, failed := call("add_leetgrinder_todo_problem", map[string]any{"problem": "https://neetcode.io/problems/valid-sudoku"})
+	if failed || neet["problemSlug"] != "valid-sudoku" {
+		t.Fatal("neetcode link", neet)
+	}
+	if out, failed := call("remove_leetgrinder_todo_problem", map[string]any{"id": neet["id"]}); failed || out["removed"] != true {
+		t.Fatal(out)
+	}
+	if out, failed := call("add_leetgrinder_todo_problem", map[string]any{"problem": "https://neetcode.io/problems/no-such-neetcode-problem"}); !failed || !strings.Contains(out["error"].(string), "unknown NeetCode problem") {
+		t.Fatal("unknown neetcode link", out)
+	}
+	if out, failed := call("create_leetgrinder_todo_set", map[string]any{"title": "Mixed", "problems": []string{"https://neetcode.io/problems/no-such-neetcode-problem"}}); !failed || !strings.Contains(out["error"].(string), "unknown NeetCode problem") {
+		t.Fatal("unknown neetcode link in set", out)
+	}
 	if out, failed := call("remove_leetgrinder_todo_problem", map[string]any{"id": standalone["id"]}); failed || out["removed"] != true {
 		t.Fatal(out)
 	}

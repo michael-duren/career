@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"net/url"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -39,8 +40,37 @@ func TestLeetgrinderTodos(t *testing.T) {
 	if err := db.DeleteLeetgrinderTodoSet(ctx, messySet.ID); err != nil {
 		t.Fatal(err)
 	}
-	if bad := request("POST", "/leetgrinder/todos/sets", url.Values{"title": {"Bad"}, "problems": {"two-sum\nnot a/problem"}}); bad.Code != 400 || !strings.Contains(bad.Body.String(), "is not a LeetCode link or slug.") {
+	if bad := request("POST", "/leetgrinder/todos/sets", url.Values{"title": {"Bad"}, "problems": {"two-sum\nnot a/problem"}}); bad.Code != 400 || !strings.Contains(bad.Body.String(), "is not a LeetCode or NeetCode link or a LeetCode slug.") {
 		t.Fatalf("bad entry: %d %s", bad.Code, bad.Body.String())
+	}
+	if bad := request("POST", "/leetgrinder/todos/sets", url.Values{"title": {"Bad"}, "problems": {"two-sum\nhttps://neetcode.io/problems/no-such-neetcode-problem"}}); bad.Code != 400 || !strings.Contains(bad.Body.String(), "no known LeetCode match") {
+		t.Fatalf("unknown NeetCode entry: %d %s", bad.Code, bad.Body.String())
+	}
+	if bad := request("POST", "/leetgrinder/todos/items", url.Values{"problem": {"https://neetcode.io/problems/no-such-neetcode-problem"}}); bad.Code != 400 || !strings.Contains(bad.Body.String(), "no known LeetCode match") {
+		t.Fatalf("unknown NeetCode item: %d %s", bad.Code, bad.Body.String())
+	}
+	if w := request("POST", "/leetgrinder/todos/sets", url.Values{"title": {"NeetCode"}, "problems": {"https://neetcode.io/problems/two-integer-sum validate-parentheses https://leetcode.cn/problems/valid-sudoku/"}}); w.Code != 303 {
+		t.Fatalf("NeetCode set: %d %s", w.Code, w.Body.String())
+	}
+	var neetSet leetgrinder.TodoSet
+	if all, err := db.LeetgrinderTodoSets(ctx); err != nil || len(all) != 2 {
+		t.Fatalf("sets: %+v %v", all, err)
+	} else {
+		for _, set := range all {
+			if set.Title == "NeetCode" {
+				neetSet = set
+			}
+		}
+	}
+	var slugs []string
+	for _, item := range neetSet.Items {
+		slugs = append(slugs, item.Problem.Slug)
+	}
+	if !reflect.DeepEqual(slugs, []string{"two-sum", "validate-parentheses", "valid-sudoku"}) {
+		t.Fatalf("NeetCode set slugs: %v", slugs)
+	}
+	if err := db.DeleteLeetgrinderTodoSet(ctx, neetSet.ID); err != nil {
+		t.Fatal(err)
 	}
 	if w := request("POST", "/leetgrinder/todos/items", url.Values{"problem": {"three-sum"}}); w.Code != 303 {
 		t.Fatalf("add standalone: %d %s", w.Code, w.Body.String())

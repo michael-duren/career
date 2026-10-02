@@ -108,15 +108,20 @@ func (s *Server) renderOverview(w http.ResponseWriter, r *http.Request, status i
 	renderLeetgrinder(w, r, status, leetgrinder.Overview(page))
 }
 
-// leetgrinderLog opens the problem page for a LeetCode URL or slug.
+// leetgrinderLog opens the problem page for a LeetCode or NeetCode URL or a
+// LeetCode slug.
 func (s *Server) leetgrinderLog(w http.ResponseWriter, r *http.Request) {
 	ref := r.URL.Query().Get("problem")
-	slug, ok := leetgrinder.NormalizeProblemRef(ref)
-	if !ok {
+	slug, err := leetgrinder.ResolveProblemRef(ref)
+	if err != nil {
 		if utf8.RuneCountInString(ref) > 300 {
 			ref = string([]rune(ref)[:300])
 		}
-		s.renderOverview(w, r, 400, ref, "Enter a LeetCode problem link, such as https://leetcode.com/problems/two-sum/, or a slug such as two-sum.")
+		message := "Enter a LeetCode or NeetCode problem link, such as https://leetcode.com/problems/two-sum/, or a LeetCode slug such as two-sum."
+		if errors.Is(err, leetgrinder.ErrUnknownNeetCodeProblem) {
+			message = leetgrinder.UnknownNeetCodeMessage
+		}
+		s.renderOverview(w, r, 400, ref, message)
 		return
 	}
 	http.Redirect(w, r, leetgrinder.ProblemURL(slug), http.StatusSeeOther)

@@ -1,6 +1,9 @@
 package leetgrinder
 
 import (
+	"errors"
+	"os"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -80,16 +83,93 @@ func TestNormalizeProblemRef(t *testing.T) {
 		"leetcode.com/problems/lru-cache":                             "lru-cache",
 		"https://www.leetcode.com/problems/3sum/submissions/123/":     "3sum",
 		"/problems/valid-anagram/":                                    "valid-anagram",
-		"":                                                            "",
-		"https://example.com/problems/two-sum/":                       "",
-		"https://leetcode.com/contest/weekly-1/":                      "",
-		"two sum":                                                     "",
-		"two--sum":                                                    "",
-		strings.Repeat("a", MaxSlugLength+1):                          "",
+		// leetcode.cn uses the same slugs.
+		"https://leetcode.cn/problems/two-sum/":                       "two-sum",
+		"https://leetcode.cn/problems/two-sum/description/?envType=x": "two-sum",
+		"https://www.leetcode.cn/problems/lru-cache/solutions/":       "lru-cache",
+		"leetcode.cn/problems/3sum":                                   "3sum",
+		"www.leetcode.cn/problems/3sum/":                              "3sum",
+		"HTTPS://LeetCode.CN/problems/Two-Sum/":                       "two-sum",
+		// NeetCode slugs map to the LeetCode slug they mirror.
+		"https://neetcode.io/problems/two-integer-sum/question":                   "two-sum",
+		"https://neetcode.io/problems/two-integer-sum":                            "two-sum",
+		"https://www.neetcode.io/problems/anagram-groups/solution":                "group-anagrams",
+		"https://neetcode.io/problems/validate-parentheses?list=blind75":          "valid-parentheses",
+		"https://neetcode.io/problems/valid-sudoku/question?list=neetcode150#top": "valid-sudoku",
+		"neetcode.io/problems/top-k-elements-in-list":                             "top-k-frequent-elements",
+		"www.neetcode.io/problems/two-integer-sum/":                               "two-sum",
+		"https://NeetCode.io/problems/Two-Integer-Sum/":                           "two-sum",
+		// A NeetCode slug that is not in the table is never guessed.
+		"https://neetcode.io/problems/no-such-neetcode-problem": "",
+		"neetcode.io/problems/two-sum-nope":                     "",
+		"https://neetcode.io/problems/":                         "",
+		"https://neetcode.io/courses/dsa-for-beginners":         "",
+		// A bare slug is a LeetCode slug, never a NeetCode one.
+		"two-integer-sum":                       "two-integer-sum",
+		"":                                      "",
+		"https://example.com/problems/two-sum/": "",
+		"https://neetcode.io.evil.com/problems/two-integer-sum": "",
+		"https://notneetcode.io/problems/two-integer-sum":       "",
+		"https://leetcode.com/contest/weekly-1/":                "",
+		"two sum":                                               "",
+		"two--sum":                                              "",
+		strings.Repeat("a", MaxSlugLength+1):                    "",
 	} {
 		got, ok := NormalizeProblemRef(in)
 		if got != want || ok != (want != "") {
 			t.Errorf("%q: %q %v, want %q", in, got, ok, want)
+		}
+	}
+}
+
+func TestResolveProblemRefErrors(t *testing.T) {
+	for in, want := range map[string]error{
+		"https://neetcode.io/problems/no-such-neetcode-problem": ErrUnknownNeetCodeProblem,
+		"neetcode.io/problems/nope":                             ErrUnknownNeetCodeProblem,
+		"https://example.com/problems/two-sum":                  ErrInvalidProblemRef,
+		"two sum":                                               ErrInvalidProblemRef,
+		"":                                                      ErrInvalidProblemRef,
+		"https://neetcode.io/courses/x":                         ErrInvalidProblemRef,
+	} {
+		if _, err := ResolveProblemRef(in); !errors.Is(err, want) {
+			t.Errorf("%q: %v, want %v", in, err, want)
+		}
+	}
+}
+
+// neetcodeSlugsJS is the extension's table of NeetCode slugs.
+const neetcodeSlugsJS = "../../extension/leetgrinder/neetcode-slugs.js"
+
+// TestNeetCodeSlugsMatchExtension keeps the Go table in step with the
+// extension's generated neetcode-slugs.js. Regenerate both with
+// `node scripts/update-neetcode-slugs.js` in extension/leetgrinder.
+func TestNeetCodeSlugsMatchExtension(t *testing.T) {
+	src, err := os.ReadFile(neetcodeSlugsJS)
+	if err != nil {
+		t.Fatal(err)
+	}
+	row := regexp.MustCompile(`(?m)^\s+"([^"]+)": \["([^"]+)",`)
+	js := map[string]string{}
+	for _, m := range row.FindAllStringSubmatch(string(src), -1) {
+		js[m[1]] = m[2]
+	}
+	if len(js) < 100 {
+		t.Fatalf("parsed only %d rows from %s", len(js), neetcodeSlugsJS)
+	}
+	goTable := NeetCodeSlugs()
+	for nc, lc := range js {
+		if got, ok := goTable[nc]; !ok || got != lc {
+			t.Errorf("%s: Go table has %q (present %v), JS has %q; regenerate neetcode_slugs.json", nc, got, ok, lc)
+		}
+	}
+	for nc := range goTable {
+		if _, ok := js[nc]; !ok {
+			t.Errorf("%s is in the Go table but not in neetcode-slugs.js", nc)
+		}
+	}
+	for nc, lc := range goTable {
+		if !ValidSlug(nc) || !ValidSlug(lc) {
+			t.Errorf("invalid slug pair %q -> %q", nc, lc)
 		}
 	}
 }

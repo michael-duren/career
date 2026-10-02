@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// Regenerates neetcode-slugs.js from the problem list neetcode.io ships in
-// its main bundle. Each entry there pairs a NeetCode page (ncLink) with the
+// Regenerates neetcode-slugs.js, and the Go server's copy of the slug pairs
+// (internal/leetgrinder/neetcode_slugs.json), from the problem list neetcode.io
+// ships in its main bundle. Each entry there pairs a NeetCode page (ncLink) with the
 // LeetCode problem it mirrors (link); NeetCode uses the same list to show
 // "Leetcode <number>." on its problem pages.
 //
@@ -60,7 +61,10 @@ ${lines.join("\n")}
 })(globalThis);
 `;
   fs.writeFileSync(path.join(__dirname, "..", "neetcode-slugs.js"), out);
-  console.log(`neetcode-slugs.js: ${count} problems`);
+  // The Go server embeds the NeetCode -> LeetCode slug pairs.
+  const goTable = Object.fromEntries(Object.entries(sorted).map(([nc, row]) => [nc, row[0]]));
+  fs.writeFileSync(path.join(__dirname, "..", "..", "..", "internal", "leetgrinder", "neetcode_slugs.json"), JSON.stringify(goTable, null, 1) + "\n");
+  console.log(`neetcode-slugs.js and neetcode_slugs.json: ${count} problems`);
 }
 
 main().catch((err) => {

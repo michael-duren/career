@@ -13,12 +13,12 @@ type createTodoSetInput struct {
 	Title          string                    `json:"title" jsonschema:"name of the new problem set, 1-120 characters"`
 	Description    string                    `json:"description,omitempty" jsonschema:"optional set description, up to 2000 characters"`
 	Metadata       map[string]any            `json:"metadata,omitempty" jsonschema:"optional source-specific set data to preserve"`
-	Problems       []string                  `json:"problems,omitempty" jsonschema:"LeetCode links or slugs without metadata"`
+	Problems       []string                  `json:"problems,omitempty" jsonschema:"LeetCode or NeetCode links, or LeetCode slugs, without metadata"`
 	ProblemDetails []todoProblemDetailsInput `json:"problemDetails,omitempty" jsonschema:"problems with catalog fields and arbitrary source metadata; use to copy a complete set"`
 }
 
 type todoProblemDetailsInput struct {
-	Problem    string         `json:"problem" jsonschema:"LeetCode problem link or slug"`
+	Problem    string         `json:"problem" jsonschema:"LeetCode or NeetCode problem link, or LeetCode slug"`
 	Number     int            `json:"number,omitempty" jsonschema:"optional LeetCode frontend number"`
 	Title      string         `json:"title,omitempty" jsonschema:"optional problem title"`
 	Difficulty string         `json:"difficulty,omitempty" jsonschema:"Easy, Medium, or Hard"`
@@ -32,11 +32,19 @@ type addTodoProblemInput struct {
 }
 
 func todoProblemFromMCP(in todoProblemDetailsInput) (leetgrinder.TodoProblemInput, error) {
-	slug, ok := leetgrinder.NormalizeProblemRef(in.Problem)
-	if !ok {
-		return leetgrinder.TodoProblemInput{}, invalidInput("invalid LeetCode problem link or slug")
+	slug, err := leetgrinder.ResolveProblemRef(in.Problem)
+	if err != nil {
+		return leetgrinder.TodoProblemInput{}, refInputError(in.Problem, err)
 	}
 	return leetgrinder.TodoProblemInput{Slug: slug, Reference: in.Problem, Number: in.Number, Title: in.Title, Difficulty: in.Difficulty, Topics: in.Topics, ImportMetadata: in.Metadata}, nil
+}
+
+// refInputError explains a refused problem reference to the MCP client.
+func refInputError(ref string, err error) error {
+	if errors.Is(err, leetgrinder.ErrUnknownNeetCodeProblem) {
+		return invalidInput("unknown NeetCode problem %q: no LeetCode match is known; use its LeetCode link or slug", ref)
+	}
+	return invalidInput("invalid LeetCode or NeetCode problem link, or LeetCode slug: %q", ref)
 }
 
 type removeTodoInput struct {
@@ -63,7 +71,7 @@ func (s *Server) addLeetgrinderTodoTools(server *mcp.Server) {
 		return nil, map[string]any{"sets": listedSets, "individualProblems": todoResults(standalone)}, nil
 	})
 	mcp.AddTool(server, &mcp.Tool{
-		Name: "create_leetgrinder_todo_set", Description: "Create a named Leetgrinder todo set with up to 200 problems. Use problemDetails to copy title, number, difficulty, topics and arbitrary metadata onto each catalog problem; use problems for plain links or slugs. Set description and metadata are also preserved. Requires edit access.",
+		Name: "create_leetgrinder_todo_set", Description: "Create a named Leetgrinder todo set with up to 200 problems. Use problemDetails to copy title, number, difficulty, topics and arbitrary metadata onto each catalog problem; use problems for plain links or slugs (leetcode.com, leetcode.cn or neetcode.io problem links, or LeetCode slugs; a NeetCode link is mapped to its LeetCode slug, and an unknown NeetCode problem is rejected). Set description and metadata are also preserved. Requires edit access.",
 		Annotations: &mcp.ToolAnnotations{Title: "Create Leetgrinder problem set", DestructiveHint: new(bool), OpenWorldHint: new(bool)},
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in createTodoSetInput) (*mcp.CallToolResult, any, error) {
 		if !canWrite(req) {
@@ -75,9 +83,9 @@ func (s *Server) addLeetgrinderTodoTools(server *mcp.Server) {
 		problems := make([]leetgrinder.TodoProblemInput, 0, len(in.Problems)+len(in.ProblemDetails))
 		seen := map[string]int{}
 		for _, ref := range in.Problems {
-			slug, ok := leetgrinder.NormalizeProblemRef(ref)
-			if !ok {
-				return nil, nil, invalidInput("invalid LeetCode problem: %q", ref)
+			slug, err := leetgrinder.ResolveProblemRef(ref)
+			if err != nil {
+				return nil, nil, refInputError(ref, err)
 			}
 			if _, exists := seen[slug]; !exists {
 				seen[slug] = len(problems)
@@ -108,7 +116,7 @@ func (s *Server) addLeetgrinderTodoTools(server *mcp.Server) {
 		return nil, map[string]any{"id": set.ID, "title": set.Title, "problemCount": len(problems)}, nil
 	})
 	mcp.AddTool(server, &mcp.Tool{
-		Name: "add_leetgrinder_todo_problem", Description: "Add a LeetCode problem to the individual list or a set. Optional title, number, difficulty, topics, and arbitrary metadata are saved on the catalog problem. Repeated additions keep one todo entry; adding a done individual problem again queues it for another pass. Requires edit access.",
+		Name: "add_leetgrinder_todo_problem", Description: "Add a LeetCode problem to the individual list or a set. The problem may be a leetcode.com, leetcode.cn or neetcode.io problem link, or a LeetCode slug; a NeetCode link is mapped to its LeetCode slug, and an unknown NeetCode problem is rejected. Optional title, number, difficulty, topics, and arbitrary metadata are saved on the catalog problem. Repeated additions keep one todo entry; adding a done individual problem again queues it for another pass. Requires edit access.",
 		Annotations: &mcp.ToolAnnotations{Title: "Add Leetgrinder todo problem", DestructiveHint: new(bool), IdempotentHint: true, OpenWorldHint: new(bool)},
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in addTodoProblemInput) (*mcp.CallToolResult, any, error) {
 		if !canWrite(req) {
