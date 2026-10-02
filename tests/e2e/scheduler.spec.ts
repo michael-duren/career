@@ -114,8 +114,9 @@ test('dragging a session to another day saves without flashing the editor or err
 
   await expect.poll(async () => {
     const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
-    return state.sessions.find((s: { assignment: { goalId: string } }) => s.assignment.goalId === goal.id)?.date;
-  }).toBe(targetDate);
+    const moved = state.sessions.find((s: { assignment: { goalId: string } }) => s.assignment.goalId === goal.id);
+    return moved && { date: moved.date, start: localTimeOf(moved.plan.start), end: localTimeOf(moved.plan.end) };
+  }).toEqual({ date: targetDate, start: '05:45', end: '06:45' });
 });
 
 test('deleting a recurring occurrence with "future" scope removes it from later weeks too', async ({ page, request, baseURL }) => {

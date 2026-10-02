@@ -30,7 +30,7 @@ export function localFields(instant: string, timezone: string) {
   return { date: `${part('year')}-${part('month')}-${part('day')}`, time: `${part('hour')}:${part('minute')}`, offset: part('timeZoneName') };
 }
 export function zonedDate(now: Date, timezone: string): string { return localFields(now.toISOString(), timezone).date; }
-export function localInstant(date: string, time: string, timezone: string): string {
+export function localInstant(date: string, time: string, timezone: string, preferredOffset?: string): string {
   const wall = Date.parse(`${date}T${time}:00Z`);
   if (!Number.isFinite(wall)) throw new Error('Enter a valid date and time.');
   const offsets = new Set<number>();
@@ -45,7 +45,8 @@ export function localInstant(date: string, time: string, timezone: string): stri
   }).sort((a, b) => a - b);
   const first = matches[0];
   if (first === undefined) throw new Error('This local time does not exist because the clocks change. Choose another time.');
-  return new Date(first).toISOString();
+  const preferred = preferredOffset && matches.find(candidate => localFields(new Date(candidate).toISOString(), timezone).offset === preferredOffset);
+  return new Date(preferred ?? first).toISOString();
 }
 export function minuteOf(instant: string, date: string, timezone: string): number {
   const local = localFields(instant, timezone);
@@ -60,7 +61,7 @@ const planSchema = z.object({ start: z.string(), end: z.string() });
 const actualSchema = planSchema.extend({ status: z.enum(['assumed', 'explicit', 'skipped']), date: z.string(), outsideTimeline: z.boolean().optional() });
 export const sessionSchema = z.object({ id: z.string(), ruleId: z.string().optional(), date: z.string(), assignment: assignmentSchema, plan: planSchema.nullable(), actual: actualSchema.nullable(), state: z.string(), attention: z.string().optional(), conflictIds: list(z.string()), exception: z.boolean() });
 const ruleSchema = z.object({ id: z.string(), weekday: z.number(), localStart: z.string(), durationMinutes: z.number(), effectiveFrom: z.string(), effectiveTo: z.string().optional(), assignment: assignmentSchema });
-const goalSchema = z.object({ id: z.string(), title: z.string(), color: z.string(), startDate: z.string(), endDate: z.string(), status: z.string(), dailyHours: z.number().nullable(), selectedWeekdays: z.array(z.number()).nullable(), steps: list(z.object({ id: z.string(), title: z.string(), completed: z.boolean() })), dependsOn: list(z.string()) });
+const goalSchema = z.object({ id: z.string(), title: z.string(), color: z.string(), startDate: z.string(), endDate: z.string(), status: z.string(), dailyHours: z.number().nullable(), selectedWeekdays: z.array(z.number()).nullable(), eligibleFrom: z.string().optional(), stoppedDate: z.string().optional(), pauses: list(z.object({ from: z.string(), to: z.string() })), steps: list(z.object({ id: z.string(), title: z.string(), completed: z.boolean() })), dependsOn: list(z.string()) });
 export const weekSchema = z.object({ revision: z.string(), week: z.string(), settings: settingsSchema, days: list(z.object({ date: z.string(), interval: dayIntervalSchema, start: z.string(), end: z.string() })), goals: list(z.object({ goal: goalSchema, requiredHours: z.number().nullable(), actualHours: z.number(), remainingScheduledHours: z.number(), uncoveredHours: z.number(), excessHours: z.number(), unscheduledStepIds: list(z.string()) })), sessions: list(sessionSchema), rules: list(ruleSchema), busy: list(planSchema.extend({ id: z.string(), title: z.string() })), warnings: list(z.string()), remainingCapacityHours: z.number() });
 export type SchedulerWeek = z.infer<typeof weekSchema>;
 export type SchedulerSession = z.infer<typeof sessionSchema>;

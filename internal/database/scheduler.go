@@ -203,6 +203,11 @@ func (s *Store) schedulerUpdate(ctx context.Context, w string, m *scheduler.Muta
 		if be != nil {
 			return scheduler.Week{}, be
 		}
+		if m.Action == "actual" && m.Actual != nil && m.Actual.Status == "explicit" && scheduler.ValidDate(m.Actual.Date) {
+			actual := *m.Actual
+			actual.Date = d.ActualDate(actual.Start)
+			m.Actual = &actual
+		}
 		if e = d.Apply(*m, now, busy); e != nil {
 			if ue := json.Unmarshal(baseline, &d); ue != nil {
 				return scheduler.Week{}, ue

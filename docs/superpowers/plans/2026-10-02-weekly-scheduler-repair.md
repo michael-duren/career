@@ -80,13 +80,13 @@ Issues: S03, S04, S08; supports S01.
 
 **Interfaces:** Add `proposePlacement(input: PlacementInput, week: SchedulerWeek, now: Date): PlacementResult`. Define `PlacementInput` as assignment placement, session move, or session resize variants. Move inputs include target scheduling date and snapped start minute after subtracting the grab offset. Resize inputs include session, edge, and snapped elapsed delta minutes. Define `PlacementResult` as either a valid `{ kind: 'valid', draft: SessionDraft, start: string, end: string, conflictIds: string[] }` or `{ kind: 'invalid', message: string }`. An overlapping proposal remains valid geometry with nonempty conflicts; invalid geometry/time has no submittable draft.
 
-- [ ] Add literal expected-value tests for 09:00–10:00 moved using a 30-minute grab offset to a 10:00 pointer target. Expected interval: 09:30–10:30.
-- [ ] Add move/resize tests for Chicago Nov 1, 2026 repeated-hour work. Expected 01:30 CDT–01:30 CST remains `06:30Z–07:30Z` with 60 elapsed minutes; changed endpoints keep their computed offset. Add spring-gap rejection.
-- [ ] Add overnight attribution tests for 09:00–02:00 days, Sunday/Monday, dated overrides, and work outside configured hours. Use server `ActualDate` as the authority. Normalize explicit actual dates at the server boundary and derive new unplanned session dates from that result. Return canonical records; update the client draft from the response on success.
-- [ ] Implement the shared proposal function. Preserve both computed instants in `originalStart` and `originalEnd` for move/resize drafts. Resolve changed manual fields through `localInstant`. Validate day bounds, eligibility, local accepted-plan or actual overlaps, and future actual ends for previews.
-- [ ] Use `proposePlacement` for release and resize saves. Record grab offset and active pointer ID at start; compute release position from the actual release event.
-- [ ] Run `node --test tests/scheduler.test.ts` and the relevant Go actual-date tests. Expected: exact dates, instants, and durations pass while manual minute precision and historical offsets remain intact.
-- [ ] Commit the time and placement repair.
+- [x] Add literal expected-value tests for 09:00–10:00 moved using a 30-minute grab offset to a 10:00 pointer target. Expected interval: 09:30–10:30.
+- [x] Add move/resize tests for Chicago Nov 1, 2026 repeated-hour work. Expected 01:30 CDT–01:30 CST remains `06:30Z–07:30Z` with 60 elapsed minutes; changed endpoints keep their computed offset. Add spring-gap rejection.
+- [x] Add overnight attribution tests for 09:00–02:00 days, Sunday/Monday, dated overrides, and work outside configured hours. Use server `ActualDate` as the authority. Normalize explicit actual dates at the server boundary and derive new unplanned session dates from that result. Return canonical records; update the client draft from the response on success.
+- [x] Implement the shared proposal function. Preserve both computed instants in `originalStart` and `originalEnd` for move/resize drafts. Resolve changed manual fields through `localInstant`. Validate day bounds, eligibility, local accepted-plan or actual overlaps, and future actual ends for previews.
+- [x] Use `proposePlacement` for release and resize saves. Record grab offset and active pointer ID at start; compute release position from the actual release event.
+- [x] Run `node --test tests/scheduler.test.ts` and the relevant Go actual-date tests. Expected: exact dates, instants, and durations pass while manual minute precision and historical offsets remain intact.
+- [x] Commit the time and placement repair.
 
 ## Task 4: Render placement previews and support ordinary gestures
 
