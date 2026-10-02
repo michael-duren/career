@@ -39,7 +39,10 @@ type Settings struct {
 	// AnalysisEnabled turns LLM complexity analysis on or off. It defaults
 	// to on; analysis also needs ANTHROPIC_API_KEY.
 	AnalysisEnabled bool
-	Revision        string
+	// NewFromTodos picks each day's new problems from the oldest todos still
+	// to do. It defaults to off; todos and the goal work without it.
+	NewFromTodos bool
+	Revision     string
 }
 
 func DefaultSettings() Settings {

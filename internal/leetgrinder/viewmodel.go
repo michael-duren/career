@@ -74,10 +74,11 @@ type ReviewsPage struct {
 // GeneralForm keeps the submitted text so a rejected save can be retried.
 type GeneralForm struct {
 	Timezone, GoalNew, GoalReview, Revision string
+	NewFromTodos                            bool
 }
 
 func NewGeneralForm(s Settings) GeneralForm {
-	return GeneralForm{Timezone: s.Timezone, GoalNew: strconv.Itoa(s.Goal.New), GoalReview: strconv.Itoa(s.Goal.Review), Revision: s.Revision}
+	return GeneralForm{Timezone: s.Timezone, GoalNew: strconv.Itoa(s.Goal.New), GoalReview: strconv.Itoa(s.Goal.Review), Revision: s.Revision, NewFromTodos: s.NewFromTodos}
 }
 
 // GoalOptions are the choices for each daily target.

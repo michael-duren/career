@@ -420,7 +420,7 @@ func (s *Server) leetgrinderSaveGeneral(w http.ResponseWriter, r *http.Request) 
 	if !s.leetgrinderForm(w, r) {
 		return
 	}
-	form := leetgrinder.GeneralForm{Timezone: strings.TrimSpace(r.PostForm.Get("timezone")), GoalNew: r.PostForm.Get("goalNew"), GoalReview: r.PostForm.Get("goalReview"), Revision: r.PostForm.Get("revision")}
+	form := leetgrinder.GeneralForm{Timezone: strings.TrimSpace(r.PostForm.Get("timezone")), GoalNew: r.PostForm.Get("goalNew"), GoalReview: r.PostForm.Get("goalReview"), Revision: r.PostForm.Get("revision"), NewFromTodos: r.PostForm.Get("newFromTodos") == "true"}
 	reject := func(status int, message string) {
 		settings, err := s.db.LeetgrinderSettings(r.Context())
 		if err != nil {
@@ -452,7 +452,7 @@ func (s *Server) leetgrinderSaveGeneral(w http.ResponseWriter, r *http.Request) 
 		if _, err := leetgrinder.LoadTimezone(form.Timezone); err != nil {
 			return settingsError("Choose an IANA time zone such as America/Chicago.")
 		}
-		settings.Timezone, settings.Goal = form.Timezone, goal
+		settings.Timezone, settings.Goal, settings.NewFromTodos = form.Timezone, goal, form.NewFromTodos
 		if err := settings.Validate(); err != nil {
 			return settingsError("Check the settings: " + err.Error() + ".")
 		}
@@ -602,6 +602,7 @@ func (s *Server) leetgrinderExport(w http.ResponseWriter, r *http.Request) {
 			"ntfyTopic":       settings.NtfyTopic,
 			"notifications":   notifications,
 			"analysisEnabled": settings.AnalysisEnabled,
+			"newFromTodos":    settings.NewFromTodos,
 		},
 	})
 }

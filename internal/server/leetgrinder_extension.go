@@ -337,6 +337,15 @@ type leetgrinderAPIReview struct {
 	Done       bool    `json:"done"`
 }
 
+// leetgrinderAPINewPick is one of today's new problems picked from todos.
+type leetgrinderAPINewPick struct {
+	Slug       string `json:"slug"`
+	Title      string `json:"title"`
+	Difficulty string `json:"difficulty,omitempty"`
+	Set        string `json:"set,omitempty"`
+	Done       bool   `json:"done"`
+}
+
 type leetgrinderAPIToday struct {
 	Date string                `json:"date"`
 	Goal leetgrinder.DailyGoal `json:"goal"`
@@ -345,12 +354,13 @@ type leetgrinderAPIToday struct {
 		Review int `json:"review"`
 		Bonus  int `json:"bonus"`
 	} `json:"done"`
-	Met       bool                   `json:"met"`
-	Remaining int                    `json:"remaining"`
-	Streak    int                    `json:"streak"`
-	Picks     []leetgrinderAPIReview `json:"picks"`
-	Due       []leetgrinderAPIReview `json:"due"`
-	DueCount  int                    `json:"dueCount"`
+	Met       bool                    `json:"met"`
+	Remaining int                     `json:"remaining"`
+	Streak    int                     `json:"streak"`
+	Picks     []leetgrinderAPIReview  `json:"picks"`
+	NewPicks  []leetgrinderAPINewPick `json:"newPicks"`
+	Due       []leetgrinderAPIReview  `json:"due"`
+	DueCount  int                     `json:"dueCount"`
 }
 
 // leetgrinderAPIToday is today's goal and reviews for the extension's badge
@@ -363,12 +373,15 @@ func (s *Server) leetgrinderAPIToday(w http.ResponseWriter, r *http.Request) {
 	}
 	loc := today.Settings.Location()
 	// The review goal is capped at the reviews that can count today.
-	out := leetgrinderAPIToday{Date: today.Date.Format(time.DateOnly), Goal: today.Progress.Target(), Met: today.Progress.Met(), Remaining: today.Progress.Remaining(), Streak: today.Streaks.Current, Picks: []leetgrinderAPIReview{}, Due: []leetgrinderAPIReview{}}
+	out := leetgrinderAPIToday{Date: today.Date.Format(time.DateOnly), Goal: today.Progress.Target(), Met: today.Progress.Met(), Remaining: today.Progress.Remaining(), Streak: today.Streaks.Current, Picks: []leetgrinderAPIReview{}, NewPicks: []leetgrinderAPINewPick{}, Due: []leetgrinderAPIReview{}}
 	out.Done.New, out.Done.Review, out.Done.Bonus = today.Progress.New(), today.Progress.Reviews(), today.Progress.Bonus()
 	for _, item := range today.Reviews {
 		// Reason and recall both describe the card before today's review.
 		recall := item.Card.Retrievability(today.Now)
 		out.Picks = append(out.Picks, leetgrinderAPIReview{item.Problem.Slug, item.Problem.DisplayTitle(), item.Problem.Difficulty, recall, item.Reason, item.Done})
+	}
+	for _, pick := range today.NewPicks {
+		out.NewPicks = append(out.NewPicks, leetgrinderAPINewPick{pick.Problem.Slug, pick.Problem.DisplayTitle(), pick.Problem.Difficulty, pick.SetTitle, pick.Done})
 	}
 	due := today.DueOptional()
 	out.DueCount = len(due)

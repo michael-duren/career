@@ -20,7 +20,10 @@ type Today struct {
 	// Goal is today's frozen goal.
 	Goal DailyGoal
 	// Reviews are today's frozen review picks.
-	Reviews  []ReviewItem
+	Reviews []ReviewItem
+	// NewPicks are today's frozen new-problem picks from todos, empty while
+	// picking from todos is off.
+	NewPicks []NewPickItem
 	Progress DayProgress
 	Streaks  Streaks
 	// Cards are every problem's review card as of now.
@@ -64,6 +67,7 @@ func NewTodayFrom(settings Settings, state State, now time.Time, r Replay) Today
 		}
 		t.Reviews = append(t.Reviews, item)
 	}
+	t.NewPicks = t.newPickItems()
 	return t
 }
 

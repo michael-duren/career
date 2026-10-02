@@ -34,7 +34,7 @@ func (k NotificationKind) HasThreshold() bool { return k.ThresholdLabel != "" }
 
 // NotificationKinds lists every kind in display order.
 var NotificationKinds = []NotificationKind{
-	{Key: NotifyMorningPlan, Label: "Morning plan", Description: "Today's targets, review picks, due count, and current streak.",
+	{Key: NotifyMorningPlan, Label: "Morning plan", Description: "Today's targets, new problems picked from todos, review picks, due count, and current streak.",
 		Default: NotificationPref{Enabled: true, Time: "08:00", Priority: "default"}, Window: 4 * time.Hour},
 	{Key: NotifyGoalIncomplete, Label: "Goal incomplete", Description: "Today's goal is not met yet; lists what is left.",
 		Default: NotificationPref{Enabled: true, Time: "18:00", Priority: "default"}, Window: 2 * time.Hour},

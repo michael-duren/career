@@ -120,8 +120,67 @@ func loadLeetgrinderState(ctx context.Context, tx queryer, withCode bool) (leetg
 	if state.Plans, err = loadLeetgrinderPlans(ctx, tx); err != nil {
 		return state, err
 	}
-	state.Goals, err = loadLeetgrinderGoals(ctx, tx)
+	if state.Goals, err = loadLeetgrinderGoals(ctx, tx); err != nil {
+		return state, err
+	}
+	state.NewPlans, err = loadLeetgrinderNewPlans(ctx, tx)
 	return state, err
+}
+
+// loadLeetgrinderNewPlans reads every date's frozen new picks with the title
+// of the todo set each came from.
+func loadLeetgrinderNewPlans(ctx context.Context, tx queryer) (map[time.Time][]leetgrinder.NewPick, error) {
+	rows, err := tx.QueryContext(ctx, `SELECT n.plan_date,n.problem_slug,COALESCE(s.id::text,''),COALESCE(s.title,'')
+FROM leetgrinder_new_plan n LEFT JOIN leetgrinder_todo_sets s ON s.id=n.set_id
+ORDER BY n.plan_date,n.slot`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	plans := map[time.Time][]leetgrinder.NewPick{}
+	for rows.Next() {
+		var date time.Time
+		var pick leetgrinder.NewPick
+		if err = rows.Scan(&date, &pick.Slug, &pick.SetID, &pick.SetTitle); err != nil {
+			return nil, err
+		}
+		d := leetgrinder.Date(date, time.UTC)
+		plans[d] = append(plans[d], pick)
+	}
+	return plans, rows.Err()
+}
+
+// leetgrinderNewPickCandidates returns up to limit todo problems to pick as
+// new problems on the day starting at dayStart, oldest entry first. A
+// candidate is still to do, has no attempt before that day (so an attempt on
+// it counts as new), and is not in picked. A problem queued more than once
+// is offered once, from its oldest entry.
+func leetgrinderNewPickCandidates(ctx context.Context, tx queryer, dayStart time.Time, picked []leetgrinder.NewPick, limit int) ([]leetgrinder.NewPick, error) {
+	skip := make([]string, len(picked))
+	for i, p := range picked {
+		skip[i] = p.Slug
+	}
+	rows, err := tx.QueryContext(ctx, `SELECT slug,COALESCE(set_key::text,''),COALESCE(s.title,'')
+FROM (
+  SELECT DISTINCT ON (slug) slug,set_key,created_at,id FROM (`+leetgrinderTodoRows+`) todo
+  WHERE done_at IS NULL AND NOT (slug = ANY($2::text[]))
+    AND NOT EXISTS (SELECT 1 FROM leetgrinder_attempts a WHERE a.problem_slug=todo.slug AND a.created_at<$1)
+  ORDER BY slug,created_at,id
+) next LEFT JOIN leetgrinder_todo_sets s ON s.id=next.set_key
+ORDER BY next.created_at,next.id LIMIT $3`, dayStart, skip, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []leetgrinder.NewPick
+	for rows.Next() {
+		var pick leetgrinder.NewPick
+		if err = rows.Scan(&pick.Slug, &pick.SetID, &pick.SetTitle); err != nil {
+			return nil, err
+		}
+		out = append(out, pick)
+	}
+	return out, rows.Err()
 }
 
 func loadLeetgrinderPlans(ctx context.Context, tx queryer) (map[time.Time][]string, error) {

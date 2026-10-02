@@ -1494,6 +1494,16 @@ dd {
 .goal-progress li.done strong {
   color: var(--accent);
 }
+.new-picks {
+  margin-top: 12px;
+}
+.new-picks p {
+  margin: 0 0 4px;
+}
+.new-picks ol {
+  margin: 0;
+  padding-left: 20px;
+}
 .streaks,
 .summary,
 .review-state {

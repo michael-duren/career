@@ -200,6 +200,7 @@ templ goalCard(today Today) {
 			if !today.Progress.Met() && today.Progress.NewLeft() == 0 && today.Progress.ReviewsLeft() == 0 {
 				<p class="small muted">Log any attempt to meet today's goal.</p>
 			}
+			@newPicks(today)
 		</div>
 		<dl class="streaks">
 			<dt>Streak</dt>
@@ -210,6 +211,37 @@ templ goalCard(today Today) {
 			<dd>{ Count(today.Streaks.Active) } in a row</dd>
 		</dl>
 	</section>
+}
+
+// newPicks lists today's new problems picked from todos, naming the next one.
+templ newPicks(today Today) {
+	if len(today.NewPicks) > 0 {
+		<div class="new-picks">
+			if next, ok := today.NextNewPick(); ok {
+				<p class="small">
+					Next new problem: <a href={ templ.SafeURL(ProblemURL(next.Problem.Slug)) }>{ next.Problem.DisplayTitle() }</a>
+					if next.SetTitle != "" {
+						from { next.SetTitle }
+					}
+				</p>
+			} else {
+				<p class="small muted">Today's picked new problems are done.</p>
+			}
+			<ol class="small" aria-label="Today's new problems from todos">
+				for _, pick := range today.NewPicks {
+					<li class={ templ.KV("done", pick.Done) }>
+						<a href={ templ.SafeURL(ProblemURL(pick.Problem.Slug)) }>{ pick.Problem.DisplayTitle() }</a>
+						if pick.Done {
+							<span class="muted">· done</span>
+						}
+						if pick.SetTitle != "" {
+							<span class="muted">· { pick.SetTitle }</span>
+						}
+					</li>
+				}
+			</ol>
+		</div>
+	}
 }
 
 // progressPanel is the all-time summary.
@@ -601,6 +633,11 @@ templ generalSettings(page SettingsPage) {
 					<option value={ tz }></option>
 				}
 			</datalist>
+			<label class="checkbox">
+				<input type="checkbox" name="newFromTodos" value="true" checked?={ page.General.NewFromTodos }/>
+				Pick today's new problems from my todos
+			</label>
+			<p class="small muted">Optional. Each day picks as many new problems as the goal asks for from the oldest todos you have not attempted, and keeps them for the day like review picks. Todos and the goal work the same without it.</p>
 			<p class="small muted">
 				A new problem is one you have never attempted before today. A review counts toward the goal when the problem was due, flagged, or today's pick; other re-solves count as practice. Extra work is bonus, and each goal-met day extends your streak.
 				if page.TodayGoal != nil {
@@ -656,6 +693,9 @@ templ zoneConfirm(page SettingsPage) {
 		<input type="hidden" name="timezone" value={ page.General.Timezone }/>
 		<input type="hidden" name="goalNew" value={ page.General.GoalNew }/>
 		<input type="hidden" name="goalReview" value={ page.General.GoalReview }/>
+		if page.General.NewFromTodos {
+			<input type="hidden" name="newFromTodos" value="true"/>
+		}
 		<input type="hidden" name="confirm" value="1"/>
 		<button class="button primary" type="submit">Change time zone and save</button>
 		<a class="button" href="/leetgrinder/settings#general">Cancel</a>

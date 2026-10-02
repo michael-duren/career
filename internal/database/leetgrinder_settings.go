@@ -6,18 +6,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/michael-duren/career-strategy/internal/leetgrinder"
 )
 
-const leetgrinderSettingsColumns = "timezone,goal_new,goal_review,ntfy_url,ntfy_topic,ntfy_token_ciphertext,notifications,analysis_enabled,revision"
+const leetgrinderSettingsColumns = "timezone,goal_new,goal_review,ntfy_url,ntfy_topic,ntfy_token_ciphertext,notifications,analysis_enabled,new_from_todos,revision"
 
 func scanLeetgrinderSettings(row interface{ Scan(...any) error }) (leetgrinder.Settings, error) {
 	var s leetgrinder.Settings
 	var notifications []byte
-	if err := row.Scan(&s.Timezone, &s.Goal.New, &s.Goal.Review, &s.NtfyURL, &s.NtfyTopic, &s.NtfyTokenCiphertext, &notifications, &s.AnalysisEnabled, &s.Revision); err != nil {
+	if err := row.Scan(&s.Timezone, &s.Goal.New, &s.Goal.Review, &s.NtfyURL, &s.NtfyTopic, &s.NtfyTokenCiphertext, &notifications, &s.AnalysisEnabled, &s.NewFromTodos, &s.Revision); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return s, ErrNotFound
 		}
@@ -71,8 +72,8 @@ func (s *Store) UpdateLeetgrinderSettings(ctx context.Context, expectedRevision 
 	if len(next.NtfyTokenCiphertext) > 0 {
 		token = next.NtfyTokenCiphertext
 	}
-	saved, err := scanLeetgrinderSettings(tx.QueryRowContext(ctx, `UPDATE leetgrinder_settings SET timezone=$1,goal_new=$2,goal_review=$3,ntfy_url=$4,ntfy_topic=$5,ntfy_token_ciphertext=$6,notifications=$7,analysis_enabled=$8,revision=$9 WHERE id=1 RETURNING `+leetgrinderSettingsColumns,
-		next.Timezone, next.Goal.New, next.Goal.Review, next.NtfyURL, next.NtfyTopic, token, notifications, next.AnalysisEnabled, uuid.NewString()))
+	saved, err := scanLeetgrinderSettings(tx.QueryRowContext(ctx, `UPDATE leetgrinder_settings SET timezone=$1,goal_new=$2,goal_review=$3,ntfy_url=$4,ntfy_topic=$5,ntfy_token_ciphertext=$6,notifications=$7,analysis_enabled=$8,new_from_todos=$9,revision=$10 WHERE id=1 RETURNING `+leetgrinderSettingsColumns,
+		next.Timezone, next.Goal.New, next.Goal.Review, next.NtfyURL, next.NtfyTopic, token, notifications, next.AnalysisEnabled, next.NewFromTodos, uuid.NewString()))
 	if err != nil {
 		return leetgrinder.Settings{}, err
 	}
@@ -148,12 +149,19 @@ func (s *Store) leetgrinderTodayPlanned(ctx context.Context, now time.Time) (lee
 	if err != nil {
 		return leetgrinderDay{}, false, err
 	}
-	if err = tx.Commit(); err != nil {
-		return leetgrinderDay{}, false, err
-	}
 	goal, ok := state.Goals[date]
 	if !ok {
 		return leetgrinderDay{}, false, nil
+	}
+	// New picks stay short while no todo is left to pick.
+	if leetgrinder.NewPicksWanted(settings, state, date) > 0 {
+		more, err := leetgrinderNewPickCandidates(ctx, tx, leetgrinder.StartOfDate(date, loc), state.NewPlans[date], 1)
+		if err != nil || len(more) > 0 {
+			return leetgrinderDay{}, false, err
+		}
+	}
+	if err = tx.Commit(); err != nil {
+		return leetgrinderDay{}, false, err
 	}
 	day := leetgrinderDay{settings: settings, state: state}
 	// A plan shorter than its target stays short while nothing more is due.
@@ -200,6 +208,21 @@ func (s *Store) planLeetgrinderToday(ctx context.Context, now time.Time) (leetgr
 	for slot := len(existing); slot < len(plan); slot++ {
 		if _, err = tx.ExecContext(ctx, "INSERT INTO leetgrinder_review_plan(plan_date,problem_slug,slot) VALUES($1,$2,$3)", day, plan[slot], slot+1); err != nil {
 			return leetgrinderDay{}, err
+		}
+	}
+	if wanted := leetgrinder.NewPicksWanted(settings, state, date); wanted > 0 {
+		existing := state.NewPlans[date]
+		more, err := leetgrinderNewPickCandidates(ctx, tx, leetgrinder.StartOfDate(date, loc), existing, wanted)
+		if err != nil {
+			return leetgrinderDay{}, err
+		}
+		for i, pick := range more {
+			if _, err = tx.ExecContext(ctx, "INSERT INTO leetgrinder_new_plan(plan_date,problem_slug,slot,set_id) VALUES($1,$2,$3,$4)", day, pick.Slug, len(existing)+i+1, nullableUUID(pick.SetID)); err != nil {
+				return leetgrinderDay{}, err
+			}
+		}
+		if len(more) > 0 {
+			state.NewPlans[date] = append(slices.Clone(existing), more...)
 		}
 	}
 	if err = tx.Commit(); err != nil {
