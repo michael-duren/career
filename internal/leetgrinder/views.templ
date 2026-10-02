@@ -263,7 +263,7 @@ templ problemMeta(p Problem) {
 			<span class={ DifficultyClass(p.Difficulty) }>{ p.Difficulty }</span>
 		}
 		for _, t := range p.Topics {
-			<a class="topic-tag" href={ templ.SafeURL("/leetgrinder/problems?topic=" + t) }>{ TopicLabel(t) }</a>
+			<a class="topic-tag" href={ templ.SafeURL("/leetgrinder/problems?topic=" + t) }>{ p.TopicLabel(t) }</a>
 		}
 	</p>
 }
@@ -752,7 +752,7 @@ templ Problems(page ProblemsPage) {
 									if len(row.Problem.Topics) > 0 {
 										<span class="row-topics">
 											for _, t := range row.Problem.Topics {
-												<a class="topic-tag" href={ templ.SafeURL("/leetgrinder/problems?topic=" + t) }>{ TopicLabel(t) }</a>
+												<a class="topic-tag" href={ templ.SafeURL("/leetgrinder/problems?topic=" + t) }>{ row.Problem.TopicLabel(t) }</a>
 											}
 										</span>
 									}

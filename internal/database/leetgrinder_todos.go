@@ -233,7 +233,7 @@ ORDER BY created_at,id`)
 	if err != nil {
 		return nil, err
 	}
-	items, err := scanLeetgrinderTodoItems(rows)
+	items, err := scanLeetgrinderTodoItems(ctx, tx, rows)
 	if err != nil {
 		return nil, err
 	}
@@ -296,7 +296,7 @@ ORDER BY created_at,id`, nullableUUID(setID))
 	if err != nil {
 		return nil, err
 	}
-	return scanLeetgrinderTodoItems(rows)
+	return scanLeetgrinderTodoItems(ctx, s.DB, rows)
 }
 
 // LeetgrinderNextTodoItems returns the oldest queued entry for each problem
@@ -313,10 +313,10 @@ ORDER BY created_at,id LIMIT $1`, limit)
 	if err != nil {
 		return nil, err
 	}
-	return scanLeetgrinderTodoItems(rows)
+	return scanLeetgrinderTodoItems(ctx, s.DB, rows)
 }
 
-func scanLeetgrinderTodoItems(rows *sql.Rows) ([]leetgrinder.TodoItem, error) {
+func scanLeetgrinderTodoItems(ctx context.Context, q queryer, rows *sql.Rows) ([]leetgrinder.TodoItem, error) {
 	defer rows.Close()
 	items := []leetgrinder.TodoItem{}
 	for rows.Next() {
@@ -337,7 +337,25 @@ func scanLeetgrinderTodoItems(rows *sql.Rows) ([]leetgrinder.TodoItem, error) {
 		}
 		items = append(items, item)
 	}
-	return items, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	rows.Close()
+	if len(items) == 0 {
+		return items, nil
+	}
+	slugs := []string{}
+	for _, item := range items {
+		slugs = append(slugs, item.Problem.Topics...)
+	}
+	names, err := loadLeetgrinderTopicNames(ctx, q, slugs)
+	if err != nil {
+		return nil, err
+	}
+	for i := range items {
+		items[i].Problem = withTopicNames(items[i].Problem, names)
+	}
+	return items, nil
 }
 
 func nullableUUID(id string) any {

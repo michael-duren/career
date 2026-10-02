@@ -127,7 +127,7 @@ func matchProblem(p Problem, query, difficulty, topic string) bool {
 		} else {
 			text := p.Title + " " + p.Slug
 			for _, t := range p.Topics {
-				text += " " + t + " " + TopicLabel(t)
+				text += " " + t + " " + TopicLabel(t) + " " + p.TopicLabel(t)
 			}
 			if !strings.Contains(strings.ToLower(text), strings.ToLower(query)) {
 				return false
@@ -225,7 +225,7 @@ func topicOptions(problems []Problem) []FilterOption {
 		for _, t := range p.Topics {
 			if !seen[t] {
 				seen[t] = true
-				out = append(out, FilterOption{t, TopicLabel(t)})
+				out = append(out, FilterOption{t, p.TopicLabel(t)})
 			}
 		}
 	}
