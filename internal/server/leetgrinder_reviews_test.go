@@ -61,7 +61,7 @@ func TestLeetgrinderGeneralSettings(t *testing.T) {
 	}
 	// Once today's goal is frozen, the page says changes apply from tomorrow.
 	request("GET", "/leetgrinder", nil)
-	if w := request("GET", "/leetgrinder/settings", nil); !strings.Contains(w.Body.String(), "Today's goal is already set to 3 new + 0 reviews, so changes apply from tomorrow.") {
+	if w := request("GET", "/leetgrinder/settings", nil); !strings.Contains(w.Body.String(), "Today's goal is already set to 3 new + 0 reviews, so target changes apply from tomorrow; picking from todos starts today.") {
 		t.Fatal("frozen day not explained")
 	}
 }

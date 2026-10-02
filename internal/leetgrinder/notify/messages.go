@@ -23,6 +23,9 @@ func Compose(kind string, pref leetgrinder.NotificationPref, today leetgrinder.T
 			}
 			lines = append(lines, line)
 		}
+		if today.NewPicksFailed {
+			lines = append(lines, "New: couldn't pick from your todos; open the dashboard to retry")
+		}
 		for _, r := range today.Reviews {
 			lines = append(lines, "Review: "+r.Problem.DisplayTitle())
 		}

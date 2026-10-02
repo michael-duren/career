@@ -359,8 +359,10 @@ type leetgrinderAPIToday struct {
 	Streak    int                     `json:"streak"`
 	Picks     []leetgrinderAPIReview  `json:"picks"`
 	NewPicks  []leetgrinderAPINewPick `json:"newPicks"`
-	Due       []leetgrinderAPIReview  `json:"due"`
-	DueCount  int                     `json:"dueCount"`
+	// NewPicksFailed reports that today's new picks could not be planned.
+	NewPicksFailed bool                   `json:"newPicksFailed,omitempty"`
+	Due            []leetgrinderAPIReview `json:"due"`
+	DueCount       int                    `json:"dueCount"`
 }
 
 // leetgrinderAPIToday is today's goal, reviews and new picks for the
@@ -381,6 +383,7 @@ func (s *Server) leetgrinderAPIToday(w http.ResponseWriter, r *http.Request) {
 		recall := item.Card.Retrievability(today.Now)
 		out.Picks = append(out.Picks, leetgrinderAPIReview{item.Problem.Slug, item.Problem.DisplayTitle(), item.Problem.Difficulty, recall, item.Reason, item.Done})
 	}
+	out.NewPicksFailed = today.NewPicksFailed
 	for _, pick := range today.NewPicks {
 		out.NewPicks = append(out.NewPicks, leetgrinderAPINewPick{pick.Problem.Slug, pick.Problem.DisplayTitle(), pick.Problem.Difficulty, pick.SetTitle, pick.Done})
 	}

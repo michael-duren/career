@@ -653,7 +653,7 @@ templ generalSettings(page SettingsPage) {
 			<p class="small muted">
 				A new problem is one you have never attempted before today. A review counts toward the goal when the problem was due, flagged, or today's pick; other re-solves count as practice. Extra work is bonus, and each goal-met day extends your streak.
 				if page.TodayGoal != nil {
-					Today's goal is already set to { GoalLabel(*page.TodayGoal) }, so changes apply from tomorrow.
+					Today's goal is already set to { GoalLabel(*page.TodayGoal) }, so target changes apply from tomorrow; picking from todos starts today.
 				} else {
 					Changes apply from today.
 				}

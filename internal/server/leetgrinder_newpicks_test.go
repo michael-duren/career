@@ -36,6 +36,20 @@ func TestLeetgrinderNewPicksFromTodos(t *testing.T) {
 	if body := request("GET", "/leetgrinder", nil).Body.String(); strings.Contains(body, "Next new problem") {
 		t.Fatal("picks while off")
 	}
+	_, plain, err := db.CreateLeetgrinderToken(ctx, "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	todayAPI := func() *httptest.ResponseRecorder {
+		r := httptest.NewRequest("GET", "/api/leetgrinder/today", nil)
+		r.Header.Set("Authorization", "Bearer "+plain)
+		rec := httptest.NewRecorder()
+		s.RegisterRoutes().ServeHTTP(rec, r)
+		return rec
+	}
+	if body := todayAPI().Body.String(); !strings.Contains(body, `"newPicks":[]`) || strings.Contains(body, "newPicksFailed") {
+		t.Fatalf("API while off: %s", body)
+	}
 	// The settings form turns it on; a later, unplanned day picks from the
 	// oldest todos.
 	s.now = func() time.Time { return now }
@@ -68,14 +82,7 @@ func TestLeetgrinderNewPicksFromTodos(t *testing.T) {
 	if _, err = db.DB.Exec("UPDATE leetgrinder_attempts SET created_at=$1 WHERE id=$2", tomorrow.AddDate(0, 0, 1).Add(-time.Hour), attempt.ID); err != nil {
 		t.Fatal(err)
 	}
-	_, plain, err := db.CreateLeetgrinderToken(ctx, "test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	r := httptest.NewRequest("GET", "/api/leetgrinder/today", nil)
-	r.Header.Set("Authorization", "Bearer "+plain)
-	rec := httptest.NewRecorder()
-	s.RegisterRoutes().ServeHTTP(rec, r)
+	rec := todayAPI()
 	var out struct {
 		NewPicks []struct {
 			Slug, Title, Set string

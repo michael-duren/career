@@ -43,9 +43,10 @@ func (t Today) NextNewPick() (NewPickItem, bool) {
 }
 
 // NewPicksShort reports that picking from todos is on and today has fewer
-// picks than its new target, because too few todos could be picked.
+// picks than its new target: too few todos could be picked, or planning
+// failed (see NewPicksFailed).
 func (t Today) NewPicksShort() bool {
-	return t.Settings.NewFromTodos && !t.NewPicksFailed && len(t.NewPicks) < t.Goal.New
+	return t.Settings.NewFromTodos && len(t.NewPicks) < t.Goal.New
 }
 
 // NewPicksWanted is how many more new picks date's frozen goal has room

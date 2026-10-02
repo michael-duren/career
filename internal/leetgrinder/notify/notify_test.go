@@ -221,6 +221,12 @@ func TestComposeMorningNewPicks(t *testing.T) {
 	if want := "Goal: 2 new + 0 reviews\nNew: Two Sum (Blind 75)\nNew: binary-search\nStreak: 0 days"; !ok || m.Body != want {
 		t.Fatalf("morning: %q, want %q", m.Body, want)
 	}
+	// A failed plan says so.
+	failed := leetgrinder.NewToday(settings, state, now)
+	failed.NewPicksFailed = true
+	if m, _ = Compose(leetgrinder.NotifyMorningPlan, pref, failed, "https://app.example"); !strings.Contains(m.Body, "\nNew: couldn't pick from your todos; open the dashboard to retry\n") {
+		t.Fatalf("failed: %q", m.Body)
+	}
 	// Turned off, frozen picks are left out.
 	settings.NewFromTodos = false
 	if m, _ = Compose(leetgrinder.NotifyMorningPlan, pref, leetgrinder.NewToday(settings, state, now), "https://app.example"); strings.Contains(m.Body, "New:") {

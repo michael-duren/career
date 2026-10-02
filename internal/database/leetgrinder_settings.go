@@ -112,7 +112,8 @@ func (s *Store) LeetgrinderToday(ctx context.Context, now time.Time) (leetgrinde
 }
 
 // PlanLeetgrinderToday freezes today's goal, review picks and new picks as
-// LeetgrinderToday does, without building today's view.
+// LeetgrinderToday does, without building today's view. A new-pick error is
+// returned after the goal and review picks are saved.
 func (s *Store) PlanLeetgrinderToday(ctx context.Context, now time.Time) error {
 	day, err := s.leetgrinderDay(ctx, now)
 	if err != nil {
