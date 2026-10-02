@@ -352,34 +352,83 @@ test("repeated backward jumps keep carriedMs at or below activeMs", () => {
   let timer = { startedAt: T0, activeMs: 20 * MIN, tabs: {}, creditedTo: T0 };
   let now = T0 + 25 * MIN;
   timer = lib.creditActive(timer, { visible: true, lastInputAt: now }, now, 1);
+  let expected = 20 * MIN;
   for (let i = 0; i < 4; i++) {
     now -= 10 * MIN;
+    // First sample after a jump credits nothing.
     timer = lib.creditActive(timer, { visible: true, lastInputAt: now }, now, 1);
-    assert.ok(timer.carriedMs <= timer.activeMs, `${timer.carriedMs} > ${timer.activeMs}`);
+    assert.equal(timer.activeMs, expected);
+    assert.equal(timer.carriedMs, expected);
     now += 30000;
     timer = lib.creditActive(timer, { visible: true, lastInputAt: now }, now, 1);
-    now -= 20000;
+    expected += 30000;
+    assert.equal(timer.activeMs, expected);
+    assert.ok(timer.carriedMs <= timer.activeMs);
   }
-  assert.ok(timer.activeMs <= 20 * MIN + 4 * 30000 + 1000);
-  assert.ok(timer.activeMs >= 20 * MIN);
 });
 
 test("backward jump then forward jump", () => {
   let timer = { startedAt: T0, activeMs: 10 * MIN, tabs: { 1: T0 + 10 * MIN }, creditedTo: T0 + 10 * MIN };
-  timer = lib.creditActive(timer, { visible: true, lastInputAt: T0 }, T0, 1);
+  timer = lib.creditActive(timer, { visible: true, lastInputAt: T0 - 20 * MIN }, T0 - 20 * MIN, 1);
   assert.equal(timer.activeMs, 10 * MIN);
   // Clock leaps forward an hour: only one capped sample is credited.
   const later = T0 + 60 * MIN;
   timer = lib.creditActive(timer, { visible: true, lastInputAt: later }, later, 1);
+  assert.ok(timer.activeMs >= 10 * MIN);
   assert.ok(timer.activeMs <= 10 * MIN + lib.SAMPLE_MAX_CREDIT_MS);
 });
 
 test("legacy timer's first sample credits from its startedAt", () => {
   const legacy = { startedAt: T0, lastSampleAt: T0 + 5 * MIN };
   const first = lib.creditActive(legacy, { visible: true, lastInputAt: T0 + 6 * MIN }, T0 + 6 * MIN, 1);
-  // Wall-clock so far is kept; the first sample marks the tab without extra credit.
   assert.equal(first.activeMs, 6 * MIN);
   assert.equal(first.creditedTo, T0);
   const second = lib.creditActive(first, { visible: true, lastInputAt: T0 + 6 * MIN + 30000 }, T0 + 6 * MIN + 30000, 1);
-  assert.equal(second.activeMs, 6 * MIN + 30000 > 0 ? Math.min(6 * MIN + 30000, 6 * MIN + 30000) : 0);
+  assert.equal(second.activeMs, 6 * MIN + 30000);
+});
+
+test("legacy timer migration sets openedAt from startedAt", () => {
+  const first = lib.creditActive({ startedAt: T0 }, { visible: true, lastInputAt: T0 }, T0 + MIN, 1);
+  assert.equal(first.openedAt, T0);
+  assert.equal(lib.openedAt({ startedAt: T0 }), T0);
+});
+
+test("legacy timer keeps wall-clock time across a backward jump", () => {
+  const legacy = { startedAt: T0, lastSeenAt: T0 + 10 * MIN };
+  const now = T0 - 30 * MIN;
+  const t = lib.creditActive(legacy, { visible: true, lastInputAt: now }, now, 1);
+  assert.equal(t.activeMs, 10 * MIN);
+  assert.equal(t.carriedMs, 10 * MIN);
+  assert.equal(t.openedAt, T0);
+});
+
+test("a small backward step only clamps marks and keeps open time", () => {
+  const timer = { startedAt: T0, openedAt: T0, activeMs: 5 * MIN, carriedMs: 0, tabs: { 1: T0 + 10 * MIN }, creditedTo: T0 + 10 * MIN };
+  const now = T0 + 10 * MIN - 1000;
+  const t = lib.creditActive(timer, { visible: true, lastInputAt: now }, now, 1);
+  assert.equal(t.startedAt, T0);
+  assert.equal(t.openedAt, T0);
+  assert.equal(t.carriedMs, 0);
+  assert.equal(t.activeMs, 5 * MIN);
+  assert.equal(t.tabs[1], now);
+  assert.equal(t.creditedTo, now);
+  assert.equal(lib.elapsedMinutes(lib.openedAt(t), now), 10);
+});
+
+test("the jump tolerance is SAMPLE_MAX_CREDIT_MS", () => {
+  const base = { startedAt: T0, openedAt: T0, activeMs: 5 * MIN, carriedMs: 0, tabs: { 1: T0 + 10 * MIN }, creditedTo: T0 + 10 * MIN };
+  const at = T0 + 10 * MIN - lib.SAMPLE_MAX_CREDIT_MS;
+  assert.equal(lib.creditActive(base, { visible: true, lastInputAt: at }, at, 1).startedAt, T0);
+  const past = at - 1;
+  const jumped = lib.creditActive(base, { visible: true, lastInputAt: past }, past, 1);
+  assert.equal(jumped.startedAt, past);
+  assert.equal(jumped.openedAt, T0);
+  assert.equal(jumped.carriedMs, 5 * MIN);
+});
+
+test("a jump does not restart the max-age clock, which uses openedAt", () => {
+  const opened = T0;
+  const now = T0 + 13 * 3600000;
+  assert.ok(lib.timerExpired({ startedAt: now - MIN, openedAt: opened, lastSeenAt: now - MIN }, now));
+  assert.ok(!lib.timerExpired({ startedAt: now - MIN, lastSeenAt: now - MIN }, now));
 });

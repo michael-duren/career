@@ -112,7 +112,7 @@ async function readTimer(slug, patch = {}, rawSample = null, tabId = 0) {
   const now = Date.now();
   const stored = (await ext.storage.session.get(key))[key];
   const fresh = lib.timerExpired(stored, now);
-  let timer = fresh ? { startedAt: now, activeMs: 0, tabs: {}, creditedTo: now, assisted: false, nudged: false } : stored;
+  let timer = fresh ? { startedAt: now, openedAt: now, activeMs: 0, tabs: {}, creditedTo: now, assisted: false, nudged: false } : stored;
   const sample = lib.validSample(rawSample, now);
   if (sample) timer = lib.creditActive(timer, sample, now, tabId);
   timer.lastSeenAt = now;
@@ -131,7 +131,7 @@ const updateTimer = (slug, patch, sample, tabId) => serialized(slug, () => readT
 const restartTimer = (slug) =>
   serialized(slug, async () => {
     const now = Date.now();
-    const timer = { startedAt: now, lastSeenAt: now, activeMs: 0, tabs: {}, creditedTo: now, assisted: false, nudged: true };
+    const timer = { startedAt: now, openedAt: now, lastSeenAt: now, activeMs: 0, tabs: {}, creditedTo: now, assisted: false, nudged: true };
     await ext.storage.session.set({ [timerKey(slug)]: timer });
     return timer;
   });

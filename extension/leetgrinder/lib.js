@@ -297,24 +297,33 @@
   // the end of the latest credited interval, so overlapping tabs add once.
   // A clock that went backward credits nothing and resets the tab's mark.
   // Timers saved without activeMs keep their wall-clock time so far.
+  //
+  // openedAt is when the problem was first opened and is never rebased; open
+  // time and the 12-hour max age use it. startedAt is the baseline for the
+  // wall-clock cap on active time. A backward step within SAMPLE_MAX_CREDIT_MS
+  // (NTP slew) only clamps the stored marks to now. A larger one is a clock
+  // jump: startedAt moves to now and carriedMs keeps the active time earned
+  // so far. The first sample after a jump credits nothing (bounded loss of
+  // under one heartbeat).
   function creditActive(timer, sample, now, tabId = 0) {
+    const finite = Number.isFinite;
+    const origStart = finite(timer.startedAt) ? timer.startedAt : now;
+    const openedAt = finite(timer.openedAt) ? timer.openedAt : origStart;
+    let ahead = Math.max(origStart, finite(timer.creditedTo) ? timer.creditedTo : 0) - now;
+    for (const at of Object.values(timer.tabs || {})) if (finite(at)) ahead = Math.max(ahead, at - now);
+    const jumped = ahead > SAMPLE_MAX_CREDIT_MS;
     const tabs = {};
     for (const [id, at] of Object.entries(timer.tabs || {})) {
-      if (Number.isFinite(at) && at <= now && now - at <= TAB_STALE_MS) tabs[id] = at;
+      if (!finite(at) || now - at > TAB_STALE_MS || (jumped && at > now)) continue;
+      tabs[id] = Math.min(at, now);
     }
     const since = Object.hasOwn(tabs, tabId) ? tabs[tabId] : now;
-    // A clock that jumped back puts startedAt in the future: rebase it and
-    // keep the active time already earned.
-    // Any stored time ahead of now (start, credited end or a tab's mark)
-    // means the clock went backward.
-    const jumped =
-      (Number.isFinite(timer.startedAt) && timer.startedAt > now) ||
-      (Number.isFinite(timer.creditedTo) && timer.creditedTo > now) ||
-      Object.values(timer.tabs || {}).some((at) => Number.isFinite(at) && at > now);
-    const startedAt = jumped || !Number.isFinite(timer.startedAt) ? now : timer.startedAt;
-    const earned = Number.isFinite(timer.activeMs) ? timer.activeMs : Math.max(0, since - startedAt);
+    // Computed before any rebase so a legacy timer keeps its wall-clock time.
+    const legacyRef = jumped && finite(timer.lastSeenAt) ? timer.lastSeenAt : since;
+    const earned = finite(timer.activeMs) ? timer.activeMs : Math.max(0, legacyRef - origStart);
+    const startedAt = jumped ? now : origStart;
     let activeMs = earned;
-    let creditedTo = Number.isFinite(timer.creditedTo) ? Math.min(timer.creditedTo, now) : startedAt;
+    let creditedTo = finite(timer.creditedTo) ? Math.min(timer.creditedTo, now) : startedAt;
     if (sample && sample.visible && since < now) {
       const end = Math.min(now, since + SAMPLE_MAX_CREDIT_MS, sample.lastInputAt + ACTIVE_IDLE_MS);
       const start = Math.max(since, creditedTo);
@@ -324,14 +333,18 @@
       }
     }
     tabs[tabId] = now;
-    // Never above wall-clock time since start plus carriedMs, the active time
-    // that a clock jump moved startedAt past.
-    // earned already includes any earlier carry, so a rebase replaces it.
-    // A backward jump also restarts the 12-hour max-age clock and shortens
-    // "open M min", since startedAt moves to now.
-    const carriedMs = jumped ? earned : Number.isFinite(timer.carriedMs) ? timer.carriedMs : 0;
+    // Active time never exceeds wall-clock time since startedAt plus
+    // carriedMs. earned already includes any earlier carry, so a jump
+    // replaces carriedMs rather than adding to it.
+    const carriedMs = jumped ? earned : finite(timer.carriedMs) ? timer.carriedMs : 0;
     activeMs = Math.min(activeMs, Math.max(0, now - startedAt) + carriedMs);
-    return { ...timer, startedAt, activeMs, carriedMs, creditedTo, tabs };
+    return { ...timer, openedAt, startedAt, activeMs, carriedMs, creditedTo, tabs };
+  }
+
+  // openTime is when the problem was opened, for open minutes and max age.
+  function openedAt(timer) {
+    if (!timer) return NaN;
+    return Number.isFinite(timer.openedAt) ? timer.openedAt : timer.startedAt;
   }
 
   // activeMs is the active time recorded on a timer. Timers without one fall
@@ -366,7 +379,7 @@
   function timerExpired(timer, now) {
     if (!timer || !Number.isFinite(timer.startedAt)) return true;
     const seen = Number.isFinite(timer.lastSeenAt) ? timer.lastSeenAt : timer.startedAt;
-    return now - seen > TIMER_IDLE_MS || now - timer.startedAt > TIMER_MAX_AGE_MS;
+    return now - seen > TIMER_IDLE_MS || now - openedAt(timer) > TIMER_MAX_AGE_MS;
   }
 
   function shouldNudge(timer, now) {
@@ -563,6 +576,7 @@
     creditActive,
     activeMs,
     activeMinutes,
+    openedAt,
     showOpenTime,
     inferOutcome,
     shouldNudge,

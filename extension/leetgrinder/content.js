@@ -195,7 +195,7 @@
     const now = Date.now();
     const timer = res.ok ? res.data : { startedAt: now, activeMs: 0, assisted: false };
     const minutes = lib.activeMinutes(timer, now);
-    showPanel(state, found.info, { outcome: lib.inferOutcome(minutes), minutes, openMinutes: lib.elapsedMinutes(timer.startedAt, now), assisted: Boolean(timer.assisted) }, captureFor(state.slug, submissionId));
+    showPanel(state, found.info, { outcome: lib.inferOutcome(minutes), minutes, openMinutes: lib.elapsedMinutes(lib.openedAt(timer), now), assisted: Boolean(timer.assisted) }, captureFor(state.slug, submissionId));
   }
 
   window.addEventListener("message", (event) => {
@@ -358,7 +358,7 @@
       const res = await send({ type: "timer:get", slug });
       const now = Date.now();
       const timer = res.ok ? res.data : { startedAt: now, activeMs: 0 };
-      showPanel(state, info, { outcome: "unfinished", minutes: lib.activeMinutes(timer, now), openMinutes: lib.elapsedMinutes(timer.startedAt, now), assisted: Boolean(res.ok && res.data.assisted) }, captureFor(slug));
+      showPanel(state, info, { outcome: "unfinished", minutes: lib.activeMinutes(timer, now), openMinutes: lib.elapsedMinutes(lib.openedAt(timer), now), assisted: Boolean(res.ok && res.data.assisted) }, captureFor(slug));
     });
     later.addEventListener("click", closeUI);
     root.append(
