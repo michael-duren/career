@@ -173,10 +173,10 @@ async function handle(message, sender) {
       return api("GET", `/api/leetgrinder/problem/${encodeURIComponent(slug)}`);
     case "timer:get":
       if (!lib.validSlug(slug)) return { ok: false, status: 0, error: "Invalid problem." };
-      return { ok: true, status: 200, data: await getTimer(slug, message.sample, sender.tab.id) };
+      return { ok: true, status: 200, data: await getTimer(slug, message.sample, sender.tab?.id ?? 0) };
     case "timer:update":
       if (!lib.validSlug(slug) || !message.patch || typeof message.patch !== "object") return { ok: false, status: 0, error: "Invalid timer update." };
-      return { ok: true, status: 200, data: await updateTimer(slug, message.patch, message.sample, sender.tab.id) };
+      return { ok: true, status: 200, data: await updateTimer(slug, message.patch, message.sample, sender.tab?.id ?? 0) };
     case "timer:restart":
       if (!lib.validSlug(slug)) return { ok: false, status: 0, error: "Invalid problem." };
       return { ok: true, status: 200, data: await restartTimer(slug) };

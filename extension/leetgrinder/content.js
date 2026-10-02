@@ -155,6 +155,9 @@
   async function tick() {
     const state = current;
     if (!state) return;
+    // Send the heartbeat first: a slow or retried lookup must not delay the
+    // sample the background worker credits active time from.
+    const heartbeat = send({ type: "timer:get", slug: state.slug });
     let found = await state.lookup;
     if (found.status === "error" && current === state && !ui) {
       state.lookup = lookup(state.slug);
@@ -164,7 +167,7 @@
     if (current !== state) return;
     // The site re-renders the title; put the banner back if it was removed.
     showBanner(state, found);
-    const res = await send({ type: "timer:get", slug: state.slug });
+    const res = await heartbeat;
     if (found.status !== "ok" || !res.ok || !lib.shouldNudge(res.data, Date.now()) || ui || current !== state) return;
     await send({ type: "timer:update", slug: state.slug, patch: { nudged: true } });
     // An Accepted panel may have opened while the update was in flight.

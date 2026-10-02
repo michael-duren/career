@@ -275,11 +275,11 @@
   // covers thinking time without typing; the cost is that a break after the
   // last input still counts for up to ten minutes. Content scripts sample
   // every 30 seconds. Each tab has its own previous-sample time, and one
-  // sample credits at most SAMPLE_MAX_CREDIT_MS (about one heartbeat), so
+  // sample credits at most SAMPLE_MAX_CREDIT_MS (a heartbeat plus slack for a slow page), so
   // sleep or a long-closed tab adds little. Credit is the union of the
   // intervals tabs report, so two visible tabs never count twice.
   const ACTIVE_IDLE_MS = 10 * 60000;
-  const SAMPLE_MAX_CREDIT_MS = 45000;
+  const SAMPLE_MAX_CREDIT_MS = 90000;
   const TAB_STALE_MS = 10 * 60000;
 
   // validSample accepts {visible, lastInputAt} from a content script and
@@ -303,8 +303,11 @@
       if (Number.isFinite(at) && at <= now && now - at <= TAB_STALE_MS) tabs[id] = at;
     }
     const since = Object.hasOwn(tabs, tabId) ? tabs[tabId] : now;
-    const startedAt = Number.isFinite(timer.startedAt) ? timer.startedAt : now;
-    let activeMs = Number.isFinite(timer.activeMs) ? timer.activeMs : Math.max(0, since - startedAt);
+    // A clock that jumped back puts startedAt in the future: rebase it and
+    // keep the active time already earned.
+    const startedAt = Number.isFinite(timer.startedAt) ? Math.min(timer.startedAt, now) : now;
+    const earned = Number.isFinite(timer.activeMs) ? timer.activeMs : Math.max(0, since - startedAt);
+    let activeMs = earned;
     let creditedTo = Number.isFinite(timer.creditedTo) ? Math.min(timer.creditedTo, now) : startedAt;
     if (sample && sample.visible && since < now) {
       const end = Math.min(now, since + SAMPLE_MAX_CREDIT_MS, sample.lastInputAt + ACTIVE_IDLE_MS);
@@ -315,8 +318,10 @@
       }
     }
     tabs[tabId] = now;
-    activeMs = Math.min(activeMs, Math.max(0, now - startedAt));
-    return { ...timer, activeMs, creditedTo, tabs };
+    // Never above wall-clock time since start, and never below what was
+    // already earned (a rebased start must not erase it).
+    activeMs = Math.min(activeMs, Math.max(earned, now - startedAt));
+    return { ...timer, startedAt, activeMs, creditedTo, tabs };
   }
 
   // activeMs is the active time recorded on a timer. Timers without one fall

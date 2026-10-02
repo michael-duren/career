@@ -252,7 +252,7 @@ test("a clock that goes backward credits nothing and resets the mark", () => {
   assert.equal(next.activeMs, 90000);
 });
 
-test("one sample credits at most about one heartbeat", () => {
+test("one sample credits at most the sample cap", () => {
   const timer = lib.creditActive({ startedAt: T0, activeMs: 0, tabs: { 1: T0 }, creditedTo: T0 }, { visible: true, lastInputAt: T0 + 5 * MIN }, T0 + 5 * MIN, 1);
   assert.equal(timer.activeMs, lib.SAMPLE_MAX_CREDIT_MS);
   assert.equal(timer.tabs[1], T0 + 5 * MIN);
@@ -316,4 +316,34 @@ test("timer expiry ignores active time", () => {
   assert.ok(!lib.timerExpired({ startedAt: start, activeMs: 0, lastSeenAt: start + 40 * min }, start + 60 * min));
   assert.ok(lib.timerExpired({ startedAt: start, activeMs: 99 * min, lastSeenAt: start + 10 * min }, start + 41 * min));
   assert.ok(lib.timerExpired({ startedAt: start, activeMs: 0, lastSeenAt: start + 13 * 60 * min }, start + 13 * 60 * min));
+});
+
+test("slow ~50s heartbeats are still credited in full", () => {
+  let timer = { startedAt: T0, activeMs: 0, tabs: {}, creditedTo: T0 };
+  for (let t = T0; t <= T0 + 10 * MIN; t += 50000) {
+    timer = lib.creditActive(timer, { visible: true, lastInputAt: t }, t, 1);
+  }
+  assert.equal(timer.activeMs, 10 * MIN - (10 * MIN % 50000));
+});
+
+test("a backward clock jump keeps accumulated active time", () => {
+  const timer = { startedAt: T0, activeMs: 20 * MIN, tabs: { 1: T0 + 25 * MIN }, creditedTo: T0 + 25 * MIN };
+  const back = lib.creditActive(timer, { visible: true, lastInputAt: T0 - 5 * MIN }, T0 - 5 * MIN, 1);
+  assert.equal(back.activeMs, 20 * MIN);
+  assert.equal(back.startedAt, T0 - 5 * MIN);
+  const next = lib.creditActive(back, { visible: true, lastInputAt: T0 - 5 * MIN + 30000 }, T0 - 5 * MIN + 30000, 1);
+  assert.equal(next.activeMs, 20 * MIN + 30000);
+});
+
+test("tab switch: A hides, B shows, hidden heartbeat arrives", () => {
+  let timer = { startedAt: T0, activeMs: 0, tabs: { 1: T0, 2: T0 }, creditedTo: T0 };
+  // A hides: flush as visible. B shows: marks hidden stretch, no credit.
+  timer = lib.creditActive(timer, { visible: true, lastInputAt: T0 + 20000 }, T0 + 20000, 1);
+  timer = lib.creditActive(timer, { visible: false, lastInputAt: 0 }, T0 + 20000, 2);
+  assert.equal(timer.activeMs, 20000);
+  // B is now the working tab; A's throttled hidden heartbeat arrives late.
+  timer = lib.creditActive(timer, { visible: true, lastInputAt: T0 + 50000 }, T0 + 50000, 2);
+  timer = lib.creditActive(timer, { visible: false, lastInputAt: T0 + 20000 }, T0 + 60000, 1);
+  timer = lib.creditActive(timer, { visible: true, lastInputAt: T0 + 80000 }, T0 + 80000, 2);
+  assert.equal(timer.activeMs, 80000);
 });
