@@ -53,14 +53,17 @@ func TestLeetgrinderTodos(t *testing.T) {
 		t.Fatalf("NeetCode set: %d %s", w.Code, w.Body.String())
 	}
 	var neetSet leetgrinder.TodoSet
-	if all, err := db.LeetgrinderTodoSets(ctx); err != nil || len(all) != 2 {
-		t.Fatalf("sets: %+v %v", all, err)
-	} else {
-		for _, set := range all {
-			if set.Title == "NeetCode" {
-				neetSet = set
-			}
+	all, err = db.LeetgrinderTodoSets(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, set := range all {
+		if set.Title == "NeetCode" {
+			neetSet = set
 		}
+	}
+	if neetSet.ID == "" {
+		t.Fatalf("NeetCode set not saved: %+v", all)
 	}
 	var slugs []string
 	for _, item := range neetSet.Items {

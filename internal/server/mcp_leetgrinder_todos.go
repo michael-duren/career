@@ -42,9 +42,9 @@ func todoProblemFromMCP(in todoProblemDetailsInput) (leetgrinder.TodoProblemInpu
 // refInputError explains a refused problem reference to the MCP client.
 func refInputError(ref string, err error) error {
 	if errors.Is(err, leetgrinder.ErrUnknownNeetCodeProblem) {
-		return invalidInput("unknown NeetCode problem %q: no LeetCode match is known; use its LeetCode link or slug", ref)
+		return invalidInput("unknown NeetCode problem %q: no LeetCode match is known; use its LeetCode link or slug", leetgrinder.EchoRef(ref))
 	}
-	return invalidInput("invalid LeetCode or NeetCode problem link, or LeetCode slug: %q", ref)
+	return invalidInput("invalid LeetCode or NeetCode problem link, or LeetCode slug: %q", leetgrinder.EchoRef(ref))
 }
 
 type removeTodoInput struct {

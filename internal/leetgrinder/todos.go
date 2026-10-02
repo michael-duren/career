@@ -217,10 +217,7 @@ func ParseTodoRefs(input string) ([]string, error) {
 	for _, part := range parts {
 		slug, err := ResolveProblemRef(part)
 		if err != nil {
-			// Keep the echoed entry short, cutting on a rune boundary.
-			if r := []rune(part); len(r) > 60 {
-				part = string(r[:60]) + "..."
-			}
+			part = EchoRef(part)
 			return nil, InvalidTodoRefError{Entry: part, UnknownNeetCode: errors.Is(err, ErrUnknownNeetCodeProblem)}
 		}
 		if !seen[slug] {

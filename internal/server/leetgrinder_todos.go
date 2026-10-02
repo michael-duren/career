@@ -76,7 +76,7 @@ func (s *Server) leetgrinderCreateTodoSet(w http.ResponseWriter, r *http.Request
 	title, raw := r.PostForm.Get("title"), r.PostForm.Get("problems")
 	slugs, err := leetgrinder.ParseTodoRefs(raw)
 	if err != nil {
-		message := fmt.Sprintf("Enter at most %d LeetCode links or slugs.", leetgrinder.MaxTodoRefs)
+		message := fmt.Sprintf("Enter at most %d LeetCode or NeetCode links or LeetCode slugs.", leetgrinder.MaxTodoRefs)
 		var invalid leetgrinder.InvalidTodoRefError
 		if errors.As(err, &invalid) {
 			message = fmt.Sprintf("%q is not a LeetCode or NeetCode link or a LeetCode slug.", invalid.Entry)

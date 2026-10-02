@@ -157,6 +157,24 @@ func NeetCodeSlugs() map[string]string {
 // in the NeetCode to LeetCode table.
 var ErrUnknownNeetCodeProblem = errors.New("unknown NeetCode problem")
 
+// ErrInvalidProblemRef is returned for input that is not a problem link or slug.
+var ErrInvalidProblemRef = errors.New("invalid problem link or slug")
+
+// UnknownNeetCodeMessage explains a refused NeetCode link.
+const UnknownNeetCodeMessage = "That NeetCode problem has no known LeetCode match. Use its LeetCode link or slug instead."
+
+// MaxEchoedRefRunes is how much of a rejected reference an error repeats.
+const MaxEchoedRefRunes = 60
+
+// EchoRef shortens a rejected reference for an error message, cutting on a
+// rune boundary.
+func EchoRef(ref string) string {
+	if r := []rune(ref); len(r) > MaxEchoedRefRunes {
+		return string(r[:MaxEchoedRefRunes]) + "..."
+	}
+	return ref
+}
+
 // ResolveProblemRef turns a problem link or slug into the LeetCode slug. It
 // accepts leetcode.com and leetcode.cn problem URLs, neetcode.io problem URLs
 // (mapped to the LeetCode slug they mirror), paths such as
@@ -175,6 +193,11 @@ func ResolveProblemRef(input string) (string, error) {
 		}
 		u, err := url.Parse(s)
 		if err != nil {
+			return "", ErrInvalidProblemRef
+		}
+		switch strings.ToLower(u.Scheme) {
+		case "", "http", "https":
+		default:
 			return "", ErrInvalidProblemRef
 		}
 		if u.Host != "" {
@@ -206,9 +229,6 @@ func ResolveProblemRef(input string) (string, error) {
 	return s, nil
 }
 
-// UnknownNeetCodeMessage explains a refused NeetCode link.
-const UnknownNeetCodeMessage = "That NeetCode problem has no known LeetCode match. Use its LeetCode link or slug instead."
-
 // refHostPrefix reports whether a scheme-less reference starts with a
 // supported problem site host, such as "leetcode.cn/problems/two-sum".
 func refHostPrefix(s string) bool {
@@ -220,9 +240,6 @@ func refHostPrefix(s string) bool {
 	}
 	return false
 }
-
-// ErrInvalidProblemRef is returned for input that is not a problem link or slug.
-var ErrInvalidProblemRef = errors.New("invalid problem link or slug")
 
 // NormalizeProblemRef is ResolveProblemRef without the reason for a refusal.
 func NormalizeProblemRef(input string) (string, bool) {
