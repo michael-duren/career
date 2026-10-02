@@ -179,3 +179,82 @@ func TestLeetgrinderStateCodeScopes(t *testing.T) {
 		t.Fatalf("two-sum code attempts = %d, want 1", codes)
 	}
 }
+
+func TestLeetgrinderTodoSetsMatchesPerSetItems(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	first, err := s.CreateLeetgrinderTodoSet(ctx, "First", []string{"two-sum", "valid-anagram", "group-anagrams"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := s.CreateLeetgrinderTodoSet(ctx, "Second", []string{"group-anagrams", "two-sum"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	empty, err := s.CreateLeetgrinderTodoSet(ctx, "Empty", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	third, err := s.CreateLeetgrinderTodoSet(ctx, "Third", []string{"top-k-frequent-elements"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// two-sum is shared by two sets and the standalone list.
+	if _, err = s.AddLeetgrinderTodoItem(ctx, "", "two-sum"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.AddLeetgrinderTodoItem(ctx, "", "contains-duplicate"); err != nil {
+		t.Fatal(err)
+	}
+	// Attempts logged after everything was added.
+	for _, a := range []leetgrinder.Attempt{
+		{ID: uuid.NewString(), ProblemSlug: "two-sum", Outcome: "solved", Minutes: 5, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"},
+		{ID: uuid.NewString(), ProblemSlug: "valid-anagram", Outcome: "struggled", Minutes: 5, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"},
+		{ID: uuid.NewString(), ProblemSlug: "top-k-frequent-elements", Outcome: "unfinished", Minutes: 5, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"},
+	} {
+		if _, err = s.SaveLeetgrinderAttempt(ctx, a, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	sets, err := s.LeetgrinderTodoSets(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantIDs := []string{first.ID, second.ID, empty.ID, third.ID}
+	if len(sets) != len(wantIDs) {
+		t.Fatalf("got %d sets, want %d", len(sets), len(wantIDs))
+	}
+	doneCount := 0
+	for i, set := range sets {
+		if set.ID != wantIDs[i] {
+			t.Fatalf("set %d = %s, want %s", i, set.ID, wantIDs[i])
+		}
+		want, err := s.LeetgrinderTodoItems(ctx, set.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(set.Items, want) {
+			t.Fatalf("set %q items = %+v, want %+v", set.Title, set.Items, want)
+		}
+		for _, item := range set.Items {
+			if !item.DoneAt.IsZero() {
+				doneCount++
+			}
+		}
+	}
+	if len(sets[2].Items) != 0 || sets[2].Items == nil {
+		t.Fatalf("empty set items = %#v, want empty non-nil", sets[2].Items)
+	}
+	if len(sets[0].Items) != 3 || len(sets[1].Items) != 2 || len(sets[3].Items) != 1 {
+		t.Fatalf("item counts = %d,%d,%d", len(sets[0].Items), len(sets[1].Items), len(sets[3].Items))
+	}
+	// two-sum (in two sets) and valid-anagram are done; the rest are not.
+	if doneCount != 3 {
+		t.Fatalf("done items = %d, want 3", doneCount)
+	}
+	// Standalone semantics are unchanged: two-sum left the list once solved.
+	standalone, err := s.LeetgrinderTodoItems(ctx, "")
+	if err != nil || len(standalone) != 1 || standalone[0].Problem.Slug != "contains-duplicate" {
+		t.Fatalf("standalone = %+v, %v", standalone, err)
+	}
+}

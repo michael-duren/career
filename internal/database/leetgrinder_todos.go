@@ -191,12 +191,21 @@ SELECT archived, over FROM cur`, slug, itemID, source, maxImportMetadataBytes).S
 	return nil
 }
 
+// LeetgrinderTodoSets lists every set with its entries. Sets and entries are
+// read in one query each, inside one snapshot, so an entry never refers to a
+// set the list lacks.
 func (s *Store) LeetgrinderTodoSets(ctx context.Context) ([]leetgrinder.TodoSet, error) {
-	rows, err := s.DB.QueryContext(ctx, "SELECT id,title,description,metadata::text FROM leetgrinder_todo_sets ORDER BY created_at,id")
+	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true})
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	rows, err := tx.QueryContext(ctx, "SELECT id,title,description,metadata::text FROM leetgrinder_todo_sets ORDER BY created_at,id")
 	if err != nil {
 		return nil, err
 	}
 	sets := []leetgrinder.TodoSet{}
+	index := map[string]int{}
 	for rows.Next() {
 		var set leetgrinder.TodoSet
 		var metadata string
@@ -209,6 +218,7 @@ func (s *Store) LeetgrinderTodoSets(ctx context.Context) ([]leetgrinder.TodoSet,
 			return nil, err
 		}
 		set.Items = []leetgrinder.TodoItem{}
+		index[set.ID] = len(sets)
 		sets = append(sets, set)
 	}
 	err = rows.Err()
@@ -216,13 +226,23 @@ func (s *Store) LeetgrinderTodoSets(ctx context.Context) ([]leetgrinder.TodoSet,
 	if err != nil {
 		return nil, err
 	}
-	for i := range sets {
-		sets[i].Items, err = s.LeetgrinderTodoItems(ctx, sets[i].ID)
-		if err != nil {
-			return nil, err
+	rows, err = tx.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,source_data,done_at
+FROM (`+leetgrinderTodoRows+`) todo
+WHERE set_key IS NOT NULL
+ORDER BY created_at,id`)
+	if err != nil {
+		return nil, err
+	}
+	items, err := scanLeetgrinderTodoItems(rows)
+	if err != nil {
+		return nil, err
+	}
+	for _, item := range items {
+		if i, ok := index[item.SetID]; ok {
+			sets[i].Items = append(sets[i].Items, item)
 		}
 	}
-	return sets, nil
+	return sets, tx.Commit()
 }
 
 // LeetgrinderTodoSet returns one set with all its entries.
