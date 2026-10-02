@@ -31,7 +31,8 @@ export function proposePlacement(input: PlacementInput, week: SchedulerWeek, now
       date = input.targetDate;
       const calendarDate = dateForMinute(date, input.startMinute);
       const sourceFields = input.kind === 'move' && interval ? localFields(interval.start, zone) : undefined;
-      const preferredOffset = sourceFields?.date === calendarDate ? sourceFields.offset : undefined;
+      const sourceIsLaterFold = sourceFields && interval && Math.floor(Date.parse(localInstant(sourceFields.date, sourceFields.time, zone)) / 60000) !== Math.floor(Date.parse(interval.start) / 60000);
+      const preferredOffset = sourceFields?.date === calendarDate && sourceIsLaterFold ? sourceFields.offset : undefined;
       start = localInstant(calendarDate, clockLabel(input.startMinute).slice(0, 5), zone, preferredOffset);
       const duration = input.kind === 'assignment' ? input.durationMinutes : interval ? (Date.parse(interval.end) - Date.parse(interval.start)) / 60000 : 0;
       end = new Date(Date.parse(start) + duration * 60000).toISOString();
