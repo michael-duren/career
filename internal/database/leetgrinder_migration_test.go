@@ -184,3 +184,47 @@ func TestLeetgrinderStruggleFlagMigration(t *testing.T) {
 		}
 	}
 }
+
+func TestLeetgrinderAttemptSlugIndex(t *testing.T) {
+	s := emptyStore(t)
+	ctx := context.Background()
+	if err := s.Migrate(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Migrate(ctx); err != nil {
+		t.Fatal(err)
+	}
+	var def string
+	if err := s.DB.QueryRow(`SELECT indexdef FROM pg_indexes WHERE schemaname=current_schema() AND tablename='leetgrinder_attempts' AND indexname='leetgrinder_attempts_problem_slug_created_at_idx'`).Scan(&def); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(def, "(problem_slug, created_at) INCLUDE (outcome)") {
+		t.Fatalf("unexpected index definition: %s", def)
+	}
+	// Seqscans are only cheaper on an empty table, so forbid them to prove the
+	// planner can use the index for the todo done_at lookup.
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+	if _, err = tx.ExecContext(ctx, "SET LOCAL enable_seqscan=off"); err != nil {
+		t.Fatal(err)
+	}
+	rows, err := tx.QueryContext(ctx, `EXPLAIN SELECT max(a.created_at) FROM leetgrinder_attempts a WHERE a.problem_slug='two-sum' AND a.outcome IN ('solved','struggled')`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+	var plan strings.Builder
+	for rows.Next() {
+		var line string
+		if err = rows.Scan(&line); err != nil {
+			t.Fatal(err)
+		}
+		plan.WriteString(line + "\n")
+	}
+	if !strings.Contains(plan.String(), "leetgrinder_attempts_problem_slug_created_at_idx") {
+		t.Fatalf("done_at lookup does not use the index:\n%s", plan.String())
+	}
+}
