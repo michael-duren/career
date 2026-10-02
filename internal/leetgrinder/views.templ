@@ -646,6 +646,9 @@ templ zoneConfirm(page SettingsPage) {
 				</tr>
 			</tbody>
 		</table>
+		if !page.ZoneImpact.Changed() {
+			<p class="small muted">These figures do not change.</p>
+		}
 		<input type="hidden" name="revision" value={ page.General.Revision }/>
 		<input type="hidden" name="timezone" value={ page.General.Timezone }/>
 		<input type="hidden" name="goalNew" value={ page.General.GoalNew }/>

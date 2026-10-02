@@ -389,23 +389,26 @@ type zoneChange struct {
 }
 
 // zoneImpact previews form's time zone when it differs from the saved one,
-// reading state without saving or freezing anything. It reports false when
-// the zone is unchanged or invalid, the revision is stale (the save then
-// answers with the conflict), or the data cannot be read (the save then
-// proceeds as before).
-func (s *Server) zoneImpact(r *http.Request, form leetgrinder.GeneralForm) (zoneChange, bool) {
+// reading state without saving or freezing anything. needed is false when the
+// zone is unchanged or invalid, or the revision is stale (the save then
+// answers with the conflict). A read failure is an error: the change must not
+// be saved without its confirmation.
+func (s *Server) zoneImpact(r *http.Request, form leetgrinder.GeneralForm, goal leetgrinder.DailyGoal) (change zoneChange, needed bool, err error) {
 	settings, err := s.db.LeetgrinderSettings(r.Context())
-	if err != nil || form.Timezone == settings.Timezone || form.Revision != settings.Revision {
-		return zoneChange{}, false
+	if err != nil {
+		return zoneChange{}, false, err
+	}
+	if form.Timezone == settings.Timezone || form.Revision != settings.Revision {
+		return zoneChange{}, false, nil
 	}
 	if _, err := leetgrinder.LoadTimezone(form.Timezone); err != nil {
-		return zoneChange{}, false
+		return zoneChange{}, false, nil
 	}
 	state, err := s.db.LeetgrinderState(r.Context())
 	if err != nil {
-		return zoneChange{}, false
+		return zoneChange{}, false, err
 	}
-	return zoneChange{leetgrinder.NewZoneImpact(settings, state, s.clock(), form.Timezone), settings}, true
+	return zoneChange{leetgrinder.NewZoneImpact(settings, state, s.clock(), form.Timezone, goal), settings}, true, nil
 }
 
 func (s *Server) leetgrinderSaveGeneral(w http.ResponseWriter, r *http.Request) {
@@ -429,7 +432,12 @@ func (s *Server) leetgrinderSaveGeneral(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	if r.PostForm.Get("confirm") != "1" {
-		if impact, ok := s.zoneImpact(r, form); ok {
+		impact, needed, err := s.zoneImpact(r, form, goal)
+		if err != nil {
+			reject(503, "The time zone change could not be previewed. Your draft is retained; please retry.")
+			return
+		}
+		if needed {
 			page := leetgrinder.SettingsPage{Settings: impact.settings, Now: s.clock(), General: form, ZoneImpact: &impact.ZoneImpact, TodayGoal: s.todayGoal(r, impact.settings)}
 			renderLeetgrinder(w, r, 200, leetgrinder.SettingsView(s.withAPITokens(r, s.withNotify(r.Context(), page))))
 			return

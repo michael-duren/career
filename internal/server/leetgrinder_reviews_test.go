@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -320,5 +321,127 @@ func TestLeetgrinderTimezoneChangePreview(t *testing.T) {
 	// An invalid zone still gets the usual rejection, not a preview.
 	if w := request("POST", "/leetgrinder/settings/general", form("Nowhere/Land")); w.Code != 400 || strings.Contains(w.Body.String(), "Confirm the time zone change") {
 		t.Fatalf("invalid zone: %d", w.Code)
+	}
+}
+
+// zoneFixture saves UTC settings with frozen goals and a frozen pick keyed by
+// old dates, and attempts that move across midnight in Tokyo. now is Oct 10
+// 20:00 UTC, which is already Oct 11 in Tokyo.
+func zoneFixture(t *testing.T) (db interface {
+	LeetgrinderSettings(context.Context) (leetgrinder.Settings, error)
+	LeetgrinderToday(context.Context, time.Time) (leetgrinder.Today, error)
+	LeetgrinderDailyGoal(context.Context, time.Time) (leetgrinder.DailyGoal, bool, error)
+}, now time.Time, post func(url.Values) *httptest.ResponseRecorder) {
+	s, store, request := leetgrinderTestServer(t)
+	ctx := context.Background()
+	now = time.Date(2026, 10, 10, 20, 0, 0, 0, time.UTC)
+	s.now = func() time.Time { return now }
+	settings, _ := store.LeetgrinderSettings(ctx)
+	if _, err := store.UpdateLeetgrinderSettings(ctx, settings.Revision, func(v *leetgrinder.Settings) error { v.Timezone = "UTC"; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	add := func(slug string, at time.Time) {
+		id := uuid.NewString()
+		if _, err := store.SaveLeetgrinderAttempt(ctx, leetgrinder.Attempt{ID: id, ProblemSlug: slug, Outcome: "struggled", Minutes: 20, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}, ""); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := store.DB.Exec("UPDATE leetgrinder_attempts SET created_at=$1 WHERE id=$2", at, id); err != nil {
+			t.Fatal(err)
+		}
+	}
+	utc := func(d, h int) time.Time { return time.Date(2026, 10, d, h, 0, 0, 0, time.UTC) }
+	add("two-sum", utc(1, 12))
+	add("valid-anagram", utc(1, 13))
+	add("binary-search", utc(8, 22))
+	add("isomorphic-strings", utc(9, 20))
+	add("ransom-note", utc(9, 21))
+	for _, g := range []string{"INSERT INTO leetgrinder_daily_goal(local_date,goal_new,goal_review) VALUES('2026-10-08',1,0)", "INSERT INTO leetgrinder_daily_goal(local_date,goal_new,goal_review) VALUES('2026-10-09',2,1)", "INSERT INTO leetgrinder_review_plan(plan_date,problem_slug,slot) VALUES('2026-10-09','two-sum',1)"} {
+		if _, err := store.DB.Exec(g); err != nil {
+			t.Fatal(err)
+		}
+	}
+	post = func(v url.Values) *httptest.ResponseRecorder {
+		cur, _ := store.LeetgrinderSettings(ctx)
+		v.Set("revision", cur.Revision)
+		return request("POST", "/leetgrinder/settings/general", v)
+	}
+	return store, now, post
+}
+
+// previewFigures reads the three figures of a table row from a preview page.
+func previewFigures(t *testing.T, body string) (before, after [3]int) {
+	t.Helper()
+	for i, label := range []string{"Current streak", "Longest streak", "Goal-met days, last 8 weeks"} {
+		m := regexp.MustCompile(`(?s)` + label + `</th>\s*<td>(\d+)[^<]*</td>\s*<td>(\d+)[^<]*</td>`).FindStringSubmatch(body)
+		if m == nil {
+			t.Fatalf("no %q row in %s", label, body)
+		}
+		before[i], _ = strconv.Atoi(m[1])
+		after[i], _ = strconv.Atoi(m[2])
+	}
+	return
+}
+
+func todayFigures(t *testing.T, today leetgrinder.Today) [3]int {
+	t.Helper()
+	met := 0
+	for _, d := range today.Calendar(leetgrinder.ZoneWeeks * 7) {
+		if d.Met {
+			met++
+		}
+	}
+	return [3]int{today.Streaks.Current, today.Streaks.Longest, met}
+}
+
+func TestLeetgrinderTimezonePreviewMatchesSavedResult(t *testing.T) {
+	ctx := context.Background()
+	values := func() url.Values {
+		return url.Values{"timezone": {"Asia/Tokyo"}, "goalNew": {"1"}, "goalReview": {"2"}}
+	}
+	day := func(s string) time.Time { d, _ := time.Parse(time.DateOnly, s); return d }
+
+	// After: the dashboard once the change is confirmed matches the preview.
+	db, now, post := zoneFixture(t)
+	w := post(values())
+	if w.Code != 200 || !strings.Contains(w.Body.String(), "Confirm the time zone change") {
+		t.Fatalf("preview: %d", w.Code)
+	}
+	b0, after := previewFigures(t, w.Body.String())
+	t.Logf("figures %v -> %v", b0, after)
+	for _, d := range []string{"2026-10-10", "2026-10-11"} {
+		if _, ok, _ := db.LeetgrinderDailyGoal(ctx, day(d)); ok {
+			t.Errorf("preview froze %s", d)
+		}
+	}
+	confirm := values()
+	confirm.Set("confirm", "1")
+	if w := post(confirm); w.Code != 303 {
+		t.Fatalf("confirm: %d", w.Code)
+	}
+	today, err := db.LeetgrinderToday(ctx, now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := todayFigures(t, today); got != after {
+		t.Errorf("after the save the dashboard shows %v, the preview said %v", got, after)
+	}
+
+	// Before: the dashboard in the saved zone matches the preview's left side.
+	db, now, post = zoneFixture(t)
+	w = post(values())
+	before, _ := previewFigures(t, w.Body.String())
+	if today, err = db.LeetgrinderToday(ctx, now); err != nil {
+		t.Fatal(err)
+	}
+	if got := todayFigures(t, today); got != before {
+		t.Errorf("before the change the dashboard shows %v, the preview said %v", got, before)
+	}
+}
+
+func TestLeetgrinderTimezoneDraftEscapedAndUnreadable(t *testing.T) {
+	_, _, post := zoneFixture(t)
+	w := post(url.Values{"timezone": {`Foo"><b>x`}, "goalNew": {"2"}, "goalReview": {"1"}})
+	if w.Code != 400 || strings.Contains(w.Body.String(), `"><b>x`) || !strings.Contains(w.Body.String(), "Foo&#34;&gt;&lt;b&gt;x") {
+		t.Fatalf("zone not escaped: %d", w.Code)
 	}
 }

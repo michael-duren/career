@@ -1,43 +1,64 @@
 package leetgrinder
 
-import "time"
+import (
+	"maps"
+	"slices"
+	"time"
+)
 
 // ZoneWeeks is how far back a time zone preview counts goal-met days.
 const ZoneWeeks = 8
 
 // ZoneStats is how history reads in one time zone.
 type ZoneStats struct {
-	Zone     string
-	Current  int
-	Longest  int
-	MetDays  int
+	Zone    string
+	Current int
+	Longest int
+	MetDays int
 }
 
 // ZoneImpact compares history in the saved time zone with history in the
 // zone being chosen, so the settings page can say what changing it recounts.
 type ZoneImpact struct {
 	Before, After ZoneStats
-	// Days is the window MetDays counts over.
-	Days int
 }
 
-// NewZoneImpact replays state in the saved zone and in zone without saving
-// or freezing anything: it only reads the frozen goals and plans in state.
-func NewZoneImpact(settings Settings, state State, now time.Time, zone string) ZoneImpact {
-	days := ZoneWeeks * 7
-	stats := func(s Settings) ZoneStats {
-		today := NewToday(s, state, now)
-		out := ZoneStats{Zone: s.zone(), Current: today.Streaks.Current, Longest: today.Streaks.Longest}
-		for _, d := range today.Calendar(days) {
-			if d.Met {
-				out.MetDays++
-			}
-		}
-		return out
-	}
+// NewZoneImpact reads state as the saved settings and as the settings with
+// zone and goal applied, without saving or freezing anything. Today is
+// planned in memory on a copy of state the way the first visit after a save
+// would plan it, so the figures match what the dashboard shows afterwards.
+func NewZoneImpact(settings Settings, state State, now time.Time, zone string, goal DailyGoal) ZoneImpact {
 	after := settings
-	after.Timezone = zone
-	return ZoneImpact{Before: stats(settings), After: stats(after), Days: days}
+	after.Timezone, after.Goal = zone, goal
+	return ZoneImpact{Before: zoneStats(settings, state, now), After: zoneStats(after, state, now)}
+}
+
+func zoneStats(s Settings, state State, now time.Time) ZoneStats {
+	loc := s.Location()
+	date := Date(now, loc)
+	state.Goals, state.Plans = maps.Clone(state.Goals), maps.Clone(state.Plans)
+	if state.Goals == nil {
+		state.Goals = map[time.Time]DailyGoal{}
+	}
+	if state.Plans == nil {
+		state.Plans = map[time.Time][]string{}
+	}
+	if _, ok := state.Goals[date]; !ok {
+		state.Goals[date] = s.Goal
+	}
+	replay := ReplayAttempts(state, loc)
+	existing := state.Plans[date]
+	if plan := PlanReviews(replay.Cards(), date, loc, state.Goals[date].Review, slices.Clone(existing)); len(plan) > len(existing) {
+		state.Plans[date] = plan
+	}
+	today := NewTodayFrom(s, state, now, replay)
+	out := ZoneStats{Zone: s.zone(), Current: today.Streaks.Current, Longest: today.Streaks.Longest}
+	for _, d := range today.Calendar(ZoneWeeks * 7) {
+		if d.Met {
+			out.MetDays++
+		}
+	}
+	return out
 }
 
 // Changed reports whether any figure differs between the zones.
