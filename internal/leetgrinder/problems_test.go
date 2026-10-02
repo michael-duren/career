@@ -127,8 +127,8 @@ func TestProblemRowsMatchStateLookups(t *testing.T) {
 		}
 		seen[slug] = true
 		attempts := state.ProblemAttempts(slug)
-		if r.Status != state.ProblemStatus(slug) || r.Attempts != len(attempts) || r.Last.ID != attempts[0].ID {
-			t.Fatalf("%s: row %q/%d/%s, state %q/%d/%s", slug, r.Status, r.Attempts, r.Last.ID, state.ProblemStatus(slug), len(attempts), attempts[0].ID)
+		if r.Best != state.ProblemBest(slug) || r.Latest != state.ProblemLatest(slug) || r.Attempts != len(attempts) || r.Last.ID != attempts[0].ID {
+			t.Fatalf("%s: row %q/%q/%d/%s, state %q/%q/%d/%s", slug, r.Best, r.Latest, r.Attempts, r.Last.ID, state.ProblemBest(slug), state.ProblemLatest(slug), len(attempts), attempts[0].ID)
 		}
 		if i > 0 && r.Last.CreatedAt.After(rows[i-1].Last.CreatedAt) {
 			t.Fatalf("%s: rows not newest first", slug)
@@ -165,5 +165,84 @@ func BenchmarkProblemRows(b *testing.B) {
 	b.ResetTimer()
 	for range b.N {
 		ProblemRows(state, cards, now, loc)
+	}
+}
+
+// A problem solved long ago and failed since is still ever solved, but its
+// latest result is what the struggle filters and the page show.
+func TestBestAndLatestResults(t *testing.T) {
+	now := time.Date(2026, 10, 20, 12, 0, 0, 0, time.UTC)
+	for name, test := range map[string]struct {
+		attempts     []Attempt // newest first
+		best, latest string
+	}{
+		"none":                   {nil, ResultNone, ResultNone},
+		"independent":            {[]Attempt{attempt("a", "solved", 10, false, now)}, ResultIndependent, ResultIndependent},
+		"help only":              {[]Attempt{attempt("a", "solved", 10, true, now)}, ResultWithHelp, ResultWithHelp},
+		"unfinished only":        {[]Attempt{attempt("a", "unfinished", 10, false, now)}, ResultNotSolved, ResultUnfinished},
+		"struggled only":         {[]Attempt{attempt("a", "struggled", 10, false, now)}, ResultNotSolved, ResultStruggled},
+		"solved then unfinished": {[]Attempt{attempt("a", "unfinished", 10, false, now), attempt("a", "solved", 10, false, now.AddDate(0, -7, 0))}, ResultIndependent, ResultUnfinished},
+		"solved then struggled":  {[]Attempt{attempt("a", "struggled", 10, false, now), attempt("a", "solved", 10, false, now.AddDate(0, -7, 0))}, ResultIndependent, ResultStruggled},
+		"help then independent":  {[]Attempt{attempt("a", "solved", 10, false, now), attempt("a", "solved", 10, true, now.AddDate(0, 0, -9))}, ResultIndependent, ResultIndependent},
+		"independent then help":  {[]Attempt{attempt("a", "solved", 10, true, now), attempt("a", "solved", 10, false, now.AddDate(0, 0, -9))}, ResultIndependent, ResultWithHelp},
+		"help then unfinished":   {[]Attempt{attempt("a", "unfinished", 10, false, now), attempt("a", "solved", 10, true, now.AddDate(0, 0, -9))}, ResultWithHelp, ResultUnfinished},
+	} {
+		if best, latest := bestOf(test.attempts), latestOf(test.attempts); best != test.best || latest != test.latest {
+			t.Errorf("%s: best %q latest %q, want %q and %q", name, best, latest, test.best, test.latest)
+		}
+	}
+}
+
+func TestStatusFiltersUseLatestResult(t *testing.T) {
+	now := time.Date(2026, 10, 20, 12, 0, 0, 0, time.UTC)
+	state := State{Problems: testProblems, Attempts: []Attempt{
+		attempt("two-sum", "unfinished", 25, false, now.AddDate(0, 0, -1)),
+		attempt("two-sum", "solved", 10, false, now.AddDate(0, -7, 0)),
+		attempt("ransom-note", "solved", 10, false, now.AddDate(0, 0, -2)),
+		attempt("ransom-note", "struggled", 40, false, now.AddDate(0, -3, 0)),
+	}}
+	rows := ProblemRows(state, BuildCards(state, time.UTC), now, time.UTC)
+	slugs := func(query string) []string {
+		q, _ := url.ParseQuery(query)
+		var out []string
+		for _, r := range FilterProblems(rows, ParseProblemFilter(q)) {
+			out = append(out, r.Problem.Slug)
+		}
+		return out
+	}
+	for query, want := range map[string]string{
+		"status=unfinished":  "two-sum",
+		"status=struggled":   "",
+		"status=solved":      "two-sum,ransom-note",
+		"status=solved-last": "ransom-note",
+	} {
+		if got := strings.Join(slugs(query), ","); got != want {
+			t.Errorf("%q: %q, want %q", query, got, want)
+		}
+	}
+	var twoSum ProblemRow
+	for _, r := range rows {
+		if r.Problem.Slug == "two-sum" {
+			twoSum = r
+		}
+	}
+	if twoSum.Best != ResultIndependent || twoSum.Latest != ResultUnfinished {
+		t.Fatalf("two-sum row: best %q latest %q", twoSum.Best, twoSum.Latest)
+	}
+
+	var out bytes.Buffer
+	page := ProblemsPage{Rows: rows, Total: len(rows), Location: time.UTC, Filter: ParseProblemFilter(url.Values{})}
+	if err := Problems(page).Render(context.Background(), &out); err != nil {
+		t.Fatal(err)
+	}
+	html := out.String()
+	for _, want := range []string{"Ever solved", "Solved last time", "Unfinished last time", `title="Latest result"`, "Best: <span class=\"status-pill status-solved\">Solved independently</span>"} {
+		if !strings.Contains(html, want) {
+			t.Errorf("problems page missing %q", want)
+		}
+	}
+	// ransom-note best and latest agree, so only two-sum shows a best.
+	if n := strings.Count(html, "Best: "); n != 1 {
+		t.Errorf("%d Best labels, want 1", n)
 	}
 }

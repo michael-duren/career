@@ -174,32 +174,65 @@ func (s State) ProblemAttempts(slug string) []Attempt {
 	return result
 }
 
-// ProblemStatus summarises every attempt on slug in one label.
-func (s State) ProblemStatus(slug string) string {
-	return statusOf(s.ProblemAttempts(slug))
+// ProblemBest is the best result on slug over every attempt.
+func (s State) ProblemBest(slug string) string {
+	return bestOf(s.ProblemAttempts(slug))
 }
 
-// statusOf is ProblemStatus over one problem's attempts, newest first.
-func statusOf(attempts []Attempt) string {
-	assisted := false
+// ProblemLatest is the result of the newest attempt on slug.
+func (s State) ProblemLatest(slug string) string {
+	return latestOf(s.ProblemAttempts(slug))
+}
+
+// Results of a problem. A best result is one of the first three; a latest
+// result is any of the first four, or "Not attempted".
+const (
+	ResultIndependent = "Solved independently"
+	ResultWithHelp    = "Solved with help"
+	ResultStruggled   = "Struggled"
+	ResultUnfinished  = "Unfinished"
+	ResultNotSolved   = "Not solved"
+	ResultNone        = "Not attempted"
+)
+
+// bestOf is the best result over one problem's attempts: solved
+// independently, else solved with help, else not solved, whatever came later.
+func bestOf(attempts []Attempt) string {
+	if len(attempts) == 0 {
+		return ResultNone
+	}
+	best := ResultNotSolved
 	for _, a := range attempts {
 		if a.Outcome == "solved" {
 			if !a.Assisted {
-				return "Solved independently"
+				return ResultIndependent
 			}
-			assisted = true
+			best = ResultWithHelp
 		}
 	}
-	if assisted {
-		return "Solved with help"
+	return best
+}
+
+// latestOf is the result of the newest attempt, the first of attempts.
+func latestOf(attempts []Attempt) string {
+	if len(attempts) == 0 {
+		return ResultNone
 	}
-	if len(attempts) > 0 {
-		if attempts[0].Outcome == "struggled" {
-			return "Struggled"
-		}
-		return "Unfinished"
+	a := attempts[0]
+	switch {
+	case a.Outcome == "solved" && a.Assisted:
+		return ResultWithHelp
+	case a.Outcome == "solved":
+		return ResultIndependent
+	case a.Outcome == "struggled":
+		return ResultStruggled
 	}
-	return "Not attempted"
+	return ResultUnfinished
+}
+
+// Solved reports whether a best or latest result is a solve.
+func Solved(result string) bool {
+	return result == ResultIndependent || result == ResultWithHelp
 }
 
 // Progress counts distinct problems solved, and solved without help.
