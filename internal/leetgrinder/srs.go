@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"fmt"
 	"slices"
+	"sort"
 	"strings"
 	"time"
 
@@ -232,28 +233,108 @@ func attemptsBySlug(attempts []Attempt) map[string][]Attempt {
 	return bySlug
 }
 
-// BuildCards replays state's attempts through FSRS, one card per attempted
-// problem, and applies flags. Cards come back ordered by due time.
-func BuildCards(state State, loc *time.Location) []Card {
-	cards := make([]Card, 0)
+// slugReplay is one problem's replay: each counted local day with the card
+// as it stood before that day, and the card after the last day.
+type slugReplay struct {
+	problem Problem
+	list    []Attempt
+	dates   []time.Time
+	befores []Card
+	final   Card
+	// ordered reports that the attempts' local dates never go back, as they
+	// can when a clock change moves back across midnight.
+	ordered bool
+}
+
+// replayAll replays each problem's attempts in state through FSRS once.
+func replayAll(state State, loc *time.Location) map[string]*slugReplay {
+	replays := map[string]*slugReplay{}
 	for slug, list := range attemptsBySlug(state.Attempts) {
-		card := replaySlug(state.Problem(slug), list, loc, nil)
-		if card.Reviews == 0 {
-			continue
-		}
-		if f := flagFor(card.Last, card.Problem, state.Analyses, loc); f != nil {
-			card.Flag = f
-			if due := f.DueAt(loc); due.Before(card.Due) {
-				card.Due = due
+		r := &slugReplay{problem: state.Problem(slug), list: list, ordered: true}
+		for i := 1; i < len(list); i++ {
+			if Date(list[i].CreatedAt, loc).Before(Date(list[i-1].CreatedAt, loc)) {
+				r.ordered = false
 			}
 		}
-		cards = append(cards, card)
+		r.final = replaySlug(r.problem, list, loc, func(date time.Time, before Card) {
+			r.dates, r.befores = append(r.dates, date), append(r.befores, before)
+		})
+		replays[slug] = r
+	}
+	return replays
+}
+
+// before is the card replayed from the attempts on local dates before date.
+// While dates are ordered those attempts are whole days at the start of the
+// replay, so the card is the one the replay held when it reached date.
+func (r *slugReplay) before(date time.Time, loc *time.Location) Card {
+	if !r.ordered {
+		var earlier []Attempt
+		for _, a := range r.list {
+			if Date(a.CreatedAt, loc).Before(date) {
+				earlier = append(earlier, a)
+			}
+		}
+		return replaySlug(r.problem, earlier, loc, nil)
+	}
+	i := sort.Search(len(r.dates), func(i int) bool { return !r.dates[i].Before(date) })
+	if i < len(r.befores) {
+		return r.befores[i]
+	}
+	return r.final
+}
+
+// withFlag applies the flag of the card's last attempt, if any.
+func withFlag(card Card, analyses map[string]Analysis, loc *time.Location) Card {
+	if f := flagFor(card.Last, card.Problem, analyses, loc); f != nil {
+		card.Flag = f
+		if due := f.DueAt(loc); due.Before(card.Due) {
+			card.Due = due
+		}
+	}
+	return card
+}
+
+// cardsFrom turns replays into flagged cards ordered by due time.
+func cardsFrom(replays map[string]*slugReplay, state State, loc *time.Location) []Card {
+	cards := make([]Card, 0)
+	for _, r := range replays {
+		if r.final.Reviews == 0 {
+			continue
+		}
+		cards = append(cards, withFlag(r.final, state.Analyses, loc))
 	}
 	slices.SortFunc(cards, func(a, b Card) int {
 		return cmp.Or(a.Due.Compare(b.Due), cmp.Compare(a.Problem.Slug, b.Problem.Slug))
 	})
 	return cards
 }
+
+// BuildCards replays state's attempts through FSRS, one card per attempted
+// problem, and applies flags. Cards come back ordered by due time.
+func BuildCards(state State, loc *time.Location) []Card {
+	return cardsFrom(replayAll(state, loc), state, loc)
+}
+
+// Replay is a state's attempts replayed through FSRS once, in one time
+// zone. A request that plans reviews and then builds today's view shares it
+// (see NewTodayFrom) instead of replaying the history for each.
+type Replay struct {
+	replays map[string]*slugReplay
+	cards   []Card
+}
+
+// ReplayAttempts replays state's attempts in loc. The replay holds for any
+// state with the same attempts, problems and analyses; goals and plans may
+// change.
+func ReplayAttempts(state State, loc *time.Location) Replay {
+	replays := replayAll(state, loc)
+	return Replay{replays: replays, cards: cardsFrom(replays, state, loc)}
+}
+
+// Cards are the replay's cards, as BuildCards returns them. They are
+// shared, so callers must not modify them.
+func (r Replay) Cards() []Card { return r.cards }
 
 // DueCards lists cards due by the end of date, flagged first, then lowest
 // estimated recall, then the most overdue. Cards in skip are left out.

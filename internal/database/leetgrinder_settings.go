@@ -95,85 +95,120 @@ func (s *Store) LeetgrinderNtfyTokenStored(ctx context.Context) (bool, error) {
 // the frozen review target has more slots than the plan and more cards are
 // due. Accesses that would change nothing read one snapshot without a lock.
 func (s *Store) LeetgrinderToday(ctx context.Context, now time.Time) (leetgrinder.Today, error) {
-	if today, ok, err := s.leetgrinderTodayPlanned(ctx, now); err != nil || ok {
-		return today, err
+	day, err := s.leetgrinderDay(ctx, now)
+	if err != nil {
+		return leetgrinder.Today{}, err
+	}
+	if day.replay == nil {
+		replay := leetgrinder.ReplayAttempts(day.state, day.settings.Location())
+		day.replay = &replay
+	}
+	return leetgrinder.NewTodayFrom(day.settings, day.state, now, *day.replay), nil
+}
+
+// PlanLeetgrinderToday freezes today's goal and review picks as
+// LeetgrinderToday does, without building today's view.
+func (s *Store) PlanLeetgrinderToday(ctx context.Context, now time.Time) error {
+	_, err := s.leetgrinderDay(ctx, now)
+	return err
+}
+
+// leetgrinderDay is what today's view is built from, once today is planned.
+type leetgrinderDay struct {
+	settings leetgrinder.Settings
+	state    leetgrinder.State
+	// replay is state's replay, or nil when planning did not need one.
+	replay *leetgrinder.Replay
+}
+
+// leetgrinderDay plans today if needed and returns the state it planned.
+func (s *Store) leetgrinderDay(ctx context.Context, now time.Time) (leetgrinderDay, error) {
+	if day, ok, err := s.leetgrinderTodayPlanned(ctx, now); err != nil || ok {
+		return day, err
 	}
 	return s.planLeetgrinderToday(ctx, now)
 }
 
-// leetgrinderTodayPlanned returns today's view from one read-only snapshot.
+// leetgrinderTodayPlanned reads today's state from one read-only snapshot.
 // It reports false when today's goal is not frozen yet or its plan would
 // take more picks; those need planLeetgrinderToday.
-func (s *Store) leetgrinderTodayPlanned(ctx context.Context, now time.Time) (leetgrinder.Today, bool, error) {
+func (s *Store) leetgrinderTodayPlanned(ctx context.Context, now time.Time) (leetgrinderDay, bool, error) {
 	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true})
 	if err != nil {
-		return leetgrinder.Today{}, false, err
+		return leetgrinderDay{}, false, err
 	}
 	defer tx.Rollback()
 	settings, err := scanLeetgrinderSettings(tx.QueryRowContext(ctx, "SELECT "+leetgrinderSettingsColumns+" FROM leetgrinder_settings WHERE id=1"))
 	if err != nil {
-		return leetgrinder.Today{}, false, err
+		return leetgrinderDay{}, false, err
 	}
 	loc := settings.Location()
 	date := leetgrinder.Date(now, loc)
 	state, err := loadLeetgrinderState(ctx, tx, false)
 	if err != nil {
-		return leetgrinder.Today{}, false, err
+		return leetgrinderDay{}, false, err
 	}
 	if err = tx.Commit(); err != nil {
-		return leetgrinder.Today{}, false, err
+		return leetgrinderDay{}, false, err
 	}
 	goal, ok := state.Goals[date]
 	if !ok {
-		return leetgrinder.Today{}, false, nil
+		return leetgrinderDay{}, false, nil
 	}
+	day := leetgrinderDay{settings: settings, state: state}
 	// A plan shorter than its target stays short while nothing more is due.
-	if existing := state.Plans[date]; len(existing) < goal.Review && len(leetgrinder.PlanReviews(leetgrinder.BuildCards(state, loc), date, loc, goal.Review, existing)) > len(existing) {
-		return leetgrinder.Today{}, false, nil
+	if existing := state.Plans[date]; len(existing) < goal.Review {
+		replay := leetgrinder.ReplayAttempts(state, loc)
+		if len(leetgrinder.PlanReviews(replay.Cards(), date, loc, goal.Review, existing)) > len(existing) {
+			return leetgrinderDay{}, false, nil
+		}
+		day.replay = &replay
 	}
-	return leetgrinder.NewToday(settings, state, now), true, nil
+	return day, true, nil
 }
 
 // planLeetgrinderToday freezes today's goal and extends its plan under a
-// lock, re-checking both, and returns today's view.
-func (s *Store) planLeetgrinderToday(ctx context.Context, now time.Time) (leetgrinder.Today, error) {
+// lock, re-checking both, and returns the planned state.
+func (s *Store) planLeetgrinderToday(ctx context.Context, now time.Time) (leetgrinderDay, error) {
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
-		return leetgrinder.Today{}, err
+		return leetgrinderDay{}, err
 	}
 	defer tx.Rollback()
 	// Serializes planners so concurrent first visits agree on one plan.
 	if _, err = tx.ExecContext(ctx, "SELECT pg_advisory_xact_lock(724193611)"); err != nil {
-		return leetgrinder.Today{}, err
+		return leetgrinderDay{}, err
 	}
 	settings, err := scanLeetgrinderSettings(tx.QueryRowContext(ctx, "SELECT "+leetgrinderSettingsColumns+" FROM leetgrinder_settings WHERE id=1"))
 	if err != nil {
-		return leetgrinder.Today{}, err
+		return leetgrinderDay{}, err
 	}
 	loc := settings.Location()
 	date := leetgrinder.Date(now, loc)
 	day := date.Format(time.DateOnly)
 	if _, err = tx.ExecContext(ctx, "INSERT INTO leetgrinder_daily_goal(local_date,goal_new,goal_review) VALUES($1,$2,$3) ON CONFLICT (local_date) DO NOTHING", day, settings.Goal.New, settings.Goal.Review); err != nil {
-		return leetgrinder.Today{}, err
+		return leetgrinderDay{}, err
 	}
 	state, err := loadLeetgrinderState(ctx, tx, false)
 	if err != nil {
-		return leetgrinder.Today{}, err
+		return leetgrinderDay{}, err
 	}
+	// Plans do not enter the replay, so today's view reuses it.
+	replay := leetgrinder.ReplayAttempts(state, loc)
 	existing := state.Plans[date]
-	plan := leetgrinder.PlanReviews(leetgrinder.BuildCards(state, loc), date, loc, state.GoalFor(date).Review, existing)
+	plan := leetgrinder.PlanReviews(replay.Cards(), date, loc, state.GoalFor(date).Review, existing)
 	for slot := len(existing); slot < len(plan); slot++ {
 		if _, err = tx.ExecContext(ctx, "INSERT INTO leetgrinder_review_plan(plan_date,problem_slug,slot) VALUES($1,$2,$3)", day, plan[slot], slot+1); err != nil {
-			return leetgrinder.Today{}, err
+			return leetgrinderDay{}, err
 		}
 	}
 	if err = tx.Commit(); err != nil {
-		return leetgrinder.Today{}, err
+		return leetgrinderDay{}, err
 	}
 	if len(plan) > 0 {
 		state.Plans[date] = plan
 	}
-	return leetgrinder.NewToday(settings, state, now), nil
+	return leetgrinderDay{settings: settings, state: state, replay: &replay}, nil
 }
 
 // LeetgrinderDailyGoal returns the goal frozen for a local date, if any.

@@ -314,7 +314,7 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 	}
 	if form.Revision == "" {
 		// Freeze today's goal and picks first, as the extension API does.
-		_, _ = s.db.LeetgrinderToday(r.Context(), s.clock())
+		_ = s.db.PlanLeetgrinderToday(r.Context(), s.clock())
 	}
 	_, err = s.db.SaveLeetgrinderAttempt(r.Context(), attempt, form.Revision)
 	if err != nil {
