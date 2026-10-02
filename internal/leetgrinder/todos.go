@@ -55,10 +55,10 @@ type TodosPage struct {
 	// Location formats done dates in the settings time zone.
 	Location *time.Location
 	Error    string
-	Title      string
-	Problems   string
-	Problem    string
-	SetID      string
+	Title    string
+	Problems string
+	Problem  string
+	SetID    string
 }
 
 // ParseTodoRefs accepts one LeetCode link or slug per line, or comma-separated entries.
