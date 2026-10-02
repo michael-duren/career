@@ -367,3 +367,18 @@ func TestZeroTargetsNeedAnAttempt(t *testing.T) {
 		t.Fatalf("one attempt: met %v target %+v", today.Progress.Met(), today.Progress.Target())
 	}
 }
+
+// A "not optimal" verdict may have been judged against an older reference
+// than the live optimum, so the reason drops the "vs" detail rather than
+// reading "O(n) vs O(n)".
+func TestNotOptimalReasonSkipsEqualValues(t *testing.T) {
+	now := time.Date(2026, 10, 10, 12, 0, 0, 0, time.UTC)
+	f := Flag{NotOptimal: true, ActualTime: "O(n)", OptimalTime: "O(n)", ActualSpace: "O(1)", OptimalSpace: "O(1)", AnalysisDate: time.Date(2026, 10, 9, 0, 0, 0, 0, time.UTC)}
+	if got := f.Reason(now, time.UTC); got != "Not optimal" {
+		t.Errorf("equal values: %q", got)
+	}
+	f.ActualSpace = "O(n)"
+	if got := f.Reason(now, time.UTC); got != "Not optimal: space O(n) vs O(1)" {
+		t.Errorf("differing space: %q", got)
+	}
+}

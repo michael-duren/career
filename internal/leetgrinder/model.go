@@ -1,6 +1,10 @@
 package leetgrinder
 
-import "time"
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"time"
+)
 
 // Problem is one row of the problem catalog (leetgrinder_problems). Any
 // LeetCode problem can be tracked; a problem whose metadata is not known yet
@@ -66,6 +70,29 @@ func (p Problem) HasOptimal() bool { return p.OptimalTime != "" && p.OptimalSpac
 // OptimalEstimated reports that the optimum is Claude's estimate rather than
 // the curated table.
 func (p Problem) OptimalEstimated() bool { return p.OptimalSource == "model" }
+
+// OptimalManual reports that the optimum was entered by the learner.
+func (p Problem) OptimalManual() bool { return p.OptimalSource == "manual" }
+
+// OptimalSourceLabel names where the optimum came from: "Your value" for a
+// manual entry, "Claude's estimate" for a model estimate, "Curated" otherwise.
+func (p Problem) OptimalSourceLabel() string {
+	switch p.OptimalSource {
+	case "manual":
+		return "Your value"
+	case "model":
+		return "Claude's estimate"
+	}
+	return "Curated"
+}
+
+// OptimalRevision identifies the optimal values and their source, so a form
+// opened before they changed (an edit, a re-estimate, a first estimate) is
+// refused instead of silently replacing the newer values.
+func (p Problem) OptimalRevision() string {
+	sum := sha256.Sum256([]byte(p.OptimalSource + "\x00" + p.OptimalTime + "\x00" + p.OptimalSpace + "\x00" + p.OptimalNote))
+	return hex.EncodeToString(sum[:])
+}
 
 // Attempt IDs make retries safe; revisions prevent silent overwrites during corrections.
 type Attempt struct {

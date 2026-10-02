@@ -338,7 +338,7 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, avail Analy
 				}
 			</section>
 			<section>
-				@optimalPanel(problem, len(state.ProblemAttempts(problem.Slug)) > 0)
+				@optimalPanel(problem, len(state.ProblemAttempts(problem.Slug)) > 0, form.OptimalNotice)
 				<h2>Previous attempts</h2>
 				if len(state.ProblemAttempts(problem.Slug))==0 {
 					<p class="muted">No attempts recorded yet.</p>
@@ -392,8 +392,8 @@ templ optimalCell(p Problem) {
 	if p.HasOptimal() {
 		<span class="optimal-value"><abbr title="Time" aria-hidden="true">T</abbr><span class="visually-hidden">Time</span> { p.OptimalTime }</span>
 		<span class="optimal-value"><abbr title="Space" aria-hidden="true">S</abbr><span class="visually-hidden">Space</span> { p.OptimalSpace }</span>
-		if p.OptimalEstimated() {
-			<span class="small muted estimate">Claude's estimate</span>
+		if p.OptimalEstimated() || p.OptimalManual() {
+			<span class="small muted estimate">{ p.OptimalSourceLabel() }</span>
 		}
 	} else {
 		<span class="muted" aria-hidden="true">—</span><span class="visually-hidden">Not known yet</span>
@@ -402,9 +402,12 @@ templ optimalCell(p Problem) {
 
 // optimalPanel reveals the optimal complexity only once the learner has
 // attempted the problem, so the answer's shape is not given away beforehand.
-templ optimalPanel(p Problem, attempted bool) {
-	<div class="panel optimal-panel">
+templ optimalPanel(p Problem, attempted bool, notice string) {
+	<div class="panel optimal-panel" id="optimal">
 		<h2>Optimal complexity</h2>
+		if notice != "" {
+			<p class="notice" role="status">{ notice }</p>
+		}
 		if !attempted {
 			<p class="small muted">The optimal time and space complexity appears after your first attempt.</p>
 		} else if p.HasOptimal() {
@@ -417,13 +420,19 @@ templ optimalPanel(p Problem, attempted bool) {
 			if p.OptimalNote != "" {
 				<p class="small muted">{ p.OptimalNote }</p>
 			}
+			<p class="small"><strong>{ p.OptimalSourceLabel() }</strong></p>
 			if p.OptimalEstimated() {
 				<p class="small muted">Claude's estimate from the first analysed attempt. Space excludes the returned output.</p>
+			} else if p.OptimalManual() {
+				<p class="small muted">Entered by you; Claude's estimates never replace it. Space excludes the returned output.</p>
 			} else {
 				<p class="small muted">Best-known bounds under the problem's constraints. Space excludes the returned output.</p>
 			}
 		} else {
 			<p class="small muted">Not known yet. Claude estimates it when it analyses an attempt with captured code.</p>
+		}
+		if attempted {
+			@optimalActions(p)
 		}
 	</div>
 }

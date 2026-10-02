@@ -1,0 +1,63 @@
+package leetgrinder
+
+// optimalActions offers the edit link, and Re-estimate for a model estimate
+// only: curated and manual values are never cleared by it.
+templ optimalActions(p Problem) {
+	<div class="analysis-actions">
+		<a class="button" href={ templ.SafeURL(OptimalEditURL(p.Slug)) }>Edit optimal complexity</a>
+		if p.OptimalEstimated() {
+			<form method="post" action={ templ.SafeURL(OptimalReestimateURL(p.Slug)) }>
+				<input type="hidden" name="revision" value={ p.OptimalRevision() }/>
+				<button class="button" type="submit">Re-estimate</button>
+			</form>
+		}
+	</div>
+}
+
+// OptimalEdit is the "Edit optimal complexity" page. An error keeps the draft.
+templ OptimalEdit(p Problem, form OptimalForm) {
+	@layout("Edit optimal complexity", "problems") {
+		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder/problems">Problems</a><span>/</span><a href={ templ.SafeURL(ProblemURL(p.Slug)) }>{ p.DisplayTitle() }</a><span>/</span><span>Optimal complexity</span></nav>
+		<h1>Edit optimal complexity</h1>
+		<section class="panel">
+			if p.HasOptimal() {
+				<p class="small muted">Current value: time { p.OptimalTime }, space { p.OptimalSpace } ({ p.OptimalSourceLabel() }).</p>
+			} else {
+				<p class="small muted">No optimal complexity is known yet.</p>
+			}
+			<p class="small muted">Your value replaces the current one and is kept: Claude's estimates and the catalog never overwrite it. Analyses judge solutions against it from now on; use Re-analyse on an attempt to judge it again.</p>
+			if form.Error != "" {
+				<p class="error" role="alert">{ form.Error }</p>
+			}
+			if form.Conflict {
+				<p class="notice">The current value is shown above and your draft is in the form below. Saving again replaces the current value with your draft.</p>
+			}
+			<form method="post" action={ templ.SafeURL(OptimalEditURL(p.Slug)) }>
+				<input type="hidden" name="revision" value={ form.Revision }/>
+				<fieldset class="complexity">
+					<legend>Optimal complexity <span class="muted">(both required)</span></legend>
+					<div class="form-row">
+						@complexityField("timeComplexity", "time", form.Time)
+						@complexityField("spaceComplexity", "space", form.Space)
+					</div>
+				</fieldset>
+				<label>Note <span class="muted">(optional, 300 characters or fewer)</span><input type="text" name="note" maxlength="300" value={ form.Note }/></label>
+				<p>
+					<button class="button primary" type="submit">Save optimal complexity</button>
+					<a class="button" href={ templ.SafeURL(ProblemURL(p.Slug)) }>Cancel</a>
+				</p>
+			</form>
+		</section>
+	}
+}
+
+// OptimalError explains a Re-estimate that was refused.
+templ OptimalError(p Problem, message string) {
+	@layout("Re-estimate", "problems") {
+		<section class="panel">
+			<h1>The estimate was not cleared</h1>
+			<p role="alert">{ message }</p>
+			<p><a href={ templ.SafeURL(ProblemURL(p.Slug)) }>Back to { p.DisplayTitle() }</a></p>
+		</section>
+	}
+}

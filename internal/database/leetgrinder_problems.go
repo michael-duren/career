@@ -116,7 +116,8 @@ func (s *Store) SaveLeetgrinderMetadata(ctx context.Context, slug string, m leet
 }
 
 // saveLeetgrinderModelOptimal stores Claude's estimate of a problem's
-// optimum, only when the problem has none yet.
+// optimum, only when the problem has none yet: a curated or manual value
+// (optimal_source other than empty) is never replaced.
 func saveLeetgrinderModelOptimal(ctx context.Context, tx interface {
 	ExecContext(context.Context, string, ...any) (sql.Result, error)
 }, slug string, r leetgrinder.AnalysisResult) error {
@@ -129,6 +130,92 @@ func saveLeetgrinderModelOptimal(ctx context.Context, tx interface {
 	_, err := tx.ExecContext(ctx, `UPDATE leetgrinder_problems SET optimal_time=$2,optimal_space=$3,optimal_note=$4,optimal_source='model'
 WHERE slug=$1 AND optimal_source='' AND optimal_time='' AND optimal_space=''`, slug, r.OptimalTime, r.OptimalSpace, leetgrinder.CleanAnalysisText(r.OptimalNote, leetgrinder.MaxOptimalNote))
 	return err
+}
+
+// LeetgrinderOptimalProblem returns slug's catalog row for the optimal
+// complexity forms. It is ErrNotFound unless the problem has an attempt, since
+// the optimum is hidden until the first attempt and a form must never create
+// a row (and so queue a LeetCode fetch).
+func (s *Store) LeetgrinderOptimalProblem(ctx context.Context, slug string) (leetgrinder.Problem, error) {
+	return optimalProblem(ctx, s.DB, slug, "")
+}
+
+type rowQueryer interface {
+	QueryRowContext(context.Context, string, ...any) *sql.Row
+}
+
+func optimalProblem(ctx context.Context, q rowQueryer, slug, suffix string) (leetgrinder.Problem, error) {
+	if !leetgrinder.ValidSlug(slug) {
+		return leetgrinder.Problem{}, ErrNotFound
+	}
+	p, err := scanLeetgrinderProblem(q.QueryRowContext(ctx, "SELECT "+leetgrinderProblemColumns+" FROM leetgrinder_problems WHERE slug=$1 AND EXISTS (SELECT 1 FROM leetgrinder_attempts WHERE problem_slug=$1)"+suffix, slug))
+	if errors.Is(err, sql.ErrNoRows) {
+		return p, ErrNotFound
+	}
+	return p, err
+}
+
+// lockLeetgrinderOptimal returns slug's row locked for update, after checking
+// that its optimal values still match the revision the form was rendered from
+// (Problem.OptimalRevision).
+func lockLeetgrinderOptimal(ctx context.Context, tx *sql.Tx, slug, revision string) (leetgrinder.Problem, error) {
+	p, err := optimalProblem(ctx, tx, slug, " FOR UPDATE OF leetgrinder_problems")
+	if err != nil {
+		return p, err
+	}
+	if p.OptimalRevision() != revision {
+		return p, ErrConflict
+	}
+	return p, nil
+}
+
+// SaveLeetgrinderManualOptimal stores the learner's own optimal time, space
+// and note with optimal_source = 'manual', replacing a model estimate, a
+// curated value or an earlier manual one. The values are validated with
+// leetgrinder.NormalizeOptimal (ErrInvalid otherwise). ErrNotFound means the
+// problem has no attempts, and ErrConflict that the values changed since the
+// form was rendered. Later model estimates and catalog seeding never replace it.
+func (s *Store) SaveLeetgrinderManualOptimal(ctx context.Context, slug, optimalTime, optimalSpace, note, revision string) error {
+	optimalTime, optimalSpace, note, err := leetgrinder.NormalizeOptimal(optimalTime, optimalSpace, note)
+	if err != nil {
+		return ErrInvalid
+	}
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	if _, err = lockLeetgrinderOptimal(ctx, tx, slug, revision); err != nil {
+		return err
+	}
+	if _, err = tx.ExecContext(ctx, "UPDATE leetgrinder_problems SET optimal_time=$2,optimal_space=$3,optimal_note=$4,optimal_source='manual' WHERE slug=$1", slug, optimalTime, optimalSpace, note); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// ClearLeetgrinderModelOptimal removes Claude's estimate so the next analysis
+// estimates again. It only ever clears optimal_source = 'model': a curated or
+// manual value is ErrInvalid. ErrNotFound means the problem has no attempts,
+// and ErrConflict that the values changed since the form was rendered.
+// Existing analyses are left as they are.
+func (s *Store) ClearLeetgrinderModelOptimal(ctx context.Context, slug, revision string) error {
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	p, err := lockLeetgrinderOptimal(ctx, tx, slug, revision)
+	if err != nil {
+		return err
+	}
+	if p.OptimalSource != "model" {
+		return ErrInvalid
+	}
+	if _, err = tx.ExecContext(ctx, "UPDATE leetgrinder_problems SET optimal_time='',optimal_space='',optimal_note='',optimal_source='' WHERE slug=$1 AND optimal_source='model'", slug); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 // NextLeetgrinderFetch picks one slug whose metadata the server should ask
