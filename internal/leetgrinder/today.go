@@ -24,8 +24,10 @@ type Today struct {
 	Progress DayProgress
 	Streaks  Streaks
 	// Cards are every problem's review card as of now.
-	Cards   []Card
-	history map[time.Time]*DayProgress
+	Cards []Card
+	// cardBySlug indexes Cards; nil when Today was not built by NewTodayFrom.
+	cardBySlug map[string]Card
+	history    map[time.Time]*DayProgress
 }
 
 // NewToday combines saved state, including today's frozen goal and review
@@ -46,6 +48,7 @@ func NewTodayFrom(settings Settings, state State, now time.Time, r Replay) Today
 	t := Today{Settings: settings, State: state, Now: now, Date: Date(now, loc)}
 	t.Goal = state.GoalFor(t.Date)
 	t.Cards = r.cards
+	t.cardBySlug = indexCards(t.Cards)
 	t.history = history(r.replays, state, loc, t.Date)
 	t.Progress = *t.history[t.Date]
 	t.Streaks = ComputeStreaks(t.history, t.Progress)
@@ -83,12 +86,28 @@ func (t Today) Kind(slug string) string { return t.Progress.Kinds[slug] }
 
 // Card returns slug's review card, if it has one.
 func (t Today) Card(slug string) (Card, bool) {
+	if t.cardBySlug != nil {
+		c, ok := t.cardBySlug[slug]
+		return c, ok
+	}
 	for _, c := range t.Cards {
 		if c.Problem.Slug == slug {
 			return c, true
 		}
 	}
 	return Card{}, false
+}
+
+// indexCards keys cards by problem slug, keeping the first of any repeats as
+// the linear search does.
+func indexCards(cards []Card) map[string]Card {
+	m := make(map[string]Card, len(cards))
+	for _, c := range cards {
+		if _, ok := m[c.Problem.Slug]; !ok {
+			m[c.Problem.Slug] = c
+		}
+	}
+	return m
 }
 
 // Picked reports whether slug is one of today's review picks.

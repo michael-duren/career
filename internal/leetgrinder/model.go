@@ -176,7 +176,11 @@ func (s State) ProblemAttempts(slug string) []Attempt {
 
 // ProblemStatus summarises every attempt on slug in one label.
 func (s State) ProblemStatus(slug string) string {
-	attempts := s.ProblemAttempts(slug)
+	return statusOf(s.ProblemAttempts(slug))
+}
+
+// statusOf is ProblemStatus over one problem's attempts, newest first.
+func statusOf(attempts []Attempt) string {
 	assisted := false
 	for _, a := range attempts {
 		if a.Outcome == "solved" {

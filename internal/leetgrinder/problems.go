@@ -134,21 +134,27 @@ func matchProblem(p Problem, query, difficulty, topic string) bool {
 
 // ProblemRows lists every attempted problem, newest attempt first.
 func ProblemRows(state State, cards []Card, now time.Time, loc *time.Location) []ProblemRow {
-	byCard := map[string]Card{}
+	byCard := make(map[string]Card, len(cards))
 	for _, c := range cards {
 		byCard[c.Problem.Slug] = c
 	}
-	end := EndOfDate(Date(now, loc), loc)
-	seen := map[string]bool{}
-	var rows []ProblemRow
-	// Attempts are newest first, so rows come out by last attempt.
+	// Attempts are newest first, so each slug's list is too, and slugs
+	// are in order of their newest attempt.
+	bySlug := map[string][]Attempt{}
+	var slugs []string
 	for _, a := range state.Attempts {
-		if seen[a.ProblemSlug] {
-			continue
+		if _, ok := bySlug[a.ProblemSlug]; !ok {
+			slugs = append(slugs, a.ProblemSlug)
 		}
-		seen[a.ProblemSlug] = true
-		row := ProblemRow{Problem: state.Problem(a.ProblemSlug), Status: state.ProblemStatus(a.ProblemSlug), Attempts: len(state.ProblemAttempts(a.ProblemSlug)), Last: a, ComplexityWrong: state.StatedWrong(a.ID)}
-		if c, ok := byCard[a.ProblemSlug]; ok {
+		bySlug[a.ProblemSlug] = append(bySlug[a.ProblemSlug], a)
+	}
+	end := EndOfDate(Date(now, loc), loc)
+	rows := make([]ProblemRow, 0, len(slugs))
+	for _, slug := range slugs {
+		attempts := bySlug[slug]
+		a := attempts[0]
+		row := ProblemRow{Problem: state.Problem(slug), Status: statusOf(attempts), Attempts: len(attempts), Last: a, ComplexityWrong: state.StatedWrong(a.ID)}
+		if c, ok := byCard[slug]; ok {
 			row.Card, row.Due, row.Recall = c, c.Due.Before(end), c.Retrievability(now)
 		}
 		rows = append(rows, row)
