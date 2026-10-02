@@ -150,16 +150,23 @@ WHERE slug=$1`, problem.Slug, number, problem.Title, problem.Difficulty, problem
 	return err
 }
 
+// maxImportMetadataBytes bounds a problem's archived source snapshots.
+const maxImportMetadataBytes = 64 << 10
+
+// recordTodoSource archives a todo's source snapshot under its item ID. A
+// snapshot already archived under any item, for example by an earlier add of
+// the same problem that was then removed, is not stored again, and nothing is
+// added once the column is full. The item's own source_data still holds it.
 func recordTodoSource(ctx context.Context, tx *sql.Tx, slug, itemID string, source []byte) error {
 	if string(source) == "{}" {
 		return nil
 	}
 	_, err := tx.ExecContext(ctx, `UPDATE leetgrinder_problems SET import_metadata=jsonb_set(import_metadata,ARRAY[$2::text],
 COALESCE(import_metadata->$2,'[]'::jsonb) || jsonb_build_array($3::jsonb),true)
-WHERE slug=$1 AND NOT EXISTS (
-  SELECT 1 FROM jsonb_array_elements(COALESCE(import_metadata->$2,'[]'::jsonb)) AS prior(value)
+WHERE slug=$1 AND octet_length(import_metadata::text)+octet_length($3::jsonb::text) <= $4 AND NOT EXISTS (
+  SELECT 1 FROM jsonb_each(import_metadata) AS entry(key,versions), jsonb_array_elements(entry.versions) AS prior(value)
   WHERE prior.value=$3::jsonb
-)`, slug, itemID, source)
+)`, slug, itemID, source, maxImportMetadataBytes)
 	return err
 }
 
