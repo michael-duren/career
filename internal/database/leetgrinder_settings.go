@@ -115,6 +115,10 @@ func (s *Store) PlanLeetgrinderToday(ctx context.Context, now time.Time) error {
 	return err
 }
 
+// leetgrinderPlannerLock is the advisory lock that serializes planning
+// today's goal and picks, and todo set deletes that would race with it.
+const leetgrinderPlannerLock = 724193611
+
 // leetgrinderDay is what today's view is built from, once today is planned.
 type leetgrinderDay struct {
 	settings leetgrinder.Settings
@@ -185,7 +189,7 @@ func (s *Store) planLeetgrinderToday(ctx context.Context, now time.Time) (leetgr
 	}
 	defer tx.Rollback()
 	// Serializes planners so concurrent first visits agree on one plan.
-	if _, err = tx.ExecContext(ctx, "SELECT pg_advisory_xact_lock(724193611)"); err != nil {
+	if _, err = tx.ExecContext(ctx, "SELECT pg_advisory_xact_lock($1)", leetgrinderPlannerLock); err != nil {
 		return leetgrinderDay{}, err
 	}
 	settings, err := scanLeetgrinderSettings(tx.QueryRowContext(ctx, "SELECT "+leetgrinderSettingsColumns+" FROM leetgrinder_settings WHERE id=1"))
@@ -211,28 +215,47 @@ func (s *Store) planLeetgrinderToday(ctx context.Context, now time.Time) (leetgr
 			return leetgrinderDay{}, err
 		}
 	}
+	// New picks are optional: a failure there still keeps the goal and
+	// review picks, then reports the error.
+	var newErr error
 	if wanted := leetgrinder.NewPicksWanted(settings, state, date); wanted > 0 {
-		existing := state.NewPlans[date]
-		more, err := leetgrinderNewPickCandidates(ctx, tx, leetgrinder.StartOfDate(date, loc), existing, wanted)
-		if err != nil {
+		if _, err = tx.ExecContext(ctx, "SAVEPOINT new_picks"); err != nil {
 			return leetgrinderDay{}, err
 		}
-		for i, pick := range more {
-			if _, err = tx.ExecContext(ctx, "INSERT INTO leetgrinder_new_plan(plan_date,problem_slug,slot,set_id) VALUES($1,$2,$3,$4)", day, pick.Slug, len(existing)+i+1, nullableUUID(pick.SetID)); err != nil {
+		var more []leetgrinder.NewPick
+		if more, newErr = planLeetgrinderNewPicks(ctx, tx, day, leetgrinder.StartOfDate(date, loc), state.NewPlans[date], wanted); newErr != nil {
+			if _, err = tx.ExecContext(ctx, "ROLLBACK TO SAVEPOINT new_picks"); err != nil {
 				return leetgrinderDay{}, err
 			}
-		}
-		if len(more) > 0 {
-			state.NewPlans[date] = append(slices.Clone(existing), more...)
+		} else if len(more) > 0 {
+			state.NewPlans[date] = append(slices.Clone(state.NewPlans[date]), more...)
 		}
 	}
 	if err = tx.Commit(); err != nil {
 		return leetgrinderDay{}, err
 	}
+	if newErr != nil {
+		return leetgrinderDay{}, fmt.Errorf("leetgrinder new picks: %w", newErr)
+	}
 	if len(plan) > 0 {
 		state.Plans[date] = plan
 	}
 	return leetgrinderDay{settings: settings, state: state, replay: &replay}, nil
+}
+
+// planLeetgrinderNewPicks saves up to wanted more new picks for day after
+// existing and returns them.
+func planLeetgrinderNewPicks(ctx context.Context, tx *sql.Tx, day string, dayStart time.Time, existing []leetgrinder.NewPick, wanted int) ([]leetgrinder.NewPick, error) {
+	more, err := leetgrinderNewPickCandidates(ctx, tx, dayStart, existing, wanted)
+	if err != nil {
+		return nil, err
+	}
+	for i, pick := range more {
+		if _, err = tx.ExecContext(ctx, "INSERT INTO leetgrinder_new_plan(plan_date,problem_slug,slot,set_id) VALUES($1,$2,$3,$4)", day, pick.Slug, len(existing)+i+1, nullableUUID(pick.SetID)); err != nil {
+			return nil, err
+		}
+	}
+	return more, nil
 }
 
 // LeetgrinderDailyGoal returns the goal frozen for a local date, if any.

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -368,5 +369,72 @@ func TestLeetgrinderNewPicksAttemptsToday(t *testing.T) {
 	}
 	if today, err = s.LeetgrinderToday(ctx, tomorrow); err != nil || !reflect.DeepEqual(newPickSlots(today), []string{"1:group-anagrams:A"}) {
 		t.Fatalf("solved this morning: %v %v", newPickSlots(today), err)
+	}
+}
+
+// The read-only check also starts the day in the settings zone: east of
+// UTC, an attempt after local midnight but before UTC midnight is today's,
+// so a todo queued for it still tops up a short day.
+func TestLeetgrinderNewPicksPlannedLocalDayStart(t *testing.T) {
+	s, attempt := newPicksStore(t, "Asia/Tokyo", 2)
+	ctx := context.Background()
+	now := time.Date(2026, 10, 2, 3, 0, 0, 0, time.UTC)
+	if _, err := s.AddLeetgrinderTodoItem(ctx, "", "two-sum"); err != nil {
+		t.Fatal(err)
+	}
+	if today, err := s.LeetgrinderToday(ctx, now); err != nil || len(today.NewPicks) != 1 {
+		t.Fatalf("first plan %v: %v", newPickSlots(today), err)
+	}
+	// 20:00 UTC on Oct 1 is 05:00 on Oct 2 in Tokyo.
+	attempt("valid-anagram", time.Date(2026, 10, 1, 20, 0, 0, 0, time.UTC))
+	if _, err := s.AddLeetgrinderTodoItem(ctx, "", "valid-anagram"); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok, err := s.leetgrinderTodayPlanned(ctx, now); err != nil || ok {
+		t.Fatalf("today's attempt read as an earlier day's: %v %v", ok, err)
+	}
+	if today, err := s.LeetgrinderToday(ctx, now); err != nil || !reflect.DeepEqual(newPickSlots(today), []string{"1:two-sum:", "2:valid-anagram:"}) {
+		t.Fatalf("top-up %v: %v", newPickSlots(today), err)
+	}
+}
+
+// A failure saving new picks is reported but keeps the day's goal and
+// review picks, and a later access plans the new picks.
+func TestLeetgrinderNewPicksFailureKeepsReviewPlan(t *testing.T) {
+	s, attempt := newPicksStore(t, "UTC", 1)
+	ctx := context.Background()
+	settings, err := s.LeetgrinderSettings(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.UpdateLeetgrinderSettings(ctx, settings.Revision, func(v *leetgrinder.Settings) error { v.Goal.Review = 1; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	now := time.Date(2026, 10, 2, 12, 0, 0, 0, time.UTC)
+	attempt("binary-search", now.AddDate(0, 0, -20))
+	if _, err = s.AddLeetgrinderTodoItem(ctx, "", "two-sum"); err != nil {
+		t.Fatal(err)
+	}
+	for _, stmt := range []string{
+		"CREATE FUNCTION fail_new_pick() RETURNS trigger LANGUAGE plpgsql AS $$BEGIN RAISE EXCEPTION 'injected'; END$$",
+		"CREATE TRIGGER fail_new_pick BEFORE INSERT ON leetgrinder_new_plan FOR EACH ROW EXECUTE FUNCTION fail_new_pick()",
+	} {
+		if _, err = s.DB.Exec(stmt); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err = s.LeetgrinderToday(ctx, now); err == nil || !strings.Contains(err.Error(), "injected") {
+		t.Fatalf("new-pick failure not reported: %v", err)
+	}
+	var goals, reviews, picks int
+	if err = s.DB.QueryRow("SELECT (SELECT count(*) FROM leetgrinder_daily_goal), (SELECT count(*) FROM leetgrinder_review_plan), (SELECT count(*) FROM leetgrinder_new_plan)").Scan(&goals, &reviews, &picks); err != nil || goals != 1 || reviews != 1 || picks != 0 {
+		t.Fatalf("after failure: goals %d reviews %d picks %d: %v", goals, reviews, picks, err)
+	}
+	if _, err = s.DB.Exec("DROP TRIGGER fail_new_pick ON leetgrinder_new_plan"); err != nil {
+		t.Fatal(err)
+	}
+	today, err := s.LeetgrinderToday(ctx, now)
+	if err != nil || !reflect.DeepEqual(newPickSlots(today), []string{"1:two-sum:"}) || len(today.Reviews) != 1 || today.Reviews[0].Problem.Slug != "binary-search" {
+		t.Fatalf("retry: %v %+v %v", newPickSlots(today), today.Reviews, err)
 	}
 }

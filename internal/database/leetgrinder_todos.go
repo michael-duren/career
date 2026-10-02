@@ -444,7 +444,7 @@ func (s *Store) DeleteLeetgrinderTodoSet(ctx context.Context, id string) error {
 	defer tx.Rollback()
 	// The planner reads a set's ID before saving it on a new pick; its lock
 	// keeps a delete from removing the set in between.
-	if _, err = tx.ExecContext(ctx, "SELECT pg_advisory_xact_lock(724193611)"); err != nil {
+	if _, err = tx.ExecContext(ctx, "SELECT pg_advisory_xact_lock($1)", leetgrinderPlannerLock); err != nil {
 		return err
 	}
 	result, err := tx.ExecContext(ctx, "DELETE FROM leetgrinder_todo_sets WHERE id=$1", id)

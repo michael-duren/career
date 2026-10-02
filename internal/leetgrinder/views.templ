@@ -217,7 +217,7 @@ templ goalCard(today Today) {
 templ newPicks(today Today) {
 	if len(today.NewPicks) > 0 || (today.NewPicksShort() && today.Progress.NewLeft() > 0) {
 		<div class="new-picks">
-			if next, ok := today.NextNewPick(); ok {
+			if next, ok := today.NextNewPick(); ok && today.Progress.NewLeft() > 0 {
 				<p class="small">
 					Next new problem: <a href={ templ.SafeURL(ProblemURL(next.Problem.Slug)) }>{ next.Problem.DisplayTitle() }</a>
 					if next.SetTitle != "" {

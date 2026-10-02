@@ -210,6 +210,12 @@ func TestGoalCardNewPicks(t *testing.T) {
 	if html = render(state); strings.Contains(html, "Fewer todos") {
 		t.Errorf("met short plan still explains shortfall: %s", html)
 	}
+	// Picks added after the new goal was met with other problems are listed
+	// without prompting for the next one.
+	state.NewPlans[date] = append(state.NewPlans[date], NewPick{Slug: "valid-anagram"})
+	if html = render(state); strings.Contains(html, "Next new problem") || !strings.Contains(html, "valid-anagram") {
+		t.Errorf("late top-up after goal met: %s", html)
+	}
 	// No todo could be picked: the note explains the empty list.
 	if html = render(State{Goals: goals}); !strings.Contains(html, "Todos whose problem you attempted on an earlier day are skipped") || strings.Contains(html, "Next new problem") {
 		t.Errorf("empty plan: %s", html)
