@@ -59,6 +59,7 @@ func (s *Server) registerLeetgrinder(r chi.Router) {
 		r.Post("/leetgrinder/settings/general", s.leetgrinderSaveGeneral)
 		s.registerLeetgrinderNotify(r)
 		s.registerLeetgrinderAnalysis(r)
+		s.registerLeetgrinderOptimal(r)
 		r.Get("/leetgrinder/export", s.leetgrinderExport)
 	})
 }
