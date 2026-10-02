@@ -20,6 +20,8 @@ type TodoItem struct {
 	// DoneAt is the latest solved or struggled attempt that completes this
 	// entry, zero while it is still to do.
 	DoneAt time.Time
+	// CreatedAt is when the entry was added; only the export query fills it.
+	CreatedAt time.Time
 }
 
 func (i TodoItem) Done() bool { return !i.DoneAt.IsZero() }
@@ -30,6 +32,8 @@ type TodoSet struct {
 	Description string
 	Metadata    map[string]any
 	Items       []TodoItem
+	// CreatedAt is when the set was made; only the export query fills it.
+	CreatedAt time.Time
 }
 
 // Remaining counts the set's problems still to do.

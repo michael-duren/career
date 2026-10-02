@@ -3,9 +3,12 @@ package server
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -226,5 +229,111 @@ func TestLeetgrinderTestNotification(t *testing.T) {
 	log, err := db.RecentLeetgrinderNotifications(ctx, 14)
 	if err != nil || len(log) != 1 || strings.Contains(log[0].Detail, token) {
 		t.Fatalf("log: %+v %v", log, err)
+	}
+}
+
+func TestLeetgrinderExportCompleteness(t *testing.T) {
+	s, db, request := leetgrinderTestServer(t)
+	ctx := context.Background()
+	s.config.LeetgrinderSecretKey = bytes.Repeat([]byte{7}, 32)
+	const token = "tk_export_secret_value"
+	settings, _ := db.LeetgrinderSettings(ctx)
+	if w := request("POST", "/leetgrinder/settings/ntfy", url.Values{"url": {"https://ntfy.example"}, "topic": {"grind"}, "token": {token}, "revision": {settings.Revision}}); w.Code != 303 {
+		t.Fatalf("ntfy: %d %s", w.Code, w.Body.String())
+	}
+	settings, _ = db.LeetgrinderSettings(ctx)
+	if len(settings.NtfyTokenCiphertext) == 0 {
+		t.Fatal("token not stored")
+	}
+	set, err := db.CreateLeetgrinderTodoSetDetailed(ctx, leetgrinder.TodoSet{Title: "Warmup", Description: "easy ones", Metadata: map[string]any{"source": "test"}}, []leetgrinder.TodoProblemInput{
+		{Slug: "two-sum", Number: 1, Title: "Two Sum", Difficulty: "Easy", Topics: []string{"array"}},
+		{Slug: "valid-anagram", Reference: "https://leetcode.com/problems/valid-anagram/"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.AddLeetgrinderTodoProblem(ctx, "", leetgrinder.TodoProblemInput{Slug: "lonely-problem"}); err != nil {
+		t.Fatal(err)
+	}
+	// Picks are stored in slot order, which is not alphabetical.
+	for slot, slug := range []string{"valid-anagram", "two-sum"} {
+		if _, err = db.DB.Exec("INSERT INTO leetgrinder_review_plan(plan_date,problem_slug,slot) VALUES('2026-10-02',$1,$2)", slug, slot+1); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err = db.DB.Exec("INSERT INTO leetgrinder_review_plan(plan_date,problem_slug,slot) VALUES('2026-09-30','two-sum',1)"); err != nil {
+		t.Fatal(err)
+	}
+
+	w := request("GET", "/leetgrinder/export", nil)
+	if w.Code != 200 {
+		t.Fatalf("export: %d", w.Code)
+	}
+	raw := w.Body.String()
+	for _, secret := range []string{token, "ntfyToken", "ntfy_token", "ciphertext", "Ciphertext", base64.StdEncoding.EncodeToString(settings.NtfyTokenCiphertext)} {
+		if strings.Contains(raw, secret) {
+			t.Fatalf("export leaks %q", secret)
+		}
+	}
+	var exported struct {
+		Version     int                     `json:"version"`
+		Attempts    []json.RawMessage       `json:"attempts"`
+		Problems    []struct{ Slug string } `json:"problems"`
+		DailyGoals  []json.RawMessage       `json:"dailyGoals"`
+		ReviewPlans map[string][]string     `json:"reviewPlans"`
+		Todos       struct {
+			Sets []struct {
+				ID, Title, Description string
+				Metadata               map[string]any
+				CreatedAt              time.Time
+				Items                  []struct {
+					Slug       string
+					SourceData map[string]any
+					CreatedAt  time.Time
+				}
+			}
+			Items []struct{ Slug string }
+		} `json:"todos"`
+		Settings struct {
+			Timezone        string
+			Goal            struct{ New, Review int }
+			NtfyURL         string `json:"ntfyUrl"`
+			NtfyTopic       string
+			Notifications   map[string]leetgrinder.NotificationPref
+			AnalysisEnabled bool
+		} `json:"settings"`
+	}
+	if err = json.Unmarshal(w.Body.Bytes(), &exported); err != nil {
+		t.Fatal(err)
+	}
+	if exported.Version != 2 || exported.Attempts == nil || exported.DailyGoals == nil {
+		t.Fatalf("legacy fields or version: %s", raw)
+	}
+	if !slices.Equal(exported.ReviewPlans["2026-10-02"], []string{"valid-anagram", "two-sum"}) || !slices.Equal(exported.ReviewPlans["2026-09-30"], []string{"two-sum"}) || len(exported.ReviewPlans) != 2 {
+		t.Fatalf("reviewPlans: %v", exported.ReviewPlans)
+	}
+	if strings.Index(raw, `"2026-09-30"`) > strings.Index(raw, `"2026-10-02"`) {
+		t.Fatal("review plan dates not in order")
+	}
+	if len(exported.Todos.Sets) != 1 || exported.Todos.Sets[0].ID != set.ID || exported.Todos.Sets[0].Title != "Warmup" || exported.Todos.Sets[0].Description != "easy ones" || exported.Todos.Sets[0].Metadata["source"] != "test" || exported.Todos.Sets[0].CreatedAt.IsZero() {
+		t.Fatalf("todo sets: %+v", exported.Todos.Sets)
+	}
+	items := exported.Todos.Sets[0].Items
+	if len(items) != 2 || items[0].Slug != "two-sum" || items[1].Slug != "valid-anagram" || items[0].CreatedAt.IsZero() || items[0].SourceData["title"] != "Two Sum" || items[1].SourceData["reference"] != "https://leetcode.com/problems/valid-anagram/" {
+		t.Fatalf("todo items: %+v", items)
+	}
+	if len(exported.Todos.Items) != 1 || exported.Todos.Items[0].Slug != "lonely-problem" {
+		t.Fatalf("standalone todos: %+v", exported.Todos.Items)
+	}
+	var slugs []string
+	for _, p := range exported.Problems {
+		slugs = append(slugs, p.Slug)
+	}
+	if !slices.Equal(slugs, []string{"lonely-problem", "two-sum", "valid-anagram"}) {
+		t.Fatalf("problems: %v", slugs)
+	}
+	got := exported.Settings
+	if got.Timezone != settings.Timezone || got.Goal.New != settings.Goal.New || got.Goal.Review != settings.Goal.Review || got.NtfyURL != "https://ntfy.example" || got.NtfyTopic != "grind" || !got.AnalysisEnabled || got.Notifications == nil {
+		t.Fatalf("settings: %+v", got)
 	}
 }
