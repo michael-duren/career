@@ -382,6 +382,35 @@ func (s *Server) todayGoal(r *http.Request, settings leetgrinder.Settings) *leet
 	return &goal
 }
 
+// zoneChange is a pending time zone change and what it would recount.
+type zoneChange struct {
+	leetgrinder.ZoneImpact
+	settings leetgrinder.Settings
+}
+
+// zoneImpact previews form's time zone when it differs from the saved one,
+// reading state without saving or freezing anything. needed is false when the
+// zone is unchanged or invalid, or the revision is stale (the save then
+// answers with the conflict). A read failure is an error: the change must not
+// be saved without its confirmation.
+func (s *Server) zoneImpact(r *http.Request, form leetgrinder.GeneralForm, goal leetgrinder.DailyGoal) (change zoneChange, needed bool, err error) {
+	settings, err := s.db.LeetgrinderSettings(r.Context())
+	if err != nil {
+		return zoneChange{}, false, err
+	}
+	if form.Timezone == settings.Timezone || form.Revision != settings.Revision {
+		return zoneChange{}, false, nil
+	}
+	if _, err := leetgrinder.LoadTimezone(form.Timezone); err != nil {
+		return zoneChange{}, false, nil
+	}
+	state, err := s.db.LeetgrinderStateWithoutCode(r.Context())
+	if err != nil {
+		return zoneChange{}, false, err
+	}
+	return zoneChange{leetgrinder.NewZoneImpact(settings, state, s.clock(), form.Timezone, goal), settings}, true, nil
+}
+
 func (s *Server) leetgrinderSaveGeneral(w http.ResponseWriter, r *http.Request) {
 	if !s.leetgrinderForm(w, r) {
 		return
@@ -401,6 +430,18 @@ func (s *Server) leetgrinderSaveGeneral(w http.ResponseWriter, r *http.Request) 
 	if errNew != nil || errReview != nil || goal.Validate() != nil {
 		reject(400, "Choose daily targets from 0 to 10, with at least one above 0.")
 		return
+	}
+	if r.PostForm.Get("confirm") != "1" {
+		impact, needed, err := s.zoneImpact(r, form, goal)
+		if err != nil {
+			reject(503, "The time zone change could not be previewed. Your draft is retained; please retry.")
+			return
+		}
+		if needed {
+			page := leetgrinder.SettingsPage{Settings: impact.settings, Now: s.clock(), General: form, ZoneImpact: &impact.ZoneImpact, TodayGoal: s.todayGoal(r, impact.settings)}
+			renderLeetgrinder(w, r, 200, leetgrinder.SettingsView(s.withAPITokens(r, s.withNotify(r.Context(), page))))
+			return
+		}
 	}
 	_, err := s.db.UpdateLeetgrinderSettings(r.Context(), form.Revision, func(settings *leetgrinder.Settings) error {
 		if _, err := leetgrinder.LoadTimezone(form.Timezone); err != nil {

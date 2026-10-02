@@ -151,6 +151,9 @@ type SettingsPage struct {
 	Settings Settings
 	Now      time.Time
 	General  GeneralForm
+	// ZoneImpact, when set, asks the user to confirm a time zone change
+	// before it is saved.
+	ZoneImpact *ZoneImpact
 	// TodayGoal is today's frozen goal, or nil when today has not started,
 	// so the page can say when goal changes apply.
 	TodayGoal *DailyGoal
