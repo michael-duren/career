@@ -96,13 +96,13 @@ Issues: S01, S09, S12.
 
 **Interfaces:** Grid consumes the authoritative week and Task 3 proposals. It emits a `SessionDraft` on accepted release; the parent owns asynchronous saves. Preview state is independent of accepted sessions.
 
-- [ ] Add real mouse tests that hold the pointer over a day before release and assert the preview's date, time labels, top, and duration. Drop afterward and assert the API interval equals the preview. Cover assignment creation and existing-session move.
-- [ ] Add held-pointer resize tests for both edges. Assert preview geometry changes before release and the final elapsed duration matches.
-- [ ] Add overlap, unavailable-range, out-of-timeline, future-actual, and DST-gap cases. Assert visibly explained invalid placement and no mutation when invalid. For server-discovered conflicts after release, assert retained editable draft.
-- [ ] Extract the grid and render `.scheduler-drop-preview` with `pointer-events:none`, clear destination labels, valid/conflicting appearance, and exact interval geometry. Keep a minimum-size action/label affordance separate from interval length.
-- [ ] Implement one-pointer ownership, lost-capture/Escape/pointercancel cleanup, and auto-scroll near viewport edges. Clear gestures on week change. Use a deliberate touch drag handle or activation so requirement-list scrolling remains available.
-- [ ] Test at desktop 1280×900 and mobile 390×844. Assert offscreen targets are reachable, ordinary touch scrolling works, cancellation writes nothing, and successful gestures do not flash the editor.
-- [ ] Run `npx playwright test tests/e2e/scheduler.spec.ts`. Expected: preview assertions pass during the gesture and real input saves the expected intervals. Commit.
+- [x] Add real mouse tests that hold the pointer over a day before release and assert the preview's date, time labels, top, and duration. Drop afterward and assert the API interval equals the preview. Cover assignment creation and existing-session move.
+- [x] Add held-pointer resize tests for both edges. Assert preview geometry changes before release and the final elapsed duration matches.
+- [x] Add overlap, unavailable-range, out-of-timeline, future-actual, and DST-gap cases. Assert visibly explained invalid placement and no mutation when invalid. For server-discovered conflicts after release, assert retained editable draft.
+- [x] Extract the grid and render `.scheduler-drop-preview` with `pointer-events:none`, clear destination labels, valid/conflicting appearance, and exact interval geometry. Keep a minimum-size action/label affordance separate from interval length.
+- [x] Implement one-pointer ownership, lost-capture/Escape/pointercancel cleanup, and auto-scroll near viewport edges. Clear gestures on week change. Use a deliberate touch drag handle or activation so requirement-list scrolling remains available.
+- [x] Test at desktop 1280×900 and mobile 390×844. Assert offscreen targets are reachable, ordinary touch scrolling works, cancellation writes nothing, and successful gestures do not flash the editor.
+- [x] Run `npx playwright test tests/e2e/scheduler.spec.ts`. Expected: preview assertions pass during the gesture and real input saves the expected intervals. Commit.
 
 ## Task 5: Coordinate requests and refresh local state
 

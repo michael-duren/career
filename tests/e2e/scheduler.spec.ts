@@ -1,4 +1,6 @@
-import { test, expect, type APIRequestContext, type Page } from '@playwright/test';
+import { test, expect, type APIRequestContext, type Locator, type Page } from '@playwright/test';
+
+const ownedGoals = new Set<string>();
 
 // Regression coverage for three bugs found in production: recurring-delete
 // not cascading to future occurrences, the session editor flashing open on a
@@ -22,6 +24,7 @@ async function createGoal(request: APIRequestContext, origin: string, overrides:
   // mutation() check) - a real browser sends this automatically, a bare request doesn't.
   const response = await request.post('/api/goals', { headers: { origin }, data: { revision: null, goal } });
   expect(response.ok(), await response.text()).toBeTruthy();
+  ownedGoals.add(id);
   return goal;
 }
 async function goToNextWeek(page: Page) {
@@ -37,6 +40,12 @@ async function goToNextWeek(page: Page) {
   await expect(firstDay).not.toHaveAttribute('data-scheduler-date', before ?? '');
   await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
   return firstDay.getAttribute('data-scheduler-date');
+}
+async function visibleBox(locator: Locator) {
+  await locator.scrollIntoViewIfNeeded();
+  const box = await locator.boundingBox();
+  if (!box) throw new Error('Drag source is unavailable.');
+  return box;
 }
 function sessionFor(page: Page, title: string) {
   return page.locator('[data-session-id]').filter({ hasText: title });
@@ -61,9 +70,44 @@ function localTimeOf(instant: string) {
 }
 
 test.beforeEach(async ({ page }) => {
+  ownedGoals.clear();
   await page.goto('/weekly-scheduler');
   await expect(page.locator('.scheduler-grid')).toBeVisible();
   await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
+});
+
+test.afterEach(async ({ request, baseURL }) => {
+  if (!ownedGoals.size) return;
+  const { revisions } = await (await request.get('/api/goals')).json();
+  for (const id of ownedGoals) {
+    const response = await request.delete('/api/goals', { headers: { origin: baseURL! }, data: { id, revision: revisions[id] } });
+    expect(response.ok(), `Could not remove test goal ${id}: ${await response.text()}`).toBeTruthy();
+  }
+  ownedGoals.clear();
+});
+
+test('held assignment shows its snapped destination before the matching interval is saved', async ({ page, request, baseURL }) => {
+  const goal = await createGoal(request, baseURL!, { dailyHours: 0 });
+  const date = await goToNextWeek(page);
+  const source = await visibleBox(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`));
+  const day = page.locator(`[data-scheduler-date="${date}"]`);
+  const target = (await day.boundingBox())!;
+  await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(target.x + target.width / 2, target.y + 60, { steps: 8 });
+  const preview = day.locator('.scheduler-drop-preview');
+  await expect(preview).toBeVisible();
+  await expect(preview).toContainText(date!);
+  await expect(preview).toContainText('06:00–07:00');
+  await expect(preview).toHaveAttribute('data-duration-minutes', '60');
+  expect((await preview.boundingBox())?.height).toBe(60);
+  expect(Math.abs((await preview.boundingBox())!.y - (target.y + 60))).toBeLessThan(2);
+  await page.mouse.up();
+  await expect(page.locator('.scheduler-status')).toContainText('Saved.');
+  const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
+  const session = state.sessions.find((s: { assignment: { goalId: string } }) => s.assignment.goalId === goal.id);
+  expect(localTimeOf(session.plan.start)).toBe('06:00');
+  expect(localTimeOf(session.plan.end)).toBe('07:00');
 });
 
 test('dragging a session to another day saves without flashing the editor or erroring', async ({ page, request, baseURL }) => {
@@ -176,7 +220,7 @@ test('editing an existing planned session can assign it to a subgoal', async ({ 
   expect(session?.assignment.stepId).toBe(stepId);
 });
 
-test('creating a fixed commitment with no goal saves it as a plain reservation', async ({ page, request }) => {
+test('creating a fixed commitment with no goal saves it as a plain reservation', async ({ page, request, baseURL }) => {
   const date = await goToNextWeek(page);
   const dialog = page.locator('.scheduler-editor-dialog');
   const title = `Commute ${crypto.randomUUID()}`;
@@ -194,6 +238,8 @@ test('creating a fixed commitment with no goal saves it as a plain reservation',
   const session = state.sessions.find((s: { assignment: { title: string } }) => s.assignment.title === title);
   expect(session?.assignment.goalId).toBeUndefined();
   expect(session?.plan).toBeTruthy();
+  const cleanup = await request.post('/api/scheduler/mutate', { headers: { origin: baseURL! }, data: { action: 'cancel', week: date, revision: state.revision, id: session.id } });
+  expect(cleanup.ok(), await cleanup.text()).toBeTruthy();
 });
 
 test('editing an existing planned session updates its time', async ({ page, request, baseURL }) => {
@@ -401,4 +447,364 @@ test('a narrow viewport shows only the selected day and never scrolls horizontal
   expect(visibleDays).toBe(1);
   const scrollsHorizontally = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(scrollsHorizontally).toBe(false);
+});
+
+async function createPlannedSession(page: Page, goal: { id: string; title: string }, date: string, start: string, end: string) {
+  const dialog = page.locator('.scheduler-editor-dialog');
+  await page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`).click();
+  await dialog.getByLabel('Scheduling date').fill(date);
+  await dialog.getByLabel('Start time').fill(start);
+  await dialog.getByLabel('End time').fill(end);
+  await dialog.getByRole('button', { name: 'Save session' }).click();
+  await expect(dialog).toBeHidden();
+  return sessionFor(page, goal.title);
+}
+
+test('held move and both resize edges preview the interval that the API stores', async ({ page, request, baseURL }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const goal = await createGoal(request, baseURL!, { dailyHours: 0 });
+  const date = await goToNextWeek(page);
+  const session = await createPlannedSession(page, goal, date!, '06:00', '07:00');
+  const nextDay = page.locator('[data-scheduler-date]').nth(1);
+  const targetDate = (await nextDay.getAttribute('data-scheduler-date'))!;
+  await session.locator('.scheduler-block-main').scrollIntoViewIfNeeded();
+  await session.locator('.scheduler-block-main').evaluate(element => window.scrollBy(0, element.getBoundingClientRect().top - 370));
+  const source = await visibleBox(session.locator('.scheduler-block-main'));
+  const target = (await nextDay.boundingBox())!;
+  expect(target.y + 90).toBeLessThan(840);
+  await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(target.x + target.width / 2, target.y + 90, { steps: 8 });
+  let preview = nextDay.locator('.scheduler-drop-preview');
+  await expect(preview).toHaveAttribute('data-start', '06:00');
+  await expect(preview).toHaveAttribute('data-end', '07:00');
+  await page.mouse.up();
+  await expect(page.locator('.scheduler-status')).toContainText('Saved.');
+  await expect(session).toHaveCount(1);
+  let block = (await session.boundingBox())!;
+  expect(Math.abs(block.y - (target.y + 60))).toBeLessThan(2);
+
+  const topEdge = (await session.locator('.scheduler-edge-top').boundingBox())!;
+  await page.mouse.move(topEdge.x + topEdge.width / 2, topEdge.y + topEdge.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(topEdge.x + topEdge.width / 2, topEdge.y + topEdge.height / 2 + 15, { steps: 4 });
+  preview = nextDay.locator('.scheduler-drop-preview');
+  await expect(preview).toHaveAttribute('data-start', '06:15');
+  await expect(preview).toHaveAttribute('data-duration-minutes', '45');
+  await page.mouse.up();
+  await expect(page.locator('.scheduler-status')).toContainText('Saved.');
+
+  const bottomEdge = (await session.locator('.scheduler-edge-bottom').boundingBox())!;
+  await page.mouse.move(bottomEdge.x + bottomEdge.width / 2, bottomEdge.y + bottomEdge.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(bottomEdge.x + bottomEdge.width / 2, bottomEdge.y + bottomEdge.height / 2 + 30, { steps: 4 });
+  preview = nextDay.locator('.scheduler-drop-preview');
+  await expect(preview).toHaveAttribute('data-end', '07:30');
+  await expect(preview).toHaveAttribute('data-duration-minutes', '75');
+  await page.mouse.up();
+  await expect(page.locator('.scheduler-status')).toContainText('Saved.');
+  const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
+  const saved = state.sessions.find((value: { assignment: { goalId: string } }) => value.assignment.goalId === goal.id);
+  expect([saved.date, localTimeOf(saved.plan.start), localTimeOf(saved.plan.end), (Date.parse(saved.plan.end) - Date.parse(saved.plan.start)) / 60000]).toEqual([targetDate, '06:15', '07:30', 75]);
+  block = (await session.boundingBox())!;
+  expect(Math.abs(block.height - 75)).toBeLessThan(2);
+});
+
+test('known overlap appears during the held drag and a rejected drop retains its draft', async ({ page, request, baseURL }) => {
+  const goalA = await createGoal(request, baseURL!, { dailyHours: 0 });
+  const goalB = await createGoal(request, baseURL!, { dailyHours: 0 });
+  const date = await goToNextWeek(page);
+  await createPlannedSession(page, goalA, date!, '05:00', '06:00');
+  const source = await visibleBox(page.locator(`#scheduler-goal-${goalB.id} .scheduler-goal-title`));
+  const day = page.locator(`[data-scheduler-date="${date}"]`);
+  const target = (await day.boundingBox())!;
+  await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(target.x + target.width / 2, target.y + 30, { steps: 6 });
+  const preview = day.locator('.scheduler-drop-preview');
+  await expect(preview).toHaveClass(/is-conflicting/);
+  await expect(preview).toContainText('Overlaps 1 known reservation');
+  await page.mouse.up();
+  await expect(page.locator('.scheduler-editor-dialog')).toBeVisible();
+  await expect(page.locator('.scheduler-editor-dialog [role="alert"]')).toContainText('draft');
+  const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
+  expect(state.sessions.some((value: { assignment: { goalId: string } }) => value.assignment.goalId === goalB.id)).toBe(false);
+});
+
+test('a conflict added after the preview keeps the released draft editable', async ({ page, request, baseURL }) => {
+  const goalA = await createGoal(request, baseURL!, { dailyHours: 0 });
+  const goalB = await createGoal(request, baseURL!, { dailyHours: 0 });
+  const date = await goToNextWeek(page);
+  const source = await visibleBox(page.locator(`#scheduler-goal-${goalA.id} .scheduler-goal-title`));
+  const day = page.locator(`[data-scheduler-date="${date}"]`);
+  const target = (await day.boundingBox())!;
+  await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(target.x + target.width / 2, target.y + 60, { steps: 8 });
+  await expect(day.locator('.scheduler-drop-preview')).toHaveClass(/is-valid/);
+  const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
+  const competing = await request.post('/api/scheduler/mutate', { headers: { origin: baseURL! }, data: {
+    action: 'session', week: date, revision: state.revision,
+    session: { id: '', date, assignment: { goalId: goalB.id, title: goalB.title }, plan: { start: `${date}T11:00:00Z`, end: `${date}T12:00:00Z` }, actual: null, state: 'accepted', exception: false, conflictIds: [] },
+  } });
+  expect(competing.ok(), await competing.text()).toBeTruthy();
+  await page.mouse.up();
+  const dialog = page.locator('.scheduler-editor-dialog');
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel('Start time')).toHaveValue('06:00');
+  await expect(dialog.locator('[role="alert"]')).toContainText('draft');
+  const updated = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
+  expect(updated.sessions.some((value: { assignment: { goalId: string }; state: string }) => value.assignment.goalId === goalA.id && value.state === 'accepted')).toBe(false);
+});
+
+test('Escape and lost pointer capture clear the preview without writing', async ({ page, request, baseURL }) => {
+  const goal = await createGoal(request, baseURL!, { dailyHours: 0 });
+  const date = await goToNextWeek(page);
+  let writes = 0;
+  await page.route('**/api/scheduler/mutate', async route => { writes++; await route.continue(); });
+  const source = page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`);
+  const from = await visibleBox(source);
+  const day = page.locator(`[data-scheduler-date="${date}"]`);
+  const to = (await day.boundingBox())!;
+  for (const cancel of ['escape', 'capture'] as const) {
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(to.x + to.width / 2, to.y + 60, { steps: 5 });
+    await expect(day.locator('.scheduler-drop-preview')).toBeVisible();
+    if (cancel === 'escape') await page.keyboard.press('Escape');
+    else {
+      const captured = await source.evaluate(element => {
+      const pointer = (element as HTMLElement);
+      const ids = [];
+      for (let id = 1; id < 20; id++) if (pointer.hasPointerCapture(id)) { ids.push(id); pointer.releasePointerCapture(id); }
+      return ids;
+      });
+      expect(captured.length).toBeGreaterThan(0);
+      await page.mouse.move(to.x + to.width / 2 + 1, to.y + 60);
+    }
+    await expect(day.locator('.scheduler-drop-preview')).toHaveCount(0);
+    await page.mouse.up();
+  }
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(to.x + to.width / 2, to.y + 60, { steps: 5 });
+  await expect(day.locator('.scheduler-drop-preview')).toBeVisible();
+  await page.mouse.move(1270, 10, { steps: 5 });
+  await expect(page.locator('.scheduler-preview-outside')).toContainText('Place inside a scheduling day');
+  await page.mouse.up();
+  await expect(page.locator('.scheduler-preview-outside')).toHaveCount(0);
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(to.x + to.width / 2, to.y + 60, { steps: 5 });
+  await expect(day.locator('.scheduler-drop-preview')).toBeVisible();
+  await page.evaluate(() => (document.querySelector('button[aria-label="Next week"]') as HTMLButtonElement).click());
+  await expect(day.locator('.scheduler-drop-preview')).toHaveCount(0);
+  await page.mouse.up();
+  const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
+  expect(state.sessions.some((value: { assignment: { goalId: string } }) => value.assignment.goalId === goal.id)).toBe(false);
+  expect(writes).toBe(0);
+});
+
+test('viewport edge scrolling reaches a target below a 1280 by 900 screen', async ({ page, request, baseURL }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const goal = await createGoal(request, baseURL!, { dailyHours: 0 });
+  const date = await goToNextWeek(page);
+  const source = await visibleBox(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`));
+  const day = page.locator(`[data-scheduler-date="${date}"]`);
+  const dayBox = (await day.boundingBox())!;
+  const initialScroll = await page.evaluate(() => scrollY);
+  await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(dayBox.x + dayBox.width / 2, 890, { steps: 8 });
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(initialScroll + 150);
+  await expect(day.locator('.scheduler-drop-preview')).toBeVisible();
+  await page.mouse.up();
+  await expect(page.locator('.scheduler-status')).toContainText('Saved.');
+});
+
+async function setDateOverride(page: Page, date: string, start: string, end: string) {
+  await page.getByRole('button', { name: 'Day settings' }).click();
+  const settings = page.getByRole('region', { name: 'Scheduler settings' });
+  await settings.getByText('Date overrides', { exact: true }).click();
+  await settings.getByLabel('Date', { exact: true }).fill(date);
+  await settings.getByRole('button', { name: 'Add override' }).click();
+  const override = settings.locator('fieldset').last();
+  await override.getByLabel('Start', { exact: true }).fill(start);
+  await override.getByLabel('End', { exact: true }).fill(end);
+  await settings.getByRole('button', { name: 'Save settings' }).click();
+  await expect(settings).toBeHidden();
+}
+async function clearDateOverride(request: APIRequestContext, origin: string, weekDate: string, overrideDate: string) {
+  const state = await (await request.get(`/api/scheduler/week?week=${weekDate}`)).json();
+  const dates = { ...state.settings.dates };
+  delete dates[overrideDate];
+  const response = await request.post('/api/scheduler/mutate', { headers: { origin }, data: { action: 'settings', week: weekDate, revision: state.revision, settings: { ...state.settings, dates } } });
+  expect(response.ok(), await response.text()).toBeTruthy();
+}
+
+test('unavailable hours and ineligible dates show invalid previews and save nothing', async ({ page, request, baseURL }) => {
+  const available = await createGoal(request, baseURL!, { dailyHours: 0 });
+  const ineligible = await createGoal(request, baseURL!, { dailyHours: 0, startDate: '2026-10-06' });
+  const date = await goToNextWeek(page);
+  await setDateOverride(page, date!, '09:00', '12:00');
+  const day = page.locator(`[data-scheduler-date="${date}"]`);
+  const target = (await day.boundingBox())!;
+  for (const [goal, minute, explanation] of [
+    [available, 60, 'fit inside one scheduling day'],
+    [ineligible, 270, 'not eligible'],
+  ] as const) {
+    const source = await visibleBox(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`));
+    const currentTarget = (await day.boundingBox())!;
+    await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(currentTarget.x + currentTarget.width / 2, currentTarget.y + minute, { steps: 8 });
+    const preview = day.locator('.scheduler-drop-preview');
+    await expect(preview).toHaveClass(/is-invalid/);
+    await expect(preview).toContainText(explanation);
+    await page.mouse.up();
+  }
+  const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
+  expect(state.sessions.some((value: { assignment: { goalId: string } }) => new Set<string>([available.id, ineligible.id]).has(value.assignment.goalId))).toBe(false);
+  await clearDateOverride(request, baseURL!, date!, date!);
+});
+
+test('spring daylight gap shows a specific invalid preview and saves nothing', async ({ page, request, baseURL }) => {
+  const goal = await createGoal(request, baseURL!, { dailyHours: 0, startDate: '2026-01-01' });
+  await page.reload();
+  await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
+  await setDateOverride(page, '2027-03-14', '00:00', '04:00');
+  const targetWeek = '2027-03-08';
+  for (let i = 0; i < 23; i++) await goToNextWeek(page);
+  await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', targetWeek);
+  await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
+  const day = page.locator('[data-scheduler-date="2027-03-14"]');
+  const source = await visibleBox(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`));
+  const target = (await day.boundingBox())!;
+  await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(target.x + target.width / 2, target.y + 150, { steps: 8 });
+  const preview = day.locator('.scheduler-drop-preview');
+  await expect(preview).toHaveClass(/is-invalid/);
+  await expect(preview).toContainText('does not exist');
+  await page.mouse.up();
+  const state = await (await request.get(`/api/scheduler/week?week=${targetWeek}`)).json();
+  expect(state.sessions.some((value: { assignment: { goalId: string } }) => value.assignment.goalId === goal.id)).toBe(false);
+  await clearDateOverride(request, baseURL!, targetWeek, '2027-03-14');
+});
+
+test('mobile touch scrolls the requirement list and drags only from its handle', async ({ page, request, baseURL }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const client = await page.context().newCDPSession(page);
+  await client.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 });
+  const goal = await createGoal(request, baseURL!, { dailyHours: 0 });
+  const date = await goToNextWeek(page);
+  let writes = 0;
+  await page.route('**/api/scheduler/mutate', async route => { writes++; await route.continue(); });
+  const source = await visibleBox(page.locator('.scheduler-goal-title').first());
+  const initialScroll = await page.evaluate(() => scrollY + (document.querySelector('.scheduler-goals')?.scrollTop ?? 0));
+  const x = source.x + source.width / 2, y = source.y + source.height / 2;
+  await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y, id: 1 }] });
+  for (let step = 1; step <= 5; step++) await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y: y - step * 35, id: 1 }] });
+  await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await expect.poll(() => page.evaluate(() => scrollY + (document.querySelector('.scheduler-goals')?.scrollTop ?? 0))).toBeGreaterThan(initialScroll + 50);
+  await page.waitForTimeout(300);
+  await page.evaluate(() => scrollTo(0, 0));
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+  const handle = await visibleBox(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-handle`));
+  const day = page.locator(`[data-scheduler-date="${date}"]`);
+  const target = (await day.boundingBox())!;
+  await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: handle.x + handle.width / 2, y: handle.y + handle.height / 2, id: 2 }] });
+  for (let step = 1; step <= 8; step++) await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: handle.x + handle.width / 2 + (target.x + target.width / 2 - handle.x - handle.width / 2) * step / 8, y: handle.y + handle.height / 2 + (830 - handle.y - handle.height / 2) * step / 8, id: 2 }] });
+  await expect.poll(async () => (await day.boundingBox())?.y).toBeLessThan(650);
+  await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 220, y: 500, id: 2 }] });
+  await page.waitForTimeout(80);
+  const visibleDay = (await day.boundingBox())!;
+  await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: visibleDay.x + visibleDay.width / 2, y: visibleDay.y + 60, id: 2 }] });
+  const preview = day.locator('.scheduler-drop-preview');
+  await expect(preview).toHaveAttribute('data-start', '06:00');
+  const previewStart = await preview.getAttribute('data-start');
+  const previewEnd = await preview.getAttribute('data-end');
+  await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await expect(page.locator('.scheduler-status')).toContainText('Saved.');
+  const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
+  const saved = state.sessions.find((value: { assignment: { goalId: string } }) => value.assignment.goalId === goal.id);
+  expect([localTimeOf(saved.plan.start), localTimeOf(saved.plan.end)]).toEqual([previewStart, previewEnd]);
+  expect(writes).toBe(1);
+
+  await page.evaluate(() => scrollTo(0, 0));
+  const title = await visibleBox(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`));
+  await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: title.x + title.width / 2, y: title.y + title.height / 2, id: 3 }] });
+  await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await expect(page.locator('.scheduler-editor-dialog')).toBeVisible();
+  await page.locator('.scheduler-editor-dialog').getByRole('button', { name: 'Discard draft' }).click();
+
+  await page.evaluate(() => scrollTo(0, 0));
+  const cancelHandle = await visibleBox(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-handle`));
+  await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: cancelHandle.x + cancelHandle.width / 2, y: cancelHandle.y + cancelHandle.height / 2, id: 4 }] });
+  await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 220, y: 830, id: 4 }] });
+  await expect.poll(async () => (await day.boundingBox())?.y).toBeLessThan(650);
+  const cancelDay = (await day.boundingBox())!;
+  await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: cancelDay.x + cancelDay.width / 2, y: cancelDay.y + 120, id: 4 }] });
+  await expect(day.locator('.scheduler-drop-preview')).toBeVisible();
+  await client.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
+  await expect(day.locator('.scheduler-drop-preview')).toHaveCount(0);
+  expect(writes).toBe(1);
+  await page.evaluate(() => scrollTo(0, 0));
+  const titleAfterCancel = await visibleBox(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`));
+  await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: titleAfterCancel.x + titleAfterCancel.width / 2, y: titleAfterCancel.y + titleAfterCancel.height / 2, id: 5 }] });
+  await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await expect(page.locator('.scheduler-editor-dialog')).toBeVisible();
+  expect(writes).toBe(1);
+});
+
+test('tablet touch can start a visible drag handle', async ({ page, request, baseURL }) => {
+  await page.setViewportSize({ width: 820, height: 1112 });
+  const client = await page.context().newCDPSession(page);
+  await client.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 });
+  const goal = await createGoal(request, baseURL!, { dailyHours: 0 });
+  const date = await goToNextWeek(page);
+  const handle = page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-handle`);
+  await expect(handle).toBeVisible();
+  const source = await visibleBox(handle);
+  const day = page.locator(`[data-scheduler-date="${date}"]`);
+  const target = (await day.boundingBox())!;
+  await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: source.x + source.width / 2, y: source.y + source.height / 2, id: 1 }] });
+  await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: target.x + target.width / 2, y: target.y + 60, id: 1 }] });
+  await expect(day.locator('.scheduler-drop-preview')).toHaveAttribute('data-start', '06:00');
+  await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await expect(page.locator('.scheduler-status')).toContainText('Saved.');
+});
+
+test('future actual work shows an invalid preview and sends no mutation', async ({ page, request, baseURL }) => {
+  const goal = await createGoal(request, baseURL!, { dailyHours: 0 });
+  const first = (await page.locator('[data-scheduler-date]').first().getAttribute('data-scheduler-date'))!;
+  const targetWeek = new Date(`${first}T12:00:00Z`);
+  targetWeek.setUTCDate(targetWeek.getUTCDate() + 7);
+  const date = targetWeek.toISOString().slice(0, 10);
+  let writes = 0;
+  await page.route('**/api/scheduler/mutate', async route => { writes++; await route.continue(); });
+  await page.route('**/api/scheduler/week?**', async route => {
+    const response = await route.fetch();
+    const state = await response.json();
+    if (state.week === date) state.sessions.push({
+      id: 'future-actual-preview-fixture', date, assignment: { goalId: goal.id, title: goal.title },
+      plan: null, actual: { status: 'explicit', date, start: `${date}T10:00:00Z`, end: `${date}T11:00:00Z` },
+      state: 'accepted', exception: false, conflictIds: [],
+    });
+    await route.fulfill({ response, json: state });
+  });
+  await goToNextWeek(page);
+  const block = sessionFor(page, goal.title);
+  await expect(block).toBeVisible();
+  const source = await visibleBox(block.locator('.scheduler-block-main'));
+  const nextDay = page.locator('[data-scheduler-date]').nth(1);
+  const target = (await nextDay.boundingBox())!;
+  await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(target.x + target.width / 2, target.y + 90, { steps: 8 });
+  const preview = nextDay.locator('.scheduler-drop-preview');
+  await expect(preview).toHaveClass(/is-invalid/);
+  await expect(preview).toContainText('Actual work cannot end in the future');
+  await page.mouse.up();
+  expect(writes).toBe(0);
 });
