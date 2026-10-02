@@ -1283,7 +1283,8 @@ dd {
   align-items: center;
   gap: 6px;
 }
-.status-tags .flag {
+.status-tags .flag,
+.status-tags .status-best {
   flex-basis: 100%;
 }
 .problem-table .not-found {

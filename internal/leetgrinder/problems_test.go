@@ -215,6 +215,8 @@ func TestStatusFiltersUseLatestResult(t *testing.T) {
 		"status=struggled":   "",
 		"status=solved":      "two-sum,ransom-note",
 		"status=solved-last": "ransom-note",
+		"status=helped":      "",
+		"status=bogus":       "two-sum,ransom-note",
 	} {
 		if got := strings.Join(slugs(query), ","); got != want {
 			t.Errorf("%q: %q, want %q", query, got, want)
@@ -236,7 +238,7 @@ func TestStatusFiltersUseLatestResult(t *testing.T) {
 		t.Fatal(err)
 	}
 	html := out.String()
-	for _, want := range []string{"Ever solved", "Solved last time", "Unfinished last time", `title="Latest result"`, "Best: <span class=\"status-pill status-solved\">Solved independently</span>"} {
+	for _, want := range []string{"Ever solved", "Solved last time", "Unfinished last time", "Needed help last time", "Best: <span class=\"status-pill status-solved\">Solved independently</span>", `<span class="visually-hidden">Latest: </span>`} {
 		if !strings.Contains(html, want) {
 			t.Errorf("problems page missing %q", want)
 		}
@@ -244,5 +246,38 @@ func TestStatusFiltersUseLatestResult(t *testing.T) {
 	// ransom-note best and latest agree, so only two-sum shows a best.
 	if n := strings.Count(html, "Best: "); n != 1 {
 		t.Errorf("%d Best labels, want 1", n)
+	}
+}
+
+func TestHelpedFilterAndNoBestForUnsolved(t *testing.T) {
+	now := time.Date(2026, 10, 20, 12, 0, 0, 0, time.UTC)
+	state := State{Problems: testProblems, Attempts: []Attempt{
+		attempt("two-sum", "solved", 30, true, now.AddDate(0, 0, -1)),
+		attempt("two-sum", "solved", 10, false, now.AddDate(0, -7, 0)),
+		attempt("ransom-note", "unfinished", 25, false, now),
+		attempt("binary-search", "struggled", 30, false, now),
+	}}
+	rows := ProblemRows(state, BuildCards(state, time.UTC), now, time.UTC)
+	q, _ := url.ParseQuery("status=helped")
+	if got := FilterProblems(rows, ParseProblemFilter(q)); len(got) != 1 || got[0].Problem.Slug != "two-sum" {
+		t.Fatalf("helped filter: %+v", got)
+	}
+	var out bytes.Buffer
+	if err := Problems(ProblemsPage{Rows: rows, Total: len(rows), Location: time.UTC, Filter: ParseProblemFilter(url.Values{})}).Render(context.Background(), &out); err != nil {
+		t.Fatal(err)
+	}
+	// Only two-sum (best: independent, latest: with help) shows a Best.
+	if n := strings.Count(out.String(), "Best: "); n != 1 {
+		t.Errorf("%d Best labels in table, want 1", n)
+	}
+	for _, slug := range []string{"ransom-note", "binary-search"} {
+		var html bytes.Buffer
+		s := State{Attempts: state.ProblemAttempts(slug)}
+		if err := ProblemHistory(testProblems[slug], s, NewForm("x"), AnalysisAvailability{}, ProblemReview{}).Render(context.Background(), &html); err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(html.String(), ">Best</span>") || !strings.Contains(html.String(), ">Latest</span>") {
+			t.Errorf("%s page: Best shown for never-solved problem", slug)
+		}
 	}
 }

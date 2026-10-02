@@ -34,6 +34,7 @@ var problemStatuses = []struct{ Key, Label string }{
 	{"flagged", "Flagged"},
 	{"solved", "Ever solved"},
 	{"solved-last", "Solved last time"},
+	{"helped", "Needed help last time"},
 	{"struggled", "Struggled last time"},
 	{"unfinished", "Unfinished last time"},
 }
@@ -104,6 +105,8 @@ func (f ProblemFilter) match(r ProblemRow) bool {
 		return Solved(r.Best)
 	case "solved-last":
 		return Solved(r.Latest)
+	case "helped":
+		return r.Latest == ResultWithHelp
 	case "struggled":
 		return r.Latest == ResultStruggled
 	case "unfinished":
