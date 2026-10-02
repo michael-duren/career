@@ -196,32 +196,47 @@ func (s *Store) LeetgrinderTodoSets(ctx context.Context) ([]leetgrinder.TodoSet,
 	return sets, nil
 }
 
+// leetgrinderTodoRows selects todo entries with done_at, the latest solved or
+// struggled attempt that completes the entry. Any such attempt completes a set
+// entry, so a set shows problems done before it was made. An individual entry
+// counts only attempts since it was added, so adding a done problem again
+// queues it for another pass. Windows compare when an attempt was logged, so
+// correcting an older attempt to solved does not complete an individual entry.
+const leetgrinderTodoRows = `SELECT i.id,COALESCE(i.set_id::text,'') AS set_id,i.set_id AS set_key,p.slug,
+  COALESCE(p.number,0) AS number,p.title,p.difficulty,array_to_json(p.topics)::text AS topics,
+  i.source_data::text AS source_data,i.created_at,
+  (SELECT max(a.created_at) FROM leetgrinder_attempts a
+   WHERE a.problem_slug=i.problem_slug AND a.outcome IN ('solved','struggled')
+     AND (i.set_id IS NOT NULL OR a.created_at>=i.created_at)) AS done_at
+FROM leetgrinder_todo_items i JOIN leetgrinder_problems p ON p.slug=i.problem_slug`
+
+// LeetgrinderTodoItems lists a set's entries, done or not, or with setID ""
+// the individual entries still to do. A done individual entry leaves the list.
 func (s *Store) LeetgrinderTodoItems(ctx context.Context, setID string) ([]leetgrinder.TodoItem, error) {
 	if setID != "" {
 		if _, err := uuid.Parse(setID); err != nil {
 			return nil, ErrInvalid
 		}
 	}
-	rows, err := s.DB.QueryContext(ctx, `SELECT i.id,COALESCE(i.set_id::text,''),p.slug,COALESCE(p.number,0),p.title,p.difficulty,array_to_json(p.topics)::text,i.source_data::text
-FROM leetgrinder_todo_items i JOIN leetgrinder_problems p ON p.slug=i.problem_slug
-WHERE i.set_id IS NOT DISTINCT FROM $1::uuid ORDER BY i.created_at,i.id`, nullableUUID(setID))
+	rows, err := s.DB.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,source_data,done_at
+FROM (`+leetgrinderTodoRows+`) todo
+WHERE set_key IS NOT DISTINCT FROM $1::uuid AND (set_key IS NOT NULL OR done_at IS NULL)
+ORDER BY created_at,id`, nullableUUID(setID))
 	if err != nil {
 		return nil, err
 	}
 	return scanLeetgrinderTodoItems(rows)
 }
 
-// LeetgrinderNextTodoItems returns the oldest queued entry for each problem.
-// A problem present in several sets appears only once on the dashboard.
+// LeetgrinderNextTodoItems returns the oldest queued entry for each problem
+// still to do. A problem present in several sets appears only once on the
+// dashboard.
 func (s *Store) LeetgrinderNextTodoItems(ctx context.Context, limit int) ([]leetgrinder.TodoItem, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,source_data
+	rows, err := s.DB.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,source_data,done_at
 FROM (
-  SELECT DISTINCT ON (p.slug) i.id,COALESCE(i.set_id::text,'') AS set_id,p.slug,
-    COALESCE(p.number,0) AS number,p.title,p.difficulty,
-    array_to_json(p.topics)::text AS topics,i.source_data::text AS source_data,
-    i.created_at
-  FROM leetgrinder_todo_items i JOIN leetgrinder_problems p ON p.slug=i.problem_slug
-  ORDER BY p.slug,i.created_at,i.id
+  SELECT DISTINCT ON (slug) * FROM (`+leetgrinderTodoRows+`) todo
+  WHERE done_at IS NULL
+  ORDER BY slug,created_at,id
 ) next
 ORDER BY created_at,id LIMIT $1`, limit)
 	if err != nil {
@@ -236,8 +251,12 @@ func scanLeetgrinderTodoItems(rows *sql.Rows) ([]leetgrinder.TodoItem, error) {
 	for rows.Next() {
 		var item leetgrinder.TodoItem
 		var topics, metadata string
-		if err := rows.Scan(&item.ID, &item.SetID, &item.Problem.Slug, &item.Problem.Number, &item.Problem.Title, &item.Problem.Difficulty, &topics, &metadata); err != nil {
+		var doneAt sql.NullTime
+		if err := rows.Scan(&item.ID, &item.SetID, &item.Problem.Slug, &item.Problem.Number, &item.Problem.Title, &item.Problem.Difficulty, &topics, &metadata, &doneAt); err != nil {
 			return nil, err
+		}
+		if doneAt.Valid {
+			item.DoneAt = doneAt.Time
 		}
 		if err := json.Unmarshal([]byte(topics), &item.Problem.Topics); err != nil {
 			return nil, err
@@ -291,7 +310,9 @@ func (s *Store) AddLeetgrinderTodoProblem(ctx context.Context, setID string, pro
 	item := leetgrinder.TodoItem{ID: uuid.NewString(), SetID: setID, Problem: leetgrinder.Problem{Slug: problem.Slug}}
 	if setID == "" {
 		err = tx.QueryRowContext(ctx, `INSERT INTO leetgrinder_todo_items(id,problem_slug,source_data) VALUES($1,$2,$3::jsonb)
-ON CONFLICT (problem_slug) WHERE set_id IS NULL DO UPDATE SET source_data=CASE WHEN EXCLUDED.source_data='{}'::jsonb THEN leetgrinder_todo_items.source_data ELSE EXCLUDED.source_data END RETURNING id`, item.ID, problem.Slug, source).Scan(&item.ID)
+ON CONFLICT (problem_slug) WHERE set_id IS NULL DO UPDATE SET source_data=CASE WHEN EXCLUDED.source_data='{}'::jsonb THEN leetgrinder_todo_items.source_data ELSE EXCLUDED.source_data END,
+created_at=CASE WHEN EXISTS (SELECT 1 FROM leetgrinder_attempts a WHERE a.problem_slug=EXCLUDED.problem_slug AND a.outcome IN ('solved','struggled') AND a.created_at>=leetgrinder_todo_items.created_at)
+  THEN clock_timestamp() ELSE leetgrinder_todo_items.created_at END RETURNING id`, item.ID, problem.Slug, source).Scan(&item.ID)
 	} else {
 		err = tx.QueryRowContext(ctx, `INSERT INTO leetgrinder_todo_items(id,set_id,problem_slug,source_data) VALUES($1,$2,$3,$4::jsonb)
 ON CONFLICT (set_id,problem_slug) DO UPDATE SET source_data=CASE WHEN EXCLUDED.source_data='{}'::jsonb THEN leetgrinder_todo_items.source_data ELSE EXCLUDED.source_data END RETURNING id`, item.ID, setID, problem.Slug, source).Scan(&item.ID)

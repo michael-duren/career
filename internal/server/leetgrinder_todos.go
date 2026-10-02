@@ -16,6 +16,11 @@ func (s *Server) todoPage(w http.ResponseWriter, r *http.Request, status int, pa
 	if err == nil {
 		page.Standalone, err = s.db.LeetgrinderTodoItems(r.Context(), "")
 	}
+	if err == nil {
+		var settings leetgrinder.Settings
+		settings, err = s.db.LeetgrinderSettings(r.Context())
+		page.Location = settings.Location()
+	}
 	if err != nil {
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your todos are unavailable. Please retry."))
 		return

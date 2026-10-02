@@ -5,6 +5,9 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+
+	"github.com/google/uuid"
+	"github.com/michael-duren/career-strategy/internal/leetgrinder"
 )
 
 func TestMCPLeetgrinderTodos(t *testing.T) {
@@ -34,14 +37,21 @@ func TestMCPLeetgrinderTodos(t *testing.T) {
 	if failed {
 		t.Fatal(standalone)
 	}
+	if _, err := db.SaveLeetgrinderAttempt(context.Background(), leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "clone-graph", Outcome: "solved", Minutes: 15, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}, ""); err != nil {
+		t.Fatal(err)
+	}
 	listed, failed := call("list_leetgrinder_todos", nil)
 	if failed {
 		t.Fatal(listed)
 	}
 	sets := listed["sets"].([]any)
-	problems := sets[0].(map[string]any)["problems"].([]any)
+	listedSet := sets[0].(map[string]any)
+	problems := listedSet["problems"].([]any)
 	if len(sets) != 1 || len(problems) != 3 || len(listed["individualProblems"].([]any)) != 1 {
 		t.Fatal(listed)
+	}
+	if listedSet["problemCount"] != float64(3) || listedSet["remainingCount"] != float64(2) || problems[1].(map[string]any)["done"] != true || problems[0].(map[string]any)["done"] != false {
+		t.Fatal("set progress", listedSet)
 	}
 	if out, failed := call("add_leetgrinder_todo_problem", map[string]any{"problem": "https://example.com/problems/bad/"}); !failed || !strings.Contains(out["error"].(string), "invalid") {
 		t.Fatal(out)

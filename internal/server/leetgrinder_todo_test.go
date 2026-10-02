@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/michael-duren/career-strategy/internal/leetgrinder"
 )
 
@@ -122,5 +123,87 @@ func TestDashboardShowsNextFiveDistinctTodoProblems(t *testing.T) {
 	}
 	if strings.Contains(section, "/leetgrinder/problem/number-of-islands") || strings.Count(section, "/leetgrinder/problem/two-sum") != 1 {
 		t.Fatal("dashboard did not show five distinct next problems")
+	}
+}
+
+func TestDoneTodosLeaveTheQueueAndCountInSets(t *testing.T) {
+	_, db, request := leetgrinderTestServer(t)
+	ctx := context.Background()
+	attempt := func(slug, outcome string) {
+		t.Helper()
+		a := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: slug, Outcome: outcome, Minutes: 20}
+		if outcome != "unfinished" {
+			a.TimeComplexity, a.SpaceComplexity = "O(n)", "O(1)"
+		}
+		if _, err := db.SaveLeetgrinderAttempt(ctx, a, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	attempt("two-sum", "solved")
+	if _, err := db.CreateLeetgrinderTodoSet(ctx, "Blind 75", []string{"two-sum", "valid-parentheses", "three-sum"}); err != nil {
+		t.Fatal(err)
+	}
+	for _, slug := range []string{"merge-intervals", "clone-graph"} {
+		if _, err := db.AddLeetgrinderTodoItem(ctx, "", slug); err != nil {
+			t.Fatal(err)
+		}
+	}
+	attempt("valid-parentheses", "struggled")
+	attempt("three-sum", "unfinished")
+	attempt("merge-intervals", "solved")
+
+	sets, err := db.LeetgrinderTodoSets(ctx)
+	if err != nil || len(sets) != 1 || len(sets[0].Items) != 3 || sets[0].Remaining() != 1 {
+		t.Fatalf("set keeps done problems and counts the rest: %+v %v", sets, err)
+	}
+	for _, item := range sets[0].Items {
+		if want := item.Problem.Slug != "three-sum"; item.Done() != want {
+			t.Errorf("%s done=%v, want %v", item.Problem.Slug, item.Done(), want)
+		}
+	}
+	standalone, err := db.LeetgrinderTodoItems(ctx, "")
+	if err != nil || len(standalone) != 1 || standalone[0].Problem.Slug != "clone-graph" {
+		t.Fatalf("done individual problem must leave the list: %+v %v", standalone, err)
+	}
+
+	page := request("GET", "/leetgrinder/todos", nil).Body.String()
+	if !strings.Contains(page, "1 of 3 remaining") || strings.Count(page, ">Done</span>") != 2 || strings.Contains(page, "/leetgrinder/problem/merge-intervals") {
+		t.Fatalf("todo page progress: %s", page)
+	}
+	dashboard := request("GET", "/leetgrinder", nil).Body.String()
+	section := dashboard[strings.Index(dashboard, `id="next-todos-title"`):]
+	section = section[:strings.Index(section, "</section>")]
+	for _, slug := range []string{"two-sum", "valid-parentheses", "merge-intervals"} {
+		if strings.Contains(section, "/leetgrinder/problem/"+slug+`"`) {
+			t.Errorf("dashboard queue shows done %s", slug)
+		}
+	}
+	if !strings.Contains(section, "/leetgrinder/problem/three-sum") || !strings.Contains(section, "/leetgrinder/problem/clone-graph") {
+		t.Fatal("dashboard queue lost open problems")
+	}
+
+	if _, err = db.AddLeetgrinderTodoItem(ctx, "", "merge-intervals"); err != nil {
+		t.Fatal(err)
+	}
+	standalone, err = db.LeetgrinderTodoItems(ctx, "")
+	if err != nil || len(standalone) != 2 || standalone[1].Problem.Slug != "merge-intervals" {
+		t.Fatalf("adding a done problem again must queue it: %+v %v", standalone, err)
+	}
+
+	attempt("clone-graph", "unfinished")
+	if _, err = db.AddLeetgrinderTodoItem(ctx, "", "clone-graph"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.AddLeetgrinderTodoItem(ctx, "", "two-sum"); err != nil {
+		t.Fatal(err)
+	}
+	standalone, err = db.LeetgrinderTodoItems(ctx, "")
+	if err != nil || len(standalone) != 3 || standalone[0].Problem.Slug != "clone-graph" || standalone[2].Problem.Slug != "two-sum" || standalone[2].Done() {
+		t.Fatalf("open entries keep their place and earlier solves do not complete new entries: %+v %v", standalone, err)
+	}
+
+	attempt("three-sum", "solved")
+	if page = request("GET", "/leetgrinder/todos", nil).Body.String(); !strings.Contains(page, "All 3 done") {
+		t.Fatal("finished set must say so")
 	}
 }
