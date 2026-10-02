@@ -290,9 +290,19 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, avail Analy
 				target="_blank"
 				rel="noopener noreferrer"
 			>Open on LeetCode ↗</a>
-			<span class={ StatusClass(state.ProblemStatus(problem.Slug)) }>
-				{ state.ProblemStatus(problem.Slug) }
-			</span>
+			{{ latest, best := state.ProblemLatest(problem.Slug), state.ProblemBest(problem.Slug) }}
+			if latest != ResultNone {
+				<span class="status-group">
+					<span class="small muted">Latest</span>
+					<span class={ StatusClass(latest) }>{ latest }</span>
+				</span>
+			}
+			if ShowBest(best, latest) {
+				<span class="status-group">
+					<span class="small muted">Best</span>
+					<span class={ StatusClass(best) }>{ best }</span>
+				</span>
+			}
 			if review.Pick {
 				<span class="badge">Today's review</span>
 			} else if review.Due {
@@ -698,7 +708,7 @@ templ Problems(page ProblemsPage) {
 </td>
 								<td class="status">
 									<div class="status-tags">
-										<span class={ StatusClass(row.Status) }>{ row.Status }</span>
+										<span class={ StatusClass(row.Latest) }><span class="visually-hidden">Latest: </span>{ row.Latest }</span>
 										if row.Due {
 											<span class="badge">Due</span>
 										}
@@ -707,6 +717,9 @@ templ Problems(page ProblemsPage) {
 										}
 										if row.Card.Flag != nil {
 											<span class="small flag">{ row.Card.Flag.Label() }</span>
+										}
+										if ShowBest(row.Best, row.Latest) {
+											<span class="small muted status-best">Best: <span class={ StatusClass(row.Best) }>{ row.Best }</span></span>
 										}
 									</div>
 								</td>

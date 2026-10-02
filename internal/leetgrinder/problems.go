@@ -11,9 +11,11 @@ import (
 
 // ProblemRow is one attempted problem with the learner's progress on it.
 type ProblemRow struct {
-	Problem  Problem
-	Status   string
-	Attempts int
+	Problem Problem
+	// Best is the best result over every attempt, and Latest the result of
+	// the newest one (see bestOf and latestOf).
+	Best, Latest string
+	Attempts     int
 	// Last is the newest attempt.
 	Last Attempt
 	// ComplexityWrong reports that the analysis of Last judged a stated
@@ -30,9 +32,11 @@ type ProblemRow struct {
 var problemStatuses = []struct{ Key, Label string }{
 	{"due", "Due for review"},
 	{"flagged", "Flagged"},
-	{"solved", "Solved"},
-	{"struggled", "Struggled"},
-	{"unfinished", "Unfinished"},
+	{"solved", "Ever solved"},
+	{"solved-last", "Solved last time"},
+	{"helped", "Needed help last time"},
+	{"struggled", "Struggled last time"},
+	{"unfinished", "Unfinished last time"},
 }
 
 var problemSorts = []struct{ Key, Label string }{
@@ -98,11 +102,15 @@ func (f ProblemFilter) match(r ProblemRow) bool {
 	case "flagged":
 		return r.Card.Flagged()
 	case "solved":
-		return strings.HasPrefix(r.Status, "Solved")
+		return isSolve(r.Best)
+	case "solved-last":
+		return isSolve(r.Latest)
+	case "helped":
+		return r.Latest == ResultWithHelp
 	case "struggled":
-		return r.Status == "Struggled"
+		return r.Latest == ResultStruggled
 	case "unfinished":
-		return r.Status == "Unfinished"
+		return r.Latest == ResultUnfinished
 	}
 	return true
 }
@@ -153,7 +161,7 @@ func ProblemRows(state State, cards []Card, now time.Time, loc *time.Location) [
 	for _, slug := range slugs {
 		attempts := bySlug[slug]
 		a := attempts[0]
-		row := ProblemRow{Problem: state.Problem(slug), Status: statusOf(attempts), Attempts: len(attempts), Last: a, ComplexityWrong: state.StatedWrong(a.ID)}
+		row := ProblemRow{Problem: state.Problem(slug), Best: bestOf(attempts), Latest: latestOf(attempts), Attempts: len(attempts), Last: a, ComplexityWrong: state.StatedWrong(a.ID)}
 		if c, ok := byCard[slug]; ok {
 			row.Card, row.Due, row.Recall = c, c.Due.Before(end), c.Retrievability(now)
 		}
@@ -259,13 +267,13 @@ func ProblemSortOptions() []FilterOption {
 // StatusClass maps a progress label to its pill class.
 func StatusClass(label string) string {
 	switch label {
-	case "Solved independently":
+	case ResultIndependent:
 		return "status-pill status-solved"
-	case "Solved with help":
+	case ResultWithHelp:
 		return "status-pill status-solved-help"
-	case "Struggled":
+	case ResultStruggled:
 		return "status-pill status-struggled"
-	case "Unfinished":
+	case ResultUnfinished:
 		return "status-pill status-unfinished"
 	}
 	return "status-pill status-not-attempted"

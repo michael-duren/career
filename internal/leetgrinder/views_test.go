@@ -43,6 +43,9 @@ func TestProblemHistoryForAnyProblem(t *testing.T) {
 			t.Errorf("unknown problem page missing %q", want)
 		}
 	}
+	if strings.Contains(html, ">Latest</span>") || strings.Contains(html, "Not attempted") {
+		t.Error("unattempted problem shows a result")
+	}
 	if html = render(Problem{Slug: "queued", InCatalog: true}, State{}); !strings.Contains(html, "Fetching details from LeetCode…") {
 		t.Error("catalogued problem does not say it is fetching")
 	}
@@ -144,5 +147,26 @@ func TestAttemptHistoryUsesSettingsZoneAndDayKind(t *testing.T) {
 	}
 	if got := (ProblemReview{}).AttemptTime(second).Format("15:04 MST"); got != "03:30 UTC" {
 		t.Fatalf("fallback %q", got)
+	}
+}
+
+func TestProblemHistoryShowsLatestAndBest(t *testing.T) {
+	now := time.Date(2026, 10, 20, 12, 0, 0, 0, time.UTC)
+	render := func(state State) string {
+		var out bytes.Buffer
+		if err := ProblemHistory(testProblems["two-sum"], state, NewForm(uuid.NewString()), AnalysisAvailability{}, ProblemReview{}).Render(context.Background(), &out); err != nil {
+			t.Fatal(err)
+		}
+		return out.String()
+	}
+	html := render(State{Attempts: []Attempt{attempt("two-sum", "unfinished", 25, false, now), attempt("two-sum", "solved", 10, false, now.AddDate(0, -7, 0))}})
+	for _, want := range []string{`>Latest</span>`, `status-unfinished">Unfinished</span>`, `>Best</span>`, `status-solved">Solved independently</span>`} {
+		if !strings.Contains(html, want) {
+			t.Errorf("solved-then-unfinished page missing %q", want)
+		}
+	}
+	html = render(State{Attempts: []Attempt{attempt("two-sum", "solved", 10, false, now)}})
+	if !strings.Contains(html, `>Latest</span>`) || strings.Contains(html, `>Best</span>`) {
+		t.Error("equal best and latest should show only the latest")
 	}
 }
