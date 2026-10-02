@@ -92,8 +92,51 @@ func (s *Store) LeetgrinderNtfyTokenStored(ctx context.Context) (bool, error) {
 // LeetgrinderToday loads settings and history and returns today's view for
 // now. On first access for a local date it freezes that date's goal from
 // settings and plans its review picks; later accesses only add picks when
-// the frozen review target has more slots than the plan.
+// the frozen review target has more slots than the plan and more cards are
+// due. Accesses that would change nothing read one snapshot without a lock.
 func (s *Store) LeetgrinderToday(ctx context.Context, now time.Time) (leetgrinder.Today, error) {
+	if today, ok, err := s.leetgrinderTodayPlanned(ctx, now); err != nil || ok {
+		return today, err
+	}
+	return s.planLeetgrinderToday(ctx, now)
+}
+
+// leetgrinderTodayPlanned returns today's view from one read-only snapshot.
+// It reports false when today's goal is not frozen yet or its plan would
+// take more picks; those need planLeetgrinderToday.
+func (s *Store) leetgrinderTodayPlanned(ctx context.Context, now time.Time) (leetgrinder.Today, bool, error) {
+	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true})
+	if err != nil {
+		return leetgrinder.Today{}, false, err
+	}
+	defer tx.Rollback()
+	settings, err := scanLeetgrinderSettings(tx.QueryRowContext(ctx, "SELECT "+leetgrinderSettingsColumns+" FROM leetgrinder_settings WHERE id=1"))
+	if err != nil {
+		return leetgrinder.Today{}, false, err
+	}
+	loc := settings.Location()
+	date := leetgrinder.Date(now, loc)
+	state, err := loadLeetgrinderState(ctx, tx, false)
+	if err != nil {
+		return leetgrinder.Today{}, false, err
+	}
+	if err = tx.Commit(); err != nil {
+		return leetgrinder.Today{}, false, err
+	}
+	goal, ok := state.Goals[date]
+	if !ok {
+		return leetgrinder.Today{}, false, nil
+	}
+	// A plan shorter than its target stays short while nothing more is due.
+	if existing := state.Plans[date]; len(existing) < goal.Review && len(leetgrinder.PlanReviews(leetgrinder.BuildCards(state, loc), date, loc, goal.Review, existing)) > len(existing) {
+		return leetgrinder.Today{}, false, nil
+	}
+	return leetgrinder.NewToday(settings, state, now), true, nil
+}
+
+// planLeetgrinderToday freezes today's goal and extends its plan under a
+// lock, re-checking both, and returns today's view.
+func (s *Store) planLeetgrinderToday(ctx context.Context, now time.Time) (leetgrinder.Today, error) {
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return leetgrinder.Today{}, err

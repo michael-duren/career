@@ -247,6 +247,148 @@ func TestLeetgrinderTodayFreezesReviewPlan(t *testing.T) {
 	}
 }
 
+// Accesses that would not change today's goal or plan never take the planner
+// lock; the rest still do and still agree on one plan.
+func TestLeetgrinderTodayReadsWithoutLock(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	settings, err := s.LeetgrinderSettings(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.UpdateLeetgrinderSettings(ctx, settings.Revision, func(v *leetgrinder.Settings) error {
+		v.Timezone = "UTC"
+		v.Goal.Review = 2
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	now := time.Date(2026, 10, 2, 12, 0, 0, 0, time.UTC)
+	old := now.AddDate(0, 0, -20)
+	created := map[string]time.Time{"binary-search": old, "two-sum": now.Add(-time.Hour), "isomorphic-strings": now.Add(-time.Hour)}
+	for slug, at := range created {
+		a := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: slug, Outcome: "unfinished", Minutes: 25}
+		if _, err = s.SaveLeetgrinderAttempt(ctx, a, ""); err != nil {
+			t.Fatal(err)
+		}
+		if _, err = s.DB.Exec("UPDATE leetgrinder_attempts SET created_at=$1 WHERE id=$2", at, a.ID); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// holdLock takes the planner lock on its own connection until released.
+	holdLock := func() func() {
+		t.Helper()
+		conn, err := s.DB.Conn(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err = conn.ExecContext(ctx, "SELECT pg_advisory_lock(724193611)"); err != nil {
+			t.Fatal(err)
+		}
+		return func() {
+			if _, err := conn.ExecContext(ctx, "SELECT pg_advisory_unlock(724193611)"); err != nil {
+				t.Error(err)
+			}
+			conn.Close()
+		}
+	}
+	// todayWhileLocked reports whether LeetgrinderToday finished while the
+	// lock was held.
+	todayWhileLocked := func() (leetgrinder.Today, bool) {
+		t.Helper()
+		release := holdLock()
+		defer release()
+		short, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
+		defer cancel()
+		today, err := s.LeetgrinderToday(short, now)
+		return today, err == nil
+	}
+	picks := func(today leetgrinder.Today) []string {
+		var slugs []string
+		for _, r := range today.Reviews {
+			slugs = append(slugs, r.Problem.Slug)
+		}
+		return slugs
+	}
+	counts := func() (goals, planned int) {
+		t.Helper()
+		if err := s.DB.QueryRow("SELECT (SELECT count(*) FROM leetgrinder_daily_goal),(SELECT count(*) FROM leetgrinder_review_plan)").Scan(&goals, &planned); err != nil {
+			t.Fatal(err)
+		}
+		return goals, planned
+	}
+	concurrent := func(want []string) {
+		t.Helper()
+		var wg sync.WaitGroup
+		plans := make(chan []string, 8)
+		for range 8 {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				today, err := s.LeetgrinderToday(ctx, now)
+				if err != nil {
+					t.Error(err)
+					return
+				}
+				plans <- picks(today)
+			}()
+		}
+		wg.Wait()
+		close(plans)
+		for plan := range plans {
+			if !reflect.DeepEqual(plan, want) {
+				t.Fatalf("concurrent plans disagree: %v, want %v", plan, want)
+			}
+		}
+	}
+
+	// The first visit freezes the goal, so it needs the lock.
+	if _, ok := todayWhileLocked(); ok {
+		t.Fatal("first visit did not wait for the planner lock")
+	}
+	if goals, planned := counts(); goals != 0 || planned != 0 {
+		t.Fatalf("blocked first visit wrote %d goals %d picks", goals, planned)
+	}
+	concurrent([]string{"binary-search"})
+	// Only one card is due, so the short plan is read without the lock.
+	today, ok := todayWhileLocked()
+	if !ok || today.Goal.Review != 2 || !reflect.DeepEqual(picks(today), []string{"binary-search"}) {
+		t.Fatalf("short plan with nothing due took the lock: %v %+v %v", ok, today.Goal, picks(today))
+	}
+	if goals, planned := counts(); goals != 1 || planned != 1 {
+		t.Fatalf("persisted %d goals %d picks", goals, planned)
+	}
+	// Another card falling due fills the open slot, under the lock.
+	if _, err = s.DB.Exec("UPDATE leetgrinder_attempts SET created_at=$1 WHERE problem_slug='two-sum'", old); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok = todayWhileLocked(); ok {
+		t.Fatal("extending the plan did not wait for the planner lock")
+	}
+	concurrent([]string{"binary-search", "two-sum"})
+	// A full plan is read without the lock and writes nothing.
+	today, ok = todayWhileLocked()
+	if !ok || !reflect.DeepEqual(picks(today), []string{"binary-search", "two-sum"}) {
+		t.Fatalf("full plan took the lock: %v %v", ok, picks(today))
+	}
+	if goals, planned := counts(); goals != 1 || planned != 2 {
+		t.Fatalf("persisted %d goals %d picks", goals, planned)
+	}
+	// A higher frozen target with a due card adds a pick.
+	if _, err = s.DB.Exec("UPDATE leetgrinder_daily_goal SET goal_review=3"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.DB.Exec("UPDATE leetgrinder_attempts SET created_at=$1 WHERE problem_slug='isomorphic-strings'", old); err != nil {
+		t.Fatal(err)
+	}
+	if today, err = s.LeetgrinderToday(ctx, now); err != nil || len(today.Reviews) != 3 || today.Reviews[2].Problem.Slug != "isomorphic-strings" {
+		t.Fatalf("raised target: %v %v", picks(today), err)
+	}
+	if goals, planned := counts(); goals != 1 || planned != 3 {
+		t.Fatalf("persisted %d goals %d picks", goals, planned)
+	}
+}
+
 func TestLeetgrinderAttemptSource(t *testing.T) {
 	s := testStore(t)
 	ctx := context.Background()
