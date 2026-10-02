@@ -318,8 +318,24 @@ func TestLeetgrinderAPIReviewStatus(t *testing.T) {
 	if _, err := db.DB.ExecContext(ctx, "UPDATE leetgrinder_attempts SET created_at=$1 WHERE id=$2", now.Add(-time.Hour), review); err != nil {
 		t.Fatal(err)
 	}
-	// Still today's pick, now attempted today.
-	if info := get(); !info.AttemptedToday || !info.TodaysPick {
+	// The pick's recall is read before today's review, like its reason.
+	before := func() float64 {
+		r := httptest.NewRequest("GET", "/api/leetgrinder/today", nil)
+		r.Header.Set("Authorization", "Bearer "+plain)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, r)
+		var out leetgrinderAPIToday
+		if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &out) != nil || len(out.Picks) != 1 {
+			t.Fatalf("today: %d %s", w.Code, w.Body.String())
+		}
+		return out.Picks[0].Recall
+	}()
+	if before <= 0 || before > 0.5 {
+		t.Fatalf("pick recall %v should be the stale pre-review estimate", before)
+	}
+	// Still today's pick, now attempted today. Its new FSRS date is ahead, so
+	// the due date reported is today.
+	if info := get(); !info.AttemptedToday || !info.TodaysPick || info.Status != "due" || info.DueDate != "2026-10-10" {
 		t.Fatalf("done review not reported: %+v", info)
 	}
 	// The next day it is no longer due.
