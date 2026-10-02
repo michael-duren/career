@@ -17,6 +17,16 @@ func TestLeetgrinderEditOptimal(t *testing.T) {
 	s, db, request := leetgrinderTestServer(t)
 	ctx := context.Background()
 	slug := "mystery-problem"
+	// A problem with no attempts reveals nothing and gets no row.
+	for _, c := range []struct{ method, path string }{{"GET", "/leetgrinder/problem/two-sum/optimal"}, {"POST", "/leetgrinder/problem/two-sum/optimal"}, {"POST", "/leetgrinder/problem/" + slug + "/optimal"}, {"POST", "/leetgrinder/problem/" + slug + "/optimal/reestimate"}} {
+		if w := request(c.method, c.path, url.Values{"timeComplexity": {"O(1)"}, "spaceComplexity": {"O(1)"}, "revision": {"x"}}); w.Code != 404 || strings.Contains(w.Body.String(), "O(n)") {
+			t.Errorf("%s %s without attempts: %d", c.method, c.path, w.Code)
+		}
+	}
+	var rows int
+	if err := db.DB.QueryRowContext(ctx, "SELECT count(*) FROM leetgrinder_problems WHERE slug=$1", slug).Scan(&rows); err != nil || rows != 0 {
+		t.Fatalf("a form created a row: %d %v", rows, err)
+	}
 	if _, err := db.SaveLeetgrinderAttempt(ctx, leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: slug, Outcome: "solved", Minutes: 20, Source: "extension", TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}, ""); err != nil {
 		t.Fatal(err)
 	}
@@ -106,9 +116,21 @@ func TestLeetgrinderEditOptimal(t *testing.T) {
 		t.Fatalf("analysis overwrote the manual value: %+v", p)
 	}
 
-	// A form opened before the edit is refused.
-	if w = request("POST", edit, url.Values{"timeComplexity": {"O(1)"}, "spaceComplexity": {"O(1)"}, "revision": {"stale"}}); w.Code != 409 {
-		t.Errorf("stale edit: %d", w.Code)
+	// A form opened before the edit is refused, showing the current value
+	// beside the draft with the current revision, so resubmitting overwrites.
+	w = request("POST", edit, url.Values{"timeComplexity": {"O(1)"}, "spaceComplexity": {"O(1)"}, "note": {"my draft"}, "revision": {"stale"}})
+	if w.Code != 409 || !strings.Contains(w.Body.String(), "Current value: time O(n log n), space O(1) (Your value)") || !strings.Contains(w.Body.String(), `value="`+revision()+`"`) || !strings.Contains(w.Body.String(), `value="my draft"`) || !strings.Contains(w.Body.String(), "Saving again replaces the current value") {
+		t.Errorf("stale edit: %d\n%s", w.Code, w.Body.String())
+	}
+	if p := problem(); p.OptimalTime != "O(n log n)" {
+		t.Fatalf("stale edit saved %+v", p)
+	}
+	retry := url.Values{"timeComplexity": {"O(1)"}, "spaceComplexity": {"O(1)"}, "revision": {revision()}}
+	if w = request("POST", edit, retry); w.Code != 303 || problem().OptimalTime != "O(1)" {
+		t.Fatalf("deliberate overwrite: %d %+v", w.Code, problem())
+	}
+	if _, err := db.DB.ExecContext(ctx, `UPDATE leetgrinder_problems SET optimal_time='O(n log n)' WHERE slug=$1`, slug); err != nil {
+		t.Fatal(err)
 	}
 	// Re-estimate refuses a manual value; the curated label shows for seeds.
 	re := "/leetgrinder/problem/" + slug + "/optimal/reestimate"
@@ -134,6 +156,12 @@ func TestLeetgrinderEditOptimal(t *testing.T) {
 	}
 	if p := problem(); p.OptimalSource != "" || p.HasOptimal() || p.OptimalNote != "" {
 		t.Fatalf("not cleared: %+v", p)
+	}
+	if b := request("GET", "/leetgrinder/problem/"+slug+"?reestimated=1", nil).Body.String(); !strings.Contains(b, "next analysed attempt, or Re-analyse") {
+		t.Errorf("no notice after re-estimate:\n%s", b)
+	}
+	if b := page(); strings.Contains(b, "next analysed attempt, or Re-analyse") {
+		t.Error("notice shown without a redirect from Re-estimate")
 	}
 
 	// Same-origin, form-encoded, signed-in requests only.

@@ -29,6 +29,9 @@ templ OptimalEdit(p Problem, form OptimalForm) {
 			if form.Error != "" {
 				<p class="error" role="alert">{ form.Error }</p>
 			}
+			if form.Conflict {
+				<p class="notice">The current value is shown above and your draft is in the form below. Saving again replaces the current value with your draft.</p>
+			}
 			<form method="post" action={ templ.SafeURL(OptimalEditURL(p.Slug)) }>
 				<input type="hidden" name="revision" value={ form.Revision }/>
 				<fieldset class="complexity">
@@ -44,9 +47,6 @@ templ OptimalEdit(p Problem, form OptimalForm) {
 					<a class="button" href={ templ.SafeURL(ProblemURL(p.Slug)) }>Cancel</a>
 				</p>
 			</form>
-			if form.Error != "" {
-				<p class="small"><a href={ templ.SafeURL(OptimalEditURL(p.Slug)) }>Reload the current value</a> before reapplying a conflicting edit. Your draft is shown above.</p>
-			}
 		</section>
 	}
 }

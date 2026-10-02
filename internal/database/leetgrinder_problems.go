@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"time"
-	"unicode/utf8"
 
 	"github.com/michael-duren/career-strategy/internal/leetgrinder"
 )
@@ -133,14 +132,34 @@ WHERE slug=$1 AND optimal_source='' AND optimal_time='' AND optimal_space=''`, s
 	return err
 }
 
-// lockLeetgrinderOptimal adds slug's catalog row if it has none and returns
-// it locked for update, after checking that its optimal values still match
-// the revision the form was rendered from (Problem.OptimalRevision).
-func lockLeetgrinderOptimal(ctx context.Context, tx *sql.Tx, slug, revision string) (leetgrinder.Problem, error) {
-	if err := ensureLeetgrinderProblem(ctx, tx, slug); err != nil {
-		return leetgrinder.Problem{}, err
+// LeetgrinderOptimalProblem returns slug's catalog row for the optimal
+// complexity forms. It is ErrNotFound unless the problem has an attempt, since
+// the optimum is hidden until the first attempt and a form must never create
+// a row (and so queue a LeetCode fetch).
+func (s *Store) LeetgrinderOptimalProblem(ctx context.Context, slug string) (leetgrinder.Problem, error) {
+	return optimalProblem(ctx, s.DB, slug, "")
+}
+
+type rowQueryer interface {
+	QueryRowContext(context.Context, string, ...any) *sql.Row
+}
+
+func optimalProblem(ctx context.Context, q rowQueryer, slug, suffix string) (leetgrinder.Problem, error) {
+	if !leetgrinder.ValidSlug(slug) {
+		return leetgrinder.Problem{}, ErrNotFound
 	}
-	p, err := scanLeetgrinderProblem(tx.QueryRowContext(ctx, "SELECT "+leetgrinderProblemColumns+" FROM leetgrinder_problems WHERE slug=$1 FOR UPDATE", slug))
+	p, err := scanLeetgrinderProblem(q.QueryRowContext(ctx, "SELECT "+leetgrinderProblemColumns+" FROM leetgrinder_problems WHERE slug=$1 AND EXISTS (SELECT 1 FROM leetgrinder_attempts WHERE problem_slug=$1)"+suffix, slug))
+	if errors.Is(err, sql.ErrNoRows) {
+		return p, ErrNotFound
+	}
+	return p, err
+}
+
+// lockLeetgrinderOptimal returns slug's row locked for update, after checking
+// that its optimal values still match the revision the form was rendered from
+// (Problem.OptimalRevision).
+func lockLeetgrinderOptimal(ctx context.Context, tx *sql.Tx, slug, revision string) (leetgrinder.Problem, error) {
+	p, err := optimalProblem(ctx, tx, slug, " FOR UPDATE OF leetgrinder_problems")
 	if err != nil {
 		return p, err
 	}
@@ -152,18 +171,14 @@ func lockLeetgrinderOptimal(ctx context.Context, tx *sql.Tx, slug, revision stri
 
 // SaveLeetgrinderManualOptimal stores the learner's own optimal time, space
 // and note with optimal_source = 'manual', replacing a model estimate, a
-// curated value or an earlier manual one. Time and space must already pass
-// NormalizeComplexity and be present; ErrInvalid otherwise. ErrConflict means
-// the values changed since the form was rendered. Later model estimates and
-// catalog seeding never replace it.
+// curated value or an earlier manual one. The values are validated with
+// leetgrinder.NormalizeOptimal (ErrInvalid otherwise). ErrNotFound means the
+// problem has no attempts, and ErrConflict that the values changed since the
+// form was rendered. Later model estimates and catalog seeding never replace it.
 func (s *Store) SaveLeetgrinderManualOptimal(ctx context.Context, slug, optimalTime, optimalSpace, note, revision string) error {
-	if !leetgrinder.ValidSlug(slug) || optimalTime == "" || optimalSpace == "" || utf8.RuneCountInString(note) > leetgrinder.MaxOptimalNote {
+	optimalTime, optimalSpace, note, err := leetgrinder.NormalizeOptimal(optimalTime, optimalSpace, note)
+	if err != nil {
 		return ErrInvalid
-	}
-	for _, c := range []string{optimalTime, optimalSpace} {
-		if n, err := leetgrinder.NormalizeComplexity(c); err != nil || n != c {
-			return ErrInvalid
-		}
 	}
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
@@ -181,12 +196,10 @@ func (s *Store) SaveLeetgrinderManualOptimal(ctx context.Context, slug, optimalT
 
 // ClearLeetgrinderModelOptimal removes Claude's estimate so the next analysis
 // estimates again. It only ever clears optimal_source = 'model': a curated or
-// manual value is ErrInvalid. ErrConflict means the values changed since the
-// form was rendered. Existing analyses are left as they are.
+// manual value is ErrInvalid. ErrNotFound means the problem has no attempts,
+// and ErrConflict that the values changed since the form was rendered.
+// Existing analyses are left as they are.
 func (s *Store) ClearLeetgrinderModelOptimal(ctx context.Context, slug, revision string) error {
-	if !leetgrinder.ValidSlug(slug) {
-		return ErrInvalid
-	}
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return err

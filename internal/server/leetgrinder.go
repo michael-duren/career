@@ -186,7 +186,11 @@ func (s *Server) leetgrinderProblem(w http.ResponseWriter, r *http.Request) {
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your attempt history is unavailable. Please retry."))
 		return
 	}
-	renderLeetgrinder(w, r, 200, leetgrinder.ProblemHistory(problem, state, leetgrinder.NewForm(uuid.NewString()), s.historyAnalysis(r), s.problemReview(r, state, problem.Slug)))
+	form := leetgrinder.NewForm(uuid.NewString())
+	if r.URL.Query().Get("reestimated") != "" && !problem.HasOptimal() {
+		form.OptimalNotice = "Claude's estimate was cleared. The next analysed attempt, or Re-analyse on an attempt with captured code, estimates it again."
+	}
+	renderLeetgrinder(w, r, 200, leetgrinder.ProblemHistory(problem, state, form, s.historyAnalysis(r), s.problemReview(r, state, problem.Slug)))
 }
 
 // problemReview is slug's review state for its page. It reads today without

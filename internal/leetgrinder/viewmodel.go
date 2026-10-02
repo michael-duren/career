@@ -27,6 +27,9 @@ type AttemptForm struct {
 	Error  string
 	// Time and Space are the complexity controls as submitted.
 	Time, Space ComplexityInput
+
+	// OptimalNotice is shown in the optimal complexity panel after Re-estimate.
+	OptimalNotice string
 }
 
 // ComplexityInput is one complexity control: Choice is "", a canonical
