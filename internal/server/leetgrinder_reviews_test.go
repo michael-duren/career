@@ -35,7 +35,7 @@ func TestLeetgrinderGeneralSettings(t *testing.T) {
 	if w := request("GET", "/leetgrinder/settings", nil); !strings.Contains(w.Body.String(), "Changes apply from today.") {
 		t.Fatal("unfrozen day not explained")
 	}
-	if w := save(url.Values{"timezone": {"Asia/Tokyo"}, "goalNew": {"3"}, "goalReview": {"0"}}); w.Code != 303 || w.Header().Get("Location") != "/leetgrinder/settings?saved=general#general" {
+	if w := save(url.Values{"timezone": {"Asia/Tokyo"}, "goalNew": {"3"}, "goalReview": {"0"}, "confirm": {"1"}}); w.Code != 303 || w.Header().Get("Location") != "/leetgrinder/settings?saved=general#general" {
 		t.Fatalf("save: %d %s", w.Code, w.Body.String())
 	}
 	if settings, _ := db.LeetgrinderSettings(ctx); settings.Timezone != "Asia/Tokyo" || settings.Goal != (leetgrinder.DailyGoal{New: 3}) {
@@ -224,5 +224,101 @@ func TestLeetgrinderTodayAPIAndKinds(t *testing.T) {
 	}
 	if w = api("GET", "/api/leetgrinder/problem/"+pick, nil); !strings.Contains(w.Body.String(), `"todaysPick":true`) || !strings.Contains(w.Body.String(), `"attemptedToday":true`) || !strings.Contains(w.Body.String(), `"todayKind":"review"`) {
 		t.Fatalf("pick status: %s", w.Body.String())
+	}
+}
+
+func TestLeetgrinderTimezoneChangePreview(t *testing.T) {
+	s, db, request := leetgrinderTestServer(t)
+	ctx := context.Background()
+	now := time.Date(2026, 10, 10, 12, 0, 0, 0, time.UTC)
+	s.now = func() time.Time { return now }
+	settings, _ := db.LeetgrinderSettings(ctx)
+	if _, err := db.UpdateLeetgrinderSettings(ctx, settings.Revision, func(v *leetgrinder.Settings) error { v.Timezone = "UTC"; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	// Two new problems on Oct 8 at 20:00 UTC and two on Oct 9 at 10:00 UTC:
+	// two goal-met days in UTC, but all four land on Oct 9 in Tokyo.
+	for i, slug := range []string{"two-sum", "valid-anagram", "binary-search", "isomorphic-strings"} {
+		id := uuid.NewString()
+		if _, err := db.SaveLeetgrinderAttempt(ctx, leetgrinder.Attempt{ID: id, ProblemSlug: slug, Outcome: "solved", Minutes: 20, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}, ""); err != nil {
+			t.Fatal(err)
+		}
+		at := time.Date(2026, 10, 8, 20, 0, 0, 0, time.UTC)
+		if i >= 2 {
+			at = time.Date(2026, 10, 9, 10, 0, 0, 0, time.UTC)
+		}
+		if _, err := db.DB.Exec("UPDATE leetgrinder_attempts SET created_at=$1 WHERE id=$2", at, id); err != nil {
+			t.Fatal(err)
+		}
+	}
+	current := func() leetgrinder.Settings {
+		v, err := db.LeetgrinderSettings(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return v
+	}
+	form := func(zone string, extra ...string) url.Values {
+		v := url.Values{"timezone": {zone}, "goalNew": {"2"}, "goalReview": {"1"}, "revision": {current().Revision}}
+		for _, e := range extra {
+			v.Set(e, "1")
+		}
+		return v
+	}
+	before := current()
+
+	w := request("POST", "/leetgrinder/settings/general", form("Asia/Tokyo"))
+	body := w.Body.String()
+	if w.Code != 200 || !strings.Contains(body, "Confirm the time zone change") || !strings.Contains(body, "recounts past days") || !strings.Contains(body, `name="confirm" value="1"`) {
+		t.Fatalf("no preview: %d %s", w.Code, body)
+	}
+	row := func(label string) string {
+		m := regexp.MustCompile(`(?s)` + label + `</th>\s*<td>([^<]*)</td>\s*<td>([^<]*)</td>`).FindStringSubmatch(body)
+		if m == nil {
+			t.Fatalf("no %q row in %s", label, body)
+		}
+		return m[1] + " -> " + m[2]
+	}
+	for label, want := range map[string]string{"Current streak": "2 days -> 1 day", "Longest streak": "2 days -> 1 day", "Goal-met days, last 8 weeks": "2 -> 1"} {
+		if got := row(label); got != want {
+			t.Errorf("%s: got %q, want %q", label, got, want)
+		}
+	}
+	if after := current(); after.Timezone != "UTC" || after.Revision != before.Revision {
+		t.Fatalf("preview saved: %+v", after)
+	}
+	for _, date := range []string{"2026-10-10", "2026-10-09"} {
+		d, _ := time.Parse(time.DateOnly, date)
+		if _, ok, _ := db.LeetgrinderDailyGoal(ctx, d); ok {
+			t.Errorf("preview froze a goal for %s", date)
+		}
+	}
+
+	// A stale revision on the previewing form is a conflict, not a preview.
+	stale := form("Asia/Tokyo")
+	stale.Set("revision", uuid.NewString())
+	if w := request("POST", "/leetgrinder/settings/general", stale); w.Code != 409 {
+		t.Fatalf("stale preview: %d", w.Code)
+	}
+	stale.Set("confirm", "1")
+	if w := request("POST", "/leetgrinder/settings/general", stale); w.Code != 409 || current().Timezone != "UTC" {
+		t.Fatalf("stale confirm: %d", w.Code)
+	}
+
+	// Saving only the goal in the same zone does not ask.
+	same := form("UTC")
+	same.Set("goalNew", "3")
+	if w := request("POST", "/leetgrinder/settings/general", same); w.Code != 303 || current().Goal.New != 3 {
+		t.Fatalf("same zone: %d %s", w.Code, w.Body.String())
+	}
+
+	// Confirming saves the zone.
+	if w := request("POST", "/leetgrinder/settings/general", form("Asia/Tokyo", "confirm")); w.Code != 303 || current().Timezone != "Asia/Tokyo" {
+		t.Fatalf("confirm: %d %s", w.Code, w.Body.String())
+	}
+
+	// An invalid zone still gets the usual rejection, not a preview.
+	if w := request("POST", "/leetgrinder/settings/general", form("Nowhere/Land")); w.Code != 400 || strings.Contains(w.Body.String(), "Confirm the time zone change") {
+		t.Fatalf("invalid zone: %d", w.Code)
 	}
 }

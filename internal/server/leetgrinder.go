@@ -382,6 +382,32 @@ func (s *Server) todayGoal(r *http.Request, settings leetgrinder.Settings) *leet
 	return &goal
 }
 
+// zoneChange is a pending time zone change and what it would recount.
+type zoneChange struct {
+	leetgrinder.ZoneImpact
+	settings leetgrinder.Settings
+}
+
+// zoneImpact previews form's time zone when it differs from the saved one,
+// reading state without saving or freezing anything. It reports false when
+// the zone is unchanged or invalid, the revision is stale (the save then
+// answers with the conflict), or the data cannot be read (the save then
+// proceeds as before).
+func (s *Server) zoneImpact(r *http.Request, form leetgrinder.GeneralForm) (zoneChange, bool) {
+	settings, err := s.db.LeetgrinderSettings(r.Context())
+	if err != nil || form.Timezone == settings.Timezone || form.Revision != settings.Revision {
+		return zoneChange{}, false
+	}
+	if _, err := leetgrinder.LoadTimezone(form.Timezone); err != nil {
+		return zoneChange{}, false
+	}
+	state, err := s.db.LeetgrinderState(r.Context())
+	if err != nil {
+		return zoneChange{}, false
+	}
+	return zoneChange{leetgrinder.NewZoneImpact(settings, state, s.clock(), form.Timezone), settings}, true
+}
+
 func (s *Server) leetgrinderSaveGeneral(w http.ResponseWriter, r *http.Request) {
 	if !s.leetgrinderForm(w, r) {
 		return
@@ -401,6 +427,13 @@ func (s *Server) leetgrinderSaveGeneral(w http.ResponseWriter, r *http.Request) 
 	if errNew != nil || errReview != nil || goal.Validate() != nil {
 		reject(400, "Choose daily targets from 0 to 10, with at least one above 0.")
 		return
+	}
+	if r.PostForm.Get("confirm") != "1" {
+		if impact, ok := s.zoneImpact(r, form); ok {
+			page := leetgrinder.SettingsPage{Settings: impact.settings, Now: s.clock(), General: form, ZoneImpact: &impact.ZoneImpact, TodayGoal: s.todayGoal(r, impact.settings)}
+			renderLeetgrinder(w, r, 200, leetgrinder.SettingsView(s.withAPITokens(r, s.withNotify(r.Context(), page))))
+			return
+		}
 	}
 	_, err := s.db.UpdateLeetgrinderSettings(r.Context(), form.Revision, func(settings *leetgrinder.Settings) error {
 		if _, err := leetgrinder.LoadTimezone(form.Timezone); err != nil {

@@ -17,6 +17,8 @@ The goal is a number of new problems plus a number of reviews each day, 2 + 1 by
 - Each day's targets are frozen in `leetgrinder_daily_goal` on first access that day (dashboard, API, or reminder worker), the same way review picks are. Changing the goal affects today only if today has not been frozen yet, otherwise from tomorrow; the settings page says which. Days before this feature count with 2 + 1.
 - The **streak** counts consecutive goal-met days ending today, or ending yesterday while today's goal is still open. The dashboard shows it with the longest streak and a looser count of consecutive days with any attempt.
 
+- **Changing the time zone recounts past days.** Frozen goals, review plans and the notification log are keyed by local date, but History places every attempt on its date in the current zone, so late-evening attempts can move to another day. Submitting a different time zone therefore shows a confirmation step first (no JavaScript needed): the current and longest streak and the goal-met days in the last 8 weeks, in the saved zone and in the new one, computed read-only (nothing is frozen or saved). The zone and goals are saved only when you confirm; a stale settings revision still returns 409. Saving only the goal, or the same zone, saves directly.
+
 `is_review` on attempts is set by the server at save time (the problem has an attempt on an earlier local day); the client value is ignored.
 
 The dashboard shows today's goal card (new x/n, review x/n, bonus, met), the streak, today's review pick(s) with a reason and a form to log them, the optional "Also due" list (top 10), a **Log an attempt** form that takes a LeetCode URL or slug and opens its page, recent attempts, and all-time totals.

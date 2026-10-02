@@ -569,6 +569,9 @@ templ SettingsView(page SettingsPage) {
 templ generalSettings(page SettingsPage) {
 	<section class="panel" id="general" aria-labelledby="general-settings-title">
 		<h2 id="general-settings-title">Daily goal</h2>
+		if page.ZoneImpact != nil {
+			@zoneConfirm(page)
+		}
 		<form class="attempt-form settings-form" method="post" action="/leetgrinder/settings/general">
 			<input type="hidden" name="revision" value={ page.General.Revision }/>
 			<div class="form-row">
@@ -609,6 +612,48 @@ templ generalSettings(page SettingsPage) {
 			<button class="button primary" type="submit">Save</button>
 		</form>
 	</section>
+}
+
+templ zoneConfirm(page SettingsPage) {
+	<form class="attempt-form settings-form" method="post" action="/leetgrinder/settings/general" aria-labelledby="zone-confirm-title">
+		<h3 id="zone-confirm-title">Confirm the time zone change</h3>
+		<p>
+			Changing the time zone from { page.ZoneImpact.Before.Zone } to { page.ZoneImpact.After.Zone } recounts past days. Every attempt is placed on its local date in the new zone, so late-evening attempts can move to another day. Goals and review picks already frozen stay with their old dates, so past days can lose their picks or goals and your streaks can change. Nothing is saved yet.
+		</p>
+		<table class="zone-impact">
+			<thead>
+				<tr>
+					<th scope="col"></th>
+					<th scope="col">{ page.ZoneImpact.Before.Zone } (now)</th>
+					<th scope="col">{ page.ZoneImpact.After.Zone } (after)</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<th scope="row">Current streak</th>
+					<td>{ page.ZoneImpact.Before.Current } { DayUnit(page.ZoneImpact.Before.Current) }</td>
+					<td>{ page.ZoneImpact.After.Current } { DayUnit(page.ZoneImpact.After.Current) }</td>
+				</tr>
+				<tr>
+					<th scope="row">Longest streak</th>
+					<td>{ page.ZoneImpact.Before.Longest } { DayUnit(page.ZoneImpact.Before.Longest) }</td>
+					<td>{ page.ZoneImpact.After.Longest } { DayUnit(page.ZoneImpact.After.Longest) }</td>
+				</tr>
+				<tr>
+					<th scope="row">Goal-met days, last { ZoneWeeks } weeks</th>
+					<td>{ page.ZoneImpact.Before.MetDays }</td>
+					<td>{ page.ZoneImpact.After.MetDays }</td>
+				</tr>
+			</tbody>
+		</table>
+		<input type="hidden" name="revision" value={ page.General.Revision }/>
+		<input type="hidden" name="timezone" value={ page.General.Timezone }/>
+		<input type="hidden" name="goalNew" value={ page.General.GoalNew }/>
+		<input type="hidden" name="goalReview" value={ page.General.GoalReview }/>
+		<input type="hidden" name="confirm" value="1"/>
+		<button class="button primary" type="submit">Change time zone and save</button>
+		<a class="button" href="/leetgrinder/settings#general">Cancel</a>
+	</form>
 }
 
 templ Problems(page ProblemsPage) {
