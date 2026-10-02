@@ -2,10 +2,12 @@ package leetgrinder
 
 import (
 	"cmp"
+	"fmt"
 	"net/url"
 	"slices"
 	"strings"
 	"time"
+	"unicode"
 )
 
 type TodoItem struct {
@@ -177,26 +179,31 @@ type TodosPage struct {
 	SetID    string
 }
 
-// ParseTodoRefs accepts one LeetCode link or slug per line, or comma-separated entries.
-func ParseTodoRefs(input string) ([]string, bool) {
-	if strings.TrimSpace(input) == "" {
-		return []string{}, true
-	}
-	parts := strings.FieldsFunc(input, func(r rune) bool { return r == '\n' || r == ',' || r == '\r' })
-	if len(parts) > 200 {
-		return nil, false
+// MaxTodoRefs is how many problems one pasted list may hold.
+const MaxTodoRefs = 200
+
+// ParseTodoRefs accepts LeetCode links or slugs separated by new lines,
+// commas, spaces or tabs. Empty entries are ignored. The error names the first
+// entry that is not a LeetCode problem.
+func ParseTodoRefs(input string) ([]string, error) {
+	parts := strings.FieldsFunc(input, func(r rune) bool { return r == ',' || unicode.IsSpace(r) })
+	if len(parts) > MaxTodoRefs {
+		return nil, fmt.Errorf("Enter at most %d LeetCode links or slugs.", MaxTodoRefs)
 	}
 	out := make([]string, 0, len(parts))
 	seen := map[string]bool{}
 	for _, part := range parts {
 		slug, ok := NormalizeProblemRef(part)
 		if !ok {
-			return nil, false
+			if len(part) > 60 {
+				part = part[:60] + "..."
+			}
+			return nil, fmt.Errorf("%q is not a LeetCode link or slug.", part)
 		}
 		if !seen[slug] {
 			out = append(out, slug)
 			seen[slug] = true
 		}
 	}
-	return out, true
+	return out, nil
 }

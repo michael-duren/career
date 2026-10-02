@@ -20,6 +20,28 @@ func TestLeetgrinderTodos(t *testing.T) {
 	if err != nil || len(sets) != 1 || len(sets[0].Items) != 2 {
 		t.Fatalf("saved set: %+v %v", sets, err)
 	}
+	// Trailing separators, blank lines and space-separated slugs are fine.
+	messy := request("POST", "/leetgrinder/todos/sets", url.Values{"title": {"Messy"}, "problems": {"two-sum, three-sum, \n   \nvalid-anagram contains-duplicate\t\n"}})
+	all, err := db.LeetgrinderTodoSets(ctx)
+	if err != nil || len(all) != 2 {
+		t.Fatalf("sets: %+v %v", all, err)
+	}
+	var messySet leetgrinder.TodoSet
+	for _, set := range all {
+		if set.Title == "Messy" {
+			messySet = set
+		}
+	}
+	// Creating a set opens it.
+	if messy.Code != 303 || messy.Header().Get("Location") != "/leetgrinder/todos/sets/"+messySet.ID || len(messySet.Items) != 4 {
+		t.Fatalf("messy list: %d %s %+v", messy.Code, messy.Header().Get("Location"), messySet.Items)
+	}
+	if err := db.DeleteLeetgrinderTodoSet(ctx, messySet.ID); err != nil {
+		t.Fatal(err)
+	}
+	if bad := request("POST", "/leetgrinder/todos/sets", url.Values{"title": {"Bad"}, "problems": {"two-sum\nnot a/problem"}}); bad.Code != 400 || !strings.Contains(bad.Body.String(), "is not a LeetCode link or slug.") {
+		t.Fatalf("bad entry: %d %s", bad.Code, bad.Body.String())
+	}
 	if w := request("POST", "/leetgrinder/todos/items", url.Values{"problem": {"three-sum"}}); w.Code != 303 {
 		t.Fatalf("add standalone: %d %s", w.Code, w.Body.String())
 	}
@@ -294,5 +316,53 @@ func TestTodoSetPageSummarizesAndSearches(t *testing.T) {
 	}
 	if w := request("POST", "/leetgrinder/todos/items/"+set.Items[4].ID+"/delete", url.Values{"setID": {set.ID}}); w.Code != 303 || w.Header().Get("Location") != base {
 		t.Fatalf("removing from a set returns to it: %d %s", w.Code, w.Header().Get("Location"))
+	}
+}
+
+func TestTodoImportMetadataDoesNotGrowOnReAdd(t *testing.T) {
+	_, db, _ := leetgrinderTestServer(t)
+	ctx := context.Background()
+	input := []leetgrinder.TodoProblemInput{{Slug: "two-sum", Title: "Two Sum", ImportMetadata: map[string]any{"sourceID": "a"}}}
+	snapshots := func() int {
+		p, err := db.LeetgrinderProblem(ctx, "two-sum")
+		if err != nil {
+			t.Fatal(err)
+		}
+		n := 0
+		for _, versions := range p.ImportMetadata {
+			n += len(versions.([]any))
+		}
+		return n
+	}
+	for i := 0; i < 3; i++ {
+		set, err := db.CreateLeetgrinderTodoSetDetailed(ctx, leetgrinder.TodoSet{Title: "Cycle"}, input)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err = db.DeleteLeetgrinderTodoSet(ctx, set.ID); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if n := snapshots(); n != 1 {
+		t.Fatalf("identical snapshots archived %d times", n)
+	}
+	// A different snapshot is still kept.
+	input[0].ImportMetadata = map[string]any{"sourceID": "b"}
+	if _, err := db.CreateLeetgrinderTodoSetDetailed(ctx, leetgrinder.TodoSet{Title: "Other"}, input); err != nil {
+		t.Fatal(err)
+	}
+	if n := snapshots(); n != 2 {
+		t.Fatalf("changed snapshot not kept: %d", n)
+	}
+	// The archive stops at its size limit; saving the todo still works.
+	input[0].ImportMetadata = map[string]any{"sourceID": "c"}
+	if _, err := db.DB.ExecContext(ctx, `UPDATE leetgrinder_problems SET import_metadata=jsonb_build_object('pad', jsonb_build_array(repeat('x', 65500))) WHERE slug='two-sum'`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.CreateLeetgrinderTodoSetDetailed(ctx, leetgrinder.TodoSet{Title: "Full"}, input); err != nil {
+		t.Fatal(err)
+	}
+	if p, _ := db.LeetgrinderProblem(ctx, "two-sum"); len(p.ImportMetadata) != 1 {
+		t.Fatalf("archive grew past its limit: %v", p.ImportMetadata)
 	}
 }
