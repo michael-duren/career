@@ -63,6 +63,14 @@ func (s Settings) Location() *time.Location {
 	return loc
 }
 
+// zone is the name of the zone Location loads.
+func (s Settings) zone() string {
+	if _, err := LoadTimezone(s.Timezone); err == nil {
+		return s.Timezone
+	}
+	return DefaultTimezone
+}
+
 func (s Settings) TokenSet() bool { return len(s.NtfyTokenCiphertext) > 0 }
 
 var ntfyTopic = regexp.MustCompile(`^[A-Za-z0-9_-]{0,64}$`)

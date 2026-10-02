@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"fmt"
 	"math/rand"
+	"os"
 	"reflect"
 	"slices"
 	"sort"
@@ -200,6 +201,12 @@ func randomState(rng *rand.Rand, loc *time.Location, base, change time.Time) Sta
 }
 
 func TestSingleReplayMatchesPerCallReplays(t *testing.T) {
+	// LEETGRINDER_REPLAY_FULL=1 runs 150 histories per zone and base, 2,700
+	// in all, instead of the default 20.
+	histories := 20
+	if os.Getenv("LEETGRINDER_REPLAY_FULL") != "" {
+		histories = 150
+	}
 	rng := rand.New(rand.NewSource(20261002))
 	unordered := 0
 	for _, z := range equivalenceZones {
@@ -209,7 +216,7 @@ func TestSingleReplayMatchesPerCallReplays(t *testing.T) {
 		}
 		settings := Settings{Timezone: z.zone}
 		for _, base := range []time.Time{z.change.AddDate(0, 0, -30), z.change.AddDate(0, 0, -5)} {
-			for i := range 150 {
+			for i := range histories {
 				state := randomState(rng, loc, base, z.change)
 				for _, r := range replayAll(state, loc) {
 					if !r.ordered {

@@ -37,10 +37,10 @@ func NewToday(settings Settings, state State, now time.Time) Today {
 // NewTodayFrom is NewToday over r, the replay of state in the settings' time
 // zone, so a caller that already replayed state to plan reviews does not
 // replay it again. A replay in another zone, or none, is replaced by a
-// fresh one.
+// fresh one. r must come from this state, not an earlier load.
 func NewTodayFrom(settings Settings, state State, now time.Time, r Replay) Today {
 	loc := settings.Location()
-	if r.loc == nil || r.loc.String() != loc.String() {
+	if r.zone != settings.zone() {
 		r = ReplayAttempts(state, loc)
 	}
 	t := Today{Settings: settings, State: state, Now: now, Date: Date(now, loc)}

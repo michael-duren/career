@@ -319,9 +319,12 @@ func BuildCards(state State, loc *time.Location) []Card {
 
 // Replay is a state's attempts replayed through FSRS once, in one time
 // zone. A request that plans reviews and then builds today's view shares it
-// (see NewTodayFrom) instead of replaying the history for each.
+// (see NewTodayFrom) instead of replaying the history for each. A replay
+// must not outlive the state it was built from: once attempts, problems or
+// analyses change, it is stale.
 type Replay struct {
-	loc     *time.Location
+	// zone is the time zone's name; "" for the zero Replay.
+	zone    string
 	replays map[string]*slugReplay
 	cards   []Card
 }
@@ -331,7 +334,7 @@ type Replay struct {
 // change.
 func ReplayAttempts(state State, loc *time.Location) Replay {
 	replays := replayAll(state, loc)
-	return Replay{loc: loc, replays: replays, cards: cardsFrom(replays, state, loc)}
+	return Replay{zone: loc.String(), replays: replays, cards: cardsFrom(replays, state, loc)}
 }
 
 // Cards are the replay's cards, as BuildCards returns them. They are
