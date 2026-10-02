@@ -3,3 +3,20 @@
 @media(max-width:1100px){.scheduler-workspace{grid-template-columns:185px minmax(0,1fr);gap:.7rem}.scheduler-day-heading{font-size:.68rem;flex-wrap:wrap}.scheduler-grid{grid-template-columns:40px repeat(7,minmax(0,1fr))}}
 @media(max-width:767px){.scheduler-workspace{display:flex;flex-direction:column}.scheduler-goals,.scheduler-calendar{width:100%}.scheduler-goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.6rem}.scheduler-goals>h2,.scheduler-goals>.scheduler-actions{grid-column:1/-1}.scheduler-goal{margin:0}.scheduler-goals>.scheduler-actions button{width:auto}.scheduler-day-picker{display:grid!important;margin:1rem 0 .7rem}.scheduler-grid{grid-template-columns:48px minmax(0,1fr)}.scheduler-day:not(.is-selected){display:none}.scheduler-day-heading{font-size:.9rem;flex-wrap:nowrap;height:48px}.scheduler-block{font-size:.85rem;left:5px;right:5px}.scheduler-block-main small{font-size:.75rem}.scheduler-toolbar h2{order:3;width:100%}.scheduler-editor-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.scheduler-interval{grid-template-columns:repeat(2,minmax(0,1fr))}.scheduler-interval .scheduler-check{grid-column:1/-1}}
 @media(prefers-reduced-motion:reduce){.weekly-scheduler *{scroll-behavior:auto!important}}
+.scheduler-drop-preview{position:absolute;left:2px;right:2px;z-index:5;pointer-events:none;box-sizing:border-box;border:2px solid #67e8f9;border-radius:.35rem;background:#0891b244;box-shadow:0 0 0 1px #083344,0 0 14px #22d3ee66;color:#fff;overflow:visible}
+.scheduler-drop-preview.is-conflicting,.scheduler-drop-preview.is-invalid{border-color:#fb923c;background:#9a341244;box-shadow:0 0 0 1px #431407}
+.scheduler-drop-preview.is-invalid{border-style:dashed}
+.scheduler-preview-label{position:absolute;top:0;left:0;right:0;min-height:42px;padding:.25rem .35rem;background:#164e63;border-radius:.25rem;font-size:.68rem;line-height:1.2;overflow-wrap:anywhere}
+.scheduler-drop-preview.is-conflicting .scheduler-preview-label,.scheduler-drop-preview.is-invalid .scheduler-preview-label{background:#7c2d12}
+.scheduler-preview-label strong,.scheduler-preview-label span{display:block}
+.scheduler-preview-label span{margin-top:.1rem}
+.scheduler-preview-outside{position:fixed;transform:translate(12px,-50%);z-index:50;pointer-events:none;padding:.4rem .6rem;border:1px solid #fb923c;border-radius:.35rem;background:#7c2d12;color:#fff;font-size:.75rem;max-width:200px}
+.weekly-scheduler .scheduler-goal-title,.weekly-scheduler .scheduler-step,.weekly-scheduler .scheduler-block-main,.scheduler-block{touch-action:pan-y}
+.weekly-scheduler .scheduler-touch-handle{display:none;touch-action:none;user-select:none;cursor:grab}
+@media(max-width:767px){.weekly-scheduler .scheduler-touch-handle{display:block}.weekly-scheduler .scheduler-goal-handle{float:right;margin-top:-1.7rem;padding:.1rem .4rem;min-width:40px;min-height:40px}.weekly-scheduler .scheduler-block-handle{position:absolute;right:1.5rem;bottom:0;z-index:3;border:0;background:#0009;padding:0;min-width:32px;min-height:30px}.scheduler-preview-label{font-size:.78rem}}
+.scheduler-goal{position:relative}
+@media(max-width:767px){.weekly-scheduler .scheduler-goal-title{padding-right:48px}.weekly-scheduler .scheduler-goal-handle{position:absolute;top:.4rem;right:.4rem;float:none;margin:0;z-index:4;min-width:40px;min-height:40px}}
+.scheduler-step-row{position:relative}
+@media(max-width:767px){.weekly-scheduler .scheduler-step{padding-right:48px}.weekly-scheduler .scheduler-step-handle{position:absolute;right:.2rem;top:.3rem;z-index:4;min-width:40px;min-height:40px}}
+.scheduler-goals{max-height:calc(100dvh - 9rem);overflow-y:auto;scrollbar-gutter:stable;padding-right:.25rem}
+@media(max-width:767px){.scheduler-goals{max-height:min(45dvh,400px)}}
