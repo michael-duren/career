@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"net/url"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -62,8 +63,11 @@ func TestStoredTopicNamesDriveLabels(t *testing.T) {
 	}
 
 	// Todo set summaries use it too.
-	sum := TodoSet{Items: []TodoItem{{Problem: dfsProblem()}}}.Summary()
-	if len(sum.Topics) != 2 || sum.Topics[0].Label != "Depth-First Search" && sum.Topics[1].Label != "Depth-First Search" {
-		t.Fatalf("todo summary: %+v", sum.Topics)
+	var todoLabels []string
+	for _, tally := range (TodoSet{Items: []TodoItem{{Problem: dfsProblem()}}}).Summary().Topics {
+		todoLabels = append(todoLabels, tally.Label)
+	}
+	if !slices.Contains(todoLabels, "Depth-First Search") || !slices.Contains(todoLabels, "Tree") {
+		t.Fatalf("todo summary labels: %v", todoLabels)
 	}
 }

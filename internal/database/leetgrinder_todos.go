@@ -226,14 +226,14 @@ func (s *Store) LeetgrinderTodoSets(ctx context.Context) ([]leetgrinder.TodoSet,
 	if err != nil {
 		return nil, err
 	}
-	rows, err = tx.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,topic_names,source_data,done_at
+	rows, err = tx.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,source_data,done_at
 FROM (`+leetgrinderTodoRows+`) todo
 WHERE set_key IS NOT NULL
 ORDER BY created_at,id`)
 	if err != nil {
 		return nil, err
 	}
-	items, err := scanLeetgrinderTodoItems(rows)
+	items, err := scanLeetgrinderTodoItems(ctx, tx, rows)
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +275,6 @@ func (s *Store) LeetgrinderTodoSet(ctx context.Context, id string) (leetgrinder.
 // correcting an older attempt to solved does not complete an individual entry.
 const leetgrinderTodoRows = `SELECT i.id,COALESCE(i.set_id::text,'') AS set_id,i.set_id AS set_key,p.slug,
   COALESCE(p.number,0) AS number,p.title,p.difficulty,array_to_json(p.topics)::text AS topics,
-  (SELECT COALESCE(jsonb_object_agg(t.slug,t.name),'{}'::jsonb)::text FROM leetgrinder_topics t WHERE t.slug = ANY(p.topics)) AS topic_names,
   i.source_data::text AS source_data,i.created_at,
   (SELECT max(a.created_at) FROM leetgrinder_attempts a
    WHERE a.problem_slug=i.problem_slug AND a.outcome IN ('solved','struggled')
@@ -290,21 +289,21 @@ func (s *Store) LeetgrinderTodoItems(ctx context.Context, setID string) ([]leetg
 			return nil, ErrInvalid
 		}
 	}
-	rows, err := s.DB.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,topic_names,source_data,done_at
+	rows, err := s.DB.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,source_data,done_at
 FROM (`+leetgrinderTodoRows+`) todo
 WHERE set_key IS NOT DISTINCT FROM $1::uuid AND (set_key IS NOT NULL OR done_at IS NULL)
 ORDER BY created_at,id`, nullableUUID(setID))
 	if err != nil {
 		return nil, err
 	}
-	return scanLeetgrinderTodoItems(rows)
+	return scanLeetgrinderTodoItems(ctx, s.DB, rows)
 }
 
 // LeetgrinderNextTodoItems returns the oldest queued entry for each problem
 // still to do. A problem present in several sets appears only once on the
 // dashboard.
 func (s *Store) LeetgrinderNextTodoItems(ctx context.Context, limit int) ([]leetgrinder.TodoItem, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,topic_names,source_data,done_at
+	rows, err := s.DB.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,source_data,done_at
 FROM (
   SELECT DISTINCT ON (slug) * FROM (`+leetgrinderTodoRows+`) todo
   WHERE done_at IS NULL
@@ -314,17 +313,17 @@ ORDER BY created_at,id LIMIT $1`, limit)
 	if err != nil {
 		return nil, err
 	}
-	return scanLeetgrinderTodoItems(rows)
+	return scanLeetgrinderTodoItems(ctx, s.DB, rows)
 }
 
-func scanLeetgrinderTodoItems(rows *sql.Rows) ([]leetgrinder.TodoItem, error) {
+func scanLeetgrinderTodoItems(ctx context.Context, q queryer, rows *sql.Rows) ([]leetgrinder.TodoItem, error) {
 	defer rows.Close()
 	items := []leetgrinder.TodoItem{}
 	for rows.Next() {
 		var item leetgrinder.TodoItem
-		var topics, names, metadata string
+		var topics, metadata string
 		var doneAt sql.NullTime
-		if err := rows.Scan(&item.ID, &item.SetID, &item.Problem.Slug, &item.Problem.Number, &item.Problem.Title, &item.Problem.Difficulty, &topics, &names, &metadata, &doneAt); err != nil {
+		if err := rows.Scan(&item.ID, &item.SetID, &item.Problem.Slug, &item.Problem.Number, &item.Problem.Title, &item.Problem.Difficulty, &topics, &metadata, &doneAt); err != nil {
 			return nil, err
 		}
 		if doneAt.Valid {
@@ -333,15 +332,26 @@ func scanLeetgrinderTodoItems(rows *sql.Rows) ([]leetgrinder.TodoItem, error) {
 		if err := json.Unmarshal([]byte(topics), &item.Problem.Topics); err != nil {
 			return nil, err
 		}
-		if err := json.Unmarshal([]byte(names), &item.Problem.TopicNames); err != nil {
-			return nil, err
-		}
 		if err := json.Unmarshal([]byte(metadata), &item.SourceData); err != nil {
 			return nil, err
 		}
 		items = append(items, item)
 	}
-	return items, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	rows.Close()
+	if len(items) == 0 {
+		return items, nil
+	}
+	names, err := loadLeetgrinderTopicNames(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	for i := range items {
+		items[i].Problem = withTopicNames(items[i].Problem, names)
+	}
+	return items, nil
 }
 
 func nullableUUID(id string) any {

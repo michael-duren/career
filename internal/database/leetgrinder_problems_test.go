@@ -238,6 +238,8 @@ INSERT INTO leetgrinder_attempts(id,problem_slug,outcome,minutes,assisted,notes,
 }
 
 func TestLeetgrinderTopicNames(t *testing.T) {
+	// testStore migrates a fresh schema per test, so the slugs below cannot
+	// collide with another test's rows.
 	s := testStore(t)
 	ctx := context.Background()
 	now := time.Date(2026, 10, 1, 12, 0, 0, 0, time.UTC)
@@ -283,6 +285,18 @@ func TestLeetgrinderTopicNames(t *testing.T) {
 		t.Fatalf("attempt names: %+v", p.TopicNames)
 	}
 
+	// Saving an unchanged name does not rewrite its row, and a batch with the
+	// same slug twice is not an error.
+	var before, after string
+	s.DB.QueryRow("SELECT xmin::text FROM leetgrinder_topics WHERE slug='xx-attempt-tag'").Scan(&before)
+	if _, err := s.SaveLeetgrinderAttemptWithProblem(ctx, leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "word-ladder", Outcome: "unfinished", Minutes: 5}, "", &leetgrinder.ProblemMetadata{Title: "Word Ladder", Topics: []leetgrinder.TopicTag{{Slug: "xx-attempt-tag", Name: "XX Attempt"}, {Slug: "xx-attempt-tag", Name: "XX Attempt"}}}, now); err != nil {
+		t.Fatal(err)
+	}
+	s.DB.QueryRow("SELECT xmin::text FROM leetgrinder_topics WHERE slug='xx-attempt-tag'").Scan(&after)
+	if before == "" || before != after {
+		t.Fatalf("unchanged name rewritten: %q -> %q", before, after)
+	}
+
 	// MCP todo topics carry only slugs: they fall back to TopicLabel, and
 	// reuse a name stored from another source.
 	set, err := s.CreateLeetgrinderTodoSetDetailed(ctx, leetgrinder.TodoSet{Title: "Names"}, []leetgrinder.TodoProblemInput{
@@ -301,5 +315,28 @@ func TestLeetgrinderTopicNames(t *testing.T) {
 	var n int
 	if err := s.DB.QueryRow("SELECT count(*) FROM leetgrinder_topics WHERE slug='topological-sort'").Scan(&n); err != nil || n != 0 {
 		t.Fatalf("slug-only topic stored a name: %d %v", n, err)
+	}
+}
+
+func TestTopicBackfillKeepsExistingNames(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	if _, err := s.DB.ExecContext(ctx, "UPDATE leetgrinder_topics SET name='My Own DFS' WHERE slug='depth-first-search'"); err != nil {
+		t.Fatal(err)
+	}
+	file, err := migrations.ReadFile("migrations/028_leetgrinder_topics.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, insert, ok := strings.Cut(string(file), "INSERT INTO")
+	if !ok {
+		t.Fatal("no backfill in migration 028")
+	}
+	if _, err = s.DB.ExecContext(ctx, "INSERT INTO"+insert); err != nil {
+		t.Fatal(err)
+	}
+	var name string
+	if err = s.DB.QueryRow("SELECT name FROM leetgrinder_topics WHERE slug='depth-first-search'").Scan(&name); err != nil || name != "My Own DFS" {
+		t.Fatalf("backfill replaced a stored name: %q %v", name, err)
 	}
 }

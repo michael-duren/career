@@ -5,29 +5,24 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"maps"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/michael-duren/career-strategy/internal/leetgrinder"
 )
 
-const leetgrinderProblemColumns = "slug,COALESCE(number,0),title,difficulty,array_to_json(topics)::text,optimal_time,optimal_space,optimal_note,optimal_source,metadata_source,(fetched_at IS NOT NULL AND title=''),fetch_attempts,import_metadata::text," + leetgrinderTopicNamesColumn
-
-// leetgrinderTopicNamesColumn selects the stored display names of the row's
-// topic slugs as a JSON object.
-const leetgrinderTopicNamesColumn = "(SELECT COALESCE(jsonb_object_agg(t.slug,t.name),'{}'::jsonb)::text FROM leetgrinder_topics t WHERE t.slug = ANY(leetgrinder_problems.topics))"
+const leetgrinderProblemColumns = "slug,COALESCE(number,0),title,difficulty,array_to_json(topics)::text,optimal_time,optimal_space,optimal_note,optimal_source,metadata_source,(fetched_at IS NOT NULL AND title=''),fetch_attempts,import_metadata::text"
 
 func scanLeetgrinderProblem(row interface{ Scan(...any) error }) (leetgrinder.Problem, error) {
 	var p leetgrinder.Problem
 	var topics string
-	var imported, names string
-	if err := row.Scan(&p.Slug, &p.Number, &p.Title, &p.Difficulty, &topics, &p.OptimalTime, &p.OptimalSpace, &p.OptimalNote, &p.OptimalSource, &p.MetadataSource, &p.NotFound, &p.FetchAttempts, &imported, &names); err != nil {
+	var imported string
+	if err := row.Scan(&p.Slug, &p.Number, &p.Title, &p.Difficulty, &topics, &p.OptimalTime, &p.OptimalSpace, &p.OptimalNote, &p.OptimalSource, &p.MetadataSource, &p.NotFound, &p.FetchAttempts, &imported); err != nil {
 		return p, err
 	}
 	if err := json.Unmarshal([]byte(topics), &p.Topics); err != nil {
-		return p, err
-	}
-	if err := json.Unmarshal([]byte(names), &p.TopicNames); err != nil {
 		return p, err
 	}
 	if err := json.Unmarshal([]byte(imported), &p.ImportMetadata); err != nil {
@@ -51,7 +46,59 @@ func loadLeetgrinderProblems(ctx context.Context, q queryer) (map[string]leetgri
 		}
 		problems[p.Slug] = p
 	}
-	return problems, rows.Err()
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	rows.Close()
+	names, err := loadLeetgrinderTopicNames(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	for slug, p := range problems {
+		problems[slug] = withTopicNames(p, names)
+	}
+	return problems, nil
+}
+
+// loadLeetgrinderTopicNames reads every stored topic display name, by slug.
+func loadLeetgrinderTopicNames(ctx context.Context, q queryer) (map[string]string, error) {
+	rows, err := q.QueryContext(ctx, "SELECT slug,name FROM leetgrinder_topics")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	names := map[string]string{}
+	for rows.Next() {
+		var slug, name string
+		if err := rows.Scan(&slug, &name); err != nil {
+			return nil, err
+		}
+		names[slug] = name
+	}
+	return names, rows.Err()
+}
+
+// withTopicNames sets p.TopicNames to the names known for p's topics.
+func withTopicNames(p leetgrinder.Problem, names map[string]string) leetgrinder.Problem {
+	p.TopicNames = nil
+	for _, slug := range p.Topics {
+		if name := names[slug]; name != "" {
+			if p.TopicNames == nil {
+				p.TopicNames = map[string]string{}
+			}
+			p.TopicNames[slug] = name
+		}
+	}
+	return p
+}
+
+// withStoredTopicNames loads the names for a single problem.
+func withStoredTopicNames(ctx context.Context, q queryer, p leetgrinder.Problem) (leetgrinder.Problem, error) {
+	if len(p.Topics) == 0 {
+		return p, nil
+	}
+	names, err := loadLeetgrinderTopicNames(ctx, q)
+	return withTopicNames(p, names), err
 }
 
 // LeetgrinderProblem returns the catalog row for slug, or a bare problem
@@ -61,7 +108,10 @@ func (s *Store) LeetgrinderProblem(ctx context.Context, slug string) (leetgrinde
 	if errors.Is(err, sql.ErrNoRows) {
 		return leetgrinder.Problem{Slug: slug}, nil
 	}
-	return p, err
+	if err != nil {
+		return p, err
+	}
+	return withStoredTopicNames(ctx, s.DB, p)
 }
 
 // seedLeetgrinderProblems inserts the curated catalog and a bare row for
@@ -117,21 +167,32 @@ ON CONFLICT (slug) DO UPDATE SET
 }
 
 // upsertLeetgrinderTopicNames stores the display names LeetCode sent for
-// topic tags. A tag without a name is skipped, so an empty name never
-// replaces a good one; a later non-empty name replaces the stored one.
+// topic tags in one statement. A tag without a name is skipped, so an empty
+// name never replaces a good one, and rows are written in slug order so
+// concurrent saves lock them in the same order. A row whose name is unchanged
+// is not rewritten.
 func upsertLeetgrinderTopicNames(ctx context.Context, tx interface {
 	ExecContext(context.Context, string, ...any) (sql.Result, error)
 }, topics []leetgrinder.TopicTag) error {
+	byslug := map[string]string{}
 	for _, t := range topics {
-		if t.Slug == "" || strings.TrimSpace(t.Name) == "" {
-			continue
-		}
-		if _, err := tx.ExecContext(ctx, `INSERT INTO leetgrinder_topics(slug,name) VALUES($1,$2)
-ON CONFLICT (slug) DO UPDATE SET name=EXCLUDED.name`, t.Slug, strings.TrimSpace(t.Name)); err != nil {
-			return err
+		if name := strings.TrimSpace(t.Name); t.Slug != "" && name != "" {
+			byslug[t.Slug] = name
 		}
 	}
-	return nil
+	if len(byslug) == 0 {
+		return nil
+	}
+	slugs := slices.Sorted(maps.Keys(byslug))
+	names := make([]string, len(slugs))
+	for i, slug := range slugs {
+		names[i] = byslug[slug]
+	}
+	_, err := tx.ExecContext(ctx, `INSERT INTO leetgrinder_topics(slug,name)
+SELECT slug,name FROM unnest($1::text[],$2::text[]) AS t(slug,name) ORDER BY slug
+ON CONFLICT (slug) DO UPDATE SET name=EXCLUDED.name
+WHERE leetgrinder_topics.name IS DISTINCT FROM EXCLUDED.name`, slugs, names)
+	return err
 }
 
 // SaveLeetgrinderMetadata validates and stores metadata the extension read
@@ -141,7 +202,15 @@ func (s *Store) SaveLeetgrinderMetadata(ctx context.Context, slug string, m leet
 	if !leetgrinder.ValidSlug(slug) || m.Normalize() != nil || m.Title == "" {
 		return ErrInvalid
 	}
-	return upsertLeetgrinderMetadata(ctx, s.DB, slug, m, "extension", now)
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	if err = upsertLeetgrinderMetadata(ctx, tx, slug, m, "extension", now); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 // saveLeetgrinderModelOptimal stores Claude's estimate of a problem's
@@ -169,11 +238,7 @@ func (s *Store) LeetgrinderOptimalProblem(ctx context.Context, slug string) (lee
 	return optimalProblem(ctx, s.DB, slug, "")
 }
 
-type rowQueryer interface {
-	QueryRowContext(context.Context, string, ...any) *sql.Row
-}
-
-func optimalProblem(ctx context.Context, q rowQueryer, slug, suffix string) (leetgrinder.Problem, error) {
+func optimalProblem(ctx context.Context, q queryer, slug, suffix string) (leetgrinder.Problem, error) {
 	if !leetgrinder.ValidSlug(slug) {
 		return leetgrinder.Problem{}, ErrNotFound
 	}
@@ -181,7 +246,10 @@ func optimalProblem(ctx context.Context, q rowQueryer, slug, suffix string) (lee
 	if errors.Is(err, sql.ErrNoRows) {
 		return p, ErrNotFound
 	}
-	return p, err
+	if err != nil {
+		return p, err
+	}
+	return withStoredTopicNames(ctx, q, p)
 }
 
 // lockLeetgrinderOptimal returns slug's row locked for update, after checking
