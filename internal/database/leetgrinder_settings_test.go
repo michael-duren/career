@@ -292,16 +292,51 @@ func TestLeetgrinderTodayReadsWithoutLock(t *testing.T) {
 			conn.Close()
 		}
 	}
-	// todayWhileLocked reports whether LeetgrinderToday finished while the
-	// lock was held.
-	todayWhileLocked := func() (leetgrinder.Today, bool) {
+	// readWhileLocked runs LeetgrinderToday while the lock is held and fails
+	// unless it finishes without waiting for it.
+	readWhileLocked := func() leetgrinder.Today {
 		t.Helper()
 		release := holdLock()
 		defer release()
-		short, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
+		short, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 		today, err := s.LeetgrinderToday(short, now)
-		return today, err == nil
+		if err != nil {
+			t.Fatalf("read while locked: %v", err)
+		}
+		return today
+	}
+	// waitsForLock runs LeetgrinderToday while the lock is held and fails
+	// unless it queues for the lock, seen in pg_locks, then cancels it.
+	waitsForLock := func() {
+		t.Helper()
+		release := holdLock()
+		defer release()
+		call, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		done := make(chan error, 1)
+		go func() {
+			_, err := s.LeetgrinderToday(call, now)
+			done <- err
+		}()
+		for {
+			var waiting bool
+			if err := s.DB.QueryRow("SELECT EXISTS (SELECT 1 FROM pg_locks WHERE locktype='advisory' AND classid=0 AND objid=724193611 AND objsubid=1 AND NOT granted)").Scan(&waiting); err != nil {
+				t.Fatal(err)
+			}
+			if waiting {
+				cancel()
+				break
+			}
+			select {
+			case err := <-done:
+				t.Fatalf("finished without waiting for the lock: %v", err)
+			case <-time.After(10 * time.Millisecond):
+			}
+		}
+		if err := <-done; !errors.Is(err, context.Canceled) {
+			t.Fatalf("waiting call ended with %v, want context.Canceled", err)
+		}
 	}
 	picks := func(today leetgrinder.Today) []string {
 		var slugs []string
@@ -343,17 +378,15 @@ func TestLeetgrinderTodayReadsWithoutLock(t *testing.T) {
 	}
 
 	// The first visit freezes the goal, so it needs the lock.
-	if _, ok := todayWhileLocked(); ok {
-		t.Fatal("first visit did not wait for the planner lock")
-	}
+	waitsForLock()
 	if goals, planned := counts(); goals != 0 || planned != 0 {
 		t.Fatalf("blocked first visit wrote %d goals %d picks", goals, planned)
 	}
 	concurrent([]string{"binary-search"})
 	// Only one card is due, so the short plan is read without the lock.
-	today, ok := todayWhileLocked()
-	if !ok || today.Goal.Review != 2 || !reflect.DeepEqual(picks(today), []string{"binary-search"}) {
-		t.Fatalf("short plan with nothing due took the lock: %v %+v %v", ok, today.Goal, picks(today))
+	today := readWhileLocked()
+	if today.Goal.Review != 2 || !reflect.DeepEqual(picks(today), []string{"binary-search"}) {
+		t.Fatalf("short plan: %+v %v", today.Goal, picks(today))
 	}
 	if goals, planned := counts(); goals != 1 || planned != 1 {
 		t.Fatalf("persisted %d goals %d picks", goals, planned)
@@ -362,14 +395,12 @@ func TestLeetgrinderTodayReadsWithoutLock(t *testing.T) {
 	if _, err = s.DB.Exec("UPDATE leetgrinder_attempts SET created_at=$1 WHERE problem_slug='two-sum'", old); err != nil {
 		t.Fatal(err)
 	}
-	if _, ok = todayWhileLocked(); ok {
-		t.Fatal("extending the plan did not wait for the planner lock")
-	}
+	waitsForLock()
 	concurrent([]string{"binary-search", "two-sum"})
 	// A full plan is read without the lock and writes nothing.
-	today, ok = todayWhileLocked()
-	if !ok || !reflect.DeepEqual(picks(today), []string{"binary-search", "two-sum"}) {
-		t.Fatalf("full plan took the lock: %v %v", ok, picks(today))
+	today = readWhileLocked()
+	if !reflect.DeepEqual(picks(today), []string{"binary-search", "two-sum"}) {
+		t.Fatalf("full plan: %v", picks(today))
 	}
 	if goals, planned := counts(); goals != 1 || planned != 2 {
 		t.Fatalf("persisted %d goals %d picks", goals, planned)
