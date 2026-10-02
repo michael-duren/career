@@ -271,12 +271,16 @@
   }
 
   // Active time counts only while the page is visible and the learner has
-  // used the keyboard, mouse or scroll within ACTIVE_IDLE_MS. Content scripts
-  // sample that every 30 seconds; one sample credits at most
-  // SAMPLE_MAX_CREDIT_MS, so a sleeping laptop or a long-closed tab adds a
-  // bounded amount rather than the whole gap.
-  const ACTIVE_IDLE_MS = 5 * 60000;
-  const SAMPLE_MAX_CREDIT_MS = 2 * 60000;
+  // used the keyboard, mouse or scroll within ACTIVE_IDLE_MS. Ten minutes
+  // covers thinking time without typing; the cost is that a break after the
+  // last input still counts for up to ten minutes. Content scripts sample
+  // every 30 seconds. Each tab has its own previous-sample time, and one
+  // sample credits at most SAMPLE_MAX_CREDIT_MS (about one heartbeat), so
+  // sleep or a long-closed tab adds little. Credit is the union of the
+  // intervals tabs report, so two visible tabs never count twice.
+  const ACTIVE_IDLE_MS = 10 * 60000;
+  const SAMPLE_MAX_CREDIT_MS = 45000;
+  const TAB_STALE_MS = 10 * 60000;
 
   // validSample accepts {visible, lastInputAt} from a content script and
   // clamps lastInputAt to now. It returns null for anything else.
@@ -286,19 +290,33 @@
     return { visible: sample.visible, lastInputAt: Math.min(sample.lastInputAt, now) };
   }
 
-  // creditActive returns the timer with the time since its previous sample
-  // added to activeMs when the page was visible, limited to the window that
-  // ends ACTIVE_IDLE_MS after the last input. Timers saved without
-  // activeMs (older versions) keep their wall-clock time so far.
-  function creditActive(timer, sample, now) {
-    const since = Number.isFinite(timer.lastSampleAt) ? timer.lastSampleAt : now;
-    const base = Number.isFinite(timer.activeMs) ? timer.activeMs : Number.isFinite(timer.startedAt) ? Math.max(0, since - timer.startedAt) : 0;
-    let credit = 0;
-    if (sample && sample.visible) {
-      credit = Math.min(now, sample.lastInputAt + ACTIVE_IDLE_MS) - since;
-      credit = Math.min(SAMPLE_MAX_CREDIT_MS, Math.max(0, credit));
+  // creditActive returns the timer with the time since tabId's previous
+  // sample added to activeMs when the page was visible, limited to the
+  // window ending ACTIVE_IDLE_MS after the last input and to one heartbeat.
+  // timer.tabs maps tab ids to their previous sample time, and creditedTo is
+  // the end of the latest credited interval, so overlapping tabs add once.
+  // A clock that went backward credits nothing and resets the tab's mark.
+  // Timers saved without activeMs keep their wall-clock time so far.
+  function creditActive(timer, sample, now, tabId = 0) {
+    const tabs = {};
+    for (const [id, at] of Object.entries(timer.tabs || {})) {
+      if (Number.isFinite(at) && at <= now && now - at <= TAB_STALE_MS) tabs[id] = at;
     }
-    return { ...timer, activeMs: base + credit, lastSampleAt: Math.max(since, now) };
+    const since = Object.hasOwn(tabs, tabId) ? tabs[tabId] : now;
+    const startedAt = Number.isFinite(timer.startedAt) ? timer.startedAt : now;
+    let activeMs = Number.isFinite(timer.activeMs) ? timer.activeMs : Math.max(0, since - startedAt);
+    let creditedTo = Number.isFinite(timer.creditedTo) ? Math.min(timer.creditedTo, now) : startedAt;
+    if (sample && sample.visible && since < now) {
+      const end = Math.min(now, since + SAMPLE_MAX_CREDIT_MS, sample.lastInputAt + ACTIVE_IDLE_MS);
+      const start = Math.max(since, creditedTo);
+      if (end > start) {
+        activeMs += end - start;
+        creditedTo = end;
+      }
+    }
+    tabs[tabId] = now;
+    activeMs = Math.min(activeMs, Math.max(0, now - startedAt));
+    return { ...timer, activeMs, creditedTo, tabs };
   }
 
   // activeMs is the active time recorded on a timer. Timers without one fall

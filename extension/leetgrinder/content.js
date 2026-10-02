@@ -41,7 +41,8 @@
   // Active time: the page counts as in use while it is visible and the
   // learner pressed a key, moved the mouse or scrolled recently. Timer
   // messages carry that sample; the background worker credits the time.
-  let lastInputAt = Date.now();
+  // Starts at 0: a reload or navigation earns no active time until real input.
+  let lastInputAt = 0;
   for (const name of ["keydown", "pointerdown", "mousemove", "wheel", "scroll", "touchstart"]) {
     window.addEventListener(
       name,
