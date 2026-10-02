@@ -468,14 +468,20 @@ func (s *Server) leetgrinderSaveGeneral(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-// leetgrinderExport is the attempt history download: every attempt, and the
-// catalog rows of attempted problems.
+// leetgrinderExportVersion is bumped when an export field changes meaning or
+// is removed; added fields keep it.
+const leetgrinderExportVersion = 2
+
+// leetgrinderExport is the history download: every attempt, the catalog rows of
+// attempted, planned and todo problems, daily goals, review plans, todos and settings, read in one snapshot.
+// It never includes the ntfy token or its ciphertext.
 func (s *Server) leetgrinderExport(w http.ResponseWriter, r *http.Request) {
-	state, err := s.db.LeetgrinderState(r.Context())
+	export, err := s.db.LeetgrinderExport(r.Context())
 	if err != nil {
 		failure(w, err)
 		return
 	}
+	state, settings, sets, standalone := export.State, export.Settings, export.TodoSets, export.TodoItems
 	type exportProblem struct {
 		Slug          string   `json:"slug"`
 		Number        int      `json:"number,omitempty"`
@@ -487,14 +493,32 @@ func (s *Server) leetgrinderExport(w http.ResponseWriter, r *http.Request) {
 		OptimalNote   string   `json:"optimalNote"`
 		OptimalSource string   `json:"optimalSource"`
 	}
-	problems := []exportProblem{}
-	seen := map[string]bool{}
+	// Problems are those attempted, planned for review or referenced by a todo,
+	// so an import finds the catalog row of every slug in the file.
+	slugs := map[string]bool{}
 	for _, a := range state.Attempts {
-		if seen[a.ProblemSlug] {
+		slugs[a.ProblemSlug] = true
+	}
+	for _, picks := range state.Plans {
+		for _, slug := range picks {
+			slugs[slug] = true
+		}
+	}
+	for _, set := range sets {
+		for _, item := range set.Items {
+			slugs[item.Problem.Slug] = true
+		}
+	}
+	for _, item := range standalone {
+		slugs[item.Problem.Slug] = true
+	}
+	problems := []exportProblem{}
+	for slug := range slugs {
+		// Review plans have no foreign key, so a slug may have no catalog row.
+		p, ok := state.Problems[slug]
+		if !ok {
 			continue
 		}
-		seen[a.ProblemSlug] = true
-		p := state.Problem(a.ProblemSlug)
 		topics := p.Topics
 		if topics == nil {
 			topics = []string{}
@@ -513,5 +537,66 @@ func (s *Server) leetgrinderExport(w http.ResponseWriter, r *http.Request) {
 		goals = append(goals, exportGoal{date.Format(time.DateOnly), g.New, g.Review})
 	}
 	slices.SortFunc(goals, func(a, b exportGoal) int { return strings.Compare(a.Date, b.Date) })
-	respond(w, 200, map[string]any{"attempts": state.Attempts, "problems": problems, "dailyGoals": goals})
+	// Review plans keep each day's picks in slot order; encoding/json sorts the
+	// date keys.
+	plans := map[string][]string{}
+	for date, picks := range state.Plans {
+		plans[date.Format(time.DateOnly)] = append([]string{}, picks...)
+	}
+	type exportTodoItem struct {
+		Slug       string         `json:"slug"`
+		SourceData map[string]any `json:"sourceData"`
+		CreatedAt  time.Time      `json:"createdAt"`
+	}
+	type exportTodoSet struct {
+		ID          string           `json:"id"`
+		Title       string           `json:"title"`
+		Description string           `json:"description"`
+		Metadata    map[string]any   `json:"metadata"`
+		CreatedAt   time.Time        `json:"createdAt"`
+		Items       []exportTodoItem `json:"items"`
+	}
+	exportItem := func(item leetgrinder.TodoItem) exportTodoItem {
+		data := item.SourceData
+		if data == nil {
+			data = map[string]any{}
+		}
+		return exportTodoItem{item.Problem.Slug, data, item.CreatedAt}
+	}
+	todoSets := []exportTodoSet{}
+	for _, set := range sets {
+		metadata := set.Metadata
+		if metadata == nil {
+			metadata = map[string]any{}
+		}
+		out := exportTodoSet{set.ID, set.Title, set.Description, metadata, set.CreatedAt, []exportTodoItem{}}
+		for _, item := range set.Items {
+			out.Items = append(out.Items, exportItem(item))
+		}
+		todoSets = append(todoSets, out)
+	}
+	items := []exportTodoItem{}
+	for _, item := range standalone {
+		items = append(items, exportItem(item))
+	}
+	notifications := settings.Notifications
+	if notifications == nil {
+		notifications = map[string]leetgrinder.NotificationPref{}
+	}
+	respond(w, 200, map[string]any{
+		"version":     leetgrinderExportVersion,
+		"attempts":    state.Attempts,
+		"problems":    problems,
+		"dailyGoals":  goals,
+		"reviewPlans": plans,
+		"todos":       map[string]any{"sets": todoSets, "items": items},
+		"settings": map[string]any{
+			"timezone":        settings.Timezone,
+			"goal":            map[string]int{"new": settings.Goal.New, "review": settings.Goal.Review},
+			"ntfyUrl":         settings.NtfyURL,
+			"ntfyTopic":       settings.NtfyTopic,
+			"notifications":   notifications,
+			"analysisEnabled": settings.AnalysisEnabled,
+		},
+	})
 }

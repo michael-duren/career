@@ -432,3 +432,59 @@ func (s *Store) DeleteLeetgrinderTodoSet(ctx context.Context, id string) error {
 	}
 	return nil
 }
+
+// loadLeetgrinderTodoExport returns every todo set with all its entries, and
+// the standalone entries, done or not, in creation order. Entries carry only
+// the problem slug, source data and CreatedAt.
+func loadLeetgrinderTodoExport(ctx context.Context, tx queryer) ([]leetgrinder.TodoSet, []leetgrinder.TodoItem, error) {
+	rows, err := tx.QueryContext(ctx, "SELECT id,title,description,metadata::text,created_at FROM leetgrinder_todo_sets ORDER BY created_at,id")
+	if err != nil {
+		return nil, nil, err
+	}
+	sets := []leetgrinder.TodoSet{}
+	index := map[string]int{}
+	for rows.Next() {
+		var set leetgrinder.TodoSet
+		var metadata string
+		if err = rows.Scan(&set.ID, &set.Title, &set.Description, &metadata, &set.CreatedAt); err == nil {
+			err = json.Unmarshal([]byte(metadata), &set.Metadata)
+		}
+		if err != nil {
+			rows.Close()
+			return nil, nil, err
+		}
+		set.Items = []leetgrinder.TodoItem{}
+		index[set.ID] = len(sets)
+		sets = append(sets, set)
+	}
+	err = rows.Err()
+	rows.Close()
+	if err != nil {
+		return nil, nil, err
+	}
+	rows, err = tx.QueryContext(ctx, "SELECT id,COALESCE(set_id::text,''),problem_slug,source_data::text,created_at FROM leetgrinder_todo_items ORDER BY created_at,id")
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+	standalone := []leetgrinder.TodoItem{}
+	for rows.Next() {
+		var item leetgrinder.TodoItem
+		var source string
+		if err = rows.Scan(&item.ID, &item.SetID, &item.Problem.Slug, &source, &item.CreatedAt); err != nil {
+			return nil, nil, err
+		}
+		if err = json.Unmarshal([]byte(source), &item.SourceData); err != nil {
+			return nil, nil, err
+		}
+		if i, ok := index[item.SetID]; ok {
+			sets[i].Items = append(sets[i].Items, item)
+		} else if item.SetID == "" {
+			standalone = append(standalone, item)
+		}
+	}
+	if err = rows.Err(); err != nil {
+		return nil, nil, err
+	}
+	return sets, standalone, nil
+}
