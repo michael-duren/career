@@ -340,3 +340,18 @@ func TestTopicBackfillKeepsExistingNames(t *testing.T) {
 		t.Fatalf("backfill replaced a stored name: %q %v", name, err)
 	}
 }
+
+func TestUpsertTopicNamesDuplicateSlugs(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	err := upsertLeetgrinderTopicNames(ctx, s.DB, []leetgrinder.TopicTag{
+		{Slug: "xx-b", Name: "First B"}, {Slug: "xx-a", Name: "A"}, {Slug: "xx-b", Name: " Last B "}, {Slug: "xx-a", Name: ""}, {Slug: "xx-c"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	names, err := loadLeetgrinderTopicNames(ctx, s.DB, []string{"xx-a", "xx-b", "xx-c"})
+	if err != nil || len(names) != 2 || names["xx-a"] != "A" || names["xx-b"] != "Last B" {
+		t.Fatalf("names: %v %v", names, err)
+	}
+}

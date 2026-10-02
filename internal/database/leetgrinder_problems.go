@@ -50,7 +50,7 @@ func loadLeetgrinderProblems(ctx context.Context, q queryer) (map[string]leetgri
 		return nil, err
 	}
 	rows.Close()
-	names, err := loadLeetgrinderTopicNames(ctx, q)
+	names, err := loadLeetgrinderTopicNames(ctx, q, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -60,9 +60,14 @@ func loadLeetgrinderProblems(ctx context.Context, q queryer) (map[string]leetgri
 	return problems, nil
 }
 
-// loadLeetgrinderTopicNames reads every stored topic display name, by slug.
-func loadLeetgrinderTopicNames(ctx context.Context, q queryer) (map[string]string, error) {
-	rows, err := q.QueryContext(ctx, "SELECT slug,name FROM leetgrinder_topics")
+// loadLeetgrinderTopicNames reads stored topic display names by slug: every
+// name when slugs is nil, otherwise only those slugs'.
+func loadLeetgrinderTopicNames(ctx context.Context, q queryer, slugs []string) (map[string]string, error) {
+	query, args := "SELECT slug,name FROM leetgrinder_topics", []any{}
+	if slugs != nil {
+		query, args = query+" WHERE slug = ANY($1::text[])", []any{slugs}
+	}
+	rows, err := q.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +102,7 @@ func withStoredTopicNames(ctx context.Context, q queryer, p leetgrinder.Problem)
 	if len(p.Topics) == 0 {
 		return p, nil
 	}
-	names, err := loadLeetgrinderTopicNames(ctx, q)
+	names, err := loadLeetgrinderTopicNames(ctx, q, p.Topics)
 	return withTopicNames(p, names), err
 }
 

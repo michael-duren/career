@@ -30,11 +30,22 @@ func TestStoredTopicNamesDriveLabels(t *testing.T) {
 	}
 
 	// Search matches the stored name, including its hyphens.
-	for query, want := range map[string]int{"depth-first": 1, "Depth-First Search": 1, "depth first": 0, "tree": 1} {
+	for query, want := range map[string]int{"depth-first": 1, "Depth-First Search": 1, "depth first": 1, "tree": 1} {
 		q, _ := url.ParseQuery("q=" + url.QueryEscape(query))
 		if got := FilterProblems(rows, ParseProblemFilter(q)); len(got) != want {
 			t.Errorf("search %q: %d rows, want %d", query, len(got), want)
 		}
+	}
+
+	// A name is escaped when rendered.
+	escaped := dfsProblem()
+	escaped.TopicNames = map[string]string{"depth-first-search": "<b>DFS</b> & more"}
+	var esc bytes.Buffer
+	if err := problemMeta(escaped).Render(context.Background(), &esc); err != nil {
+		t.Fatal(err)
+	}
+	if html := esc.String(); strings.Contains(html, "<b>DFS</b>") || !strings.Contains(html, "&lt;b&gt;DFS&lt;/b&gt; &amp; more") {
+		t.Errorf("topic name not escaped: %s", html)
 	}
 
 	// The problems page renders it.

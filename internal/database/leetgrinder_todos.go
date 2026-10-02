@@ -344,7 +344,11 @@ func scanLeetgrinderTodoItems(ctx context.Context, q queryer, rows *sql.Rows) ([
 	if len(items) == 0 {
 		return items, nil
 	}
-	names, err := loadLeetgrinderTopicNames(ctx, q)
+	slugs := []string{}
+	for _, item := range items {
+		slugs = append(slugs, item.Problem.Topics...)
+	}
+	names, err := loadLeetgrinderTopicNames(ctx, q, slugs)
 	if err != nil {
 		return nil, err
 	}
