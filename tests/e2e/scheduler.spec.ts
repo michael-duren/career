@@ -287,10 +287,14 @@ test('the block\'s delete icon on a recurring session cascades to future occurre
 test('resizing a session by its bottom edge extends its duration', async ({ page, request, baseURL }) => {
   const goal = await createGoal(request, baseURL!);
   const date = await goToNextWeek(page);
+  // CI retries share the same disposable app, so use another day if an
+  // earlier attempt already reserved this slot.
+  const sessionDate = await page.locator('[data-scheduler-date]').nth(test.info().retry).getAttribute('data-scheduler-date');
+  if (!sessionDate) throw new Error('Scheduling day is unavailable.');
   const dialog = page.locator('.scheduler-editor-dialog');
 
   await page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`).click();
-  await dialog.getByLabel('Scheduling date').fill(date!);
+  await dialog.getByLabel('Scheduling date').fill(sessionDate);
   await dialog.getByLabel('Start time').fill('17:00');
   await dialog.getByLabel('End time').fill('18:00');
   await dialog.getByRole('button', { name: 'Save session' }).click();
@@ -299,6 +303,7 @@ test('resizing a session by its bottom edge extends its duration', async ({ page
   // Resolve this goal's session rather than an unrelated session left by a retry.
   const sessionId = await sessionFor(page, goal.title).getAttribute('data-session-id');
   const edgeSelector = `[data-session-id="${sessionId}"] .scheduler-edge-bottom`;
+  await page.locator(edgeSelector).evaluate(element => element.scrollIntoView({ block: 'center' }));
   const box = (await page.locator(edgeSelector).boundingBox())!;
   await mouseDrag(page, { x: box.x + box.width / 2, y: box.y + box.height / 2 }, { x: box.x + box.width / 2, y: box.y + box.height / 2 + 60 }, 6);
   await expect(page.locator('[role="alert"]')).toHaveCount(0);
