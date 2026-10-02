@@ -33,6 +33,59 @@ func (s *Store) LeetgrinderState(ctx context.Context) (leetgrinder.State, error)
 	return state, tx.Commit()
 }
 
+// LeetgrinderStateWithoutCode is LeetgrinderState with every attempt's captured
+// code left empty, for pages that never show it.
+func (s *Store) LeetgrinderStateWithoutCode(ctx context.Context) (leetgrinder.State, error) {
+	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true})
+	if err != nil {
+		return leetgrinder.State{Attempts: []leetgrinder.Attempt{}}, err
+	}
+	defer tx.Rollback()
+	state, err := loadLeetgrinderState(ctx, tx, false)
+	if err != nil {
+		return state, err
+	}
+	return state, tx.Commit()
+}
+
+// LeetgrinderProblemState is LeetgrinderState with captured code kept only on
+// slug's attempts, which is all a problem page shows.
+func (s *Store) LeetgrinderProblemState(ctx context.Context, slug string) (leetgrinder.State, error) {
+	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true})
+	if err != nil {
+		return leetgrinder.State{Attempts: []leetgrinder.Attempt{}}, err
+	}
+	defer tx.Rollback()
+	state, err := loadLeetgrinderState(ctx, tx, false)
+	if err != nil {
+		return state, err
+	}
+	rows, err := tx.QueryContext(ctx, "SELECT id,code FROM leetgrinder_attempts WHERE problem_slug=$1 AND code<>''", slug)
+	if err != nil {
+		return state, err
+	}
+	code := map[string]string{}
+	for rows.Next() {
+		var id, c string
+		if err = rows.Scan(&id, &c); err != nil {
+			rows.Close()
+			return state, err
+		}
+		code[id] = c
+	}
+	err = rows.Err()
+	rows.Close()
+	if err != nil {
+		return state, err
+	}
+	for i := range state.Attempts {
+		if a := &state.Attempts[i]; a.ProblemSlug == slug {
+			a.Code = code[a.ID]
+		}
+	}
+	return state, tx.Commit()
+}
+
 // loadLeetgrinderState reads everything; withCode false leaves captured code
 // out, for paths that only count and schedule attempts.
 func loadLeetgrinderState(ctx context.Context, tx queryer, withCode bool) (leetgrinder.State, error) {

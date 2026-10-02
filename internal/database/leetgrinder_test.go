@@ -123,3 +123,59 @@ func TestLeetgrinderInvalidAttempts(t *testing.T) {
 		t.Fatalf("boundary values: %v", err)
 	}
 }
+
+func TestLeetgrinderStateCodeScopes(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	for _, a := range []leetgrinder.Attempt{
+		{ProblemSlug: "two-sum", Code: "def two(): pass", CodeLanguage: "python3", TimeComplexity: "O(n)", SpaceComplexity: "O(1)"},
+		{ProblemSlug: "two-sum", TimeComplexity: "O(n)", SpaceComplexity: "O(1)"},
+		{ProblemSlug: "valid-anagram", Code: "def anagram(): pass", CodeLanguage: "python3", TimeComplexity: "O(n)", SpaceComplexity: "O(1)"},
+	} {
+		a.ID, a.Outcome, a.Minutes = uuid.NewString(), "solved", 20
+		if _, err := s.SaveLeetgrinderAttempt(ctx, a, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	full, err := s.LeetgrinderState(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bare, err := s.LeetgrinderStateWithoutCode(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	scoped, err := s.LeetgrinderProblemState(ctx, "two-sum")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(bare.Attempts) != 3 || len(scoped.Attempts) != 3 {
+		t.Fatalf("attempts: %d, %d", len(bare.Attempts), len(scoped.Attempts))
+	}
+	wantBare, wantScoped := full, full
+	wantBare.Attempts, wantScoped.Attempts = append([]leetgrinder.Attempt{}, full.Attempts...), append([]leetgrinder.Attempt{}, full.Attempts...)
+	for i, a := range full.Attempts {
+		wantBare.Attempts[i].Code = ""
+		if a.ProblemSlug != "two-sum" {
+			wantScoped.Attempts[i].Code = ""
+		}
+	}
+	if !reflect.DeepEqual(bare, wantBare) {
+		t.Fatalf("state without code differs beyond code: %+v", bare)
+	}
+	if !reflect.DeepEqual(scoped, wantScoped) {
+		t.Fatalf("problem state differs beyond other problems' code: %+v", scoped)
+	}
+	codes := 0
+	for _, a := range scoped.Attempts {
+		if a.Code != "" {
+			codes++
+			if a.ProblemSlug != "two-sum" {
+				t.Fatalf("loaded code of %s", a.ProblemSlug)
+			}
+		}
+	}
+	if codes != 1 {
+		t.Fatalf("two-sum code attempts = %d, want 1", codes)
+	}
+}
