@@ -234,3 +234,34 @@ func TestLeetgrinderLogForm(t *testing.T) {
 		t.Fatalf("GET added a catalog row: %d %v", rows, err)
 	}
 }
+
+func TestLeetgrinderPagesCodeScope(t *testing.T) {
+	_, db, request := leetgrinderTestServer(t)
+	ctx := context.Background()
+	for slug, code := range map[string]string{"two-sum": "def two_sum_marker(): pass", "valid-anagram": "def anagram_marker(): pass"} {
+		a := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: slug, Outcome: "solved", Minutes: 20, Code: code, CodeLanguage: "python3", TimeComplexity: "O(n)", SpaceComplexity: "O(1)"}
+		if _, err := db.SaveLeetgrinderAttempt(ctx, a, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	page := request("GET", "/leetgrinder/problem/two-sum", nil)
+	if page.Code != 200 || !strings.Contains(page.Body.String(), "two_sum_marker") || strings.Contains(page.Body.String(), "anagram_marker") || !strings.Contains(page.Body.String(), "Submitted code") {
+		t.Fatalf("problem page code: %d %s", page.Code, page.Body.String())
+	}
+	if strings.Contains(page.Body.String(), "State a time or space complexity") {
+		t.Fatal("attempt with code and complexity not analysable")
+	}
+	bad := request("POST", "/leetgrinder/problem/two-sum/attempts", url.Values{"id": {uuid.NewString()}, "outcome": {"solved"}, "minutes": {"bad"}})
+	if bad.Code != 400 || !strings.Contains(bad.Body.String(), "two_sum_marker") || strings.Contains(bad.Body.String(), "anagram_marker") {
+		t.Fatalf("rejected form lost the problem's code: %d", bad.Code)
+	}
+	list := request("GET", "/leetgrinder/problems", nil)
+	body := list.Body.String()
+	if list.Code != 200 || !strings.Contains(body, "two-sum") || !strings.Contains(body, "valid-anagram") || strings.Contains(body, "_marker") {
+		t.Fatalf("problems list: %d %s", list.Code, body)
+	}
+	exp := request("GET", "/leetgrinder/export", nil)
+	if !strings.Contains(exp.Body.String(), "two_sum_marker") || !strings.Contains(exp.Body.String(), "anagram_marker") {
+		t.Fatal("export lost code")
+	}
+}

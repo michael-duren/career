@@ -122,7 +122,7 @@ func (s *Server) leetgrinderLog(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) leetgrinderProblems(w http.ResponseWriter, r *http.Request) {
-	state, err := s.db.LeetgrinderState(r.Context())
+	state, err := s.db.LeetgrinderStateWithoutCode(r.Context())
 	if err != nil {
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your saved progress is unavailable. Please retry."))
 		return
@@ -180,7 +180,7 @@ func (s *Server) leetgrinderProblem(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	state, err := s.db.LeetgrinderState(r.Context())
+	state, err := s.db.LeetgrinderProblemState(r.Context(), problem.Slug)
 	if err != nil {
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your attempt history is unavailable. Please retry."))
 		return
@@ -258,7 +258,7 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 	}
 	reject := func(status int, message string) {
 		form.Error = message
-		state, err := s.db.LeetgrinderState(r.Context())
+		state, err := s.db.LeetgrinderProblemState(r.Context(), problem.Slug)
 		review := leetgrinder.ProblemReview{}
 		if err != nil {
 			form.Error += " Your history could not be loaded; your draft is retained below."
