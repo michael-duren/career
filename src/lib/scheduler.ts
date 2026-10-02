@@ -30,7 +30,7 @@ export function localFields(instant: string, timezone: string) {
   return { date: `${part('year')}-${part('month')}-${part('day')}`, time: `${part('hour')}:${part('minute')}`, offset: part('timeZoneName') };
 }
 export function zonedDate(now: Date, timezone: string): string { return localFields(now.toISOString(), timezone).date; }
-export function localInstant(date: string, time: string, timezone: string): string {
+export function localInstant(date: string, time: string, timezone: string, preferredOffset?: string): string {
   const wall = Date.parse(`${date}T${time}:00Z`);
   if (!Number.isFinite(wall)) throw new Error('Enter a valid date and time.');
   const offsets = new Set<number>();
@@ -45,7 +45,8 @@ export function localInstant(date: string, time: string, timezone: string): stri
   }).sort((a, b) => a - b);
   const first = matches[0];
   if (first === undefined) throw new Error('This local time does not exist because the clocks change. Choose another time.');
-  return new Date(first).toISOString();
+  const preferred = preferredOffset && matches.find(candidate => localFields(new Date(candidate).toISOString(), timezone).offset === preferredOffset);
+  return new Date(preferred ?? first).toISOString();
 }
 export function minuteOf(instant: string, date: string, timezone: string): number {
   const local = localFields(instant, timezone);
