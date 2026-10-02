@@ -273,14 +273,17 @@ func (d *Document) sessionIDs() []string {
 	return ids
 }
 func (d *Document) validateActual(id string, a Actual) error {
+	if !ValidDate(a.Date) {
+		return fmt.Errorf("valid actual date required")
+	}
 	if a.Status == "skipped" {
 		return nil
 	}
 	if a.Status != "explicit" && a.Status != "assumed" {
 		return fmt.Errorf("actual status must be explicit, assumed or skipped")
 	}
-	if !ValidDate(a.Date) || !a.End.After(a.Start) {
-		return fmt.Errorf("valid actual date and positive interval required")
+	if !a.End.After(a.Start) {
+		return fmt.Errorf("positive actual interval required")
 	}
 	for key, s := range d.Sessions {
 		if key != id && s.Actual != nil && s.Actual.Status != "skipped" && overlap(Plan{Start: a.Start, End: a.End}, Plan{Start: s.Actual.Start, End: s.Actual.End}) {
@@ -351,6 +354,12 @@ func (d *Document) Reconcile(goals []Goal, now time.Time) {
 		if s.Plan == nil || !s.Plan.Start.After(now) || s.State == "canceled" {
 			continue
 		}
+		if s.Actual != nil {
+			s.State = "attention"
+			s.Attention = "Recorded actual work has replaced the future plan"
+			d.Sessions[id] = s
+			continue
+		}
 		if p, ok := stepParents[s.Assignment.StepID]; ok {
 			s.Assignment.GoalID = p
 		}
@@ -402,7 +411,7 @@ func (d *Document) Generate(from, to string, now time.Time, busy []Busy, sinceIn
 			}
 			sid := r.ID + ":" + date
 			old, exists := d.Sessions[sid]
-			if exists && (old.Exception || old.Plan != nil && !old.Plan.Start.After(now)) {
+			if exists && (old.Exception || old.Actual != nil || old.Plan != nil && !old.Plan.Start.After(now)) {
 				continue
 			}
 			a, e := d.assignment(r.Assignment, date)
@@ -449,7 +458,7 @@ func (d *Document) Revalidate(now time.Time, busy []Busy) {
 	})
 	for _, id := range ids {
 		s := d.Sessions[id]
-		if s.State == "canceled" || s.Plan == nil || !s.Plan.Start.After(now) {
+		if s.State == "canceled" || s.Plan == nil || s.Actual != nil || !s.Plan.Start.After(now) {
 			continue
 		}
 		s.State = "attention"
@@ -457,7 +466,7 @@ func (d *Document) Revalidate(now time.Time, busy []Busy) {
 	}
 	for _, id := range ids {
 		s := d.Sessions[id]
-		if s.State == "canceled" || s.Plan == nil || !s.Plan.Start.After(now) {
+		if s.State == "canceled" || s.Plan == nil || s.Actual != nil || !s.Plan.Start.After(now) {
 			continue
 		}
 		s.State = "accepted"
@@ -523,6 +532,11 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 			r.EffectiveFrom = m.EffectiveFrom
 			for id, s := range d.Sessions {
 				if s.RuleID == m.ID && s.Date >= m.EffectiveFrom && s.Plan != nil && s.Plan.Start.After(now) && !s.Exception {
+					if s.Actual != nil {
+						s.Exception = true
+						d.Sessions[id] = s
+						continue
+					}
 					delete(d.Sessions, id)
 				}
 			}
@@ -575,6 +589,9 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 			s.ID = uuid.NewString()
 		}
 		if old, ok := d.Sessions[s.ID]; ok {
+			if old.Actual != nil {
+				return fmt.Errorf("recorded actual work is preserved; edit actual time instead")
+			}
 			if old.Plan != nil && !old.Plan.Start.After(now) {
 				return fmt.Errorf("started plans are preserved; edit actual time")
 			}
@@ -613,7 +630,7 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 			return fmt.Errorf("started plans are preserved; skip actual instead")
 		}
 		if s.Actual != nil {
-			if s.RuleID != "" {
+			if s.Plan != nil || s.RuleID != "" {
 				return fmt.Errorf("recorded actual work is preserved; use skip instead")
 			}
 			// An unplanned, non-recurring actual is a manual log entry with no
@@ -654,10 +671,7 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 			if m.ID != "" || m.Session == nil {
 				return fmt.Errorf("session required for unplanned actual")
 			}
-			s = *m.Session
-			s.ID = uuid.NewString()
-			s.Plan = nil
-			s.State = "accepted"
+			s = Session{ID: uuid.NewString(), Date: d.ActualDate(m.Actual.Start), Assignment: m.Session.Assignment, State: "accepted"}
 			g, exists := d.Goals[s.Assignment.GoalID]
 			if !exists {
 				return fmt.Errorf("goal required")
@@ -676,6 +690,9 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 				return fmt.Errorf("subgoal not found for unplanned actual")
 			}
 		}
+		if s.State == "canceled" {
+			return fmt.Errorf("canceled session cannot record actual work; log unplanned actual work instead")
+		}
 		if s.Assignment.GoalID == "" {
 			return fmt.Errorf("actual work requires a goal")
 		}
@@ -691,8 +708,13 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 			a.End = s.Plan.End
 			a.Date = s.Date
 		}
-		if a.Status == "skipped" && a.Date == "" {
+		if a.Status == "skipped" {
+			if s.Plan == nil {
+				return fmt.Errorf("no original plan to skip")
+			}
 			a.Date = s.Date
+			a.Start = s.Plan.Start
+			a.End = s.Plan.End
 		}
 		if a.Status == "explicit" {
 			expected := d.ActualDate(a.Start)
@@ -709,6 +731,10 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 		g := d.Goals[s.Assignment.GoalID]
 		a.OutsideTimeline = !Eligible(g, a.Date)
 		s.Actual = &a
+		if s.Plan != nil && s.Plan.Start.After(now) {
+			s.State = "attention"
+			s.Attention = "Recorded actual work has replaced the future plan"
+		}
 		d.Sessions[s.ID] = s
 	default:
 		return fmt.Errorf("unknown scheduler action")

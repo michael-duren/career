@@ -1,9 +1,168 @@
 package scheduler
 
 import (
+	"strings"
 	"testing"
 	"time"
 )
+
+func TestUnplannedActualIgnoresRecurringIdentity(t *testing.T) {
+	d := testDocument()
+	now := instant("2026-09-30T12:00:00Z")
+	supplied := Session{ID: "forged", RuleID: "missing-rule", OccurrenceDate: "not-a-date", Date: "also-invalid", Exception: true, State: "attention", Attention: "stale", ConflictIDs: []string{"old"}, Assignment: Assignment{GoalID: "goal"}, Plan: &Plan{Start: instant("2026-09-28T11:00:00Z"), End: instant("2026-09-28T12:00:00Z")}}
+	a := Actual{Status: "explicit", Date: "2026-09-28", Start: instant("2026-09-28T09:00:00Z"), End: instant("2026-09-28T10:00:00Z")}
+	if err := d.Apply(Mutation{Action: "actual", Session: &supplied, Actual: &a}, now, nil); err != nil {
+		t.Fatal(err)
+	}
+	if len(d.Sessions) != 1 {
+		t.Fatalf("sessions: %+v", d.Sessions)
+	}
+	for _, saved := range d.Sessions {
+		if saved.ID == supplied.ID || saved.RuleID != "" || saved.OccurrenceDate != "" || saved.Exception || saved.Attention != "" || len(saved.ConflictIDs) != 0 || saved.Plan != nil || saved.State != "accepted" || saved.Date != a.Date {
+			t.Fatalf("client identity or metadata persisted: %+v", saved)
+		}
+	}
+	if err := d.Validate(); err != nil {
+		t.Fatalf("accepted actual fails import validation: %v", err)
+	}
+}
+
+func TestSkippedActualUsesOriginalSchedulingDate(t *testing.T) {
+	d := testDocument()
+	now := instant("2026-09-30T12:00:00Z")
+	plan := &Plan{Start: instant("2026-09-28T09:00:00Z"), End: instant("2026-09-28T10:00:00Z")}
+	d.Sessions["planned"] = Session{ID: "planned", Date: "2026-09-28", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: plan}
+	for _, suppliedDate := range []string{"invalid", "2026-09-29"} {
+		a := Actual{Status: "skipped", Date: suppliedDate, Start: instant("2026-09-29T09:00:00Z"), End: instant("2026-09-29T10:00:00Z")}
+		if err := d.Apply(Mutation{Action: "actual", ID: "planned", Actual: &a}, now, nil); err != nil {
+			t.Fatal(err)
+		}
+		saved := d.Sessions["planned"]
+		if saved.Date != "2026-09-28" || saved.Actual.Date != "2026-09-28" || saved.Actual.Start != plan.Start || saved.Actual.End != plan.End || d.Week("2026-09-28", now, nil).Goals[0].ActualHours != 0 {
+			t.Fatalf("skip moved or counted plan: %+v", saved)
+		}
+		if err := d.Validate(); err != nil {
+			t.Fatalf("accepted skip fails import validation: %v", err)
+		}
+	}
+	a := Actual{Status: "explicit", Date: "invalid", Start: plan.Start, End: plan.End}
+	if err := d.Apply(Mutation{Action: "actual", ID: "planned", Actual: &a}, now, nil); err == nil {
+		t.Fatal("explicit actual accepted malformed date")
+	}
+}
+
+func TestCanceledPlanCannotHideActualWork(t *testing.T) {
+	d := testDocument()
+	now := instant("2026-09-30T12:00:00Z")
+	d.Sessions["canceled"] = Session{ID: "canceled", Date: "2026-09-28", Assignment: Assignment{GoalID: "goal"}, State: "canceled", Plan: &Plan{Start: instant("2026-09-28T09:00:00Z"), End: instant("2026-09-28T10:00:00Z")}}
+	a := Actual{Status: "explicit", Date: "2026-09-28", Start: instant("2026-09-28T09:00:00Z"), End: instant("2026-09-28T10:00:00Z")}
+	err := d.Apply(Mutation{Action: "actual", ID: "canceled", Actual: &a}, now, nil)
+	if err == nil || !strings.Contains(err.Error(), "unplanned") {
+		t.Fatalf("expected an unplanned-log instruction, got %v", err)
+	}
+	if d.Sessions["canceled"].Actual != nil || d.Week("2026-09-28", now, nil).Goals[0].ActualHours != 0 {
+		t.Fatal("canceled record hid counted actual work")
+	}
+}
+
+func TestReconcilePreservesActualOnFuturePlan(t *testing.T) {
+	d := testDocument()
+	now := instant("2026-09-30T12:00:00Z")
+	d.Sessions["future"] = Session{ID: "future", Date: "2026-10-05", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-10-05T09:00:00Z"), End: instant("2026-10-05T10:00:00Z")}}
+	a := Actual{Status: "explicit", Date: "2026-09-28", Start: instant("2026-09-28T09:00:00Z"), End: instant("2026-09-28T10:00:00Z")}
+	if err := d.Apply(Mutation{Action: "actual", ID: "future", Actual: &a}, now, nil); err != nil {
+		t.Fatal(err)
+	}
+	if d.Sessions["future"].State != "attention" {
+		t.Fatal("actual on future plan still reserves and exports that plan")
+	}
+	g := d.Goals["goal"]
+	g.Status = "done"
+	d.Reconcile([]Goal{g}, now)
+	d.Generate("2026-09-28", "2026-10-12", now, nil, time.Time{})
+	if d.Sessions["future"].State != "attention" || d.Sessions["future"].Actual == nil || d.Week("2026-09-28", now, nil).Goals[0].ActualHours != 1 {
+		t.Fatalf("recorded actual became hidden after reconciliation: %+v", d.Sessions["future"])
+	}
+	if err := d.Validate(); err != nil {
+		t.Fatalf("reconciled actual fails import validation: %v", err)
+	}
+}
+
+func TestGenerateKeepsRecordedActualOnFutureRecurringPlan(t *testing.T) {
+	d := testDocument()
+	now := instant("2026-09-30T12:00:00Z")
+	d.Rules["r"] = Rule{ID: "r", Weekday: 1, LocalStart: "09:00", DurationMinutes: 60, EffectiveFrom: "2026-10-05", Assignment: Assignment{GoalID: "goal"}}
+	d.Sessions["r:2026-10-05"] = Session{ID: "r:2026-10-05", RuleID: "r", OccurrenceDate: "2026-10-05", Date: "2026-10-05", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-10-05T09:00:00Z"), End: instant("2026-10-05T10:00:00Z")}}
+	a := Actual{Status: "explicit", Date: "2026-09-28", Start: instant("2026-09-28T09:00:00Z"), End: instant("2026-09-28T10:00:00Z")}
+	if err := d.Apply(Mutation{Action: "actual", ID: "r:2026-10-05", Actual: &a}, now, nil); err != nil {
+		t.Fatal(err)
+	}
+	d.Generate("2026-10-05", "2026-10-05", now, nil, time.Time{})
+	saved := d.Sessions["r:2026-10-05"]
+	if saved.Actual == nil || saved.Actual.Date != "2026-09-28" || saved.State != "attention" || d.Week("2026-09-28", now, nil).Goals[0].ActualHours != 1 {
+		t.Fatalf("generation replaced recorded work: %+v", saved)
+	}
+}
+
+func TestCancelPreservesActualOnNonrecurringPlan(t *testing.T) {
+	d := testDocument()
+	now := instant("2026-09-30T12:00:00Z")
+	d.Sessions["future"] = Session{ID: "future", Date: "2026-10-05", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-10-05T09:00:00Z"), End: instant("2026-10-05T10:00:00Z")}}
+	a := Actual{Status: "explicit", Date: "2026-09-28", Start: instant("2026-09-28T09:00:00Z"), End: instant("2026-09-28T10:00:00Z")}
+	if err := d.Apply(Mutation{Action: "actual", ID: "future", Actual: &a}, now, nil); err != nil {
+		t.Fatal(err)
+	}
+	err := d.Apply(Mutation{Action: "cancel", ID: "future"}, now, nil)
+	if err == nil || !strings.Contains(err.Error(), "recorded actual") {
+		t.Fatalf("cancel should preserve planned actual work: %v", err)
+	}
+	if d.Sessions["future"].Actual == nil || d.Week("2026-09-28", now, nil).Goals[0].ActualHours != 1 {
+		t.Fatal("cancel removed recorded work")
+	}
+}
+
+func TestFutureRuleEditPreservesRecordedActual(t *testing.T) {
+	d := testDocument()
+	now := instant("2026-09-30T12:00:00Z")
+	r := Rule{ID: "r", Weekday: 1, LocalStart: "09:00", DurationMinutes: 60, EffectiveFrom: "2026-09-28", Assignment: Assignment{GoalID: "goal"}}
+	d.Rules[r.ID] = r
+	id := "r:2026-10-05"
+	d.Sessions[id] = Session{ID: id, RuleID: r.ID, OccurrenceDate: "2026-10-05", Date: "2026-10-05", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-10-05T09:00:00Z"), End: instant("2026-10-05T10:00:00Z")}}
+	a := Actual{Status: "explicit", Date: "2026-09-28", Start: instant("2026-09-28T09:00:00Z"), End: instant("2026-09-28T10:00:00Z")}
+	if err := d.Apply(Mutation{Action: "actual", ID: id, Actual: &a}, now, nil); err != nil {
+		t.Fatal(err)
+	}
+	r.LocalStart = "10:00"
+	if err := d.Apply(Mutation{Action: "rule", ID: "r", EffectiveFrom: "2026-10-05", Rule: &r}, now, nil); err != nil {
+		t.Fatal(err)
+	}
+	d.Generate("2026-10-05", "2026-10-05", now, nil, time.Time{})
+	saved, ok := d.Sessions[id]
+	if !ok || saved.Actual == nil || !saved.Exception || saved.State != "attention" || len(d.Sessions) != 1 || d.Week("2026-09-28", now, nil).Goals[0].ActualHours != 1 {
+		t.Fatalf("rule edit lost or duplicated actual occurrence: %+v", d.Sessions)
+	}
+}
+
+func TestFutureSessionEditCannotEraseRecordedActual(t *testing.T) {
+	d := testDocument()
+	now := instant("2026-09-30T12:00:00Z")
+	id := "planned"
+	plan := &Plan{Start: instant("2026-10-05T09:00:00Z"), End: instant("2026-10-05T10:00:00Z")}
+	d.Sessions[id] = Session{ID: id, Date: "2026-10-05", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: plan}
+	a := Actual{Status: "explicit", Date: "2026-09-28", Start: instant("2026-09-28T09:00:00Z"), End: instant("2026-09-28T10:00:00Z")}
+	if err := d.Apply(Mutation{Action: "actual", ID: id, Actual: &a}, now, nil); err != nil {
+		t.Fatal(err)
+	}
+	edit := d.Sessions[id]
+	edit.Plan = &Plan{Start: plan.Start.Add(time.Hour), End: plan.End.Add(time.Hour)}
+	if err := d.Apply(Mutation{Action: "session", ID: id, Session: &edit}, now, nil); err == nil || !strings.Contains(err.Error(), "actual") {
+		t.Fatalf("future plan edit should preserve recorded actual: %v", err)
+	}
+	saved := d.Sessions[id]
+	if saved.Actual == nil || *saved.Plan != *plan || d.Week("2026-09-28", now, nil).Goals[0].ActualHours != 1 {
+		t.Fatalf("plan edit erased recorded work: %+v", saved)
+	}
+}
 
 func TestRequirements(t *testing.T) {
 	h := 1.
