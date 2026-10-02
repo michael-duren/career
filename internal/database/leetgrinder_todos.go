@@ -433,15 +433,10 @@ func (s *Store) DeleteLeetgrinderTodoSet(ctx context.Context, id string) error {
 	return nil
 }
 
-// LeetgrinderTodoExport returns every todo set with all its entries, and the
-// standalone entries, done or not, in creation order. Entries carry only the
-// problem slug, source data and CreatedAt; it reads one snapshot.
-func (s *Store) LeetgrinderTodoExport(ctx context.Context) ([]leetgrinder.TodoSet, []leetgrinder.TodoItem, error) {
-	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true})
-	if err != nil {
-		return nil, nil, err
-	}
-	defer tx.Rollback()
+// loadLeetgrinderTodoExport returns every todo set with all its entries, and
+// the standalone entries, done or not, in creation order. Entries carry only
+// the problem slug, source data and CreatedAt.
+func loadLeetgrinderTodoExport(ctx context.Context, tx queryer) ([]leetgrinder.TodoSet, []leetgrinder.TodoItem, error) {
 	rows, err := tx.QueryContext(ctx, "SELECT id,title,description,metadata::text,created_at FROM leetgrinder_todo_sets ORDER BY created_at,id")
 	if err != nil {
 		return nil, nil, err
@@ -491,5 +486,5 @@ func (s *Store) LeetgrinderTodoExport(ctx context.Context) ([]leetgrinder.TodoSe
 	if err = rows.Err(); err != nil {
 		return nil, nil, err
 	}
-	return sets, standalone, tx.Commit()
+	return sets, standalone, nil
 }

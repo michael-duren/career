@@ -220,3 +220,32 @@ func (s *Store) LeetgrinderDailyGoal(ctx context.Context, date time.Time) (leetg
 	}
 	return g, err == nil, err
 }
+
+// LeetgrinderExport is everything the history export writes.
+type LeetgrinderExport struct {
+	State     leetgrinder.State
+	Settings  leetgrinder.Settings
+	TodoSets  []leetgrinder.TodoSet
+	TodoItems []leetgrinder.TodoItem
+}
+
+// LeetgrinderExport reads attempts, catalog, plans, goals, settings and todos
+// in one snapshot, so the file is consistent with itself.
+func (s *Store) LeetgrinderExport(ctx context.Context) (LeetgrinderExport, error) {
+	var out LeetgrinderExport
+	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true})
+	if err != nil {
+		return out, err
+	}
+	defer tx.Rollback()
+	if out.State, err = loadLeetgrinderState(ctx, tx, true); err != nil {
+		return out, err
+	}
+	if out.Settings, err = scanLeetgrinderSettings(tx.QueryRowContext(ctx, "SELECT "+leetgrinderSettingsColumns+" FROM leetgrinder_settings WHERE id=1")); err != nil {
+		return out, err
+	}
+	if out.TodoSets, out.TodoItems, err = loadLeetgrinderTodoExport(ctx, tx); err != nil {
+		return out, err
+	}
+	return out, tx.Commit()
+}

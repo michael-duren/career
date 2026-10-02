@@ -473,23 +473,15 @@ func (s *Server) leetgrinderSaveGeneral(w http.ResponseWriter, r *http.Request) 
 const leetgrinderExportVersion = 2
 
 // leetgrinderExport is the history download: every attempt, the catalog rows of
-// attempted and todo problems, daily goals, review plans, todos and settings.
+// attempted, planned and todo problems, daily goals, review plans, todos and settings, read in one snapshot.
 // It never includes the ntfy token or its ciphertext.
 func (s *Server) leetgrinderExport(w http.ResponseWriter, r *http.Request) {
-	state, err := s.db.LeetgrinderState(r.Context())
-	var settings leetgrinder.Settings
-	if err == nil {
-		settings, err = s.db.LeetgrinderSettings(r.Context())
-	}
-	var sets []leetgrinder.TodoSet
-	var standalone []leetgrinder.TodoItem
-	if err == nil {
-		sets, standalone, err = s.db.LeetgrinderTodoExport(r.Context())
-	}
+	export, err := s.db.LeetgrinderExport(r.Context())
 	if err != nil {
 		failure(w, err)
 		return
 	}
+	state, settings, sets, standalone := export.State, export.Settings, export.TodoSets, export.TodoItems
 	type exportProblem struct {
 		Slug          string   `json:"slug"`
 		Number        int      `json:"number,omitempty"`
@@ -501,11 +493,16 @@ func (s *Server) leetgrinderExport(w http.ResponseWriter, r *http.Request) {
 		OptimalNote   string   `json:"optimalNote"`
 		OptimalSource string   `json:"optimalSource"`
 	}
-	// Problems are those attempted plus those a todo references, so an import
-	// finds the catalog row of every slug in the file.
+	// Problems are those attempted, planned for review or referenced by a todo,
+	// so an import finds the catalog row of every slug in the file.
 	slugs := map[string]bool{}
 	for _, a := range state.Attempts {
 		slugs[a.ProblemSlug] = true
+	}
+	for _, picks := range state.Plans {
+		for _, slug := range picks {
+			slugs[slug] = true
+		}
 	}
 	for _, set := range sets {
 		for _, item := range set.Items {

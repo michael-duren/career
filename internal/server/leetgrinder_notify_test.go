@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"github.com/google/uuid"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -255,6 +256,19 @@ func TestLeetgrinderExportCompleteness(t *testing.T) {
 	if _, err = db.AddLeetgrinderTodoProblem(ctx, "", leetgrinder.TodoProblemInput{Slug: "lonely-problem"}); err != nil {
 		t.Fatal(err)
 	}
+	// A solved attempt on a todo slug (completing it), and a slug only a plan names.
+	if w := request("POST", "/leetgrinder/problem/two-sum/attempts", url.Values{"id": {uuid.NewString()}, "outcome": {"solved"}, "minutes": {"10"}, "timeComplexity": {"O(n)"}, "spaceComplexity": {"O(n)"}}); w.Code != 303 {
+		t.Fatalf("attempt: %d", w.Code)
+	}
+	if _, err = db.DB.Exec("INSERT INTO leetgrinder_problems(slug) VALUES('plan-only')"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.DB.Exec("INSERT INTO leetgrinder_daily_goal(local_date,goal_new,goal_review) VALUES('2026-10-01',2,1)"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.DB.Exec("INSERT INTO leetgrinder_review_plan(plan_date,problem_slug,slot) VALUES('2026-10-01','plan-only',1)"); err != nil {
+		t.Fatal(err)
+	}
 	// Picks are stored in slot order, which is not alphabetical.
 	for slot, slug := range []string{"valid-anagram", "two-sum"} {
 		if _, err = db.DB.Exec("INSERT INTO leetgrinder_review_plan(plan_date,problem_slug,slot) VALUES('2026-10-02',$1,$2)", slug, slot+1); err != nil {
@@ -309,10 +323,13 @@ func TestLeetgrinderExportCompleteness(t *testing.T) {
 	if exported.Version != 2 || exported.Attempts == nil || exported.DailyGoals == nil {
 		t.Fatalf("legacy fields or version: %s", raw)
 	}
-	if !slices.Equal(exported.ReviewPlans["2026-10-02"], []string{"valid-anagram", "two-sum"}) || !slices.Equal(exported.ReviewPlans["2026-09-30"], []string{"two-sum"}) || len(exported.ReviewPlans) != 2 {
+	if len(exported.Attempts) != 1 || len(exported.DailyGoals) < 1 {
+		t.Fatalf("attempts/goals: %s", raw)
+	}
+	if !slices.Equal(exported.ReviewPlans["2026-10-02"], []string{"valid-anagram", "two-sum"}) || !slices.Equal(exported.ReviewPlans["2026-09-30"], []string{"two-sum"}) || len(exported.ReviewPlans) != 3 {
 		t.Fatalf("reviewPlans: %v", exported.ReviewPlans)
 	}
-	if strings.Index(raw, `"2026-09-30"`) > strings.Index(raw, `"2026-10-02"`) {
+	if plansJSON := raw[strings.Index(raw, `"reviewPlans"`):]; strings.Index(plansJSON, `"2026-09-30"`) > strings.Index(plansJSON, `"2026-10-01"`) || strings.Index(plansJSON, `"2026-10-01"`) > strings.Index(plansJSON, `"2026-10-02"`) {
 		t.Fatal("review plan dates not in order")
 	}
 	if len(exported.Todos.Sets) != 1 || exported.Todos.Sets[0].ID != set.ID || exported.Todos.Sets[0].Title != "Warmup" || exported.Todos.Sets[0].Description != "easy ones" || exported.Todos.Sets[0].Metadata["source"] != "test" || exported.Todos.Sets[0].CreatedAt.IsZero() {
@@ -329,7 +346,7 @@ func TestLeetgrinderExportCompleteness(t *testing.T) {
 	for _, p := range exported.Problems {
 		slugs = append(slugs, p.Slug)
 	}
-	if !slices.Equal(slugs, []string{"lonely-problem", "two-sum", "valid-anagram"}) {
+	if !slices.Equal(slugs, []string{"lonely-problem", "plan-only", "two-sum", "valid-anagram"}) {
 		t.Fatalf("problems: %v", slugs)
 	}
 	got := exported.Settings
