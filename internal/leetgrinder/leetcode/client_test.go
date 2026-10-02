@@ -219,6 +219,9 @@ func TestWorker(t *testing.T) {
 	if strings.Join(p.Topics, ",") != "array,hash-table" || p.OptimalSource != "curated" || p.OptimalTime != "O(n)" || p.MetadataSource != "leetcode" {
 		t.Fatalf("two-sum after fetch: %+v", p)
 	}
+	if p.TopicLabel("hash-table") != "Hash Table" || p.TopicNames["array"] != "Array" {
+		t.Fatalf("fetcher did not store topic names: %+v", p.TopicNames)
+	}
 	if got := step(); len(got) != 0 {
 		t.Fatalf("refetched: %v", got)
 	}

@@ -236,3 +236,70 @@ INSERT INTO leetgrinder_attempts(id,problem_slug,outcome,minutes,assisted,notes,
 		t.Fatalf("attempts: %v", err)
 	}
 }
+
+func TestLeetgrinderTopicNames(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	now := time.Date(2026, 10, 1, 12, 0, 0, 0, time.UTC)
+
+	// The migration backfills common tags whose name is not the title-cased slug.
+	var backfilled string
+	if err := s.DB.QueryRow("SELECT name FROM leetgrinder_topics WHERE slug='depth-first-search'").Scan(&backfilled); err != nil || backfilled != "Depth-First Search" {
+		t.Fatalf("backfill: %q %v", backfilled, err)
+	}
+
+	// The extension's metadata PUT stores names.
+	meta := leetgrinder.ProblemMetadata{Number: 104, Title: "Maximum Depth of Binary Tree", Difficulty: "Easy", Topics: []leetgrinder.TopicTag{{Slug: "tree", Name: "Tree"}, {Slug: "xx-custom-tag", Name: "XX Custom!"}}}
+	if err := s.SaveLeetgrinderMetadata(ctx, "maximum-depth-of-binary-tree", meta, now); err != nil {
+		t.Fatal(err)
+	}
+	p, _ := s.LeetgrinderProblem(ctx, "maximum-depth-of-binary-tree")
+	if p.TopicLabel("xx-custom-tag") != "XX Custom!" || p.TopicLabel("tree") != "Tree" {
+		t.Fatalf("PUT names: %+v", p.TopicNames)
+	}
+
+	// An empty name never replaces a stored one; a new name does.
+	meta.Topics = []leetgrinder.TopicTag{{Slug: "xx-custom-tag"}}
+	if err := s.SaveLeetgrinderMetadata(ctx, "maximum-depth-of-binary-tree", meta, now); err != nil {
+		t.Fatal(err)
+	}
+	if p, _ = s.LeetgrinderProblem(ctx, "maximum-depth-of-binary-tree"); p.TopicLabel("xx-custom-tag") != "XX Custom!" {
+		t.Fatalf("empty name overwrote: %+v", p.TopicNames)
+	}
+	meta.Topics = []leetgrinder.TopicTag{{Slug: "xx-custom-tag", Name: "XX Custom Renamed"}}
+	if err := s.SaveLeetgrinderMetadata(ctx, "maximum-depth-of-binary-tree", meta, now); err != nil {
+		t.Fatal(err)
+	}
+	if p, _ = s.LeetgrinderProblem(ctx, "maximum-depth-of-binary-tree"); p.TopicLabel("xx-custom-tag") != "XX Custom Renamed" {
+		t.Fatalf("rename: %+v", p.TopicNames)
+	}
+
+	// Attempt metadata stores names in the same transaction.
+	attemptMeta := &leetgrinder.ProblemMetadata{Title: "Word Ladder", Topics: []leetgrinder.TopicTag{{Slug: "breadth-first-search", Name: "Breadth-First Search"}, {Slug: "xx-attempt-tag", Name: "XX Attempt"}}}
+	if _, err := s.SaveLeetgrinderAttemptWithProblem(ctx, leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "word-ladder", Outcome: "unfinished", Minutes: 5}, "", attemptMeta, now); err != nil {
+		t.Fatal(err)
+	}
+	if p, _ = s.LeetgrinderProblem(ctx, "word-ladder"); p.TopicLabel("xx-attempt-tag") != "XX Attempt" || p.TopicLabel("breadth-first-search") != "Breadth-First Search" {
+		t.Fatalf("attempt names: %+v", p.TopicNames)
+	}
+
+	// MCP todo topics carry only slugs: they fall back to TopicLabel, and
+	// reuse a name stored from another source.
+	set, err := s.CreateLeetgrinderTodoSetDetailed(ctx, leetgrinder.TodoSet{Title: "Names"}, []leetgrinder.TodoProblemInput{
+		{Slug: "course-schedule", Title: "Course Schedule", Topics: []string{"xx-attempt-tag", "topological-sort"}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	items, err := s.LeetgrinderTodoItems(ctx, set.ID)
+	if err != nil || len(items) != 1 {
+		t.Fatalf("items: %v %v", items, err)
+	}
+	if got := items[0].Problem; got.TopicLabel("xx-attempt-tag") != "XX Attempt" || got.TopicLabel("topological-sort") != "Topological Sort" || len(got.TopicNames) != 1 {
+		t.Fatalf("todo names: %+v", got.TopicNames)
+	}
+	var n int
+	if err := s.DB.QueryRow("SELECT count(*) FROM leetgrinder_topics WHERE slug='topological-sort'").Scan(&n); err != nil || n != 0 {
+		t.Fatalf("slug-only topic stored a name: %d %v", n, err)
+	}
+}

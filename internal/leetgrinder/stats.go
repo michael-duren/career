@@ -135,7 +135,7 @@ func NewStatsPage(today Today, f StatsFilter, weeks int) StatsPage {
 		for key := range keys {
 			s := topics[key]
 			if s == nil {
-				s = &TopicStat{Key: key, Label: topicStatLabel(key)}
+				s = &TopicStat{Key: key, Label: topicStatLabel(key, p.problem)}
 				topics[key] = s
 			}
 			s.Problems++
@@ -195,14 +195,14 @@ func topicKeys(p Problem) []string {
 	return p.Topics
 }
 
-func topicStatLabel(key string) string {
+func topicStatLabel(key string, p Problem) string {
 	switch key {
 	case untaggedTopic:
 		return "Untagged"
 	case otherTopic:
 		return "Other"
 	}
-	return TopicLabel(key)
+	return p.TopicLabel(key)
 }
 
 // calendarWeeks lays the last weeks of goal results out as rows of Monday

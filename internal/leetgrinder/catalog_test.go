@@ -101,3 +101,17 @@ func TestTopicLabel(t *testing.T) {
 		}
 	}
 }
+
+func TestProblemTopicLabelPrefersStoredName(t *testing.T) {
+	p := Problem{Topics: []string{"depth-first-search", "hash-table"}, TopicNames: map[string]string{"depth-first-search": "Depth-First Search", "hash-table": ""}}
+	if got := p.TopicLabel("depth-first-search"); got != "Depth-First Search" {
+		t.Errorf("stored name: %q", got)
+	}
+	// An empty or missing name falls back to the title-cased slug.
+	if got := p.TopicLabel("hash-table"); got != "Hash Table" {
+		t.Errorf("empty name: %q", got)
+	}
+	if got := (Problem{}).TopicLabel("depth-first-search"); got != "Depth First Search" {
+		t.Errorf("no names: %q", got)
+	}
+}

@@ -17,6 +17,9 @@ type Problem struct {
 	Difficulty string
 	// Topics are LeetCode topic tag slugs, such as "hash-table".
 	Topics []string
+	// TopicNames maps a topic slug to the display name LeetCode sent for it.
+	// A slug without a name is labelled by TopicLabel; use Problem.TopicLabel.
+	TopicNames map[string]string
 	// OptimalTime and OptimalSpace are the best-known bounds under the
 	// problem's constraints, in the notation NormalizeComplexity produces. Space is auxiliary
 	// space and excludes the returned output.
@@ -287,4 +290,13 @@ func Summarize(state State) Progress {
 		}
 	}
 	return Progress{Attempted: len(attempted), Solved: len(solved), Independent: len(independent)}
+}
+
+// TopicLabel is the display name of one of the problem's topic slugs: the
+// name LeetCode sent when stored, otherwise the slug title-cased.
+func (p Problem) TopicLabel(slug string) string {
+	if name := p.TopicNames[slug]; name != "" {
+		return name
+	}
+	return TopicLabel(slug)
 }

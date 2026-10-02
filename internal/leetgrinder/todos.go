@@ -100,7 +100,7 @@ func (s TodoSet) Summary() TodoSummary {
 		}
 		for _, topic := range item.Problem.Topics {
 			if topics[topic] == nil {
-				topics[topic] = &TodoTally{Key: topic, Label: TopicLabel(topic)}
+				topics[topic] = &TodoTally{Key: topic, Label: item.Problem.TopicLabel(topic)}
 			}
 			count(topics[topic], done)
 		}

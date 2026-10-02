@@ -211,7 +211,7 @@ templ todoTable(items []TodoItem, caption string, loc *time.Location, setID stri
 								} else {
 									<span class="row-topics">
 										for _, topic := range item.Problem.Topics {
-											<span class="topic-tag">{ TopicLabel(topic) }</span>
+											<span class="topic-tag">{ item.Problem.TopicLabel(topic) }</span>
 										}
 								</span>
 							}

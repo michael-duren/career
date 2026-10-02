@@ -166,7 +166,8 @@ func NormalizeProblemRef(input string) (string, bool) {
 	return s, true
 }
 
-// TopicLabel is a readable name for a topic tag slug.
+// TopicLabel is a readable name for a topic tag slug, built from the slug.
+// Prefer Problem.TopicLabel, which uses the name LeetCode sent when known.
 func TopicLabel(slug string) string {
 	if slug == "" {
 		return "Untagged"
