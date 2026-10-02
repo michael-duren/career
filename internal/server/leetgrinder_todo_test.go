@@ -246,37 +246,53 @@ func TestTodoSetPageSummarizesAndSearches(t *testing.T) {
 			t.Fatalf("search %s: %d", query, w.Code)
 		}
 		body := w.Body.String()
-		return body[strings.Index(body, `role="status"`):]
+		start := strings.Index(body, `role="status"`)
+		if start < 0 {
+			t.Fatalf("search %s: no result count", query)
+		}
+		return body[start:]
 	}
-	for query, want := range map[string][]string{
-		"q=island":                    {"number-of-islands"},
-		"q=127":                       {"word-ladder"},
-		"topic=graph&difficulty=Hard": {"word-ladder"},
-		"status=done":                 {"two-sum"},
-		"status=todo&topic=array":     {"number-of-islands"},
+	if _, err = db.AddLeetgrinderTodoItem(ctx, set.ID, "custom-untagged-problem"); err != nil {
+		t.Fatal(err)
+	}
+	if body = request("GET", base, nil).Body.String(); !strings.Contains(body, "Unknown</span> 0/1") {
+		t.Error("summary must count problems without a difficulty")
+	}
+	for query, want := range map[string]string{
+		"q=island":                    "number-of-islands",
+		"q=127":                       "word-ladder",
+		"topic=graph&difficulty=Hard": "word-ladder",
+		"status=done":                 "two-sum",
+		"status=todo&topic=array":     "number-of-islands",
+		"topic=untagged":              "custom-untagged-problem",
 	} {
 		results := search(query)
-		for _, slug := range []string{"two-sum", "number-of-islands", "word-ladder"} {
-			if shown := strings.Contains(results, "/leetgrinder/problem/"+slug+`"`); shown != (slug == want[0]) {
+		for _, slug := range []string{"two-sum", "number-of-islands", "word-ladder", "custom-untagged-problem"} {
+			if shown := strings.Contains(results, "/leetgrinder/problem/"+slug+`"`); shown != (slug == want) {
 				t.Errorf("%s: %s shown=%v", query, slug, shown)
 			}
 		}
 	}
-	if results := search("q=nothing-matches"); !strings.Contains(results, "Showing 0 of 3") {
+	if results := search("q=nothing-matches"); !strings.Contains(results, "Showing 0 of 4") {
 		t.Error("empty search must say nothing matched")
 	}
-	if w := request("GET", "/leetgrinder/todos/sets/"+uuid.NewString(), nil); w.Code != 404 {
-		t.Errorf("missing set: %d", w.Code)
+	for id, want := range map[string]int{uuid.NewString(): 404, "not-a-set": 404, "urn:uuid:" + set.ID: 200} {
+		if w := request("GET", "/leetgrinder/todos/sets/"+id, nil); w.Code != want {
+			t.Errorf("set %s: %d, want %d", id, w.Code, want)
+		}
+	}
+	if add := request("GET", "/leetgrinder/todos/add?setID="+set.ID, nil).Body.String(); !strings.Contains(add, `<a href="`+base+`">Graphs and arrays</a>`) {
+		t.Error("add page must link back to its set")
 	}
 
 	if w := request("POST", "/leetgrinder/todos/items", url.Values{"problem": {"clone-graph"}, "setID": {set.ID}}); w.Code != 303 || w.Header().Get("Location") != base {
 		t.Fatalf("adding to a set returns to it: %d %s", w.Code, w.Header().Get("Location"))
 	}
 	set, err = db.LeetgrinderTodoSet(ctx, set.ID)
-	if err != nil || len(set.Items) != 4 {
+	if err != nil || len(set.Items) != 5 {
 		t.Fatalf("set after add: %+v %v", set, err)
 	}
-	if w := request("POST", "/leetgrinder/todos/items/"+set.Items[3].ID+"/delete", url.Values{"setID": {set.ID}}); w.Code != 303 || w.Header().Get("Location") != base {
+	if w := request("POST", "/leetgrinder/todos/items/"+set.Items[4].ID+"/delete", url.Values{"setID": {set.ID}}); w.Code != 303 || w.Header().Get("Location") != base {
 		t.Fatalf("removing from a set returns to it: %d %s", w.Code, w.Header().Get("Location"))
 	}
 }

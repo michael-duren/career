@@ -205,7 +205,7 @@ templ todoTable(items []TodoItem, caption string, loc *time.Location, setID stri
 									<span class="muted">Unknown</span>
 								}
 						</td>
-						<td>
+						<td class="todo-topics">
 								if len(item.Problem.Topics) == 0 {
 									<span class="muted">Unknown</span>
 								} else {
@@ -231,7 +231,15 @@ templ todoTable(items []TodoItem, caption string, loc *time.Location, setID stri
 
 templ TodoAddProblem(page TodosPage) {
 	@layout("Add a problem", "todos") {
-		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder/todos">Todos</a><span>/</span><span>Add a problem</span></nav>
+		<nav class="breadcrumb" aria-label="Breadcrumb">
+			<a href="/leetgrinder/todos">Todos</a><span>/</span>
+			for _, set := range page.Sets {
+				if set.ID == page.SetID {
+					<a href={ templ.SafeURL("/leetgrinder/todos/sets/" + set.ID) }>{ set.Title }</a><span>/</span>
+				}
+			}
+			<span>Add a problem</span>
+		</nav>
 		<header class="dash-head"><div><p class="eyebrow">PRACTICE QUEUE</p><h1>Add a problem</h1></div></header>
 		<section class="panel">
 				if page.Error != "" {
