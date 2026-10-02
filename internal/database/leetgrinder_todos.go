@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"log"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -150,17 +151,44 @@ WHERE slug=$1`, problem.Slug, number, problem.Title, problem.Difficulty, problem
 	return err
 }
 
+// maxImportMetadataBytes bounds a problem's archived source snapshots.
+const maxImportMetadataBytes = 64 << 10
+
+// recordTodoSource archives a todo's source snapshot under its item ID. A
+// snapshot already archived under any item, for example by an earlier add of
+// the same problem that was then removed, is not stored again, and nothing is
+// added once the column is full. The item's own source_data still holds it.
 func recordTodoSource(ctx context.Context, tx *sql.Tx, slug, itemID string, source []byte) error {
 	if string(source) == "{}" {
 		return nil
 	}
-	_, err := tx.ExecContext(ctx, `UPDATE leetgrinder_problems SET import_metadata=jsonb_set(import_metadata,ARRAY[$2::text],
-COALESCE(import_metadata->$2,'[]'::jsonb) || jsonb_build_array($3::jsonb),true)
-WHERE slug=$1 AND NOT EXISTS (
-  SELECT 1 FROM jsonb_array_elements(COALESCE(import_metadata->$2,'[]'::jsonb)) AS prior(value)
-  WHERE prior.value=$3::jsonb
-)`, slug, itemID, source)
-	return err
+	// One statement reads the size and whether the snapshot is archived,
+	// adds it when it fits, and reports which case applied.
+	var archived, over bool
+	err := tx.QueryRowContext(ctx, `WITH cur AS (
+  SELECT slug,
+    octet_length(import_metadata::text)+octet_length($3::jsonb::text) > $4 AS over,
+    EXISTS (
+      SELECT 1 FROM jsonb_each(import_metadata) AS entry(key,versions), jsonb_array_elements(entry.versions) AS prior(value)
+      WHERE prior.value=$3::jsonb
+    ) AS archived
+  FROM leetgrinder_problems WHERE slug=$1
+), added AS (
+  UPDATE leetgrinder_problems p SET import_metadata=jsonb_set(import_metadata,ARRAY[$2::text],
+    COALESCE(import_metadata->$2,'[]'::jsonb) || jsonb_build_array($3::jsonb),true)
+  FROM cur WHERE p.slug=cur.slug AND NOT cur.over AND NOT cur.archived
+)
+SELECT archived, over FROM cur`, slug, itemID, source, maxImportMetadataBytes).Scan(&archived, &over)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if over && !archived {
+		log.Printf("leetgrinder: import metadata for %s is at its %d byte cap; snapshot for todo %s not archived", slug, maxImportMetadataBytes, itemID)
+	}
+	return nil
 }
 
 func (s *Store) LeetgrinderTodoSets(ctx context.Context) ([]leetgrinder.TodoSet, error) {

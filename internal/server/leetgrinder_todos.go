@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -73,12 +74,18 @@ func (s *Server) leetgrinderCreateTodoSet(w http.ResponseWriter, r *http.Request
 		return
 	}
 	title, raw := r.PostForm.Get("title"), r.PostForm.Get("problems")
-	slugs, ok := leetgrinder.ParseTodoRefs(raw)
-	if !ok {
-		renderLeetgrinder(w, r, 400, leetgrinder.TodoAddSet(leetgrinder.TodosPage{Title: title, Problems: raw, Error: "Enter at most 200 valid LeetCode links or slugs, one per line."}))
+	slugs, err := leetgrinder.ParseTodoRefs(raw)
+	if err != nil {
+		message := fmt.Sprintf("Enter at most %d LeetCode links or slugs.", leetgrinder.MaxTodoRefs)
+		var invalid leetgrinder.InvalidTodoRefError
+		if errors.As(err, &invalid) {
+			message = fmt.Sprintf("%q is not a LeetCode link or slug.", invalid.Entry)
+		}
+		renderLeetgrinder(w, r, 400, leetgrinder.TodoAddSet(leetgrinder.TodosPage{Title: title, Problems: raw, Error: message}))
 		return
 	}
-	if _, err := s.db.CreateLeetgrinderTodoSet(r.Context(), title, slugs); err != nil {
+	set, err := s.db.CreateLeetgrinderTodoSet(r.Context(), title, slugs)
+	if err != nil {
 		if errors.Is(err, database.ErrInvalid) {
 			renderLeetgrinder(w, r, 400, leetgrinder.TodoAddSet(leetgrinder.TodosPage{Title: title, Problems: raw, Error: "Enter a set name of at most 120 characters and valid problems."}))
 			return
@@ -86,7 +93,7 @@ func (s *Server) leetgrinderCreateTodoSet(w http.ResponseWriter, r *http.Request
 		renderLeetgrinder(w, r, 503, leetgrinder.TodoAddSet(leetgrinder.TodosPage{Title: title, Problems: raw, Error: "The set could not be saved. Please retry."}))
 		return
 	}
-	http.Redirect(w, r, "/leetgrinder/todos", http.StatusSeeOther)
+	http.Redirect(w, r, todoListURL(set.ID), http.StatusSeeOther)
 }
 
 func (s *Server) leetgrinderAddTodoItem(w http.ResponseWriter, r *http.Request) {

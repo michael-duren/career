@@ -211,7 +211,7 @@ func (s *Server) leetgrinderAPIAttempt(w http.ResponseWriter, r *http.Request) {
 		}
 		respond(w, 200, map[string]any{"attempt": saved, "kind": kind})
 	case errors.Is(err, database.ErrConflict):
-		respond(w, 409, map[string]string{"error": "This attempt id was already used for a different attempt. Correct it in the app instead."})
+		respond(w, 409, map[string]string{"error": "Saved earlier with different values. Check the history, or save this as a new attempt."})
 	case errors.Is(err, database.ErrInvalid):
 		bad("Check the attempt fields and try again.")
 	default:
@@ -277,6 +277,10 @@ func (s *Server) leetgrinderAPIProblem(w http.ResponseWriter, r *http.Request) {
 		out.Recall, out.LastAttemptedAt = &recall, &last
 		if today.Due(card) || out.TodaysPick {
 			out.Status, out.DueDate = "due", due
+			if !today.Due(card) {
+				// Due only as today's pick: the FSRS date is still ahead.
+				out.DueDate = today.Date.Format(time.DateOnly)
+			}
 			if card.Flag != nil {
 				out.FlagReason = card.Flag.Label()
 			}
@@ -362,10 +366,8 @@ func (s *Server) leetgrinderAPIToday(w http.ResponseWriter, r *http.Request) {
 	out := leetgrinderAPIToday{Date: today.Date.Format(time.DateOnly), Goal: today.Progress.Target(), Met: today.Progress.Met(), Remaining: today.Progress.Remaining(), Streak: today.Streaks.Current, Picks: []leetgrinderAPIReview{}, Due: []leetgrinderAPIReview{}}
 	out.Done.New, out.Done.Review, out.Done.Bonus = today.Progress.New(), today.Progress.Reviews(), today.Progress.Bonus()
 	for _, item := range today.Reviews {
-		recall := 0.0
-		if card, ok := today.Card(item.Problem.Slug); ok {
-			recall = card.Retrievability(today.Now)
-		}
+		// Reason and recall both describe the card before today's review.
+		recall := item.Card.Retrievability(today.Now)
 		out.Picks = append(out.Picks, leetgrinderAPIReview{item.Problem.Slug, item.Problem.DisplayTitle(), item.Problem.Difficulty, recall, item.Reason, item.Done})
 	}
 	due := today.DueOptional()

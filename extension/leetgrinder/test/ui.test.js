@@ -49,3 +49,19 @@ test("popupModel", () => {
   const many = { ...today, due: Array.from({ length: 20 }, (_, i) => ({ slug: `p-${i}`, title: `P${i}` })) };
   assert.equal(lib.popupModel(many, "").due.length, 10);
 });
+
+test("panelCloses", () => {
+  assert.equal(lib.panelCloses("escape", false), true);
+  assert.equal(lib.panelCloses("dismiss", false), true);
+  // A locked panel holds an attempt that may not be saved.
+  assert.equal(lib.panelCloses("escape", true, () => true), false);
+  assert.equal(lib.panelCloses("dismiss", true), false);
+  assert.equal(lib.panelCloses("dismiss", true, () => false), false);
+  let asked = "";
+  assert.equal(lib.panelCloses("dismiss", true, (m) => ((asked = m), true)), true);
+  assert.equal(asked, lib.DISCARD_PROMPT);
+});
+
+test("409 message offers a way forward", () => {
+  assert.match(lib.describeStatus(409, ""), /save this as a new attempt/);
+});

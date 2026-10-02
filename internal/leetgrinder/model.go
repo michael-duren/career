@@ -25,7 +25,12 @@ type Problem struct {
 	OptimalSource string
 	// MetadataSource is "seed", "extension", "leetcode", "mcp", or "" for a bare row.
 	MetadataSource string
-	// ImportMetadata keeps source-specific problem snapshots keyed by todo item ID.
+	// ImportMetadata keeps source-specific problem snapshots. Each snapshot is
+	// stored once per problem, under the ID of the todo item that first
+	// archived it; a later item with identical content adds nothing, and
+	// snapshots stay when their item is deleted. Migration 024 still says the
+	// keys are item IDs and that entries remain on removal; its SQL is applied
+	// and checksummed, so this comment is the current description.
 	ImportMetadata map[string]any
 	// NotFound reports that LeetCode answered that no such problem exists.
 	NotFound bool

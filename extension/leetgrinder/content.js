@@ -368,7 +368,7 @@
     const slug = state.slug;
     const root = mount();
     // One id per panel: retries of the same entry are idempotent on the server.
-    const id = crypto.randomUUID();
+    let id = crypto.randomUUID();
     const outcome = el("select", { name: "outcome" }, [
       el("option", { value: "solved", text: "Solved" }),
       el("option", { value: "struggled", text: "Struggled" }),
@@ -417,9 +417,12 @@
       el("div", { className: "actions" }, [dismiss, submit]),
       status,
     ]);
-    dismiss.addEventListener("click", closeUI);
+    const closePanel = (trigger) => {
+      if (lib.panelCloses(trigger, Boolean(ui && ui.locked), (message) => window.confirm(message))) closeUI();
+    };
+    dismiss.addEventListener("click", () => closePanel("dismiss"));
     form.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") closeUI();
+      if (event.key === "Escape") closePanel("escape");
       // Keep the site's editor shortcuts from firing while typing here.
       event.stopPropagation();
     });
@@ -482,8 +485,14 @@
       status.className = "status error";
       status.textContent = res.error || lib.describeStatus(res.status, "");
       if (res.status === 409) {
-        // This id can never succeed; correct it in the app.
+        // This id can never succeed. Keep what was typed and let the learner
+        // save it under a new id.
+        id = crypto.randomUUID();
+        locked = null;
         panel.locked = false;
+        submit.disabled = false;
+        submit.textContent = "Log attempt";
+        for (const f of fields) f.disabled = false;
         return;
       }
       submit.disabled = false;
