@@ -49,6 +49,7 @@ func (s *Server) registerLeetgrinder(r chi.Router) {
 		r.Get("/leetgrinder/todos/add", s.leetgrinderTodoAddProblem)
 		r.Get("/leetgrinder/todos/sets/new", s.leetgrinderTodoAddSet)
 		r.Post("/leetgrinder/todos/sets", s.leetgrinderCreateTodoSet)
+		r.Get("/leetgrinder/todos/sets/{id}", s.leetgrinderTodoSet)
 		r.Post("/leetgrinder/todos/items", s.leetgrinderAddTodoItem)
 		r.Post("/leetgrinder/todos/sets/{id}/delete", s.leetgrinderDeleteTodoSet)
 		r.Post("/leetgrinder/todos/items/{id}/delete", s.leetgrinderDeleteTodoItem)
