@@ -200,7 +200,8 @@ func (s *Store) LeetgrinderTodoSets(ctx context.Context) ([]leetgrinder.TodoSet,
 // struggled attempt that completes the entry. Any such attempt completes a set
 // entry, so a set shows problems done before it was made. An individual entry
 // counts only attempts since it was added, so adding a done problem again
-// queues it for another pass.
+// queues it for another pass. Windows compare when an attempt was logged, so
+// correcting an older attempt to solved does not complete an individual entry.
 const leetgrinderTodoRows = `SELECT i.id,COALESCE(i.set_id::text,'') AS set_id,i.set_id AS set_key,p.slug,
   COALESCE(p.number,0) AS number,p.title,p.difficulty,array_to_json(p.topics)::text AS topics,
   i.source_data::text AS source_data,i.created_at,

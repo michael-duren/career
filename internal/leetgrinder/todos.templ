@@ -1,5 +1,7 @@
 package leetgrinder
 
+import "time"
+
 templ Todos(page TodosPage) {
 	@layout("Todos", "todos") {
 		<header class="dash-head">
@@ -21,7 +23,7 @@ templ Todos(page TodosPage) {
 			if len(page.Standalone) == 0 {
 				<p class="muted small">No individual problems yet.</p>
 			} else {
-				@todoTable(page.Standalone, "Individual problems")
+				@todoTable(page.Standalone, "Individual problems", page.Location)
 			}
 		</section>
 		for _, set := range page.Sets {
@@ -48,14 +50,14 @@ templ Todos(page TodosPage) {
 				if len(set.Items) == 0 {
 					<p class="muted small">No problems in this set.</p>
 				} else {
-					@todoTable(set.Items, set.Title)
+					@todoTable(set.Items, set.Title, page.Location)
 				}
 			</section>
 		}
 	}
 }
 
-templ todoTable(items []TodoItem, caption string) {
+templ todoTable(items []TodoItem, caption string, loc *time.Location) {
 	<div class="table-scroll queue todo-table">
 		<table>
 			<caption class="visually-hidden">{ caption }</caption>
@@ -73,7 +75,7 @@ templ todoTable(items []TodoItem, caption string) {
 						<th scope="row">
 							<a href={ templ.SafeURL(ProblemURL(item.Problem.Slug)) }>{ item.Problem.DisplayTitle() }</a>
 							if item.Done() {
-								<span class="status-pill status-solved" title={ "Done " + item.DoneAt.Format("Jan 2, 2006") }>Done</span>
+								<span class="status-pill status-solved" title={ "Done " + item.DoneAt.In(loc).Format("Jan 2, 2006") }>Done</span>
 							}
 						</th>
 						<td>

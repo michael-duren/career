@@ -190,6 +190,18 @@ func TestDoneTodosLeaveTheQueueAndCountInSets(t *testing.T) {
 		t.Fatalf("adding a done problem again must queue it: %+v %v", standalone, err)
 	}
 
+	attempt("clone-graph", "unfinished")
+	if _, err = db.AddLeetgrinderTodoItem(ctx, "", "clone-graph"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.AddLeetgrinderTodoItem(ctx, "", "two-sum"); err != nil {
+		t.Fatal(err)
+	}
+	standalone, err = db.LeetgrinderTodoItems(ctx, "")
+	if err != nil || len(standalone) != 3 || standalone[0].Problem.Slug != "clone-graph" || standalone[2].Problem.Slug != "two-sum" || standalone[2].Done() {
+		t.Fatalf("open entries keep their place and earlier solves do not complete new entries: %+v %v", standalone, err)
+	}
+
 	attempt("three-sum", "solved")
 	if page = request("GET", "/leetgrinder/todos", nil).Body.String(); !strings.Contains(page, "All 3 done") {
 		t.Fatal("finished set must say so")

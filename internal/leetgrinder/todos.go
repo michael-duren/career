@@ -52,7 +52,9 @@ type TodoProblemInput struct {
 type TodosPage struct {
 	Sets       []TodoSet
 	Standalone []TodoItem
-	Error      string
+	// Location formats done dates in the settings time zone.
+	Location *time.Location
+	Error    string
 	Title      string
 	Problems   string
 	Problem    string

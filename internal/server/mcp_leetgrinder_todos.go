@@ -108,7 +108,7 @@ func (s *Server) addLeetgrinderTodoTools(server *mcp.Server) {
 		return nil, map[string]any{"id": set.ID, "title": set.Title, "problemCount": len(problems)}, nil
 	})
 	mcp.AddTool(server, &mcp.Tool{
-		Name: "add_leetgrinder_todo_problem", Description: "Add a LeetCode problem to the individual list or a set. Optional title, number, difficulty, topics, and arbitrary metadata are saved on the catalog problem. Repeated additions keep one todo entry. Requires edit access.",
+		Name: "add_leetgrinder_todo_problem", Description: "Add a LeetCode problem to the individual list or a set. Optional title, number, difficulty, topics, and arbitrary metadata are saved on the catalog problem. Repeated additions keep one todo entry; adding a done individual problem again queues it for another pass. Requires edit access.",
 		Annotations: &mcp.ToolAnnotations{Title: "Add Leetgrinder todo problem", DestructiveHint: new(bool), IdempotentHint: true, OpenWorldHint: new(bool)},
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in addTodoProblemInput) (*mcp.CallToolResult, any, error) {
 		if !canWrite(req) {
