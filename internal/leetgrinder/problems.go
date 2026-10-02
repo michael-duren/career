@@ -102,9 +102,9 @@ func (f ProblemFilter) match(r ProblemRow) bool {
 	case "flagged":
 		return r.Card.Flagged()
 	case "solved":
-		return Solved(r.Best)
+		return isSolve(r.Best)
 	case "solved-last":
-		return Solved(r.Latest)
+		return isSolve(r.Latest)
 	case "helped":
 		return r.Latest == ResultWithHelp
 	case "struggled":

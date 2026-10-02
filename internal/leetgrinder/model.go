@@ -233,11 +233,11 @@ func latestOf(attempts []Attempt) string {
 // ShowBest reports whether the best result adds to the latest: it is a solve
 // and differs from it.
 func ShowBest(best, latest string) bool {
-	return Solved(best) && best != latest
+	return isSolve(best) && best != latest
 }
 
-// Solved reports whether a best or latest result is a solve.
-func Solved(result string) bool {
+// isSolve reports whether a best or latest result is a solve.
+func isSolve(result string) bool {
 	return result == ResultIndependent || result == ResultWithHelp
 }
 

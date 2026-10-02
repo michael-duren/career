@@ -43,6 +43,9 @@ func TestProblemHistoryForAnyProblem(t *testing.T) {
 			t.Errorf("unknown problem page missing %q", want)
 		}
 	}
+	if strings.Contains(html, ">Latest</span>") || strings.Contains(html, "Not attempted") {
+		t.Error("unattempted problem shows a result")
+	}
 	if html = render(Problem{Slug: "queued", InCatalog: true}, State{}); !strings.Contains(html, "Fetching details from LeetCode…") {
 		t.Error("catalogued problem does not say it is fetching")
 	}

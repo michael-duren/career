@@ -291,11 +291,17 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, avail Analy
 				rel="noopener noreferrer"
 			>Open on LeetCode ↗</a>
 			{{ latest, best := state.ProblemLatest(problem.Slug), state.ProblemBest(problem.Slug) }}
-			<span class="small muted">Latest</span>
-			<span class={ StatusClass(latest) }>{ latest }</span>
+			if latest != ResultNone {
+				<span class="status-group">
+					<span class="small muted">Latest</span>
+					<span class={ StatusClass(latest) }>{ latest }</span>
+				</span>
+			}
 			if ShowBest(best, latest) {
-				<span class="small muted">Best</span>
-				<span class={ StatusClass(best) }>{ best }</span>
+				<span class="status-group">
+					<span class="small muted">Best</span>
+					<span class={ StatusClass(best) }>{ best }</span>
+				</span>
 			}
 			if review.Pick {
 				<span class="badge">Today's review</span>

@@ -200,6 +200,8 @@ func TestStatusFiltersUseLatestResult(t *testing.T) {
 		attempt("two-sum", "solved", 10, false, now.AddDate(0, -7, 0)),
 		attempt("ransom-note", "solved", 10, false, now.AddDate(0, 0, -2)),
 		attempt("ransom-note", "struggled", 40, false, now.AddDate(0, -3, 0)),
+		attempt("binary-search", "struggled", 40, false, now.AddDate(0, 0, -3)),
+		attempt("mystery-problem", "solved", 40, true, now.AddDate(0, 0, -4)),
 	}}
 	rows := ProblemRows(state, BuildCards(state, time.UTC), now, time.UTC)
 	slugs := func(query string) []string {
@@ -212,11 +214,11 @@ func TestStatusFiltersUseLatestResult(t *testing.T) {
 	}
 	for query, want := range map[string]string{
 		"status=unfinished":  "two-sum",
-		"status=struggled":   "",
-		"status=solved":      "two-sum,ransom-note",
-		"status=solved-last": "ransom-note",
-		"status=helped":      "",
-		"status=bogus":       "two-sum,ransom-note",
+		"status=struggled":   "binary-search",
+		"status=solved":      "two-sum,ransom-note,mystery-problem",
+		"status=solved-last": "ransom-note,mystery-problem",
+		"status=helped":      "mystery-problem",
+		"status=bogus":       "two-sum,ransom-note,binary-search,mystery-problem",
 	} {
 		if got := strings.Join(slugs(query), ","); got != want {
 			t.Errorf("%q: %q, want %q", query, got, want)
@@ -244,7 +246,7 @@ func TestStatusFiltersUseLatestResult(t *testing.T) {
 		}
 	}
 	// ransom-note best and latest agree, so only two-sum shows a best.
-	if n := strings.Count(html, "Best: "); n != 1 {
+	if n := strings.Count(html, `class="small muted status-best"`); n != 1 {
 		t.Errorf("%d Best labels, want 1", n)
 	}
 }
@@ -267,7 +269,7 @@ func TestHelpedFilterAndNoBestForUnsolved(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Only two-sum (best: independent, latest: with help) shows a Best.
-	if n := strings.Count(out.String(), "Best: "); n != 1 {
+	if n := strings.Count(out.String(), `class="small muted status-best"`); n != 1 {
 		t.Errorf("%d Best labels in table, want 1", n)
 	}
 	for _, slug := range []string{"ransom-note", "binary-search"} {

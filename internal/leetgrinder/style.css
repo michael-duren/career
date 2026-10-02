@@ -1274,7 +1274,13 @@ dd {
   white-space: normal;
   min-width: 14em;
 }
-.status-tags > span:not(.flag) {
+.status-tags > span:not(.flag):not(.status-best) {
+  white-space: nowrap;
+}
+.status-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   white-space: nowrap;
 }
 .status-tags {
