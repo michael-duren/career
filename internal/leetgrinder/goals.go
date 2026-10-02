@@ -101,6 +101,11 @@ func (d DayProgress) Bonus() int {
 // goals and review plans in state. The result has an entry for every day
 // with an attempt and for each of extra.
 func History(state State, loc *time.Location, extra ...time.Time) map[time.Time]*DayProgress {
+	return history(replayAll(state, loc), state, loc, extra...)
+}
+
+// history is History over replays already made.
+func history(replays map[string]*slugReplay, state State, loc *time.Location, extra ...time.Time) map[time.Time]*DayProgress {
 	days := map[time.Time]*DayProgress{}
 	day := func(date time.Time) *DayProgress {
 		d := days[date]
@@ -117,20 +122,13 @@ func History(state State, loc *time.Location, extra ...time.Time) map[time.Time]
 		date  time.Time
 		after Card
 	}
-	bySlug := attemptsBySlug(state.Attempts)
 	history := map[string][]snapshot{}
-	for slug, list := range bySlug {
-		problem := state.Problem(slug)
-		var dates []time.Time
-		var befores []Card
-		final := replaySlug(problem, list, loc, func(date time.Time, before Card) {
-			day(date).Kinds[slug] = classify(state, slug, problem, date, before, loc)
-			dates, befores = append(dates, date), append(befores, before)
-		})
-		for i, date := range dates {
-			after := final
-			if i+1 < len(befores) {
-				after = befores[i+1]
+	for slug, r := range replays {
+		for i, date := range r.dates {
+			day(date).Kinds[slug] = classify(state, slug, r.problem, date, r.befores[i], loc)
+			after := r.final
+			if i+1 < len(r.befores) {
+				after = r.befores[i+1]
 			}
 			history[slug] = append(history[slug], snapshot{date, after})
 		}

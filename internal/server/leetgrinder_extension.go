@@ -200,7 +200,7 @@ func (s *Server) leetgrinderAPIAttempt(w http.ResponseWriter, r *http.Request) {
 	}
 	// Freeze today's goal and picks before the attempt, so a first access
 	// that is itself a review still plans that review.
-	_, _ = s.db.LeetgrinderToday(r.Context(), s.clock())
+	_ = s.db.PlanLeetgrinderToday(r.Context(), s.clock())
 	saved, err := s.db.SaveLeetgrinderAttemptWithProblem(r.Context(), attempt, "", input.Problem, s.clock())
 	switch {
 	case err == nil:

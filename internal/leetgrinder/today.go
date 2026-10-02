@@ -31,30 +31,33 @@ type Today struct {
 // NewToday combines saved state, including today's frozen goal and review
 // plan, into today's view for now.
 func NewToday(settings Settings, state State, now time.Time) Today {
+	return NewTodayFrom(settings, state, now, ReplayAttempts(state, settings.Location()))
+}
+
+// NewTodayFrom is NewToday over r, the replay of state in the settings' time
+// zone, so a caller that already replayed state to plan reviews does not
+// replay it again. A replay in another zone, or none, is replaced by a
+// fresh one. r must come from this state, not an earlier load.
+func NewTodayFrom(settings Settings, state State, now time.Time, r Replay) Today {
 	loc := settings.Location()
+	if r.zone != settings.zone() {
+		r = ReplayAttempts(state, loc)
+	}
 	t := Today{Settings: settings, State: state, Now: now, Date: Date(now, loc)}
 	t.Goal = state.GoalFor(t.Date)
-	t.Cards = BuildCards(state, loc)
-	t.history = History(state, loc, t.Date)
+	t.Cards = r.cards
+	t.history = history(r.replays, state, loc, t.Date)
 	t.Progress = *t.history[t.Date]
 	t.Streaks = ComputeStreaks(t.history, t.Progress)
-	// Reasons describe each card as it stood before today, so they stay
-	// stable after today's review is logged.
-	var before State = state
-	before.Attempts = nil
-	for _, a := range state.Attempts {
-		if Date(a.CreatedAt, loc).Before(t.Date) {
-			before.Attempts = append(before.Attempts, a)
-		}
-	}
-	cards := map[string]Card{}
-	for _, c := range BuildCards(before, loc) {
-		cards[c.Problem.Slug] = c
-	}
 	for i, slug := range state.Plans[t.Date] {
-		item := ReviewItem{Slot: i + 1, Problem: state.Problem(slug), Card: cards[slug], Done: t.AttemptedOn(slug)}
-		if item.Card.Reviews > 0 {
-			item.Reason = ReviewReason(item.Card, now, loc)
+		item := ReviewItem{Slot: i + 1, Problem: state.Problem(slug), Done: t.AttemptedOn(slug)}
+		// Reasons describe each card as it stood before today, so they stay
+		// stable after today's review is logged.
+		if replay, ok := r.replays[slug]; ok {
+			if before := replay.before(t.Date, loc); before.Reviews > 0 {
+				item.Card = withFlag(before, state.Analyses, loc)
+				item.Reason = ReviewReason(item.Card, now, loc)
+			}
 		}
 		t.Reviews = append(t.Reviews, item)
 	}

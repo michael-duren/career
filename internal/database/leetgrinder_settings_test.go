@@ -420,6 +420,107 @@ func TestLeetgrinderTodayReadsWithoutLock(t *testing.T) {
 	}
 }
 
+// PlanLeetgrinderToday persists the picks LeetgrinderToday would, and
+// LeetgrinderToday's view, built from the planner's replay, matches a view
+// built from a fresh load and replay of the same state.
+func TestLeetgrinderPlanTodayMatchesView(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	settings, err := s.LeetgrinderSettings(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.UpdateLeetgrinderSettings(ctx, settings.Revision, func(v *leetgrinder.Settings) error {
+		v.Timezone = "America/Chicago"
+		v.Goal.Review = 2
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	now := time.Date(2026, 10, 2, 17, 0, 0, 0, time.UTC)
+	old := now.AddDate(0, 0, -20)
+	created := map[string]time.Time{"binary-search": old, "two-sum": now.Add(-time.Hour), "isomorphic-strings": now.Add(-time.Hour)}
+	for slug, at := range created {
+		a := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: slug, Outcome: "unfinished", Minutes: 25}
+		if _, err = s.SaveLeetgrinderAttempt(ctx, a, ""); err != nil {
+			t.Fatal(err)
+		}
+		if _, err = s.DB.Exec("UPDATE leetgrinder_attempts SET created_at=$1 WHERE id=$2", at, a.ID); err != nil {
+			t.Fatal(err)
+		}
+	}
+	planned := func() []string {
+		t.Helper()
+		rows, err := s.DB.Query("SELECT problem_slug FROM leetgrinder_review_plan WHERE plan_date='2026-10-02' ORDER BY slot")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer rows.Close()
+		var slugs []string
+		for rows.Next() {
+			var slug string
+			if err = rows.Scan(&slug); err != nil {
+				t.Fatal(err)
+			}
+			slugs = append(slugs, slug)
+		}
+		return slugs
+	}
+	// sameView compares LeetgrinderToday with NewToday over a fresh load.
+	sameView := func(want []string) {
+		t.Helper()
+		today, err := s.LeetgrinderToday(ctx, now)
+		if err != nil {
+			t.Fatal(err)
+		}
+		settings, err := s.LeetgrinderSettings(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		state, err := loadLeetgrinderState(ctx, s.DB, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if fresh := leetgrinder.NewToday(settings, state, now); !reflect.DeepEqual(today, fresh) {
+			t.Fatalf("view differs from a fresh replay:\n%+v\n%+v", today.Reviews, fresh.Reviews)
+		}
+		var picks []string
+		for _, r := range today.Reviews {
+			picks = append(picks, r.Problem.Slug)
+		}
+		if !reflect.DeepEqual(picks, want) || !reflect.DeepEqual(planned(), want) {
+			t.Fatalf("picks %v, persisted %v, want %v", picks, planned(), want)
+		}
+	}
+
+	// The first plan freezes the goal; one card is due, so the plan is short.
+	if err = s.PlanLeetgrinderToday(ctx, now); err != nil || !reflect.DeepEqual(planned(), []string{"binary-search"}) {
+		t.Fatalf("first plan %v: %v", planned(), err)
+	}
+	// Nothing more is due: planning again changes nothing.
+	if err = s.PlanLeetgrinderToday(ctx, now); err != nil {
+		t.Fatal(err)
+	}
+	sameView([]string{"binary-search"})
+	// Another card falls due: planning fills the open slot.
+	if _, err = s.DB.Exec("UPDATE leetgrinder_attempts SET created_at=$1 WHERE problem_slug='two-sum'", old); err != nil {
+		t.Fatal(err)
+	}
+	if err = s.PlanLeetgrinderToday(ctx, now); err != nil || !reflect.DeepEqual(planned(), []string{"binary-search", "two-sum"}) {
+		t.Fatalf("filled plan %v: %v", planned(), err)
+	}
+	sameView([]string{"binary-search", "two-sum"})
+	// A raised target with a due card is planned by LeetgrinderToday itself,
+	// whose view then comes from the planner's replay.
+	if _, err = s.DB.Exec("UPDATE leetgrinder_daily_goal SET goal_review=3"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.DB.Exec("UPDATE leetgrinder_attempts SET created_at=$1 WHERE problem_slug='isomorphic-strings'", old); err != nil {
+		t.Fatal(err)
+	}
+	sameView([]string{"binary-search", "two-sum", "isomorphic-strings"})
+}
+
 func TestLeetgrinderAttemptSource(t *testing.T) {
 	s := testStore(t)
 	ctx := context.Background()
