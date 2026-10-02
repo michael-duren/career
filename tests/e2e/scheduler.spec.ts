@@ -5,7 +5,7 @@ import { test, expect, type APIRequestContext, type Page } from '@playwright/tes
 // successful drag, and the subgoal picker being unavailable when editing an
 // existing session. Each test creates its own disposable goal (real UUIDs -
 // the API validates goal/step ids as UUIDs) so runs don't collide, mirroring
-// tests/scheduler.browser.mjs. Form fields are looked up scoped to the open
+// Form fields are looked up scoped to the open
 // dialog, not the whole page: Playwright's getByLabel/getByRole name matching
 // is substring-based by default, and other sessions' resize-edge buttons
 // (aria-label "Change start time of <title>") otherwise collide with "Start
@@ -41,17 +41,20 @@ async function goToNextWeek(page: Page) {
 function sessionFor(page: Page, title: string) {
   return page.locator('[data-session-id]').filter({ hasText: title });
 }
-// Drives the component's pointer-capture-based drag/resize (see the comment
-// on the drag test below) by dispatching PointerEvents directly at `selector`
-// rather than relying on Playwright's mouse actions, which never reach it.
-async function dispatchPointerDrag(page: Page, selector: string, from: { x: number; y: number }, to: { x: number; y: number }, steps = 8) {
-  await page.evaluate(({ selector, fx, fy, tx, ty, steps }) => {
-    const el = document.querySelector(selector) as HTMLElement;
-    const fire = (type: string, x: number, y: number) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 1, isPrimary: true, clientX: x, clientY: y, button: 0, buttons: type === 'pointerup' ? 0 : 1 }));
-    fire('pointerdown', fx, fy);
-    for (let i = 1; i <= steps; i++) fire('pointermove', fx + (tx - fx) * i / steps, fy + (ty - fy) * i / steps);
-    fire('pointerup', tx, ty);
-  }, { selector, fx: from.x, fy: from.y, tx: to.x, ty: to.y, steps });
+// Browser input exercises pointer capture and hit testing on the real page.
+async function mouseDrag(page: Page, from: { x: number; y: number }, to: { x: number; y: number }, steps = 8) {
+  const viewport = page.viewportSize();
+  if (!viewport) throw new Error('Browser viewport is unavailable.');
+  for (const point of [from, to]) {
+    expect(point.x).toBeGreaterThanOrEqual(0);
+    expect(point.x).toBeLessThan(viewport.width);
+    expect(point.y).toBeGreaterThanOrEqual(0);
+    expect(point.y).toBeLessThan(viewport.height);
+  }
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(to.x, to.y, { steps });
+  await page.mouse.up();
 }
 function localTimeOf(instant: string) {
   return new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', hour12: false, hour: '2-digit', minute: '2-digit' }).format(new Date(instant));
@@ -87,14 +90,6 @@ test('dragging a session to another day saves without flashing the editor or err
   const targetDate = await page.locator('[data-scheduler-date]').nth(1).getAttribute('data-scheduler-date');
   const target = (await page.locator('[data-scheduler-date]').nth(1).boundingBox())!;
 
-  // The component implements dragging itself via pointer capture (see
-  // WeeklyScheduler.tsx's beginPointerDrag/pointerDragMove), not native HTML5
-  // drag-and-drop or Playwright's mouse actions - page.mouse.* never reached
-  // its onPointerMove handler in testing (setPointerCapture routes real OS
-  // input, not JS-dispatched events, and dispatching directly on the element
-  // sidesteps that entirely). Dispatching PointerEvents straight at the
-  // element is what actually drives it.
-  //
   // Checking dialog.toBeHidden() only *after* the drag settles wouldn't catch
   // a flash regression - it's a retrying assertion, and the dialog reliably
   // ends up closed again by the time it's checked whether or not it flashed
@@ -108,7 +103,7 @@ test('dragging a session to another day saves without flashing the editor or err
     const el = document.querySelector('.scheduler-editor-dialog')!;
     new MutationObserver(() => { if (el.hasAttribute('open')) w.__dialogFlashed = true; }).observe(el, { attributes: true, attributeFilter: ['open'] });
   });
-  await dispatchPointerDrag(page, handleSelector, { x: source.x + source.width / 2, y: source.y + source.height / 2 }, { x: target.x + target.width / 2, y: target.y + 80 }, 10);
+  await mouseDrag(page, { x: source.x + source.width / 2, y: source.y + source.height / 2 }, { x: target.x + target.width / 2, y: target.y + 80 }, 10);
   await expect(page.locator('.scheduler-status')).toContainText('Saved.');
   expect(await page.evaluate(() => (window as unknown as { __dialogFlashed?: boolean }).__dialogFlashed)).toBe(false);
 
@@ -117,9 +112,10 @@ test('dragging a session to another day saves without flashing the editor or err
   await expect(dialog).toBeHidden();
   await expect(page.locator('[role="alert"]')).toHaveCount(0);
 
-  const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
-  const moved = state.sessions.find((s: { assignment: { goalId: string } }) => s.assignment.goalId === goal.id);
-  expect(moved?.date).toBe(targetDate);
+  await expect.poll(async () => {
+    const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
+    return state.sessions.find((s: { assignment: { goalId: string } }) => s.assignment.goalId === goal.id)?.date;
+  }).toBe(targetDate);
 });
 
 test('deleting a recurring occurrence with "future" scope removes it from later weeks too', async ({ page, request, baseURL }) => {
@@ -291,30 +287,34 @@ test('the block\'s delete icon on a recurring session cascades to future occurre
 test('resizing a session by its bottom edge extends its duration', async ({ page, request, baseURL }) => {
   const goal = await createGoal(request, baseURL!);
   const date = await goToNextWeek(page);
+  // CI retries share the same disposable app, so use another day if an
+  // earlier attempt already reserved this slot.
+  const sessionDate = await page.locator('[data-scheduler-date]').nth(test.info().retry).getAttribute('data-scheduler-date');
+  if (!sessionDate) throw new Error('Scheduling day is unavailable.');
   const dialog = page.locator('.scheduler-editor-dialog');
 
   await page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`).click();
-  await dialog.getByLabel('Scheduling date').fill(date!);
-  await dialog.getByLabel('Start time').fill('18:00');
-  await dialog.getByLabel('End time').fill('19:00');
+  await dialog.getByLabel('Scheduling date').fill(sessionDate);
+  await dialog.getByLabel('Start time').fill('09:00');
+  await dialog.getByLabel('End time').fill('10:00');
   await dialog.getByRole('button', { name: 'Save session' }).click();
   await expect(dialog).toBeHidden();
 
-  // ":has-text" is a Playwright-only pseudo-selector - it doesn't exist for
-  // the native document.querySelector that dispatchPointerDrag runs inside
-  // page.evaluate, so resolve the real session id first and build a plain
-  // attribute selector from it.
+  // Resolve this goal's session rather than an unrelated session left by a retry.
   const sessionId = await sessionFor(page, goal.title).getAttribute('data-session-id');
   const edgeSelector = `[data-session-id="${sessionId}"] .scheduler-edge-bottom`;
   const box = (await page.locator(edgeSelector).boundingBox())!;
-  await dispatchPointerDrag(page, edgeSelector, { x: box.x + box.width / 2, y: box.y }, { x: box.x + box.width / 2, y: box.y + 60 }, 6);
-  await page.waitForTimeout(200);
+  await mouseDrag(page, { x: box.x + box.width / 2, y: box.y + box.height / 2 }, { x: box.x + box.width / 2, y: box.y + box.height / 2 + 60 }, 6);
   await expect(page.locator('[role="alert"]')).toHaveCount(0);
 
-  const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
-  const session = state.sessions.find((s: { assignment: { goalId: string } }) => s.assignment.goalId === goal.id);
-  const minutes = (Date.parse(session.plan.end) - Date.parse(session.plan.start)) / 60000;
-  expect(minutes).toBeGreaterThan(60);
+  await expect.poll(async () => {
+    const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
+    const session = state.sessions.find((s: { assignment: { goalId: string } }) => s.assignment.goalId === goal.id);
+    return session && {
+      end: localTimeOf(session.plan.end),
+      minutes: (Date.parse(session.plan.end) - Date.parse(session.plan.start)) / 60000,
+    };
+  }).toEqual({ end: '11:00', minutes: 120 });
 });
 
 test('overlapping sessions are flagged as a conflict and the failed draft is kept open for editing', async ({ page, request, baseURL }) => {
