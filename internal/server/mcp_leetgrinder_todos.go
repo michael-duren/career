@@ -45,7 +45,7 @@ type removeTodoInput struct {
 
 func (s *Server) addLeetgrinderTodoTools(server *mcp.Server) {
 	mcp.AddTool(server, &mcp.Tool{
-		Name: "list_leetgrinder_todos", Description: "List saved Leetgrinder problem sets and individual todo problems, including IDs for editing.",
+		Name: "list_leetgrinder_todos", Description: "List saved Leetgrinder problem sets and individual todo problems, including IDs for editing. A problem is done once a solved or struggled attempt is logged: set problems stay listed with done=true and count against remainingCount; individual problems leave the list once done.",
 		Annotations: readOnly,
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, any, error) {
 		sets, err := s.db.LeetgrinderTodoSets(ctx)
@@ -58,7 +58,7 @@ func (s *Server) addLeetgrinderTodoTools(server *mcp.Server) {
 		}
 		listedSets := make([]map[string]any, 0, len(sets))
 		for _, set := range sets {
-			listedSets = append(listedSets, map[string]any{"id": set.ID, "title": set.Title, "description": set.Description, "metadata": set.Metadata, "problems": todoResults(set.Items)})
+			listedSets = append(listedSets, map[string]any{"id": set.ID, "title": set.Title, "description": set.Description, "metadata": set.Metadata, "problemCount": len(set.Items), "remainingCount": set.Remaining(), "problems": todoResults(set.Items)})
 		}
 		return nil, map[string]any{"sets": listedSets, "individualProblems": todoResults(standalone)}, nil
 	})
@@ -157,7 +157,11 @@ func todoResults(items []leetgrinder.TodoItem) []map[string]any {
 		if metadata == nil {
 			metadata = map[string]any{}
 		}
-		out = append(out, map[string]any{"id": item.ID, "slug": item.Problem.Slug, "number": item.Problem.Number, "title": item.Problem.DisplayTitle(), "url": item.Problem.URL(), "difficulty": item.Problem.Difficulty, "topics": item.Problem.Topics, "metadata": metadata, "sourceProblem": item.SourceData})
+		result := map[string]any{"id": item.ID, "slug": item.Problem.Slug, "number": item.Problem.Number, "title": item.Problem.DisplayTitle(), "url": item.Problem.URL(), "difficulty": item.Problem.Difficulty, "topics": item.Problem.Topics, "metadata": metadata, "sourceProblem": item.SourceData, "done": item.Done()}
+		if item.Done() {
+			result["doneAt"] = item.DoneAt
+		}
+		out = append(out, result)
 	}
 	return out
 }

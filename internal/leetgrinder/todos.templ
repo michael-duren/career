@@ -33,6 +33,15 @@ templ Todos(page TodosPage) {
 						<form method="post" action={ templ.SafeURL("/leetgrinder/todos/sets/" + set.ID + "/delete") }><button class="button" type="submit">Remove set</button></form>
 					</div>
 				</div>
+				if len(set.Items) > 0 {
+					<p class="todo-progress small">
+						if set.Remaining() == 0 {
+							All { Count(len(set.Items)) } done
+						} else {
+							{ Count(set.Remaining()) } of { Count(len(set.Items)) } remaining
+						}
+					</p>
+				}
 				if set.Description != "" {
 					<p class="muted small">{ set.Description }</p>
 				}
@@ -53,7 +62,7 @@ templ todoTable(items []TodoItem, caption string) {
 			<thead><tr><th scope="col">#</th><th scope="col">Problem</th><th scope="col">Difficulty</th><th scope="col">Type / topics</th><th scope="col">LeetCode</th><th scope="col">Remove</th></tr></thead>
 			<tbody>
 				for _, item := range items {
-					<tr>
+					<tr class={ templ.KV("todo-done", item.Done()) }>
 						<td class="num">
 								if item.Problem.Number > 0 {
 									{ Count(item.Problem.Number) }
@@ -61,7 +70,12 @@ templ todoTable(items []TodoItem, caption string) {
 									<span class="muted">—</span>
 								}
 						</td>
-						<th scope="row"><a href={ templ.SafeURL(ProblemURL(item.Problem.Slug)) }>{ item.Problem.DisplayTitle() }</a></th>
+						<th scope="row">
+							<a href={ templ.SafeURL(ProblemURL(item.Problem.Slug)) }>{ item.Problem.DisplayTitle() }</a>
+							if item.Done() {
+								<span class="status-pill status-solved" title={ "Done " + item.DoneAt.Format("Jan 2, 2006") }>Done</span>
+							}
+						</th>
 						<td>
 								if item.Problem.Difficulty != "" {
 									<span class={ DifficultyClass(item.Problem.Difficulty) }>{ item.Problem.Difficulty }</span>

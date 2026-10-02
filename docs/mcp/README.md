@@ -68,7 +68,9 @@ login blocks the connector.
   `minConnections` and `untracked`; sort by `connections`, `recent` or `name`; page with
   `offset`/`limit` (1-100).
 - `list_leetgrinder_todos`: named problem sets and individual problems. Returns set and
-  item IDs for removal.
+  item IDs for removal. A problem is done once a solved or struggled attempt is logged.
+  Sets keep done problems with `done: true` and report `problemCount` and
+  `remainingCount`; individual problems leave the list once done.
 
 Kinds: `goal`, `work_journal`, `personal_journal`, `note`, `page`, `book`, `company`,
 `connection`, `audio_thought`. Audio thoughts are private and only returned when
