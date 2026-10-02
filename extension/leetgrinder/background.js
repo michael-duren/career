@@ -107,11 +107,14 @@ function serialized(slug, fn) {
 
 // readTimer returns the slug's timer, restarting it when it belongs to an
 // earlier visit, and records that the problem page is open now.
-async function readTimer(slug, patch = {}) {
+async function readTimer(slug, patch = {}, rawSample = null) {
   const key = timerKey(slug);
   const now = Date.now();
   const stored = (await ext.storage.session.get(key))[key];
-  const timer = lib.timerExpired(stored, now) ? { startedAt: now, assisted: false, nudged: false } : stored;
+  const fresh = lib.timerExpired(stored, now);
+  let timer = fresh ? { startedAt: now, activeMs: 0, lastSampleAt: now, assisted: false, nudged: false } : stored;
+  const sample = lib.validSample(rawSample, now);
+  if (sample) timer = lib.creditActive(timer, sample, now);
   timer.lastSeenAt = now;
   if (patch.assisted === true) timer.assisted = true;
   if (patch.nudged === true) timer.nudged = true;
@@ -119,16 +122,16 @@ async function readTimer(slug, patch = {}) {
   return timer;
 }
 
-const getTimer = (slug) => serialized(slug, () => readTimer(slug));
+const getTimer = (slug, sample) => serialized(slug, () => readTimer(slug, {}, sample));
 
-const updateTimer = (slug, patch) => serialized(slug, () => readTimer(slug, patch));
+const updateTimer = (slug, patch, sample) => serialized(slug, () => readTimer(slug, patch, sample));
 
 // restartTimer starts timing the next attempt after one is logged. It is
 // already nudged: the learner just finished and needs no "Log as unfinished".
 const restartTimer = (slug) =>
   serialized(slug, async () => {
     const now = Date.now();
-    const timer = { startedAt: now, lastSeenAt: now, assisted: false, nudged: true };
+    const timer = { startedAt: now, lastSeenAt: now, activeMs: 0, lastSampleAt: now, assisted: false, nudged: true };
     await ext.storage.session.set({ [timerKey(slug)]: timer });
     return timer;
   });
@@ -170,10 +173,10 @@ async function handle(message, sender) {
       return api("GET", `/api/leetgrinder/problem/${encodeURIComponent(slug)}`);
     case "timer:get":
       if (!lib.validSlug(slug)) return { ok: false, status: 0, error: "Invalid problem." };
-      return { ok: true, status: 200, data: await getTimer(slug) };
+      return { ok: true, status: 200, data: await getTimer(slug, message.sample) };
     case "timer:update":
       if (!lib.validSlug(slug) || !message.patch || typeof message.patch !== "object") return { ok: false, status: 0, error: "Invalid timer update." };
-      return { ok: true, status: 200, data: await updateTimer(slug, message.patch) };
+      return { ok: true, status: 200, data: await updateTimer(slug, message.patch, message.sample) };
     case "timer:restart":
       if (!lib.validSlug(slug)) return { ok: false, status: 0, error: "Invalid problem." };
       return { ok: true, status: 200, data: await restartTimer(slug) };

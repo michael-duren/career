@@ -258,11 +258,65 @@
     return tabs.test(path || "");
   }
 
-  // elapsedMinutes rounds a timer to whole minutes within the API's range.
-  function elapsedMinutes(startedAt, now) {
-    const minutes = Math.round((now - startedAt) / 60000);
+  // minutesFromMs rounds a duration to whole minutes within the API's range.
+  function minutesFromMs(ms) {
+    const minutes = Math.round(ms / 60000);
     if (!Number.isFinite(minutes)) return 1;
     return Math.min(MAX_MINUTES, Math.max(1, minutes));
+  }
+
+  // elapsedMinutes is the wall-clock time the problem has been open.
+  function elapsedMinutes(startedAt, now) {
+    return minutesFromMs(now - startedAt);
+  }
+
+  // Active time counts only while the page is visible and the learner has
+  // used the keyboard, mouse or scroll within ACTIVE_IDLE_MS. Content scripts
+  // sample that every 30 seconds; one sample credits at most
+  // SAMPLE_MAX_CREDIT_MS, so a sleeping laptop or a long-closed tab adds a
+  // bounded amount rather than the whole gap.
+  const ACTIVE_IDLE_MS = 5 * 60000;
+  const SAMPLE_MAX_CREDIT_MS = 2 * 60000;
+
+  // validSample accepts {visible, lastInputAt} from a content script and
+  // clamps lastInputAt to now. It returns null for anything else.
+  function validSample(sample, now) {
+    if (!sample || typeof sample !== "object" || typeof sample.visible !== "boolean") return null;
+    if (!Number.isFinite(sample.lastInputAt)) return null;
+    return { visible: sample.visible, lastInputAt: Math.min(sample.lastInputAt, now) };
+  }
+
+  // creditActive returns the timer with the time since its previous sample
+  // added to activeMs when the page was visible, limited to the window that
+  // ends ACTIVE_IDLE_MS after the last input. Timers saved without
+  // activeMs (older versions) keep their wall-clock time so far.
+  function creditActive(timer, sample, now) {
+    const since = Number.isFinite(timer.lastSampleAt) ? timer.lastSampleAt : now;
+    const base = Number.isFinite(timer.activeMs) ? timer.activeMs : Number.isFinite(timer.startedAt) ? Math.max(0, since - timer.startedAt) : 0;
+    let credit = 0;
+    if (sample && sample.visible) {
+      credit = Math.min(now, sample.lastInputAt + ACTIVE_IDLE_MS) - since;
+      credit = Math.min(SAMPLE_MAX_CREDIT_MS, Math.max(0, credit));
+    }
+    return { ...timer, activeMs: base + credit, lastSampleAt: Math.max(since, now) };
+  }
+
+  // activeMs is the active time recorded on a timer. Timers without one fall
+  // back to wall-clock time so they still nudge and prefill.
+  function activeMs(timer, now) {
+    if (!timer) return 0;
+    if (Number.isFinite(timer.activeMs)) return Math.max(0, timer.activeMs);
+    return Number.isFinite(timer.startedAt) ? Math.max(0, now - timer.startedAt) : 0;
+  }
+
+  function activeMinutes(timer, now) {
+    return minutesFromMs(activeMs(timer, now));
+  }
+
+  // showOpenTime is true when the confirm panel should say how long the tab
+  // was open because it differs from the active minutes.
+  function showOpenTime(active, open) {
+    return Number.isFinite(open) && open !== active;
   }
 
   // inferOutcome prefills the confirm panel after an Accepted submission.
@@ -283,7 +337,7 @@
   }
 
   function shouldNudge(timer, now) {
-    return Boolean(timer) && !timer.nudged && now - timer.startedAt >= NUDGE_MINUTES * 60000;
+    return Boolean(timer) && !timer.nudged && activeMs(timer, now) >= NUDGE_MINUTES * 60000;
   }
 
   // normalizeOrigin accepts https origins, or plain http only on loopback,
@@ -469,7 +523,14 @@
     problemFromPath,
     slugFromPath,
     isAssistPath,
+    ACTIVE_IDLE_MS,
+    SAMPLE_MAX_CREDIT_MS,
     elapsedMinutes,
+    validSample,
+    creditActive,
+    activeMs,
+    activeMinutes,
+    showOpenTime,
     inferOutcome,
     shouldNudge,
     timerExpired,

@@ -181,3 +181,105 @@ test("attempts carry optional problem metadata", () => {
   // Invalid metadata is left off rather than blocking the attempt.
   assert.equal(lib.buildAttempt({ ...fields, problem: { number: -1 } }, null, false).problem, undefined);
 });
+
+// Active time: simulate the 30-second heartbeat against creditActive.
+function simulate(lib, { startedAt, minutes, visibleAt, inputAt }) {
+  let timer = { startedAt, activeMs: 0, lastSampleAt: startedAt };
+  let lastInput = startedAt;
+  for (let t = startedAt + 30000; t <= startedAt + minutes * 60000; t += 30000) {
+    const input = inputAt(t);
+    if (input !== null) lastInput = Math.max(lastInput, input);
+    timer = lib.creditActive(timer, { visible: visibleAt(t), lastInputAt: lastInput }, t);
+  }
+  return timer;
+}
+
+test("active time accumulates while visible and in use", () => {
+  const start = Date.UTC(2026, 9, 2, 12);
+  const timer = simulate(lib, { startedAt: start, minutes: 20, visibleAt: () => true, inputAt: (t) => t });
+  assert.equal(timer.activeMs, 20 * 60000);
+  assert.equal(lib.activeMinutes(timer, start + 20 * 60000), 20);
+});
+
+test("active time excludes idle gaps beyond the idle threshold", () => {
+  const start = Date.UTC(2026, 9, 2, 12);
+  // 20 minutes of work, then a 70-minute lunch with no input (tab still visible).
+  const work = 20 * 60000;
+  const timer = simulate(lib, { startedAt: start, minutes: 90, visibleAt: () => true, inputAt: (t) => (t <= start + work ? t : null) });
+  // Work plus at most the idle window after the last input.
+  assert.equal(timer.activeMs, work + lib.ACTIVE_IDLE_MS);
+  const minutes = lib.activeMinutes(timer, start + 90 * 60000);
+  assert.equal(minutes, 25);
+  assert.equal(lib.elapsedMinutes(start, start + 90 * 60000), 90);
+});
+
+test("active time excludes hidden time", () => {
+  const start = Date.UTC(2026, 9, 2, 12);
+  const timer = simulate(lib, {
+    startedAt: start,
+    minutes: 30,
+    visibleAt: (t) => t <= start + 10 * 60000 || t > start + 25 * 60000,
+    inputAt: (t) => t,
+  });
+  assert.equal(timer.activeMs, 15 * 60000);
+});
+
+test("one sample credits a bounded amount after a long gap", () => {
+  const start = Date.UTC(2026, 9, 2, 12);
+  const timer = lib.creditActive({ startedAt: start, activeMs: 0, lastSampleAt: start }, { visible: true, lastInputAt: start + 20 * 60000 }, start + 20 * 60000);
+  assert.equal(timer.activeMs, lib.SAMPLE_MAX_CREDIT_MS);
+  assert.equal(timer.lastSampleAt, start + 20 * 60000);
+});
+
+test("a hidden sample advances the clock without credit", () => {
+  const start = Date.UTC(2026, 9, 2, 12);
+  let timer = { startedAt: start, activeMs: 1000, lastSampleAt: start };
+  timer = lib.creditActive(timer, { visible: false, lastInputAt: start }, start + 60000);
+  assert.equal(timer.activeMs, 1000);
+  timer = lib.creditActive(timer, { visible: true, lastInputAt: start + 90000 }, start + 90000);
+  assert.equal(timer.activeMs, 1000 + 30000);
+});
+
+test("legacy timers without activeMs fall back to wall-clock time", () => {
+  const start = Date.UTC(2026, 9, 2, 12);
+  assert.equal(lib.activeMs({ startedAt: start }, start + 600000), 600000);
+  assert.equal(lib.activeMinutes({ startedAt: start }, start + 600000), 10);
+  const credited = lib.creditActive({ startedAt: start }, { visible: true, lastInputAt: start + 600000 }, start + 600000);
+  assert.equal(credited.activeMs, 600000);
+});
+
+test("validSample", () => {
+  assert.deepEqual(lib.validSample({ visible: true, lastInputAt: 5 }, 10), { visible: true, lastInputAt: 5 });
+  assert.equal(lib.validSample({ visible: true, lastInputAt: 50 }, 10).lastInputAt, 10);
+  assert.equal(lib.validSample({ visible: "yes", lastInputAt: 5 }, 10), null);
+  assert.equal(lib.validSample({ visible: true }, 10), null);
+  assert.equal(lib.validSample(null, 10), null);
+});
+
+test("prefill and outcome come from active time", () => {
+  const start = Date.UTC(2026, 9, 2, 12);
+  const timer = { startedAt: start, activeMs: 20 * 60000 };
+  const now = start + 90 * 60000;
+  const minutes = lib.activeMinutes(timer, now);
+  assert.equal(minutes, 20);
+  assert.equal(lib.inferOutcome(minutes), "solved");
+  assert.equal(lib.inferOutcome(lib.elapsedMinutes(start, now)), "struggled");
+  assert.ok(lib.showOpenTime(20, 90));
+  assert.ok(!lib.showOpenTime(20, 20));
+});
+
+test("nudge uses active time", () => {
+  const start = Date.UTC(2026, 9, 2, 12);
+  const open = start + 90 * 60000;
+  assert.ok(!lib.shouldNudge({ startedAt: start, activeMs: 20 * 60000, nudged: false }, open));
+  assert.ok(lib.shouldNudge({ startedAt: start, activeMs: 25 * 60000, nudged: false }, start + 26 * 60000));
+  assert.ok(!lib.shouldNudge({ startedAt: start, activeMs: 40 * 60000, nudged: true }, open));
+});
+
+test("timer expiry ignores active time", () => {
+  const start = Date.UTC(2026, 9, 2, 12);
+  const min = 60000;
+  assert.ok(!lib.timerExpired({ startedAt: start, activeMs: 0, lastSeenAt: start + 40 * min }, start + 60 * min));
+  assert.ok(lib.timerExpired({ startedAt: start, activeMs: 99 * min, lastSeenAt: start + 10 * min }, start + 41 * min));
+  assert.ok(lib.timerExpired({ startedAt: start, activeMs: 0, lastSeenAt: start + 13 * 60 * min }, start + 13 * 60 * min));
+});

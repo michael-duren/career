@@ -38,7 +38,30 @@
     return capture.status === "Accepted" ? capture : null;
   }
 
+  // Active time: the page counts as in use while it is visible and the
+  // learner pressed a key, moved the mouse or scrolled recently. Timer
+  // messages carry that sample; the background worker credits the time.
+  let lastInputAt = Date.now();
+  for (const name of ["keydown", "pointerdown", "mousemove", "wheel", "scroll", "touchstart"]) {
+    window.addEventListener(
+      name,
+      (event) => {
+        if (event.isTrusted) lastInputAt = Date.now();
+      },
+      { capture: true, passive: true },
+    );
+  }
+  const activitySample = (visible = document.visibilityState === "visible") => ({ visible, lastInputAt });
+  // Hiding flushes the time up to now as active; showing again records a
+  // hidden stretch that earns nothing.
+  document.addEventListener("visibilitychange", () => {
+    if (!current) return;
+    const nowVisible = document.visibilityState === "visible";
+    send({ type: "timer:get", slug: current.slug, sample: activitySample(!nowVisible) });
+  });
+
   async function send(message) {
+    if (message.type.startsWith("timer:") && message.type !== "timer:restart" && !message.sample) message = { ...message, sample: activitySample() };
     try {
       const res = await ext.runtime.sendMessage(message);
       return res || { ok: false, status: 0, error: "No response from the extension." };
@@ -165,9 +188,10 @@
       showError(`Accepted, but Leetgrinder could not be reached: ${found.error}`, submissionId);
       return;
     }
-    const timer = res.ok ? res.data : { startedAt: Date.now(), assisted: false };
-    const minutes = lib.elapsedMinutes(timer.startedAt, Date.now());
-    showPanel(state, found.info, { outcome: lib.inferOutcome(minutes), minutes, assisted: Boolean(timer.assisted) }, captureFor(state.slug, submissionId));
+    const now = Date.now();
+    const timer = res.ok ? res.data : { startedAt: now, activeMs: 0, assisted: false };
+    const minutes = lib.activeMinutes(timer, now);
+    showPanel(state, found.info, { outcome: lib.inferOutcome(minutes), minutes, openMinutes: lib.elapsedMinutes(timer.startedAt, now), assisted: Boolean(timer.assisted) }, captureFor(state.slug, submissionId));
   }
 
   window.addEventListener("message", (event) => {
@@ -328,14 +352,15 @@
     const later = el("button", { type: "button", text: "Keep going" });
     unfinished.addEventListener("click", async () => {
       const res = await send({ type: "timer:get", slug });
-      const minutes = lib.elapsedMinutes(res.ok ? res.data.startedAt : Date.now(), Date.now());
-      showPanel(state, info, { outcome: "unfinished", minutes, assisted: Boolean(res.ok && res.data.assisted) }, captureFor(slug));
+      const now = Date.now();
+      const timer = res.ok ? res.data : { startedAt: now, activeMs: 0 };
+      showPanel(state, info, { outcome: "unfinished", minutes: lib.activeMinutes(timer, now), openMinutes: lib.elapsedMinutes(timer.startedAt, now), assisted: Boolean(res.ok && res.data.assisted) }, captureFor(slug));
     });
     later.addEventListener("click", closeUI);
     root.append(
       el("section", { className: "box", role: "dialog", "aria-label": "Leetgrinder time check" }, [
         ...heading(state, info),
-        el("p", { text: `${lib.NUDGE_MINUTES} minutes on this problem. Log it as unfinished and look at a hint, or keep going.` }),
+        el("p", { text: `${lib.NUDGE_MINUTES} active minutes on this problem. Log it as unfinished and look at a hint, or keep going.` }),
         el("div", { className: "actions" }, [later, unfinished]),
       ]),
     );
@@ -407,6 +432,7 @@
     const form = el("form", { className: "box", "aria-label": "Log this attempt to Leetgrinder" }, [
       ...heading(state, info),
       el("div", { className: "row" }, [el("label", {}, ["Outcome", outcome]), el("label", {}, ["Minutes", minutes])]),
+      ...(lib.showOpenTime(prefill.minutes, prefill.openMinutes) ? [el("p", { className: "muted", text: `Active ${prefill.minutes} min (open ${prefill.openMinutes} min)` })] : []),
       el("div", { className: "row" }, [time.node, space.node]),
       required,
       ...codeRow,
