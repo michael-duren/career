@@ -420,6 +420,48 @@ func TestWorkerSkipsRetriesPastTheWindow(t *testing.T) {
 	}
 }
 
+func TestWorkerWindowEdge(t *testing.T) {
+	f := newFixture(t)
+	f.configure(t, func(s *leetgrinder.Settings) {
+		off := func(time string) leetgrinder.NotificationPref {
+			return leetgrinder.NotificationPref{Enabled: false, Time: time, Priority: "default"}
+		}
+		s.Notifications = map[string]leetgrinder.NotificationPref{
+			leetgrinder.NotifyMorningPlan:    {Enabled: true, Time: "08:00", Priority: "default"},
+			leetgrinder.NotifyGoalIncomplete: {Enabled: true, Time: "18:00", Priority: "default"},
+			leetgrinder.NotifyStreakAtRisk:   off("21:00"),
+			leetgrinder.NotifyReviewBacklog:  {Enabled: false, Time: "18:00", Threshold: 1, Priority: "default"},
+		}
+	})
+	// Exactly at the edge still sends; a minute later is skipped.
+	if got := f.step(t, at(12, "12:00")); len(got) != 1 {
+		t.Fatalf("morning plan at its window edge: %v", got)
+	}
+	if got := f.step(t, at(13, "12:01")); len(got) != 0 {
+		t.Fatalf("morning plan just past its window: %v", got)
+	}
+	if e := f.logEntry(t, leetgrinder.NotifyMorningPlan, at(13, "08:00")); e.Status != leetgrinder.NotifySkipped {
+		t.Fatalf("morning plan: %+v", e)
+	}
+	if got := f.step(t, at(14, "20:00")); len(got) != 1 {
+		t.Fatalf("goal reminder at its window edge: %v", got)
+	}
+	if got := f.step(t, at(15, "20:01")); len(got) != 0 {
+		t.Fatalf("goal reminder just past its window: %v", got)
+	}
+	if e := f.logEntry(t, leetgrinder.NotifyGoalIncomplete, at(15, "18:00")); e.Status != leetgrinder.NotifySkipped {
+		t.Fatalf("goal reminder: %+v", e)
+	}
+}
+
+func TestEveryKindHasAWindow(t *testing.T) {
+	for _, kind := range leetgrinder.NotificationKinds {
+		if kind.Window <= 0 {
+			t.Errorf("%s has no lateness window, so it would never send", kind.Key)
+		}
+	}
+}
+
 func TestWorkerNeedsATopic(t *testing.T) {
 	f := newFixture(t)
 	f.configure(t, func(s *leetgrinder.Settings) { s.NtfyTopic = "" })

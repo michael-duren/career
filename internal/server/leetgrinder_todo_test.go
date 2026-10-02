@@ -359,8 +359,13 @@ func TestTodoImportMetadataDoesNotGrowOnReAdd(t *testing.T) {
 	if _, err := db.DB.ExecContext(ctx, `UPDATE leetgrinder_problems SET import_metadata=jsonb_build_object('pad', jsonb_build_array(repeat('x', 65500))) WHERE slug='two-sum'`); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := db.CreateLeetgrinderTodoSetDetailed(ctx, leetgrinder.TodoSet{Title: "Full"}, input); err != nil {
+	full, err := db.CreateLeetgrinderTodoSetDetailed(ctx, leetgrinder.TodoSet{Title: "Full"}, input)
+	if err != nil {
 		t.Fatal(err)
+	}
+	var source string
+	if err := db.DB.QueryRowContext(ctx, "SELECT source_data::text FROM leetgrinder_todo_items WHERE set_id=$1", full.ID).Scan(&source); err != nil || !strings.Contains(source, `"sourceID": "c"`) {
+		t.Fatalf("the todo's own source_data was not saved: %q %v", source, err)
 	}
 	if p, _ := db.LeetgrinderProblem(ctx, "two-sum"); len(p.ImportMetadata) != 1 {
 		t.Fatalf("archive grew past its limit: %v", p.ImportMetadata)

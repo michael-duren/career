@@ -162,26 +162,30 @@ func recordTodoSource(ctx context.Context, tx *sql.Tx, slug, itemID string, sour
 	if string(source) == "{}" {
 		return nil
 	}
-	const notArchived = `NOT EXISTS (
-  SELECT 1 FROM jsonb_each(import_metadata) AS entry(key,versions), jsonb_array_elements(entry.versions) AS prior(value)
-  WHERE prior.value=$3::jsonb
-)`
-	result, err := tx.ExecContext(ctx, `UPDATE leetgrinder_problems SET import_metadata=jsonb_set(import_metadata,ARRAY[$2::text],
-COALESCE(import_metadata->$2,'[]'::jsonb) || jsonb_build_array($3::jsonb),true)
-WHERE slug=$1 AND octet_length(import_metadata::text)+octet_length($3::jsonb::text) <= $4 AND `+notArchived, slug, itemID, source, maxImportMetadataBytes)
+	// One statement reads the size and whether the snapshot is archived,
+	// adds it when it fits, and reports which case applied.
+	var archived, over bool
+	err := tx.QueryRowContext(ctx, `WITH cur AS (
+  SELECT slug,
+    octet_length(import_metadata::text)+octet_length($3::jsonb::text) > $4 AS over,
+    EXISTS (
+      SELECT 1 FROM jsonb_each(import_metadata) AS entry(key,versions), jsonb_array_elements(entry.versions) AS prior(value)
+      WHERE prior.value=$3::jsonb
+    ) AS archived
+  FROM leetgrinder_problems WHERE slug=$1
+), added AS (
+  UPDATE leetgrinder_problems p SET import_metadata=jsonb_set(import_metadata,ARRAY[$2::text],
+    COALESCE(import_metadata->$2,'[]'::jsonb) || jsonb_build_array($3::jsonb),true)
+  FROM cur WHERE p.slug=cur.slug AND NOT cur.over AND NOT cur.archived
+)
+SELECT archived, over FROM cur`, slug, itemID, source, maxImportMetadataBytes).Scan(&archived, &over)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
 	if err != nil {
 		return err
 	}
-	if n, err := result.RowsAffected(); err != nil || n > 0 {
-		return err
-	}
-	// Nothing was added: either the snapshot is already archived, or the cap dropped it.
-	var dropped bool
-	if err = tx.QueryRowContext(ctx, `SELECT COALESCE(bool_or(`+notArchived+`), false) FROM leetgrinder_problems WHERE slug=$1 AND $2::text IS NOT NULL AND octet_length(import_metadata::text)+octet_length($3::jsonb::text) > $4`,
-		slug, itemID, source, maxImportMetadataBytes).Scan(&dropped); err != nil {
-		return err
-	}
-	if dropped {
+	if over && !archived {
 		log.Printf("leetgrinder: import metadata for %s is at its %d byte cap; snapshot for todo %s not archived", slug, maxImportMetadataBytes, itemID)
 	}
 	return nil

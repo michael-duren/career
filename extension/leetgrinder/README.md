@@ -102,6 +102,7 @@ Run through this after loading the extension in each browser, with the app runni
 - [ ] Stop the app (or go offline), press Log attempt: an error shows and the fields lock. Restart the app and press Retry: exactly one attempt is recorded.
 - [ ] With the app stopped, open a problem, work a few minutes, start the app, and submit an accepted solution: the panel's minutes include the time before the app came back. With the app still stopped, Accepted shows an error with Try again.
 - [ ] While a panel is locked for Retry, submit again: the locked panel stays. Press Escape: nothing happens. Press Dismiss: it asks before discarding.
+- [ ] Log an attempt, edit it in the app, then Retry the same panel after a forced failure (or reuse its id): a 409 shows "Saved earlier with different values...", the fields unlock with what you typed, and pressing Log attempt saves it under a new id.
 - [ ] Open a problem you have never logged (for example `https://leetcode.com/problems/design-hit-counter/`) and submit an accepted solution: the panel opens with the "New" badge. After logging, the app's problem page shows its title, number, difficulty, and topics.
 - [ ] Keep a problem open for 25 minutes without submitting: the nudge appears once. **Log as unfinished** opens the panel with Unfinished.
 - [ ] Solve a problem in under 25 minutes, then log or dismiss the panel and leave the tab open past the 25-minute mark: no nudge appears.
