@@ -24,10 +24,8 @@ export default defineConfig({
     // two avoids that reload (and the "date belongs to a different week"
     // race it can otherwise cause if a dialog is opened in between).
     timezoneId: 'America/Chicago',
-    // Tall enough that a day column's full 05:00-20:30 range fits on screen -
-    // a drag/resize target computed from a day's bounding box otherwise can
-    // land just past the viewport edge, where elementFromPoint returns null.
-    viewport: { width: 1280, height: 1400 },
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  // Set this after the device preset: its default 720px height otherwise
+  // overrides a top-level viewport and places the drag source off screen.
+  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 1400 } } }],
 });
