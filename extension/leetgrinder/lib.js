@@ -305,7 +305,13 @@
     const since = Object.hasOwn(tabs, tabId) ? tabs[tabId] : now;
     // A clock that jumped back puts startedAt in the future: rebase it and
     // keep the active time already earned.
-    const startedAt = Number.isFinite(timer.startedAt) ? Math.min(timer.startedAt, now) : now;
+    // Any stored time ahead of now (start, credited end or a tab's mark)
+    // means the clock went backward.
+    const jumped =
+      (Number.isFinite(timer.startedAt) && timer.startedAt > now) ||
+      (Number.isFinite(timer.creditedTo) && timer.creditedTo > now) ||
+      Object.values(timer.tabs || {}).some((at) => Number.isFinite(at) && at > now);
+    const startedAt = jumped || !Number.isFinite(timer.startedAt) ? now : timer.startedAt;
     const earned = Number.isFinite(timer.activeMs) ? timer.activeMs : Math.max(0, since - startedAt);
     let activeMs = earned;
     let creditedTo = Number.isFinite(timer.creditedTo) ? Math.min(timer.creditedTo, now) : startedAt;
@@ -320,8 +326,10 @@
     tabs[tabId] = now;
     // Never above wall-clock time since start plus carriedMs, the active time
     // that a clock jump moved startedAt past.
-    const rebased = Number.isFinite(timer.startedAt) && timer.startedAt > now;
-    const carriedMs = (Number.isFinite(timer.carriedMs) ? timer.carriedMs : 0) + (rebased ? earned : 0);
+    // earned already includes any earlier carry, so a rebase replaces it.
+    // A backward jump also restarts the 12-hour max-age clock and shortens
+    // "open M min", since startedAt moves to now.
+    const carriedMs = jumped ? earned : Number.isFinite(timer.carriedMs) ? timer.carriedMs : 0;
     activeMs = Math.min(activeMs, Math.max(0, now - startedAt) + carriedMs);
     return { ...timer, startedAt, activeMs, carriedMs, creditedTo, tabs };
   }

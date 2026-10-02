@@ -347,3 +347,39 @@ test("tab switch: A hides, B shows, hidden heartbeat arrives", () => {
   timer = lib.creditActive(timer, { visible: true, lastInputAt: T0 + 80000 }, T0 + 80000, 2);
   assert.equal(timer.activeMs, 80000);
 });
+
+test("repeated backward jumps keep carriedMs at or below activeMs", () => {
+  let timer = { startedAt: T0, activeMs: 20 * MIN, tabs: {}, creditedTo: T0 };
+  let now = T0 + 25 * MIN;
+  timer = lib.creditActive(timer, { visible: true, lastInputAt: now }, now, 1);
+  for (let i = 0; i < 4; i++) {
+    now -= 10 * MIN;
+    timer = lib.creditActive(timer, { visible: true, lastInputAt: now }, now, 1);
+    assert.ok(timer.carriedMs <= timer.activeMs, `${timer.carriedMs} > ${timer.activeMs}`);
+    now += 30000;
+    timer = lib.creditActive(timer, { visible: true, lastInputAt: now }, now, 1);
+    now -= 20000;
+  }
+  assert.ok(timer.activeMs <= 20 * MIN + 4 * 30000 + 1000);
+  assert.ok(timer.activeMs >= 20 * MIN);
+});
+
+test("backward jump then forward jump", () => {
+  let timer = { startedAt: T0, activeMs: 10 * MIN, tabs: { 1: T0 + 10 * MIN }, creditedTo: T0 + 10 * MIN };
+  timer = lib.creditActive(timer, { visible: true, lastInputAt: T0 }, T0, 1);
+  assert.equal(timer.activeMs, 10 * MIN);
+  // Clock leaps forward an hour: only one capped sample is credited.
+  const later = T0 + 60 * MIN;
+  timer = lib.creditActive(timer, { visible: true, lastInputAt: later }, later, 1);
+  assert.ok(timer.activeMs <= 10 * MIN + lib.SAMPLE_MAX_CREDIT_MS);
+});
+
+test("legacy timer's first sample credits from its startedAt", () => {
+  const legacy = { startedAt: T0, lastSampleAt: T0 + 5 * MIN };
+  const first = lib.creditActive(legacy, { visible: true, lastInputAt: T0 + 6 * MIN }, T0 + 6 * MIN, 1);
+  // Wall-clock so far is kept; the first sample marks the tab without extra credit.
+  assert.equal(first.activeMs, 6 * MIN);
+  assert.equal(first.creditedTo, T0);
+  const second = lib.creditActive(first, { visible: true, lastInputAt: T0 + 6 * MIN + 30000 }, T0 + 6 * MIN + 30000, 1);
+  assert.equal(second.activeMs, 6 * MIN + 30000 > 0 ? Math.min(6 * MIN + 30000, 6 * MIN + 30000) : 0);
+});
