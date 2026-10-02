@@ -43,6 +43,14 @@ function sessionFor(page: Page, title: string) {
 }
 // Browser input exercises pointer capture and hit testing on the real page.
 async function mouseDrag(page: Page, from: { x: number; y: number }, to: { x: number; y: number }, steps = 8) {
+  const viewport = page.viewportSize();
+  if (!viewport) throw new Error('Browser viewport is unavailable.');
+  for (const point of [from, to]) {
+    expect(point.x).toBeGreaterThanOrEqual(0);
+    expect(point.x).toBeLessThan(viewport.width);
+    expect(point.y).toBeGreaterThanOrEqual(0);
+    expect(point.y).toBeLessThan(viewport.height);
+  }
   await page.mouse.move(from.x, from.y);
   await page.mouse.down();
   await page.mouse.move(to.x, to.y, { steps });
@@ -283,8 +291,8 @@ test('resizing a session by its bottom edge extends its duration', async ({ page
 
   await page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`).click();
   await dialog.getByLabel('Scheduling date').fill(date!);
-  await dialog.getByLabel('Start time').fill('18:00');
-  await dialog.getByLabel('End time').fill('19:00');
+  await dialog.getByLabel('Start time').fill('17:00');
+  await dialog.getByLabel('End time').fill('18:00');
   await dialog.getByRole('button', { name: 'Save session' }).click();
   await expect(dialog).toBeHidden();
 
@@ -298,8 +306,11 @@ test('resizing a session by its bottom edge extends its duration', async ({ page
   await expect.poll(async () => {
     const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
     const session = state.sessions.find((s: { assignment: { goalId: string } }) => s.assignment.goalId === goal.id);
-    return (Date.parse(session.plan.end) - Date.parse(session.plan.start)) / 60000;
-  }).toBeGreaterThan(60);
+    return session && {
+      end: localTimeOf(session.plan.end),
+      minutes: (Date.parse(session.plan.end) - Date.parse(session.plan.start)) / 60000,
+    };
+  }).toEqual({ end: '19:00', minutes: 120 });
 });
 
 test('overlapping sessions are flagged as a conflict and the failed draft is kept open for editing', async ({ page, request, baseURL }) => {
