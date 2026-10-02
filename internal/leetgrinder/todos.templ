@@ -268,7 +268,7 @@ templ TodoAddSet(page TodosPage) {
 				}
 			<form class="attempt-form todo-form" method="post" action="/leetgrinder/todos/sets">
 				<label>Set name<input type="text" name="title" required maxlength="120" value={ page.Title } placeholder="Interview prep"/></label>
-				<label>Problems, one link or slug per line (optional)<textarea name="problems" rows="5" placeholder="two-sum&#10;valid-parentheses">{ page.Problems }</textarea></label>
+				<label>Problems, links or slugs separated by lines, commas or spaces (optional)<textarea name="problems" rows="5" placeholder="two-sum&#10;valid-parentheses">{ page.Problems }</textarea></label>
 				<button class="button primary" type="submit">Add set</button>
 			</form>
 		</section>

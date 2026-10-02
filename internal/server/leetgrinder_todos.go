@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -75,7 +76,12 @@ func (s *Server) leetgrinderCreateTodoSet(w http.ResponseWriter, r *http.Request
 	title, raw := r.PostForm.Get("title"), r.PostForm.Get("problems")
 	slugs, err := leetgrinder.ParseTodoRefs(raw)
 	if err != nil {
-		renderLeetgrinder(w, r, 400, leetgrinder.TodoAddSet(leetgrinder.TodosPage{Title: title, Problems: raw, Error: err.Error()}))
+		message := fmt.Sprintf("Enter at most %d LeetCode links or slugs.", leetgrinder.MaxTodoRefs)
+		var invalid leetgrinder.InvalidTodoRefError
+		if errors.As(err, &invalid) {
+			message = fmt.Sprintf("%q is not a LeetCode link or slug.", invalid.Entry)
+		}
+		renderLeetgrinder(w, r, 400, leetgrinder.TodoAddSet(leetgrinder.TodosPage{Title: title, Problems: raw, Error: message}))
 		return
 	}
 	set, err := s.db.CreateLeetgrinderTodoSet(r.Context(), title, slugs)

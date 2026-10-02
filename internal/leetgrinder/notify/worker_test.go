@@ -278,11 +278,14 @@ func TestWorkerSkipsWhenGoalIsMet(t *testing.T) {
 	f := newFixture(t)
 	f.quiet(t, leetgrinder.DailyGoal{New: 1})
 	f.review(t, "two-sum", at(10, "09:00"))
-	if got := f.step(t, at(10, "22:00")); len(got) != 0 {
-		t.Fatalf("sent with the goal met: %v", got)
+	// Step inside each window so the goal-met path is what skips.
+	for _, clock := range []string{"18:00", "21:00"} {
+		if got := f.step(t, at(10, clock)); len(got) != 0 {
+			t.Fatalf("sent with the goal met at %s: %v", clock, got)
+		}
 	}
 	for _, kind := range []string{leetgrinder.NotifyGoalIncomplete, leetgrinder.NotifyStreakAtRisk} {
-		if e := f.logEntry(t, kind, at(10, "18:00")); e.Status != leetgrinder.NotifySkipped {
+		if e := f.logEntry(t, kind, at(10, "18:00")); e.Status != leetgrinder.NotifySkipped || e.Detail != "Nothing to report" {
 			t.Fatalf("%s: %+v", kind, e)
 		}
 	}
@@ -367,7 +370,7 @@ func TestWorkerSkipsStaleReminders(t *testing.T) {
 		t.Fatalf("stale reminders sent: %v", got)
 	}
 	for kind, when := range map[string]string{leetgrinder.NotifyMorningPlan: "08:00", leetgrinder.NotifyStreakAtRisk: "18:00", leetgrinder.NotifyGoalIncomplete: "18:00"} {
-		if e := f.logEntry(t, kind, at(10, when)); e.Status != leetgrinder.NotifySkipped || e.Detail != "Missed while the server was down" {
+		if e := f.logEntry(t, kind, at(10, when)); e.Status != leetgrinder.NotifySkipped || e.Detail != "Too late to send (past its window)" {
 			t.Fatalf("%s: %+v", kind, e)
 		}
 	}
@@ -379,6 +382,41 @@ func TestWorkerSkipsStaleReminders(t *testing.T) {
 	})
 	if got := f.step(t, at(11, "11:30")); len(got) != 1 || got[0].Header.Get("Title") != "Leetgrinder: today's plan" {
 		t.Fatalf("late but in window: %v", got)
+	}
+}
+
+func TestWorkerSkipsRetriesPastTheWindow(t *testing.T) {
+	f := newFixture(t)
+	f.quiet(t, leetgrinder.DefaultGoal)
+	ctx := context.Background()
+	date := leetgrinder.Date(at(10, "18:00"), chicago)
+	// A failed send keeps its error in the log.
+	f.ntfy.respond(500, false)
+	if got := f.step(t, at(10, "18:00")); len(got) != 1 {
+		t.Fatalf("first send: %v", got)
+	}
+	failed := f.logEntry(t, leetgrinder.NotifyGoalIncomplete, at(10, "18:00"))
+	if failed.Status != leetgrinder.NotifyFailed {
+		t.Fatalf("setup: %+v", failed)
+	}
+	f.ntfy.respond(200, false)
+	if got := f.step(t, at(10, "20:30")); len(got) != 0 {
+		t.Fatalf("retry past the window sent: %v", got)
+	}
+	e := f.logEntry(t, leetgrinder.NotifyGoalIncomplete, at(10, "18:00"))
+	if e.Status != leetgrinder.NotifySkipped || e.Detail != "Too late to send (last error: "+failed.Detail+")" {
+		t.Fatalf("failed retry: %+v", e)
+	}
+
+	// An abandoned send is skipped the same way.
+	if _, ok, err := f.db.ClaimLeetgrinderNotification(ctx, leetgrinder.NotifyStreakAtRisk, date, at(10, "21:00")); !ok || err != nil {
+		t.Fatal(ok, err)
+	}
+	if got := f.step(t, at(10, "23:30")); len(got) != 0 {
+		t.Fatalf("abandoned send past the window sent: %v", got)
+	}
+	if e = f.logEntry(t, leetgrinder.NotifyStreakAtRisk, at(10, "21:00")); e.Status != leetgrinder.NotifySkipped || !strings.HasPrefix(e.Detail, "Too late to send") {
+		t.Fatalf("abandoned: %+v", e)
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"log"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -161,13 +162,29 @@ func recordTodoSource(ctx context.Context, tx *sql.Tx, slug, itemID string, sour
 	if string(source) == "{}" {
 		return nil
 	}
-	_, err := tx.ExecContext(ctx, `UPDATE leetgrinder_problems SET import_metadata=jsonb_set(import_metadata,ARRAY[$2::text],
-COALESCE(import_metadata->$2,'[]'::jsonb) || jsonb_build_array($3::jsonb),true)
-WHERE slug=$1 AND octet_length(import_metadata::text)+octet_length($3::jsonb::text) <= $4 AND NOT EXISTS (
+	const notArchived = `NOT EXISTS (
   SELECT 1 FROM jsonb_each(import_metadata) AS entry(key,versions), jsonb_array_elements(entry.versions) AS prior(value)
   WHERE prior.value=$3::jsonb
-)`, slug, itemID, source, maxImportMetadataBytes)
-	return err
+)`
+	result, err := tx.ExecContext(ctx, `UPDATE leetgrinder_problems SET import_metadata=jsonb_set(import_metadata,ARRAY[$2::text],
+COALESCE(import_metadata->$2,'[]'::jsonb) || jsonb_build_array($3::jsonb),true)
+WHERE slug=$1 AND octet_length(import_metadata::text)+octet_length($3::jsonb::text) <= $4 AND `+notArchived, slug, itemID, source, maxImportMetadataBytes)
+	if err != nil {
+		return err
+	}
+	if n, err := result.RowsAffected(); err != nil || n > 0 {
+		return err
+	}
+	// Nothing was added: either the snapshot is already archived, or the cap dropped it.
+	var dropped bool
+	if err = tx.QueryRowContext(ctx, `SELECT COALESCE(bool_or(`+notArchived+`), false) FROM leetgrinder_problems WHERE slug=$1 AND $2::text IS NOT NULL AND octet_length(import_metadata::text)+octet_length($3::jsonb::text) > $4`,
+		slug, itemID, source, maxImportMetadataBytes).Scan(&dropped); err != nil {
+		return err
+	}
+	if dropped {
+		log.Printf("leetgrinder: import metadata for %s is at its %d byte cap; snapshot for todo %s not archived", slug, maxImportMetadataBytes, itemID)
+	}
+	return nil
 }
 
 func (s *Store) LeetgrinderTodoSets(ctx context.Context) ([]leetgrinder.TodoSet, error) {

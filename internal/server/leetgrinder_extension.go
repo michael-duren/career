@@ -211,7 +211,7 @@ func (s *Server) leetgrinderAPIAttempt(w http.ResponseWriter, r *http.Request) {
 		}
 		respond(w, 200, map[string]any{"attempt": saved, "kind": kind})
 	case errors.Is(err, database.ErrConflict):
-		respond(w, 409, map[string]string{"error": "This attempt id was already used for a different attempt. Correct it in the app instead."})
+		respond(w, 409, map[string]string{"error": "Saved earlier with different values. Check the history, or save this as a new attempt."})
 	case errors.Is(err, database.ErrInvalid):
 		bad("Check the attempt fields and try again.")
 	default:

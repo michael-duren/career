@@ -1,6 +1,7 @@
 package leetgrinder
 
 import (
+	"errors"
 	"reflect"
 	"strings"
 	"testing"
@@ -23,11 +24,19 @@ func TestParseTodoRefs(t *testing.T) {
 	if got, err := ParseTodoRefs(" \n,\n"); err != nil || len(got) != 0 {
 		t.Errorf("blank list: %v %v", got, err)
 	}
-	if _, err := ParseTodoRefs("two-sum\nhttps://example.com/problems/x\nthree-sum"); err == nil || !strings.Contains(err.Error(), "example.com") {
+	if _, err := ParseTodoRefs("two-sum\nhttps://example.com/problems/x\nthree-sum"); !errors.As(err, new(InvalidTodoRefError)) || !strings.Contains(err.Error(), "example.com") {
 		t.Errorf("the error should name the bad entry: %v", err)
 	}
 	many := strings.Repeat("a-b ", MaxTodoRefs+1)
-	if _, err := ParseTodoRefs(many); err == nil || !strings.Contains(err.Error(), "at most 200") {
+	if _, err := ParseTodoRefs(many); !errors.Is(err, ErrTooManyTodoRefs) {
 		t.Errorf("too many: %v", err)
+	}
+}
+
+func TestParseTodoRefsTruncatesByRune(t *testing.T) {
+	_, err := ParseTodoRefs(strings.Repeat("é", 100))
+	var invalid InvalidTodoRefError
+	if !errors.As(err, &invalid) || invalid.Entry != strings.Repeat("é", 60)+"..." {
+		t.Fatalf("entry %q", invalid.Entry)
 	}
 }
