@@ -29,7 +29,8 @@ type LeetgrinderAnalysisJob struct {
 // leetgrinderAnalysisColumns reads an analysis joined to its attempt "a". An
 // analysis is current when its code_sha256 equals the attempt's input_sha256:
 // the SHA-256 of the analysed inputs (language, stated time and space, code),
-// which a trigger (migration 026) keeps current on every insert and update.
+// which a trigger (migration 026) sets on insert and on updates that change
+// an input.
 const leetgrinderAnalysisColumns = "an.attempt_id,an.status,an.tries,an.actual_time,an.actual_space,an.time_matches,an.space_matches,an.optimal,an.explanation,an.model,an.error,an.updated_at,an.code_sha256=a.input_sha256"
 
 func scanLeetgrinderAnalysis(row interface{ Scan(...any) error }) (leetgrinder.Analysis, error) {

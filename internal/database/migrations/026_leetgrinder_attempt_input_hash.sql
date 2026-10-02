@@ -2,8 +2,9 @@
 -- stated space, code), so analysis queries compare it with
 -- leetgrinder_analyses.code_sha256 instead of rehashing every attempt's code.
 -- A generated column cannot hold it: convert_to is STABLE, not IMMUTABLE. A
--- trigger keeps it current on every insert and update instead. The expression
--- is the one analyses were stored against, so existing analyses stay current.
+-- trigger keeps it current on every insert and on updates that change an
+-- input. The expression is the one analyses were stored against, so existing
+-- analyses stay current.
 ALTER TABLE leetgrinder_attempts ADD COLUMN input_sha256 BYTEA;
 
 UPDATE leetgrinder_attempts
@@ -16,6 +17,15 @@ ALTER TABLE leetgrinder_attempts
 CREATE OR REPLACE FUNCTION leetgrinder_attempts_input_sha256() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
+    -- An update that leaves the inputs alone (a notes or marked_at change)
+    -- keeps the stored hash without rereading the code; any value written
+    -- to input_sha256 directly is replaced either way.
+    IF TG_OP = 'UPDATE'
+       AND NEW.code_language = OLD.code_language AND NEW.time_complexity = OLD.time_complexity
+       AND NEW.space_complexity = OLD.space_complexity AND NEW.code = OLD.code THEN
+        NEW.input_sha256 := OLD.input_sha256;
+        RETURN NEW;
+    END IF;
     NEW.input_sha256 := sha256(convert_to(NEW.code_language || chr(10) || NEW.time_complexity || chr(10) || NEW.space_complexity || chr(10) || NEW.code, 'UTF8'));
     RETURN NEW;
 END;
