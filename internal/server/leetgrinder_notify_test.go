@@ -256,6 +256,12 @@ func TestLeetgrinderExportCompleteness(t *testing.T) {
 	if _, err = db.AddLeetgrinderTodoProblem(ctx, "", leetgrinder.TodoProblemInput{Slug: "lonely-problem"}); err != nil {
 		t.Fatal(err)
 	}
+	if _, err = db.UpdateLeetgrinderSettings(ctx, settings.Revision, func(v *leetgrinder.Settings) error {
+		v.Notifications = map[string]leetgrinder.NotificationPref{leetgrinder.NotifyStreakAtRisk: {Enabled: true, Time: "20:30", Threshold: 3, Priority: "high"}}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
 	// A solved attempt on a todo slug (completing it), and a slug only a plan names.
 	if w := request("POST", "/leetgrinder/problem/two-sum/attempts", url.Values{"id": {uuid.NewString()}, "outcome": {"solved"}, "minutes": {"10"}, "timeComplexity": {"O(n)"}, "spaceComplexity": {"O(n)"}}); w.Code != 303 {
 		t.Fatalf("attempt: %d", w.Code)
@@ -264,6 +270,10 @@ func TestLeetgrinderExportCompleteness(t *testing.T) {
 		t.Fatal(err)
 	}
 	if _, err = db.DB.Exec("INSERT INTO leetgrinder_daily_goal(local_date,goal_new,goal_review) VALUES('2026-10-01',2,1)"); err != nil {
+		t.Fatal(err)
+	}
+	// A plan slug with no catalog row must not export as a blank problem.
+	if _, err = db.DB.Exec("INSERT INTO leetgrinder_review_plan(plan_date,problem_slug,slot) VALUES('2026-10-01','no-catalog-row',2)"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err = db.DB.Exec("INSERT INTO leetgrinder_review_plan(plan_date,problem_slug,slot) VALUES('2026-10-01','plan-only',1)"); err != nil {
@@ -279,6 +289,10 @@ func TestLeetgrinderExportCompleteness(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Completion is derived from attempts, so it is not exported; the entry is.
+	if got, err := db.LeetgrinderTodoSet(ctx, set.ID); err != nil || !got.Items[0].Done() || got.Items[0].Problem.Slug != "two-sum" || got.Items[1].Done() {
+		t.Fatalf("todo completion: %+v %v", got.Items, err)
+	}
 	w := request("GET", "/leetgrinder/export", nil)
 	if w.Code != 200 {
 		t.Fatalf("export: %d", w.Code)
@@ -319,6 +333,31 @@ func TestLeetgrinderExportCompleteness(t *testing.T) {
 	}
 	if err = json.Unmarshal(w.Body.Bytes(), &exported); err != nil {
 		t.Fatal(err)
+	}
+	var top map[string]json.RawMessage
+	var attemptKeys []map[string]json.RawMessage
+	if json.Unmarshal(w.Body.Bytes(), &top) != nil || json.Unmarshal(top["attempts"], &attemptKeys) != nil || len(attemptKeys) != 1 {
+		t.Fatalf("top level: %s", raw)
+	}
+	for _, key := range []string{"attempts", "problems", "dailyGoals", "version", "reviewPlans", "todos", "settings"} {
+		if _, ok := top[key]; !ok {
+			t.Errorf("export missing %q", key)
+		}
+	}
+	for _, key := range []string{"id", "problemSlug", "outcome", "minutes", "timeComplexity", "spaceComplexity", "code", "codeLanguage", "wantsReview", "approach", "markedAt"} {
+		if _, ok := attemptKeys[0][key]; !ok {
+			t.Errorf("attempt missing legacy key %q: %v", key, attemptKeys[0])
+		}
+	}
+	var goalKeys []map[string]json.RawMessage
+	json.Unmarshal(top["dailyGoals"], &goalKeys)
+	for _, key := range []string{"date", "new", "review"} {
+		if _, ok := goalKeys[0][key]; !ok {
+			t.Errorf("goal missing %q", key)
+		}
+	}
+	if got := exported.Settings.Notifications[leetgrinder.NotifyStreakAtRisk]; got != (leetgrinder.NotificationPref{Enabled: true, Time: "20:30", Threshold: 3, Priority: "high"}) {
+		t.Errorf("notification pref: %+v", got)
 	}
 	if exported.Version != 2 || exported.Attempts == nil || exported.DailyGoals == nil {
 		t.Fatalf("legacy fields or version: %s", raw)

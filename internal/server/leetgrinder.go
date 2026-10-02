@@ -514,7 +514,11 @@ func (s *Server) leetgrinderExport(w http.ResponseWriter, r *http.Request) {
 	}
 	problems := []exportProblem{}
 	for slug := range slugs {
-		p := state.Problem(slug)
+		// Review plans have no foreign key, so a slug may have no catalog row.
+		p, ok := state.Problems[slug]
+		if !ok {
+			continue
+		}
 		topics := p.Topics
 		if topics == nil {
 			topics = []string{}
