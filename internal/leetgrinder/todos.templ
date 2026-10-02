@@ -23,48 +23,171 @@ templ Todos(page TodosPage) {
 			if len(page.Standalone) == 0 {
 				<p class="muted small">No individual problems yet.</p>
 			} else {
-				@todoTable(page.Standalone, "Individual problems", page.Location)
+				@todoTable(page.Standalone, "Individual problems", page.Location, "")
 			}
 		</section>
 		for _, set := range page.Sets {
 			<section class="panel" aria-labelledby={ "set-" + set.ID }>
 				<div class="todo-heading">
-					<h2 id={ "set-" + set.ID }>{ set.Title }</h2>
+					<h2 id={ "set-" + set.ID }><a href={ templ.SafeURL("/leetgrinder/todos/sets/" + set.ID) }>{ set.Title }</a></h2>
 					<div class="todo-actions">
-						<a class="button" href={ templ.SafeURL("/leetgrinder/todos/add?setID=" + set.ID) }>Add problem</a>
-						<form method="post" action={ templ.SafeURL("/leetgrinder/todos/sets/" + set.ID + "/delete") }><button class="button" type="submit">Remove set</button></form>
+						<a class="button primary" href={ templ.SafeURL("/leetgrinder/todos/sets/" + set.ID) }>Open set</a>
 					</div>
 				</div>
-				if len(set.Items) > 0 {
-					<p class="todo-progress small">
-						if set.Remaining() == 0 {
-							All { Count(len(set.Items)) } done
-						} else {
-							{ Count(set.Remaining()) } of { Count(len(set.Items)) } remaining
-						}
-					</p>
-				}
 				if set.Description != "" {
 					<p class="muted small">{ set.Description }</p>
 				}
-				if len(set.Items) == 0 {
-					<p class="muted small">No problems in this set.</p>
-				} else {
-					@todoTable(set.Items, set.Title, page.Location)
-				}
+				@todoSummary(set.Summary(), 6)
 			</section>
 		}
 	}
 }
 
-templ todoTable(items []TodoItem, caption string, loc *time.Location) {
+// todoSummary shows a set's progress, difficulty split and most common
+// topics; topicLimit 0 shows every topic.
+templ todoSummary(sum TodoSummary, topicLimit int) {
+	if sum.Total == 0 {
+		<p class="muted small">No problems in this set.</p>
+	} else {
+		<dl class="todo-summary">
+			<div>
+				<dt>Progress</dt>
+				<dd>
+					<strong>{ Count(sum.Done) } of { Count(sum.Total) } done</strong>
+					if sum.Remaining() == 0 {
+						<span class="muted"> · all finished</span>
+					} else {
+						<span class="muted"> · { Count(sum.Remaining()) } remaining</span>
+					}
+					<progress max={ Count(sum.Total) } value={ Count(sum.Done) } aria-label="Problems done"></progress>
+				</dd>
+			</div>
+			<div>
+				<dt>Difficulty</dt>
+				<dd class="todo-tallies">
+					for _, d := range sum.Difficulties {
+						<span class="todo-tally">
+							if d.Key != "" {
+								<span class={ DifficultyClass(d.Key) }>{ d.Label }</span>
+							} else {
+								<span class="muted">{ d.Label }</span>
+							}
+							{ Count(d.Done) }/{ Count(d.Total) }
+						</span>
+					}
+				</dd>
+			</div>
+			if len(sum.Topics) > 0 {
+				<div>
+					<dt>Types</dt>
+					<dd class="todo-tallies">
+						for i, t := range sum.Topics {
+							if topicLimit == 0 || i < topicLimit {
+								<span class="todo-tally"><span class="topic-tag">{ t.Label }</span> { Count(t.Done) }/{ Count(t.Total) }</span>
+							}
+						}
+						if topicLimit > 0 && len(sum.Topics) > topicLimit {
+							<span class="muted small">+{ Count(len(sum.Topics) - topicLimit) } more</span>
+						}
+					</dd>
+				</div>
+			}
+		</dl>
+	}
+}
+
+templ TodoSetView(page TodoSetPage) {
+	@layout(page.Set.Title, "todos") {
+		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder/todos">Todos</a><span>/</span><span>{ page.Set.Title }</span></nav>
+		<header class="dash-head">
+			<div>
+				<p class="eyebrow">PROBLEM SET</p>
+				<h1>{ page.Set.Title }</h1>
+				if page.Set.Description != "" {
+					<p class="muted">{ page.Set.Description }</p>
+				}
+			</div>
+			<div class="todo-actions">
+				<a class="button primary" href={ templ.SafeURL("/leetgrinder/todos/add?setID=" + page.Set.ID) }>Add problem</a>
+				<form method="post" action={ templ.SafeURL("/leetgrinder/todos/sets/" + page.Set.ID + "/delete") }><button class="button" type="submit">Remove set</button></form>
+			</div>
+		</header>
+		<section class="panel" aria-label="Set summary">
+			@todoSummary(page.Summary, 0)
+		</section>
+		if page.Summary.Total > 0 {
+			<form class="problem-filters" method="get" action={ templ.SafeURL("/leetgrinder/todos/sets/" + page.Set.ID) } role="search" aria-label="Search this set">
+				<label class="filter-search">
+					Search
+					<input type="search" name="q" value={ page.Filter.Query } maxlength="100" placeholder="Title, number, or topic" autocomplete="off"/>
+				</label>
+				<label>
+					Difficulty
+					<select name="difficulty">
+						<option value="">All</option>
+						for _, d := range []string{"Easy", "Medium", "Hard"} {
+							<option value={ d } selected?={ page.Filter.Difficulty == d }>{ d }</option>
+						}
+					</select>
+				</label>
+				<label>
+					Type
+					<select name="topic">
+						<option value="">All types</option>
+						for _, t := range page.Topics {
+							<option value={ t.Key } selected?={ page.Filter.Topic == t.Key }>{ t.Label }</option>
+						}
+					</select>
+				</label>
+				<label>
+					Status
+					<select name="status">
+						<option value="">Any</option>
+						<option value="todo" selected?={ page.Filter.Status == "todo" }>To do</option>
+						<option value="done" selected?={ page.Filter.Status == "done" }>Done</option>
+					</select>
+				</label>
+				<div class="filter-actions">
+					<button class="button primary" type="submit">Search</button>
+					if page.Filter.Active() {
+						<a href={ templ.SafeURL("/leetgrinder/todos/sets/" + page.Set.ID) }>Clear filters</a>
+					}
+				</div>
+			</form>
+			<p class="small muted" role="status">Showing { Count(len(page.Items)) } of { Count(page.Summary.Total) } problems</p>
+			if len(page.Items) == 0 {
+				<p class="panel muted">No problems in this set match. <a href={ templ.SafeURL("/leetgrinder/todos/sets/" + page.Set.ID) }>Clear filters</a></p>
+			} else {
+				@todoTable(page.Items, page.Set.Title, page.Location, page.Set.ID)
+			}
+		}
+	}
+}
+
+// todoTable lists todo entries. A set's table (setID set) adds a done column,
+// and removing an entry returns to the set.
+templ todoTable(items []TodoItem, caption string, loc *time.Location, setID string) {
 	<div class="table-scroll queue todo-table">
 		<table>
 			<caption class="visually-hidden">{ caption }</caption>
-			<thead><tr><th scope="col">#</th><th scope="col">Problem</th><th scope="col">Difficulty</th><th scope="col">Type / topics</th><th scope="col">LeetCode</th><th scope="col">Remove</th></tr></thead>
+			<thead><tr>
+				if setID != "" {
+					<th scope="col"><span class="visually-hidden">Done</span></th>
+				}
+				<th scope="col">#</th><th scope="col">Problem</th><th scope="col">Difficulty</th><th scope="col">Type / topics</th><th scope="col">LeetCode</th><th scope="col">Remove</th>
+			</tr></thead>
 			<tbody>
 				for _, item := range items {
 					<tr class={ templ.KV("todo-done", item.Done()) }>
+						if setID != "" {
+							<td class="todo-status">
+								if item.Done() {
+									<svg class="todo-check" viewBox="0 0 20 20" width="20" height="20" role="img" aria-label={ "Done " + item.DoneAt.In(loc).Format("Jan 2, 2006") }><title>{ "Done " + item.DoneAt.In(loc).Format("Jan 2, 2006") }</title><circle cx="10" cy="10" r="9"></circle><path d="M5.5 10.5l3 3 6-7"></path></svg>
+								} else {
+									<span class="todo-open" aria-label="To do" role="img"></span>
+								}
+							</td>
+						}
 						<td class="num">
 								if item.Problem.Number > 0 {
 									{ Count(item.Problem.Number) }
@@ -74,9 +197,6 @@ templ todoTable(items []TodoItem, caption string, loc *time.Location) {
 						</td>
 						<th scope="row">
 							<a href={ templ.SafeURL(ProblemURL(item.Problem.Slug)) }>{ item.Problem.DisplayTitle() }</a>
-							if item.Done() {
-								<span class="status-pill status-solved" title={ "Done " + item.DoneAt.In(loc).Format("Jan 2, 2006") }>Done</span>
-							}
 						</th>
 						<td>
 								if item.Problem.Difficulty != "" {
@@ -97,7 +217,11 @@ templ todoTable(items []TodoItem, caption string, loc *time.Location) {
 							}
 						</td>
 						<td><a href={ templ.SafeURL(item.Problem.URL()) } target="_blank" rel="noopener noreferrer">Open<span class="visually-hidden"> { item.Problem.DisplayTitle() } on LeetCode</span></a></td>
-						<td><form method="post" action={ templ.SafeURL("/leetgrinder/todos/items/" + item.ID + "/delete") }><button class="button" type="submit" aria-label={ "Remove " + item.Problem.DisplayTitle() }>Remove</button></form></td>
+						<td><form method="post" action={ templ.SafeURL("/leetgrinder/todos/items/" + item.ID + "/delete") }>
+							if setID != "" {
+								<input type="hidden" name="setID" value={ setID }/>
+							}
+							<button class="button" type="submit" aria-label={ "Remove " + item.Problem.DisplayTitle() }>Remove</button></form></td>
 					</tr>
 				}
 			</tbody>

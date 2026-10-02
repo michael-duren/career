@@ -89,26 +89,7 @@ func (f ProblemFilter) Active() bool {
 }
 
 func (f ProblemFilter) match(r ProblemRow) bool {
-	if f.Query != "" {
-		// A bare number is a LeetCode number; anything else searches the text.
-		if n, err := strconv.Atoi(f.Query); err == nil {
-			if r.Problem.Number != n {
-				return false
-			}
-		} else {
-			text := r.Problem.Title + " " + r.Problem.Slug
-			for _, t := range r.Problem.Topics {
-				text += " " + t + " " + TopicLabel(t)
-			}
-			if !strings.Contains(strings.ToLower(text), strings.ToLower(f.Query)) {
-				return false
-			}
-		}
-	}
-	if f.Difficulty != "" && r.Problem.Difficulty != f.Difficulty {
-		return false
-	}
-	if f.Topic == untaggedTopic && len(r.Problem.Topics) > 0 || f.Topic != "" && f.Topic != untaggedTopic && !slices.Contains(r.Problem.Topics, f.Topic) {
+	if !matchProblem(r.Problem, f.Query, f.Difficulty, f.Topic) {
 		return false
 	}
 	switch f.Status {
@@ -124,6 +105,31 @@ func (f ProblemFilter) match(r ProblemRow) bool {
 		return r.Status == "Unfinished"
 	}
 	return true
+}
+
+// matchProblem applies the search text, difficulty and topic filters shared by
+// the problem and todo lists; empty values match everything.
+func matchProblem(p Problem, query, difficulty, topic string) bool {
+	if query != "" {
+		// A bare number is a LeetCode number; anything else searches the text.
+		if n, err := strconv.Atoi(query); err == nil {
+			if p.Number != n {
+				return false
+			}
+		} else {
+			text := p.Title + " " + p.Slug
+			for _, t := range p.Topics {
+				text += " " + t + " " + TopicLabel(t)
+			}
+			if !strings.Contains(strings.ToLower(text), strings.ToLower(query)) {
+				return false
+			}
+		}
+	}
+	if difficulty != "" && p.Difficulty != difficulty {
+		return false
+	}
+	return topic != untaggedTopic && (topic == "" || slices.Contains(p.Topics, topic)) || topic == untaggedTopic && len(p.Topics) == 0
 }
 
 // ProblemRows lists every attempted problem, newest attempt first.
@@ -187,14 +193,22 @@ func numberKey(n int) int {
 // ProblemTopics lists the topic tags on rows, by label, with "untagged"
 // last when any row has no tags.
 func ProblemTopics(rows []ProblemRow) []FilterOption {
+	problems := make([]Problem, len(rows))
+	for i, r := range rows {
+		problems[i] = r.Problem
+	}
+	return topicOptions(problems)
+}
+
+func topicOptions(problems []Problem) []FilterOption {
 	seen := map[string]bool{}
 	var out []FilterOption
 	untagged := false
-	for _, r := range rows {
-		if len(r.Problem.Topics) == 0 {
+	for _, p := range problems {
+		if len(p.Topics) == 0 {
 			untagged = true
 		}
-		for _, t := range r.Problem.Topics {
+		for _, t := range p.Topics {
 			if !seen[t] {
 				seen[t] = true
 				out = append(out, FilterOption{t, TopicLabel(t)})

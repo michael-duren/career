@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -194,6 +195,27 @@ func (s *Store) LeetgrinderTodoSets(ctx context.Context) ([]leetgrinder.TodoSet,
 		}
 	}
 	return sets, nil
+}
+
+// LeetgrinderTodoSet returns one set with all its entries.
+func (s *Store) LeetgrinderTodoSet(ctx context.Context, id string) (leetgrinder.TodoSet, error) {
+	if _, err := uuid.Parse(id); err != nil {
+		return leetgrinder.TodoSet{}, ErrInvalid
+	}
+	var set leetgrinder.TodoSet
+	var metadata string
+	err := s.DB.QueryRowContext(ctx, "SELECT id,title,description,metadata::text FROM leetgrinder_todo_sets WHERE id=$1", id).Scan(&set.ID, &set.Title, &set.Description, &metadata)
+	if errors.Is(err, sql.ErrNoRows) {
+		return leetgrinder.TodoSet{}, ErrNotFound
+	}
+	if err != nil {
+		return leetgrinder.TodoSet{}, err
+	}
+	if err = json.Unmarshal([]byte(metadata), &set.Metadata); err != nil {
+		return leetgrinder.TodoSet{}, err
+	}
+	set.Items, err = s.LeetgrinderTodoItems(ctx, set.ID)
+	return set, err
 }
 
 // leetgrinderTodoRows selects todo entries with done_at, the latest solved or

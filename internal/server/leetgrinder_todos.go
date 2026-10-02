@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/michael-duren/career-strategy/internal/database"
 	"github.com/michael-duren/career-strategy/internal/leetgrinder"
 )
@@ -30,6 +31,23 @@ func (s *Server) todoPage(w http.ResponseWriter, r *http.Request, status int, pa
 
 func (s *Server) leetgrinderTodos(w http.ResponseWriter, r *http.Request) {
 	s.todoPage(w, r, 200, leetgrinder.TodosPage{})
+}
+
+func (s *Server) leetgrinderTodoSet(w http.ResponseWriter, r *http.Request) {
+	set, err := s.db.LeetgrinderTodoSet(r.Context(), chi.URLParam(r, "id"))
+	if errors.Is(err, database.ErrInvalid) || errors.Is(err, database.ErrNotFound) {
+		http.NotFound(w, r)
+		return
+	}
+	var settings leetgrinder.Settings
+	if err == nil {
+		settings, err = s.db.LeetgrinderSettings(r.Context())
+	}
+	if err != nil {
+		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("This problem set is unavailable. Please retry."))
+		return
+	}
+	renderLeetgrinder(w, r, 200, leetgrinder.TodoSetView(leetgrinder.NewTodoSetPage(set, leetgrinder.ParseTodoFilter(r.URL.Query()), settings.Location())))
 }
 
 func (s *Server) todoAddProblemPage(w http.ResponseWriter, r *http.Request, status int, page leetgrinder.TodosPage) {
@@ -89,7 +107,7 @@ func (s *Server) leetgrinderAddTodoItem(w http.ResponseWriter, r *http.Request) 
 		s.todoAddProblemPage(w, r, status, leetgrinder.TodosPage{Problem: ref, SetID: setID, Error: message})
 		return
 	}
-	http.Redirect(w, r, "/leetgrinder/todos", http.StatusSeeOther)
+	http.Redirect(w, r, todoListURL(setID), http.StatusSeeOther)
 }
 
 func (s *Server) leetgrinderDeleteTodoSet(w http.ResponseWriter, r *http.Request) {
@@ -119,5 +137,17 @@ func (s *Server) deleteTodo(w http.ResponseWriter, r *http.Request, set bool) {
 		s.todoPage(w, r, 503, leetgrinder.TodosPage{Error: "The todo could not be removed. Please retry."})
 		return
 	}
-	http.Redirect(w, r, "/leetgrinder/todos", http.StatusSeeOther)
+	back := "/leetgrinder/todos"
+	if !set {
+		back = todoListURL(r.PostForm.Get("setID"))
+	}
+	http.Redirect(w, r, back, http.StatusSeeOther)
+}
+
+// todoListURL is the set page for a set ID, or the todos page otherwise.
+func todoListURL(setID string) string {
+	if id, err := uuid.Parse(setID); err == nil {
+		return "/leetgrinder/todos/sets/" + id.String()
+	}
+	return "/leetgrinder/todos"
 }
