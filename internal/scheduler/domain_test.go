@@ -121,6 +121,49 @@ func TestCancelPreservesActualOnNonrecurringPlan(t *testing.T) {
 	}
 }
 
+func TestFutureRuleEditPreservesRecordedActual(t *testing.T) {
+	d := testDocument()
+	now := instant("2026-09-30T12:00:00Z")
+	r := Rule{ID: "r", Weekday: 1, LocalStart: "09:00", DurationMinutes: 60, EffectiveFrom: "2026-09-28", Assignment: Assignment{GoalID: "goal"}}
+	d.Rules[r.ID] = r
+	id := "r:2026-10-05"
+	d.Sessions[id] = Session{ID: id, RuleID: r.ID, OccurrenceDate: "2026-10-05", Date: "2026-10-05", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-10-05T09:00:00Z"), End: instant("2026-10-05T10:00:00Z")}}
+	a := Actual{Status: "explicit", Date: "2026-09-28", Start: instant("2026-09-28T09:00:00Z"), End: instant("2026-09-28T10:00:00Z")}
+	if err := d.Apply(Mutation{Action: "actual", ID: id, Actual: &a}, now, nil); err != nil {
+		t.Fatal(err)
+	}
+	r.LocalStart = "10:00"
+	if err := d.Apply(Mutation{Action: "rule", ID: "r", EffectiveFrom: "2026-10-05", Rule: &r}, now, nil); err != nil {
+		t.Fatal(err)
+	}
+	d.Generate("2026-10-05", "2026-10-05", now, nil, time.Time{})
+	saved, ok := d.Sessions[id]
+	if !ok || saved.Actual == nil || !saved.Exception || saved.State != "attention" || len(d.Sessions) != 1 || d.Week("2026-09-28", now, nil).Goals[0].ActualHours != 1 {
+		t.Fatalf("rule edit lost or duplicated actual occurrence: %+v", d.Sessions)
+	}
+}
+
+func TestFutureSessionEditCannotEraseRecordedActual(t *testing.T) {
+	d := testDocument()
+	now := instant("2026-09-30T12:00:00Z")
+	id := "planned"
+	plan := &Plan{Start: instant("2026-10-05T09:00:00Z"), End: instant("2026-10-05T10:00:00Z")}
+	d.Sessions[id] = Session{ID: id, Date: "2026-10-05", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: plan}
+	a := Actual{Status: "explicit", Date: "2026-09-28", Start: instant("2026-09-28T09:00:00Z"), End: instant("2026-09-28T10:00:00Z")}
+	if err := d.Apply(Mutation{Action: "actual", ID: id, Actual: &a}, now, nil); err != nil {
+		t.Fatal(err)
+	}
+	edit := d.Sessions[id]
+	edit.Plan = &Plan{Start: plan.Start.Add(time.Hour), End: plan.End.Add(time.Hour)}
+	if err := d.Apply(Mutation{Action: "session", ID: id, Session: &edit}, now, nil); err == nil || !strings.Contains(err.Error(), "actual") {
+		t.Fatalf("future plan edit should preserve recorded actual: %v", err)
+	}
+	saved := d.Sessions[id]
+	if saved.Actual == nil || *saved.Plan != *plan || d.Week("2026-09-28", now, nil).Goals[0].ActualHours != 1 {
+		t.Fatalf("plan edit erased recorded work: %+v", saved)
+	}
+}
+
 func TestRequirements(t *testing.T) {
 	h := 1.
 	g := Goal{StartDate: "2026-09-28", EndDate: "2026-10-04", DailyHours: &h}

@@ -532,6 +532,11 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 			r.EffectiveFrom = m.EffectiveFrom
 			for id, s := range d.Sessions {
 				if s.RuleID == m.ID && s.Date >= m.EffectiveFrom && s.Plan != nil && s.Plan.Start.After(now) && !s.Exception {
+					if s.Actual != nil {
+						s.Exception = true
+						d.Sessions[id] = s
+						continue
+					}
 					delete(d.Sessions, id)
 				}
 			}
@@ -584,6 +589,9 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 			s.ID = uuid.NewString()
 		}
 		if old, ok := d.Sessions[s.ID]; ok {
+			if old.Actual != nil {
+				return fmt.Errorf("recorded actual work is preserved; edit actual time instead")
+			}
 			if old.Plan != nil && !old.Plan.Start.After(now) {
 				return fmt.Errorf("started plans are preserved; edit actual time")
 			}
