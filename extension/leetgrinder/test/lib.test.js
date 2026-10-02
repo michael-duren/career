@@ -181,3 +181,279 @@ test("attempts carry optional problem metadata", () => {
   // Invalid metadata is left off rather than blocking the attempt.
   assert.equal(lib.buildAttempt({ ...fields, problem: { number: -1 } }, null, false).problem, undefined);
 });
+
+// Active time: simulate heartbeats from one or more tabs against creditActive.
+// Each tab is {id, offset, visible(t), input(t) -> last input time or null}.
+function simulate(startedAt, minutes, tabs) {
+  let timer = { startedAt, activeMs: 0, tabs: {}, creditedTo: startedAt };
+  const lastInput = {};
+  const beats = [];
+  for (const tab of tabs) {
+    lastInput[tab.id] = 0;
+    for (let t = startedAt + (tab.offset || 0); t <= startedAt + minutes * 60000; t += 30000) beats.push([t, tab]);
+  }
+  beats.sort((x, y) => x[0] - y[0]);
+  for (const [t, tab] of beats) {
+    const input = tab.input(t);
+    if (input !== null) lastInput[tab.id] = Math.max(lastInput[tab.id], input);
+    timer = lib.creditActive(timer, { visible: tab.visible(t), lastInputAt: lastInput[tab.id] }, t, tab.id);
+  }
+  return timer;
+}
+
+const T0 = Date.UTC(2026, 9, 2, 12);
+const MIN = 60000;
+const busy = { id: 1, visible: () => true, input: (t) => t };
+
+test("active time accumulates while visible and in use", () => {
+  const timer = simulate(T0, 20, [busy]);
+  assert.equal(timer.activeMs, 20 * MIN);
+  assert.equal(lib.activeMinutes(timer, T0 + 20 * MIN), 20);
+});
+
+test("active time excludes idle gaps beyond the idle threshold", () => {
+  const work = 20 * MIN;
+  const timer = simulate(T0, 90, [{ id: 1, visible: () => true, input: (t) => (t <= T0 + work ? t : null) }]);
+  // Work plus the idle window after the last input, never the 70-minute lunch.
+  assert.ok(timer.activeMs <= work + lib.ACTIVE_IDLE_MS);
+  assert.ok(timer.activeMs >= work + lib.ACTIVE_IDLE_MS - 30000 - 30000);
+  assert.ok(lib.activeMinutes(timer, T0 + 90 * MIN) <= 30);
+  assert.equal(lib.elapsedMinutes(T0, T0 + 90 * MIN), 90);
+});
+
+test("active time excludes hidden time", () => {
+  const timer = simulate(T0, 30, [{ id: 1, visible: (t) => t <= T0 + 10 * MIN || t > T0 + 25 * MIN, input: (t) => t }]);
+  assert.ok(Math.abs(timer.activeMs - 15 * MIN) <= 60000);
+});
+
+test("a hidden twin tab does not swallow the visible tab's time", () => {
+  const timer = simulate(T0, 20, [busy, { id: 2, offset: 15000, visible: () => false, input: () => null }]);
+  assert.ok(timer.activeMs >= 20 * MIN - 60000, String(timer.activeMs));
+});
+
+test("two visible tabs count once", () => {
+  const timer = simulate(T0, 20, [busy, { id: 2, offset: 15000, visible: () => true, input: (t) => t }]);
+  assert.ok(timer.activeMs <= 20 * MIN);
+  assert.ok(timer.activeMs >= 20 * MIN - 60000);
+});
+
+test("active time never exceeds time since the timer started", () => {
+  const t = lib.creditActive({ startedAt: T0, activeMs: 5 * MIN, tabs: { 1: T0 + 10000 }, creditedTo: T0 }, { visible: true, lastInputAt: T0 + 20000 }, T0 + 20000, 1);
+  assert.equal(t.activeMs, 20000);
+});
+
+test("a clock that goes backward credits nothing and resets the mark", () => {
+  const timer = { startedAt: T0, activeMs: 60000, tabs: { 1: T0 + 10 * MIN }, creditedTo: T0 + 10 * MIN };
+  const back = lib.creditActive(timer, { visible: true, lastInputAt: T0 + 5 * MIN }, T0 + 5 * MIN, 1);
+  assert.equal(back.activeMs, 60000);
+  assert.equal(back.tabs[1], T0 + 5 * MIN);
+  assert.ok(back.creditedTo <= T0 + 5 * MIN);
+  const next = lib.creditActive(back, { visible: true, lastInputAt: T0 + 5 * MIN + 30000 }, T0 + 5 * MIN + 30000, 1);
+  assert.equal(next.activeMs, 90000);
+});
+
+test("one sample credits at most the sample cap", () => {
+  const timer = lib.creditActive({ startedAt: T0, activeMs: 0, tabs: { 1: T0 }, creditedTo: T0 }, { visible: true, lastInputAt: T0 + 5 * MIN }, T0 + 5 * MIN, 1);
+  assert.equal(timer.activeMs, lib.SAMPLE_MAX_CREDIT_MS);
+  assert.equal(timer.tabs[1], T0 + 5 * MIN);
+});
+
+test("hidden and visible samples interleave", () => {
+  let timer = { startedAt: T0, activeMs: 0, tabs: { 1: T0 }, creditedTo: T0 };
+  // Hide flush counts the stretch up to now as visible.
+  timer = lib.creditActive(timer, { visible: true, lastInputAt: T0 + 20000 }, T0 + 20000, 1);
+  assert.equal(timer.activeMs, 20000);
+  // Show: records the hidden stretch with no credit.
+  timer = lib.creditActive(timer, { visible: false, lastInputAt: T0 + 20000 }, T0 + 5 * MIN, 1);
+  assert.equal(timer.activeMs, 20000);
+  timer = lib.creditActive(timer, { visible: true, lastInputAt: T0 + 5 * MIN + 30000 }, T0 + 5 * MIN + 30000, 1);
+  assert.equal(timer.activeMs, 50000);
+});
+
+test("stale tab entries are pruned", () => {
+  const timer = lib.creditActive({ startedAt: T0, activeMs: 0, tabs: { 7: T0, 1: T0 + 20 * MIN - 1000 }, creditedTo: T0 }, { visible: true, lastInputAt: T0 + 20 * MIN }, T0 + 20 * MIN, 1);
+  assert.deepEqual(Object.keys(timer.tabs), ["1"]);
+});
+
+test("legacy timers without activeMs fall back to wall-clock time", () => {
+  assert.equal(lib.activeMs({ startedAt: T0 }, T0 + 10 * MIN), 10 * MIN);
+  assert.equal(lib.activeMinutes({ startedAt: T0 }, T0 + 10 * MIN), 10);
+  const credited = lib.creditActive({ startedAt: T0 }, { visible: true, lastInputAt: T0 + 10 * MIN }, T0 + 10 * MIN, 1);
+  assert.equal(credited.activeMs, 10 * MIN);
+});
+
+test("validSample", () => {
+  assert.deepEqual(lib.validSample({ visible: true, lastInputAt: 5 }, 10), { visible: true, lastInputAt: 5 });
+  assert.equal(lib.validSample({ visible: true, lastInputAt: 50 }, 10).lastInputAt, 10);
+  assert.equal(lib.validSample({ visible: "yes", lastInputAt: 5 }, 10), null);
+  assert.equal(lib.validSample({ visible: true }, 10), null);
+  assert.equal(lib.validSample(null, 10), null);
+});
+
+test("prefill and outcome come from active time", () => {
+  const start = Date.UTC(2026, 9, 2, 12);
+  const timer = { startedAt: start, activeMs: 20 * 60000 };
+  const now = start + 90 * 60000;
+  const minutes = lib.activeMinutes(timer, now);
+  assert.equal(minutes, 20);
+  assert.equal(lib.inferOutcome(minutes), "solved");
+  assert.equal(lib.inferOutcome(lib.elapsedMinutes(start, now)), "struggled");
+  assert.ok(lib.showOpenTime(20, 90));
+  assert.ok(!lib.showOpenTime(20, 20));
+});
+
+test("nudge uses active time", () => {
+  const start = Date.UTC(2026, 9, 2, 12);
+  const open = start + 90 * 60000;
+  assert.ok(!lib.shouldNudge({ startedAt: start, activeMs: 20 * 60000, nudged: false }, open));
+  assert.ok(lib.shouldNudge({ startedAt: start, activeMs: 25 * 60000, nudged: false }, start + 26 * 60000));
+  assert.ok(!lib.shouldNudge({ startedAt: start, activeMs: 40 * 60000, nudged: true }, open));
+});
+
+test("timer expiry ignores active time", () => {
+  const start = Date.UTC(2026, 9, 2, 12);
+  const min = 60000;
+  assert.ok(!lib.timerExpired({ startedAt: start, activeMs: 0, lastSeenAt: start + 40 * min }, start + 60 * min));
+  assert.ok(lib.timerExpired({ startedAt: start, activeMs: 99 * min, lastSeenAt: start + 10 * min }, start + 41 * min));
+  assert.ok(lib.timerExpired({ startedAt: start, activeMs: 0, lastSeenAt: start + 13 * 60 * min }, start + 13 * 60 * min));
+});
+
+test("slow ~50s heartbeats are still credited in full", () => {
+  let timer = { startedAt: T0, activeMs: 0, tabs: {}, creditedTo: T0 };
+  for (let t = T0; t <= T0 + 10 * MIN; t += 50000) {
+    timer = lib.creditActive(timer, { visible: true, lastInputAt: t }, t, 1);
+  }
+  assert.equal(timer.activeMs, 10 * MIN - (10 * MIN % 50000));
+});
+
+test("a backward clock jump keeps accumulated active time", () => {
+  const timer = { startedAt: T0, activeMs: 20 * MIN, tabs: { 1: T0 + 25 * MIN }, creditedTo: T0 + 25 * MIN };
+  const back = lib.creditActive(timer, { visible: true, lastInputAt: T0 - 5 * MIN }, T0 - 5 * MIN, 1);
+  assert.equal(back.activeMs, 20 * MIN);
+  assert.equal(back.startedAt, T0 - 5 * MIN);
+  const next = lib.creditActive(back, { visible: true, lastInputAt: T0 - 5 * MIN + 30000 }, T0 - 5 * MIN + 30000, 1);
+  assert.equal(next.activeMs, 20 * MIN + 30000);
+});
+
+test("tab switch: A hides, B shows, hidden heartbeat arrives", () => {
+  let timer = { startedAt: T0, activeMs: 0, tabs: { 1: T0, 2: T0 }, creditedTo: T0 };
+  // A hides: flush as visible. B shows: marks hidden stretch, no credit.
+  timer = lib.creditActive(timer, { visible: true, lastInputAt: T0 + 20000 }, T0 + 20000, 1);
+  timer = lib.creditActive(timer, { visible: false, lastInputAt: 0 }, T0 + 20000, 2);
+  assert.equal(timer.activeMs, 20000);
+  // B is now the working tab; A's throttled hidden heartbeat arrives late.
+  timer = lib.creditActive(timer, { visible: true, lastInputAt: T0 + 50000 }, T0 + 50000, 2);
+  timer = lib.creditActive(timer, { visible: false, lastInputAt: T0 + 20000 }, T0 + 60000, 1);
+  timer = lib.creditActive(timer, { visible: true, lastInputAt: T0 + 80000 }, T0 + 80000, 2);
+  assert.equal(timer.activeMs, 80000);
+});
+
+test("repeated backward jumps keep carriedMs at or below activeMs", () => {
+  let timer = { startedAt: T0, activeMs: 20 * MIN, tabs: {}, creditedTo: T0 };
+  let now = T0 + 25 * MIN;
+  timer = lib.creditActive(timer, { visible: true, lastInputAt: now }, now, 1);
+  let expected = 20 * MIN;
+  for (let i = 0; i < 4; i++) {
+    now -= 10 * MIN;
+    // First sample after a jump credits nothing.
+    timer = lib.creditActive(timer, { visible: true, lastInputAt: now }, now, 1);
+    assert.equal(timer.activeMs, expected);
+    assert.equal(timer.carriedMs, expected);
+    now += 30000;
+    timer = lib.creditActive(timer, { visible: true, lastInputAt: now }, now, 1);
+    expected += 30000;
+    assert.equal(timer.activeMs, expected);
+    assert.ok(timer.carriedMs <= timer.activeMs);
+  }
+});
+
+test("backward jump then forward jump", () => {
+  let timer = { startedAt: T0, activeMs: 10 * MIN, tabs: { 1: T0 + 10 * MIN }, creditedTo: T0 + 10 * MIN };
+  timer = lib.creditActive(timer, { visible: true, lastInputAt: T0 - 20 * MIN }, T0 - 20 * MIN, 1);
+  assert.equal(timer.activeMs, 10 * MIN);
+  // Clock leaps forward an hour: only one capped sample is credited.
+  const later = T0 + 60 * MIN;
+  timer = lib.creditActive(timer, { visible: true, lastInputAt: later }, later, 1);
+  assert.ok(timer.activeMs >= 10 * MIN);
+  assert.ok(timer.activeMs <= 10 * MIN + lib.SAMPLE_MAX_CREDIT_MS);
+});
+
+test("legacy timer's first sample credits from its startedAt", () => {
+  const legacy = { startedAt: T0, lastSampleAt: T0 + 5 * MIN };
+  const first = lib.creditActive(legacy, { visible: true, lastInputAt: T0 + 6 * MIN }, T0 + 6 * MIN, 1);
+  assert.equal(first.activeMs, 6 * MIN);
+  assert.equal(first.creditedTo, T0);
+  const second = lib.creditActive(first, { visible: true, lastInputAt: T0 + 6 * MIN + 30000 }, T0 + 6 * MIN + 30000, 1);
+  assert.equal(second.activeMs, 6 * MIN + 30000);
+});
+
+test("legacy timer migration sets openedAt from startedAt", () => {
+  const first = lib.creditActive({ startedAt: T0 }, { visible: true, lastInputAt: T0 }, T0 + MIN, 1);
+  assert.equal(first.openedAt, T0);
+  assert.equal(lib.openedAt({ startedAt: T0 }), T0);
+});
+
+test("legacy timer keeps wall-clock time across a backward jump", () => {
+  const legacy = { startedAt: T0, lastSeenAt: T0 + 10 * MIN };
+  const now = T0 - 30 * MIN;
+  const t = lib.creditActive(legacy, { visible: true, lastInputAt: now }, now, 1);
+  assert.equal(t.activeMs, 10 * MIN);
+  assert.equal(t.carriedMs, 10 * MIN);
+  // Observed open time (10 min) is preserved: openedAt shifts with the clock.
+  assert.equal(t.openedAt, now - 10 * MIN);
+});
+
+test("a small backward step only clamps marks and keeps open time", () => {
+  const timer = { startedAt: T0, openedAt: T0, activeMs: 5 * MIN, carriedMs: 0, tabs: { 1: T0 + 10 * MIN }, creditedTo: T0 + 10 * MIN };
+  const now = T0 + 10 * MIN - 1000;
+  const t = lib.creditActive(timer, { visible: true, lastInputAt: now }, now, 1);
+  assert.equal(t.startedAt, T0);
+  assert.equal(t.openedAt, T0);
+  assert.equal(t.carriedMs, 0);
+  assert.equal(t.activeMs, 5 * MIN);
+  assert.equal(t.tabs[1], now);
+  assert.equal(t.creditedTo, now);
+  assert.equal(lib.elapsedMinutes(lib.openedAt(t), now), 10);
+});
+
+test("the jump tolerance is SAMPLE_MAX_CREDIT_MS", () => {
+  const base = { startedAt: T0, openedAt: T0, activeMs: 5 * MIN, carriedMs: 0, tabs: { 1: T0 + 10 * MIN }, creditedTo: T0 + 10 * MIN };
+  const at = T0 + 10 * MIN - lib.SAMPLE_MAX_CREDIT_MS;
+  assert.equal(lib.creditActive(base, { visible: true, lastInputAt: at }, at, 1).startedAt, T0);
+  const past = at - 1;
+  const jumped = lib.creditActive(base, { visible: true, lastInputAt: past }, past, 1);
+  assert.equal(jumped.startedAt, past);
+  assert.equal(jumped.openedAt, past - 10 * MIN);
+  assert.equal(jumped.carriedMs, 5 * MIN);
+});
+
+test("a jump does not restart the max-age clock, which uses openedAt", () => {
+  const opened = T0;
+  const now = T0 + 13 * 3600000;
+  assert.ok(lib.timerExpired({ startedAt: now - MIN, openedAt: opened, lastSeenAt: now - MIN }, now));
+  assert.ok(!lib.timerExpired({ startedAt: now - MIN, lastSeenAt: now - MIN }, now));
+});
+
+for (const hours of [2, 3]) {
+  test(`a ${hours}h backward step keeps open time and max age continuous`, () => {
+    const seen = T0 + 10 * MIN;
+    const timer = { startedAt: T0, openedAt: T0, lastSeenAt: seen, activeMs: 5 * MIN, tabs: { 1: seen }, creditedTo: seen };
+    const now = seen - hours * 3600000;
+    const t = lib.creditActive(timer, { visible: true, lastInputAt: now }, now, 1);
+    assert.ok(t.openedAt <= now);
+    assert.equal(lib.elapsedMinutes(lib.openedAt(t), now), 10);
+    assert.equal(lib.elapsedMinutes(lib.openedAt(t), now + 5 * MIN), 15);
+    // Expiry comes after 12 hours of observed time, not 12h plus the step.
+    const stored = { ...t, lastSeenAt: now };
+    const almost = now + 12 * 3600000 - 10 * MIN - MIN;
+    const over = now + 12 * 3600000 - 10 * MIN + MIN;
+    assert.ok(!lib.timerExpired({ ...stored, lastSeenAt: almost - MIN }, almost));
+    assert.ok(lib.timerExpired({ ...stored, lastSeenAt: over - MIN }, over));
+  });
+}
+
+test("a forward clock step over 30 minutes expires the timer like sleep", () => {
+  const timer = { startedAt: T0, openedAt: T0, lastSeenAt: T0 + MIN };
+  assert.ok(lib.timerExpired(timer, T0 + MIN + 31 * MIN));
+  assert.ok(!lib.timerExpired(timer, T0 + MIN + 29 * MIN));
+});

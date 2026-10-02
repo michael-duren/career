@@ -258,11 +258,117 @@
     return tabs.test(path || "");
   }
 
-  // elapsedMinutes rounds a timer to whole minutes within the API's range.
-  function elapsedMinutes(startedAt, now) {
-    const minutes = Math.round((now - startedAt) / 60000);
+  // minutesFromMs rounds a duration to whole minutes within the API's range.
+  function minutesFromMs(ms) {
+    const minutes = Math.round(ms / 60000);
     if (!Number.isFinite(minutes)) return 1;
     return Math.min(MAX_MINUTES, Math.max(1, minutes));
+  }
+
+  // elapsedMinutes is the wall-clock time the problem has been open.
+  function elapsedMinutes(startedAt, now) {
+    return minutesFromMs(now - startedAt);
+  }
+
+  // Active time counts only while the page is visible and the learner has
+  // used the keyboard, mouse or scroll within ACTIVE_IDLE_MS. Ten minutes
+  // covers thinking time without typing; the cost is that a break after the
+  // last input still counts for up to ten minutes. Content scripts sample
+  // every 30 seconds. Each tab has its own previous-sample time, and one
+  // sample credits at most SAMPLE_MAX_CREDIT_MS (a heartbeat plus slack for a slow page), so
+  // sleep or a long-closed tab adds little. Credit is the union of the
+  // intervals tabs report, so two visible tabs never count twice.
+  const ACTIVE_IDLE_MS = 10 * 60000;
+  const SAMPLE_MAX_CREDIT_MS = 90000;
+  const TAB_STALE_MS = 10 * 60000;
+
+  // validSample accepts {visible, lastInputAt} from a content script and
+  // clamps lastInputAt to now. It returns null for anything else.
+  function validSample(sample, now) {
+    if (!sample || typeof sample !== "object" || typeof sample.visible !== "boolean") return null;
+    if (!Number.isFinite(sample.lastInputAt)) return null;
+    return { visible: sample.visible, lastInputAt: Math.min(sample.lastInputAt, now) };
+  }
+
+  // creditActive returns the timer with the time since tabId's previous
+  // sample added to activeMs when the page was visible, limited to the
+  // window ending ACTIVE_IDLE_MS after the last input and to one heartbeat.
+  // timer.tabs maps tab ids to their previous sample time, and creditedTo is
+  // the end of the latest credited interval, so overlapping tabs add once.
+  // A clock that went backward credits nothing and resets the tab's mark.
+  // Timers saved without activeMs keep their wall-clock time so far.
+  //
+  // openedAt is when the problem was first opened and is never rebased; open
+  // time and the 12-hour max age use it. startedAt is the baseline for the
+  // wall-clock cap on active time. A backward step within SAMPLE_MAX_CREDIT_MS
+  // (NTP slew) only clamps the stored marks to now. A larger one is a clock
+  // jump: startedAt moves to now and carriedMs keeps the active time earned
+  // so far, and openedAt shifts by the step so open time and max age continue
+  // as if the gap never happened. The first sample after a jump credits nothing (bounded loss of
+  // under one heartbeat).
+  function creditActive(timer, sample, now, tabId = 0) {
+    const finite = Number.isFinite;
+    const origStart = finite(timer.startedAt) ? timer.startedAt : now;
+    const storedOpenedAt = finite(timer.openedAt) ? timer.openedAt : origStart;
+    let ahead = Math.max(origStart, finite(timer.creditedTo) ? timer.creditedTo : 0) - now;
+    for (const at of Object.values(timer.tabs || {})) if (finite(at)) ahead = Math.max(ahead, at - now);
+    const jumped = ahead > SAMPLE_MAX_CREDIT_MS;
+    // On a jump the unobserved gap counts as zero: shift openedAt by the step
+    // so open time and the max age stay continuous (and never ahead of now).
+    let lastSeen = finite(timer.lastSeenAt) ? timer.lastSeenAt : Math.max(origStart, finite(timer.creditedTo) ? timer.creditedTo : 0);
+    for (const at of Object.values(timer.tabs || {})) if (!finite(timer.lastSeenAt) && finite(at)) lastSeen = Math.max(lastSeen, at);
+    const openedAt = jumped ? Math.min(now, storedOpenedAt + (now - lastSeen)) : storedOpenedAt;
+    const tabs = {};
+    for (const [id, at] of Object.entries(timer.tabs || {})) {
+      if (!finite(at) || now - at > TAB_STALE_MS || (jumped && at > now)) continue;
+      tabs[id] = Math.min(at, now);
+    }
+    const since = Object.hasOwn(tabs, tabId) ? tabs[tabId] : now;
+    // Computed before any rebase so a legacy timer keeps its wall-clock time.
+    const legacyRef = jumped && finite(timer.lastSeenAt) ? timer.lastSeenAt : since;
+    const earned = finite(timer.activeMs) ? timer.activeMs : Math.max(0, legacyRef - origStart);
+    const startedAt = jumped ? now : origStart;
+    let activeMs = earned;
+    let creditedTo = finite(timer.creditedTo) ? Math.min(timer.creditedTo, now) : startedAt;
+    if (sample && sample.visible && since < now) {
+      const end = Math.min(now, since + SAMPLE_MAX_CREDIT_MS, sample.lastInputAt + ACTIVE_IDLE_MS);
+      const start = Math.max(since, creditedTo);
+      if (end > start) {
+        activeMs += end - start;
+        creditedTo = end;
+      }
+    }
+    tabs[tabId] = now;
+    // Active time never exceeds wall-clock time since startedAt plus
+    // carriedMs. earned already includes any earlier carry, so a jump
+    // replaces carriedMs rather than adding to it.
+    const carriedMs = jumped ? earned : finite(timer.carriedMs) ? timer.carriedMs : 0;
+    activeMs = Math.min(activeMs, Math.max(0, now - startedAt) + carriedMs);
+    return { ...timer, openedAt, startedAt, activeMs, carriedMs, creditedTo, tabs };
+  }
+
+  // openTime is when the problem was opened, for open minutes and max age.
+  function openedAt(timer) {
+    if (!timer) return NaN;
+    return Number.isFinite(timer.openedAt) ? timer.openedAt : timer.startedAt;
+  }
+
+  // activeMs is the active time recorded on a timer. Timers without one fall
+  // back to wall-clock time so they still nudge and prefill.
+  function activeMs(timer, now) {
+    if (!timer) return 0;
+    if (Number.isFinite(timer.activeMs)) return Math.max(0, timer.activeMs);
+    return Number.isFinite(timer.startedAt) ? Math.max(0, now - timer.startedAt) : 0;
+  }
+
+  function activeMinutes(timer, now) {
+    return minutesFromMs(activeMs(timer, now));
+  }
+
+  // showOpenTime is true when the confirm panel should say how long the tab
+  // was open because it differs from the active minutes.
+  function showOpenTime(active, open) {
+    return Number.isFinite(open) && open !== active;
   }
 
   // inferOutcome prefills the confirm panel after an Accepted submission.
@@ -279,11 +385,11 @@
   function timerExpired(timer, now) {
     if (!timer || !Number.isFinite(timer.startedAt)) return true;
     const seen = Number.isFinite(timer.lastSeenAt) ? timer.lastSeenAt : timer.startedAt;
-    return now - seen > TIMER_IDLE_MS || now - timer.startedAt > TIMER_MAX_AGE_MS;
+    return now - seen > TIMER_IDLE_MS || now - openedAt(timer) > TIMER_MAX_AGE_MS;
   }
 
   function shouldNudge(timer, now) {
-    return Boolean(timer) && !timer.nudged && now - timer.startedAt >= NUDGE_MINUTES * 60000;
+    return Boolean(timer) && !timer.nudged && activeMs(timer, now) >= NUDGE_MINUTES * 60000;
   }
 
   // normalizeOrigin accepts https origins, or plain http only on loopback,
@@ -469,7 +575,15 @@
     problemFromPath,
     slugFromPath,
     isAssistPath,
+    ACTIVE_IDLE_MS,
+    SAMPLE_MAX_CREDIT_MS,
     elapsedMinutes,
+    validSample,
+    creditActive,
+    activeMs,
+    activeMinutes,
+    openedAt,
+    showOpenTime,
     inferOutcome,
     shouldNudge,
     timerExpired,
