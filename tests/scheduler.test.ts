@@ -99,6 +99,10 @@ test('move and resize retain both computed fold instants and elapsed duration', 
     const mutation = draftMutation(secondFoldMove.draft, week);
     if (mutation.action === 'session') assert.deepEqual([mutation.session.plan?.start, mutation.session.plan?.end], ['2026-11-01T07:45:00.000Z', '2026-11-01T08:45:00.000Z']);
   }
+  const nextDay = weekSchema.parse({ ...week, sessions: [{ ...secondFold, date: '2026-11-02', plan: { start: '2026-11-02T07:30:00Z', end: '2026-11-02T08:30:00Z' } }] }).sessions[0];
+  const movedFromOrdinaryDay = proposePlacement({ kind: 'move', session: nextDay, targetDate: '2026-11-01', startMinute: 105 }, week, now);
+  assert.equal(movedFromOrdinaryDay.kind, 'valid');
+  if (movedFromOrdinaryDay.kind === 'valid') assert.deepEqual([movedFromOrdinaryDay.start, movedFromOrdinaryDay.end], ['2026-11-01T06:45:00.000Z', '2026-11-01T07:45:00.000Z']);
   const endResize = proposePlacement({ kind: 'resize', session: secondFold, edge: 'end', deltaMinutes: -30 }, week, now);
   assert.equal(endResize.kind, 'valid');
   if (endResize.kind === 'valid') {

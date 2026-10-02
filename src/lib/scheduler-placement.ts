@@ -29,8 +29,10 @@ export function proposePlacement(input: PlacementInput, week: SchedulerWeek, now
       end = new Date(Date.parse(interval.end) + (input.edge === 'end' ? input.deltaMinutes * 60000 : 0)).toISOString();
     } else {
       date = input.targetDate;
-      const preferredOffset = input.kind === 'move' && interval ? localFields(interval.start, zone).offset : undefined;
-      start = localInstant(dateForMinute(date, input.startMinute), clockLabel(input.startMinute).slice(0, 5), zone, preferredOffset);
+      const calendarDate = dateForMinute(date, input.startMinute);
+      const sourceFields = input.kind === 'move' && interval ? localFields(interval.start, zone) : undefined;
+      const preferredOffset = sourceFields?.date === calendarDate ? sourceFields.offset : undefined;
+      start = localInstant(calendarDate, clockLabel(input.startMinute).slice(0, 5), zone, preferredOffset);
       const duration = input.kind === 'assignment' ? input.durationMinutes : interval ? (Date.parse(interval.end) - Date.parse(interval.start)) / 60000 : 0;
       end = new Date(Date.parse(start) + duration * 60000).toISOString();
     }
