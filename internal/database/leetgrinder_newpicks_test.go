@@ -226,40 +226,15 @@ func TestLeetgrinderNewPicksTopUp(t *testing.T) {
 	if _, ok, err := s.leetgrinderTodayPlanned(ctx, now); err != nil || ok {
 		t.Fatalf("queued todo not planned: %v %v", ok, err)
 	}
-	// The top-up takes the planner lock, so concurrent visits agree on it:
-	// hold the lock and see the call queue for it before it plans.
-	conn, err := s.DB.Conn(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer conn.Close()
-	if _, err = conn.ExecContext(ctx, "SELECT pg_advisory_lock(724193611)"); err != nil {
-		t.Fatal(err)
-	}
+	// The top-up takes the planner lock, so concurrent visits agree on it.
 	done := make(chan []string, 1)
-	go func() {
+	waitsForPlannerLock(t, s, func() {
 		today, err := s.LeetgrinderToday(ctx, now)
 		if err != nil {
 			t.Error(err)
 		}
 		done <- newPickSlots(today)
-	}()
-	for deadline := time.Now().Add(5 * time.Second); ; {
-		var waiting bool
-		if err = s.DB.QueryRow("SELECT EXISTS (SELECT 1 FROM pg_locks WHERE locktype='advisory' AND classid=0 AND objid=724193611 AND objsubid=1 AND NOT granted)").Scan(&waiting); err != nil {
-			t.Fatal(err)
-		}
-		if waiting {
-			break
-		}
-		if time.Now().After(deadline) {
-			t.Fatal("top-up did not wait for the planner lock")
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
-	if _, err = conn.ExecContext(ctx, "SELECT pg_advisory_unlock(724193611)"); err != nil {
-		t.Fatal(err)
-	}
+	})
 	if slots, want := <-done, []string{"1:two-sum:", "2:valid-anagram:"}; !reflect.DeepEqual(slots, want) {
 		t.Fatalf("top-up %v, want %v", slots, want)
 	}
@@ -282,5 +257,116 @@ func TestLeetgrinderNewPicksLocalDayStart(t *testing.T) {
 	today, err := s.LeetgrinderToday(ctx, time.Date(2026, 10, 2, 17, 0, 0, 0, time.UTC))
 	if want := []string{"1:valid-anagram:A"}; err != nil || !reflect.DeepEqual(newPickSlots(today), want) {
 		t.Fatalf("picks %v, want %v: %v", newPickSlots(today), want, err)
+	}
+}
+
+// waitsForPlannerLock holds the planner lock, runs call in the background,
+// and fails unless call queues for the lock; it then releases the lock.
+func waitsForPlannerLock(t *testing.T, s *Store, call func()) {
+	t.Helper()
+	ctx := context.Background()
+	conn, err := s.DB.Conn(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	if _, err = conn.ExecContext(ctx, "SELECT pg_advisory_lock(724193611)"); err != nil {
+		t.Fatal(err)
+	}
+	go call()
+	for deadline := time.Now().Add(5 * time.Second); ; {
+		var waiting bool
+		if err = s.DB.QueryRow("SELECT EXISTS (SELECT 1 FROM pg_locks WHERE locktype='advisory' AND classid=0 AND objid=724193611 AND objsubid=1 AND NOT granted)").Scan(&waiting); err != nil {
+			t.Fatal(err)
+		}
+		if waiting {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("call did not wait for the planner lock")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	if _, err = conn.ExecContext(ctx, "SELECT pg_advisory_unlock(724193611)"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// Deleting a set takes the planner lock, so a pick is never saved with the
+// ID of a set deleted after the planner read it.
+func TestLeetgrinderDeleteTodoSetWaitsForPlanner(t *testing.T) {
+	s, _ := newPicksStore(t, "UTC", 1)
+	ctx := context.Background()
+	set, err := s.CreateLeetgrinderTodoSet(ctx, "A", []string{"two-sum"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	waitsForPlannerLock(t, s, func() { done <- s.DeleteLeetgrinderTodoSet(ctx, set.ID) })
+	if err = <-done; err != nil {
+		t.Fatal(err)
+	}
+}
+
+// Today's frozen goal decides how many picks it takes: raising the target
+// adds picks from the next day, not today. A pick left unattempted is still
+// to do, so the next day picks it again first.
+func TestLeetgrinderNewPicksUseFrozenGoal(t *testing.T) {
+	s, _ := newPicksStore(t, "UTC", 1)
+	ctx := context.Background()
+	now := time.Date(2026, 10, 2, 12, 0, 0, 0, time.UTC)
+	if _, err := s.CreateLeetgrinderTodoSet(ctx, "A", []string{"two-sum", "valid-anagram", "group-anagrams"}); err != nil {
+		t.Fatal(err)
+	}
+	if today, err := s.LeetgrinderToday(ctx, now); err != nil || len(today.NewPicks) != 1 {
+		t.Fatalf("first plan %v: %v", newPickSlots(today), err)
+	}
+	settings, err := s.LeetgrinderSettings(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.UpdateLeetgrinderSettings(ctx, settings.Revision, func(v *leetgrinder.Settings) error { v.Goal.New = 3; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok, err := s.leetgrinderTodayPlanned(ctx, now); err != nil || !ok {
+		t.Fatalf("raised target replans today: %v %v", ok, err)
+	}
+	if today, err := s.LeetgrinderToday(ctx, now); err != nil || len(today.NewPicks) != 1 {
+		t.Fatalf("today after raise %v: %v", newPickSlots(today), err)
+	}
+	if today, err := s.LeetgrinderToday(ctx, now.AddDate(0, 0, 1)); err != nil || !reflect.DeepEqual(newPickSlots(today), []string{"1:two-sum:A", "2:valid-anagram:A", "3:group-anagrams:A"}) {
+		t.Fatalf("next day %v: %v", newPickSlots(today), err)
+	}
+}
+
+// Attempts earlier today do not rule a todo out, since an attempt today still
+// counts as new; a todo already completed today is no longer to do.
+func TestLeetgrinderNewPicksAttemptsToday(t *testing.T) {
+	s, attempt := newPicksStore(t, "UTC", 1)
+	ctx := context.Background()
+	now := time.Date(2026, 10, 2, 12, 0, 0, 0, time.UTC)
+	attempt("two-sum", now.Add(-4*time.Hour))
+	if _, err := s.AddLeetgrinderTodoItem(ctx, "", "two-sum"); err != nil {
+		t.Fatal(err)
+	}
+	today, err := s.LeetgrinderToday(ctx, now)
+	if err != nil || !reflect.DeepEqual(newPickSlots(today), []string{"1:two-sum:"}) || !today.NewPicks[0].Done {
+		t.Fatalf("attempted this morning: %+v %v", today.NewPicks, err)
+	}
+	// Next day: a set problem solved that morning is done, so the next todo
+	// is picked.
+	tomorrow := now.AddDate(0, 0, 1)
+	solved := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "valid-anagram", Outcome: "solved", Minutes: 20, TimeComplexity: "O(n)", SpaceComplexity: "O(1)"}
+	if _, err = s.SaveLeetgrinderAttempt(ctx, solved, ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.DB.Exec("UPDATE leetgrinder_attempts SET created_at=$1 WHERE id=$2", tomorrow.Add(-4*time.Hour), solved.ID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.CreateLeetgrinderTodoSet(ctx, "A", []string{"valid-anagram", "group-anagrams"}); err != nil {
+		t.Fatal(err)
+	}
+	if today, err = s.LeetgrinderToday(ctx, tomorrow); err != nil || !reflect.DeepEqual(newPickSlots(today), []string{"1:group-anagrams:A"}) {
+		t.Fatalf("solved this morning: %v %v", newPickSlots(today), err)
 	}
 }

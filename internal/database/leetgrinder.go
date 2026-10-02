@@ -154,7 +154,7 @@ ORDER BY n.plan_date,n.slot`)
 // new problems on the day starting at dayStart, oldest entry first. A
 // candidate is still to do, has no attempt before that day (so an attempt on
 // it counts as new), and is not in picked. A problem queued more than once
-// is offered once, from its oldest entry.
+// is offered once, from its oldest entry still to do.
 func leetgrinderNewPickCandidates(ctx context.Context, tx queryer, dayStart time.Time, picked []leetgrinder.NewPick, limit int) ([]leetgrinder.NewPick, error) {
 	skip := make([]string, len(picked))
 	for i, p := range picked {

@@ -6,9 +6,13 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/michael-duren/career-strategy/internal/leetgrinder"
 )
 
 func TestLeetgrinderNewPicksFromTodos(t *testing.T) {
@@ -55,7 +59,15 @@ func TestLeetgrinderNewPicksFromTodos(t *testing.T) {
 	if n := strings.Count(body, "· Blind 75</span>"); n != 2 {
 		t.Errorf("%d picks for a goal of two", n)
 	}
-	// The extension's today API lists the same picks.
+	// The extension's today API lists the same picks, with an attempt today
+	// marking its pick done.
+	attempt := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "two-sum", Outcome: "unfinished", Minutes: 20}
+	if _, err = db.SaveLeetgrinderAttempt(ctx, attempt, ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.DB.Exec("UPDATE leetgrinder_attempts SET created_at=$1 WHERE id=$2", tomorrow.AddDate(0, 0, 1).Add(-time.Hour), attempt.ID); err != nil {
+		t.Fatal(err)
+	}
 	_, plain, err := db.CreateLeetgrinderToken(ctx, "test")
 	if err != nil {
 		t.Fatal(err)
@@ -76,28 +88,54 @@ func TestLeetgrinderNewPicksFromTodos(t *testing.T) {
 	want := []struct {
 		Slug, Title, Set string
 		Done             bool
-	}{{"two-sum", "Two Sum", "Blind 75", false}, {"valid-anagram", "Valid Anagram", "Blind 75", false}}
+	}{{"two-sum", "Two Sum", "Blind 75", true}, {"valid-anagram", "Valid Anagram", "Blind 75", false}}
 	if !reflect.DeepEqual(out.NewPicks, want) {
 		t.Fatalf("API picks %+v", out.NewPicks)
 	}
-	// A time zone change keeps the option through the confirm step.
-	settings, _ = db.LeetgrinderSettings(ctx)
-	w = request("POST", "/leetgrinder/settings/general", url.Values{"timezone": {"Asia/Tokyo"}, "goalNew": {"2"}, "goalReview": {"1"}, "newFromTodos": {"true"}, "revision": {settings.Revision}})
-	if w.Code != 200 || !strings.Contains(w.Body.String(), "Confirm the time zone change") || !strings.Contains(w.Body.String(), `<input type="hidden" name="newFromTodos" value="true">`) {
-		t.Fatalf("confirm step drops the option: %d %s", w.Code, w.Body.String())
+	exported := func() bool {
+		t.Helper()
+		var out struct {
+			Settings struct {
+				NewFromTodos *bool `json:"newFromTodos"`
+			} `json:"settings"`
+		}
+		if w := request("GET", "/leetgrinder/export", nil); json.Unmarshal(w.Body.Bytes(), &out) != nil || out.Settings.NewFromTodos == nil {
+			t.Fatalf("export: %s", w.Body.String())
+		}
+		return *out.Settings.NewFromTodos
 	}
-	// The export keeps the setting.
-	var exported struct {
-		Settings struct {
-			NewFromTodos bool `json:"newFromTodos"`
-		} `json:"settings"`
+	if !exported() {
+		t.Fatal("export dropped the option")
 	}
-	if w = request("GET", "/leetgrinder/export", nil); json.Unmarshal(w.Body.Bytes(), &exported) != nil || !exported.Settings.NewFromTodos {
-		t.Fatalf("export: %s", w.Body.String())
-	}
-	// Unticking the box turns it off.
-	w = request("POST", "/leetgrinder/settings/general", url.Values{"timezone": {"UTC"}, "goalNew": {"2"}, "goalReview": {"1"}, "revision": {settings.Revision}})
-	if settings, _ = db.LeetgrinderSettings(ctx); w.Code != 303 || settings.NewFromTodos {
-		t.Fatalf("turn off: %d %+v", w.Code, settings)
+	// A time zone change keeps the option, on or off, through the confirm
+	// step: the confirm form's hidden fields are what gets saved.
+	hidden := regexp.MustCompile(`<input type="hidden" name="([A-Za-z]+)" value="([^"]*)">`)
+	for i, zone := range []string{"Asia/Tokyo", "Europe/Paris", "UTC"} {
+		on := i%2 == 0
+		settings, _ = db.LeetgrinderSettings(ctx)
+		draft := url.Values{"timezone": {zone}, "goalNew": {"2"}, "goalReview": {"1"}, "revision": {settings.Revision}}
+		if on {
+			draft.Set("newFromTodos", "true")
+		}
+		w = request("POST", "/leetgrinder/settings/general", draft)
+		if w.Code != 200 || !strings.Contains(w.Body.String(), "Confirm the time zone change") {
+			t.Fatalf("%s: no confirm step: %d", zone, w.Code)
+		}
+		confirm := url.Values{}
+		for _, m := range hidden.FindAllStringSubmatch(w.Body.String(), -1) {
+			confirm.Set(m[1], m[2])
+		}
+		if confirm.Get("confirm") != "1" || (confirm.Get("newFromTodos") == "true") != on {
+			t.Fatalf("%s: confirm form %v, option %v", zone, confirm, on)
+		}
+		if w = request("POST", "/leetgrinder/settings/general", confirm); w.Code != 303 {
+			t.Fatalf("%s: confirm: %d", zone, w.Code)
+		}
+		if settings, _ = db.LeetgrinderSettings(ctx); settings.Timezone != zone || settings.NewFromTodos != on {
+			t.Fatalf("%s: saved %+v, option %v", zone, settings, on)
+		}
+		if exported() != on {
+			t.Fatalf("%s: export disagrees with option %v", zone, on)
+		}
 	}
 }

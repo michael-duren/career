@@ -215,7 +215,7 @@ templ goalCard(today Today) {
 
 // newPicks lists today's new problems picked from todos, naming the next one.
 templ newPicks(today Today) {
-	if len(today.NewPicks) > 0 || today.NewPicksShort() {
+	if len(today.NewPicks) > 0 || (today.NewPicksShort() && today.Progress.NewLeft() > 0) {
 		<div class="new-picks">
 			if next, ok := today.NextNewPick(); ok {
 				<p class="small">
@@ -244,7 +244,7 @@ templ newPicks(today Today) {
 					}
 				</ol>
 			}
-			if today.NewPicksShort() {
+			if today.NewPicksShort() && today.Progress.NewLeft() > 0 {
 				<p class="small muted">Fewer todos than today's new target could be picked. Todos whose problem you attempted on an earlier day are skipped; <a href="/leetgrinder/todos/add">add todos</a> and they are picked on your next visit today.</p>
 			}
 		</div>

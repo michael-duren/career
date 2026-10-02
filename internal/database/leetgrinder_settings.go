@@ -92,9 +92,10 @@ func (s *Store) LeetgrinderNtfyTokenStored(ctx context.Context) (bool, error) {
 
 // LeetgrinderToday loads settings and history and returns today's view for
 // now. On first access for a local date it freezes that date's goal from
-// settings and plans its review picks; later accesses only add picks when
-// the frozen review target has more slots than the plan and more cards are
-// due. Accesses that would change nothing read one snapshot without a lock.
+// settings and plans its review picks and, when picking from todos is on,
+// its new picks; later accesses only add picks when a frozen target has
+// more slots than its plan and more cards are due or todos queued. Accesses
+// that would change nothing read one snapshot without a lock.
 func (s *Store) LeetgrinderToday(ctx context.Context, now time.Time) (leetgrinder.Today, error) {
 	day, err := s.leetgrinderDay(ctx, now)
 	if err != nil {
@@ -107,7 +108,7 @@ func (s *Store) LeetgrinderToday(ctx context.Context, now time.Time) (leetgrinde
 	return leetgrinder.NewTodayFrom(day.settings, day.state, now, *day.replay), nil
 }
 
-// PlanLeetgrinderToday freezes today's goal and review picks as
+// PlanLeetgrinderToday freezes today's goal, review picks and new picks as
 // LeetgrinderToday does, without building today's view.
 func (s *Store) PlanLeetgrinderToday(ctx context.Context, now time.Time) error {
 	_, err := s.leetgrinderDay(ctx, now)
@@ -131,8 +132,8 @@ func (s *Store) leetgrinderDay(ctx context.Context, now time.Time) (leetgrinderD
 }
 
 // leetgrinderTodayPlanned reads today's state from one read-only snapshot.
-// It reports false when today's goal is not frozen yet or its plan would
-// take more picks; those need planLeetgrinderToday.
+// It reports false when today's goal is not frozen yet or its review or
+// new-pick plan would take more picks; those need planLeetgrinderToday.
 func (s *Store) leetgrinderTodayPlanned(ctx context.Context, now time.Time) (leetgrinderDay, bool, error) {
 	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true})
 	if err != nil {

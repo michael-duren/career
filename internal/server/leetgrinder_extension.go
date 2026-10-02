@@ -363,8 +363,9 @@ type leetgrinderAPIToday struct {
 	DueCount  int                     `json:"dueCount"`
 }
 
-// leetgrinderAPIToday is today's goal and reviews for the extension's badge
-// and popup. Like the dashboard, it freezes today's goal and plan.
+// leetgrinderAPIToday is today's goal, reviews and new picks for the
+// extension's badge and popup. Like the dashboard, it freezes today's goal
+// and plans.
 func (s *Server) leetgrinderAPIToday(w http.ResponseWriter, r *http.Request) {
 	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
 	if err != nil {

@@ -199,6 +199,17 @@ func TestGoalCardNewPicks(t *testing.T) {
 	if html = render(state); !strings.Contains(html, "Any other new problem counts toward the goal.") || !strings.Contains(html, "· done") {
 		t.Errorf("done short plan: %s", html)
 	}
+	// With goal 1 and its one pick done, the goal is met and no note shows.
+	goals[date] = DailyGoal{New: 1}
+	if html = render(state); !strings.Contains(html, "Today's picked new problems are done.") || strings.Contains(html, "Any other new problem") || strings.Contains(html, "Fewer todos") {
+		t.Errorf("met plan: %s", html)
+	}
+	// A short day whose new goal is met by other problems drops the note.
+	goals[date] = DailyGoal{New: 2}
+	state.Attempts = append(state.Attempts, Attempt{ID: "b", ProblemSlug: "binary-search", Outcome: "unfinished", Minutes: 20, CreatedAt: now.Add(-time.Hour)})
+	if html = render(state); strings.Contains(html, "Fewer todos") {
+		t.Errorf("met short plan still explains shortfall: %s", html)
+	}
 	// No todo could be picked: the note explains the empty list.
 	if html = render(State{Goals: goals}); !strings.Contains(html, "Todos whose problem you attempted on an earlier day are skipped") || strings.Contains(html, "Next new problem") {
 		t.Errorf("empty plan: %s", html)
