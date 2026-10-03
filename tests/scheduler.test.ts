@@ -64,7 +64,7 @@ test('unchanged editor times retain the original instants across a repeated hour
 const placementWeek = (day: string, zone = 'America/Chicago', start = '09:00', end = '17:00', nextDay = false) => {
   const dayStart = localInstant(day, start, zone);
   const dayEnd = localInstant(nextDay ? addDays(day, 1) : day, end, zone);
-  return weekSchema.parse({ revision: 'r1', week: mondayOf(day), settings: { timeZone: zone, defaultDay: { start, end, nextDay }, weekdays: {}, dates: {} }, days: [{ date: day, interval: { start, end, nextDay }, start: dayStart, end: dayEnd }], goals: [{ goal: { id: 'goal', title: 'Learn', color: '#123456', startDate: '2026-01-01', endDate: '2027-01-01', status: 'active', dailyHours: 1, selectedWeekdays: null, steps: [], dependsOn: [] }, requiredHours: 1, actualHours: 0, remainingScheduledHours: 0, uncoveredHours: 0, excessHours: 0, unscheduledStepIds: [] }], sessions: [], rules: [], busy: [], warnings: [], remainingCapacityHours: 8 });
+  return weekSchema.parse({ revision: 'r1', week: mondayOf(day), settings: { timeZone: zone, defaultDay: { start, end, nextDay }, weekdays: {}, dates: {} }, days: [{ valid: true, date: day, interval: { start, end, nextDay }, start: dayStart, end: dayEnd }], goals: [{ goal: { id: 'goal', title: 'Learn', color: '#123456', startDate: '2026-01-01', endDate: '2027-01-01', status: 'active', dailyHours: 1, selectedWeekdays: null, steps: [], dependsOn: [] }, requiredHours: 1, actualHours: 0, remainingScheduledHours: 0, uncoveredHours: 0, excessHours: 0, unscheduledStepIds: [] }], sessions: [], rules: [], busy: [], warnings: [], remainingCapacityHours: 8 });
 };
 
 test('moving a block subtracts the 30-minute grab offset before snapping', () => {
