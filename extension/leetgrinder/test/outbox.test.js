@@ -62,10 +62,10 @@ test("an unsent attempt survives a worker restart and syncs later", async () => 
 });
 
 test("retryable answers keep the attempt; final ones are returned and dropped", async () => {
-  for (const status of [0, 401, 403, 408, 429, 500, 502, 503]) {
+  for (const status of [0, 401, 403, 404, 408, 429, 500, 502, 503]) {
     assert.equal(lib.outboxRetryable(status), true, String(status));
   }
-  for (const status of [400, 404, 409, 413, 415, 422]) {
+  for (const status of [400, 409, 413, 415, 422]) {
     assert.equal(lib.outboxRetryable(status), false, String(status));
   }
   const storage = fakeStorage();

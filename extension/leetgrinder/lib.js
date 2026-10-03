@@ -571,10 +571,11 @@
 
   // outboxRetryable reports whether a failed send may succeed later without
   // changing the attempt: the app was unreachable or failed (0, 408, 429,
-  // 5xx), rejected the token (401, fixed in the options), or refused the
-  // request's origin (403). Other answers are final.
+  // 5xx), rejected the token (401, fixed in the options), refused the
+  // request's origin (403), or had no such route (404, as during a deploy).
+  // Other answers are final.
   function outboxRetryable(status) {
-    return status === 0 || status === 401 || status === 403 || status === 408 || status === 429 || status >= 500;
+    return status === 0 || status === 401 || status === 403 || status === 404 || status === 408 || status === 429 || status >= 500;
   }
 
   // createOutbox keeps confirmed attempts in storage until the app accepts
