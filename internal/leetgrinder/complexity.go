@@ -110,6 +110,8 @@ var languageLabels = map[string]string{
 	"c": "C", "cpp": "C++", "csharp": "C#", "dart": "Dart", "elixir": "Elixir", "erlang": "Erlang", "golang": "Go", "java": "Java",
 	"javascript": "JavaScript", "kotlin": "Kotlin", "php": "PHP", "python": "Python", "python3": "Python3", "racket": "Racket",
 	"ruby": "Ruby", "rust": "Rust", "scala": "Scala", "swift": "Swift", "typescript": "TypeScript",
+	// Code pasted into the extension's log panel may be plain text.
+	"text": "Plain text",
 }
 
 // LanguageLabel names a LeetCode language slug for display.
