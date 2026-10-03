@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/michael-duren/career-strategy/internal/scheduler"
-	"time"
 )
 
 func schedulerLoad(ctx context.Context, q queryer) (scheduler.Document, error) {
@@ -156,6 +158,65 @@ func schedulerRange(d scheduler.Document, w string, sinceDate string) (string, s
 	}
 	return from, to
 }
+
+func schedulerValidationDates(d scheduler.Document, busy []scheduler.Busy) []string {
+	known := map[string]bool{}
+	loc, _ := time.LoadLocation(d.Settings.TimeZone)
+	for date := range d.Settings.Dates {
+		known[date] = true
+	}
+	for _, session := range d.Sessions {
+		known[session.Date] = true
+		if session.OccurrenceDate != "" {
+			known[session.OccurrenceDate] = true
+		}
+		if session.Plan != nil {
+			known[session.Plan.Start.In(loc).Format("2006-01-02")] = true
+			known[session.Plan.End.Add(-time.Nanosecond).In(loc).Format("2006-01-02")] = true
+		}
+	}
+	for _, reservation := range busy {
+		if !reservation.End.After(reservation.Start) {
+			continue
+		}
+		known[reservation.Start.In(loc).Format("2006-01-02")] = true
+		known[reservation.End.Add(-time.Nanosecond).In(loc).Format("2006-01-02")] = true
+		first := scheduler.DateAdd(reservation.Start.In(loc).Format("2006-01-02"), -1)
+		last := scheduler.DateAdd(reservation.End.In(loc).Format("2006-01-02"), 1)
+		for _, rule := range d.Rules {
+			day, _ := time.Parse("2006-01-02", first)
+			weekday := (int(day.Weekday())+6)%7 + 1
+			date := scheduler.DateAdd(first, (rule.Weekday-weekday+7)%7)
+			for date <= last {
+				if date >= rule.EffectiveFrom && (rule.EffectiveTo == "" || date <= rule.EffectiveTo) {
+					known[date] = true
+				}
+				date = scheduler.DateAdd(date, 7)
+			}
+		}
+	}
+	// A rule's plan may start after midnight on its scheduling date, and a
+	// known reservation may cross midnight. Probe the adjacent occurrence
+	// dates too; exact interval overlap validation filters the extras.
+	baseDates := make([]string, 0, len(known))
+	for date := range known {
+		if scheduler.ValidDate(date) {
+			baseDates = append(baseDates, date)
+		}
+	}
+	for _, date := range baseDates {
+		known[scheduler.DateAdd(date, -1)] = true
+		known[scheduler.DateAdd(date, 1)] = true
+	}
+	dates := make([]string, 0, len(known))
+	for date := range known {
+		if scheduler.ValidDate(date) {
+			dates = append(dates, date)
+		}
+	}
+	return dates
+}
+
 func (s *Store) schedulerUpdate(ctx context.Context, w string, m *scheduler.Mutation, now time.Time, busy []scheduler.Busy) (scheduler.Week, error) {
 	if !scheduler.ValidDate(w) || scheduler.Monday(w) != w {
 		return scheduler.Week{}, fmt.Errorf("%w: week must be a Monday date", ErrInvalid)
@@ -225,12 +286,36 @@ func (s *Store) schedulerUpdate(ctx context.Context, w string, m *scheduler.Muta
 		dates := []string{}
 		ids := []string{}
 		for _, session := range d.Sessions {
-			if session.RuleID != "" && !originalRules[session.RuleID] && session.State == "attention" && session.Plan != nil {
+			if session.RuleID != "" && !originalRules[session.RuleID] && session.State == "attention" {
+				dates = append(dates, session.Date)
+				ids = append(ids, session.ConflictIDs...)
+			}
+		}
+		probeBytes, pe := json.Marshal(d)
+		if pe != nil {
+			return scheduler.Week{}, pe
+		}
+		var probe scheduler.Document
+		if pe = json.Unmarshal(probeBytes, &probe); pe != nil {
+			return scheduler.Week{}, pe
+		}
+		probe.GenerateDates(schedulerValidationDates(d, busy), now, busy, sinceInstant)
+		for _, session := range probe.Sessions {
+			if session.RuleID != "" && !originalRules[session.RuleID] && session.State == "attention" {
 				dates = append(dates, session.Date)
 				ids = append(ids, session.ConflictIDs...)
 			}
 		}
 		if len(dates) > 0 {
+			dateSet := map[string]bool{}
+			for _, date := range dates {
+				dateSet[date] = true
+			}
+			dates = dates[:0]
+			for date := range dateSet {
+				dates = append(dates, date)
+			}
+			sort.Strings(dates)
 			var original scheduler.Document
 			if ue := json.Unmarshal(before, &original); ue != nil {
 				return scheduler.Week{}, ue

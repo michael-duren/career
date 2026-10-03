@@ -5,11 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/google/uuid"
-	"github.com/michael-duren/career-strategy/internal/scheduler"
+	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/michael-duren/career-strategy/internal/scheduler"
 )
 
 func TestSchedulerConcurrentReservationsAndStaleDraft(t *testing.T) {
@@ -89,6 +91,173 @@ func TestSchedulerIdleTickDoesNotRotateRevisionOrDirtyOutbox(t *testing.T) {
 		t.Fatalf("idle tick stale-revisioned an open draft: %v", err)
 	}
 }
+
+func TestRuleChecksKnownReservationBeyondGenerationWindow(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	now := time.Date(2026, 1, 5, 8, 0, 0, 0, time.UTC)
+	week := "2026-01-05"
+	reservationWeek := "2026-07-06"
+	w, err := s.SchedulerWeek(ctx, reservationWeek, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	reservation := scheduler.Session{Date: reservationWeek, Assignment: scheduler.Assignment{Title: "One-off"}, Plan: &scheduler.Plan{Start: time.Date(2026, 7, 6, 9, 0, 0, 0, time.UTC), End: time.Date(2026, 7, 6, 10, 0, 0, 0, time.UTC)}}
+	w, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: reservationWeek, Action: "session", Session: &reservation}, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	w, err = s.SchedulerWeek(ctx, week, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	makeRule := func(start string) scheduler.Mutation {
+		return scheduler.Mutation{Revision: w.Revision, Week: week, Action: "rule", Rule: &scheduler.Rule{Weekday: 1, LocalStart: start, DurationMinutes: 60, EffectiveFrom: week, Assignment: scheduler.Assignment{Title: "Weekly"}}}
+	}
+	_, err = s.SchedulerMutate(ctx, makeRule("09:00"), now, nil)
+	var conflict *scheduler.Conflict
+	if !errors.As(err, &conflict) || !strings.Contains(err.Error(), reservationWeek) {
+		t.Fatalf("overlapping recurrence should name future date %s; got %v", reservationWeek, err)
+	}
+	_, err = s.SchedulerMutate(ctx, makeRule("10:00"), now, nil)
+	if err != nil {
+		t.Fatalf("adjacent future reservation should allow recurrence: %v", err)
+	}
+}
+
+func TestRuleChecksDatedBoundaryBeyondGenerationWindow(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	now := time.Date(2026, 1, 5, 8, 0, 0, 0, time.UTC)
+	week := "2026-01-05"
+	w, err := s.SchedulerWeek(ctx, week, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	settings := scheduler.New().Settings
+	settings.Dates["2026-07-06"] = scheduler.DayInterval{Start: "12:00", End: "20:30"}
+	w, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: week, Action: "settings", Settings: &settings}, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: week, Action: "rule", Rule: &scheduler.Rule{Weekday: 1, LocalStart: "09:00", DurationMinutes: 60, EffectiveFrom: week, Assignment: scheduler.Assignment{Title: "Weekly"}}}, now, nil)
+	if err == nil || !strings.Contains(err.Error(), "2026-07-06") {
+		t.Fatalf("recurrence outside a dated day boundary should name 2026-07-06; got %v", err)
+	}
+	doc, err := s.SchedulerDocument(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(doc.Rules) != 0 || len(doc.Sessions) != 0 {
+		t.Fatalf("rejected rule changed saved schedule: rules=%d sessions=%d", len(doc.Rules), len(doc.Sessions))
+	}
+}
+
+func TestRuleChecksOvernightReservationOnSchedulingDate(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	now := time.Date(2026, 1, 5, 8, 0, 0, 0, time.UTC)
+	week := "2026-01-05"
+	reservationDate := "2026-07-06"
+	w, err := s.SchedulerWeek(ctx, week, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	settings := scheduler.New().Settings
+	settings.DefaultDay = scheduler.DayInterval{Start: "09:00", End: "02:00", NextDay: true}
+	w, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: week, Action: "settings", Settings: &settings}, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	w, err = s.SchedulerWeek(ctx, reservationDate, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	reservation := scheduler.Session{Date: reservationDate, Assignment: scheduler.Assignment{Title: "Overnight one-off"}, Plan: &scheduler.Plan{Start: time.Date(2026, 7, 7, 0, 30, 0, 0, time.UTC), End: time.Date(2026, 7, 7, 1, 30, 0, 0, time.UTC)}}
+	w, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: reservationDate, Action: "session", Session: &reservation}, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	w, err = s.SchedulerWeek(ctx, week, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: week, Action: "rule", Rule: &scheduler.Rule{Weekday: 1, LocalStart: "23:45", DurationMinutes: 60, EffectiveFrom: week, Assignment: scheduler.Assignment{Title: "Overnight weekly"}}}, now, nil)
+	var conflict *scheduler.Conflict
+	if !errors.As(err, &conflict) || !strings.Contains(err.Error(), reservationDate) {
+		t.Fatalf("Monday overnight recurrence should collide with Tuesday 00:30 one-off on scheduling date %s; got %v", reservationDate, err)
+	}
+}
+
+func TestRuleChecksMatchingOccurrenceInsideDistantBusySpan(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	now := time.Date(2026, 1, 5, 8, 0, 0, 0, time.UTC)
+	week := "2026-01-05"
+	w, err := s.SchedulerWeek(ctx, week, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	busy := []scheduler.Busy{{ID: "multi-day", Start: time.Date(2026, 7, 6, 8, 0, 0, 0, time.UTC), End: time.Date(2026, 7, 10, 17, 0, 0, 0, time.UTC)}}
+	_, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: week, Action: "rule", Rule: &scheduler.Rule{Weekday: 3, LocalStart: "09:00", DurationMinutes: 60, EffectiveFrom: week, Assignment: scheduler.Assignment{Title: "Weekly"}}}, now, busy)
+	var conflict *scheduler.Conflict
+	if !errors.As(err, &conflict) || !strings.Contains(err.Error(), "2026-07-08") {
+		t.Fatalf("recurrence inside a distant multi-day busy reservation should name 2026-07-08; got %v", err)
+	}
+}
+
+func TestRuleChecksPreservedFutureDateException(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	now := time.Date(2026, 1, 5, 8, 0, 0, 0, time.UTC)
+	week := "2026-01-05"
+	doc := scheduler.New()
+	doc.Rules["existing"] = scheduler.Rule{ID: "existing", Weekday: 1, LocalStart: "08:00", DurationMinutes: 60, EffectiveFrom: week, Assignment: scheduler.Assignment{Title: "Existing weekly"}}
+	plan := &scheduler.Plan{Start: time.Date(2026, 7, 6, 9, 0, 0, 0, time.UTC), End: time.Date(2026, 7, 6, 10, 0, 0, 0, time.UTC)}
+	doc.Sessions["existing:2026-07-06"] = scheduler.Session{ID: "existing:2026-07-06", RuleID: "existing", OccurrenceDate: "2026-07-06", Date: "2026-07-06", Exception: true, Assignment: scheduler.Assignment{Title: "Preserved exception"}, State: "accepted", Plan: plan}
+	raw, err := json.Marshal(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.DB.ExecContext(ctx, "INSERT INTO scheduler_state(id,document,reconciled_at) VALUES(1,$1::jsonb,$2)", raw, now); err != nil {
+		t.Fatal(err)
+	}
+	w, err := s.SchedulerWeek(ctx, week, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	before, err := s.SchedulerDocument(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: week, Action: "rule", Rule: &scheduler.Rule{Weekday: 1, LocalStart: "09:00", DurationMinutes: 60, EffectiveFrom: week, Assignment: scheduler.Assignment{Title: "New weekly"}}}, now, nil)
+	var conflict *scheduler.Conflict
+	if !errors.As(err, &conflict) || !strings.Contains(err.Error(), "2026-07-06") {
+		t.Fatalf("recurrence should conflict with preserved exception occurrence; got %v", err)
+	}
+	after, err := s.SchedulerDocument(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := after.Sessions["existing:2026-07-06"]
+	beforeJSON, err := json.Marshal(before)
+	if err != nil {
+		t.Fatal(err)
+	}
+	afterJSON, err := json.Marshal(after)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(beforeJSON, afterJSON) || !got.Exception || got.RuleID != "existing" || !got.Plan.Start.Equal(plan.Start) || !got.Plan.End.Equal(plan.End) {
+		t.Fatalf("rejected recurrence rewrote future exception/history: rules=%d sessions=%d exception=%+v", len(after.Rules), len(after.Sessions), got)
+	}
+	for id, session := range after.Sessions {
+		if session.Date > scheduler.DateAdd(week, 62) && id != "existing:2026-07-06" {
+			t.Fatalf("validation materialized intervening future occurrence %s", id)
+		}
+	}
+}
+
 func TestImportDoesNotFabricateAlreadySkippedOccurrence(t *testing.T) {
 	s := imported(t)
 	ctx := context.Background()

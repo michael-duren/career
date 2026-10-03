@@ -2,10 +2,11 @@ package scheduler
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const dateLayout = "2006-01-02"
@@ -385,71 +386,102 @@ func (d *Document) Reconcile(goals []Goal, now time.Time) {
 // catch-up keeps working. A zero sinceInstant (never reconciled) leaves the
 // full range unrestricted.
 func (d *Document) Generate(from, to string, now time.Time, busy []Busy, sinceInstant time.Time) {
-	loc, _ := time.LoadLocation(d.Settings.TimeZone)
 	rules := []string{}
 	for id := range d.Rules {
 		rules = append(rules, id)
 	}
 	sort.Strings(rules)
 	for date := from; date <= to; date = DateAdd(date, 1) {
-		t, _ := time.Parse(dateLayout, date)
-		weekday := (int(t.Weekday())+6)%7 + 1
-		for _, id := range rules {
-			r := d.Rules[id]
-			if date < r.EffectiveFrom || (r.EffectiveTo != "" && date > r.EffectiveTo) || weekday != r.Weekday {
-				continue
-			}
-			excepted := false
-			for _, existing := range d.Sessions {
-				if existing.RuleID == r.ID && existing.Exception && (existing.OccurrenceDate == date || existing.OccurrenceDate == "" && existing.Date == date) {
-					excepted = true
-					break
-				}
-			}
-			if excepted {
-				continue
-			}
-			sid := r.ID + ":" + date
-			old, exists := d.Sessions[sid]
-			if exists && (old.Exception || old.Actual != nil || old.Plan != nil && !old.Plan.Start.After(now)) {
-				continue
-			}
-			a, e := d.assignment(r.Assignment, date)
-			if e != nil {
-				continue
-			}
-			s := Session{ID: sid, RuleID: r.ID, OccurrenceDate: date, Date: date, Assignment: a, State: "accepted", ConflictIDs: []string{}}
-			start, e := Local(date, r.LocalStart, loc)
-			if e == nil {
-				day := d.Settings.Interval(date)
-				m, _ := minutes(r.LocalStart)
-				dayStart, _ := minutes(day.Start)
-				if day.NextDay && m < dayStart {
-					start, e = Local(DateAdd(date, 1), r.LocalStart, loc)
-				}
-			}
-			if e != nil {
-				s.State = "attention"
-				s.Attention = e.Error()
-			} else if !exists && !sinceInstant.IsZero() && !start.After(sinceInstant) {
-				continue
-			} else {
-				s.Plan = &Plan{Start: start, End: start.Add(time.Duration(r.DurationMinutes) * time.Minute)}
-			}
-			if s.Plan != nil {
-				if err := d.validateSession(s, busy); err != nil {
-					s.State = "attention"
-					s.Attention = err.Error()
-					if c, ok := err.(*Conflict); ok {
-						s.ConflictIDs = c.IDs
-					}
-				}
-			}
-			d.Sessions[sid] = s
-		}
+		d.generateDate(date, rules, now, busy, sinceInstant)
 	}
 	d.Revalidate(now, busy)
 	d.Finalize(now)
+}
+
+// GenerateDates materializes only the supplied dates. It is used to validate
+// known future reservations and day overrides without extending routine
+// generation beyond its bounded window.
+func (d *Document) GenerateDates(dates []string, now time.Time, busy []Busy, sinceInstant time.Time) {
+	rules := make([]string, 0, len(d.Rules))
+	for id := range d.Rules {
+		rules = append(rules, id)
+	}
+	sort.Strings(rules)
+	unique := make(map[string]bool, len(dates))
+	for _, date := range dates {
+		if ValidDate(date) {
+			unique[date] = true
+		}
+	}
+	ordered := make([]string, 0, len(unique))
+	for date := range unique {
+		ordered = append(ordered, date)
+	}
+	sort.Strings(ordered)
+	for _, date := range ordered {
+		d.generateDate(date, rules, now, busy, sinceInstant)
+	}
+	d.Revalidate(now, busy)
+	d.Finalize(now)
+}
+
+func (d *Document) generateDate(date string, rules []string, now time.Time, busy []Busy, sinceInstant time.Time) {
+	loc, _ := time.LoadLocation(d.Settings.TimeZone)
+	t, _ := time.Parse(dateLayout, date)
+	weekday := (int(t.Weekday())+6)%7 + 1
+	for _, id := range rules {
+		r := d.Rules[id]
+		if date < r.EffectiveFrom || (r.EffectiveTo != "" && date > r.EffectiveTo) || weekday != r.Weekday {
+			continue
+		}
+		excepted := false
+		for _, existing := range d.Sessions {
+			if existing.RuleID == r.ID && existing.Exception && (existing.OccurrenceDate == date || existing.OccurrenceDate == "" && existing.Date == date) {
+				excepted = true
+				break
+			}
+		}
+		if excepted {
+			continue
+		}
+		sid := r.ID + ":" + date
+		old, exists := d.Sessions[sid]
+		if exists && (old.Exception || old.Actual != nil || old.Plan != nil && !old.Plan.Start.After(now)) {
+			continue
+		}
+		a, e := d.assignment(r.Assignment, date)
+		if e != nil {
+			continue
+		}
+		s := Session{ID: sid, RuleID: r.ID, OccurrenceDate: date, Date: date, Assignment: a, State: "accepted", ConflictIDs: []string{}}
+		start, e := Local(date, r.LocalStart, loc)
+		if e == nil {
+			day := d.Settings.Interval(date)
+			m, _ := minutes(r.LocalStart)
+			dayStart, _ := minutes(day.Start)
+			if day.NextDay && m < dayStart {
+				start, e = Local(DateAdd(date, 1), r.LocalStart, loc)
+			}
+		}
+		if e != nil {
+			s.State = "attention"
+			s.Attention = e.Error()
+		} else if !exists && !sinceInstant.IsZero() && !start.After(sinceInstant) {
+			continue
+		} else {
+			s.Plan = &Plan{Start: start, End: start.Add(time.Duration(r.DurationMinutes) * time.Minute)}
+		}
+		if s.Plan != nil {
+			if err := d.validateSession(s, busy); err != nil {
+				s.State = "attention"
+				s.Attention = err.Error()
+				if c, ok := err.(*Conflict); ok {
+					s.ConflictIDs = c.IDs
+				}
+			}
+		}
+		d.Sessions[sid] = s
+	}
 }
 func (d *Document) Revalidate(now time.Time, busy []Busy) {
 	ids := d.sessionIDs()

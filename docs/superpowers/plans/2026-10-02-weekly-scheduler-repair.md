@@ -139,10 +139,10 @@ Issue: R04.
 
 **Files:** `internal/database/scheduler.go`, `internal/scheduler/domain.go`, `internal/database/scheduler_test.go`.
 
-- [ ] Add `TestRuleChecksKnownReservationBeyondGenerationWindow`: create a one-off six months out, then create an otherwise valid unbounded weekly rule that overlaps it. Assert rejection names that future date; adjacent placement succeeds.
-- [ ] Add a distant date-override case and a preserved date exception. Assert future rule validation respects both without rewriting history or expanding every intervening date.
-- [ ] Extend rule validation to occurrence dates implied by known future reservations and dated boundaries outside the normal 62-day generation window. Keep routine background generation bounded.
-- [ ] Run the scheduler database suite with a disposable database. Expected: conflicts in known future dates are reported, and existing exception/revision tests pass. Commit.
+- [x] Add `TestRuleChecksKnownReservationBeyondGenerationWindow`: create a one-off six months out, then create an otherwise valid unbounded weekly rule that overlaps it. Assert rejection names that future date; adjacent placement succeeds.
+- [x] Add a distant date-override case and a preserved date exception. Assert future rule validation respects both without rewriting history or expanding every intervening date.
+- [x] Extend rule validation to occurrence dates implied by known future reservations and dated boundaries outside the normal 62-day generation window. Keep routine background generation bounded.
+- [x] Run the scheduler database suite with a disposable database. Expected: conflicts in known future dates are reported, and existing exception/revision tests pass. Commit.
 
 ## Task 8: Make Google work advance across retries
 
