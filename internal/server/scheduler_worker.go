@@ -177,6 +177,12 @@ func (s *Server) syncSchedulerGoogle(ctx context.Context, now time.Time, periodi
 		}
 	}
 	sort.Strings(pending)
+	pendingCursor, err := s.db.SchedulerGooglePendingCursor(ctx, c.AccountID, c.CalendarID)
+	if err != nil {
+		return err
+	}
+	next := sort.Search(len(pending), func(i int) bool { return pending[i] > pendingCursor })
+	pending = append(append([]string(nil), pending[next:]...), pending[:next]...)
 	cursor := ""
 	reconcile := []string{}
 	if periodic {
@@ -206,12 +212,35 @@ func (s *Server) syncSchedulerGoogle(ctx context.Context, now time.Time, periodi
 		selected = selected[:schedulerGoogleBatchSize]
 	}
 	succeeded := map[string]bool{}
+	attempted := map[string]bool{}
+	var exportErrors []error
 	client := s.googleClient()
 	for _, id := range selected {
 		job := jobs[id]
 		m := job.mapping
 		if err = ctx.Err(); err != nil {
 			return err
+		}
+
+		// Persist the attempted position before the network call. A slow failed
+		// event cannot reclaim the first slot after a cycle deadline or restart.
+		if job.pending {
+			if err = s.db.SaveSchedulerGooglePendingCursor(ctx, c.AccountID, c.CalendarID, id); err != nil {
+				return err
+			}
+		}
+		if periodic && !job.remove {
+			if err = s.db.QueueSchedulerGoogleMapping(ctx, m); err != nil {
+				return err
+			}
+			attempted[id] = true
+			for len(reconcile) > 0 && attempted[reconcile[0]] {
+				cursor = reconcile[0]
+				reconcile = reconcile[1:]
+			}
+			if err = s.db.SaveSchedulerGoogleReconciliationCursor(ctx, c.AccountID, c.CalendarID, cursor); err != nil {
+				return err
+			}
 		}
 		if job.remove {
 			err = client.DeleteEvent(ctx, token, m.CalendarID, m.EventID)
@@ -234,37 +263,44 @@ func (s *Server) syncSchedulerGoogle(ctx context.Context, now time.Time, periodi
 				err = s.db.CompleteSchedulerGoogleMapping(ctx, m)
 			}
 		}
+
 		if err != nil {
 			s.recordGoogleError(ctx, &c, err)
-			return err
-		}
-		succeeded[id] = true
-		if periodic {
-			// Only advance across a contiguous completed prefix of the reconciliation set.
-			for len(reconcile) > 0 && succeeded[reconcile[0]] {
-				cursor = reconcile[0]
-				reconcile = reconcile[1:]
-			}
-			if err = s.db.SaveSchedulerGoogleReconciliationCursor(ctx, c.AccountID, c.CalendarID, cursor); err != nil {
+			if errors.Is(err, scheduler.ErrGoogleReconnect) || ctx.Err() != nil {
 				return err
 			}
+			exportErrors = append(exportErrors, err)
+			continue
 		}
+		succeeded[id] = true
+
 	}
 	if periodic && len(reconcile) == 0 {
 		if err = s.db.SaveSchedulerGoogleReconciliationCursor(ctx, c.AccountID, c.CalendarID, ""); err != nil {
 			return err
 		}
 	}
-	remaining := false
+	remaining := len(exportErrors) > 0
 	for _, id := range pending {
 		if !succeeded[id] {
 			remaining = true
 			break
 		}
 	}
+	current, err := s.db.SchedulerGoogle(ctx)
+	if err != nil {
+		return err
+	}
+	if current.Revision != c.Revision {
+		return errors.New("Google connection changed during export")
+	}
+	c = current
 	c.Error = ""
 	if availabilityErr != nil {
 		c.Error = availabilityErr.Error()
+	}
+	if len(exportErrors) > 0 {
+		c.Error = exportErrors[len(exportErrors)-1].Error()
 	}
 	if err = s.db.UpdateSchedulerGoogleHealth(ctx, &c); err != nil {
 		return err
@@ -274,5 +310,5 @@ func (s *Server) syncSchedulerGoogle(ctx context.Context, now time.Time, periodi
 			return err
 		}
 	}
-	return availabilityErr
+	return errors.Join(append(exportErrors, availabilityErr)...)
 }

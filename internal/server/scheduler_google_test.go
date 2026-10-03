@@ -24,6 +24,7 @@ type googleFixture struct {
 	writes             []string
 	deletes            []string
 	busyCalls          int
+	failingID          string
 	writeFailureStatus int
 	failWrite          int
 	failBusy           bool
@@ -67,7 +68,7 @@ func newGoogleFixture(t *testing.T, count int) *googleFixture {
 				return
 			}
 			f.writes = append(f.writes, event.ID)
-			if f.failWrite > 0 && len(f.writes) == f.failWrite {
+			if f.failWrite > 0 && len(f.writes) == f.failWrite || f.failingID == event.ID {
 				status := f.writeFailureStatus
 				if status == 0 {
 					status = 503
@@ -643,7 +644,7 @@ func TestSchedulerGoogleWorkerAndDisconnectShareAuthorityLock(t *testing.T) {
 	}
 }
 
-func TestSchedulerGooglePeriodicFailureKeepsCompletedCursor(t *testing.T) {
+func TestSchedulerGooglePeriodicFailureQueuesRetryAndAdvancesCursor(t *testing.T) {
 	f := newGoogleFixture(t, 27)
 	for i := 0; i < 3; i++ {
 		f.sync(t, false)
@@ -654,8 +655,8 @@ func TestSchedulerGooglePeriodicFailureKeepsCompletedCursor(t *testing.T) {
 		t.Fatal("expected periodic partial failure")
 	}
 	cursor, err := f.s.db.SchedulerGoogleReconciliationCursor(context.Background(), "account", "destination")
-	if err != nil || cursor != "session-004" {
-		t.Fatalf("successful reconciliation prefix lost: %s %v", cursor, err)
+	if err != nil || cursor != "session-019" {
+		t.Fatalf("attempted reconciliation prefix lost: %s %v", cursor, err)
 	}
 	f.failWrite = 0
 	before = len(f.writes)
@@ -663,7 +664,6 @@ func TestSchedulerGooglePeriodicFailureKeepsCompletedCursor(t *testing.T) {
 	if f.writes[before] != scheduler.GoogleEventID("account", "session-005") {
 		t.Fatal("periodic retry restarted completed prefix")
 	}
-	f.sync(t, true)
 	cursor, err = f.s.db.SchedulerGoogleReconciliationCursor(context.Background(), "account", "destination")
 	if err != nil || cursor != "" {
 		t.Fatalf("full pass cursor did not reset: %s %v", cursor, err)
@@ -698,5 +698,52 @@ func TestSchedulerGoogleRevocationPersistsAfterConcurrentHealthWrite(t *testing.
 	f.sync(t, true)
 	if len(f.writes) != before {
 		t.Fatal("revoked authorization retried")
+	}
+}
+
+func TestSchedulerGooglePersistentFirstFailureCannotStarveLaterWork(t *testing.T) {
+	f := newGoogleFixture(t, 47)
+	for i := 0; i < 47; i++ {
+		id := scheduler.GoogleEventID("account", fmt.Sprintf("session-%03d", i))
+		f.events[id] = scheduler.GoogleEvent{ID: id}
+	}
+	first := scheduler.GoogleEventID("account", "session-000")
+	f.failingID = first
+	for cycle := 0; cycle < 4; cycle++ {
+		before := len(f.writes)
+		_ = f.s.syncSchedulerGoogle(context.Background(), f.now, cycle%2 == 1)
+		if len(f.writes)-before > 20 {
+			t.Fatalf("failed attempts escaped batch bound: %d", len(f.writes)-before)
+		}
+	}
+	for i := 1; i < 47; i++ {
+		id := fmt.Sprintf("session-%03d", i)
+		if f.events[scheduler.GoogleEventID("account", id)].Summary != id {
+			t.Fatalf("healthy %s starved behind persistently failing first event", id)
+		}
+	}
+	mappings, err := f.s.db.SchedulerGoogleMappings(context.Background(), "account")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, m := range mappings {
+		if m.SessionID == "session-000" && m.SyncedFingerprint != "" {
+			t.Fatal("failed event marked successful")
+		}
+	}
+	gen, err := f.s.db.SchedulerGoogleOutbox(context.Background())
+	if err != nil || gen == 0 {
+		t.Fatalf("failed event lost pending outbox: %d %v", gen, err)
+	}
+	f.failingID = ""
+	for i := 0; i < 4; i++ {
+		f.sync(t, false)
+	}
+	if f.events[first].Summary != "session-000" {
+		t.Fatal("recovered first event never synchronized")
+	}
+	gen, err = f.s.db.SchedulerGoogleOutbox(context.Background())
+	if err != nil || gen != 0 {
+		t.Fatalf("recovered outbox=%d %v", gen, err)
 	}
 }

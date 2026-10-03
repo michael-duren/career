@@ -7,6 +7,7 @@ CREATE TABLE scheduler_google_reconciliation (
  account_id text NOT NULL,
  calendar_id text NOT NULL,
  after_session text NOT NULL DEFAULT '',
+ pending_after_session text NOT NULL DEFAULT '',
  PRIMARY KEY (account_id, calendar_id)
 );
 

@@ -235,3 +235,34 @@ func (s *Store) RecordSchedulerGoogleError(ctx context.Context, c *SchedulerGoog
 	}
 	return err
 }
+
+func (s *Store) SchedulerGooglePendingCursor(ctx context.Context, account, calendar string) (string, error) {
+	var cursor string
+	err := s.DB.QueryRowContext(ctx, `SELECT pending_after_session FROM scheduler_google_reconciliation WHERE account_id=$1 AND calendar_id=$2`, account, calendar).Scan(&cursor)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", nil
+	}
+	return cursor, err
+}
+func (s *Store) SaveSchedulerGooglePendingCursor(ctx context.Context, account, calendar, cursor string) error {
+	_, err := s.DB.ExecContext(ctx, `INSERT INTO scheduler_google_reconciliation(account_id,calendar_id,pending_after_session) VALUES($1,$2,$3) ON CONFLICT(account_id,calendar_id) DO UPDATE SET pending_after_session=$3`, account, calendar, cursor)
+	return err
+}
+
+// Reconciliation invalidates successful progress before a forced write, so a
+// crash or provider failure becomes pending ordinary work. This short local
+// transaction queues work without including any provider request.
+func (s *Store) QueueSchedulerGoogleMapping(ctx context.Context, m SchedulerGoogleMapping) error {
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	if _, err = tx.ExecContext(ctx, `UPDATE scheduler_google_mappings SET synced_fingerprint='' WHERE account_id=$1 AND session_id=$2 AND calendar_id=$3 AND event_id=$4`, m.AccountID, m.SessionID, m.CalendarID, m.EventID); err != nil {
+		return err
+	}
+	if _, err = tx.ExecContext(ctx, `INSERT INTO scheduler_google_outbox(id) VALUES(1) ON CONFLICT(id) DO NOTHING`); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
