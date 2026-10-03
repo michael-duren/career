@@ -58,7 +58,10 @@
     scala: "Scala",
     swift: "Swift",
     typescript: "TypeScript",
+    text: "Plain text",
   };
+  // PASTE_LANGUAGES are the choices for code pasted into the log panel.
+  const PASTE_LANGUAGES = ["python3", "java", "cpp", "c", "csharp", "javascript", "typescript", "go", "rust", "kotlin", "swift", "ruby", "scala", "php", "dart", "elixir", "erlang", "racket", "text"];
 
   // normalizeComplexity returns the canonical spelling of a stated
   // complexity, "" when nothing is stated, or null when it is not O(...) in
@@ -100,6 +103,26 @@
     if (typeof data.status !== "string" || data.status.length > MAX_STATUS || CONTROL.test(data.status)) return null;
     if (typeof data.code !== "string" || data.code === "" || !validCode(data.code, data.lang)) return null;
     return { slug: data.slug, submissionId: data.submissionId, status: data.status, lang: data.lang, code: data.code };
+  }
+
+  // pastedCode checks code pasted into the log panel. It returns
+  // {capture: null} when nothing was pasted, {capture} shaped like a
+  // captured submission otherwise, or {error}.
+  function pastedCode(code, lang, slug) {
+    if (typeof code !== "string" || code.trim() === "") return { capture: null };
+    if (!PASTE_LANGUAGES.includes(lang)) return { error: "Choose the pasted code's language." };
+    if (code.includes("\u0000")) return { error: "The pasted code contains a null character." };
+    if (utf8Bytes(code) > MAX_CODE_BYTES) return { error: `The pasted code is over ${formatBytes(MAX_CODE_BYTES)}.` };
+    return { capture: { slug, submissionId: "", status: "Pasted", lang, code } };
+  }
+
+  // prefillFrom is the log panel's prefill from a problem timer: active
+  // minutes, the outcome they suggest (or outcome when given), open
+  // minutes, and whether help was opened.
+  function prefillFrom(timer, now, outcome) {
+    const t = timer && typeof timer === "object" ? timer : { startedAt: now, activeMs: 0 };
+    const minutes = activeMinutes(t, now);
+    return { outcome: outcome || inferOutcome(minutes), minutes, openMinutes: elapsedMinutes(openedAt(t), now), assisted: Boolean(t.assisted) };
   }
 
   function languageLabel(lang) {
@@ -759,6 +782,9 @@
     cleanCapture,
     languageLabel,
     formatBytes,
+    PASTE_LANGUAGES,
+    pastedCode,
+    prefillFrom,
     attemptProblem,
     buildAttempt,
     cleanMetadata,

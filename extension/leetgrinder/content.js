@@ -192,10 +192,19 @@
       showError(`Accepted, but Leetgrinder could not be reached: ${found.error}`, submissionId);
       return;
     }
-    const now = Date.now();
-    const timer = res.ok ? res.data : { startedAt: now, activeMs: 0, assisted: false };
-    const minutes = lib.activeMinutes(timer, now);
-    showPanel(state, found.info, { outcome: lib.inferOutcome(minutes), minutes, openMinutes: lib.elapsedMinutes(lib.openedAt(timer), now), assisted: Boolean(timer.assisted) }, captureFor(state.slug, submissionId));
+    showPanel(state, found.info, lib.prefillFrom(res.ok ? res.data : null, Date.now()), captureFor(state.slug, submissionId));
+  }
+
+  // logManually opens the log panel from the banner, for an attempt solved
+  // elsewhere or not submitted, prefilled from the problem timer. The
+  // latest captured submission, if any, is offered as with the nudge.
+  async function logManually(state) {
+    if (current !== state || busy()) return;
+    const found = await state.lookup;
+    if (current !== state || busy() || found.status !== "ok") return;
+    const res = await send({ type: "timer:get", slug: state.slug });
+    if (current !== state || busy()) return;
+    showPanel(state, found.info, lib.prefillFrom(res.ok ? res.data : null, Date.now()), captureFor(state.slug));
   }
 
   window.addEventListener("message", (event) => {
@@ -238,6 +247,9 @@
     button:disabled { opacity: .6; cursor: default; }
     .status { min-height: 1.5em; margin: 8px 0 0; font-size: 13px; }
     .status.error { color: #ffb4a8; }
+    details { margin-bottom: 10px; }
+    summary { margin-bottom: 6px; cursor: pointer; }
+    textarea[name=pastedCode] { min-height: 96px; font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; }
   `;
 
   function el(tag, props = {}, children = []) {
@@ -289,7 +301,11 @@
     .pill:hover, .pill:focus-visible { border-color: #bee48a; outline: none; }
     .label { color: #bee48a; font-weight: 600; }
     .summary { color: #a7b4a9; }
-    .fixed { position: fixed; top: 64px; right: 20px; z-index: 2147483646; }
+    .bar { display: inline-flex; gap: 6px; align-items: center; }
+    .bar.fixed { position: fixed; top: 64px; right: 20px; z-index: 2147483646; }
+    .log { margin: 6px 0; padding: 4px 10px; border: 1px solid #56704a; border-radius: 999px; background: #191d1b; color: #bee48a;
+      cursor: pointer; font: 600 12px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .log:hover, .log:focus-visible { border-color: #bee48a; outline: none; }
   `;
   // banner is the mounted pill: {host, slug, text}.
   let banner = null;
@@ -324,12 +340,15 @@
     removeBanner();
     const host = el("div", { id: "leetgrinder-banner-root" });
     const root = host.attachShadow({ mode: "closed" });
-    const pill = el("button", { type: "button", className: anchor ? "pill" : "pill fixed", title: "Open this problem's history in Leetgrinder" }, [
+    const pill = el("button", { type: "button", className: "pill", title: "Open this problem's history in Leetgrinder" }, [
       el("span", { className: "label", text: view.label }),
       ...(view.summary ? [el("span", { className: "summary", text: view.summary })] : []),
     ]);
     pill.addEventListener("click", () => send({ type: "open-history", slug: state.slug }));
-    root.append(el("style", { text: BANNER_STYLE }), pill);
+    // Logs an attempt without a submission, such as one solved elsewhere.
+    const log = el("button", { type: "button", className: "log", text: "Log attempt", title: "Log an attempt on this problem to Leetgrinder" });
+    log.addEventListener("click", () => logManually(state));
+    root.append(el("style", { text: BANNER_STYLE }), el("div", { className: anchor ? "bar" : "bar fixed" }, [pill, log]));
     if (anchor) anchor.after(host);
     else document.documentElement.append(host);
     banner = { host, slug: state.slug, text, anchored: Boolean(anchor) };
@@ -356,9 +375,7 @@
     const later = el("button", { type: "button", text: "Keep going" });
     unfinished.addEventListener("click", async () => {
       const res = await send({ type: "timer:get", slug });
-      const now = Date.now();
-      const timer = res.ok ? res.data : { startedAt: now, activeMs: 0 };
-      showPanel(state, info, { outcome: "unfinished", minutes: lib.activeMinutes(timer, now), openMinutes: lib.elapsedMinutes(lib.openedAt(timer), now), assisted: Boolean(res.ok && res.data.assisted) }, captureFor(slug));
+      showPanel(state, info, lib.prefillFrom(res.ok ? res.data : null, Date.now(), "unfinished"), captureFor(slug));
     });
     later.addEventListener("click", closeUI);
     root.append(
@@ -428,7 +445,21 @@
     const codeRow = captured
       ? [el("label", { className: "check" }, [includeCode, `Code captured (${lib.languageLabel(captured.lang)}, ${lib.formatBytes(lib.utf8Bytes(captured.code))})`])]
       : [];
-    const fields = [outcome, minutes, ...time.fields, ...space.fields, approach, assisted, wantsReview, includeCode, notes];
+    // Code written elsewhere (an IDE, a whiteboard transcript) can be pasted;
+    // it replaces any captured code.
+    const pasteLang = el(
+      "select",
+      { name: "pasteLanguage", "aria-label": "Pasted code language" },
+      lib.PASTE_LANGUAGES.map((l) => el("option", { value: l, text: lib.languageLabel(l) })),
+    );
+    if (captured && lib.PASTE_LANGUAGES.includes(captured.lang)) pasteLang.value = captured.lang;
+    const pasteCode = el("textarea", { name: "pastedCode", spellcheck: false, placeholder: "Paste your solution", "aria-label": "Pasted code" });
+    const pasteRow = el("details", {}, [
+      el("summary", { className: "muted", text: captured ? "Paste code instead" : "Paste code" }),
+      el("label", {}, ["Language", pasteLang]),
+      el("label", {}, ["Code", pasteCode]),
+    ]);
+    const fields = [outcome, minutes, ...time.fields, ...space.fields, approach, assisted, wantsReview, includeCode, pasteLang, pasteCode, notes];
     // After an ambiguous failure the server may have saved the entry, so the
     // fields lock and retries resend exactly the same attempt.
     let locked = null;
@@ -444,6 +475,7 @@
       el("div", { className: "row" }, [time.node, space.node]),
       required,
       ...codeRow,
+      pasteRow,
       el("label", {}, ["Approach", approach]),
       el("label", { className: "check" }, [assisted, "Used a hint or solution"]),
       el("label", { className: "check" }, [wantsReview, "Review this again soon"]),
@@ -462,6 +494,14 @@
     });
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
+      const pasted = locked ? { capture: null } : lib.pastedCode(pasteCode.value, pasteLang.value, slug);
+      if (pasted.error) {
+        status.className = "status error";
+        status.textContent = pasted.error;
+        return;
+      }
+      const source = pasted.capture || captured;
+      const withCode = pasted.capture ? true : includeCode.checked;
       const attempt =
         locked ||
         lib.buildAttempt(
@@ -480,8 +520,8 @@
             timeComplexity: time.value(),
             spaceComplexity: space.value(),
           },
-          captured,
-          includeCode.checked,
+          source,
+          withCode,
         );
       const problem = lib.attemptProblem(attempt);
       if (problem || !lib.cleanAttempt(attempt)) {
@@ -489,7 +529,7 @@
         status.textContent = problem || "The attempt is too large to send.";
         return;
       }
-      const droppedCode = Boolean(captured && includeCode.checked && !attempt.code);
+      const droppedCode = Boolean(source && withCode && !attempt.code);
       submit.disabled = true;
       for (const f of fields) f.disabled = true;
       status.className = "status";

@@ -457,3 +457,33 @@ test("a forward clock step over 30 minutes expires the timer like sleep", () => 
   assert.ok(lib.timerExpired(timer, T0 + MIN + 31 * MIN));
   assert.ok(!lib.timerExpired(timer, T0 + MIN + 29 * MIN));
 });
+
+test("pastedCode", () => {
+  assert.deepEqual(lib.pastedCode("", "python3", "two-sum"), { capture: null });
+  assert.deepEqual(lib.pastedCode("  \n ", "python3", "two-sum"), { capture: null });
+  assert.deepEqual(lib.pastedCode("def f(): pass", "python3", "two-sum"), { capture: { slug: "two-sum", submissionId: "", status: "Pasted", lang: "python3", code: "def f(): pass" } });
+  assert.match(lib.pastedCode("x", "brainfuck", "two-sum").error, /language/);
+  assert.match(lib.pastedCode("a\u0000b", "text", "two-sum").error, /null character/);
+  assert.match(lib.pastedCode("x".repeat(lib.MAX_CODE_BYTES + 1), "text", "two-sum").error, /over 64/);
+  assert.ok(lib.pastedCode("é".repeat(lib.MAX_CODE_BYTES / 2), "text", "two-sum").capture);
+  // Every choice is a language the app accepts and has a label.
+  for (const l of lib.PASTE_LANGUAGES) {
+    assert.ok(lib.cleanAttempt({ id: "00000000-0000-4000-8000-000000000001", problemSlug: "two-sum", outcome: "unfinished", minutes: 5, assisted: false, notes: "", isReview: false, timeComplexity: "", spaceComplexity: "", code: "x", codeLanguage: l }), l);
+    assert.notEqual(lib.languageLabel(l), l);
+  }
+  // Pasted code goes into the attempt like captured code.
+  const pasted = lib.pastedCode("print(1)", "python3", "two-sum").capture;
+  const a = lib.buildAttempt({ id: "00000000-0000-4000-8000-000000000001", problemSlug: "two-sum", outcome: "unfinished", minutes: 5, assisted: false, notes: "", isReview: false, timeComplexity: "", spaceComplexity: "" }, pasted, true);
+  assert.equal(a.code, "print(1)");
+  assert.equal(a.codeLanguage, "python3");
+});
+
+test("prefillFrom", () => {
+  const now = 10_000_000;
+  const timer = { startedAt: now - 40 * 60000, openedAt: now - 40 * 60000, activeMs: 30 * 60000, assisted: true };
+  assert.deepEqual(lib.prefillFrom(timer, now), { outcome: "struggled", minutes: 30, openMinutes: 40, assisted: true });
+  assert.deepEqual(lib.prefillFrom({ ...timer, activeMs: 10 * 60000, assisted: false }, now), { outcome: "solved", minutes: 10, openMinutes: 40, assisted: false });
+  assert.equal(lib.prefillFrom(timer, now, "unfinished").outcome, "unfinished");
+  // Without a timer (the app or worker unreachable) the panel still opens.
+  assert.deepEqual(lib.prefillFrom(null, now), { outcome: "solved", minutes: 1, openMinutes: 1, assisted: false });
+});
