@@ -133,3 +133,48 @@ func TestTrendsSectionRenders(t *testing.T) {
 		t.Fatalf("empty trends: %s %v", out.String(), err)
 	}
 }
+
+func TestUpcomingReviews(t *testing.T) {
+	settings := DefaultSettings()
+	settings.Timezone = "UTC"
+	date := time.Date(2026, 10, 14, 0, 0, 0, 0, time.UTC)
+	card := func(slug string, due time.Time, flagged bool) Card {
+		c := Card{Problem: Problem{Slug: slug}, Due: due, Reviews: 1}
+		if flagged {
+			c.Flag = &Flag{}
+		}
+		return c
+	}
+	today := Today{
+		Settings: settings,
+		Date:     date,
+		Now:      date.Add(12 * time.Hour),
+		Cards: []Card{
+			card("later-5", date.AddDate(0, 0, 5), false),
+			card("flagged", date.Add(-time.Hour), true),
+			card("later-2", date.AddDate(0, 0, 2).Add(time.Hour), false),
+			// Today's pick ranks below the flagged card in DueCards order,
+			// and a second pick was rescheduled by today's attempt.
+			card("pick", date.Add(-time.Hour), false),
+			card("pick-done", date.AddDate(0, 0, 4), false),
+			card("later-1", date.AddDate(0, 0, 1).Add(time.Hour), false),
+		},
+		Reviews: []ReviewItem{{Slot: 1, Problem: Problem{Slug: "pick"}}, {Slot: 2, Problem: Problem{Slug: "pick-done"}, Done: true}},
+	}
+	slugs := func(cards []Card) string {
+		var out []string
+		for _, c := range cards {
+			out = append(out, c.Problem.Slug)
+		}
+		return strings.Join(out, " ")
+	}
+	for days, want := range map[int]string{
+		0: "pick pick-done flagged",
+		3: "pick pick-done flagged later-1 later-2",
+		5: "pick pick-done flagged later-1 later-2 later-5",
+	} {
+		if got := slugs(UpcomingReviews(today, days)); got != want {
+			t.Errorf("days %d: %s, want %s", days, got, want)
+		}
+	}
+}

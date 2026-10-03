@@ -20,7 +20,7 @@ func TestMCPLeetgrinderTodos(t *testing.T) {
 	if status != 200 {
 		t.Fatal(status, tokens)
 	}
-	call := connectMCP(t, h, tokens["access_token"].(string), 14)
+	call := connectMCP(t, h, tokens["access_token"].(string), 18)
 	set, failed := call("create_leetgrinder_todo_set", map[string]any{"title": "Graphs", "problems": []string{"https://leetcode.com/problems/number-of-islands/", "clone-graph"}})
 	if failed || set["problemCount"] != float64(2) {
 		t.Fatal(set)
