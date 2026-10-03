@@ -1072,6 +1072,17 @@ test('geometry keeps adjacent short blocks selectable and outside-hours actuals 
   await expect(page.getByRole('dialog',{name:'Session editor'})).toBeVisible();
   await page.getByRole('button',{name:'Discard draft'}).click();
  }
+ await page.setViewportSize({width:390,height:844});
+ const touch=await page.context().newCDPSession(page); await touch.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:1});
+ for (const id of ['short one','short two']) {
+  const block=page.locator(`[data-session-id="${id}"]`); const box=await visibleBox(block); expect(box.height).toBe(15);
+  const topEdge=(await block.locator('.scheduler-edge-top').boundingBox())!, bottomEdge=(await block.locator('.scheduler-edge-bottom').boundingBox())!;
+  expect(topEdge.height).toBe(2); expect(bottomEdge.height).toBe(2); expect(topEdge.y+topEdge.height).toBeLessThan(bottomEdge.y);
+  await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:box.x+box.width/2,y:box.y+box.height/2,id:1}]});
+  await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await expect(page.getByRole('dialog',{name:'Session editor'})).toBeVisible(); await page.getByRole('button',{name:'Discard draft'}).click();
+ }
+ await touch.detach(); await page.setViewportSize({width:1280,height:1400});
  for(const id of ['early actual','late actual']) { const block=page.locator(`[data-session-id="${id}"]`); await block.scrollIntoViewIfNeeded(); await expect(block).toBeInViewport(); expect((await block.boundingBox())!.height).toBe(60); }
 });
 test('invalid dated column remains visible and warning opens its affected editable session', async ({page,request})=>{
