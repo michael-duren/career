@@ -61,7 +61,7 @@
     text: "Plain text",
   };
   // PASTE_LANGUAGES are the choices for code pasted into the log panel.
-  const PASTE_LANGUAGES = ["python3", "java", "cpp", "c", "csharp", "javascript", "typescript", "go", "rust", "kotlin", "swift", "ruby", "scala", "php", "dart", "elixir", "erlang", "racket", "text"];
+  const PASTE_LANGUAGES = ["python3", "java", "cpp", "c", "csharp", "javascript", "typescript", "golang", "rust", "kotlin", "swift", "ruby", "scala", "php", "dart", "elixir", "erlang", "racket", "text"];
 
   // normalizeComplexity returns the canonical spelling of a stated
   // complexity, "" when nothing is stated, or null when it is not O(...) in
@@ -114,6 +114,14 @@
     if (code.includes("\u0000")) return { error: "The pasted code contains a null character." };
     if (utf8Bytes(code) > MAX_CODE_BYTES) return { error: `The pasted code is over ${formatBytes(MAX_CODE_BYTES)}.` };
     return { capture: { slug, submissionId: "", status: "Pasted", lang, code } };
+  }
+
+  // codeSource picks the code an attempt carries: pasted code when there is
+  // some (sent even if the captured code is unticked), else the captured
+  // submission when ticked.
+  function codeSource(pasted, captured, includeCaptured) {
+    if (pasted) return { source: pasted, withCode: true };
+    return { source: captured || null, withCode: Boolean(captured && includeCaptured) };
   }
 
   // prefillFrom is the log panel's prefill from a problem timer: active
@@ -784,6 +792,7 @@
     formatBytes,
     PASTE_LANGUAGES,
     pastedCode,
+    codeSource,
     prefillFrom,
     attemptProblem,
     buildAttempt,

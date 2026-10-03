@@ -199,11 +199,13 @@
   // elsewhere or not submitted, prefilled from the problem timer. The
   // latest captured submission, if any, is offered as with the nudge.
   async function logManually(state) {
-    if (current !== state || busy()) return;
+    // An open log panel keeps what was typed in it; the button does nothing.
+    const blocked = () => current !== state || busy() || Boolean(ui && ui.panel);
+    if (blocked()) return;
     const found = await state.lookup;
-    if (current !== state || busy() || found.status !== "ok") return;
+    if (blocked() || found.status !== "ok") return;
     const res = await send({ type: "timer:get", slug: state.slug });
-    if (current !== state || busy()) return;
+    if (blocked()) return;
     showPanel(state, found.info, lib.prefillFrom(res.ok ? res.data : null, Date.now()), captureFor(state.slug));
   }
 
@@ -413,6 +415,7 @@
   function showPanel(state, info, prefill, captured) {
     const slug = state.slug;
     const root = mount();
+    ui.panel = true;
     // One id per panel: retries of the same entry are idempotent on the server.
     let id = crypto.randomUUID();
     const outcome = el("select", { name: "outcome" }, [
@@ -447,11 +450,10 @@
       : [];
     // Code written elsewhere (an IDE, a whiteboard transcript) can be pasted;
     // it replaces any captured code.
-    const pasteLang = el(
-      "select",
-      { name: "pasteLanguage", "aria-label": "Pasted code language" },
-      lib.PASTE_LANGUAGES.map((l) => el("option", { value: l, text: lib.languageLabel(l) })),
-    );
+    const pasteLang = el("select", { name: "pasteLanguage", "aria-label": "Pasted code language" }, [
+      el("option", { value: "", text: "Choose…" }),
+      ...lib.PASTE_LANGUAGES.map((l) => el("option", { value: l, text: lib.languageLabel(l) })),
+    ]);
     if (captured && lib.PASTE_LANGUAGES.includes(captured.lang)) pasteLang.value = captured.lang;
     const pasteCode = el("textarea", { name: "pastedCode", spellcheck: false, placeholder: "Paste your solution", "aria-label": "Pasted code" });
     const pasteRow = el("details", {}, [
@@ -463,6 +465,8 @@
     // After an ambiguous failure the server may have saved the entry, so the
     // fields lock and retries resend exactly the same attempt.
     let locked = null;
+    // droppedCode is set when the captured code was too large to send.
+    let droppedCode = false;
     // queued is set while the outbox holds this panel's attempt, and
     // restarted once the timer was restarted for it.
     let queued = false;
@@ -500,8 +504,7 @@
         status.textContent = pasted.error;
         return;
       }
-      const source = pasted.capture || captured;
-      const withCode = pasted.capture ? true : includeCode.checked;
+      const { source, withCode } = lib.codeSource(pasted.capture, captured, includeCode.checked);
       const attempt =
         locked ||
         lib.buildAttempt(
@@ -529,7 +532,13 @@
         status.textContent = problem || "The attempt is too large to send.";
         return;
       }
-      const droppedCode = Boolean(source && withCode && !attempt.code);
+      if (pasted.capture && !attempt.code) {
+        status.className = "status error";
+        status.textContent = "The pasted code is too large to send. Shorten it or leave it out.";
+        return;
+      }
+      // A retry resends the locked attempt, so it keeps the first note.
+      if (!locked) droppedCode = Boolean(source && withCode && !attempt.code);
       submit.disabled = true;
       for (const f of fields) f.disabled = true;
       status.className = "status";
@@ -540,7 +549,7 @@
       const res = await send({ type: "attempt", attempt });
       panel.locked = Boolean(locked);
       if (res.ok) {
-        panel.locked = false;
+        panel.locked = true;
         const kind = lib.kindLabel(res.data && res.data.kind);
         const logged = kind ? `Logged to Leetgrinder as ${kind}.` : "Logged to Leetgrinder.";
         status.textContent = droppedCode ? `${logged} The code was too large to send.` : logged;
@@ -550,8 +559,10 @@
           if (current === state) showBanner(state, found);
         });
         // Start a fresh timer for the next attempt on this problem, unless
-        // queuing it already did.
+        // queuing it already did. The panel stays locked until then, so a
+        // new panel cannot reuse the minutes just logged.
         if (!restarted) await send({ type: "timer:restart", slug });
+        panel.locked = false;
         setTimeout(() => {
           if (ui && ui.root === root) closeUI();
         }, 1500);
