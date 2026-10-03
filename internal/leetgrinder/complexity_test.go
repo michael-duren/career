@@ -155,7 +155,7 @@ func TestAttemptFormKeepsComplexityDraft(t *testing.T) {
 }
 
 // TestPasteLanguagesHaveLabels keeps the extension's paste language list,
-// in lib.js, in step with the labels the app shows for submitted code.
+// in lib.js, in step with the app: each is accepted and has a label.
 func TestPasteLanguagesHaveLabels(t *testing.T) {
 	src, err := os.ReadFile("../../extension/leetgrinder/lib.js")
 	if err != nil {
@@ -170,8 +170,13 @@ func TestPasteLanguagesHaveLabels(t *testing.T) {
 		t.Fatal("PASTE_LANGUAGES is empty")
 	}
 	for _, m := range langs {
-		if lang := string(m[1]); LanguageLabel(lang) == lang {
+		lang := string(m[1])
+		if LanguageLabel(lang) == lang {
 			t.Errorf("paste language %q has no label in languageLabels", lang)
+		}
+		a := Attempt{Outcome: "unfinished", Code: "x", CodeLanguage: lang}
+		if err := a.NormalizeDetails(); err != nil {
+			t.Errorf("paste language %q rejected: %v", lang, err)
 		}
 	}
 }

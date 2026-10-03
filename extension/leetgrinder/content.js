@@ -20,11 +20,15 @@
   // once read; known is the metadata NeetCode's slug table has, if any.
   let current = null;
   let lastPath = "";
-  // ui is the mounted panel: {host, root, locked}. A locked panel holds an
-  // attempt that may already be saved and must stay until it is retried.
+  // ui is the mounted panel: {host, root, locked, panel, saved}. A locked
+  // panel holds an attempt that may already be saved and must stay until it
+  // is retried. panel is how a log panel was opened ("accepted", "nudge" or
+  // "manual"), unset for other panels; saved is set once its attempt is
+  // saved and the panel is only waiting to close.
   let ui = null;
   // capture is the latest validated submission on the open problem:
-  // {slug, submissionId, status, lang, code} (see lib.cleanCapture).
+  // {slug, submissionId, status, lang, code} (see lib.cleanCapture). It is
+  // cleared once logged with an attempt, so a later attempt never carries it.
   let capture = null;
 
   // captureFor picks the code that produced the result being logged: the
@@ -175,24 +179,34 @@
     showNudge(state, found.info);
   }
 
+  // manualOpen reports a log panel opened from the banner, whose typed or
+  // pasted input an Accepted submission must not replace.
+  const manualOpen = () => Boolean(ui && ui.panel === "manual" && !ui.saved);
+
   async function onAccepted(submissionId) {
     const state = current;
-    if (!state || busy()) return;
+    if (!state || busy() || manualOpen()) return;
     // Refresh so review status reflects anything logged since page load.
     state.lookup = lookup(state.slug);
     const found = await state.lookup;
-    if (current !== state || busy()) return;
+    if (current !== state || busy() || manualOpen()) return;
     showBanner(state, found);
     if (found.status === "ok") describe(state, found.info);
     // Accepted ends the nudge window even if the panel is dismissed or the
     // app is unreachable.
     const res = await send({ type: "timer:update", slug: state.slug, patch: { nudged: true } });
-    if (current !== state || busy()) return;
+    if (current !== state || busy() || manualOpen()) return;
     if (found.status === "error") {
       showError(`Accepted, but Leetgrinder could not be reached: ${found.error}`, submissionId);
       return;
     }
-    showPanel(state, found.info, lib.prefillFrom(res.ok ? res.data : null, Date.now()), captureFor(state.slug, submissionId));
+    showPanel(state, found.info, lib.prefillFrom(res.ok ? res.data : null, Date.now()), captureFor(state.slug, submissionId), "accepted");
+  }
+
+  // forgetCapture drops the captured submission once an attempt carrying its
+  // code is saved or queued, so a later attempt does not reuse it.
+  function forgetCapture(attempt) {
+    if (capture && attempt.code && attempt.code === capture.code && attempt.problemSlug === capture.slug) capture = null;
   }
 
   // logManually opens the log panel from the banner, for an attempt solved
@@ -206,7 +220,7 @@
     if (blocked() || found.status !== "ok") return;
     const res = await send({ type: "timer:get", slug: state.slug });
     if (blocked()) return;
-    showPanel(state, found.info, lib.prefillFrom(res.ok ? res.data : null, Date.now()), captureFor(state.slug));
+    showPanel(state, found.info, lib.prefillFrom(res.ok ? res.data : null, Date.now()), captureFor(state.slug), "manual");
   }
 
   window.addEventListener("message", (event) => {
@@ -377,7 +391,7 @@
     const later = el("button", { type: "button", text: "Keep going" });
     unfinished.addEventListener("click", async () => {
       const res = await send({ type: "timer:get", slug });
-      showPanel(state, info, lib.prefillFrom(res.ok ? res.data : null, Date.now(), "unfinished"), captureFor(slug));
+      showPanel(state, info, lib.prefillFrom(res.ok ? res.data : null, Date.now(), "unfinished"), captureFor(slug), "nudge");
     });
     later.addEventListener("click", closeUI);
     root.append(
@@ -412,10 +426,10 @@
     };
   }
 
-  function showPanel(state, info, prefill, captured) {
+  function showPanel(state, info, prefill, captured, opened) {
     const slug = state.slug;
     const root = mount();
-    ui.panel = true;
+    ui.panel = opened;
     // One id per panel: retries of the same entry are idempotent on the server.
     let id = crypto.randomUUID();
     const outcome = el("select", { name: "outcome" }, [
@@ -454,7 +468,8 @@
       el("option", { value: "", text: "Choose…" }),
       ...lib.PASTE_LANGUAGES.map((l) => el("option", { value: l, text: lib.languageLabel(l) })),
     ]);
-    if (captured && lib.PASTE_LANGUAGES.includes(captured.lang)) pasteLang.value = captured.lang;
+    // No preselection: pasted code is often in another language than the
+    // captured submission, so the learner always chooses.
     const pasteCode = el("textarea", { name: "pastedCode", spellcheck: false, placeholder: "Paste your solution", "aria-label": "Pasted code" });
     const pasteRow = el("details", {}, [
       el("summary", { className: "muted", text: captured ? "Paste code instead" : "Paste code" }),
@@ -488,7 +503,8 @@
       status,
     ]);
     const closePanel = (trigger) => {
-      if (lib.panelCloses(trigger, Boolean(ui && ui.locked), (message) => window.confirm(message))) closeUI();
+      // A saved panel waiting to close is not holding anything unsaved.
+      if (lib.panelCloses(trigger, Boolean(ui && ui.locked && !ui.saved), (message) => window.confirm(message))) closeUI();
     };
     dismiss.addEventListener("click", () => closePanel("dismiss"));
     form.addEventListener("keydown", (event) => {
@@ -549,7 +565,8 @@
       const res = await send({ type: "attempt", attempt });
       panel.locked = Boolean(locked);
       if (res.ok) {
-        panel.locked = true;
+        panel.locked = panel.saved = true;
+        forgetCapture(attempt);
         const kind = lib.kindLabel(res.data && res.data.kind);
         const logged = kind ? `Logged to Leetgrinder as ${kind}.` : "Logged to Leetgrinder.";
         status.textContent = droppedCode ? `${logged} The code was too large to send.` : logged;
@@ -561,7 +578,10 @@
         // Start a fresh timer for the next attempt on this problem, unless
         // queuing it already did. The panel stays locked until then, so a
         // new panel cannot reuse the minutes just logged.
-        if (!restarted) await send({ type: "timer:restart", slug });
+        if (!restarted) {
+          const restart = await send({ type: "timer:restart", slug });
+          if (!restart.ok) status.textContent += " The timer did not restart; check the minutes on your next log.";
+        }
         panel.locked = false;
         setTimeout(() => {
           if (ui && ui.root === root) closeUI();
@@ -580,6 +600,7 @@
         submit.textContent = "Retry now";
         status.className = "status";
         status.textContent = lib.queuedMessage(res);
+        forgetCapture(attempt);
         if (!restarted) await send({ type: "timer:restart", slug });
         queued = restarted = true;
         return;
