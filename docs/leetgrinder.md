@@ -61,12 +61,12 @@ Every attempted problem becomes a review card. Card state is never stored: each 
 
 `/leetgrinder/stats` shows, per LeetCode topic: problems attempted, solved, struggle rate (struggled, unfinished and assisted attempts over all attempts), average current recall, and how many are due. It is sorted weakest recall first by default and can sort by struggle rate, due count, problems, or topic. A problem counts under each of its topics; topics with fewer than 3 problems are grouped under "Other" unless "List topics with fewer than 3 problems" is ticked, and problems without metadata count as "Untagged". Below are the difficulty mix (attempted and solved per Easy, Medium and Hard), weekly trends, and a 12-week calendar of goal-met days as a plain table.
 
-**Weekly trends** is a table with one row per Monday-to-Sunday week, by local date in the settings time zone, oldest first. It starts at the week of your first attempt and goes back at most 12 weeks, so a new account shows only the weeks it has, and nothing appears before the first attempt. Each row shows:
+**Weekly trends** is a table with one row per Monday-to-Sunday week, by local date in the settings time zone, oldest first. It covers at most the last 12 weeks, ending with the current week, and leaves out weeks before your first attempt, so a new account shows only the weeks it has. Each row shows:
 
 - problems solved (distinct problems with a solved attempt that week), with a bar scaled to the best week;
 - the independent-solve rate (solves without help over all solves), with the number of solves;
 - the average minutes per attempt for Easy, Medium and Hard (a dash when there were none);
-- complexity-check accuracy: of the stated time and space complexities that a completed, current Claude analysis judged that week, the share it judged right.
+- complexity-check accuracy: of the stated time and space complexities on that week's attempts that a completed, current Claude analysis judged, the share it judged right.
 
 The bars are inline SVG with the value written beside them, and the table scrolls sideways on narrow screens; it needs no JavaScript.
 

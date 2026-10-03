@@ -87,3 +87,19 @@ func TestStatsCalendarUsesLocalDate(t *testing.T) {
 		t.Fatalf("last week %+v", last)
 	}
 }
+
+func TestStatsPageShowsTrendsBetweenMixAndCalendar(t *testing.T) {
+	now := time.Date(2026, 10, 14, 17, 0, 0, 0, time.UTC)
+	settings := DefaultSettings()
+	settings.Timezone = "UTC"
+	state := State{Attempts: []Attempt{{ID: "a", ProblemSlug: "two-sum", Outcome: "solved", Minutes: 10, CreatedAt: now.Add(-time.Hour)}}, Problems: map[string]Problem{"two-sum": {Slug: "two-sum", Difficulty: "Easy"}}}
+	var out bytes.Buffer
+	if err := Stats(NewStatsPage(NewToday(settings, state, now), StatsFilter{}, 12)).Render(context.Background(), &out); err != nil {
+		t.Fatal(err)
+	}
+	html := out.String()
+	mix, trends, calendar := strings.Index(html, "Difficulty mix"), strings.Index(html, "Weekly trends"), strings.Index(html, "Goal calendar")
+	if mix < 0 || trends < mix || calendar < trends || !strings.Contains(html, "100% of 1") {
+		t.Fatalf("order mix %d trends %d calendar %d", mix, trends, calendar)
+	}
+}

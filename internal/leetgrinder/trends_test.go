@@ -24,7 +24,11 @@ func TestWeeklyTrends(t *testing.T) {
 		{ID: "a3", ProblemSlug: "median-of-two-sorted-arrays", Outcome: "struggled", Minutes: 60, CreatedAt: at(2026, 10, 12, 10)},
 		// Sunday 11 Oct, 23:30 local, is already Monday in UTC: it stays in
 		// the previous week.
-		{ID: "a4", ProblemSlug: "valid-anagram", Outcome: "solved", Minutes: 15, CreatedAt: at(2026, 10, 11, 23).Add(30 * time.Minute)},
+		// Stored as UTC, as loaded from the database.
+		{ID: "a4", ProblemSlug: "valid-anagram", Outcome: "solved", Minutes: 15, CreatedAt: time.Date(2026, 10, 12, 4, 30, 0, 0, time.UTC)},
+		// The best week is before the last: two problems solved.
+		{ID: "a6", ProblemSlug: "climbing-stairs", Outcome: "solved", Minutes: 9, CreatedAt: at(2026, 9, 29, 9)},
+		{ID: "a7", ProblemSlug: "house-robber", Outcome: "solved", Minutes: 11, CreatedAt: at(2026, 9, 30, 9)},
 		// The first attempt, three weeks back.
 		{ID: "a5", ProblemSlug: "lru-cache", Outcome: "unfinished", Minutes: 30, CreatedAt: at(2026, 9, 23, 9)},
 	}
@@ -54,7 +58,7 @@ func TestWeeklyTrends(t *testing.T) {
 		t.Fatalf("weeks %v, want %s", starts, want)
 	}
 	this, last, first := trends.Weeks[3], trends.Weeks[2], trends.Weeks[0]
-	if this.Solved != 1 || this.Solves != 2 || this.Independent != 1 || last.Solved != 1 || first.Solved != 0 || trends.MaxSolved != 1 {
+	if this.Solved != 1 || this.Solves != 2 || this.Independent != 1 || last.Solved != 1 || first.Solved != 0 || trends.Weeks[1].Solved != 2 || trends.MaxSolved != 2 || trends.Limit != 12 {
 		t.Fatalf("solves: this %+v last %+v first %+v max %d", this, last, first, trends.MaxSolved)
 	}
 	if rate, ok := this.IndependentRate(); !ok || rate != 0.5 {
@@ -84,8 +88,15 @@ func TestWeeklyTrends(t *testing.T) {
 	// An account older than the window shows exactly the window.
 	old := state
 	old.Attempts = append(append([]Attempt{}, attempts...), Attempt{ID: "a0", ProblemSlug: "lru-cache", Outcome: "unfinished", Minutes: 5, CreatedAt: at(2025, 1, 6, 9)})
-	if got := WeeklyTrends(NewToday(settings, old, now), 12); len(got.Weeks) != 12 || got.Weeks[11].Start.Format(time.DateOnly) != "2026-10-12" {
+	got := WeeklyTrends(NewToday(settings, old, now), 12)
+	if len(got.Weeks) != 12 || got.Weeks[11].Start.Format(time.DateOnly) != "2026-10-12" {
 		t.Fatalf("old account: %d weeks", len(got.Weeks))
+	}
+	// The attempt before the window is skipped, not counted in a week shown.
+	for _, w := range got.Weeks {
+		if m, ok := w.AverageMinutes("Medium"); ok && m != 30 {
+			t.Fatalf("week of %s counts the attempt before the window: %d", w.Start.Format(time.DateOnly), m)
+		}
 	}
 	if got := WeeklyTrends(NewToday(settings, State{}, now), 12); len(got.Weeks) != 0 {
 		t.Fatalf("no attempts: %d weeks", len(got.Weeks))
@@ -105,12 +116,14 @@ func TestBarWidth(t *testing.T) {
 
 func TestTrendsSectionRenders(t *testing.T) {
 	var out bytes.Buffer
-	w := TrendWeek{Start: time.Date(2026, 10, 12, 0, 0, 0, 0, time.UTC), Solved: 2, Solves: 4, Independent: 3, Minutes: map[string]int{"Easy": 20}, Timed: map[string]int{"Easy": 2}, Checked: 4, Matched: 3}
-	if err := trendsSection(Trends{Weeks: []TrendWeek{w}, MaxSolved: 2}).Render(context.Background(), &out); err != nil {
+	// Bars scale to the best week, not each week; rates differ per column.
+	small := TrendWeek{Start: time.Date(2026, 10, 5, 0, 0, 0, 0, time.UTC), Solved: 1, Solves: 1, Independent: 1, Minutes: map[string]int{}, Timed: map[string]int{}}
+	w := TrendWeek{Start: time.Date(2026, 10, 12, 0, 0, 0, 0, time.UTC), Solved: 2, Solves: 4, Independent: 3, Minutes: map[string]int{"Easy": 20}, Timed: map[string]int{"Easy": 2}, Checked: 5, Matched: 2}
+	if err := trendsSection(Trends{Weeks: []TrendWeek{small, w}, MaxSolved: 2, Limit: 12}).Render(context.Background(), &out); err != nil {
 		t.Fatal(err)
 	}
 	html := out.String()
-	for _, want := range []string{"Weekly trends", "12 Oct", "75% of 4", "10 min", `width="100.0"`, `width="75.0"`, "—"} {
+	for _, want := range []string{"Weekly trends", "at most the last 12 weeks", "12 Oct", "75% of 4", "40% of 5", "10 min", `width="50.0"`, `width="100.0"`, `width="75.0"`, `width="40.0"`, "—"} {
 		if !strings.Contains(html, want) {
 			t.Errorf("trends missing %q", want)
 		}

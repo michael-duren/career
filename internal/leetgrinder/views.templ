@@ -1067,7 +1067,7 @@ templ trendsSection(t Trends) {
 		if len(t.Weeks) == 0 {
 			<p class="muted small">Trends appear after your first attempt.</p>
 		} else {
-			<p class="small muted">Weeks run Monday to Sunday in your time zone, from the week of your first attempt, up to the last { Count(len(t.Weeks)) } weeks. Independent is the share of solves without help; complexity checks are the stated values Claude's analysis judged right.</p>
+			<p class="small muted">Weeks run Monday to Sunday in your time zone, for at most the last { Count(t.Limit) } weeks, leaving out weeks before your first attempt. Independent is the share of solves without help; complexity checks are the stated values Claude's analysis judged right.</p>
 			<div class="table-scroll">
 				<table class="trends">
 					<thead>

@@ -60,6 +60,8 @@ type Trends struct {
 	Weeks []TrendWeek
 	// MaxSolved is the largest weekly Solved, for scaling its bars.
 	MaxSolved int
+	// Limit is the most weeks shown.
+	Limit int
 }
 
 // WeeklyTrends builds the last weeks of trends from today's state.
@@ -76,7 +78,7 @@ func WeeklyTrends(today Today, weeks int) Trends {
 	if start := monday(Date(state.Attempts[len(state.Attempts)-1].CreatedAt, loc)); start.After(first) {
 		first = start
 	}
-	var t Trends
+	t := Trends{Limit: weeks}
 	index := map[time.Time]int{}
 	for d := first; !d.After(last); d = d.AddDate(0, 0, 7) {
 		index[d] = len(t.Weeks)
