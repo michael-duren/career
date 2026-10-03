@@ -300,10 +300,28 @@ func (s *Store) schedulerUpdate(ctx context.Context, w string, m *scheduler.Muta
 			return scheduler.Week{}, pe
 		}
 		probe.GenerateDates(schedulerValidationDates(d, busy), now, busy, sinceInstant)
+		newRules := map[string]bool{}
+		for id := range d.Rules {
+			if !originalRules[id] {
+				newRules[id] = true
+			}
+		}
 		for _, session := range probe.Sessions {
-			if session.RuleID != "" && !originalRules[session.RuleID] && session.State == "attention" {
+			if session.RuleID != "" && newRules[session.RuleID] && session.State == "attention" {
 				dates = append(dates, session.Date)
 				ids = append(ids, session.ConflictIDs...)
+				continue
+			}
+			if session.State != "attention" {
+				continue
+			}
+			for _, conflictID := range session.ConflictIDs {
+				conflicting := probe.Sessions[conflictID]
+				if newRules[conflicting.RuleID] {
+					dates = append(dates, conflicting.Date)
+					ids = append(ids, session.ConflictIDs...)
+					break
+				}
 			}
 		}
 		if len(dates) > 0 {

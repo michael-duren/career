@@ -206,6 +206,34 @@ func TestRuleChecksMatchingOccurrenceInsideDistantBusySpan(t *testing.T) {
 	}
 }
 
+func TestRuleChecksKnownFutureRuleWhenProbeOrdersItAfterNewRule(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	now := time.Date(2026, 1, 5, 8, 0, 0, 0, time.UTC)
+	week := "2026-01-05"
+	farDate := "2026-07-06"
+	doc := scheduler.New()
+	doc.Settings.Dates[farDate] = scheduler.DayInterval{Start: "08:00", End: "20:30"}
+	doc.Rules["z-existing"] = scheduler.Rule{ID: "z-existing", Weekday: 1, LocalStart: "09:00", DurationMinutes: 60, EffectiveFrom: farDate, Assignment: scheduler.Assignment{Title: "Existing future weekly"}}
+	doc.Sessions["one-off"] = scheduler.Session{ID: "one-off", Date: farDate, Assignment: scheduler.Assignment{Title: "Adjacent one-off"}, State: "accepted", Plan: &scheduler.Plan{Start: time.Date(2026, 7, 6, 12, 0, 0, 0, time.UTC), End: time.Date(2026, 7, 6, 13, 0, 0, 0, time.UTC)}}
+	raw, err := json.Marshal(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.DB.ExecContext(ctx, "INSERT INTO scheduler_state(id,document,reconciled_at) VALUES(1,$1::jsonb,$2)", raw, now); err != nil {
+		t.Fatal(err)
+	}
+	w, err := s.SchedulerWeek(ctx, week, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: week, Action: "rule", Rule: &scheduler.Rule{Weekday: 1, LocalStart: "09:00", DurationMinutes: 60, EffectiveFrom: week, Assignment: scheduler.Assignment{Title: "New weekly"}}}, now, nil)
+	var conflict *scheduler.Conflict
+	if !errors.As(err, &conflict) || !strings.Contains(err.Error(), farDate) {
+		t.Fatalf("new recurrence should detect an existing unmaterialized future rule on %s; got %v", farDate, err)
+	}
+}
+
 func TestRuleChecksPreservedFutureDateException(t *testing.T) {
 	s := testStore(t)
 	ctx := context.Background()
