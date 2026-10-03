@@ -90,7 +90,7 @@ func (s Settings) Day(d string) (Day, error) {
 	if e != nil {
 		return Day{}, e
 	}
-	return Day{Date: d, Interval: i, Start: a, End: b}, nil
+	return Day{Valid: true, Date: d, Interval: i, Start: a, End: b}, nil
 }
 func (s Settings) Validate() error {
 	if _, e := time.LoadLocation(s.TimeZone); e != nil {
@@ -742,7 +742,7 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 	return nil
 }
 func (d *Document) Week(w string, now time.Time, busy []Busy) Week {
-	out := Week{Revision: d.Revision, Week: w, Settings: d.Settings, Days: []Day{}, Goals: []Summary{}, Sessions: []Session{}, Rules: []Rule{}, Busy: busy, Warnings: []string{}}
+	out := Week{Revision: d.Revision, Week: w, Settings: d.Settings, Days: []Day{}, Goals: []Summary{}, Sessions: []Session{}, Rules: []Rule{}, Busy: busy, Warnings: []string{}, WarningTargets: []Warning{}}
 	if out.Busy == nil {
 		out.Busy = []Busy{}
 	}
@@ -750,7 +750,10 @@ func (d *Document) Week(w string, now time.Time, busy []Busy) Week {
 	for i := 0; i < 7; i++ {
 		day, e := d.Settings.Day(DateAdd(w, i))
 		if e != nil {
-			out.Warnings = append(out.Warnings, e.Error())
+			date := DateAdd(w, i)
+			out.Days = append(out.Days, Day{Date: date, Interval: d.Settings.Interval(date), Reason: e.Error()})
+			out.Warnings = append(out.Warnings, date+": "+e.Error())
+			out.WarningTargets = append(out.WarningTargets, Warning{Message: date + ": " + e.Error(), Date: date})
 		} else {
 			out.Days = append(out.Days, day)
 		}
@@ -764,6 +767,7 @@ func (d *Document) Week(w string, now time.Time, busy []Busy) Week {
 			out.Sessions = append(out.Sessions, s)
 			if s.State == "attention" {
 				out.Warnings = append(out.Warnings, s.Date+": "+s.Attention)
+				out.WarningTargets = append(out.WarningTargets, Warning{Message: s.Date + ": " + s.Attention, Date: s.Date, GoalID: s.Assignment.GoalID, SessionID: s.ID})
 			}
 		}
 	}
@@ -799,18 +803,13 @@ func (d *Document) Week(w string, now time.Time, busy []Busy) Week {
 			zero := 0.
 			sum.RequiredHours = &zero
 		}
-		for _, id := range g.DependsOn {
-			if prerequisite, ok := d.Goals[id]; ok && prerequisite.Status != "done" {
-				out.Warnings = append(out.Warnings, g.Title+": unfinished dependency "+prerequisite.Title)
-			}
-		}
 		steps := map[string]bool{}
 		hasWork := false
 		for _, s := range out.Sessions {
 			if s.Assignment.GoalID != g.ID {
 				continue
 			}
-			hasWork = true
+			hasWork = hasWork || s.Actual != nil || s.State != "canceled" && s.Plan != nil
 			if s.Actual != nil {
 				if s.Actual.Status != "skipped" && s.Actual.Date >= w && s.Actual.Date <= end {
 					sum.ActualHours += s.Actual.End.Sub(s.Actual.Start).Hours()
@@ -824,25 +823,39 @@ func (d *Document) Week(w string, now time.Time, busy []Busy) Week {
 		if !hasWork && (g.StartDate > end || g.EndDate < w || g.EligibleFrom > end && g.EligibleFrom != "" || g.StoppedDate < w && g.StoppedDate != "") {
 			continue
 		}
+		for _, id := range g.DependsOn {
+			if prerequisite, ok := d.Goals[id]; ok && prerequisite.Status != "done" {
+				message := g.Title + ": unfinished dependency " + prerequisite.Title
+				out.Warnings = append(out.Warnings, message)
+				out.WarningTargets = append(out.WarningTargets, Warning{Message: message, GoalID: g.ID})
+			}
+		}
 		for _, step := range g.Steps {
 			if !step.Completed && !steps[step.ID] {
 				sum.UnscheduledStepIDs = append(sum.UnscheduledStepIDs, step.ID)
 			}
 		}
 		if sum.RequiredHours == nil {
-			out.Warnings = append(out.Warnings, g.Title+": Hours not set")
+			message := g.Title + ": Hours not set"
+			out.Warnings = append(out.Warnings, message)
+			out.WarningTargets = append(out.WarningTargets, Warning{Message: message, GoalID: g.ID})
 		} else {
 			covered := sum.ActualHours + sum.RemainingScheduledHours
 			sum.UncoveredHours = max(0, *sum.RequiredHours-covered)
 			sum.ExcessHours = max(0, covered-*sum.RequiredHours)
 			uncovered += sum.UncoveredHours
 			if sum.UncoveredHours > 0 {
-				out.Warnings = append(out.Warnings, fmt.Sprintf("%s: %.2f hours uncovered", g.Title, sum.UncoveredHours))
+				message := fmt.Sprintf("%s: %.2f hours uncovered", g.Title, sum.UncoveredHours)
+				out.Warnings = append(out.Warnings, message)
+				out.WarningTargets = append(out.WarningTargets, Warning{Message: message, GoalID: g.ID})
 			}
 		}
 		out.Goals = append(out.Goals, sum)
 	}
 	for _, day := range out.Days {
+		if !day.Valid {
+			continue
+		}
 		start := day.Start
 		if now.After(start) {
 			start = now

@@ -64,7 +64,7 @@ test('unchanged editor times retain the original instants across a repeated hour
 const placementWeek = (day: string, zone = 'America/Chicago', start = '09:00', end = '17:00', nextDay = false) => {
   const dayStart = localInstant(day, start, zone);
   const dayEnd = localInstant(nextDay ? addDays(day, 1) : day, end, zone);
-  return weekSchema.parse({ revision: 'r1', week: mondayOf(day), settings: { timeZone: zone, defaultDay: { start, end, nextDay }, weekdays: {}, dates: {} }, days: [{ date: day, interval: { start, end, nextDay }, start: dayStart, end: dayEnd }], goals: [{ goal: { id: 'goal', title: 'Learn', color: '#123456', startDate: '2026-01-01', endDate: '2027-01-01', status: 'active', dailyHours: 1, selectedWeekdays: null, steps: [], dependsOn: [] }, requiredHours: 1, actualHours: 0, remainingScheduledHours: 0, uncoveredHours: 0, excessHours: 0, unscheduledStepIds: [] }], sessions: [], rules: [], busy: [], warnings: [], remainingCapacityHours: 8 });
+  return weekSchema.parse({ revision: 'r1', week: mondayOf(day), settings: { timeZone: zone, defaultDay: { start, end, nextDay }, weekdays: {}, dates: {} }, days: [{ valid: true, date: day, interval: { start, end, nextDay }, start: dayStart, end: dayEnd }], goals: [{ goal: { id: 'goal', title: 'Learn', color: '#123456', startDate: '2026-01-01', endDate: '2027-01-01', status: 'active', dailyHours: 1, selectedWeekdays: null, steps: [], dependsOn: [] }, requiredHours: 1, actualHours: 0, remainingScheduledHours: 0, uncoveredHours: 0, excessHours: 0, unscheduledStepIds: [] }], sessions: [], rules: [], busy: [], warnings: [], remainingCapacityHours: 8 });
 };
 
 test('moving a block subtracts the 30-minute grab offset before snapping', () => {
@@ -180,4 +180,19 @@ test('planning rejects an ineligible goal date', () => {
   const result = proposePlacement({ kind: 'assignment', assignment: { goalId: 'goal', title: 'Learn' }, targetDate: '2026-10-05', startMinute: 570, durationMinutes: 60 }, week, new Date('2026-10-01T00:00:00Z'));
   assert.equal(result.kind, 'invalid');
   if (result.kind === 'invalid') assert.match(result.message, /not eligible/);
+});
+
+test('display geometry includes early and late actuals and elapsed fold duration', async () => {
+ const { displayAxis, intervalGeometry } = await import('../src/lib/scheduler.ts');
+ const week=placementWeek('2026-11-01');
+ week.sessions.push({id:'fold',date:'2026-11-01',state:'accepted',assignment:{title:'Fold'},plan:null,actual:{status:'explicit',date:'2026-11-01',start:'2026-11-01T06:30:00Z',end:'2026-11-01T07:30:00Z'},conflictIds:[],exception:false});
+ week.sessions.push({...week.sessions[0],id:'late',actual:{status:'explicit',date:'2026-11-01',start:'2026-11-02T04:00:00Z',end:'2026-11-02T05:00:00Z'}});
+ assert.deepEqual(intervalGeometry(week.sessions[0].actual!, '2026-11-01',week.settings.timeZone),{top:90,height:60});
+ assert.deepEqual(displayAxis(week),{start:90,end:1380});
+});
+test('quick add uses the selected future day and available remaining duration', async () => {
+ const { quickAddSlot } = await import('../src/lib/scheduler.ts');
+ const week=placementWeek('2026-11-02');
+ assert.deepEqual(quickAddSlot(week,'2026-11-02',new Date('2026-11-02T22:30:00Z'),60),{start:'2026-11-02T22:31:00.000Z',end:'2026-11-02T23:00:00.000Z'});
+ assert.match(quickAddSlot(week,'2026-11-02',new Date('2026-11-03T00:00:00Z'),60).reason!,/No valid future slot/);
 });

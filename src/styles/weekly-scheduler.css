@@ -21,3 +21,15 @@
 .scheduler-goals{max-height:calc(100dvh - 9rem);overflow-y:auto;scrollbar-gutter:stable;padding-right:.25rem}
 @media(max-width:767px){.scheduler-goals{max-height:min(45dvh,400px)}}
 @media(any-pointer:coarse){.weekly-scheduler .scheduler-touch-handle{display:block}.weekly-scheduler .scheduler-goal-title,.weekly-scheduler .scheduler-step{padding-right:48px}.weekly-scheduler .scheduler-goal-handle{position:absolute;top:.4rem;right:.4rem;float:none;margin:0;z-index:4;min-width:40px;min-height:40px}.weekly-scheduler .scheduler-step-handle{position:absolute;right:.2rem;top:.3rem;z-index:4;min-width:40px;min-height:40px}.weekly-scheduler .scheduler-block-handle{position:absolute;right:1.5rem;bottom:0;z-index:3;border:0;background:#0009;padding:0;min-width:32px;min-height:30px}}
+.scheduler-block{box-sizing:border-box}
+.weekly-scheduler .scheduler-short .scheduler-block-main{padding:0 3px;line-height:1;height:100%;white-space:nowrap}
+.scheduler-short .scheduler-block-main strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:13px}
+.scheduler-short .scheduler-block-main small{display:none}
+.weekly-scheduler .scheduler-short .scheduler-block-actions,.weekly-scheduler .scheduler-short .scheduler-block-handle{display:none}
+.weekly-scheduler .scheduler-short .scheduler-edge{height:2px;line-height:2px}
+.scheduler-invalid-day{position:absolute;top:0;left:3px;right:3px;padding:.4rem;background:#422006;z-index:4;font-size:.75rem}
+.weekly-scheduler .scheduler-warnings li button{border:0;background:none;padding:.1rem;color:#fde68a;text-align:left;text-decoration:underline}
+.scheduler-short-details>div{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin:.5rem 0;padding:.5rem;border:1px solid #52525b;border-radius:.3rem}
+.scheduler-micro{border-top:0;border-bottom:0}
+.weekly-scheduler .scheduler-micro .scheduler-edge{display:none}
+.weekly-scheduler .scheduler-micro .scheduler-block-main{min-height:1px}

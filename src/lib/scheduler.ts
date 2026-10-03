@@ -62,7 +62,7 @@ const actualSchema = planSchema.extend({ status: z.enum(['assumed', 'explicit', 
 export const sessionSchema = z.object({ id: z.string(), ruleId: z.string().optional(), date: z.string(), assignment: assignmentSchema, plan: planSchema.nullable(), actual: actualSchema.nullable(), state: z.string(), attention: z.string().optional(), conflictIds: list(z.string()), exception: z.boolean() });
 const ruleSchema = z.object({ id: z.string(), weekday: z.number(), localStart: z.string(), durationMinutes: z.number(), effectiveFrom: z.string(), effectiveTo: z.string().optional(), assignment: assignmentSchema });
 const goalSchema = z.object({ id: z.string(), title: z.string(), color: z.string(), startDate: z.string(), endDate: z.string(), status: z.string(), dailyHours: z.number().nullable(), selectedWeekdays: z.array(z.number()).nullable(), eligibleFrom: z.string().optional(), stoppedDate: z.string().optional(), pauses: list(z.object({ from: z.string(), to: z.string() })), steps: list(z.object({ id: z.string(), title: z.string(), completed: z.boolean() })), dependsOn: list(z.string()) });
-export const weekSchema = z.object({ revision: z.string(), week: z.string(), settings: settingsSchema, days: list(z.object({ date: z.string(), interval: dayIntervalSchema, start: z.string(), end: z.string() })), goals: list(z.object({ goal: goalSchema, requiredHours: z.number().nullable(), actualHours: z.number(), remainingScheduledHours: z.number(), uncoveredHours: z.number(), excessHours: z.number(), unscheduledStepIds: list(z.string()) })), sessions: list(sessionSchema), rules: list(ruleSchema), busy: list(planSchema.extend({ id: z.string(), title: z.string() })), warnings: list(z.string()), remainingCapacityHours: z.number() });
+export const weekSchema = z.object({ revision: z.string(), week: z.string(), settings: settingsSchema, days: list(z.object({ date: z.string(), interval: dayIntervalSchema, start: z.string(), end: z.string(), valid: z.boolean(), reason: z.string().optional() })), goals: list(z.object({ goal: goalSchema, requiredHours: z.number().nullable(), actualHours: z.number(), remainingScheduledHours: z.number(), uncoveredHours: z.number(), excessHours: z.number(), unscheduledStepIds: list(z.string()) })), sessions: list(sessionSchema), rules: list(ruleSchema), busy: list(planSchema.extend({ id: z.string(), title: z.string() })), warnings: list(z.string()), warningTargets: list(z.object({ message: z.string(), date: z.string().optional(), goalId: z.string().optional(), sessionId: z.string().optional() })), remainingCapacityHours: z.number() });
 export type SchedulerWeek = z.infer<typeof weekSchema>;
 export type SchedulerSession = z.infer<typeof sessionSchema>;
 export type Settings = z.infer<typeof settingsSchema>;
@@ -74,7 +74,7 @@ export type Mutation = { revision: string; week: string } & (
   { action: 'cancel'; id: string; scope?: 'date' | 'future' } |
   { action: 'actual'; id?: string; session?: SchedulerSession; actual: z.infer<typeof actualSchema> }
 );
-export type SessionDraft = { id?: string; ruleId?: string; assignment: Assignment; date: string; startDate?: string; start: string; endDate: string; end: string; mode: 'plan' | 'actual'; repeat: boolean; scope: 'date' | 'future'; originalStart?: string; originalEnd?: string };
+export type SessionDraft = { id?: string; ruleId?: string; assignment: Assignment; date: string; startDate?: string; start: string; endDate: string; end: string; mode: 'plan' | 'actual'; repeat: boolean; scope: 'date' | 'future'; originalStart?: string; originalEnd?: string; explanation?: string };
 export function draftMutation(draft: SessionDraft, week: SchedulerWeek): Mutation {
   const resolve = (date: string, time: string, original?: string) => {
     if (original) { const fields = localFields(original, week.settings.timeZone); if (fields.date === date && fields.time === time) return original; }
@@ -102,4 +102,37 @@ export async function schedulerRequest(path: string, body?: unknown): Promise<un
     throw error.success ? new SchedulerError(error.data.error, error.data.current, error.data.conflictIds) : new Error(`Scheduler request failed (${response.status}).`);
   }
   return value;
+}
+
+export function intervalGeometry(interval: {start: string; end: string}, date: string, zone: string) {
+  return { top: minuteOf(interval.start, date, zone), height: (Date.parse(interval.end) - Date.parse(interval.start)) / 60000 };
+}
+export function displayAxis(week: SchedulerWeek) {
+  const minutes = (clock: string) => Number(clock.slice(0, 2)) * 60 + Number(clock.slice(3));
+  const starts = week.days.map(day => minutes(day.interval.start));
+  const ends = week.days.map(day => minutes(day.interval.end) + (day.interval.nextDay ? 1440 : 0));
+  for (const session of week.sessions) {
+    if (session.state === 'canceled') continue;
+    const interval = session.actual && session.actual.status !== 'skipped' ? session.actual : session.plan;
+    if (!interval) continue;
+    const geometry = intervalGeometry(interval, session.actual?.date ?? session.date, week.settings.timeZone);
+    starts.push(geometry.top); ends.push(geometry.top + geometry.height);
+  }
+  return { start: Math.min(...starts, 300), end: Math.max(...ends, 1230) };
+}
+export function quickAddSlot(week: SchedulerWeek, date: string, now: Date, duration: number): {start: string; end: string; reason?: string} {
+  const day = week.days.find(day => day.date === date);
+  const fallback = {start: '', end: '', reason: day?.reason || 'No valid future slot is available on this scheduling date. Choose another date or record actual work.'};
+  if (!day?.valid) return fallback;
+  const end = Date.parse(day.end);
+  let start = Math.max(Date.parse(day.start), (Math.floor(now.getTime() / 60000) + 1) * 60000);
+  const blocked = [...week.busy, ...week.sessions.filter(session => session.state === 'accepted' && session.plan).map(session => session.plan!)].sort((a,b) => Date.parse(a.start)-Date.parse(b.start));
+  for (const interval of blocked) {
+    const a = Date.parse(interval.start), b = Date.parse(interval.end);
+    if (b <= start || a >= end) continue;
+    if (a > start) return {start:new Date(start).toISOString(), end:new Date(Math.min(a, end, start+duration*60000)).toISOString()};
+    start = Math.max(start,b);
+  }
+  if (start >= end) return fallback;
+  return {start:new Date(start).toISOString(),end:new Date(Math.min(end,start+duration*60000)).toISOString()};
 }

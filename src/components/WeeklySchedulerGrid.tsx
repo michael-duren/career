@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type PointerEvent } from 'react';
-import { displayClock, localFields, minuteOf, snapMinutes, type Assignment, type SchedulerSession, type SchedulerWeek } from '../lib/scheduler';
+import { displayAxis, intervalGeometry, displayClock, localFields, minuteOf, snapMinutes, type Assignment, type SchedulerSession, type SchedulerWeek } from '../lib/scheduler';
 import { proposePlacement, type PlacementResult } from '../lib/scheduler-placement';
 
 type DragItem = { kind: 'assignment'; assignment: Assignment; durationMinutes: number } | { kind: 'session'; session: SchedulerSession };
@@ -20,13 +20,28 @@ const intervalMinutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number
 const dayName = (date: string) => new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }).format(new Date(`${date}T12:00Z`));
 const activeInterval = (session: SchedulerSession) => session.actual && session.actual.status !== 'skipped' ? session.actual : session.plan;
 
+function displayLanes(sessions: SchedulerSession[], date: string, zone: string) {
+  const entries = sessions.filter(session => session.state !== 'canceled' && (session.actual?.date ?? session.date) === date).map(session => {
+    const interval=activeInterval(session);
+    return {id:session.id,...(interval ? intervalGeometry(interval,date,zone) : {top:0,height:60})};
+  }).sort((a,b)=>a.top-b.top);
+  const lanes: {top:number; end:number}[][]=[];
+  const assigned=new Map<string,number>();
+  for (const entry of entries) {
+    const end=entry.top+entry.height;
+    let lane=lanes.findIndex(items=>items.every(item=>item.end<=entry.top || item.top>=end));
+    if (lane<0) {lane=lanes.length;lanes.push([]);}
+    lanes[lane].push({top:entry.top,end}); assigned.set(entry.id,lane);
+  }
+  return {assigned,count:Math.max(1,lanes.length)};
+}
+
 export const WeeklySchedulerGrid = forwardRef<SchedulerGridHandle, Props>(function WeeklySchedulerGrid({ busy, now, week, selectedDay, conflicts, selectDay, addSession, edit, deleteSession, place }, ref) {
   const gesture = useRef<Gesture | null>(null);
   const suppressClick = useRef(false);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [outside, setOutside] = useState<{ x: number; y: number } | null>(null);
-  const axisStart = Math.min(...week.days.map(day => intervalMinutes(day.interval.start)), 300);
-  const axisEnd = Math.max(...week.days.map(day => intervalMinutes(day.interval.end) + (day.interval.nextDay ? 1440 : 0)), 1230);
+  const {start: axisStart, end: axisEnd} = displayAxis(week);
   const height = axisEnd - axisStart;
 
   function clearGesture() {
@@ -143,20 +158,25 @@ export const WeeklySchedulerGrid = forwardRef<SchedulerGridHandle, Props>(functi
     <div className="scheduler-grid"><div className="scheduler-axis"><div className="scheduler-day-heading">Time</div><div style={{ height }}>{Array.from({ length: Math.ceil(height / 60) }, (_, index) => <span style={{ top: index * 60 }} key={index}>{displayClock(axisStart + index * 60)}</span>)}</div></div>
       {week.days.map(day => {
         const startMinute = intervalMinutes(day.interval.start), endMinute = intervalMinutes(day.interval.end) + (day.interval.nextDay ? 1440 : 0);
+        const lanes=displayLanes(week.sessions,day.date,week.settings.timeZone);
         const shown = preview?.date === day.date ? preview : null;
         return <section className={`scheduler-day ${day.date === selectedDay ? 'is-selected' : ''}`} key={day.date} aria-label={dayName(day.date)}>
           <div className="scheduler-day-heading"><strong>{dayName(day.date)}</strong><button disabled={busy} aria-label={`Add session on ${day.date}`} onClick={() => addSession(day.date, startMinute)}>＋</button></div>
           <div className="scheduler-day-body" data-scheduler-date={day.date} style={{ height }}>
+            {!day.valid && <p className="scheduler-invalid-day" role="status">{day.reason}</p>}
             <div className="scheduler-unavailable" style={{ top: 0, height: startMinute - axisStart }} /><div className="scheduler-unavailable" style={{ top: endMinute - axisStart, height: axisEnd - endMinute }} />
-            {week.busy.map(busy => { const start = Math.max(axisStart, minuteOf(busy.start, day.date, week.settings.timeZone)), end = Math.min(axisEnd, minuteOf(busy.end, day.date, week.settings.timeZone)); return end > start ? <div className={`scheduler-block scheduler-busy ${conflicts.includes(busy.id) ? 'scheduler-conflict' : ''}`} key={busy.id} style={{ top: start - axisStart, height: Math.max(20, end - start) }}><strong>{busy.title || 'Google busy'}</strong><small>Google busy · {displayClock(start)}–{displayClock(end)}</small></div> : null; })}
+            {week.busy.map(busy => { const start = Math.max(axisStart, minuteOf(busy.start, day.date, week.settings.timeZone)), end = Math.min(axisEnd, minuteOf(busy.end, day.date, week.settings.timeZone)); return end > start ? <div className={`scheduler-block scheduler-busy ${conflicts.includes(busy.id) ? 'scheduler-conflict' : ''}`} key={busy.id} style={{ top: start - axisStart, height: end - start }}><strong>{busy.title || 'Google busy'}</strong><small>Google busy · {displayClock(start)}–{displayClock(end)}</small></div> : null; })}
             {week.sessions.filter(session => (session.actual?.date || session.date) === day.date && session.state !== 'canceled').map(session => {
               const interval = activeInterval(session);
               const top = interval ? minuteOf(interval.start, day.date, week.settings.timeZone) : startMinute;
+              const duration = interval ? intervalGeometry(interval, day.date, week.settings.timeZone).height : 60;
               const end = interval ? minuteOf(interval.end, day.date, week.settings.timeZone) : top + 60;
+              const offsets = interval ? `${localFields(interval.start, week.settings.timeZone).offset}–${localFields(interval.end, week.settings.timeZone).offset}` : "";
+              const lane=lanes.assigned.get(session.id) ?? 0;
               const started = session.plan ? Date.parse(session.plan.start) <= now : true;
               const canDelete = (!session.plan || !started) && (!session.actual || !session.ruleId);
-              return <div className={`scheduler-block ${session.assignment.goalId ? 'scheduler-work' : 'scheduler-fixed'} ${session.attention || conflicts.includes(session.id) ? 'scheduler-conflict' : ''} ${session.actual?.status === 'skipped' ? 'scheduler-skipped' : ''}`} key={session.id} data-session-id={session.id} style={{ top: Math.max(0, top - axisStart), minHeight: 30, height: Math.max(30, end - top), borderLeftColor: session.assignment.color }}>
-                <button disabled={busy} className="scheduler-block-main" onPointerDown={interval ? event => begin(event, { kind: 'session', session }) : undefined} onClick={() => { if (!handle.consumeClick()) edit(session); }}><strong>{session.assignment.title}</strong>{session.assignment.goalTitle && <small>{session.assignment.goalTitle}</small>}<small>{displayClock(top)}–{displayClock(end)}</small><small>{session.attention || (session.actual ? `${session.actual.status} actual` : session.assignment.goalId ? 'Planned' : 'Commitment')}{session.ruleId ? ' · Weekly' : ''}</small>{session.actual?.outsideTimeline && <small>Outside original timeline</small>}</button>
+              return <div className={`scheduler-block ${session.assignment.goalId ? 'scheduler-work' : 'scheduler-fixed'} ${session.attention || conflicts.includes(session.id) ? 'scheduler-conflict' : ''} ${session.actual?.status === 'skipped' ? 'scheduler-skipped' : '' } ${duration < 30 ? "scheduler-short" : ""} ${duration < 3 ? "scheduler-micro" : ""}`} key={session.id} data-session-id={session.id} data-duration-minutes={duration} title={`${session.assignment.title} · ${displayClock(top)}–${displayClock(end)} · ${duration} min · ${offsets}`} style={{ left:`calc(${lane*100/lanes.count}% + 2px)`, right:`calc(${(lanes.count-lane-1)*100/lanes.count}% + 2px)`, top: top - axisStart, height: Math.max(1, duration), borderLeftColor: session.assignment.color }}>
+                <button disabled={busy} className="scheduler-block-main" onPointerDown={interval ? event => begin(event, { kind: 'session', session }) : undefined} onClick={() => { if (!handle.consumeClick()) edit(session); }}><strong>{session.assignment.title}</strong>{session.assignment.goalTitle && <small>{session.assignment.goalTitle}</small>}<small>{displayClock(top)}–{displayClock(end)} · {duration} min · {offsets}</small><small>{session.attention || (session.actual ? `${session.actual.status} actual` : session.assignment.goalId ? 'Planned' : 'Commitment')}{session.ruleId ? ' · Weekly' : ''}</small>{session.actual?.outsideTimeline && <small>Outside original timeline</small>}</button>
                 <div className="scheduler-block-actions"><button disabled={busy} className="scheduler-icon-btn" aria-label={`Edit ${session.assignment.title}`} onClick={() => edit(session)}>✎</button>{canDelete && <button disabled={busy} className="scheduler-icon-btn" aria-label={`Delete ${session.assignment.title}`} onClick={() => deleteSession(session)}>×</button>}</div>
                 {interval && <><button disabled={busy} className="scheduler-edge scheduler-edge-top" aria-label={`Change start time of ${session.assignment.title}`} onPointerDown={event => { event.preventDefault(); event.stopPropagation(); begin(event, { kind: 'resize', session, edge: 'start' }); }} onClick={() => { if (!handle.consumeClick()) edit(session); }} /><button disabled={busy} className="scheduler-edge scheduler-edge-bottom" aria-label={`Change end time of ${session.assignment.title}`} onPointerDown={event => { event.preventDefault(); event.stopPropagation(); begin(event, { kind: 'resize', session, edge: 'end' }); }} onClick={() => { if (!handle.consumeClick()) edit(session); }} /><button disabled={busy} className="scheduler-touch-handle scheduler-block-handle" aria-label={`Drag ${session.assignment.title}`} onPointerDown={event => { event.preventDefault(); event.stopPropagation(); begin(event, { kind: 'session', session }); }}>⋮⋮</button></>}
               </div>;
@@ -166,6 +186,14 @@ export const WeeklySchedulerGrid = forwardRef<SchedulerGridHandle, Props>(functi
         </section>;
       })}
     </div>
+    <div className="scheduler-short-details" aria-label="Short session details">{week.sessions.filter(session => session.state !== 'canceled').map(session => {
+      const interval=activeInterval(session); if (!interval) return null;
+      const duration=(Date.parse(interval.end)-Date.parse(interval.start))/60000; if (duration>=30) return null;
+      const start=localFields(interval.start,week.settings.timeZone), end=localFields(interval.end,week.settings.timeZone);
+      const started=session.plan ? Date.parse(session.plan.start)<=now : true;
+      const canDelete=(!session.plan || !started) && (!session.actual || !session.ruleId);
+      return <div key={session.id}><span>{session.assignment.title} · {session.actual?.date ?? session.date} · {start.time} {start.offset}–{end.time} {end.offset} · {duration} min · {session.actual ? `${session.actual.status} actual` : 'Planned'}</span><button disabled={busy} onClick={()=>edit(session)} aria-label={`Edit ${session.assignment.title}`}>Edit</button>{canDelete && <button disabled={busy} onClick={()=>deleteSession(session)} aria-label={`Delete ${session.assignment.title}`}>Delete</button>}</div>;
+    })}</div>
     {outside && <div className="scheduler-preview-outside" style={{ left: outside.x, top: outside.y }} role="status">Place inside a scheduling day.</div>}
   </div>;
 });

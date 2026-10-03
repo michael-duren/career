@@ -94,12 +94,21 @@ type Summary struct {
 	UnscheduledStepIDs      []string `json:"unscheduledStepIds"`
 }
 type Day struct {
+	Valid    bool        `json:"valid"`
+	Reason   string      `json:"reason,omitempty"`
 	Date     string      `json:"date"`
 	Interval DayInterval `json:"interval"`
 	Start    time.Time   `json:"start"`
 	End      time.Time   `json:"end"`
 }
+type Warning struct {
+	Message   string `json:"message"`
+	Date      string `json:"date,omitempty"`
+	GoalID    string `json:"goalId,omitempty"`
+	SessionID string `json:"sessionId,omitempty"`
+}
 type Week struct {
+	WarningTargets         []Warning `json:"warningTargets"`
 	Revision               string    `json:"revision"`
 	Week                   string    `json:"week"`
 	Settings               Settings  `json:"settings"`

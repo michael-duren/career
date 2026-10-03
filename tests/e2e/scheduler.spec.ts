@@ -1058,3 +1058,59 @@ test('obsolete Google health errors cannot replace a newer successful status', a
   await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
   await expect(page.locator('.scheduler-google [role="alert"]')).toHaveCount(0);
 });
+
+test('geometry keeps adjacent short blocks selectable and outside-hours actuals discoverable', async ({page,request}) => {
+ const state=await controlledWeek(page,request);
+ const date=state.week;
+ const make=(id:string,start:string,end:string)=>({id,date,state:'accepted',assignment:{title:id},plan:null,actual:{date,status:'explicit',start:`${date}T${start}:00Z`,end:`${date}T${end}:00Z`},conflictIds:[],exception:false});
+ const sessions=[make('short one','09:00','09:15'),make('short two','09:15','09:30'),make('early actual','03:00','04:00'),make('late actual','22:00','23:00')];
+ await page.route('**/api/scheduler/week?*',route=>route.fulfill({json:{...state,settings:{...state.settings,timeZone:'UTC'},sessions}}));
+ await page.getByRole('button',{name:'Refresh schedule',exact:true}).first().click();
+ for(const id of ['short one','short two']) {
+  const block=page.locator(`[data-session-id="${id}"]`); const box=await visibleBox(block); expect(box.height).toBe(15);
+  await page.mouse.move(box.x+box.width/2,box.y+box.height/2); await page.mouse.down(); await page.mouse.up();
+  await expect(page.getByRole('dialog',{name:'Session editor'})).toBeVisible();
+  await page.getByRole('button',{name:'Discard draft'}).click();
+ }
+ await page.setViewportSize({width:390,height:844});
+ const touch=await page.context().newCDPSession(page); await touch.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:1});
+ for (const id of ['short one','short two']) {
+  const block=page.locator(`[data-session-id="${id}"]`); const box=await visibleBox(block); expect(box.height).toBe(15);
+  const topEdge=(await block.locator('.scheduler-edge-top').boundingBox())!, bottomEdge=(await block.locator('.scheduler-edge-bottom').boundingBox())!;
+  expect(topEdge.height).toBe(2); expect(bottomEdge.height).toBe(2); expect(topEdge.y+topEdge.height).toBeLessThan(bottomEdge.y);
+  await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:box.x+box.width/2,y:box.y+box.height/2,id:1}]});
+  await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await expect(page.getByRole('dialog',{name:'Session editor'})).toBeVisible(); await page.getByRole('button',{name:'Discard draft'}).click();
+ }
+ await touch.detach(); await page.setViewportSize({width:1280,height:1400});
+ for(const id of ['early actual','late actual']) { const block=page.locator(`[data-session-id="${id}"]`); await block.scrollIntoViewIfNeeded(); await expect(block).toBeInViewport(); expect((await block.boundingBox())!.height).toBe(60); }
+});
+test('invalid dated column remains visible and warning opens its affected editable session', async ({page,request})=>{
+ const state=await controlledWeek(page,request);
+ const session={id:'attention',date:state.week,state:'attention',assignment:{title:'Affected session'},plan:{start:`${state.week}T10:00:00Z`,end:`${state.week}T11:00:00Z`},actual:null,attention:'Needs placement',conflictIds:[],exception:false};
+ const message='Affected session needs placement';
+ await page.route('**/api/scheduler/week?*',route=>route.fulfill({json:{...state,settings:{...state.settings,timeZone:'UTC'},days:state.days.map((day:Record<string,unknown>,i:number)=>i===6?{...day,valid:false,reason:'02:30 does not exist because clocks change'}:day),sessions:[session],warnings:[message],warningTargets:[{message,date:session.date,sessionId:session.id}]}}));
+ await page.getByRole('button',{name:'Refresh schedule',exact:true}).first().click();
+ await expect(page.locator('[data-scheduler-date]')).toHaveCount(7); await expect(page.getByText('02:30 does not exist because clocks change')).toBeVisible();
+ await page.getByRole('button',{name:message,exact:true}).click();
+ await expect(page.getByRole('dialog',{name:'Session editor'})).toBeVisible(); await expect(page.getByLabel('Start time',{exact:true})).toHaveValue('10:00');
+});
+test('fold actual shows elapsed minutes and both UTC offsets', async ({page,request})=>{
+ const state=await controlledWeek(page,request,'2026-10-26');
+ const session={id:'fold',date:'2026-11-01',state:'accepted',assignment:{title:'Repeated hour'},plan:null,actual:{date:'2026-11-01',status:'explicit',start:'2026-11-01T06:30:00Z',end:'2026-11-01T07:30:00Z'},conflictIds:[],exception:false};
+ await page.route('**/api/scheduler/week?*',route=>route.fulfill({json:{...state,settings:{...state.settings,timeZone:'America/Chicago'},sessions:[session,{...session,id:'fold-second',assignment:{title:'Later repeated hour'},actual:{...session.actual,start:'2026-11-01T07:30:00Z',end:'2026-11-01T08:30:00Z'}}]}}));
+ await page.getByRole('button',{name:'Refresh schedule',exact:true}).first().click();
+ const block=page.locator('[data-session-id="fold"]'); await block.scrollIntoViewIfNeeded(); expect((await block.boundingBox())!.height).toBe(60); await expect(block).toContainText('60 min · GMT-5–GMT-6');
+ const second=page.locator('[data-session-id="fold-second"]'); const a=(await block.boundingBox())!, b=(await second.boundingBox())!; expect(a.x+a.width).toBeLessThanOrEqual(b.x);
+ for (const item of [block,second]) { await item.locator('.scheduler-block-main').click(); await expect(page.getByRole('dialog',{name:'Session editor'})).toBeVisible(); await page.getByRole('button',{name:'Discard draft'}).click(); }
+});
+test('quick add opens a fitting selected-day draft or a no-slot explanation',async({page,request})=>{
+ const state=await controlledWeek(page,request);
+ const date=state.week;
+ await page.route('**/api/scheduler/week?*',route=>route.fulfill({json:{...state,settings:{...state.settings,timeZone:'UTC'},days:state.days.map((day:Record<string,unknown>,i:number)=>({...day,valid:true,start:`${day.date}T08:00:00Z`,end:`${day.date}T08:30:00Z`,interval:{start:'08:00',end:'08:30',nextDay:false}})),sessions:[]}}));
+ await page.getByRole('button',{name:'Refresh schedule',exact:true}).first().click();
+ await page.getByRole('button',{name:`Add session on ${date}`,exact:true}).click();
+ const dialog=page.getByRole('dialog',{name:'Session editor'}); await expect(dialog.getByLabel('Start time',{exact:true})).toHaveValue('08:01'); await expect(dialog.getByLabel('End time',{exact:true})).toHaveValue('08:30');
+ await page.getByRole('button',{name:'Discard draft'}).click(); await page.clock.fastForward(31*60000);
+ await page.getByRole('button',{name:`Add session on ${date}`,exact:true}).click(); await expect(dialog.getByText(/No valid future slot/)).toBeVisible(); await expect(dialog.getByLabel('Start time',{exact:true})).toHaveValue('');
+});
