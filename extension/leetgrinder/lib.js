@@ -616,7 +616,10 @@
         await update(id, (e) => e && { ...e, tries: (e.tries || 0) + 1, lastError: error });
         return { ...res, queued: true };
       }
-      await update(id, (e) => (dropFinal ? undefined : e && { ...e, failed: error }));
+      // A 409 on a resend means the app saved this id earlier (for example
+      // when a timed-out send went through) and it was edited there since.
+      const saved = !dropFinal && res.status === 409;
+      await update(id, (e) => (dropFinal || saved ? undefined : e && { ...e, failed: error }));
       return res;
     }
 
@@ -624,16 +627,24 @@
     // app's answer, with queued set when the attempt waits to be resent.
     // A final rejection is returned to the panel and not kept.
     async function submit(attempt) {
-      const stored = await locked(async () => {
-        const box = await read();
-        const waiting = Object.values(box).filter((e) => e && !e.failed).length;
-        if (!box[attempt.id] && waiting >= MAX_OUTBOX) return false;
-        // A resend keeps the attempt's place in the queue.
-        const queuedAt = box[attempt.id] ? box[attempt.id].queuedAt : now();
-        box[attempt.id] = { attempt, queuedAt, tries: 0 };
-        await storage.set({ [OUTBOX_KEY]: box });
-        return true;
-      });
+      let stored;
+      try {
+        stored = await locked(async () => {
+          const box = await read();
+          const existing = box[attempt.id];
+          const waiting = Object.values(box).filter((e) => e && !e.failed).length;
+          if ((!existing || existing.failed) && waiting >= MAX_OUTBOX) return false;
+          // A resend keeps the attempt's place in the queue.
+          box[attempt.id] = { attempt, queuedAt: existing ? existing.queuedAt : now(), tries: 0 };
+          await storage.set({ [OUTBOX_KEY]: box });
+          return true;
+        });
+      } catch (err) {
+        // Storage failed (for example a full quota): still send, unqueued,
+        // so the panel keeps its own Retry.
+        console.error("Leetgrinder outbox:", err);
+        return post(attempt);
+      }
       if (!stored) return { ok: false, status: 0, error: `${MAX_OUTBOX} attempts are already waiting to sync. Open the popup to check them.` };
       return deliver(attempt.id, attempt, true);
     }
@@ -653,9 +664,10 @@
           for (const [id, e] of waiting) {
             const res = await deliver(id, e.attempt, false);
             if (res.ok) sent++;
-            // An unreachable or failing app, or a rejected token, fails the
-            // rest the same way.
-            else if (outboxRetryable(res.status)) break;
+            // An unreachable app, a rejected token or a refused origin fails
+            // the rest the same way. Other retryable answers (408, 429, 5xx)
+            // may be about this attempt, so the pass moves on.
+            else if (res.status === 0 || res.status === 401 || res.status === 403) break;
           }
           return sent;
         })().finally(() => {

@@ -49,7 +49,10 @@
               discard.disabled = true;
               const res = await ext.runtime.sendMessage({ type: "outbox:discard", id: f.id }).catch(() => null);
               if (res && res.ok) sync.replaceChildren(...syncSection(res.outbox));
-              else discard.disabled = false;
+              else {
+                discard.disabled = false;
+                discard.textContent = "Discard (failed, try again)";
+              }
             });
             return el("li", {}, [el("span", { text: f.title }), el("div", { className: "muted small", text: f.error }), discard]);
           }),

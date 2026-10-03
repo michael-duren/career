@@ -102,8 +102,8 @@ test("flush resends oldest first, stops while the app is unreachable, and record
   assert.deepEqual(back.sent, [attempt(3).id, attempt(1).id, attempt(2).id]);
 });
 
-test("a failing app or rejected token stops the pass; a final rejection does not", async () => {
-  for (const stop of [{ ok: false, status: 503, error: "" }, { ok: false, status: 401, error: "" }]) {
+test("an unreachable app, rejected token or refused origin stops the pass; other failures do not", async () => {
+  for (const stop of [DOWN, { ok: false, status: 401, error: "" }, { ok: false, status: 403, error: "" }]) {
     const storage = fakeStorage();
     let clock = 0;
     for (const n of [1, 2, 3]) await lib.createOutbox(storage, fakeApp(DOWN).post, () => clock++).submit(attempt(n));
@@ -114,15 +114,44 @@ test("a failing app or rejected token stops the pass; a final rejection does not
   const storage = fakeStorage();
   let clock = 0;
   for (const n of [1, 2, 3]) await lib.createOutbox(storage, fakeApp(DOWN).post, () => clock++).submit(attempt(n));
-  const app = fakeApp({ ok: false, status: 422, error: "No." }, OK, OK);
-  assert.equal(await lib.createOutbox(storage, app.post).flush(), 2);
+  // A 503 or 429 may be about one attempt, so the rest are still tried.
+  const app = fakeApp({ ok: false, status: 503, error: "" }, { ok: false, status: 429, error: "" }, OK);
+  assert.equal(await lib.createOutbox(storage, app.post).flush(), 1);
   assert.deepEqual(app.sent, [attempt(1).id, attempt(2).id, attempt(3).id]);
+  assert.equal((await lib.createOutbox(storage, app.post).summary()).pending, 2);
+  const final = fakeApp({ ok: false, status: 422, error: "No." }, OK);
+  assert.equal(await lib.createOutbox(storage, final.post).flush(), 1);
+  assert.deepEqual(final.sent, [attempt(1).id, attempt(2).id]);
+});
+
+test("a 409 on a resend means the app already saved the attempt", async () => {
+  const storage = fakeStorage();
+  await lib.createOutbox(storage, fakeApp(DOWN).post).submit(attempt(1));
+  const outbox = lib.createOutbox(storage, fakeApp({ ok: false, status: 409, error: "Saved earlier." }).post);
+  await outbox.flush();
+  assert.deepEqual(await outbox.summary(), { pending: 0, lastError: "", failed: [] });
+});
+
+test("a storage failure still sends the attempt, without queuing it", async () => {
+  const broken = { get: async () => ({}), set: async () => { throw new Error("QUOTA_BYTES quota exceeded"); } };
+  const app = fakeApp(OK);
+  const error = console.error;
+  console.error = () => {};
+  try {
+    assert.deepEqual(await lib.createOutbox(broken, app.post).submit(attempt(1)), OK);
+    const down = await lib.createOutbox(broken, fakeApp(DOWN).post).submit(attempt(2));
+    assert.equal(down.queued, undefined);
+  } finally {
+    console.error = error;
+  }
+  assert.deepEqual(app.sent, [attempt(1).id]);
 });
 
 test("the last error shown is the oldest waiting attempt's, which a pass tries first", async () => {
   const storage = fakeStorage();
-  let clock = 0;
-  for (const n of [1, 2]) await lib.createOutbox(storage, fakeApp({ ok: false, status: 401, error: "Bad token." }).post, () => clock++).submit(attempt(n));
+  // Stored oldest last, so the summary must sort by queue time.
+  let clock = 100;
+  for (const n of [1, 2]) await lib.createOutbox(storage, fakeApp({ ok: false, status: 401, error: "Bad token." }).post, () => clock--).submit(attempt(n));
   await lib.createOutbox(storage, fakeApp(DOWN).post).flush();
   assert.equal((await lib.createOutbox(storage, fakeApp(DOWN).post).summary()).lastError, DOWN.error);
 });
@@ -193,8 +222,13 @@ test("a resubmitted id replaces its entry; a full outbox refuses new attempts", 
   assert.match(full.error, /already waiting to sync/);
   // Retrying one already waiting still works.
   assert.equal((await outbox.submit(attempt(1))).queued, true);
-  // Rejected attempts do not count toward the cap.
+  // A rejected attempt sent again counts as new, so it cannot exceed the cap.
   storage.data.outbox[attempt(1).id].failed = "No.";
+  for (let i = 1; i < lib.MAX_OUTBOX; i++) storage.data.outbox[`10000000-0000-4000-8000-${String(i).padStart(12, "0")}`].failed = undefined;
+  storage.data.outbox[attempt(3).id] = { attempt: attempt(3), queuedAt: 1, tries: 0 };
+  assert.match((await outbox.submit(attempt(1))).error, /already waiting to sync/);
+  // Rejected attempts do not count toward the cap.
+  delete storage.data.outbox[attempt(3).id];
   assert.equal((await outbox.submit(attempt(2))).queued, true);
 });
 

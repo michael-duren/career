@@ -76,8 +76,13 @@ async function refreshBadge() {
 // closed tab, a reload or app downtime does not lose them.
 const outbox = lib.createOutbox(ext.storage.local, (attempt) => api("POST", "/api/leetgrinder/attempts", attempt));
 
-// syncOutbox resends waiting attempts; callers refresh the badge after it.
-const syncOutbox = () => outbox.flush().catch(() => 0);
+// syncOutbox resends waiting attempts and resolves to how many the app
+// accepted; callers refresh the badge after it.
+const syncOutbox = () =>
+  outbox.flush().catch((err) => {
+    console.error("Leetgrinder outbox:", err);
+    return 0;
+  });
 
 const BADGE_ALARM = "leetgrinder-today";
 // Create the alarm once; recreating it on every worker start would restart
@@ -168,9 +173,10 @@ async function handle(message, sender) {
   }
   if (message.type === "today") {
     if (!fromPopup(sender)) return { ok: false, status: 0, error: "Unexpected sender." };
-    // Resending runs beside the badge read, so a slow app delays the popup
-    // by one request, not a pass plus a request.
-    const [, res] = await Promise.all([syncOutbox(), refreshBadge()]);
+    // Resending runs beside the badge read; when it sent anything, today is
+    // read again so the popup counts those attempts.
+    let [sent, res] = await Promise.all([syncOutbox(), refreshBadge()]);
+    if (sent > 0) res = await refreshBadge();
     const cfg = await config();
     return { ...res, origin: cfg.origin || "", outbox: await outbox.summary() };
   }

@@ -535,7 +535,9 @@
       }
       if (queued && res.status !== 409 && !lib.outboxRetryable(res.status)) {
         // A queued attempt was rejected for good on Retry now. The outbox
-        // dropped it, so unlock the fields to fix and save it again.
+        // dropped it, so unlock the fields to fix and save it again, under a
+        // new id so a resend already under way cannot touch the new entry.
+        id = crypto.randomUUID();
         locked = null;
         queued = false;
         panel.locked = false;
