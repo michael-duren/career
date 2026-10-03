@@ -570,8 +570,9 @@
   const MAX_OUTBOX = 50;
 
   // outboxRetryable reports whether a failed send may succeed later without
-  // changing the attempt: the app was unreachable, failed, or rejected the
-  // token (fixed in the options). Other answers are final.
+  // changing the attempt: the app was unreachable or failed (0, 408, 429,
+  // 5xx), rejected the token (401, fixed in the options), or refused the
+  // request's origin (403). Other answers are final.
   function outboxRetryable(status) {
     return status === 0 || status === 401 || status === 403 || status === 408 || status === 429 || status >= 500;
   }
@@ -625,8 +626,11 @@
     async function submit(attempt) {
       const stored = await locked(async () => {
         const box = await read();
-        if (!box[attempt.id] && Object.keys(box).length >= MAX_OUTBOX) return false;
-        box[attempt.id] = { attempt, queuedAt: now(), tries: 0 };
+        const waiting = Object.values(box).filter((e) => e && !e.failed).length;
+        if (!box[attempt.id] && waiting >= MAX_OUTBOX) return false;
+        // A resend keeps the attempt's place in the queue.
+        const queuedAt = box[attempt.id] ? box[attempt.id].queuedAt : now();
+        box[attempt.id] = { attempt, queuedAt, tries: 0 };
         await storage.set({ [OUTBOX_KEY]: box });
         return true;
       });
@@ -649,8 +653,9 @@
           for (const [id, e] of waiting) {
             const res = await deliver(id, e.attempt, false);
             if (res.ok) sent++;
-            // An unreachable app fails the rest the same way.
-            else if (res.status === 0) break;
+            // An unreachable or failing app, or a rejected token, fails the
+            // rest the same way.
+            else if (outboxRetryable(res.status)) break;
           }
           return sent;
         })().finally(() => {
@@ -664,7 +669,8 @@
     // the last error, and the attempts the app rejected.
     async function summary() {
       const entries = Object.values(await read()).filter((e) => e && e.attempt);
-      const pending = entries.filter((e) => !e.failed).sort((a, b) => (b.queuedAt || 0) - (a.queuedAt || 0));
+      // A resend pass tries the oldest first, so its error is the latest.
+      const pending = entries.filter((e) => !e.failed).sort((a, b) => (a.queuedAt || 0) - (b.queuedAt || 0));
       const failed = entries
         .filter((e) => e.failed)
         .map((e) => ({ id: e.attempt.id, slug: e.attempt.problemSlug, title: (e.attempt.problem && e.attempt.problem.title) || e.attempt.problemSlug, error: e.failed }));
@@ -681,7 +687,7 @@
   // kept and will sync on its own.
   function queuedMessage(res) {
     const why = (res && res.error) || describeStatus(res ? res.status : 0, "");
-    return `${why} The attempt is saved in the extension and syncs automatically; you can close this panel.`;
+    return `${why} The attempt is saved in the extension and syncs automatically; you can close this panel. It counts on the day it syncs.`;
   }
 
   // outboxLines are the popup's sync lines for an outbox summary.

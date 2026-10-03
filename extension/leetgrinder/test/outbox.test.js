@@ -34,9 +34,13 @@ const OK = { ok: true, status: 201, data: { kind: "new" } };
 const DOWN = { ok: false, status: 0, error: "Could not reach the Leetgrinder app." };
 const attempt = (n, extra = {}) => ({ id: `00000000-0000-4000-8000-00000000000${n}`, problemSlug: "two-sum", outcome: "solved", minutes: 20, ...extra });
 
-test("an accepted attempt leaves nothing waiting", async () => {
+test("an attempt is stored before it is sent, and removed once accepted", async () => {
   const storage = fakeStorage();
-  const app = fakeApp(OK);
+  const app = fakeApp((a) => {
+    // A worker killed mid-request must still find the attempt.
+    assert.deepEqual(storage.data.outbox[a.id].attempt, a);
+    return OK;
+  });
   const outbox = lib.createOutbox(storage, app.post);
   assert.deepEqual(await outbox.submit(attempt(1)), OK);
   assert.deepEqual(await outbox.summary(), { pending: 0, lastError: "", failed: [] });
@@ -75,14 +79,18 @@ test("retryable answers keep the attempt; final ones are returned and dropped", 
   const res = await lib.createOutbox(storage, fakeApp(conflict).post).submit(attempt(2));
   assert.equal(res.queued, undefined);
   assert.equal(res.status, 409);
-  assert.equal((await outbox.summary()).pending, 1);
+  const after = await outbox.summary();
+  assert.equal(after.pending, 1);
+  assert.deepEqual(after.failed, []);
 });
 
 test("flush resends oldest first, stops while the app is unreachable, and records tries", async () => {
   const storage = fakeStorage();
-  let clock = 1000;
-  const down = lib.createOutbox(storage, fakeApp(DOWN).post, () => clock++);
-  for (const n of [3, 1, 2]) await down.submit(attempt(n));
+  // Stored in a different order from when they were queued.
+  const clocks = { 1: 2000, 2: 3000, 3: 1000 };
+  for (const n of [1, 2, 3]) {
+    await lib.createOutbox(storage, fakeApp(DOWN).post, () => clocks[n]).submit(attempt(n));
+  }
   const app = fakeApp(DOWN);
   assert.equal(await lib.createOutbox(storage, app.post).flush(), 0);
   // An unreachable app fails every attempt the same way, so one try is enough.
@@ -92,6 +100,31 @@ test("flush resends oldest first, stops while the app is unreachable, and record
   const back = fakeApp(OK);
   assert.equal(await lib.createOutbox(storage, back.post).flush(), 3);
   assert.deepEqual(back.sent, [attempt(3).id, attempt(1).id, attempt(2).id]);
+});
+
+test("a failing app or rejected token stops the pass; a final rejection does not", async () => {
+  for (const stop of [{ ok: false, status: 503, error: "" }, { ok: false, status: 401, error: "" }]) {
+    const storage = fakeStorage();
+    let clock = 0;
+    for (const n of [1, 2, 3]) await lib.createOutbox(storage, fakeApp(DOWN).post, () => clock++).submit(attempt(n));
+    const app = fakeApp(stop);
+    await lib.createOutbox(storage, app.post).flush();
+    assert.deepEqual(app.sent, [attempt(1).id], String(stop.status));
+  }
+  const storage = fakeStorage();
+  let clock = 0;
+  for (const n of [1, 2, 3]) await lib.createOutbox(storage, fakeApp(DOWN).post, () => clock++).submit(attempt(n));
+  const app = fakeApp({ ok: false, status: 422, error: "No." }, OK, OK);
+  assert.equal(await lib.createOutbox(storage, app.post).flush(), 2);
+  assert.deepEqual(app.sent, [attempt(1).id, attempt(2).id, attempt(3).id]);
+});
+
+test("the last error shown is the oldest waiting attempt's, which a pass tries first", async () => {
+  const storage = fakeStorage();
+  let clock = 0;
+  for (const n of [1, 2]) await lib.createOutbox(storage, fakeApp({ ok: false, status: 401, error: "Bad token." }).post, () => clock++).submit(attempt(n));
+  await lib.createOutbox(storage, fakeApp(DOWN).post).flush();
+  assert.equal((await lib.createOutbox(storage, fakeApp(DOWN).post).summary()).lastError, DOWN.error);
 });
 
 test("an attempt rejected during a flush stays as failed until discarded", async () => {
@@ -138,10 +171,18 @@ test("concurrent flushes share one pass and concurrent submits keep every attemp
 
 test("a resubmitted id replaces its entry; a full outbox refuses new attempts", async () => {
   const storage = fakeStorage();
-  const outbox = lib.createOutbox(storage, fakeApp(DOWN).post);
+  let clock = 100;
+  const outbox = lib.createOutbox(storage, fakeApp(DOWN).post, () => clock++);
   await outbox.submit(attempt(1));
   await outbox.submit(attempt(1));
   assert.equal((await outbox.summary()).pending, 1);
+  // Retry now keeps the queue position and starts counting tries again.
+  assert.equal(storage.data.outbox[attempt(1).id].queuedAt, 100);
+  assert.equal(storage.data.outbox[attempt(1).id].tries, 1);
+  // Resubmitting an attempt marked failed clears the mark.
+  storage.data.outbox[attempt(1).id].failed = "No.";
+  await outbox.submit(attempt(1));
+  assert.equal(storage.data.outbox[attempt(1).id].failed, undefined);
   for (let i = 1; i < lib.MAX_OUTBOX; i++) {
     await outbox.submit({ ...attempt(1), id: `10000000-0000-4000-8000-${String(i).padStart(12, "0")}` });
   }
@@ -152,6 +193,9 @@ test("a resubmitted id replaces its entry; a full outbox refuses new attempts", 
   assert.match(full.error, /already waiting to sync/);
   // Retrying one already waiting still works.
   assert.equal((await outbox.submit(attempt(1))).queued, true);
+  // Rejected attempts do not count toward the cap.
+  storage.data.outbox[attempt(1).id].failed = "No.";
+  assert.equal((await outbox.submit(attempt(2))).queued, true);
 });
 
 test("outboxLines, queuedMessage and validAttemptId", () => {

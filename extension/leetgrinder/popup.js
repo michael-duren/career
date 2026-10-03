@@ -1,6 +1,6 @@
 // Toolbar popup: today's goal, streak, review picks and due list, read
-// through the background worker, and attempts waiting to sync. Its only
-// write is discarding an attempt the app rejected.
+// through the background worker, and attempts waiting to sync. Opening it
+// resends waiting attempts; otherwise its only write is Discard.
 (() => {
   "use strict";
   const lib = globalThis.LeetgrinderLib;

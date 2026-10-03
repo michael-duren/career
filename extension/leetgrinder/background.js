@@ -168,8 +168,9 @@ async function handle(message, sender) {
   }
   if (message.type === "today") {
     if (!fromPopup(sender)) return { ok: false, status: 0, error: "Unexpected sender." };
-    await syncOutbox();
-    const res = await refreshBadge();
+    // Resending runs beside the badge read, so a slow app delays the popup
+    // by one request, not a pass plus a request.
+    const [, res] = await Promise.all([syncOutbox(), refreshBadge()]);
     const cfg = await config();
     return { ...res, origin: cfg.origin || "", outbox: await outbox.summary() };
   }
