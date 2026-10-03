@@ -72,22 +72,34 @@ async function refreshBadge() {
   return res;
 }
 
+// Confirmed attempts wait in storage.local until the app accepts them, so a
+// closed tab, a reload or app downtime does not lose them.
+const outbox = lib.createOutbox(ext.storage.local, (attempt) => api("POST", "/api/leetgrinder/attempts", attempt));
+
+// syncOutbox resends waiting attempts and resolves to how many the app
+// accepted; callers refresh the badge after it.
+const syncOutbox = () =>
+  outbox.flush().catch((err) => {
+    console.error("Leetgrinder outbox:", err);
+    return 0;
+  });
+
 const BADGE_ALARM = "leetgrinder-today";
 // Create the alarm once; recreating it on every worker start would restart
 // its countdown.
 ext.alarms.get(BADGE_ALARM).then((alarm) => alarm || ext.alarms.create(BADGE_ALARM, { periodInMinutes: 15 }));
 ext.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === BADGE_ALARM) refreshBadge();
+  if (alarm.name === BADGE_ALARM) syncOutbox().then(refreshBadge);
 });
 ext.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && (changes.origin || changes.token)) refreshBadge();
+  if (area === "local" && (changes.origin || changes.token)) syncOutbox().then(refreshBadge);
 });
-ext.permissions.onAdded.addListener(() => refreshBadge());
+ext.permissions.onAdded.addListener(() => syncOutbox().then(refreshBadge));
 ext.permissions.onRemoved.addListener(() => refreshBadge());
 // Chrome starts the worker at browser launch only for an onStartup
 // listener; the top-level refresh below then runs once per worker start.
 ext.runtime.onStartup.addListener(() => {});
-refreshBadge();
+syncOutbox().then(refreshBadge);
 
 // Timers live in storage.session so page reloads keep them but a browser
 // restart clears them. Only this worker touches that storage area.
@@ -161,9 +173,17 @@ async function handle(message, sender) {
   }
   if (message.type === "today") {
     if (!fromPopup(sender)) return { ok: false, status: 0, error: "Unexpected sender." };
-    const res = await refreshBadge();
+    // Resending runs beside the badge read; when it sent anything, today is
+    // read again so the popup counts those attempts.
+    let [sent, res] = await Promise.all([syncOutbox(), refreshBadge()]);
+    if (sent > 0) res = await refreshBadge();
     const cfg = await config();
-    return { ...res, origin: cfg.origin || "" };
+    return { ...res, origin: cfg.origin || "", outbox: await outbox.summary() };
+  }
+  if (message.type === "outbox:discard") {
+    if (!fromPopup(sender) || !lib.validAttemptId(message.id)) return { ok: false, status: 0, error: "Unexpected sender." };
+    await outbox.discard(message.id);
+    return { ok: true, status: 200, outbox: await outbox.summary() };
   }
   if (!fromProblemSite(sender)) return { ok: false, status: 0, error: "Unexpected sender." };
   const slug = message.slug;
@@ -188,7 +208,7 @@ async function handle(message, sender) {
     case "attempt": {
       const attempt = lib.cleanAttempt(message.attempt);
       if (!attempt) return { ok: false, status: 400, error: "Check the attempt fields and try again." };
-      const res = await api("POST", "/api/leetgrinder/attempts", attempt);
+      const res = await outbox.submit(attempt);
       if (res.ok) refreshBadge();
       return res;
     }

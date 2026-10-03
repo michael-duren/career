@@ -432,6 +432,10 @@
     // After an ambiguous failure the server may have saved the entry, so the
     // fields lock and retries resend exactly the same attempt.
     let locked = null;
+    // queued is set while the outbox holds this panel's attempt, and
+    // restarted once the timer was restarted for it.
+    let queued = false;
+    let restarted = false;
 
     const form = el("form", { className: "box", "aria-label": "Log this attempt to Leetgrinder" }, [
       ...heading(state, info),
@@ -505,8 +509,9 @@
         state.lookup.then((found) => {
           if (current === state) showBanner(state, found);
         });
-        // Start a fresh timer for the next attempt on this problem.
-        await send({ type: "timer:restart", slug });
+        // Start a fresh timer for the next attempt on this problem, unless
+        // queuing it already did.
+        if (!restarted) await send({ type: "timer:restart", slug });
         setTimeout(() => {
           if (ui && ui.root === root) closeUI();
         }, 1500);
@@ -514,11 +519,39 @@
       }
       status.className = "status error";
       status.textContent = res.error || lib.describeStatus(res.status, "");
+      if (res.queued) {
+        // The extension keeps the attempt and resends it until the app
+        // accepts it, so the panel can close (Escape included) without
+        // losing it. Retry now resends the same attempt.
+        locked = attempt;
+        panel.locked = false;
+        submit.disabled = false;
+        submit.textContent = "Retry now";
+        status.className = "status";
+        status.textContent = lib.queuedMessage(res);
+        if (!restarted) await send({ type: "timer:restart", slug });
+        queued = restarted = true;
+        return;
+      }
+      if (queued && res.status !== 409 && !lib.outboxRetryable(res.status)) {
+        // A queued attempt was rejected for good on Retry now. The outbox
+        // dropped it, so unlock the fields to fix and save it again, under a
+        // new id so a resend already under way cannot touch the new entry.
+        id = crypto.randomUUID();
+        locked = null;
+        queued = false;
+        panel.locked = false;
+        submit.disabled = false;
+        submit.textContent = "Log attempt";
+        for (const f of fields) f.disabled = false;
+        return;
+      }
       if (res.status === 409) {
         // This id can never succeed. Keep what was typed and let the learner
         // save it under a new id.
         id = crypto.randomUUID();
         locked = null;
+        queued = false;
         panel.locked = false;
         submit.disabled = false;
         submit.textContent = "Log attempt";
