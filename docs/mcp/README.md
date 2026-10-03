@@ -143,11 +143,12 @@ Write tools (need **Allow read and edit**):
   (solved, struggled, unfinished), `minutes` (1-240), and optionally `assisted`, `notes`,
   `timeComplexity` and `spaceComplexity` (required for solved and struggled), `code` with
   `codeLanguage`, `wantsReview` and `approach`. It is checked like an extension attempt,
-  dated now, counted as new, review or practice like any attempt (returned as `kind`), and
+  dated now, counted as new, review or practice like any attempt (returned as `kind`, left
+  out if today cannot be read after saving), and
   recorded with source `mcp`. Pass the same `id` to retry without logging twice (the
   tool generates one when omitted, so Claude should pass its own); the same `id` with
-  different values is refused. A problem not seen before is logged with a `warning`, in
-  case the slug is a typo. `historyUrl` is the problem's page in the app.
+  different values is refused. A problem whose LeetCode details are not known yet is
+  logged with a `warning`, in case the slug is a typo, including on a retry. `historyUrl` is the problem's page in the app.
 
 Saves and deletes use the website's validation. Claude clients ask before
 running write tools unless you allow them permanently. Request

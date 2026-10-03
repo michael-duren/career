@@ -95,9 +95,14 @@ func TestMCPLeetgrinderTools(t *testing.T) {
 		t.Fatal(logged)
 	}
 	// A problem never seen before is logged with a warning, in case of a typo.
-	fresh, failed := call("log_leetgrinder_attempt", map[string]any{"problem": "some-made-up-problem", "outcome": "unfinished", "minutes": 5})
+	freshArgs := map[string]any{"id": uuid.NewString(), "problem": "some-made-up-problem", "outcome": "unfinished", "minutes": 5}
+	fresh, failed := call("log_leetgrinder_attempt", freshArgs)
 	if failed || fresh["kind"] != "new" || !strings.Contains(fresh["warning"].(string), "some-made-up-problem") {
 		t.Fatal(fresh)
+	}
+	// A retry after a lost response still warns: the problem is still unchecked.
+	if again, failed := call("log_leetgrinder_attempt", freshArgs); failed || again["warning"] == nil {
+		t.Fatal(again)
 	}
 	// The same id with the same values is not logged twice; changed values are refused.
 	if again, failed := call("log_leetgrinder_attempt", args); failed || again["id"] != id {

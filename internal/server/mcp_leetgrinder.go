@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -64,7 +65,7 @@ func mcpLeetgrinderCard(today leetgrinder.Today, c leetgrinder.Card) map[string]
 
 func (s *Server) addLeetgrinderTools(server *mcp.Server) {
 	mcp.AddTool(server, &mcp.Tool{
-		Name: "get_leetgrinder_today", Description: "Today's Leetgrinder practice: the daily goal and progress (new, review, bonus), whether it is met, the streak, today's review picks with their reasons and recall, today's new problems picked from todos (when that option is on), and how many more reviews are due. Like opening the dashboard, the first access of a day freezes that day's goal and picks.",
+		Name: "get_leetgrinder_today", Description: "Today's Leetgrinder practice: the daily goal and progress (new, review, bonus, practice), whether it is met, the streak, today's review picks with their reasons and recall, today's new problems picked from todos (when that option is on), and how many more reviews are due. Like opening the dashboard, the first access of a day freezes that day's goal and picks.",
 		Annotations: readOnly,
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, any, error) {
 		today, err := s.mcpLeetgrinderToday(ctx)
@@ -186,11 +187,6 @@ func (s *Server) addLeetgrinderTools(server *mcp.Server) {
 		if in.ID == "" {
 			in.ID = uuid.NewString()
 		}
-		// A chat-typed slug may be a typo; the extension reads it from the page.
-		known, err := s.db.LeetgrinderProblem(ctx, slug)
-		if err != nil {
-			return nil, nil, toolError(err)
-		}
 		attempt, status, message := newLeetgrinderAttempt(leetgrinderAPIAttemptInput{
 			ID: in.ID, ProblemSlug: slug, Outcome: in.Outcome, Minutes: in.Minutes, Assisted: in.Assisted, Notes: in.Notes,
 			TimeComplexity: in.TimeComplexity, SpaceComplexity: in.SpaceComplexity, Code: in.Code, CodeLanguage: in.CodeLanguage, WantsReview: in.WantsReview, Approach: in.Approach,
@@ -198,9 +194,18 @@ func (s *Server) addLeetgrinderTools(server *mcp.Server) {
 		if status != 0 {
 			return nil, nil, invalidInput("%s", message)
 		}
+		// A chat-typed slug may be a typo; the extension reads it from the
+		// page. Still unknown after a retry means still unchecked, so the
+		// warning holds until LeetCode's details arrive.
+		known, err := s.db.LeetgrinderProblem(ctx, slug)
+		if err != nil {
+			return nil, nil, toolError(err)
+		}
 		// As for the extension: plan today first, so a first access that is
 		// itself a review still plans that review.
-		_ = s.db.PlanLeetgrinderToday(ctx, s.clock())
+		if err := s.db.PlanLeetgrinderToday(ctx, s.clock()); err != nil {
+			log.Printf("mcp: plan leetgrinder today before log: %v", err)
+		}
 		saved, err := s.db.SaveLeetgrinderAttemptWithProblem(ctx, attempt, "", nil, s.clock())
 		switch {
 		case errors.Is(err, database.ErrConflict):
@@ -210,12 +215,14 @@ func (s *Server) addLeetgrinderTools(server *mcp.Server) {
 		case err != nil:
 			return nil, nil, toolError(err)
 		}
-		kind := ""
+		out := map[string]any{"id": saved.ID, "problemSlug": saved.ProblemSlug, "outcome": saved.Outcome, "minutes": saved.Minutes, "historyUrl": s.config.PublicOrigin + leetgrinder.ProblemURL(saved.ProblemSlug)}
+		// The attempt is saved; kind is left out when today cannot load.
 		if today, err := s.db.LeetgrinderToday(ctx, s.clock()); err == nil {
-			kind = today.Kind(saved.ProblemSlug)
+			out["kind"] = today.Kind(saved.ProblemSlug)
+		} else {
+			log.Printf("mcp: leetgrinder kind after log: %v", err)
 		}
-		out := map[string]any{"id": saved.ID, "problemSlug": saved.ProblemSlug, "outcome": saved.Outcome, "minutes": saved.Minutes, "kind": kind, "historyUrl": s.config.PublicOrigin + leetgrinder.ProblemURL(saved.ProblemSlug)}
-		if !known.InCatalog {
+		if !known.InCatalog || !known.Known() {
 			out["warning"] = "This problem was not in Leetgrinder before, so check that " + saved.ProblemSlug + " is the intended LeetCode slug. Its title and topics are fetched from LeetCode; the problem page says if LeetCode does not know it."
 		}
 		return nil, out, nil
