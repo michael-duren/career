@@ -1087,9 +1087,11 @@ test('invalid dated column remains visible and warning opens its affected editab
 test('fold actual shows elapsed minutes and both UTC offsets', async ({page,request})=>{
  const state=await controlledWeek(page,request,'2026-10-26');
  const session={id:'fold',date:'2026-11-01',state:'accepted',assignment:{title:'Repeated hour'},plan:null,actual:{date:'2026-11-01',status:'explicit',start:'2026-11-01T06:30:00Z',end:'2026-11-01T07:30:00Z'},conflictIds:[],exception:false};
- await page.route('**/api/scheduler/week?*',route=>route.fulfill({json:{...state,settings:{...state.settings,timeZone:'America/Chicago'},sessions:[session]}}));
+ await page.route('**/api/scheduler/week?*',route=>route.fulfill({json:{...state,settings:{...state.settings,timeZone:'America/Chicago'},sessions:[session,{...session,id:'fold-second',assignment:{title:'Later repeated hour'},actual:{...session.actual,start:'2026-11-01T07:30:00Z',end:'2026-11-01T08:30:00Z'}}]}}));
  await page.getByRole('button',{name:'Refresh schedule',exact:true}).first().click();
  const block=page.locator('[data-session-id="fold"]'); await block.scrollIntoViewIfNeeded(); expect((await block.boundingBox())!.height).toBe(60); await expect(block).toContainText('60 min · GMT-5–GMT-6');
+ const second=page.locator('[data-session-id="fold-second"]'); const a=(await block.boundingBox())!, b=(await second.boundingBox())!; expect(a.x+a.width).toBeLessThanOrEqual(b.x);
+ for (const item of [block,second]) { await item.locator('.scheduler-block-main').click(); await expect(page.getByRole('dialog',{name:'Session editor'})).toBeVisible(); await page.getByRole('button',{name:'Discard draft'}).click(); }
 });
 test('quick add opens a fitting selected-day draft or a no-slot explanation',async({page,request})=>{
  const state=await controlledWeek(page,request);

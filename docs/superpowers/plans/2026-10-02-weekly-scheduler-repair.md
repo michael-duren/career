@@ -126,12 +126,12 @@ Issues: S11 and quick-add/warning improvements.
 
 **Files:** `WeeklySchedulerGrid.tsx`, `WeeklyScheduler.tsx`, `scheduler.ts`, `weekly-scheduler.css`, `internal/scheduler/model.go`, `domain.go`, client/domain/browser tests.
 
-- [ ] Add tests for two adjacent 15-minute sessions, actuals at 03:00 and after the configured end, a repeated-hour actual, and a configured 02:30 boundary on Chicago March 8, 2026. Assert both short sessions are selectable; actuals remain discoverable; elapsed duration is visible; every scheduling date has a column.
-- [ ] Derive the display axis from configured ranges and visible records. Render invalid-boundary days as dated placeholders with a reason; keep server accepted-day validation intact. Include explicit day validity in the API/client schema rather than interpreting missing array entries as date columns.
-- [ ] Separate interval height from text/actions and explain repeated-hour offsets. Keep post-midnight labels and scheduling date clear.
-- [ ] Make quick-add defaults start within the selected day and choose a duration that fits remaining room. If no valid future slot is available, open an explanatory draft rather than manufacture an invalid placement.
-- [ ] Add structured warning targets to the API alongside message text and link warnings to the owning date/goal/session. Assert a conflict warning opens the affected editable record.
-- [ ] Run domain, client, and focused browser checks. Expected: no clipped/unreachable actuals or misleading overlapping short-block geometry. Commit.
+- [x] Add tests for two adjacent 15-minute sessions, actuals at 03:00 and after the configured end, a repeated-hour actual, and a configured 02:30 boundary on Chicago March 8, 2026. Assert both short sessions are selectable; actuals remain discoverable; elapsed duration is visible; every scheduling date has a column.
+- [x] Derive the display axis from configured ranges and visible records. Render invalid-boundary days as dated placeholders with a reason; keep server accepted-day validation intact. Include explicit day validity in the API/client schema rather than interpreting missing array entries as date columns.
+- [x] Separate interval height from text/actions and explain repeated-hour offsets. Keep post-midnight labels and scheduling date clear.
+- [x] Make quick-add defaults start within the selected day and choose a duration that fits remaining room. If no valid future slot is available, open an explanatory draft rather than manufacture an invalid placement.
+- [x] Add structured warning targets to the API alongside message text and link warnings to the owning date/goal/session. Assert a conflict warning opens the affected editable record.
+- [x] Run domain, client, and focused browser checks. Expected: no clipped/unreachable actuals or misleading overlapping short-block geometry. Commit.
 
 ## Task 7: Check recurrence against known future exceptions and reservations
 
