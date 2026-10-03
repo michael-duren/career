@@ -199,8 +199,10 @@ func (s *Store) leetgrinderTodayPlanned(ctx context.Context, now time.Time) (lee
 	return day, true, nil
 }
 
-// planLeetgrinderToday freezes today's goal and extends its plan under a
-// lock, re-checking both, and returns the planned state.
+// planLeetgrinderToday freezes today's goal and extends its review and
+// new-pick plans under a lock, re-checking each, and returns the planned
+// state. A new-pick failure is rolled back on its own and returned in
+// newPicksErr.
 func (s *Store) planLeetgrinderToday(ctx context.Context, now time.Time) (leetgrinderDay, error) {
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
