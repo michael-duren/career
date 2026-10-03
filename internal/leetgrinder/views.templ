@@ -1037,6 +1037,7 @@ templ Stats(page StatsPage) {
 				</table>
 			</div>
 		</section>
+		@trendsSection(page.Trends)
 		<section class="stats-block" aria-labelledby="calendar-title">
 			<h2 id="calendar-title">Goal calendar</h2>
 			<p class="small muted">The last { Count(len(page.Calendar)) } weeks. <span class="cal-key cal-met"></span> goal met · <span class="cal-key cal-active"></span> practised · <span class="cal-key"></span> no attempts</p>
@@ -1056,4 +1057,67 @@ templ Stats(page StatsPage) {
 			</table>
 		</section>
 	}
+}
+
+// trendsSection shows weekly series as a table with inline bars, oldest week
+// first, so it reads without scripts and scrolls sideways on a phone.
+templ trendsSection(t Trends) {
+	<section class="queue stats-block" aria-labelledby="trends-title">
+		<h2 id="trends-title">Weekly trends</h2>
+		if len(t.Weeks) == 0 {
+			<p class="muted small">Trends appear after your first attempt.</p>
+		} else {
+			<p class="small muted">Weeks run Monday to Sunday in your time zone, for at most the last { Count(t.Limit) } weeks, leaving out weeks before your first attempt. Independent is the share of solves without help; complexity checks are the stated values Claude's analysis judged right.</p>
+			<div class="table-scroll">
+				<table class="trends">
+					<thead>
+						<tr>
+							<th scope="col">Week of</th>
+							<th scope="col">Problems solved</th>
+							<th scope="col">Independent</th>
+							for _, d := range TrendDifficulties {
+								<th scope="col">{ d } avg</th>
+							}
+							<th scope="col">Complexity checks</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, w := range t.Weeks {
+							<tr>
+								<th scope="row">{ w.Start.Format("2 Jan") }</th>
+								<td>
+									@trendBar(Count(w.Solved), BarWidth(float64(w.Solved), float64(t.MaxSolved)))
+								</td>
+								<td>
+									if rate, ok := w.IndependentRate(); ok {
+										@trendBar(RateLabel(rate, ok)+" of "+Count(w.Solves), BarWidth(rate, 1))
+									} else {
+										—
+									}
+								</td>
+								for _, d := range TrendDifficulties {
+									<td class="num">{ MinutesLabel(w.AverageMinutes(d)) }</td>
+								}
+								<td>
+									if acc, ok := w.Accuracy(); ok {
+										@trendBar(RateLabel(acc, ok)+" of "+Count(w.Checked), BarWidth(acc, 1))
+									} else {
+										—
+									}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+	</section>
+}
+
+// trendBar is a value with a bar whose width is out of 100.
+templ trendBar(label string, width string) {
+	<span class="trend-cell">
+		<svg class="trend-bar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true" focusable="false"><rect class="trend-track" width="100" height="8"></rect><rect class="trend-fill" width={ width } height="8"></rect></svg>
+		<span class="num">{ label }</span>
+	</span>
 }

@@ -1530,6 +1530,28 @@ dd {
   color: #fbbf24;
 }
 
+/* Stats: weekly trends. */
+.trends td,
+.trends th {
+  white-space: nowrap;
+}
+.trend-cell {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+.trend-bar {
+  width: 72px;
+  height: 8px;
+  flex: none;
+}
+.trend-track {
+  fill: var(--line);
+}
+.trend-fill {
+  fill: var(--accent);
+}
+
 /* Stats: goal calendar. */
 .stats-block {
   margin-top: 40px;

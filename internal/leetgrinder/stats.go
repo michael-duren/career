@@ -81,6 +81,7 @@ type StatsPage struct {
 	Topics       []TopicStat
 	Difficulties []DifficultyStat
 	Calendar     [][]CalendarDay
+	Trends       Trends
 	Filter       StatsFilter
 	Today        time.Time
 }
@@ -185,6 +186,7 @@ func NewStatsPage(today Today, f StatsFilter, weeks int) StatsPage {
 		}
 	}
 	page.Calendar = calendarWeeks(today, weeks)
+	page.Trends = WeeklyTrends(today, weeks)
 	return page
 }
 

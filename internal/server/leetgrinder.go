@@ -152,7 +152,7 @@ func (s *Server) leetgrinderReviews(w http.ResponseWriter, r *http.Request) {
 	renderLeetgrinder(w, r, 200, leetgrinder.Reviews(leetgrinder.ReviewsPage{Today: today, IDs: reviewIDs(map[string]string{}, today)}))
 }
 
-// statsWeeks is how many weeks the goal calendar shows.
+// statsWeeks is how many weeks the goal calendar and weekly trends cover.
 const statsWeeks = 12
 
 func (s *Server) leetgrinderStats(w http.ResponseWriter, r *http.Request) {
