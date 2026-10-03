@@ -112,13 +112,13 @@ Issues: S02, S10, R02.
 
 **Interfaces:** Keep `schedulerRequest` as the transport. Add one request generation for viewed-week results and a synchronous in-flight mutation ref. Drafts retain their owning week and revision independently of the currently rendered week.
 
-- [ ] Add controlled response-order tests: delay a Jan 7 save, navigate to Jan 14, then finish the save. Assert toolbar and first grid date both remain Jan 14. Repeat with a delayed read finishing after a save; assert newer saved state remains.
-- [ ] Test two rapid saves, stale-revision responses, and a failed save after navigation. Assert one mutation at a time, no silent conflict retry, and a recoverable draft with its original week.
-- [ ] Guard result application by request generation and viewed week. Invalidate obsolete reads when a mutation begins/completes. Reload the current week when a save for another view completes. Keep draft creation and discard actions consistent while saving.
-- [ ] Add a visible-page refresh every 60 seconds plus focus/visibility refresh, preserving drafts and using the same coordination. Add a normal Refresh schedule action. Clear errors after a successful refresh. Update start/end editability from a clock state.
-- [ ] Refresh Google status alongside visible schedule refresh. Stop availability polling when reconnection is required. Refetch selection/status revisions after conflicts while retaining user selections.
-- [ ] Use a browser clock and controlled worker-updated responses to assert local-only assumed actuals appear after a session ends. Assert reconnect health appears and no repeated availability calls occur until reconnection.
-- [ ] Run focused browser regressions and client tests. Expected: no stale results or lost drafts. Commit.
+- [x] Add controlled response-order tests: delay a Jan 7 save, navigate to Jan 14, then finish the save. Assert toolbar and first grid date both remain Jan 14. Repeat with a delayed read finishing after a save; assert newer saved state remains.
+- [x] Test two rapid saves, stale-revision responses, and a failed save after navigation. Assert one mutation at a time, no silent conflict retry, and a recoverable draft with its original week.
+- [x] Guard result application by request generation and viewed week. Invalidate obsolete reads when a mutation begins/completes. Reload the current week when a save for another view completes. Keep draft creation and discard actions consistent while saving.
+- [x] Add a visible-page refresh every 60 seconds plus focus/visibility refresh, preserving drafts and using the same coordination. Add a normal Refresh schedule action. Clear errors after a successful refresh. Update start/end editability from a clock state.
+- [x] Refresh Google status alongside visible schedule refresh. Stop availability polling when reconnection is required. Refetch selection/status revisions after conflicts while retaining user selections.
+- [x] Use a browser clock and controlled worker-updated responses to assert local-only assumed actuals appear after a session ends. Assert reconnect health appears and no repeated availability calls occur until reconnection.
+- [x] Run focused browser regressions and client tests. Expected: no stale results or lost drafts. Commit.
 
 ## Task 6: Correct grid geometry and day discovery
 
