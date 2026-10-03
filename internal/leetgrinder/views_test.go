@@ -170,3 +170,73 @@ func TestProblemHistoryShowsLatestAndBest(t *testing.T) {
 		t.Error("equal best and latest should show only the latest")
 	}
 }
+
+func TestGoalCardNewPicks(t *testing.T) {
+	now := time.Date(2026, 10, 2, 17, 0, 0, 0, time.UTC)
+	date := Date(now, time.UTC)
+	settings := DefaultSettings()
+	settings.Timezone, settings.NewFromTodos = "UTC", true
+	render := func(state State) string {
+		t.Helper()
+		var out bytes.Buffer
+		if err := goalCard(NewToday(settings, state, now)).Render(context.Background(), &out); err != nil {
+			t.Fatal(err)
+		}
+		return out.String()
+	}
+	goals := map[time.Time]DailyGoal{date: {New: 2}}
+	problems := map[string]Problem{"two-sum": {Slug: "two-sum", Title: "Two Sum"}}
+	// One pick for a goal of two: the next pick and the shortfall are shown.
+	state := State{Problems: problems, Goals: goals, NewPlans: map[time.Time][]NewPick{date: {{Slug: "two-sum", SetTitle: "Blind 75"}}}}
+	html := render(state)
+	for _, want := range []string{`Next new problem: <a href="/leetgrinder/problem/two-sum">Two Sum</a> from Blind 75`, "Fewer todos than today's new target could be picked"} {
+		if !strings.Contains(html, want) {
+			t.Errorf("short plan missing %q", want)
+		}
+	}
+	// Once the pick is done, the goal still needs another new problem.
+	state.Attempts = []Attempt{{ID: "a", ProblemSlug: "two-sum", Outcome: "unfinished", Minutes: 20, CreatedAt: now.Add(-time.Hour)}}
+	if html = render(state); !strings.Contains(html, "Any other new problem counts toward the goal.") || !strings.Contains(html, "· done") {
+		t.Errorf("done short plan: %s", html)
+	}
+	// With goal 1 and its one pick done, the goal is met and no note shows.
+	goals[date] = DailyGoal{New: 1}
+	if html = render(state); !strings.Contains(html, "Today's picked new problems are done.") || strings.Contains(html, "Any other new problem") || strings.Contains(html, "Fewer todos") {
+		t.Errorf("met plan: %s", html)
+	}
+	// A short day whose new goal is met by other problems drops the note.
+	goals[date] = DailyGoal{New: 2}
+	state.Attempts = append(state.Attempts, Attempt{ID: "b", ProblemSlug: "binary-search", Outcome: "unfinished", Minutes: 20, CreatedAt: now.Add(-time.Hour)})
+	if html = render(state); strings.Contains(html, "Fewer todos") {
+		t.Errorf("met short plan still explains shortfall: %s", html)
+	}
+	// Picks added after the new goal was met with other problems are listed
+	// without prompting for the next one.
+	state.NewPlans[date] = append(state.NewPlans[date], NewPick{Slug: "valid-anagram"})
+	if html = render(state); strings.Contains(html, "Next new problem") || strings.Contains(html, "picked new problems are done") || !strings.Contains(html, "valid-anagram") {
+		t.Errorf("late top-up after goal met: %s", html)
+	}
+	// No todo could be picked: the note explains the empty list.
+	if html = render(State{Goals: goals}); !strings.Contains(html, "Todos already done, or attempted on an earlier day, are skipped") || strings.Contains(html, "Next new problem") {
+		t.Errorf("empty plan: %s", html)
+	}
+	// A full plan explains no shortfall.
+	full := State{Problems: problems, Goals: goals, NewPlans: map[time.Time][]NewPick{date: {{Slug: "two-sum"}, {Slug: "valid-anagram"}}}}
+	if html = render(full); strings.Contains(html, "Fewer todos") || !strings.Contains(html, "Next new problem") {
+		t.Errorf("full plan: %s", html)
+	}
+	// A failed plan says so instead of explaining a shortfall.
+	var out bytes.Buffer
+	failed := NewToday(settings, State{Goals: goals}, now)
+	failed.NewPicksFailed = true
+	if err := goalCard(failed).Render(context.Background(), &out); err != nil || !strings.Contains(out.String(), "could not be picked from your todos") || strings.Contains(out.String(), "Fewer todos") {
+		t.Errorf("failed plan: %s %v", out.String(), err)
+	}
+	// Off: nothing is shown, whether or not the goal is met.
+	settings.NewFromTodos = false
+	for _, st := range []State{state, {Goals: goals}} {
+		if html = render(st); strings.Contains(html, "new-picks") {
+			t.Errorf("off: %s", html)
+		}
+	}
+}

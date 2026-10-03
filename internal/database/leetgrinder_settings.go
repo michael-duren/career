@@ -6,18 +6,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
+	"slices"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/michael-duren/career-strategy/internal/leetgrinder"
 )
 
-const leetgrinderSettingsColumns = "timezone,goal_new,goal_review,ntfy_url,ntfy_topic,ntfy_token_ciphertext,notifications,analysis_enabled,revision"
+const leetgrinderSettingsColumns = "timezone,goal_new,goal_review,ntfy_url,ntfy_topic,ntfy_token_ciphertext,notifications,analysis_enabled,new_from_todos,revision"
 
 func scanLeetgrinderSettings(row interface{ Scan(...any) error }) (leetgrinder.Settings, error) {
 	var s leetgrinder.Settings
 	var notifications []byte
-	if err := row.Scan(&s.Timezone, &s.Goal.New, &s.Goal.Review, &s.NtfyURL, &s.NtfyTopic, &s.NtfyTokenCiphertext, &notifications, &s.AnalysisEnabled, &s.Revision); err != nil {
+	if err := row.Scan(&s.Timezone, &s.Goal.New, &s.Goal.Review, &s.NtfyURL, &s.NtfyTopic, &s.NtfyTokenCiphertext, &notifications, &s.AnalysisEnabled, &s.NewFromTodos, &s.Revision); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return s, ErrNotFound
 		}
@@ -71,8 +73,8 @@ func (s *Store) UpdateLeetgrinderSettings(ctx context.Context, expectedRevision 
 	if len(next.NtfyTokenCiphertext) > 0 {
 		token = next.NtfyTokenCiphertext
 	}
-	saved, err := scanLeetgrinderSettings(tx.QueryRowContext(ctx, `UPDATE leetgrinder_settings SET timezone=$1,goal_new=$2,goal_review=$3,ntfy_url=$4,ntfy_topic=$5,ntfy_token_ciphertext=$6,notifications=$7,analysis_enabled=$8,revision=$9 WHERE id=1 RETURNING `+leetgrinderSettingsColumns,
-		next.Timezone, next.Goal.New, next.Goal.Review, next.NtfyURL, next.NtfyTopic, token, notifications, next.AnalysisEnabled, uuid.NewString()))
+	saved, err := scanLeetgrinderSettings(tx.QueryRowContext(ctx, `UPDATE leetgrinder_settings SET timezone=$1,goal_new=$2,goal_review=$3,ntfy_url=$4,ntfy_topic=$5,ntfy_token_ciphertext=$6,notifications=$7,analysis_enabled=$8,new_from_todos=$9,revision=$10 WHERE id=1 RETURNING `+leetgrinderSettingsColumns,
+		next.Timezone, next.Goal.New, next.Goal.Review, next.NtfyURL, next.NtfyTopic, token, notifications, next.AnalysisEnabled, next.NewFromTodos, uuid.NewString()))
 	if err != nil {
 		return leetgrinder.Settings{}, err
 	}
@@ -91,9 +93,10 @@ func (s *Store) LeetgrinderNtfyTokenStored(ctx context.Context) (bool, error) {
 
 // LeetgrinderToday loads settings and history and returns today's view for
 // now. On first access for a local date it freezes that date's goal from
-// settings and plans its review picks; later accesses only add picks when
-// the frozen review target has more slots than the plan and more cards are
-// due. Accesses that would change nothing read one snapshot without a lock.
+// settings and plans its review picks and, when picking from todos is on,
+// its new picks; later accesses only add picks when a frozen target has
+// more slots than its plan and more cards are due or todos queued. Accesses
+// that would change nothing read one snapshot without a lock.
 func (s *Store) LeetgrinderToday(ctx context.Context, now time.Time) (leetgrinder.Today, error) {
 	day, err := s.leetgrinderDay(ctx, now)
 	if err != nil {
@@ -103,15 +106,25 @@ func (s *Store) LeetgrinderToday(ctx context.Context, now time.Time) (leetgrinde
 		replay := leetgrinder.ReplayAttempts(day.state, day.settings.Location())
 		day.replay = &replay
 	}
-	return leetgrinder.NewTodayFrom(day.settings, day.state, now, *day.replay), nil
+	today := leetgrinder.NewTodayFrom(day.settings, day.state, now, *day.replay)
+	today.NewPicksFailed = day.newPicksErr != nil
+	return today, nil
 }
 
-// PlanLeetgrinderToday freezes today's goal and review picks as
-// LeetgrinderToday does, without building today's view.
+// PlanLeetgrinderToday freezes today's goal, review picks and new picks as
+// LeetgrinderToday does, without building today's view. A new-pick error is
+// returned after the goal and review picks are saved.
 func (s *Store) PlanLeetgrinderToday(ctx context.Context, now time.Time) error {
-	_, err := s.leetgrinderDay(ctx, now)
-	return err
+	day, err := s.leetgrinderDay(ctx, now)
+	if err != nil {
+		return err
+	}
+	return day.newPicksErr
 }
+
+// leetgrinderPlannerLock is the advisory lock that serializes planning
+// today's goal and picks, and todo set deletes that would race with it.
+const leetgrinderPlannerLock = 724193611
 
 // leetgrinderDay is what today's view is built from, once today is planned.
 type leetgrinderDay struct {
@@ -119,6 +132,9 @@ type leetgrinderDay struct {
 	state    leetgrinder.State
 	// replay is state's replay, or nil when planning did not need one.
 	replay *leetgrinder.Replay
+	// newPicksErr is why today's new picks could not be planned. The goal
+	// and review picks were still planned; a later access retries.
+	newPicksErr error
 }
 
 // leetgrinderDay plans today if needed and returns the state it planned.
@@ -130,8 +146,8 @@ func (s *Store) leetgrinderDay(ctx context.Context, now time.Time) (leetgrinderD
 }
 
 // leetgrinderTodayPlanned reads today's state from one read-only snapshot.
-// It reports false when today's goal is not frozen yet or its plan would
-// take more picks; those need planLeetgrinderToday.
+// It reports false when today's goal is not frozen yet or its review or
+// new-pick plan would take more picks; those need planLeetgrinderToday.
 func (s *Store) leetgrinderTodayPlanned(ctx context.Context, now time.Time) (leetgrinderDay, bool, error) {
 	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true})
 	if err != nil {
@@ -148,14 +164,30 @@ func (s *Store) leetgrinderTodayPlanned(ctx context.Context, now time.Time) (lee
 	if err != nil {
 		return leetgrinderDay{}, false, err
 	}
-	if err = tx.Commit(); err != nil {
-		return leetgrinderDay{}, false, err
-	}
 	goal, ok := state.Goals[date]
 	if !ok {
 		return leetgrinderDay{}, false, nil
 	}
-	day := leetgrinderDay{settings: settings, state: state}
+	// New picks stay short while no todo is left to pick. They are
+	// optional, so a failed check leaves today as planned.
+	var newPicksErr error
+	if leetgrinder.NewPicksWanted(settings, state, date) > 0 {
+		more, err := leetgrinderNewPickCandidates(ctx, tx, leetgrinder.StartOfDate(date, loc), state.NewPlans[date], 1)
+		if err != nil {
+			newPicksErr = fmt.Errorf("leetgrinder new picks: %w", err)
+			log.Printf("%v", newPicksErr)
+		} else if len(more) > 0 {
+			return leetgrinderDay{}, false, nil
+		}
+	}
+	// A failed query aborts the transaction; the snapshot was read, and a
+	// read-only transaction has nothing to commit.
+	if newPicksErr == nil {
+		if err = tx.Commit(); err != nil {
+			return leetgrinderDay{}, false, err
+		}
+	}
+	day := leetgrinderDay{settings: settings, state: state, newPicksErr: newPicksErr}
 	// A plan shorter than its target stays short while nothing more is due.
 	if existing := state.Plans[date]; len(existing) < goal.Review {
 		replay := leetgrinder.ReplayAttempts(state, loc)
@@ -167,8 +199,10 @@ func (s *Store) leetgrinderTodayPlanned(ctx context.Context, now time.Time) (lee
 	return day, true, nil
 }
 
-// planLeetgrinderToday freezes today's goal and extends its plan under a
-// lock, re-checking both, and returns the planned state.
+// planLeetgrinderToday freezes today's goal and extends its review and
+// new-pick plans under a lock, re-checking each, and returns the planned
+// state. A new-pick failure is rolled back on its own and returned in
+// newPicksErr.
 func (s *Store) planLeetgrinderToday(ctx context.Context, now time.Time) (leetgrinderDay, error) {
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
@@ -176,7 +210,7 @@ func (s *Store) planLeetgrinderToday(ctx context.Context, now time.Time) (leetgr
 	}
 	defer tx.Rollback()
 	// Serializes planners so concurrent first visits agree on one plan.
-	if _, err = tx.ExecContext(ctx, "SELECT pg_advisory_xact_lock(724193611)"); err != nil {
+	if _, err = tx.ExecContext(ctx, "SELECT pg_advisory_xact_lock($1)", leetgrinderPlannerLock); err != nil {
 		return leetgrinderDay{}, err
 	}
 	settings, err := scanLeetgrinderSettings(tx.QueryRowContext(ctx, "SELECT "+leetgrinderSettingsColumns+" FROM leetgrinder_settings WHERE id=1"))
@@ -202,13 +236,49 @@ func (s *Store) planLeetgrinderToday(ctx context.Context, now time.Time) (leetgr
 			return leetgrinderDay{}, err
 		}
 	}
+	// New picks are optional: a failure there still keeps the goal and
+	// review picks, and is logged and reported with the planned day.
+	var newErr error
+	if wanted := leetgrinder.NewPicksWanted(settings, state, date); wanted > 0 {
+		if _, err = tx.ExecContext(ctx, "SAVEPOINT new_picks"); err != nil {
+			return leetgrinderDay{}, err
+		}
+		var more []leetgrinder.NewPick
+		if more, newErr = planLeetgrinderNewPicks(ctx, tx, day, leetgrinder.StartOfDate(date, loc), state.NewPlans[date], wanted); newErr != nil {
+			if _, err = tx.ExecContext(ctx, "ROLLBACK TO SAVEPOINT new_picks"); err != nil {
+				return leetgrinderDay{}, errors.Join(fmt.Errorf("leetgrinder new picks: %w", newErr), err)
+			}
+		} else if len(more) > 0 {
+			state.NewPlans[date] = append(slices.Clone(state.NewPlans[date]), more...)
+		}
+	}
 	if err = tx.Commit(); err != nil {
 		return leetgrinderDay{}, err
 	}
 	if len(plan) > 0 {
 		state.Plans[date] = plan
 	}
-	return leetgrinderDay{settings: settings, state: state, replay: &replay}, nil
+	planned := leetgrinderDay{settings: settings, state: state, replay: &replay}
+	if newErr != nil {
+		planned.newPicksErr = fmt.Errorf("leetgrinder new picks: %w", newErr)
+		log.Printf("%v", planned.newPicksErr)
+	}
+	return planned, nil
+}
+
+// planLeetgrinderNewPicks saves up to wanted more new picks for day after
+// existing and returns them.
+func planLeetgrinderNewPicks(ctx context.Context, tx *sql.Tx, day string, dayStart time.Time, existing []leetgrinder.NewPick, wanted int) ([]leetgrinder.NewPick, error) {
+	more, err := leetgrinderNewPickCandidates(ctx, tx, dayStart, existing, wanted)
+	if err != nil {
+		return nil, err
+	}
+	for i, pick := range more {
+		if _, err = tx.ExecContext(ctx, "INSERT INTO leetgrinder_new_plan(plan_date,problem_slug,slot,set_id) VALUES($1,$2,$3,$4)", day, pick.Slug, len(existing)+i+1, nullableUUID(pick.SetID)); err != nil {
+			return nil, err
+		}
+	}
+	return more, nil
 }
 
 // LeetgrinderDailyGoal returns the goal frozen for a local date, if any.

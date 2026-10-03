@@ -182,6 +182,9 @@ type State struct {
 	// by local date (see Date).
 	Plans map[time.Time][]string
 	Goals map[time.Time]DailyGoal
+	// NewPlans are the frozen new-problem picks drawn from todos, by local
+	// date, in slot order.
+	NewPlans map[time.Time][]NewPick
 }
 
 // Problem returns the catalog row for slug, or a bare problem when the slug

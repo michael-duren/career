@@ -204,3 +204,32 @@ func TestCompose(t *testing.T) {
 		t.Fatal("retired kind composed")
 	}
 }
+
+func TestComposeMorningNewPicks(t *testing.T) {
+	loc, _ := time.LoadLocation("America/Chicago")
+	now := time.Date(2026, 9, 10, 7, 0, 0, 0, loc)
+	date := leetgrinder.Date(now, loc)
+	settings := leetgrinder.DefaultSettings()
+	settings.NewFromTodos = true
+	state := leetgrinder.State{
+		Problems: map[string]leetgrinder.Problem{"two-sum": {Slug: "two-sum", Title: "Two Sum"}},
+		Goals:    map[time.Time]leetgrinder.DailyGoal{date: {New: 2}},
+		NewPlans: map[time.Time][]leetgrinder.NewPick{date: {{Slug: "two-sum", SetTitle: "Blind 75"}, {Slug: "binary-search"}}},
+	}
+	pref := settings.NotificationPref(leetgrinder.NotifyMorningPlan)
+	m, ok := Compose(leetgrinder.NotifyMorningPlan, pref, leetgrinder.NewToday(settings, state, now), "https://app.example")
+	if want := "Goal: 2 new + 0 reviews\nNew: Two Sum (Blind 75)\nNew: binary-search\nStreak: 0 days"; !ok || m.Body != want {
+		t.Fatalf("morning: %q, want %q", m.Body, want)
+	}
+	// A failed plan says so.
+	failed := leetgrinder.NewToday(settings, state, now)
+	failed.NewPicksFailed = true
+	if m, _ = Compose(leetgrinder.NotifyMorningPlan, pref, failed, "https://app.example"); !strings.Contains(m.Body, "\nNew: couldn't pick from your todos; open the dashboard to retry\n") {
+		t.Fatalf("failed: %q", m.Body)
+	}
+	// Turned off, frozen picks are left out.
+	settings.NewFromTodos = false
+	if m, _ = Compose(leetgrinder.NotifyMorningPlan, pref, leetgrinder.NewToday(settings, state, now), "https://app.example"); strings.Contains(m.Body, "New:") {
+		t.Fatalf("off: %q", m.Body)
+	}
+}

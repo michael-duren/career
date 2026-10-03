@@ -16,6 +16,16 @@ func Compose(kind string, pref leetgrinder.NotificationPref, today leetgrinder.T
 	case leetgrinder.NotifyMorningPlan:
 		m.Title, m.Tags = "Leetgrinder: today's plan", []string{"sunrise"}
 		lines := []string{"Goal: " + leetgrinder.GoalLabel(today.Progress.Target())}
+		for _, p := range today.NewPicks {
+			line := "New: " + p.Problem.DisplayTitle()
+			if p.SetTitle != "" {
+				line += " (" + p.SetTitle + ")"
+			}
+			lines = append(lines, line)
+		}
+		if today.NewPicksFailed {
+			lines = append(lines, "New: couldn't pick from your todos; open the dashboard to retry")
+		}
 		for _, r := range today.Reviews {
 			lines = append(lines, "Review: "+r.Problem.DisplayTitle())
 		}

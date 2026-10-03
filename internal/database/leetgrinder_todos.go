@@ -437,7 +437,17 @@ func (s *Store) DeleteLeetgrinderTodoSet(ctx context.Context, id string) error {
 	if _, err := uuid.Parse(id); err != nil {
 		return ErrInvalid
 	}
-	result, err := s.DB.ExecContext(ctx, "DELETE FROM leetgrinder_todo_sets WHERE id=$1", id)
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	// The planner reads a set's ID before saving it on a new pick; its lock
+	// keeps a delete from removing the set in between.
+	if _, err = tx.ExecContext(ctx, "SELECT pg_advisory_xact_lock($1)", leetgrinderPlannerLock); err != nil {
+		return err
+	}
+	result, err := tx.ExecContext(ctx, "DELETE FROM leetgrinder_todo_sets WHERE id=$1", id)
 	if err != nil {
 		return err
 	}
@@ -448,7 +458,7 @@ func (s *Store) DeleteLeetgrinderTodoSet(ctx context.Context, id string) error {
 	if n == 0 {
 		return ErrNotFound
 	}
-	return nil
+	return tx.Commit()
 }
 
 // loadLeetgrinderTodoExport returns every todo set with all its entries, and

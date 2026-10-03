@@ -21,3 +21,8 @@ func DaysBetween(from, to time.Time) int {
 func EndOfDate(date time.Time, loc *time.Location) time.Time {
 	return time.Date(date.Year(), date.Month(), date.Day()+1, 0, 0, 0, 0, loc)
 }
+
+// StartOfDate is the first instant of date in loc.
+func StartOfDate(date time.Time, loc *time.Location) time.Time {
+	return time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, loc)
+}
