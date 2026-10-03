@@ -49,6 +49,7 @@ var mcpRules = append(slices.Clone(contextRules),
 	"Cite entry kinds and IDs when discussing evidence. Distinguish suggestions from saved changes.",
 	"create_career_entry, update_career_entry, delete_career_entry and add_companies_to_queue change saved data. Only save or delete when the user asked for the change or confirmed it. Read an entry and pass its revision before updating or deleting.",
 	"Leetgrinder todo tools change saved practice plans. Use them when the user asks to add or remove problems or sets.",
+	"log_leetgrinder_attempt saves a practice attempt. Only log when the user asked to log or confirmed it; reuse its id when retrying.",
 )
 
 var readOnly = &mcp.ToolAnnotations{ReadOnlyHint: true, IdempotentHint: true, OpenWorldHint: new(bool)}
@@ -255,6 +256,7 @@ func (s *Server) newMCPServer() *mcp.Server {
 	s.addWriteTools(server)
 	s.addConnectionTools(server)
 	s.addLeetgrinderTodoTools(server)
+	s.addLeetgrinderTools(server)
 
 	server.AddPrompt(&mcp.Prompt{
 		Name:        "career_conversation",

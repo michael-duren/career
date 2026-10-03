@@ -246,7 +246,7 @@ func (s *Store) SaveLeetgrinderAttemptWithProblem(ctx context.Context, a leetgri
 	if a.Source == "" {
 		a.Source = "web"
 	}
-	if a.Source != "web" && a.Source != "extension" {
+	if a.Source != "web" && a.Source != "extension" && a.Source != "mcp" {
 		return leetgrinder.Attempt{}, ErrInvalid
 	}
 	a.ID = id.String()
