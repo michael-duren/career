@@ -565,3 +565,60 @@ func TestRuleActionRejectsInvalidAssignment(t *testing.T) {
 		t.Fatal("rule referencing a nonexistent goal was accepted")
 	}
 }
+
+func TestWeekRetainsInvalidDatedBoundary(t *testing.T) {
+	d := testDocument()
+	d.Settings.TimeZone = "America/Chicago"
+	d.Settings.DefaultDay = DayInterval{Start: "02:30", End: "20:30"}
+	week := d.Week("2026-03-02", instant("2026-03-01T00:00:00Z"), nil)
+	if len(week.Days) != 7 {
+		t.Fatalf("missing dated column: %+v", week.Days)
+	}
+	if week.Days[6].Date != "2026-03-08" || week.Days[6].Valid || week.Days[6].Reason == "" {
+		t.Fatalf("missing invalid boundary explanation: %+v", week.Days[6])
+	}
+}
+func TestWeekCanceledFutureSnapshotDoesNotRetainStoppedGoal(t *testing.T) {
+	for _, status := range []string{"canceled", "actual", "skipped"} {
+		d := testDocument()
+		g := d.Goals["goal"]
+		g.StoppedDate = "2026-09-27"
+		d.Goals["goal"] = g
+		s := Session{ID: "snapshot", Date: "2026-09-28", Assignment: Assignment{GoalID: "goal"}, State: "canceled", Plan: &Plan{Start: instant("2026-09-28T09:00:00Z"), End: instant("2026-09-28T10:00:00Z")}}
+		if status != "canceled" {
+			s.State = "accepted"
+			s.Actual = &Actual{Status: "explicit", Date: s.Date, Start: s.Plan.Start, End: s.Plan.End}
+			if status == "skipped" {
+				s.Actual.Status = "skipped"
+			}
+		}
+		d.Sessions[s.ID] = s
+		week := d.Week("2026-09-28", instant("2026-10-02T00:00:00Z"), nil)
+		expected := 1
+		if status == "canceled" {
+			expected = 0
+		}
+		if len(week.Goals) != expected {
+			t.Fatalf("%s retained wrong goals: %+v", status, week.Goals)
+		}
+	}
+}
+func TestWeekWarningTargetsKeepDuplicateGoalIdentity(t *testing.T) {
+	d := testDocument()
+	first := d.Goals["goal"]
+	first.DailyHours = nil
+	d.Goals["goal"] = first
+	second := first
+	second.ID = "second"
+	d.Goals[second.ID] = second
+	week := d.Week("2026-09-28", instant("2026-09-27T00:00:00Z"), nil)
+	seen := map[string]bool{}
+	for _, warning := range week.WarningTargets {
+		if warning.Message == "Goal: Hours not set" {
+			seen[warning.GoalID] = true
+		}
+	}
+	if !seen["goal"] || !seen["second"] {
+		t.Fatalf("lost warning identities: %+v", week.WarningTargets)
+	}
+}

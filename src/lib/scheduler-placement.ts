@@ -44,7 +44,8 @@ export function proposePlacement(input: PlacementInput, week: SchedulerWeek, now
     if (mode === 'plan') {
       if (startMs <= now.getTime()) return { kind: 'invalid', message: 'Plans must start in the future.' };
       const day = week.days.find(value => value.date === date);
-      if (!day || startMs < Date.parse(day.start) || endMs > Date.parse(day.end)) return { kind: 'invalid', message: 'Planned sessions must fit inside one scheduling day.' };
+      if (!day?.valid) return { kind: 'invalid', message: day?.reason || 'This scheduling day has invalid boundaries.' };
+      if (startMs < Date.parse(day.start) || endMs > Date.parse(day.end)) return { kind: 'invalid', message: 'Planned sessions must fit inside one scheduling day.' };
       const goalId = input.kind === 'assignment' ? input.assignment.goalId : session?.assignment.goalId;
       if (goalId) {
         const goal = week.goals.find(value => value.goal.id === goalId)?.goal;
