@@ -30,8 +30,12 @@ func TestLeetgrinderCodeDisplayAndCompare(t *testing.T) {
 	}
 	body := request("GET", "/leetgrinder/problem/two-sum", nil).Body.String()
 	latest := regexp.MustCompile(`(?s)<details class="attempt-code" open>\s*<summary><span class="badge">Latest code</span>`)
-	if len(latest.FindAllString(body, -1)) != 1 {
-		t.Fatal("latest code not open and labelled once")
+	if len(latest.FindAllString(body, -1)) != 1 || strings.Count(body, `<details class="attempt-code" open`) != 1 || strings.Count(body, `<details class="attempt-code">`) != 1 {
+		t.Fatal("latest code not the only open, labelled block")
+	}
+	// The copy button stays hidden until the script finds a clipboard.
+	if !strings.Contains(body, `data-copy="code-`+newer+`" hidden`) || !strings.Contains(body, "if (!navigator.clipboard) return;") {
+		t.Fatal("copy button not hidden by default")
 	}
 	for _, want := range []string{
 		`<span class="k">def</span>`, "&lt;b&gt;", `data-copy="code-` + newer + `"`,
@@ -56,10 +60,21 @@ func TestLeetgrinderCodeDisplayAndCompare(t *testing.T) {
 			t.Errorf("compare missing %q", want)
 		}
 	}
-	for _, bad := range []string{leetgrinder.CompareURL("two-sum", older, uuid.NewString()), leetgrinder.CompareURL("valid-anagram", older, newer), "/leetgrinder/problem/two-sum/compare"} {
+	// The plain attempt has no code, so it cannot be compared.
+	state, err := db.LeetgrinderProblemState(ctx, "two-sum")
+	if err != nil {
+		t.Fatal(err)
+	}
+	plain := state.ProblemAttempts("two-sum")[0].ID
+	for _, bad := range []string{leetgrinder.CompareURL("two-sum", older, uuid.NewString()), leetgrinder.CompareURL("valid-anagram", older, newer), "/leetgrinder/problem/two-sum/compare", leetgrinder.CompareURL("two-sum", plain, newer)} {
 		if w := request("GET", bad, nil); w.Code != 404 {
 			t.Errorf("%s: %d", bad, w.Code)
 		}
+	}
+	// Code too long to diff gets a message, not a 500.
+	long1, long2 := save(strings.Repeat("a\n", 2100)), save(strings.Repeat("b\n", 2100))
+	if w := request("GET", leetgrinder.CompareURL("two-sum", long1, long2), nil); w.Code != 200 || !strings.Contains(w.Body.String(), "This code is too long to compare line by line.") {
+		t.Fatalf("too long: %d", w.Code)
 	}
 }
 
@@ -81,6 +96,16 @@ func TestLeetgrinderWebFormCode(t *testing.T) {
 	// 64 KiB of characters URL encoding triples still fits the form limit.
 	if status, _ := post(base(strings.Repeat("{", leetgrinder.MaxCodeBytes), "text")); status != 303 {
 		t.Fatalf("64 KiB of code: %d", status)
+	}
+	if status, body := post(base("print(1)", "cobol")); status != 400 || !strings.Contains(body, "Choose the language of your code.") {
+		t.Fatalf("unknown language: %d", status)
+	}
+	if status, body := post(base("a\x00b", "text")); status != 400 || !strings.Contains(body, "without null characters") {
+		t.Fatalf("null character: %d", status)
+	}
+	// A rejected draft keeps code that starts with a blank line.
+	if _, body := post(base("\nprint(3)", "")); !strings.Contains(body, "placeholder=\"Paste the code you wrote\">\n\nprint(3)</textarea>") {
+		t.Fatal("leading newline dropped from the draft")
 	}
 	if status, _ := post(base("print(1)\r\nprint(2)", "python3")); status != 303 {
 		t.Fatalf("save: %d", status)

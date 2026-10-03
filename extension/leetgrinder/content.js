@@ -211,6 +211,8 @@
   // code is saved or queued, so a later attempt does not reuse it.
   function forgetCapture(attempt) {
     if (capture && attempt.code && attempt.code === capture.code && attempt.problemSlug === capture.slug) capture = null;
+    // The reason a submission was not captured belongs to that attempt.
+    if (attempt.problemSlug === (current && current.slug)) captureProblem = "";
   }
 
   // logManually opens the log panel from the banner, for an attempt solved
@@ -238,14 +240,7 @@
       // NeetCode's detector reports NeetCode's slug.
       const nc = site === "neetcode" ? lib.neetcodeProblem(data.slug) : null;
       const message = site === "neetcode" ? { ...data, slug: nc ? nc.slug : "" } : data;
-      const cleaned = lib.cleanCapture(message, current && current.slug);
-      if (cleaned) {
-        capture = cleaned;
-        captureProblem = "";
-      } else {
-        const issue = lib.captureIssue(message, current && current.slug);
-        if (issue) captureProblem = issue;
-      }
+      ({ capture, issue: captureProblem } = lib.nextCapture({ capture, issue: captureProblem }, message, current && current.slug));
     } else if (data.type === "accepted" && typeof data.submissionId === "string" && data.submissionId.length <= 64) {
       onAccepted(data.submissionId);
     }

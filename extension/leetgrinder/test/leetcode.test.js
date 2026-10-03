@@ -102,3 +102,24 @@ test("capture issues say why code was not captured", () => {
   assert.match(lib.codeStatus(lib.captureIssue(big, "two-sum")), /^Code not captured: the code is over 64/);
   assert.match(lib.codeStatus(""), /^No code was captured/);
 });
+
+test("nextCapture never keeps an older submission's code for a newer one", () => {
+  const { posted, FakeXHR } = runDetector();
+  submitAndCheck(FakeXHR, { id: 1, status: "Accepted" });
+  submitAndCheck(FakeXHR, { id: 2, code: "x".repeat(lib.MAX_CODE_BYTES + 1), status: "Wrong Answer" });
+  submitAndCheck(FakeXHR, { id: 3, slug: "valid-anagram", status: "Accepted" });
+  const subs = posted.map((p) => p.msg).filter((m) => m.type === "submission");
+  let state = { capture: null, issue: "" };
+  state = lib.nextCapture(state, subs[0], "two-sum");
+  assert.equal(state.capture.submissionId, "1");
+  // The oversized submission drops the older capture and says why.
+  state = lib.nextCapture(state, subs[1], "two-sum");
+  assert.equal(state.capture, null);
+  assert.match(state.issue, /over 64/);
+  assert.match(lib.codeStatus(state.issue), /Paste a shorter version/);
+  // Another problem's submission changes nothing.
+  assert.equal(lib.nextCapture(state, subs[2], "two-sum"), state);
+  // A capturable one replaces the issue.
+  state = lib.nextCapture(state, subs[0], "two-sum");
+  assert.deepEqual([state.capture.submissionId, state.issue], ["1", ""]);
+});

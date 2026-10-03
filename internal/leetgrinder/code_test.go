@@ -17,6 +17,12 @@ func TestHighlightCode(t *testing.T) {
 		t.Fatalf("unescaped or wrapped: %s", html)
 	}
 	// Every LeetCode language the app labels gets a lexer, or plain text.
+	// Every web form language but plain text is highlighted.
+	for _, lang := range CodeLanguages {
+		if out := string(HighlightCode("x = 1", lang)); (lang != "text") != strings.Contains(out, "<span class=") {
+			t.Errorf("%s highlighting: %s", lang, out)
+		}
+	}
 	// Every language the app labels is escaped; only span tags are added.
 	spans := regexp.MustCompile(`</?span[^>]*>`)
 	for lang := range languageLabels {

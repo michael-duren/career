@@ -901,7 +901,7 @@ templ attemptFields(problem Problem, form AttemptForm) {
 				</label>
 				<label>
 					Your solution
-					<textarea name="code" rows="8" spellcheck="false" class="code-textarea" placeholder="Paste the code you wrote">{ form.Code }</textarea>
+					<textarea name="code" rows="8" spellcheck="false" class="code-textarea" placeholder="Paste the code you wrote">{ "\n" + form.Code }</textarea>
 				</label>
 				<p class="small muted">Up to 64 KiB. Saved with the attempt and analysed like extension-captured code.</p>
 			</details>
