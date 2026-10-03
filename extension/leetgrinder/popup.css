@@ -60,3 +60,17 @@ a {
 .error {
   color: #ffb4a8;
 }
+button {
+  margin-top: 4px;
+  padding: 2px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

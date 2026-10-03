@@ -514,6 +514,19 @@
       }
       status.className = "status error";
       status.textContent = res.error || lib.describeStatus(res.status, "");
+      if (res.queued) {
+        // The extension keeps the attempt and resends it until the app
+        // accepts it, so the panel can close (Escape included) without
+        // losing it. Retry now resends the same attempt.
+        locked = attempt;
+        panel.locked = false;
+        submit.disabled = false;
+        submit.textContent = "Retry now";
+        status.className = "status";
+        status.textContent = lib.queuedMessage(res);
+        await send({ type: "timer:restart", slug });
+        return;
+      }
       if (res.status === 409) {
         // This id can never succeed. Keep what was typed and let the learner
         // save it under a new id.

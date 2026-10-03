@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Leetgrinder",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Logs LeetCode and NeetCode submissions to your Leetgrinder app after you confirm them.",
   "icons": {
     "16": "icons/icon-16.png",

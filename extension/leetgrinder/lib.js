@@ -562,6 +562,144 @@
     };
   }
 
+  // ---- Outbox (attempts waiting for the app) ---------------------------
+
+  const OUTBOX_KEY = "outbox";
+  // At most this many attempts wait; storage.local holds 10 MB and each
+  // attempt is at most 96 KiB.
+  const MAX_OUTBOX = 50;
+
+  // outboxRetryable reports whether a failed send may succeed later without
+  // changing the attempt: the app was unreachable, failed, or rejected the
+  // token (fixed in the options). Other answers are final.
+  function outboxRetryable(status) {
+    return status === 0 || status === 401 || status === 403 || status === 408 || status === 429 || status >= 500;
+  }
+
+  // createOutbox keeps confirmed attempts in storage until the app accepts
+  // them, so a closed tab, a reload or app downtime loses nothing. storage
+  // is ext.storage.local; post sends one attempt and resolves to the api()
+  // result. Attempt ids make every resend idempotent. Writes run one at a
+  // time; only the background worker creates an outbox.
+  function createOutbox(storage, post, now = Date.now) {
+    let chain = Promise.resolve();
+    const locked = (fn) => {
+      const run = chain.then(fn);
+      chain = run.catch(() => {});
+      return run;
+    };
+    const read = async () => {
+      const box = (await storage.get(OUTBOX_KEY))[OUTBOX_KEY];
+      return box && typeof box === "object" && !Array.isArray(box) ? box : {};
+    };
+    const update = (id, change) =>
+      locked(async () => {
+        const box = await read();
+        const next = change(box[id]);
+        if (next === box[id]) return;
+        if (next) box[id] = next;
+        else delete box[id];
+        await storage.set({ [OUTBOX_KEY]: box });
+      });
+
+    // deliver sends one stored attempt and records the answer. A final
+    // answer drops the entry when dropFinal, else keeps it marked failed.
+    async function deliver(id, attempt, dropFinal) {
+      const res = await post(attempt);
+      if (res.ok) {
+        await update(id, () => undefined);
+        return res;
+      }
+      const error = res.error || describeStatus(res.status, "");
+      if (outboxRetryable(res.status)) {
+        await update(id, (e) => e && { ...e, tries: (e.tries || 0) + 1, lastError: error });
+        return { ...res, queued: true };
+      }
+      await update(id, (e) => (dropFinal ? undefined : e && { ...e, failed: error }));
+      return res;
+    }
+
+    // submit stores a confirmed attempt, then sends it. The result is the
+    // app's answer, with queued set when the attempt waits to be resent.
+    // A final rejection is returned to the panel and not kept.
+    async function submit(attempt) {
+      const stored = await locked(async () => {
+        const box = await read();
+        if (!box[attempt.id] && Object.keys(box).length >= MAX_OUTBOX) return false;
+        box[attempt.id] = { attempt, queuedAt: now(), tries: 0 };
+        await storage.set({ [OUTBOX_KEY]: box });
+        return true;
+      });
+      if (!stored) return { ok: false, status: 0, error: `${MAX_OUTBOX} attempts are already waiting to sync. Open the popup to check them.` };
+      return deliver(attempt.id, attempt, true);
+    }
+
+    let flushing = null;
+    // flush resends every waiting attempt, oldest first, and resolves to how
+    // many the app accepted. Calls during a flush share it. An attempt the
+    // app rejects for good stays, marked failed, until it is discarded.
+    function flush() {
+      if (!flushing) {
+        flushing = (async () => {
+          const box = await read();
+          const waiting = Object.entries(box)
+            .filter(([, e]) => e && e.attempt && !e.failed)
+            .sort(([, a], [, b]) => (a.queuedAt || 0) - (b.queuedAt || 0));
+          let sent = 0;
+          for (const [id, e] of waiting) {
+            const res = await deliver(id, e.attempt, false);
+            if (res.ok) sent++;
+            // An unreachable app fails the rest the same way.
+            else if (res.status === 0) break;
+          }
+          return sent;
+        })().finally(() => {
+          flushing = null;
+        });
+      }
+      return flushing;
+    }
+
+    // summary lists what waits: a count of attempts still being retried with
+    // the last error, and the attempts the app rejected.
+    async function summary() {
+      const entries = Object.values(await read()).filter((e) => e && e.attempt);
+      const pending = entries.filter((e) => !e.failed).sort((a, b) => (b.queuedAt || 0) - (a.queuedAt || 0));
+      const failed = entries
+        .filter((e) => e.failed)
+        .map((e) => ({ id: e.attempt.id, slug: e.attempt.problemSlug, title: (e.attempt.problem && e.attempt.problem.title) || e.attempt.problemSlug, error: e.failed }));
+      return { pending: pending.length, lastError: pending.length ? pending[0].lastError || "" : "", failed };
+    }
+
+    // discard drops an attempt the app rejected; waiting ones are kept.
+    const discard = (id) => update(id, (e) => (e && e.failed ? undefined : e));
+
+    return { submit, flush, summary, discard };
+  }
+
+  // queuedMessage tells the learner that a send failed but the attempt is
+  // kept and will sync on its own.
+  function queuedMessage(res) {
+    const why = (res && res.error) || describeStatus(res ? res.status : 0, "");
+    return `${why} The attempt is saved in the extension and syncs automatically; you can close this panel.`;
+  }
+
+  // outboxLines are the popup's sync lines for an outbox summary.
+  function outboxLines(summary) {
+    if (!summary || typeof summary !== "object") return [];
+    const lines = [];
+    const n = Number(summary.pending) || 0;
+    if (n > 0) {
+      const waiting = `${n} ${n === 1 ? "attempt" : "attempts"} waiting to sync`;
+      lines.push(summary.lastError ? `${waiting}. Last try: ${summary.lastError}` : `${waiting}.`);
+    }
+    return lines;
+  }
+
+  function validAttemptId(id) {
+    return typeof id === "string" && UUID.test(id);
+  }
+
   function validSlug(s) {
     return typeof s === "string" && SLUG.test(s) && s.length <= 100;
   }
@@ -618,6 +756,12 @@
     bannerState,
     attemptSummary,
     popupModel,
+    MAX_OUTBOX,
+    outboxRetryable,
+    createOutbox,
+    outboxLines,
+    validAttemptId,
+    queuedMessage,
   };
   root.LeetgrinderLib = lib;
   if (typeof module === "object" && module.exports) module.exports = lib;
