@@ -286,7 +286,7 @@ func (s *Store) schedulerUpdate(ctx context.Context, w string, m *scheduler.Muta
 		dates := []string{}
 		ids := []string{}
 		for _, session := range d.Sessions {
-			if session.RuleID != "" && !originalRules[session.RuleID] && session.State == "attention" {
+			if session.Actual == nil && session.RuleID != "" && !originalRules[session.RuleID] && session.State == "attention" {
 				dates = append(dates, session.Date)
 				ids = append(ids, session.ConflictIDs...)
 			}
@@ -307,12 +307,12 @@ func (s *Store) schedulerUpdate(ctx context.Context, w string, m *scheduler.Muta
 			}
 		}
 		for _, session := range probe.Sessions {
-			if session.RuleID != "" && newRules[session.RuleID] && session.State == "attention" {
+			if session.Actual == nil && session.RuleID != "" && newRules[session.RuleID] && session.State == "attention" {
 				dates = append(dates, session.Date)
 				ids = append(ids, session.ConflictIDs...)
 				continue
 			}
-			if session.State != "attention" {
+			if session.Actual != nil || session.State != "attention" {
 				continue
 			}
 			for _, conflictID := range session.ConflictIDs {

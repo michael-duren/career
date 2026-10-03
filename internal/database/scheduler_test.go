@@ -429,3 +429,55 @@ func TestSchedulerAcceptedActualsSurviveExportImport(t *testing.T) {
 		t.Fatal("explicit actual lost")
 	}
 }
+
+func TestFutureRuleValidationPreservesRecordedActualException(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	raw := bytes.Replace(fixture(t), []byte(`"endDate": "2026-09-14"`), []byte(`"endDate": "2026-12-31"`), 1)
+	if _, err := s.Import(ctx, bytes.NewReader(raw), Source{}, false); err != nil {
+		t.Fatal(err)
+	}
+	now := time.Date(2026, 9, 14, 8, 0, 0, 0, time.UTC)
+	week := "2026-09-14"
+	w, err := s.SchedulerWeek(ctx, week, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rule := scheduler.Rule{Weekday: 1, LocalStart: "09:00", DurationMinutes: 60, EffectiveFrom: week, Assignment: scheduler.Assignment{GoalID: "22222222-2222-4222-8222-222222222222"}}
+	w, err = s.SchedulerMutate(ctx, scheduler.Mutation{Week: week, Revision: w.Revision, Action: "rule", Rule: &rule}, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(w.Sessions) != 1 {
+		t.Fatalf("initial occurrences=%+v", w.Sessions)
+	}
+	original := w.Sessions[0]
+	actual := scheduler.Actual{Status: "explicit", Date: week, Start: now.Add(-2 * time.Hour), End: now.Add(-time.Hour)}
+	w, err = s.SchedulerMutate(ctx, scheduler.Mutation{Week: week, Revision: w.Revision, Action: "actual", ID: original.ID, Actual: &actual}, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rule.LocalStart = "10:00"
+	w, err = s.SchedulerMutate(ctx, scheduler.Mutation{Week: week, Revision: w.Revision, Action: "rule", ID: original.RuleID, EffectiveFrom: week, Rule: &rule}, now, nil)
+	if err != nil {
+		t.Fatalf("future template edit rejected preserved actual exception: %v", err)
+	}
+	doc, err := s.SchedulerDocument(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	saved, ok := doc.Sessions[original.ID]
+	if !ok || saved.Actual == nil || *saved.Actual != actual || saved.Plan == nil || *saved.Plan != *original.Plan || !saved.Exception || saved.State != "attention" || saved.RuleID == original.RuleID {
+		t.Fatalf("template edit changed recorded history: %+v", saved)
+	}
+	if len(w.Sessions) != 1 || len(w.Goals) != 1 || w.Goals[0].ActualHours != 1 {
+		t.Fatalf("actual duplicated or hidden: sessions=%+v goals=%+v", w.Sessions, w.Goals)
+	}
+	future, err := s.SchedulerWeek(ctx, "2026-09-21", now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(future.Sessions) != 1 || future.Sessions[0].Plan.Start.Hour() != 10 || future.Sessions[0].Actual != nil || future.Sessions[0].RuleID != saved.RuleID {
+		t.Fatalf("new template did not generate future plan: %+v", future.Sessions)
+	}
+}
