@@ -31,7 +31,8 @@
   let captureProblem = "";
   // capture is the latest validated submission on the open problem:
   // {slug, submissionId, status, lang, code} (see lib.cleanCapture). It is
-  // cleared once logged with an attempt, so a later attempt never carries it.
+  // cleared once logged with an attempt, so a later attempt never carries it,
+  // and when a newer submission cannot be captured (see lib.nextCapture).
   let capture = null;
 
   // captureFor picks the code that produced the result being logged: the

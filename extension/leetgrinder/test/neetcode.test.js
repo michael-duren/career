@@ -98,7 +98,7 @@ test("detector reports an accepted NeetCode submission", () => {
   assert.deepEqual(cleaned, { slug: "two-sum", submissionId: submission.submissionId, status: "Accepted", lang: "python", code: "class Solution: pass" });
 });
 
-test("detector ignores runs, failures and other calls", () => {
+test("detector reports failures as submissions only, and ignores runs and other calls", () => {
   const { posted, FakeXHR } = runDetector();
   const sent = { problemId: "two-integer-sum", rawCode: "x", lang: "python" };
   submit(FakeXHR, "/api/executeCodeFunctionHttp", sent, { data: { status: { description: "Wrong Answer" } } });

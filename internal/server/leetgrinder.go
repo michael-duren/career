@@ -291,9 +291,9 @@ func (s *Server) leetgrinderFormLimit(w http.ResponseWriter, r *http.Request, li
 	return true
 }
 
-// attemptFormLimit fits 64 KiB of pasted code even when URL encoding
-// triples its size, with the rest of the form.
-const attemptFormLimit = 256 << 10
+// attemptFormLimit fits 64 KiB of pasted code even when URL encoding grows
+// it sixfold (a CRLF line break is %0D%0A), with the rest of the form.
+const attemptFormLimit = 448 << 10
 
 func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 	if !s.leetgrinderFormLimit(w, r, attemptFormLimit, "Invalid or oversized form. Notes must be 2,000 characters or fewer and code 64 KiB or less.") {

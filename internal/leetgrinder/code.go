@@ -46,7 +46,8 @@ func HighlightCode(code, lang string) template.HTML {
 // from style.css.
 var chromaStyle = chroma.MustNewStyle("leetgrinder", chroma.StyleEntries{})
 
-// LatestCodeID is the ID of the newest attempt with captured code, or "".
+// LatestCodeID is the ID of the newest attempt with code, captured or
+// pasted, or "".
 // Attempts are newest first.
 func LatestCodeID(attempts []Attempt) string {
 	for _, a := range attempts {
@@ -68,8 +69,8 @@ func CodeAttempts(attempts []Attempt) []Attempt {
 	return out
 }
 
-// DiffLine is one line of a line diff: Op is ' ' (in both), '-' (only in
-// the older code) or '+' (only in the newer).
+// DiffLine is one line of a line diff from a to b: Op is ' ' (in both),
+// '-' (only in a) or '+' (only in b).
 type DiffLine struct {
 	Op   byte
 	Text string
@@ -83,7 +84,7 @@ const MaxDiffCells = 4_000_000
 // false when the inputs are too long to compare.
 func DiffLines(a, b string) ([]DiffLine, bool) {
 	x, y := splitLines(a), splitLines(b)
-	if (len(x)+1)*(len(y)+1) > MaxDiffCells {
+	if len(x)*len(y) > MaxDiffCells {
 		return nil, false
 	}
 	// lcs[i][j] is the LCS length of x[i:] and y[j:].

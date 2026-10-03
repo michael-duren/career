@@ -55,7 +55,7 @@ func TestLeetgrinderCodeDisplayAndCompare(t *testing.T) {
 	if w.Code != 200 {
 		t.Fatalf("compare: %d", w.Code)
 	}
-	for _, want := range []string{"−1", "+1", `class="diff-del"`, `class="diff-add"`, "return 1", "return 2  # &lt;b&gt;", "Removed: "} {
+	for _, want := range []string{"−1", "+1", `<span class="diff-del"><span class="diff-op" aria-hidden="true">-</span><span class="visually-hidden">Removed: </span>    return 1</span>`, `<span class="diff-add"><span class="diff-op" aria-hidden="true">+</span><span class="visually-hidden">Added: </span>    return 2  # &lt;b&gt;</span>`} {
 		if !strings.Contains(body, want) {
 			t.Errorf("compare missing %q", want)
 		}
@@ -129,9 +129,22 @@ func TestLeetgrinderWebFormCode(t *testing.T) {
 	if len(attempts) != 3 || len(withCode) != 2 || withCode[0].Code != "print(1)\nprint(2)" || withCode[0].CodeLanguage != "python3" || len(withCode[1].Code) != leetgrinder.MaxCodeBytes {
 		t.Fatalf("saved %d attempts, %d with code", len(attempts), len(withCode))
 	}
-	// A correction form has no code field and keeps the saved code.
+	// A correction form has no code field, and a correction keeps the saved
+	// code even if code is posted with it.
 	body := request("GET", "/leetgrinder/problem/two-sum", nil).Body.String()
 	if strings.Count(body, `name="code"`) != 1 {
 		t.Fatalf("code fields: %d", strings.Count(body, `name="code"`))
+	}
+	fix := url.Values{"id": {withCode[0].ID}, "revision": {withCode[0].Revision}, "outcome": {"unfinished"}, "minutes": {"7"}, "code": {"a\x00b"}, "codeLanguage": {"cobol"}}
+	if status, _ := post(fix); status != 303 {
+		t.Fatalf("correction: %d", status)
+	}
+	if state, err = db.LeetgrinderProblemState(context.Background(), "two-sum"); err != nil {
+		t.Fatal(err)
+	}
+	for _, a := range state.ProblemAttempts("two-sum") {
+		if a.ID == withCode[0].ID && (a.Minutes != 7 || a.Code != "print(1)\nprint(2)" || a.CodeLanguage != "python3") {
+			t.Fatalf("correction changed code: %+v", a.Code)
+		}
 	}
 }

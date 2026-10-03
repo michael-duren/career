@@ -117,7 +117,7 @@
   }
 
   // TOO_LARGE is captureIssue's reason for oversized code.
-  const TOO_LARGE = `the code is over ${formatBytes(MAX_CODE_BYTES)}`;
+  const TOO_LARGE = "the code is over 64 KiB";
 
   // codeStatus is the log panel's line about code when none was captured:
   // why, when a submission on this problem was seen but not captured.
