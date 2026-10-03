@@ -13,10 +13,15 @@ export function WeeklySchedulerGoogle({ week, refreshWeek, refreshGeneration }: 
   const statusSequence = useRef(0);
   const readStatus = useCallback(async () => {
     const sequence = ++statusSequence.current;
-    const next = statusSchema.parse(await schedulerRequest('google/status'));
-    if (sequence === statusSequence.current) setStatus(next);
+    try {
+      const next = statusSchema.parse(await schedulerRequest('google/status'));
+      if (sequence === statusSequence.current) { setStatus(next); setStatusError(''); }
+    } catch (e) {
+      if (sequence === statusSequence.current) setStatusError(e instanceof Error ? e.message : 'Could not read Google status.');
+      throw e;
+    }
   }, []);
-  useEffect(() => { void readStatus().then(() => setStatusError('')).catch(e => setStatusError(e instanceof Error ? e.message : 'Could not read Google status.')); }, [readStatus, refreshGeneration]);
+  useEffect(() => { void readStatus().catch(() => {}); }, [readStatus, refreshGeneration]);
   const readCalendars = async (preserve = false) => {
     const next = calendarsSchema.parse(await schedulerRequest('google/calendars'));
     setCalendars(current => preserve && current ? { ...next, calendars: next.calendars.map(calendar => ({ ...calendar, selected: current.calendars.find(c => c.id === calendar.id)?.selected ?? calendar.selected })) } : next);

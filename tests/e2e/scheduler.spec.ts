@@ -995,3 +995,66 @@ test('failed drag after ordinary navigation opens its original week draft and sa
   expect(writes[1]).toMatchObject({ week: '2030-01-07', revision: state.revision, session: { plan: { start: '2030-01-07T12:00:00.000Z' } } });
   await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', '2030-01-14');
 });
+
+test('an open plan draft locks its original plan at the start boundary and offers actual recording', async ({ page, request, baseURL }) => {
+  const stepId = crypto.randomUUID();
+  const goal = await createGoal(request, baseURL!, { steps: [{ id: stepId, title: 'Unsaved subgoal', done: false }], startDate: '2030-01-07', endDate: '2030-12-31', dailyHours: 0 });
+  const state = await controlledWeek(page, request);
+  await page.clock.setSystemTime(new Date('2030-01-07T10:59:30Z'));
+  const session = { id: crypto.randomUUID(), date: state.week, assignment: { goalId: goal.id, title: goal.title }, state: 'accepted', plan: { start: '2030-01-07T11:00:00Z', end: '2030-01-07T11:30:00Z' }, actual: null, exception: false };
+  await page.route('**/api/scheduler/week?*', route => route.fulfill({ json: { ...state, sessions: [session] } }));
+  await page.reload();
+  await sessionFor(page, goal.title).locator('.scheduler-block-main').click();
+  const dialog = page.getByRole('dialog', { name: 'Session editor' });
+  await expect(dialog.getByRole('button', { name: 'Save session', exact: true })).toBeEnabled();
+  await expect(dialog.getByRole('button', { name: 'Remove this session' })).toBeVisible();
+  await dialog.getByLabel('Subgoal').selectOption(stepId);
+  await dialog.getByLabel('Start time', { exact: true }).fill('05:10');
+  await dialog.getByLabel('End time', { exact: true }).fill('05:40');
+  const writes: { week: string; revision: string; action: string; session: { assignment: { goalId: string; title: string } }; actual: { start: string; end: string } }[] = [];
+  await page.route('**/api/scheduler/mutate', async route => { const mutation = route.request().postDataJSON(); writes.push(mutation); await route.fulfill({ json: { ...state, sessions: [{ ...session, actual: mutation.actual }] } }); });
+  await page.clock.fastForward(31000);
+  await expect(dialog.getByRole('button', { name: 'Save session', exact: true })).toBeDisabled();
+  await expect(dialog.getByRole('button', { name: 'Remove this session' })).toHaveCount(0);
+  await expect(dialog).toContainText('This session has started');
+  await dialog.evaluate(element => element.querySelector('form')!.requestSubmit());
+  expect(writes).toHaveLength(0);
+  await dialog.getByRole('button', { name: 'Record actual work', exact: true }).click();
+  await expect(dialog.getByRole('heading', { name: 'Record actual work', exact: true })).toBeVisible();
+  await expect(dialog).toContainText(`Actual work is assigned to ${goal.title}.`);
+  await expect(dialog).toContainText('Original plan: 05:00–05:30');
+  await expect(dialog.getByLabel('Start time', { exact: true })).toHaveValue('05:10');
+  await expect(dialog.getByLabel('End time', { exact: true })).toHaveValue('05:40');
+  await dialog.getByRole('button', { name: 'Save session', exact: true }).click();
+  await expect(dialog.getByRole('alert')).toContainText('Actual work cannot end in the future');
+  expect(writes).toHaveLength(0);
+  await page.clock.fastForward(41 * 60000);
+  await dialog.getByRole('button', { name: 'Save session', exact: true }).click();
+  await expect(dialog).toBeHidden();
+  expect(writes).toEqual([expect.objectContaining({ week: state.week, revision: state.revision, action: 'actual', actual: expect.objectContaining({ start: '2030-01-07T11:10:00.000Z', end: '2030-01-07T11:40:00.000Z' }) })]);
+  expect(writes[0].session.assignment).toEqual(session.assignment);
+  await sessionFor(page, goal.title).locator('.scheduler-block-main').click();
+  await expect(dialog).toContainText('Original plan: 05:00–05:30');
+  await expect(dialog.getByLabel('Start time', { exact: true })).toHaveValue('05:10');
+  await expect(dialog.getByLabel('End time', { exact: true })).toHaveValue('05:40');
+});
+
+test('obsolete Google health errors cannot replace a newer successful status', async ({ page, request }) => {
+  await controlledWeek(page, request);
+  let finish: () => void = () => {};
+  const gate = new Promise<void>(resolve => { finish = resolve; });
+  let reads = 0;
+  await page.route('**/api/scheduler/google/status', async route => {
+    reads++;
+    if (reads === 1) { await gate; await route.fulfill({ status: 503, json: { error: 'Obsolete status failure' } }); }
+    else await route.fulfill({ json: { configured: true, connected: true, reconnectRequired: false, revision: 'new-health' } });
+  });
+  await page.reload();
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(page.locator('.scheduler-google summary')).toContainText('Connected');
+  const obsolete = page.waitForResponse(response => response.url().endsWith('/google/status') && response.status() === 503);
+  finish();
+  await obsolete;
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+  await expect(page.locator('.scheduler-google [role="alert"]')).toHaveCount(0);
+});
