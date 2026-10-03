@@ -113,8 +113,9 @@ type Attempt struct {
 	// Stated complexities, "" when not stated (see NormalizeComplexity).
 	TimeComplexity  string `json:"timeComplexity"`
 	SpaceComplexity string `json:"spaceComplexity"`
-	// Code is the judged submission captured by the extension, with its
-	// LeetCode language slug; both are "" for web-logged attempts.
+	// Code is the attempt's code, captured by the extension or pasted on the
+	// web form or the extension panel, with its LeetCode language slug;
+	// both are "" when none was given.
 	Code         string `json:"code"`
 	CodeLanguage string `json:"codeLanguage"`
 	// WantsReview and Approach are the learner's own assessment. Approach is

@@ -26,9 +26,13 @@
   // "manual"), unset for other panels; saved is set once its attempt is
   // saved and the panel is only waiting to close.
   let ui = null;
+  // captureProblem is why the latest submission on the open problem was not
+  // captured, or "" (see lib.captureIssue).
+  let captureProblem = "";
   // capture is the latest validated submission on the open problem:
   // {slug, submissionId, status, lang, code} (see lib.cleanCapture). It is
-  // cleared once logged with an attempt, so a later attempt never carries it.
+  // cleared once logged with an attempt, so a later attempt never carries it,
+  // and when a newer submission cannot be captured (see lib.nextCapture).
   let capture = null;
 
   // captureFor picks the code that produced the result being logged: the
@@ -130,6 +134,7 @@
       if (!busy()) closeUI();
       removeBanner();
       current = { slug, lookup: lookup(slug), known: problem.metadata };
+      captureProblem = "";
     }
     const state = current;
     const found = await state.lookup;
@@ -207,6 +212,8 @@
   // code is saved or queued, so a later attempt does not reuse it.
   function forgetCapture(attempt) {
     if (capture && attempt.code && attempt.code === capture.code && attempt.problemSlug === capture.slug) capture = null;
+    // The reason a submission was not captured belongs to that attempt.
+    if (attempt.problemSlug === (current && current.slug)) captureProblem = "";
   }
 
   // logManually opens the log panel from the banner, for an attempt solved
@@ -233,8 +240,8 @@
     if (data.type === "submission") {
       // NeetCode's detector reports NeetCode's slug.
       const nc = site === "neetcode" ? lib.neetcodeProblem(data.slug) : null;
-      const cleaned = lib.cleanCapture(site === "neetcode" ? { ...data, slug: nc ? nc.slug : "" } : data, current && current.slug);
-      if (cleaned) capture = cleaned;
+      const message = site === "neetcode" ? { ...data, slug: nc ? nc.slug : "" } : data;
+      ({ capture, issue: captureProblem } = lib.nextCapture({ capture, issue: captureProblem }, message, current && current.slug));
     } else if (data.type === "accepted" && typeof data.submissionId === "string" && data.submissionId.length <= 64) {
       onAccepted(data.submissionId);
     }
@@ -461,7 +468,7 @@
     const includeCode = el("input", { type: "checkbox", name: "includeCode", checked: Boolean(captured) });
     const codeRow = captured
       ? [el("label", { className: "check" }, [includeCode, `Code captured (${lib.languageLabel(captured.lang)}, ${lib.formatBytes(lib.utf8Bytes(captured.code))})`])]
-      : [];
+      : [el("p", { className: "muted", text: lib.codeStatus(captureProblem) })];
     // Code written elsewhere (an IDE, a whiteboard transcript) can be pasted;
     // it replaces any captured code.
     const pasteLang = el("select", { name: "pasteLanguage", "aria-label": "Pasted code language" }, [

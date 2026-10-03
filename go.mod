@@ -4,6 +4,7 @@ go 1.27.1
 
 require (
 	github.com/a-h/templ v0.3.1020
+	github.com/alecthomas/chroma/v2 v2.27.0
 	github.com/anthropics/anthropic-sdk-go v1.76.0
 	github.com/go-chi/chi/v5 v5.3.2
 	github.com/google/jsonschema-go v0.4.3
@@ -32,6 +33,7 @@ require (
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cli/browser v1.3.0 // indirect
+	github.com/dlclark/regexp2/v2 v2.2.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect

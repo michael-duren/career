@@ -105,6 +105,40 @@
     return { slug: data.slug, submissionId: data.submissionId, status: data.status, lang: data.lang, code: data.code };
   }
 
+  // captureIssue says why a "submission" message for the problem on screen
+  // was not captured, for the log panel, or "" when cleanCapture would take
+  // it or it is not about this problem.
+  function captureIssue(data, slug) {
+    if (!data || typeof data !== "object" || data.type !== "submission" || data.slug !== slug || cleanCapture(data, slug)) return "";
+    if (typeof data.code === "string" && utf8Bytes(data.code) > MAX_CODE_BYTES) return TOO_LARGE;
+    if (typeof data.code === "string" && data.code === "") return "the submission had no code";
+    if (typeof data.lang !== "string" || !CODE_LANGUAGE.test(data.lang)) return "its language was not recognised";
+    return "the submission could not be read";
+  }
+
+  // TOO_LARGE is captureIssue's reason for oversized code.
+  const TOO_LARGE = "the code is over 64 KiB";
+
+  // codeStatus is the log panel's line about code when none was captured:
+  // why, when a submission on this problem was seen but not captured.
+  // Oversized code cannot be pasted either, so it asks for a shorter version.
+  function codeStatus(issue) {
+    if (issue === TOO_LARGE) return `Code not captured: ${issue}. Paste a shorter version below to save it.`;
+    return issue ? `Code not captured: ${issue}. Paste it below to save it.` : "No code was captured for this attempt. Paste it below to save it.";
+  }
+
+  // nextCapture is the capture state after a "submission" message: a
+  // capturable one replaces the capture and clears the issue; one for this
+  // problem that cannot be captured clears the capture too, so an older
+  // submission's code is never offered for a newer one, and records why.
+  // Anything else leaves the state as it was.
+  function nextCapture(state, message, slug) {
+    const cleaned = cleanCapture(message, slug);
+    if (cleaned) return { capture: cleaned, issue: "" };
+    const issue = captureIssue(message, slug);
+    return issue ? { capture: null, issue } : state;
+  }
+
   // pastedCode checks code pasted into the log panel. It returns
   // {capture: null} when nothing was pasted, {capture} shaped like a
   // captured submission otherwise, or {error}.
@@ -793,6 +827,9 @@
     PASTE_LANGUAGES,
     pastedCode,
     codeSource,
+    captureIssue,
+    codeStatus,
+    nextCapture,
     prefillFrom,
     attemptProblem,
     buildAttempt,

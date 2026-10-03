@@ -668,6 +668,85 @@ dd {
 .attempt details summary {
   cursor: pointer;
 }
+.code-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: 10px;
+}
+.code-actions .button[hidden] {
+  display: none;
+}
+.attempt-code summary .badge {
+  margin-right: 6px;
+}
+/* Chroma token classes (HighlightCode). */
+.chroma span[class^="k"] {
+  color: #c4b5fd;
+}
+.chroma span[class^="s"] {
+  color: #86efac;
+}
+.chroma span[class^="c"] {
+  color: var(--muted);
+  font-style: italic;
+}
+.chroma span[class^="m"] {
+  color: #fdba74;
+}
+.chroma .nf,
+.chroma .nc,
+.chroma .fm {
+  color: #93c5fd;
+}
+.chroma .nb,
+.chroma .bp {
+  color: #67e8f9;
+}
+/* Compare code. */
+.compare-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin: 12px 0 20px;
+}
+.compare-form select {
+  max-width: 100%;
+}
+.code-diff {
+  margin: 0;
+  padding: 12px 0;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.82rem;
+  tab-size: 4;
+}
+.code-diff code > span {
+  display: block;
+  padding: 0 14px 0 8px;
+  white-space: pre;
+}
+.diff-op {
+  display: inline-block;
+  width: 1.5ch;
+  color: var(--muted);
+  user-select: none;
+}
+.diff-del {
+  background: rgba(239, 68, 68, 0.14);
+}
+.diff-add {
+  background: rgba(34, 197, 94, 0.14);
+}
+.diff-del-key {
+  color: #fca5a5;
+}
+.diff-add-key {
+  color: #86efac;
+}
 .schedule-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
@@ -1611,4 +1690,12 @@ dd {
 }
 .cal-future {
   background: transparent;
+}
+.code-textarea {
+  font: 0.82rem/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: pre;
+  tab-size: 4;
+}
+.code-input summary {
+  cursor: pointer;
 }
