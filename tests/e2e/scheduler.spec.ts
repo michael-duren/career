@@ -872,6 +872,7 @@ test('request coordination retains failed proposal ownership after navigation an
   await expect(dialog).toBeHidden();
   expect(writes[1]).toMatchObject({ week: '2030-01-07', revision: 'new-owning-revision', session: { plan: { start: '2030-01-07T17:00:00.000Z' } } });
   await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', '2030-01-14');
+  await page.unrouteAll({ behavior: 'wait' });
 });
 
 test('request coordination rejects a delayed read after a newer save and clears resolved errors', async ({ page, request }) => {
