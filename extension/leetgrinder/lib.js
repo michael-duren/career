@@ -58,7 +58,10 @@
     scala: "Scala",
     swift: "Swift",
     typescript: "TypeScript",
+    text: "Plain text",
   };
+  // PASTE_LANGUAGES are the choices for code pasted into the log panel.
+  const PASTE_LANGUAGES = ["python3", "java", "cpp", "c", "csharp", "javascript", "typescript", "golang", "rust", "kotlin", "swift", "ruby", "scala", "php", "dart", "elixir", "erlang", "racket", "text"];
 
   // normalizeComplexity returns the canonical spelling of a stated
   // complexity, "" when nothing is stated, or null when it is not O(...) in
@@ -100,6 +103,68 @@
     if (typeof data.status !== "string" || data.status.length > MAX_STATUS || CONTROL.test(data.status)) return null;
     if (typeof data.code !== "string" || data.code === "" || !validCode(data.code, data.lang)) return null;
     return { slug: data.slug, submissionId: data.submissionId, status: data.status, lang: data.lang, code: data.code };
+  }
+
+  // captureIssue says why a "submission" message for the problem on screen
+  // was not captured, for the log panel, or "" when cleanCapture would take
+  // it or it is not about this problem.
+  function captureIssue(data, slug) {
+    if (!data || typeof data !== "object" || data.type !== "submission" || data.slug !== slug || cleanCapture(data, slug)) return "";
+    if (typeof data.code === "string" && utf8Bytes(data.code) > MAX_CODE_BYTES) return TOO_LARGE;
+    if (typeof data.code === "string" && data.code === "") return "the submission had no code";
+    if (typeof data.lang !== "string" || !CODE_LANGUAGE.test(data.lang)) return "its language was not recognised";
+    return "the submission could not be read";
+  }
+
+  // TOO_LARGE is captureIssue's reason for oversized code.
+  const TOO_LARGE = "the code is over 64 KiB";
+
+  // codeStatus is the log panel's line about code when none was captured:
+  // why, when a submission on this problem was seen but not captured.
+  // Oversized code cannot be pasted either, so it asks for a shorter version.
+  function codeStatus(issue) {
+    if (issue === TOO_LARGE) return `Code not captured: ${issue}. Paste a shorter version below to save it.`;
+    return issue ? `Code not captured: ${issue}. Paste it below to save it.` : "No code was captured for this attempt. Paste it below to save it.";
+  }
+
+  // nextCapture is the capture state after a "submission" message: a
+  // capturable one replaces the capture and clears the issue; one for this
+  // problem that cannot be captured clears the capture too, so an older
+  // submission's code is never offered for a newer one, and records why.
+  // Anything else leaves the state as it was.
+  function nextCapture(state, message, slug) {
+    const cleaned = cleanCapture(message, slug);
+    if (cleaned) return { capture: cleaned, issue: "" };
+    const issue = captureIssue(message, slug);
+    return issue ? { capture: null, issue } : state;
+  }
+
+  // pastedCode checks code pasted into the log panel. It returns
+  // {capture: null} when nothing was pasted, {capture} shaped like a
+  // captured submission otherwise, or {error}.
+  function pastedCode(code, lang, slug) {
+    if (typeof code !== "string" || code.trim() === "") return { capture: null };
+    if (!PASTE_LANGUAGES.includes(lang)) return { error: "Choose the pasted code's language." };
+    if (code.includes("\u0000")) return { error: "The pasted code contains a null character." };
+    if (utf8Bytes(code) > MAX_CODE_BYTES) return { error: `The pasted code is over ${formatBytes(MAX_CODE_BYTES)}.` };
+    return { capture: { slug, submissionId: "", status: "Pasted", lang, code } };
+  }
+
+  // codeSource picks the code an attempt carries: pasted code when there is
+  // some (sent even if the captured code is unticked), else the captured
+  // submission when ticked.
+  function codeSource(pasted, captured, includeCaptured) {
+    if (pasted) return { source: pasted, withCode: true };
+    return { source: captured || null, withCode: Boolean(captured && includeCaptured) };
+  }
+
+  // prefillFrom is the log panel's prefill from a problem timer: active
+  // minutes, the outcome they suggest (or outcome when given), open
+  // minutes, and whether help was opened.
+  function prefillFrom(timer, now, outcome) {
+    const t = timer && typeof timer === "object" ? timer : { startedAt: now, activeMs: 0 };
+    const minutes = activeMinutes(t, now);
+    return { outcome: outcome || inferOutcome(minutes), minutes, openMinutes: elapsedMinutes(openedAt(t), now), assisted: Boolean(t.assisted) };
   }
 
   function languageLabel(lang) {
@@ -759,6 +824,13 @@
     cleanCapture,
     languageLabel,
     formatBytes,
+    PASTE_LANGUAGES,
+    pastedCode,
+    codeSource,
+    captureIssue,
+    codeStatus,
+    nextCapture,
+    prefillFrom,
     attemptProblem,
     buildAttempt,
     cleanMetadata,

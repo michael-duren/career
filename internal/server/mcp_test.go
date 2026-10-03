@@ -286,7 +286,7 @@ func TestMCPOverOAuth(t *testing.T) {
 		t.Fatal(w.Code)
 	}
 
-	call := connectMCP(t, h, rotated["access_token"].(string), 14)
+	call := connectMCP(t, h, rotated["access_token"].(string), 18)
 	if out, isErr := call("create_leetgrinder_todo_set", map[string]any{"title": "Read only", "problems": []string{"two-sum"}}); !isErr || !strings.Contains(out["error"].(string), "read-only") {
 		t.Fatal("read-only token created a todo set", out)
 	}
@@ -393,7 +393,7 @@ func TestMCPWriteTools(t *testing.T) {
 	if status != 200 || tokens["scope"] != "career:read career:write" {
 		t.Fatal(status, tokens)
 	}
-	call := connectMCP(t, h, tokens["access_token"].(string), 14)
+	call := connectMCP(t, h, tokens["access_token"].(string), 18)
 	ctx := context.Background()
 
 	company, isErr := call("create_career_entry", map[string]any{"kind": "company", "entry": map[string]any{"title": "Duck Corp!", "category": "Infra", "url": "https://duck.example", "slug": "ignored"}})
@@ -605,7 +605,7 @@ func TestMCPConnectionCompanies(t *testing.T) {
 	if status != 200 {
 		t.Fatal(status, tokens)
 	}
-	call := connectMCP(t, h, tokens["access_token"].(string), 14)
+	call := connectMCP(t, h, tokens["access_token"].(string), 18)
 
 	// The fixture adds a third employer, linked to a tracked company.
 	list, isErr := call("list_connection_companies", map[string]any{"limit": 1})

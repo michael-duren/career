@@ -98,11 +98,15 @@ test("detector reports an accepted NeetCode submission", () => {
   assert.deepEqual(cleaned, { slug: "two-sum", submissionId: submission.submissionId, status: "Accepted", lang: "python", code: "class Solution: pass" });
 });
 
-test("detector ignores runs, failures and other calls", () => {
+test("detector reports failures as submissions only, and ignores runs and other calls", () => {
   const { posted, FakeXHR } = runDetector();
   const sent = { problemId: "two-integer-sum", rawCode: "x", lang: "python" };
   submit(FakeXHR, "/api/executeCodeFunctionHttp", sent, { data: { status: { description: "Wrong Answer" } } });
   assert.deepEqual(posted.map((p) => p.msg.type), ["submission"]);
+  // A failed submission's code is still captured, for an unfinished log.
+  const failed = lib.cleanCapture({ ...posted[0].msg, slug: lib.neetcodeProblem(posted[0].msg.slug).slug }, "two-sum");
+  assert.equal(failed.status, "Wrong Answer");
+  assert.equal(failed.code, "x");
   submit(FakeXHR, "/api/runCodeFunctionHttp", sent, RUN_ACCEPTED);
   // A Run-shaped reply on the submit path is not a verdict either.
   submit(FakeXHR, "/api/executeCodeFunctionHttp", sent, RUN_ACCEPTED);

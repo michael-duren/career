@@ -27,6 +27,9 @@ type AttemptForm struct {
 	Error  string
 	// Time and Space are the complexity controls as submitted.
 	Time, Space ComplexityInput
+	// Code and CodeLanguage are optional pasted code on a new attempt;
+	// corrections keep the code an attempt was saved with.
+	Code, CodeLanguage string
 
 	// OptimalNotice is shown in the optimal complexity panel after Re-estimate.
 	OptimalNotice string

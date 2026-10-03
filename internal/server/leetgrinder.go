@@ -43,6 +43,7 @@ func (s *Server) registerLeetgrinder(r chi.Router) {
 		r.HandleFunc("/leetgrinder/about", retired)
 		r.Get("/leetgrinder/log", s.leetgrinderLog)
 		r.Get("/leetgrinder/problem/{slug}", s.leetgrinderProblem)
+		r.Get("/leetgrinder/problem/{slug}/compare", s.leetgrinderCompareCode)
 		r.Post("/leetgrinder/problem/{slug}/attempts", s.leetgrinderAttempt)
 		r.Get("/leetgrinder/problems", s.leetgrinderProblems)
 		r.Get("/leetgrinder/todos", s.leetgrinderTodos)
@@ -152,7 +153,7 @@ func (s *Server) leetgrinderReviews(w http.ResponseWriter, r *http.Request) {
 	renderLeetgrinder(w, r, 200, leetgrinder.Reviews(leetgrinder.ReviewsPage{Today: today, IDs: reviewIDs(map[string]string{}, today)}))
 }
 
-// statsWeeks is how many weeks the goal calendar shows.
+// statsWeeks is how many weeks the goal calendar and weekly trends cover.
 const statsWeeks = 12
 
 func (s *Server) leetgrinderStats(w http.ResponseWriter, r *http.Request) {
@@ -198,6 +199,39 @@ func (s *Server) leetgrinderProblem(w http.ResponseWriter, r *http.Request) {
 	renderLeetgrinder(w, r, 200, leetgrinder.ProblemHistory(problem, state, form, s.historyAnalysis(r), s.problemReview(r, state, problem.Slug)))
 }
 
+// leetgrinderCompareCode shows a line diff between two attempts' code on one
+// problem, chosen by the from and to query parameters (attempt IDs).
+func (s *Server) leetgrinderCompareCode(w http.ResponseWriter, r *http.Request) {
+	problem, ok := s.leetgrinderRouteProblem(w, r)
+	if !ok {
+		return
+	}
+	state, err := s.db.LeetgrinderProblemState(r.Context(), problem.Slug)
+	if err != nil {
+		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your attempt history is unavailable. Please retry."))
+		return
+	}
+	choices := leetgrinder.CodeAttempts(state.ProblemAttempts(problem.Slug))
+	find := func(id string) (leetgrinder.Attempt, bool) {
+		for _, a := range choices {
+			if a.ID == id {
+				return a, true
+			}
+		}
+		return leetgrinder.Attempt{}, false
+	}
+	from, okFrom := find(r.URL.Query().Get("from"))
+	to, okTo := find(r.URL.Query().Get("to"))
+	if !okFrom || !okTo {
+		http.NotFound(w, r)
+		return
+	}
+	page := leetgrinder.CompareCodePage{Problem: problem, From: from, To: to, Choices: choices, Review: s.problemReview(r, state, problem.Slug)}
+	page.Lines, ok = leetgrinder.DiffLines(from.Code, to.Code)
+	page.TooLarge = !ok
+	renderLeetgrinder(w, r, 200, leetgrinder.CompareCode(page))
+}
+
 // problemReview is slug's review state for its page. It reads today without
 // freezing today's goal or plan; a settings failure only hides it.
 func (s *Server) problemReview(r *http.Request, state leetgrinder.State, slug string) leetgrinder.ProblemReview {
@@ -240,18 +274,29 @@ func (s *Server) historyAnalysis(r *http.Request) leetgrinder.AnalysisAvailabili
 }
 
 func (s *Server) leetgrinderForm(w http.ResponseWriter, r *http.Request) bool {
+	return s.leetgrinderFormLimit(w, r, 32<<10, "Invalid or oversized form. Notes must be 2,000 characters or fewer.")
+}
+
+// leetgrinderFormLimit parses a same-origin form of at most limit bytes,
+// answering 400 with message otherwise.
+func (s *Server) leetgrinderFormLimit(w http.ResponseWriter, r *http.Request, limit int64, message string) bool {
 	if !s.mutation(w, r, "application/x-www-form-urlencoded") {
 		return false
 	}
-	r.Body = http.MaxBytesReader(w, r.Body, 32<<10)
+	r.Body = http.MaxBytesReader(w, r.Body, limit)
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Invalid or oversized form. Notes must be 2,000 characters or fewer.", 400)
+		http.Error(w, message, 400)
 		return false
 	}
 	return true
 }
+
+// attemptFormLimit fits 64 KiB of pasted code even when URL encoding grows
+// it sixfold (a CRLF line break is %0D%0A), with the rest of the form.
+const attemptFormLimit = 448 << 10
+
 func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
-	if !s.leetgrinderForm(w, r) {
+	if !s.leetgrinderFormLimit(w, r, attemptFormLimit, "Invalid or oversized form. Notes must be 2,000 characters or fewer and code 64 KiB or less.") {
 		return
 	}
 	problem, ok := s.leetgrinderRouteProblem(w, r)
@@ -262,6 +307,11 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 		WantsReview: r.PostForm.Get("wantsReview") == "true", Approach: r.PostForm.Get("approach"),
 		Time:  leetgrinder.ComplexityInput{Choice: r.PostForm.Get("timeComplexity"), Other: r.PostForm.Get("timeComplexityOther")},
 		Space: leetgrinder.ComplexityInput{Choice: r.PostForm.Get("spaceComplexity"), Other: r.PostForm.Get("spaceComplexityOther")}}
+	// Pasted code is only taken on a new attempt; corrections keep the code
+	// the attempt was saved with.
+	if form.Revision == "" && strings.TrimSpace(r.PostForm.Get("code")) != "" {
+		form.Code, form.CodeLanguage = strings.ReplaceAll(r.PostForm.Get("code"), "\r\n", "\n"), r.PostForm.Get("codeLanguage")
+	}
 	switch ret := r.PostForm.Get("return"); ret {
 	case "overview", "reviews":
 		form.Return = ret
@@ -313,8 +363,18 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 		reject(400, "Choose whether you reached the optimal solution or took a simpler approach.")
 		return
 	}
-	attempt := leetgrinder.Attempt{ID: form.ID, ProblemSlug: problem.Slug, Outcome: form.Outcome, Minutes: minutes, Assisted: form.Assisted, Notes: form.Notes, Source: "web", WantsReview: form.WantsReview, Approach: form.Approach, TimeComplexity: form.Time.Value(), SpaceComplexity: form.Space.Value()}
+	attempt := leetgrinder.Attempt{ID: form.ID, ProblemSlug: problem.Slug, Outcome: form.Outcome, Minutes: minutes, Assisted: form.Assisted, Notes: form.Notes, Source: "web", WantsReview: form.WantsReview, Approach: form.Approach, TimeComplexity: form.Time.Value(), SpaceComplexity: form.Space.Value(), Code: form.Code, CodeLanguage: form.CodeLanguage}
+	if form.Code != "" && !slices.Contains(leetgrinder.CodeLanguages, form.CodeLanguage) {
+		reject(400, "Choose the language of your code.")
+		return
+	}
 	switch err := attempt.NormalizeDetails(); {
+	case errors.Is(err, leetgrinder.ErrCodeTooLarge):
+		reject(400, "Keep the code to 64 KiB or less.")
+		return
+	case errors.Is(err, leetgrinder.ErrCodeInvalid):
+		reject(400, "The code must be text without null characters.")
+		return
 	case errors.Is(err, leetgrinder.ErrComplexityRequired):
 		reject(400, "Choose the time and space complexity of your solution. They are required for solved and struggled attempts.")
 		return

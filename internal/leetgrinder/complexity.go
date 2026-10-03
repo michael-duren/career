@@ -110,7 +110,13 @@ var languageLabels = map[string]string{
 	"c": "C", "cpp": "C++", "csharp": "C#", "dart": "Dart", "elixir": "Elixir", "erlang": "Erlang", "golang": "Go", "java": "Java",
 	"javascript": "JavaScript", "kotlin": "Kotlin", "php": "PHP", "python": "Python", "python3": "Python3", "racket": "Racket",
 	"ruby": "Ruby", "rust": "Rust", "scala": "Scala", "swift": "Swift", "typescript": "TypeScript",
+	// Code pasted into the extension's log panel may be plain text.
+	"text": "Plain text",
 }
+
+// CodeLanguages are the choices for code pasted on the web form, in the
+// order the extension's PASTE_LANGUAGES lists them.
+var CodeLanguages = []string{"python3", "java", "cpp", "c", "csharp", "javascript", "typescript", "golang", "rust", "kotlin", "swift", "ruby", "scala", "php", "dart", "elixir", "erlang", "racket", "text"}
 
 // LanguageLabel names a LeetCode language slug for display.
 func LanguageLabel(lang string) string {

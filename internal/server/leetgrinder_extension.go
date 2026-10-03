@@ -144,6 +144,43 @@ type leetgrinderAPIAttemptInput struct {
 	Problem *leetgrinder.ProblemMetadata `json:"problem"`
 }
 
+// newLeetgrinderAttempt validates an attempt from the extension or MCP and
+// returns it with its source, or an HTTP status and message for the
+// learner.
+func newLeetgrinderAttempt(input leetgrinderAPIAttemptInput, source string) (leetgrinder.Attempt, int, string) {
+	if _, err := uuid.Parse(input.ID); err != nil {
+		return leetgrinder.Attempt{}, 400, "id must be a UUID."
+	}
+	switch input.Outcome {
+	case "solved", "struggled", "unfinished":
+	default:
+		return leetgrinder.Attempt{}, 400, "outcome must be solved, struggled, or unfinished."
+	}
+	if input.Minutes < 1 || input.Minutes > 240 {
+		return leetgrinder.Attempt{}, 400, "minutes must be between 1 and 240."
+	}
+	if !utf8.ValidString(input.Notes) || strings.ContainsRune(input.Notes, 0) || utf8.RuneCountInString(input.Notes) > 2000 {
+		return leetgrinder.Attempt{}, 400, "notes must be 2,000 characters or fewer."
+	}
+	if !leetgrinder.ValidSlug(input.ProblemSlug) {
+		return leetgrinder.Attempt{}, 400, "problemSlug must be a LeetCode problem slug."
+	}
+	if !leetgrinder.ValidApproach(input.Approach) {
+		return leetgrinder.Attempt{}, 400, "approach must be optimal, suboptimal, or empty."
+	}
+	attempt := leetgrinder.Attempt{ID: input.ID, ProblemSlug: input.ProblemSlug, Outcome: input.Outcome, Minutes: input.Minutes, Assisted: input.Assisted, Notes: input.Notes, Source: source,
+		TimeComplexity: input.TimeComplexity, SpaceComplexity: input.SpaceComplexity, Code: input.Code, CodeLanguage: input.CodeLanguage, WantsReview: input.WantsReview, Approach: input.Approach}
+	switch err := attempt.NormalizeDetails(); {
+	case errors.Is(err, leetgrinder.ErrComplexityRequired), errors.Is(err, leetgrinder.ErrComplexityFormat):
+		return leetgrinder.Attempt{}, 422, err.Error() + "."
+	case errors.Is(err, leetgrinder.ErrCodeTooLarge):
+		return leetgrinder.Attempt{}, 413, "Code must be 64 KiB or smaller."
+	case err != nil:
+		return leetgrinder.Attempt{}, 400, "code must be valid UTF-8 text with a LeetCode language, or both must be empty."
+	}
+	return attempt, 0, ""
+}
+
 func (s *Server) leetgrinderAPIAttempt(w http.ResponseWriter, r *http.Request) {
 	if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
 		respond(w, 415, map[string]string{"error": "application/json required"})
@@ -153,50 +190,15 @@ func (s *Server) leetgrinderAPIAttempt(w http.ResponseWriter, r *http.Request) {
 	if !decode(w, r, leetgrinderAPIBodyLimit, &input) {
 		return
 	}
-	bad := func(message string) { respond(w, 400, map[string]string{"error": message}) }
-	if _, err := uuid.Parse(input.ID); err != nil {
-		bad("id must be a UUID.")
-		return
-	}
-	switch input.Outcome {
-	case "solved", "struggled", "unfinished":
-	default:
-		bad("outcome must be solved, struggled, or unfinished.")
-		return
-	}
-	if input.Minutes < 1 || input.Minutes > 240 {
-		bad("minutes must be between 1 and 240.")
-		return
-	}
-	if !utf8.ValidString(input.Notes) || strings.ContainsRune(input.Notes, 0) || utf8.RuneCountInString(input.Notes) > 2000 {
-		bad("notes must be 2,000 characters or fewer.")
-		return
-	}
-	if !leetgrinder.ValidSlug(input.ProblemSlug) {
-		bad("problemSlug must be a LeetCode problem slug.")
-		return
-	}
-	if !leetgrinder.ValidApproach(input.Approach) {
-		bad("approach must be optimal, suboptimal, or empty.")
+	attempt, status, message := newLeetgrinderAttempt(input, "extension")
+	if status != 0 {
+		respond(w, status, map[string]string{"error": message})
 		return
 	}
 	// Metadata is optional and the server can fetch it itself, so invalid
 	// metadata is dropped rather than failing the attempt.
 	if input.Problem != nil && (input.Problem.Normalize() != nil || input.Problem.Title == "") {
 		input.Problem = nil
-	}
-	attempt := leetgrinder.Attempt{ID: input.ID, ProblemSlug: input.ProblemSlug, Outcome: input.Outcome, Minutes: input.Minutes, Assisted: input.Assisted, Notes: input.Notes, Source: "extension",
-		TimeComplexity: input.TimeComplexity, SpaceComplexity: input.SpaceComplexity, Code: input.Code, CodeLanguage: input.CodeLanguage, WantsReview: input.WantsReview, Approach: input.Approach}
-	switch err := attempt.NormalizeDetails(); {
-	case errors.Is(err, leetgrinder.ErrComplexityRequired), errors.Is(err, leetgrinder.ErrComplexityFormat):
-		respond(w, 422, map[string]string{"error": err.Error() + "."})
-		return
-	case errors.Is(err, leetgrinder.ErrCodeTooLarge):
-		respond(w, 413, map[string]string{"error": "Code must be 64 KiB or smaller."})
-		return
-	case err != nil:
-		bad("code must be valid UTF-8 text with a LeetCode language, or both must be empty.")
-		return
 	}
 	// Freeze today's goal and picks before the attempt, so a first access
 	// that is itself a review still plans that review.
@@ -213,7 +215,7 @@ func (s *Server) leetgrinderAPIAttempt(w http.ResponseWriter, r *http.Request) {
 	case errors.Is(err, database.ErrConflict):
 		respond(w, 409, map[string]string{"error": "Saved earlier with different values. Check the history, or save this as a new attempt."})
 	case errors.Is(err, database.ErrInvalid):
-		bad("Check the attempt fields and try again.")
+		respond(w, 400, map[string]string{"error": "Check the attempt fields and try again."})
 	default:
 		respond(w, 503, map[string]string{"error": "The attempt could not be saved; please retry."})
 	}
