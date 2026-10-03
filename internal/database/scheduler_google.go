@@ -11,23 +11,24 @@ import (
 )
 
 type SchedulerGoogleConnection struct {
-	HealthRevision    int64                      `json:"-"`
-	AccountID         string                     `json:"-"`
-	CalendarID        string                     `json:"calendarId,omitempty"`
-	Credentials       []byte                     `json:"-"`
-	SelectedCalendars []string                   `json:"-"`
-	Revision          string                     `json:"revision"`
-	ReconnectRequired bool                       `json:"reconnectRequired"`
-	Error             string                     `json:"error,omitempty"`
-	LastRefresh       *time.Time                 `json:"lastRefresh,omitempty"`
-	BusyFrom, BusyTo  *time.Time                 `json:"-"`
-	Busy              []scheduler.GoogleInterval `json:"-"`
+	AvailabilityRevision int64                      `json:"-"`
+	HealthRevision       int64                      `json:"-"`
+	AccountID            string                     `json:"-"`
+	CalendarID           string                     `json:"calendarId,omitempty"`
+	Credentials          []byte                     `json:"-"`
+	SelectedCalendars    []string                   `json:"-"`
+	Revision             string                     `json:"revision"`
+	ReconnectRequired    bool                       `json:"reconnectRequired"`
+	Error                string                     `json:"error,omitempty"`
+	LastRefresh          *time.Time                 `json:"lastRefresh,omitempty"`
+	BusyFrom, BusyTo     *time.Time                 `json:"-"`
+	Busy                 []scheduler.GoogleInterval `json:"-"`
 }
 
 func (s *Store) SchedulerGoogle(ctx context.Context) (SchedulerGoogleConnection, error) {
 	var c SchedulerGoogleConnection
 	var selected, busy []byte
-	err := s.DB.QueryRowContext(ctx, `SELECT account_id,calendar_id,credentials,selected_calendars,revision,reconnect_required,last_error,refreshed_at,busy_from,busy_to,busy,health_revision FROM scheduler_google WHERE id=1`).Scan(&c.AccountID, &c.CalendarID, &c.Credentials, &selected, &c.Revision, &c.ReconnectRequired, &c.Error, &c.LastRefresh, &c.BusyFrom, &c.BusyTo, &busy, &c.HealthRevision)
+	err := s.DB.QueryRowContext(ctx, `SELECT account_id,calendar_id,credentials,selected_calendars,revision,reconnect_required,last_error,refreshed_at,busy_from,busy_to,busy,health_revision,availability_revision FROM scheduler_google WHERE id=1`).Scan(&c.AccountID, &c.CalendarID, &c.Credentials, &selected, &c.Revision, &c.ReconnectRequired, &c.Error, &c.LastRefresh, &c.BusyFrom, &c.BusyTo, &busy, &c.HealthRevision, &c.AvailabilityRevision)
 	if errors.Is(err, sql.ErrNoRows) {
 		c.Revision = "0"
 		c.SelectedCalendars = []string{}
@@ -103,10 +104,12 @@ func (s *Store) ConsumeSchedulerOAuth(ctx context.Context, state, session string
 type SchedulerGoogleMapping struct {
 	AccountID, SessionID, CalendarID, EventID string
 	PlannedStart                              time.Time
+	DesiredFingerprint, SyncedFingerprint     string
+	DesiredGeneration                         int64
 }
 
 func (s *Store) SchedulerGoogleMappings(ctx context.Context, account string) ([]SchedulerGoogleMapping, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT account_id,session_id,calendar_id,event_id,planned_start FROM scheduler_google_mappings WHERE account_id=$1`, account)
+	rows, err := s.DB.QueryContext(ctx, `SELECT account_id,session_id,calendar_id,event_id,planned_start,desired_fingerprint,synced_fingerprint,desired_generation FROM scheduler_google_mappings WHERE account_id=$1`, account)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +117,7 @@ func (s *Store) SchedulerGoogleMappings(ctx context.Context, account string) ([]
 	result := []SchedulerGoogleMapping{}
 	for rows.Next() {
 		var m SchedulerGoogleMapping
-		if err = rows.Scan(&m.AccountID, &m.SessionID, &m.CalendarID, &m.EventID, &m.PlannedStart); err != nil {
+		if err = rows.Scan(&m.AccountID, &m.SessionID, &m.CalendarID, &m.EventID, &m.PlannedStart, &m.DesiredFingerprint, &m.SyncedFingerprint, &m.DesiredGeneration); err != nil {
 			return nil, err
 		}
 		result = append(result, m)
@@ -168,4 +171,67 @@ func (s *Store) SchedulerGoogleDestination(ctx context.Context, account string) 
 		return "", nil
 	}
 	return id, err
+}
+
+// PrepareSchedulerGoogleMapping records desired work before contacting Google.
+// Identity changes invalidate prior successful progress; plan changes retain it
+// so an unchanged retry can compare the exact successful payload.
+func (s *Store) PrepareSchedulerGoogleMapping(ctx context.Context, m SchedulerGoogleMapping) error {
+	_, err := s.DB.ExecContext(ctx, `INSERT INTO scheduler_google_mappings(account_id,session_id,calendar_id,event_id,planned_start,desired_fingerprint,desired_generation) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(account_id,session_id) DO UPDATE SET calendar_id=$3,event_id=$4,planned_start=$5,desired_fingerprint=$6,desired_generation=$7,synced_fingerprint=CASE WHEN scheduler_google_mappings.calendar_id=$3 AND scheduler_google_mappings.event_id=$4 THEN scheduler_google_mappings.synced_fingerprint ELSE '' END`, m.AccountID, m.SessionID, m.CalendarID, m.EventID, m.PlannedStart, m.DesiredFingerprint, m.DesiredGeneration)
+	return err
+}
+func (s *Store) CompleteSchedulerGoogleMapping(ctx context.Context, m SchedulerGoogleMapping) error {
+	_, err := s.DB.ExecContext(ctx, `UPDATE scheduler_google_mappings SET synced_fingerprint=$1 WHERE account_id=$2 AND session_id=$3 AND calendar_id=$4 AND event_id=$5 AND desired_fingerprint=$1 AND desired_generation=$6`, m.DesiredFingerprint, m.AccountID, m.SessionID, m.CalendarID, m.EventID, m.DesiredGeneration)
+	return err
+}
+func (s *Store) SchedulerGoogleReconciliationCursor(ctx context.Context, account, calendar string) (string, error) {
+	var cursor string
+	err := s.DB.QueryRowContext(ctx, `SELECT after_session FROM scheduler_google_reconciliation WHERE account_id=$1 AND calendar_id=$2`, account, calendar).Scan(&cursor)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", nil
+	}
+	return cursor, err
+}
+func (s *Store) SaveSchedulerGoogleReconciliationCursor(ctx context.Context, account, calendar, cursor string) error {
+	_, err := s.DB.ExecContext(ctx, `INSERT INTO scheduler_google_reconciliation(account_id,calendar_id,after_session) VALUES($1,$2,$3) ON CONFLICT(account_id,calendar_id) DO UPDATE SET after_session=$3`, account, calendar, cursor)
+	return err
+}
+
+// UpdateSchedulerGoogleAvailability only replaces availability. Export health
+// writes and token refreshes cannot masquerade as a completed FreeBusy fetch.
+func (s *Store) UpdateSchedulerGoogleAvailability(ctx context.Context, c *SchedulerGoogleConnection) error {
+	busy, err := json.Marshal(c.Busy)
+	if err != nil {
+		return err
+	}
+	if c.Busy == nil {
+		busy = []byte("[]")
+	}
+	result, err := s.DB.ExecContext(ctx, `UPDATE scheduler_google SET busy=$1,busy_from=$2,busy_to=$3,refreshed_at=$4,last_error='',availability_revision=availability_revision+1,health_revision=health_revision+1 WHERE id=1 AND revision=$5 AND health_revision=$6`, busy, c.BusyFrom, c.BusyTo, c.LastRefresh, c.Revision, c.HealthRevision)
+	if err != nil {
+		return err
+	}
+	n, err := result.RowsAffected()
+	if err == nil && n == 0 {
+		return ErrConflict
+	}
+	if err == nil {
+		c.HealthRevision++
+		c.AvailabilityRevision++
+	}
+	return err
+}
+
+// RecordSchedulerGoogleError preserves newer availability and credential writes.
+// Only the same connection and credential generation can be marked revoked.
+func (s *Store) RecordSchedulerGoogleError(ctx context.Context, c *SchedulerGoogleConnection) error {
+	result, err := s.DB.ExecContext(ctx, `UPDATE scheduler_google SET last_error=$1,reconnect_required=reconnect_required OR $2,health_revision=health_revision+1 WHERE id=1 AND revision=$3 AND credentials=$4`, c.Error, c.ReconnectRequired, c.Revision, c.Credentials)
+	if err != nil {
+		return err
+	}
+	n, err := result.RowsAffected()
+	if err == nil && n == 0 {
+		return ErrConflict
+	}
+	return err
 }

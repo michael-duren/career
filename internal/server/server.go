@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/michael-duren/career-strategy/internal/config"
 	"github.com/michael-duren/career-strategy/internal/database"
+	"github.com/michael-duren/career-strategy/internal/scheduler"
 	"net/http"
 	"sync"
 	"time"
@@ -20,7 +21,8 @@ type Server struct {
 	// now overrides the clock in tests.
 	now func() time.Time
 	// ntfyClient sends Leetgrinder test notifications; nil uses the default.
-	ntfyClient *http.Client
+	ntfyClient            *http.Client
+	schedulerGoogleClient *scheduler.GoogleClient
 }
 
 func NewServer(c config.Config, db *database.Store) *http.Server {
