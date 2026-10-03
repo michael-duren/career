@@ -808,3 +808,253 @@ test('future actual work shows an invalid preview and sends no mutation', async 
   await page.mouse.up();
   expect(writes).toBe(0);
 });
+
+async function controlledWeek(page: Page, request: APIRequestContext, date = '2030-01-07') {
+  await page.clock.install({ time: new Date(`${date}T08:00:00Z`) });
+  const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
+  await page.route('**/api/scheduler/week?*', async route => {
+    const requested = new URL(route.request().url()).searchParams.get('week');
+    const response = await request.get(`/api/scheduler/week?week=${requested}`);
+    await route.fulfill({ json: await response.json() });
+  });
+  await page.goto('/weekly-scheduler');
+  await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', date);
+  await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
+  return state;
+}
+
+async function pendingCommitment(page: Page) {
+  await page.getByRole('button', { name: 'Add commitment', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Session editor' });
+  await dialog.getByLabel('Commitment name').fill('Request ordering commitment');
+  await dialog.getByLabel('Start time', { exact: true }).fill('11:00');
+  await dialog.getByLabel('End time', { exact: true }).fill('12:00');
+  return dialog;
+}
+
+test('request coordination keeps Jan 14 visible when a delayed Jan 7 save completes', async ({ page, request }) => {
+  const jan7 = await controlledWeek(page, request);
+  let finish: () => void = () => {};
+  const gate = new Promise<void>(resolve => { finish = resolve; });
+  let writes = 0;
+  await page.route('**/api/scheduler/mutate', async route => { writes++; await gate; await route.fulfill({ json: jan7 }); });
+  const dialog = await pendingCommitment(page);
+  await dialog.getByRole('button', { name: 'Save session', exact: true }).click();
+  await expect.poll(() => writes).toBe(1);
+  await page.evaluate(() => document.querySelector<HTMLButtonElement>('[aria-label="Next week"]')?.click());
+  await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', '2030-01-14');
+  finish();
+  await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
+  await expect(page.locator('.scheduler-toolbar h2')).toContainText('Jan 14');
+  await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', '2030-01-14');
+});
+
+test('request coordination retains failed proposal ownership after navigation and guards rapid submit', async ({ page, request }) => {
+  const jan7 = await controlledWeek(page, request);
+  let finish: () => void = () => {};
+  const gate = new Promise<void>(resolve => { finish = resolve; });
+  const writes: { week: string; revision: string; session: { plan: { start: string } } }[] = [];
+  await page.route('**/api/scheduler/mutate', async route => {
+    writes.push(route.request().postDataJSON());
+    if (writes.length === 1) { await gate; await route.fulfill({ status: 409, json: { error: 'Another edit changed the revision', current: { ...jan7, revision: 'new-owning-revision' }, conflictIds: [] } }); }
+    else await route.fulfill({ json: { ...jan7, revision: 'accepted-revision' } });
+  });
+  const dialog = await pendingCommitment(page);
+  await dialog.evaluate(formDialog => { const form = formDialog.querySelector('form')!; form.requestSubmit(); form.requestSubmit(); });
+  await expect.poll(() => writes.length).toBe(1);
+  await page.evaluate(() => document.querySelector<HTMLButtonElement>('[aria-label="Next week"]')?.click());
+  await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', '2030-01-14');
+  finish();
+  await expect(dialog.getByRole('alert')).toContainText('Review and retry');
+  expect(writes).toHaveLength(1);
+  await expect(dialog.getByLabel('Scheduling date', { exact: true })).toHaveValue('2030-01-07');
+  await dialog.getByRole('button', { name: 'Save session', exact: true }).click();
+  await expect(dialog).toBeHidden();
+  expect(writes[1]).toMatchObject({ week: '2030-01-07', revision: 'new-owning-revision', session: { plan: { start: '2030-01-07T17:00:00.000Z' } } });
+  await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', '2030-01-14');
+});
+
+test('request coordination rejects a delayed read after a newer save and clears resolved errors', async ({ page, request }) => {
+  const state = await controlledWeek(page, request);
+  let finishSave: () => void = () => {};
+  let finishRead: () => void = () => {};
+  const saveGate = new Promise<void>(resolve => { finishSave = resolve; });
+  const readGate = new Promise<void>(resolve => { finishRead = resolve; });
+  let saving = false, reading = false;
+  await page.route('**/api/scheduler/mutate', async route => { saving = true; await saveGate; await route.fulfill({ json: { ...state, warnings: ['Newly saved state'], revision: 'new' } }); });
+  const dialog = await pendingCommitment(page);
+  await dialog.getByRole('button', { name: 'Save session', exact: true }).click();
+  await expect.poll(() => saving).toBe(true);
+  await page.route('**/api/scheduler/week?*', async route => { reading = true; await readGate; await route.fulfill({ json: state }); });
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect.poll(() => reading).toBe(true);
+  finishSave();
+  await expect(page.locator('.scheduler-warnings')).toContainText('Newly saved state');
+  finishRead();
+  await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
+  await expect(page.locator('.scheduler-warnings')).toContainText('Newly saved state');
+});
+
+test('visible local refresh updates worker actuals, clock editability and reconnect health without availability retries', async ({ page, request, baseURL }) => {
+  const goal = await createGoal(request, baseURL!, { title: 'Clock commitment', startDate: '2030-01-07', endDate: '2030-12-31' });
+  const state = await controlledWeek(page, request);
+  await page.clock.setSystemTime(new Date('2030-01-07T10:59:30Z'));
+  const session = { actual: null, exception: false, id: crypto.randomUUID(), date: state.week, assignment: { goalId: goal.id, title: 'Clock commitment' }, state: 'accepted', plan: { start: '2030-01-07T11:00:00Z', end: '2030-01-07T11:00:30Z' } };
+  let reads = 0, healthReads = 0, availability = 0;
+  await page.route('**/api/scheduler/google/status', route => { healthReads++; return route.fulfill({ json: { configured: true, connected: true, reconnectRequired: healthReads > 1, revision: 'google-health' } }); });
+  await page.route('**/api/scheduler/google/refresh', route => { availability++; return route.fulfill({ json: {} }); });
+  await page.route('**/api/scheduler/week?*', route => { reads++; return route.fulfill({ json: { ...state, goals: state.goals.map((summary: { actualHours: number }) => ({ ...summary, actualHours: reads > 1 ? 1 / 120 : 0 })), sessions: [{ ...session, actual: reads > 1 ? { ...session.plan, date: state.week, status: 'assumed' } : null }] } }); });
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Delete Clock commitment', exact: true })).toBeVisible();
+  await page.clock.fastForward(31000);
+  await expect(page.getByRole('button', { name: 'Delete Clock commitment', exact: true })).toHaveCount(0);
+  await sessionFor(page, 'Clock commitment').locator('.scheduler-block-main').click();
+  const clockDialog = page.getByRole('dialog', { name: 'Session editor' });
+  await expect(clockDialog.getByRole('button', { name: 'Restore as planned' })).toBeDisabled();
+  await page.clock.fastForward(30000);
+  await expect(clockDialog.getByRole('button', { name: 'Restore as planned' })).toBeEnabled();
+  await clockDialog.getByRole('button', { name: 'Discard draft' }).click();
+  await expect(sessionFor(page, 'Clock commitment')).toContainText('assumed actual');
+  await expect(page.locator(`#scheduler-goal-${goal.id} dd`).nth(1)).toHaveText('0.01h');
+  await expect(page.locator('.scheduler-google summary')).toContainText('Reconnect needed');
+  await page.clock.fastForward(600000);
+  expect(availability).toBe(0);
+});
+
+test('Google selection conflict retains choices and reloads current revision for explicit retry', async ({ page, request }) => {
+  await controlledWeek(page, request);
+  let calendarReads = 0;
+  const submitted: { revision: string; calendarIds: string[] }[] = [];
+  await page.route('**/api/scheduler/google/status', route => route.fulfill({ json: { configured: true, connected: true, reconnectRequired: false, revision: 'status-revision' } }));
+  await page.route('**/api/scheduler/google/calendars', async route => {
+    if (route.request().method() === 'GET') { calendarReads++; await route.fulfill({ json: { revision: calendarReads === 1 ? 'old-selection' : 'current-selection', calendars: [{ id: 'busy', summary: 'Busy calendar', selected: false }] } }); }
+    else { submitted.push(route.request().postDataJSON()); await route.fulfill(submitted.length === 1 ? { status: 409, json: { error: 'Calendar selection changed', conflictIds: [] } } : { json: {} }); }
+  });
+  await page.reload();
+  await page.locator('.scheduler-google summary').click();
+  await page.getByRole('button', { name: 'Select busy calendars' }).click();
+  await page.getByLabel('Busy calendar', { exact: true }).check();
+  await page.getByRole('button', { name: 'Save calendar selection' }).click();
+  await expect(page.locator('.scheduler-google [role="alert"]')).toContainText('Calendar selection changed');
+  await expect.poll(() => calendarReads).toBe(2);
+  await expect(page.getByLabel('Busy calendar', { exact: true })).toBeChecked();
+  expect(submitted).toHaveLength(1);
+  await page.getByRole('button', { name: 'Save calendar selection' }).click();
+  await expect.poll(() => submitted.length).toBe(2);
+  expect(submitted[1]).toEqual({ revision: 'current-selection', calendarIds: ['busy'] });
+});
+
+test('local refresh keeps drafts, clears resolved errors and pauses while the page is hidden', async ({ page, request }) => {
+  const state = await controlledWeek(page, request);
+  let failing = true, reads = 0, healthReads = 0;
+  await page.route('**/api/scheduler/week?*', route => { reads++; return route.fulfill(failing ? { status: 503, json: { error: 'Temporary read failure' } } : { json: state }); });
+  await page.route('**/api/scheduler/google/status', route => { healthReads++; return route.fulfill({ json: { configured: false, connected: false, reconnectRequired: false, revision: 'health' } }); });
+  const dialog = await pendingCommitment(page);
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(dialog.getByRole('alert')).toContainText('Temporary read failure');
+  failing = false;
+  await dialog.getByRole('button', { name: 'Refresh schedule', exact: true }).click();
+  await expect(dialog.getByRole('alert')).toHaveCount(0);
+  await expect(dialog.getByLabel('Commitment name')).toHaveValue('Request ordering commitment');
+  await page.evaluate(() => { Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' }); document.dispatchEvent(new Event('visibilitychange')); });
+  const before = { reads, healthReads };
+  await page.clock.fastForward(180000);
+  expect({ reads, healthReads }).toEqual(before);
+  await page.evaluate(() => { Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' }); document.dispatchEvent(new Event('visibilitychange')); });
+  await expect.poll(() => reads).toBe(before.reads + 1);
+  await dialog.getByRole('button', { name: 'Discard draft' }).click();
+  await page.locator('.scheduler-toolbar').getByRole('button', { name: 'Refresh schedule', exact: true }).click();
+  await expect.poll(() => reads).toBe(before.reads + 2);
+});
+
+test('failed drag after ordinary navigation opens its original week draft and saves with original settings', async ({ page, request, baseURL }) => {
+  const goal = await createGoal(request, baseURL!, { startDate: '2030-01-07', endDate: '2030-12-31', dailyHours: 0 });
+  const state = await controlledWeek(page, request);
+  const next = await (await request.get('/api/scheduler/week?week=2030-01-14')).json();
+  await page.route('**/api/scheduler/week?*', route => route.fulfill({ json: new URL(route.request().url()).searchParams.get('week') === state.week ? state : { ...next, settings: { ...next.settings, timeZone: 'UTC' } } }));
+  let finish: () => void = () => {};
+  const gate = new Promise<void>(resolve => { finish = resolve; });
+  const writes: { week: string; revision: string; session: { plan: { start: string } } }[] = [];
+  await page.route('**/api/scheduler/mutate', async route => { writes.push(route.request().postDataJSON()); if (writes.length === 1) { await gate; await route.fulfill({ status: 503, json: { error: 'Save temporarily unavailable' } }); } else await route.fulfill({ json: state }); });
+  const source = await visibleBox(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`));
+  const day = (await page.locator('[data-scheduler-date]').first().boundingBox())!;
+  await mouseDrag(page, { x: source.x + source.width / 2, y: source.y + source.height / 2 }, { x: day.x + day.width / 2, y: day.y + 60 });
+  await expect.poll(() => writes.length).toBe(1);
+  await expect(page.getByRole('button', { name: 'Add commitment', exact: true })).toBeDisabled();
+  await expect(page.locator('.scheduler-edge').first()).toHaveCount(0);
+  await page.getByRole('button', { name: 'Next week' }).click();
+  await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', '2030-01-14');
+  finish();
+  const dialog = page.getByRole('dialog', { name: 'Session editor' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole('alert')).toContainText('Save temporarily unavailable');
+  await expect(dialog.getByLabel('Scheduling date', { exact: true })).toHaveValue('2030-01-07');
+  await expect(dialog).toContainText('Times use America/Chicago');
+  await dialog.getByRole('button', { name: 'Save session', exact: true }).click();
+  await expect(dialog).toBeHidden();
+  expect(writes[1]).toMatchObject({ week: '2030-01-07', revision: state.revision, session: { plan: { start: '2030-01-07T12:00:00.000Z' } } });
+  await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', '2030-01-14');
+});
+
+test('an open plan draft locks its original plan at the start boundary and offers actual recording', async ({ page, request, baseURL }) => {
+  const stepId = crypto.randomUUID();
+  const goal = await createGoal(request, baseURL!, { steps: [{ id: stepId, title: 'Unsaved subgoal', done: false }], startDate: '2030-01-07', endDate: '2030-12-31', dailyHours: 0 });
+  const state = await controlledWeek(page, request);
+  await page.clock.setSystemTime(new Date('2030-01-07T10:59:30Z'));
+  const session = { id: crypto.randomUUID(), date: state.week, assignment: { goalId: goal.id, title: goal.title }, state: 'accepted', plan: { start: '2030-01-07T11:00:00Z', end: '2030-01-07T11:30:00Z' }, actual: null, exception: false };
+  await page.route('**/api/scheduler/week?*', route => route.fulfill({ json: { ...state, sessions: [session] } }));
+  await page.reload();
+  await sessionFor(page, goal.title).locator('.scheduler-block-main').click();
+  const dialog = page.getByRole('dialog', { name: 'Session editor' });
+  await expect(dialog.getByRole('button', { name: 'Save session', exact: true })).toBeEnabled();
+  await expect(dialog.getByRole('button', { name: 'Remove this session' })).toBeVisible();
+  await dialog.getByLabel('Subgoal').selectOption(stepId);
+  await dialog.getByLabel('Start time', { exact: true }).fill('05:10');
+  await dialog.getByLabel('End time', { exact: true }).fill('05:40');
+  const writes: { week: string; revision: string; action: string; session: { assignment: { goalId: string; title: string } }; actual: { start: string; end: string } }[] = [];
+  await page.route('**/api/scheduler/mutate', async route => { const mutation = route.request().postDataJSON(); writes.push(mutation); await route.fulfill({ json: { ...state, sessions: [{ ...session, actual: mutation.actual }] } }); });
+  await page.clock.fastForward(31000);
+  await expect(dialog.getByRole('button', { name: 'Save session', exact: true })).toBeDisabled();
+  await expect(dialog.getByRole('button', { name: 'Remove this session' })).toHaveCount(0);
+  await expect(dialog).toContainText('This session has started');
+  await dialog.evaluate(element => element.querySelector('form')!.requestSubmit());
+  expect(writes).toHaveLength(0);
+  await dialog.getByRole('button', { name: 'Record actual work', exact: true }).click();
+  await expect(dialog.getByRole('heading', { name: 'Record actual work', exact: true })).toBeVisible();
+  await expect(dialog).toContainText(`Actual work is assigned to ${goal.title}.`);
+  await expect(dialog).toContainText('Original plan: 05:00–05:30');
+  await expect(dialog.getByLabel('Start time', { exact: true })).toHaveValue('05:10');
+  await expect(dialog.getByLabel('End time', { exact: true })).toHaveValue('05:40');
+  await dialog.getByRole('button', { name: 'Save session', exact: true }).click();
+  await expect(dialog.getByRole('alert')).toContainText('Actual work cannot end in the future');
+  expect(writes).toHaveLength(0);
+  await page.clock.fastForward(41 * 60000);
+  await dialog.getByRole('button', { name: 'Save session', exact: true }).click();
+  await expect(dialog).toBeHidden();
+  expect(writes).toEqual([expect.objectContaining({ week: state.week, revision: state.revision, action: 'actual', actual: expect.objectContaining({ start: '2030-01-07T11:10:00.000Z', end: '2030-01-07T11:40:00.000Z' }) })]);
+  expect(writes[0].session.assignment).toEqual(session.assignment);
+  await sessionFor(page, goal.title).locator('.scheduler-block-main').click();
+  await expect(dialog).toContainText('Original plan: 05:00–05:30');
+  await expect(dialog.getByLabel('Start time', { exact: true })).toHaveValue('05:10');
+  await expect(dialog.getByLabel('End time', { exact: true })).toHaveValue('05:40');
+});
+
+test('obsolete Google health errors cannot replace a newer successful status', async ({ page, request }) => {
+  await controlledWeek(page, request);
+  let finish: () => void = () => {};
+  const gate = new Promise<void>(resolve => { finish = resolve; });
+  let reads = 0;
+  await page.route('**/api/scheduler/google/status', async route => {
+    reads++;
+    if (reads === 1) { await gate; await route.fulfill({ status: 503, json: { error: 'Obsolete status failure' } }); }
+    else await route.fulfill({ json: { configured: true, connected: true, reconnectRequired: false, revision: 'new-health' } });
+  });
+  await page.reload();
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(page.locator('.scheduler-google summary')).toContainText('Connected');
+  const obsolete = page.waitForResponse(response => response.url().endsWith('/google/status') && response.status() === 503);
+  finish();
+  await obsolete;
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+  await expect(page.locator('.scheduler-google [role="alert"]')).toHaveCount(0);
+});
