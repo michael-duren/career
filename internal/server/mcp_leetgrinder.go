@@ -12,7 +12,7 @@ import (
 )
 
 type leetgrinderReviewsInput struct {
-	Days  int `json:"days,omitempty" jsonschema:"also list reviews due within this many days after today, 0-30 (default 7)"`
+	Days  *int `json:"days,omitempty" jsonschema:"also list reviews due within this many days after today, 0-30 (default 7); 0 lists only today's"`
 	Limit int `json:"limit,omitempty" jsonschema:"maximum problems, 1-100 (default 30)"`
 }
 
@@ -100,12 +100,12 @@ func (s *Server) addLeetgrinderTools(server *mcp.Server) {
 		}, nil
 	})
 	mcp.AddTool(server, &mcp.Tool{
-		Name: "list_leetgrinder_reviews", Description: "Upcoming Leetgrinder reviews: problems due by the end of today (today's picks first, then flagged, lowest recall and most overdue) followed by those due within the next days, soonest first, each with its due date, estimated recall, flag reason and last outcome.",
+		Name: "list_leetgrinder_reviews", Description: "Upcoming Leetgrinder reviews in the order to do them: today's review picks in plan order (attemptedToday says whether each is done), the other problems due by the end of today (flagged first, then lowest recall, most overdue), then those due within the next days, soonest first. Each has its due date, estimated recall, review reason, whether it is flagged, and its last outcome.",
 		Annotations: readOnly,
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, in leetgrinderReviewsInput) (*mcp.CallToolResult, any, error) {
 		days, limit := 7, 30
-		if in.Days != 0 {
-			days = in.Days
+		if in.Days != nil {
+			days = *in.Days
 		}
 		if in.Limit != 0 {
 			limit = in.Limit
@@ -172,8 +172,9 @@ func (s *Server) addLeetgrinderTools(server *mcp.Server) {
 		return nil, map[string]any{"topics": topics, "difficulties": difficulties, "weeklyTrends": trends}, nil
 	})
 	mcp.AddTool(server, &mcp.Tool{
-		Name: "log_leetgrinder_attempt", Description: "Log a Leetgrinder attempt from chat, for a problem solved on a whiteboard, in an IDE or a mock interview. It counts as new, review or practice like any attempt, dated now. Time and space complexity are required for solved and struggled attempts. Pass the same id to retry without logging twice. Only log when the user asked to. Requires edit access.",
-		Annotations: &mcp.ToolAnnotations{Title: "Log Leetgrinder attempt", DestructiveHint: new(bool), IdempotentHint: true, OpenWorldHint: new(bool)},
+		Name: "log_leetgrinder_attempt", Description: "Log a Leetgrinder attempt from chat, for a problem solved on a whiteboard, in an IDE or a mock interview. It counts as new, review or practice like any attempt, dated now. Time and space complexity are required for solved and struggled attempts. Generate one UUID per attempt and pass it as id, so a retry after a lost response does not log twice. A problem the app has never seen gets a warning, since it may be a typo. Only log when the user asked to. Requires edit access.",
+		// Not idempotent: without an id each call logs a new attempt.
+		Annotations: &mcp.ToolAnnotations{Title: "Log Leetgrinder attempt", DestructiveHint: new(bool), OpenWorldHint: new(bool)},
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in logLeetgrinderAttemptInput) (*mcp.CallToolResult, any, error) {
 		if !canWrite(req) {
 			return nil, nil, errNeedsWrite
@@ -184,6 +185,11 @@ func (s *Server) addLeetgrinderTools(server *mcp.Server) {
 		}
 		if in.ID == "" {
 			in.ID = uuid.NewString()
+		}
+		// A chat-typed slug may be a typo; the extension reads it from the page.
+		known, err := s.db.LeetgrinderProblem(ctx, slug)
+		if err != nil {
+			return nil, nil, toolError(err)
 		}
 		attempt, status, message := newLeetgrinderAttempt(leetgrinderAPIAttemptInput{
 			ID: in.ID, ProblemSlug: slug, Outcome: in.Outcome, Minutes: in.Minutes, Assisted: in.Assisted, Notes: in.Notes,
@@ -208,6 +214,10 @@ func (s *Server) addLeetgrinderTools(server *mcp.Server) {
 		if today, err := s.db.LeetgrinderToday(ctx, s.clock()); err == nil {
 			kind = today.Kind(saved.ProblemSlug)
 		}
-		return nil, map[string]any{"id": saved.ID, "problemSlug": saved.ProblemSlug, "outcome": saved.Outcome, "minutes": saved.Minutes, "kind": kind, "historyUrl": leetgrinder.ProblemURL(saved.ProblemSlug)}, nil
+		out := map[string]any{"id": saved.ID, "problemSlug": saved.ProblemSlug, "outcome": saved.Outcome, "minutes": saved.Minutes, "kind": kind, "historyUrl": s.config.PublicOrigin + leetgrinder.ProblemURL(saved.ProblemSlug)}
+		if !known.InCatalog {
+			out["warning"] = "This problem was not in Leetgrinder before, so check that " + saved.ProblemSlug + " is the intended LeetCode slug. Its title and topics are fetched from LeetCode; the problem page says if LeetCode does not know it."
+		}
+		return nil, out, nil
 	})
 }

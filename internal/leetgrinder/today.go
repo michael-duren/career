@@ -165,28 +165,30 @@ func (t Today) Calendar(n int) []CalendarDay { return GoalMetDays(t.history, t.P
 // Due reports whether a card is due by the end of today.
 func (t Today) Due(c Card) bool { return c.Due.Before(EndOfDate(t.Date, t.Settings.Location())) }
 
-// UpcomingReviews lists review cards in the order to do them: those due by
-// the end of today (today's picks first, then as DueCards orders them),
-// then those due within days after today, soonest first.
+// UpcomingReviews lists review cards in the order to do them: today's
+// picks in plan order (attempted today or not), then the other cards due by
+// the end of today as DueCards orders them, then those due within days
+// after today, soonest first.
 func UpcomingReviews(t Today, days int) []Card {
 	loc := t.Settings.Location()
-	var picks, due []Card
-	for _, c := range DueCards(t.Cards, t.Date, loc, nil) {
-		if t.Picked(c.Problem.Slug) {
-			picks = append(picks, c)
-		} else {
-			due = append(due, c)
+	seen := map[string]bool{}
+	var out []Card
+	for _, r := range t.Reviews {
+		if c, ok := t.Card(r.Problem.Slug); ok && !seen[r.Problem.Slug] {
+			seen[r.Problem.Slug] = true
+			out = append(out, c)
 		}
 	}
+	out = append(out, DueCards(t.Cards, t.Date, loc, seen)...)
 	end, until := EndOfDate(t.Date, loc), EndOfDate(t.Date.AddDate(0, 0, days), loc)
 	var later []Card
 	for _, c := range t.Cards {
-		if !c.Due.Before(end) && c.Due.Before(until) {
+		if !seen[c.Problem.Slug] && !c.Due.Before(end) && c.Due.Before(until) {
 			later = append(later, c)
 		}
 	}
 	slices.SortFunc(later, func(a, b Card) int {
 		return cmp.Or(a.Due.Compare(b.Due), cmp.Compare(a.Problem.Slug, b.Problem.Slug))
 	})
-	return append(append(picks, due...), later...)
+	return append(out, later...)
 }

@@ -73,12 +73,15 @@ login blocks the connector.
   `remainingCount`; individual problems leave the list once done.
 - `get_leetgrinder_today`: today's goal and progress (new, review, bonus, practice), whether
   it is met, the streak, today's review picks with reason and recall, today's new picks
-  from todos when that option is on, and `alsoDue`, the other due reviews. Like the
+  from todos when that option is on (`newPicksFailed` is true when picking them failed this
+  time; it is retried on the next access), and `alsoDue`, the count of other reviews due
+  today and not attempted yet. Like the
   dashboard, the first access of a day freezes that day's goal and picks.
-- `list_leetgrinder_reviews`: reviews due by the end of today (today's picks first, then
-  flagged, lowest recall, most overdue), then those due within `days` (0-30, default 7),
-  soonest first, up to `limit` (1-100, default 30). Each has its due date, `due`, recall,
-  flag reason, last outcome and whether it was attempted today; `total` counts them all.
+- `list_leetgrinder_reviews`: today's review picks in plan order (done or not), then the
+  other reviews due by the end of today (flagged first, lowest recall, most overdue), then
+  those due within `days` (0-30, default 7; 0 lists only today's), soonest first, up to
+  `limit` (1-100, default 30). Each has its due date, `due`, recall, review reason,
+  `flagged`, last outcome, `todaysPick` and `attemptedToday`; `total` counts them all.
 - `get_leetgrinder_stats`: per-topic weakness (weakest recall first; problems, solved,
   struggle rate, recall, due), attempted and solved per difficulty, and `weeks` (1-26,
   default 12) of weekly trends: problems solved, independent-solve rate, average minutes
@@ -141,8 +144,10 @@ Write tools (need **Allow read and edit**):
   `timeComplexity` and `spaceComplexity` (required for solved and struggled), `code` with
   `codeLanguage`, `wantsReview` and `approach`. It is checked like an extension attempt,
   dated now, counted as new, review or practice like any attempt (returned as `kind`), and
-  recorded with source `mcp`. Pass the same `id` to retry without logging twice; the same
-  `id` with different values is refused.
+  recorded with source `mcp`. Pass the same `id` to retry without logging twice (the
+  tool generates one when omitted, so Claude should pass its own); the same `id` with
+  different values is refused. A problem not seen before is logged with a `warning`, in
+  case the slug is a typo. `historyUrl` is the problem's page in the app.
 
 Saves and deletes use the website's validation. Claude clients ask before
 running write tools unless you allow them permanently. Request

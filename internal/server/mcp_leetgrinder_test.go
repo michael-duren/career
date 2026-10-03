@@ -70,8 +70,14 @@ func TestMCPLeetgrinderTools(t *testing.T) {
 	if first["slug"] != picked || first["todaysPick"] != true || first["due"] != true || first["flagged"] != true || first["lastOutcome"] != "struggled" {
 		t.Fatal("review order", reviews)
 	}
-	if out, failed := call("list_leetgrinder_reviews", map[string]any{"days": 31}); !failed || !strings.Contains(out["error"].(string), "days") {
-		t.Fatal(out)
+	// days 0 lists only today's; limit caps the list, not the total.
+	if only, failed := call("list_leetgrinder_reviews", map[string]any{"days": 0, "limit": 1}); failed || only["days"] != float64(0) || only["total"] != float64(2) || len(only["reviews"].([]any)) != 1 {
+		t.Fatal(only)
+	}
+	for _, bad := range []map[string]any{{"days": 31}, {"days": -1}, {"limit": 101}, {"limit": -1}} {
+		if out, failed := call("list_leetgrinder_reviews", bad); !failed || !strings.Contains(out["error"].(string), "days must be") {
+			t.Fatal(bad, out)
+		}
 	}
 
 	// Logging from chat: NeetCode links resolve, complexity is required for
@@ -85,8 +91,13 @@ func TestMCPLeetgrinderTools(t *testing.T) {
 	id := uuid.NewString()
 	args := map[string]any{"id": id, "problem": "https://neetcode.io/problems/two-integer-sum", "outcome": "solved", "minutes": 12, "timeComplexity": "O(n)", "spaceComplexity": "O(n)", "code": "def f(): pass", "codeLanguage": "python3"}
 	logged, failed := call("log_leetgrinder_attempt", args)
-	if failed || logged["problemSlug"] != "two-sum" || logged["id"] != id || logged["kind"] != "review" {
+	if failed || logged["problemSlug"] != "two-sum" || logged["id"] != id || logged["kind"] != "review" || logged["warning"] != nil || logged["historyUrl"] != testOrigin+"/leetgrinder/problem/two-sum" {
 		t.Fatal(logged)
+	}
+	// A problem never seen before is logged with a warning, in case of a typo.
+	fresh, failed := call("log_leetgrinder_attempt", map[string]any{"problem": "some-made-up-problem", "outcome": "unfinished", "minutes": 5})
+	if failed || fresh["kind"] != "new" || !strings.Contains(fresh["warning"].(string), "some-made-up-problem") {
+		t.Fatal(fresh)
 	}
 	// The same id with the same values is not logged twice; changed values are refused.
 	if again, failed := call("log_leetgrinder_attempt", args); failed || again["id"] != id {
@@ -126,7 +137,53 @@ func TestMCPLeetgrinderTools(t *testing.T) {
 	if out, failed := read("get_leetgrinder_today", nil); failed {
 		t.Fatal(out)
 	}
+	var before, after int
+	if err = db.DB.QueryRow("SELECT count(*) FROM leetgrinder_attempts").Scan(&before); err != nil {
+		t.Fatal(err)
+	}
 	if out, failed := read("log_leetgrinder_attempt", map[string]any{"problem": "two-sum", "outcome": "unfinished", "minutes": 5}); !failed || !strings.Contains(strings.ToLower(out["error"].(string)), "edit") {
 		t.Fatal(out)
+	}
+	if err = db.DB.QueryRow("SELECT count(*) FROM leetgrinder_attempts").Scan(&after); err != nil || after != before {
+		t.Fatalf("read-only call saved an attempt: %d -> %d %v", before, after, err)
+	}
+}
+
+// Logging can be the day's first access: the attempt counts as a review and
+// the day is planned with it as today's pick.
+func TestMCPLeetgrinderLogFirst(t *testing.T) {
+	db := testDB(t)
+	h := newOAuthHarness(t, db)
+	ctx := context.Background()
+	settings, err := db.LeetgrinderSettings(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.UpdateLeetgrinderSettings(ctx, settings.Revision, func(v *leetgrinder.Settings) error { v.Timezone = "UTC"; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	a := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "two-sum", Outcome: "struggled", Minutes: 30, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}
+	if _, err = db.SaveLeetgrinderAttempt(ctx, a, ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.DB.Exec("UPDATE leetgrinder_attempts SET created_at=now()-interval '20 days' WHERE id=$1", a.ID); err != nil {
+		t.Fatal(err)
+	}
+	clientID := h.register(testCallback)
+	verifier := strings.Repeat("first", 10)
+	code := h.approve(h.consent(clientID, testCallback, pkce(verifier)), "write").Query().Get("code")
+	status, tokens := h.token(url.Values{"grant_type": {"authorization_code"}, "code": {code}, "redirect_uri": {testCallback}, "client_id": {clientID}, "code_verifier": {verifier}})
+	if status != 200 {
+		t.Fatal(status, tokens)
+	}
+	call := connectMCP(t, h, tokens["access_token"].(string), 18)
+	logged, failed := call("log_leetgrinder_attempt", map[string]any{"problem": "two-sum", "outcome": "unfinished", "minutes": 10})
+	if failed || logged["kind"] != "review" {
+		t.Fatal(logged)
+	}
+	// Today is planned, with the review as its pick.
+	var picks int
+	if err = db.DB.QueryRow("SELECT count(*) FROM leetgrinder_review_plan WHERE problem_slug='two-sum'").Scan(&picks); err != nil || picks != 1 {
+		t.Fatalf("picks %d: %v", picks, err)
 	}
 }
