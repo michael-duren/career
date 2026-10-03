@@ -152,18 +152,18 @@ Issues: R01, R03; verify R02 recovery.
 
 **Interfaces:** Add server injection of a `scheduler.GoogleClient` and clock for controlled provider responses. Persist per-event desired generation/fingerprint and successful synchronization progress. Retain stable mapped event IDs and the account/destination locking contract.
 
-- [ ] Add a worker test with more pending events than fit one bounded batch, a failure after several successful writes, and a retry. Assert all events eventually synchronize, completed unchanged writes are skipped on ordinary retries, and event identities remain stable.
-- [ ] Add cancellation during export, disconnect/reconnect, changed local plan during a batch, and deleted remote event cases. Assert no unrelated event deletion, no lost newer generation, and periodic reconciliation still restores remote edits/deletions even when fingerprints are unchanged.
-- [ ] Implement deterministic bounded batches and durable progress. Ordinary outbox retries operate on changed/pending events; periodic reconciliation advances through the full accepted export set with its own cursor. Keep external requests outside local reservation transactions.
-- [ ] Add request-count tests for manual/periodic availability refresh. Assert one FreeBusy query per refresh operation, fresh range-aware week reads, and a new fresh check before accepting a planning mutation. Test expiry, larger requested ranges, disconnect during fetch, and provider failure.
-- [ ] Return refreshed week data from refresh or reuse a fresh range-aware read cache. Keep provider failures as recoverable drafts and preserve local saves on export failures.
-- [ ] Run Go domain/database/server suites and scheduler Playwright tests. Expected: controlled provider retries converge and local interaction behavior remains valid. Update integration documentation and commit.
+- [x] Add a worker test with more pending events than fit one bounded batch, a failure after several successful writes, and a retry. Assert all events eventually synchronize, completed unchanged writes are skipped on ordinary retries, and event identities remain stable.
+- [x] Add cancellation during export, disconnect/reconnect, changed local plan during a batch, and deleted remote event cases. Assert no unrelated event deletion, no lost newer generation, and periodic reconciliation still restores remote edits/deletions even when fingerprints are unchanged.
+- [x] Implement deterministic bounded batches and durable progress. Ordinary outbox retries operate on changed/pending events; periodic reconciliation advances through the full accepted export set with its own cursor. Keep external requests outside local reservation transactions.
+- [x] Add request-count tests for manual/periodic availability refresh. Assert one FreeBusy query per refresh operation, fresh range-aware week reads, and a new fresh check before accepting a planning mutation. Test expiry, larger requested ranges, disconnect during fetch, and provider failure.
+- [x] Return refreshed week data from refresh or reuse a fresh range-aware read cache. Keep provider failures as recoverable drafts and preserve local saves on export failures.
+- [x] Run Go domain/database/server suites and scheduler Playwright tests. Expected: controlled provider retries converge and local interaction behavior remains valid. Update integration documentation and commit.
 
 ## Final review and handoff
 
-- [ ] Confirm each S01–S12 issue and R01–R04 risk has a passing regression or a documented measured result.
-- [ ] Run `node --test tests/scheduler.test.ts`, `go test ./internal/scheduler ./internal/database ./internal/server`, and `npx playwright test tests/e2e/scheduler.spec.ts` against the disposable app/database. Report skips and baseline blockers explicitly.
-- [ ] Exercise create, move, both resize edges, cancel gesture, recurring date/future edits, actual correction, skip/restore, overnight work, stale save, and narrow-screen editor equivalents in the running app.
-- [ ] Inspect the diff for historical-plan changes, duplicate accounting, credentials in responses/exports, and unrelated edits. Record provider integration limits if a live Google account remains unavailable.
+- [x] Confirm each S01–S12 issue and R01–R04 risk has a passing regression or a documented measured result.
+- [x] Run `node --test tests/scheduler.test.ts`, `go test ./internal/scheduler ./internal/database ./internal/server`, and `npx playwright test tests/e2e/scheduler.spec.ts` against the disposable app/database. Report skips and baseline blockers explicitly.
+- [x] Exercise create, move, both resize edges, cancel gesture, recurring date/future edits, actual correction, skip/restore, overnight work, stale save, and narrow-screen editor equivalents in the running app.
+- [x] Inspect the diff for historical-plan changes, duplicate accounting, credentials in responses/exports, and unrelated edits. Record provider integration limits if a live Google account remains unavailable.
 
 Optional follow-up after the repairs: measure pointer-frame cost with many sessions/busy intervals, group intervals by day, make SSR initial headings deterministic across timezone/locale differences, and improve parsing of non-JSON network/auth errors. These do not need to delay the correctness work.

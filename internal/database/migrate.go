@@ -14,7 +14,7 @@ import (
 //go:embed migrations/*.sql
 var migrations embed.FS
 
-const SchemaVersion = 30
+const SchemaVersion = 31
 
 func (s *Store) Migrate(ctx context.Context) error {
 	tx, err := s.DB.BeginTx(ctx, nil)
