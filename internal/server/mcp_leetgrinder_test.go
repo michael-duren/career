@@ -18,7 +18,7 @@ func TestMCPLeetgrinderTools(t *testing.T) {
 	// clock.
 	now := time.Now().UTC()
 	date := now.Format(time.DateOnly)
-	weekOf := leetgrinder.Date(now, time.UTC).AddDate(0, 0, -((int(now.Weekday())+6)%7)).Format(time.DateOnly)
+	weekOf := leetgrinder.Date(now, time.UTC).AddDate(0, 0, -((int(now.Weekday()) + 6) % 7)).Format(time.DateOnly)
 	ctx := context.Background()
 	settings, err := db.LeetgrinderSettings(ctx)
 	if err != nil {

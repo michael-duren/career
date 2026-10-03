@@ -13,7 +13,7 @@ import (
 
 type leetgrinderReviewsInput struct {
 	Days  *int `json:"days,omitempty" jsonschema:"also list reviews due within this many days after today, 0-30 (default 7); 0 lists only today's"`
-	Limit int `json:"limit,omitempty" jsonschema:"maximum problems, 1-100 (default 30)"`
+	Limit int  `json:"limit,omitempty" jsonschema:"maximum problems, 1-100 (default 30)"`
 }
 
 type leetgrinderStatsInput struct {
