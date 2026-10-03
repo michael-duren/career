@@ -41,6 +41,7 @@ templ layout(title string, active string) {
 				</main>
 			</div>
 			@complexityScript()
+			@copyScript()
 		</body>
 	</html>
 }
@@ -387,6 +388,8 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, avail Analy
 				if len(state.ProblemAttempts(problem.Slug))==0 {
 					<p class="muted">No attempts recorded yet.</p>
 				}
+				{{ latestCode := LatestCodeID(state.ProblemAttempts(problem.Slug)) }}
+				@compareForm(problem.Slug, CodeAttempts(state.ProblemAttempts(problem.Slug)), "", "", review)
 				for _, a:=range state.ProblemAttempts(problem.Slug) {
 					<article class="panel attempt" id={ AttemptAnchor(a.ID) }>
 						<div class="problem-heading">
@@ -419,7 +422,7 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, avail Analy
 								{ a.Notes }
 							</p>
 						}
-						@attemptCode(a)
+						@attemptCode(problem.Slug, a, latestCode, review)
 						@analysisCard(problem.Slug, a, state, avail)
 						<details>
 							<summary>Correct this attempt</summary>@attemptFields(problem, EditForm(a))
@@ -884,6 +887,25 @@ templ attemptFields(problem Problem, form AttemptForm) {
 			<label class="checkbox"><input type="radio" name="approach" value={ ApproachSuboptimal } checked?={ form.Approach==ApproachSuboptimal }/>{ ApproachLabel(ApproachSuboptimal) }</label>
 		</fieldset>
 		<label class="checkbox"><input type="checkbox" name="wantsReview" value="true" checked?={ form.WantsReview }/>I want to review this problem again soon</label>
+		if form.Revision == "" {
+			<details class="code-input" open?={ form.Code != "" }>
+				<summary>Code <span class="muted">(optional)</span></summary>
+				<label>
+					Language
+					<select name="codeLanguage">
+						<option value="">Choose…</option>
+						for _, l := range CodeLanguages {
+							<option value={ l } selected?={ form.CodeLanguage == l }>{ LanguageLabel(l) }</option>
+						}
+					</select>
+				</label>
+				<label>
+					Your solution
+					<textarea name="code" rows="8" spellcheck="false" class="code-textarea" placeholder="Paste the code you wrote">{ form.Code }</textarea>
+				</label>
+				<p class="small muted">Up to 64 KiB. Saved with the attempt and analysed like extension-captured code.</p>
+			</details>
+		}
 		<label>
 			Notes <span class="muted">(optional)</span>
 			<textarea name="notes" rows="3" maxlength="2000" placeholder="What worked? Where did you get stuck?">
@@ -948,13 +970,104 @@ templ statedComplexity(a Attempt) {
 	}
 }
 
-templ attemptCode(a Attempt) {
+templ attemptCode(slug string, a Attempt, latest string, review ProblemReview) {
 	if a.Code != "" {
-		<details class="attempt-code">
-			<summary>Submitted code ({ LanguageLabel(a.CodeLanguage) }, { ByteSize(len(a.Code)) })</summary>
-			<pre><code data-language={ a.CodeLanguage }>{ a.Code }</code></pre>
+		<details class="attempt-code" open?={ a.ID == latest }>
+			<summary>
+				if a.ID == latest {
+					<span class="badge">Latest code</span>
+				}
+				Submitted code ({ LanguageLabel(a.CodeLanguage) }, { ByteSize(len(a.Code)) })
+			</summary>
+			<div class="code-actions">
+				<button type="button" class="button small" data-copy={ "code-" + a.ID } hidden>Copy code</button>
+				if latest != "" && a.ID != latest {
+					<a class="small" href={ templ.SafeURL(CompareURL(slug, a.ID, latest)) }>Compare with latest code</a>
+				}
+			</div>
+			<pre class="chroma"><code id={ "code-" + a.ID } data-language={ a.CodeLanguage }>@templ.Raw(string(HighlightCode(a.Code, a.CodeLanguage)))</code></pre>
 		</details>
 	}
+}
+
+// compareForm picks two attempts' code to compare, when there are two.
+templ compareForm(slug string, attempts []Attempt, from string, to string, review ProblemReview) {
+	if len(attempts) >= 2 {
+		{{
+	if from == "" {
+		from = attempts[1].ID
+	}
+	if to == "" {
+		to = attempts[0].ID
+	}
+		}}
+		<form class="compare-form" method="get" action={ templ.SafeURL(ProblemURL(slug) + "/compare") }>
+			<label>
+				Compare
+				<select name="from">
+					for _, a := range attempts {
+						<option value={ a.ID } selected?={ a.ID == from }>{ CodeChoiceLabel(a, review) }</option>
+					}
+				</select>
+			</label>
+			<label>
+				with
+				<select name="to">
+					for _, a := range attempts {
+						<option value={ a.ID } selected?={ a.ID == to }>{ CodeChoiceLabel(a, review) }</option>
+					}
+				</select>
+			</label>
+			<button class="button" type="submit">Compare code</button>
+		</form>
+	}
+}
+
+// CompareCode shows a line diff between two attempts' code.
+templ CompareCode(page CompareCodePage) {
+	@layout("Compare code", "problems") {
+		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder/problems">Problems</a><span>/</span><a href={ templ.SafeURL(ProblemURL(page.Problem.Slug)) }>{ page.Problem.DisplayTitle() }</a><span>/</span><span>Compare code</span></nav>
+		<h1>Compare code</h1>
+		@compareForm(page.Problem.Slug, page.Choices, page.From.ID, page.To.ID, page.Review)
+		<p class="small muted">
+			From { CodeChoiceLabel(page.From, page.Review) } ({ LanguageLabel(page.From.CodeLanguage) }) to { CodeChoiceLabel(page.To, page.Review) } ({ LanguageLabel(page.To.CodeLanguage) }).
+		</p>
+		if page.TooLarge {
+			<p class="error" role="alert">This code is too long to compare line by line.</p>
+		} else {
+			{{ removed, added := DiffCounts(page.Lines) }}
+			<p class="small"><span class="diff-del-key">−{ Count(removed) }</span> <span class="diff-add-key">+{ Count(added) }</span> lines</p>
+			<div class="table-scroll">
+				<pre class="code-diff"><code>
+					for _, l := range page.Lines {
+						<span class={ DiffClass(l.Op) }><span class="diff-op" aria-hidden="true">{ string(l.Op) }</span><span class="visually-hidden">{ DiffLabel(l.Op) }</span>{ l.Text }</span>
+					}
+				</code></pre>
+			</div>
+		}
+	}
+}
+
+// copyScript shows each Copy code button and copies its code block.
+templ copyScript() {
+	<script>
+		(() => {
+			if (!navigator.clipboard) return;
+			document.querySelectorAll("[data-copy]").forEach((button) => {
+				button.hidden = false;
+				button.addEventListener("click", async () => {
+					const code = document.getElementById(button.dataset.copy);
+					try {
+						await navigator.clipboard.writeText(code.textContent);
+						button.textContent = "Copied";
+					} catch {
+						button.textContent = "Copy failed";
+					}
+					setTimeout(() => { button.textContent = "Copy code"; }, 2000);
+				});
+			});
+		})();
+	</script>
 }
 
 templ Unavailable(message string) {

@@ -26,6 +26,9 @@
   // "manual"), unset for other panels; saved is set once its attempt is
   // saved and the panel is only waiting to close.
   let ui = null;
+  // captureProblem is why the latest submission on the open problem was not
+  // captured, or "" (see lib.captureIssue).
+  let captureProblem = "";
   // capture is the latest validated submission on the open problem:
   // {slug, submissionId, status, lang, code} (see lib.cleanCapture). It is
   // cleared once logged with an attempt, so a later attempt never carries it.
@@ -130,6 +133,7 @@
       if (!busy()) closeUI();
       removeBanner();
       current = { slug, lookup: lookup(slug), known: problem.metadata };
+      captureProblem = "";
     }
     const state = current;
     const found = await state.lookup;
@@ -233,8 +237,15 @@
     if (data.type === "submission") {
       // NeetCode's detector reports NeetCode's slug.
       const nc = site === "neetcode" ? lib.neetcodeProblem(data.slug) : null;
-      const cleaned = lib.cleanCapture(site === "neetcode" ? { ...data, slug: nc ? nc.slug : "" } : data, current && current.slug);
-      if (cleaned) capture = cleaned;
+      const message = site === "neetcode" ? { ...data, slug: nc ? nc.slug : "" } : data;
+      const cleaned = lib.cleanCapture(message, current && current.slug);
+      if (cleaned) {
+        capture = cleaned;
+        captureProblem = "";
+      } else {
+        const issue = lib.captureIssue(message, current && current.slug);
+        if (issue) captureProblem = issue;
+      }
     } else if (data.type === "accepted" && typeof data.submissionId === "string" && data.submissionId.length <= 64) {
       onAccepted(data.submissionId);
     }
@@ -461,7 +472,7 @@
     const includeCode = el("input", { type: "checkbox", name: "includeCode", checked: Boolean(captured) });
     const codeRow = captured
       ? [el("label", { className: "check" }, [includeCode, `Code captured (${lib.languageLabel(captured.lang)}, ${lib.formatBytes(lib.utf8Bytes(captured.code))})`])]
-      : [];
+      : [el("p", { className: "muted", text: lib.codeStatus(captureProblem) })];
     // Code written elsewhere (an IDE, a whiteboard transcript) can be pasted;
     // it replaces any captured code.
     const pasteLang = el("select", { name: "pasteLanguage", "aria-label": "Pasted code language" }, [

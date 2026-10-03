@@ -129,13 +129,17 @@ func TestHistoryShowsComplexityAndEscapedCode(t *testing.T) {
 		t.Fatal(err)
 	}
 	html := out.String()
-	for _, want := range []string{"Time <strong>O(n)</strong>", "Space <strong>O(V + E)</strong>", "Submitted code (Python3,", `<details class="attempt-code">`, "<pre><code", "if a &lt; b &amp;&amp; c &gt; d:", "&lt;/code&gt;&lt;script&gt;", `name="timeComplexityOther"`, `<option value="other" selected>Other…</option>`, `value="O(V + E)"`} {
+	for _, want := range []string{"Time <strong>O(n)</strong>", "Space <strong>O(V + E)</strong>", "Submitted code (Python3,", `<details class="attempt-code" open>`, `<pre class="chroma"><code`, "&lt;/code&gt;&lt;script&gt;", `name="timeComplexityOther"`, `<option value="other" selected>Other…</option>`, `value="O(V + E)"`} {
 		if !strings.Contains(html, want) {
 			t.Errorf("history missing %q", want)
 		}
 	}
 	if strings.Contains(html, "<script>alert(1)") {
 		t.Fatal("code rendered unescaped")
+	}
+	// Highlighting splits the code into spans; its text stays escaped.
+	if text := regexp.MustCompile(`</?span[^>]*>`).ReplaceAllString(html, ""); !strings.Contains(text, "if a &lt; b &amp;&amp; c &gt; d:") {
+		t.Fatal("highlighted code text changed")
 	}
 }
 
@@ -168,6 +172,13 @@ func TestPasteLanguagesHaveLabels(t *testing.T) {
 	langs := regexp.MustCompile(`"([^"]+)"`).FindAllSubmatch(list[1], -1)
 	if len(langs) == 0 {
 		t.Fatal("PASTE_LANGUAGES is empty")
+	}
+	var js []string
+	for _, m := range langs {
+		js = append(js, string(m[1]))
+	}
+	if strings.Join(js, ",") != strings.Join(CodeLanguages, ",") {
+		t.Errorf("web form languages %v differ from the extension's %v", CodeLanguages, js)
 	}
 	for _, m := range langs {
 		lang := string(m[1])
