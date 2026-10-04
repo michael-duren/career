@@ -1,6 +1,7 @@
 package leetgrinder
 
 import (
+	"math"
 	"strconv"
 	"time"
 )
@@ -126,10 +127,19 @@ func WeeklyTrends(today Today, weeks int) Trends {
 // BarWidth is a bar's width out of 100 for value v of most, at least 1 for
 // a positive value so it stays visible.
 func BarWidth(v, most float64) string {
-	if most <= 0 || v <= 0 {
+	w := barWidth(v, most)
+	if w == 0 {
 		return "0"
 	}
-	return strconv.FormatFloat(min(max(100*v/most, 1), 100), 'f', 1, 64)
+	return strconv.FormatFloat(w, 'f', 1, 64)
+}
+
+// barWidth is BarWidth's value, rounded to the one decimal it shows.
+func barWidth(v, most float64) float64 {
+	if most <= 0 || v <= 0 {
+		return 0
+	}
+	return math.Round(min(max(100*v/most, 1), 100)*10) / 10
 }
 
 // RateLabel shows a share as a percentage, or a dash when there is none.

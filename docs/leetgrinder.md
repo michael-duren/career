@@ -61,16 +61,20 @@ Every attempted problem becomes a review card. Card state is never stored: each 
 
 ## Stats
 
-`/leetgrinder/stats` shows, per LeetCode topic: problems attempted, solved, struggle rate (struggled, unfinished and assisted attempts over all attempts), average current recall, and how many are due. It is sorted weakest recall first by default and can sort by struggle rate, due count, problems, or topic. A problem counts under each of its topics; topics with fewer than 3 problems are grouped under "Other" unless "List topics with fewer than 3 problems" is ticked, and problems without metadata count as "Untagged". Below are the difficulty mix (attempted and solved per Easy, Medium and Hard), weekly trends, and a 12-week calendar of goal-met days as a plain table.
+`/leetgrinder/stats` opens with headline tiles: problems solved of attempted, the share of solved problems solved at least once without help, the current and longest streak, goal-met days of practised days in the calendar window, and reviews due by the end of today.
 
-**Weekly trends** is a table with one row per Monday-to-Sunday week, by local date in the settings time zone, oldest first. It covers at most the last 12 weeks, ending with the current week, and leaves out weeks before your first attempt, so a new account shows only the weeks it has. Each row shows:
+**Topics** are drawn as rows of two bars on a 0–100% scale, per LeetCode topic: average current recall (blue) and struggle rate (struggled, unfinished and assisted attempts over all attempts; orange), with problems attempted and solved under each topic's name, and how many are due when any are. Rows are sorted weakest recall first by default and can sort by struggle rate, due count, problems, or topic. A problem counts under each of its topics; topics with fewer than 3 problems are grouped under "Other" unless "List topics with fewer than 3 problems" is ticked, and problems without metadata count as "Untagged". "Show topics as a table" opens the same numbers as a table.
 
-- problems solved (distinct problems with a solved attempt that week), with a bar scaled to the best week;
-- the independent-solve rate (solves without help over all solves), with the number of solves;
-- the average minutes per attempt for Easy, Medium and Hard (a dash when there were none);
-- complexity-check accuracy: of the stated time and space complexities on that week's attempts that a completed, current Claude analysis judged, the share it judged right.
+**Difficulty mix** is a stacked bar per difficulty, solved then attempted but not yet solved, scaled to the most attempted difficulty, with "n of m" beside it.
 
-The bars are inline SVG with the value written beside them, and the table scrolls sideways on narrow screens; it needs no JavaScript.
+**Weekly trends** cover Monday-to-Sunday weeks, by local date in the settings time zone, oldest first: at most the last 12 weeks, ending with the current week, leaving out weeks before your first attempt, so a new account shows only the weeks it has. Two charts show them:
+
+- problems solved per week (distinct problems with a solved attempt that week) as columns, labelling the first tallest week, and the latest week when it has solves;
+- the independent-solve rate (solves without help over all solves) and complexity-check accuracy (of the stated time and space complexities on that week's attempts that a completed, current Claude analysis judged, the share it judged right) as two lines on one 0–100% axis, each broken in weeks where it has no value, with each line's latest-week value, when it has one, labelled in the series colour to the right of the plot.
+
+Hovering a week shows its numbers. "Show weekly trends as a table" opens one row per week with those values and the average minutes per attempt for Easy, Medium and Hard (a dash when there were none). Last comes a 12-week calendar of goal-met days.
+
+Charts are inline SVG drawn on the server, so the page needs no JavaScript; each mark has a native tooltip. Tables scroll sideways on narrow screens.
 
 ## Notifications
 

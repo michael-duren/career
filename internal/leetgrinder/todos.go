@@ -12,8 +12,8 @@ import (
 )
 
 type TodoItem struct {
-	ID      string
-	SetID   string
+	ID    string
+	SetID string
 	// SetTitle names the entry's set; only the dashboard's next-todos query
 	// fills it.
 	SetTitle string

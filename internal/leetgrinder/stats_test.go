@@ -52,6 +52,10 @@ func TestStatsPage(t *testing.T) {
 	if d := page.Difficulties; len(d) != 4 || d[0].Attempted != 2 || d[0].Solved != 1 || d[1].Attempted != 1 || d[1].Solved != 1 || d[2].Attempted != 0 || d[3].Difficulty != "" || d[3].Attempted != 1 {
 		t.Fatalf("difficulties: %+v", d)
 	}
+	// Three problems are due: two array problems and the untagged one.
+	if page.DueToday != 3 || page.Streaks != (Streaks{Longest: 1, Active: 3}) || page.Progress != (Progress{Attempted: 4, Solved: 2, Independent: 1}) {
+		t.Fatalf("tiles: due %d streaks %+v progress %+v", page.DueToday, page.Streaks, page.Progress)
+	}
 	cal := page.Calendar
 	if len(cal) != 12 || cal[11][2].Date != Date(now, time.UTC) || !cal[11][3].Date.IsZero() || cal[11][0].Date.Weekday() != time.Monday {
 		t.Fatalf("calendar last week: %+v", cal[11])
@@ -63,7 +67,7 @@ func TestStatsPage(t *testing.T) {
 	if err := Stats(page).Render(context.Background(), &out); err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{`<a href="/leetgrinder/stats" aria-current="page">`, "Array", "75%", "Other", "Untagged", "Unknown", `class="goal-calendar"`, `href="/leetgrinder/problems?topic=array"`, "The last 12 weeks."} {
+	for _, want := range []string{`<a href="/leetgrinder/stats" aria-current="page">`, "Array", "75%", "Other", "Untagged", "Unknown", `class="goal-calendar"`, `href="/leetgrinder/problems?topic=array"`, "The last 12 weeks.", `<th scope="col">Average recall</th>`} {
 		if !strings.Contains(out.String(), want) {
 			t.Errorf("stats page missing %q", want)
 		}
