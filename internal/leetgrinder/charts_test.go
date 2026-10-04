@@ -77,19 +77,13 @@ func TestRateChartBreaksAtMissingWeeks(t *testing.T) {
 	if len(accuracy.Points) != 1 || accuracy.EndLabel != "50%" || independent.EndLabel != "0%" {
 		t.Fatalf("series %+v %+v", independent, accuracy)
 	}
-	// The lower line ends on the axis: its label stays above the point,
-	// clear of the week labels.
-	if independent.EndDy != Count(endLabelAbove) || accuracy.EndDy != Count(endLabelAbove) {
-		t.Fatalf("end labels %s %s", independent.EndDy, accuracy.EndDy)
+	// Far-apart values sit level with their points: 0% at the baseline,
+	// 50% halfway up.
+	if independent.LabelY != base || accuracy.LabelY != mid {
+		t.Fatalf("label heights %s %s", independent.LabelY, accuracy.LabelY)
 	}
 	if !strings.Contains(c.Hits[2].Title, "Independent solves: none") || !strings.Contains(c.Hits[3].Title, "Complexity checks right: 50% (1 of 2 checks)") {
 		t.Fatalf("hover titles %q %q", c.Hits[2].Title, c.Hits[3].Title)
-	}
-	// With room below, the lower line's label moves under its point.
-	tr.Weeks[3].Independent = 1
-	tr.Weeks[3].Solves = 4
-	if c = tr.RateChart(); c.Series[0].EndDy != Count(endLabelBelow) || c.Series[1].EndDy != Count(endLabelAbove) {
-		t.Fatalf("lower line label %s, upper %s", c.Series[0].EndDy, c.Series[1].EndDy)
 	}
 	if c.Empty() || !(Trends{Weeks: []TrendWeek{{Start: start}}}).RateChart().Empty() {
 		t.Fatal("Empty")
@@ -108,6 +102,18 @@ func TestWeekLabelsThinAndKeepTheLatest(t *testing.T) {
 	}
 	if want := "7 Sep 21 Sep 5 Oct 19 Oct"; strings.Join(got, " ") != want {
 		t.Fatalf("labels %v, want %s", got, want)
+	}
+	for i := 7; i < 12; i++ {
+		weeks = append(weeks, TrendWeek{Start: start.AddDate(0, 0, 7*i)})
+	}
+	// Twelve weeks label every other week back from the latest, so the
+	// oldest has none.
+	got = nil
+	for _, l := range (Trends{Weeks: weeks}).SolvedChart().Labels {
+		got = append(got, l.Label)
+	}
+	if want := "14 Sep 28 Sep 12 Oct 26 Oct 9 Nov 23 Nov"; strings.Join(got, " ") != want {
+		t.Fatalf("twelve-week labels %v, want %s", got, want)
 	}
 	if n := len((Trends{Weeks: weeks[:6]}).RateChart().Labels); n != 6 {
 		t.Fatalf("six weeks show %d labels, want all", n)
@@ -146,7 +152,7 @@ func TestStatsPageWithoutRates(t *testing.T) {
 	if err := Stats(NewStatsPage(NewToday(settings, state, now), StatsFilter{}, 12)).Render(context.Background(), &out); err != nil {
 		t.Fatal(err)
 	}
-	if html := out.String(); !strings.Contains(html, "Rates appear after your first solve") || strings.Contains(html, `class="chart-line"`) {
+	if html := out.String(); !strings.Contains(html, "Rates appear after your first solve") || !strings.Contains(html, "Columns appear after your first solve.") || strings.Contains(html, `class="chart-line"`) || strings.Contains(html, `class="chart-bar"`) {
 		t.Fatal("unfinished-only week should explain the missing rates")
 	}
 }
@@ -179,27 +185,26 @@ func TestSolvedChartGeometry(t *testing.T) {
 
 func TestRateChartSeparatesCloseEndLabels(t *testing.T) {
 	start := time.Date(2026, 9, 7, 0, 0, 0, 0, time.UTC)
-	// 5% independent and 0% of checks right in the same week: the lower
-	// label cannot go under the baseline, so the upper one is lifted.
-	c := (Trends{Weeks: []TrendWeek{{Start: start, Solves: 20, Independent: 1, Checked: 4}}}).RateChart()
-	upper, lower := c.Series[0], c.Series[1]
-	gap := chartPlotH * 0.05
-	if lower.EndDy != Count(endLabelAbove) || upper.EndDy != num(endLabelAbove-(endLabelGap-gap)) {
-		t.Fatalf("end labels upper %s lower %s", upper.EndDy, lower.EndDy)
+	label := func(w TrendWeek) (string, string) {
+		t.Helper()
+		w.Start = start
+		c := (Trends{Weeks: []TrendWeek{w}}).RateChart()
+		return c.Series[0].LabelY, c.Series[1].LabelY
 	}
-	// Equal values at 0%: the second line keeps its place and the first is
-	// lifted a full gap above it.
-	c = (Trends{Weeks: []TrendWeek{{Start: start, Solves: 1, Checked: 1}}}).RateChart()
-	if c.Series[0].EndDy != num(endLabelAbove-endLabelGap) || c.Series[1].EndDy != Count(endLabelAbove) {
-		t.Fatalf("equal values %s %s", c.Series[0].EndDy, c.Series[1].EndDy)
+	// 5% and 0%: pushed endLabelGap apart, then held at the baseline.
+	if a, b := label(TrendWeek{Solves: 20, Independent: 1, Checked: 4}); a != "150.0" || b != "172.0" {
+		t.Fatalf("5%% and 0%%: %s %s", a, b)
 	}
-	// 20% and 0% are already far enough apart: both stay above.
-	c = (Trends{Weeks: []TrendWeek{{Start: start, Solves: 5, Independent: 1, Checked: 1}}}).RateChart()
-	if c.Series[0].EndDy != Count(endLabelAbove) || c.Series[1].EndDy != Count(endLabelAbove) {
-		t.Fatalf("far apart %s %s", c.Series[0].EndDy, c.Series[1].EndDy)
+	// Both at 100%: pushed apart, then held at the top of the plot.
+	if a, b := label(TrendWeek{Solves: 1, Independent: 1, Checked: 1, Matched: 1}); a != "16.0" || b != "38.0" {
+		t.Fatalf("both 100%%: %s %s", a, b)
+	}
+	// 60% and 50% in the middle spread evenly around their midpoint.
+	if a, b := label(TrendWeek{Solves: 10, Independent: 6, Checked: 2, Matched: 1}); a != "75.2" || b != "97.2" {
+		t.Fatalf("60%% and 50%%: %s %s", a, b)
 	}
 	// Only the latest week is labelled: a line with no value there has none.
-	c = (Trends{Weeks: []TrendWeek{{Start: start, Checked: 1}, {Start: start.AddDate(0, 0, 7), Solves: 1}}}).RateChart()
+	c := (Trends{Weeks: []TrendWeek{{Start: start, Checked: 1}, {Start: start.AddDate(0, 0, 7), Solves: 1}}}).RateChart()
 	if c.Series[0].EndLabel != "0%" || c.Series[1].EndLabel != "" || len(c.Series[1].Points) != 1 {
 		t.Fatalf("latest-week labels %+v", c.Series)
 	}
@@ -208,11 +213,11 @@ func TestRateChartSeparatesCloseEndLabels(t *testing.T) {
 func TestChartGeometryLiterals(t *testing.T) {
 	start := time.Date(2026, 9, 7, 0, 0, 0, 0, time.UTC)
 	two := (Trends{Weeks: []TrendWeek{{Start: start, Solved: 1}, {Start: start.AddDate(0, 0, 7), Solved: 1}}, MaxSolved: 1}).SolvedChart()
-	if two.Bars[0].HitW != "294.0" || two.Bars[1].HitX != "330.0" || !strings.HasPrefix(two.Bars[0].Path, "M165.0,172.0V20.0") {
+	if two.Bars[0].HitW != "272.0" || two.Bars[1].HitX != "308.0" || !strings.HasPrefix(two.Bars[0].Path, "M154.0,172.0V20.0") {
 		t.Fatalf("two weeks %+v", two.Bars)
 	}
 	one := (Trends{Weeks: []TrendWeek{{Start: start, Solves: 1, Independent: 1}}}).RateChart()
-	if p := one.Series[0].Points[0]; p.X != "330.0" || p.Y != "16.0" {
+	if p := one.Series[0].Points[0]; p.X != "308.0" || p.Y != "16.0" {
 		t.Fatalf("one week point %+v", p)
 	}
 }
@@ -231,10 +236,14 @@ func TestStatsPageRendersChartValues(t *testing.T) {
 		Streaks:      Streaks{Current: 2, Longest: 6},
 		DueToday:     1,
 		Calendar:     [][]CalendarDay{{{Met: true, Active: true}, {Active: true}, {}, {Met: true}}},
-		Difficulties: []DifficultyStat{{"Easy", 4, 3}, {"Medium", 2, 0}},
+		Difficulties: []DifficultyStat{{"Easy", 4, 3}, {"Medium", 2, 0}, {"", 1, 0}},
+		Topics: []TopicStat{
+			{Key: "array", Label: "Array", Problems: 4, Solved: 3, Attempts: 5, Struggles: 1, RecallSum: 2, Due: 2},
+			{Key: "other", Label: "Other", Problems: 3, Solved: 1, Attempts: 3},
+		},
 		Trends: Trends{Weeks: []TrendWeek{
 			{Start: start, Solved: 2, Solves: 2, Independent: 1, Checked: 2, Matched: 2},
-			{Start: start.AddDate(0, 0, 7), Solved: 1, Solves: 1, Independent: 1},
+			{Start: start.AddDate(0, 0, 7), Solved: 1, Solves: 1, Independent: 1, Checked: 1, Matched: 1},
 		}, MaxSolved: 2, Limit: 12},
 	}
 	var out bytes.Buffer
@@ -242,15 +251,23 @@ func TestStatsPageRendersChartValues(t *testing.T) {
 		t.Fatal(err)
 	}
 	html := out.String()
+	if strings.Contains(html, `topic=other`) {
+		t.Error("Other links to a topic filter")
+	}
 	solved, rates, bars := page.Trends.SolvedChart(), page.Trends.RateChart(), page.DifficultyBars()
 	for _, want := range []string{
 		"<strong>4</strong> <span class=\"muted\">of 5 attempted", "<strong>75%</strong>", "longest 6", "<strong>2</strong> <span class=\"muted\">days of 3 practised", "<strong>1</strong> <span class=\"muted\">review ·",
 		`d="` + solved.Bars[0].Path + `"`, `d="` + solved.Bars[1].Path + `"`,
-		`d="` + rates.Series[0].Path + `"`, `dy="` + rates.Series[1].EndDy + `"`,
+		`d="` + rates.Series[0].Path + `"`,
+		`y="` + rates.Series[0].LabelY + `" dominant-baseline="middle">100%</text>`,
+		`y="` + rates.Series[1].LabelY + `" dominant-baseline="middle">100%</text>`,
 		`width="` + bars[0].SolvedWidth + `"`, `x="` + bars[0].SolvedWidth + `" width="` + bars[0].OpenWidth + `"`,
+		"<title>Array: average recall 50%</title>", "<title>Array: struggle rate 20% of 5 attempts</title>",
+		`<span class="topic-due">2 due</span>`, `href="/leetgrinder/problems?topic=array"`,
+		"Unknown: 0 solved of 1 attempted", `<span class="muted">Unknown</span>`,
 		"<title>Week of 7 Sep: 2 problems solved</title>",
 		"<title>Week of 7 Sep. Independent solves: 50% (1 of 2 solves)</title>",
-		"<title>Week of 14 Sep. Independent solves: 100% (1 of 1 solve). Complexity checks right: none</title>",
+		"<title>Week of 14 Sep. Independent solves: 100% (1 of 1 solve). Complexity checks right: 100% (1 of 1 check)</title>",
 	} {
 		if !strings.Contains(html, want) {
 			t.Errorf("stats page missing %q", want)

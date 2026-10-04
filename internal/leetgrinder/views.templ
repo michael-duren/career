@@ -1234,7 +1234,7 @@ templ statTiles(h StatsHeadline, weeks int) {
 		</div>
 		<div>
 			<dt>Due today</dt>
-			<dd><strong>{ Count(h.Due) }</strong> <span class="muted">{ plural(h.Due, "review", "reviews") } · <a href="/leetgrinder/reviews">open</a></span></dd>
+			<dd><strong>{ Count(h.Due) }</strong> <span class="muted">{ plural(h.Due, "review", "reviews") } · <a href="/leetgrinder/reviews">open reviews</a></span></dd>
 		</div>
 	</dl>
 }
@@ -1293,7 +1293,11 @@ templ trendsSection(t Trends) {
 			<div class="chart-grid">
 				<figure class="chart">
 					<figcaption>Problems solved per week</figcaption>
-					@solvedChart(t.SolvedChart())
+					if t.MaxSolved == 0 {
+						<p class="muted small">Columns appear after your first solve.</p>
+					} else {
+						@solvedChart(t.SolvedChart())
+					}
 				</figure>
 				<figure class="chart">
 					<figcaption>Independent solves and complexity checks right</figcaption>
@@ -1396,7 +1400,7 @@ templ rateChart(c RateChart) {
 					<circle class="chart-dot" cx={ p.X } cy={ p.Y } r="4"><title>{ p.Title }</title></circle>
 				}
 				if s.EndLabel != "" {
-					<text class="chart-value" x={ s.EndX } y={ s.EndY } dy={ s.EndDy } text-anchor="middle">{ s.EndLabel }</text>
+					<text class="chart-value chart-end-label" x={ ChartGutterX() } y={ s.LabelY } dominant-baseline="middle">{ s.EndLabel }</text>
 				}
 			</g>
 		}

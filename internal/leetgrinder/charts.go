@@ -77,23 +77,22 @@ func openWidth(d DifficultyStat, most int) string {
 
 // Weekly chart frame, in SVG user units.
 const (
-	chartWidth   = 640
-	chartHeight  = 200
-	chartLeft    = 36
-	chartRight   = 16
+	chartWidth  = 640
+	chartHeight = 200
+	chartLeft   = 36
+	// chartRight leaves a gutter right of the plot for the rate chart's
+	// latest values; both charts share it so their weeks line up.
+	chartRight   = 60
 	chartTop     = 16
 	chartBottom  = 28
 	chartPlotW   = chartWidth - chartLeft - chartRight
 	chartPlotH   = chartHeight - chartTop - chartBottom
 	chartBaseY   = chartTop + chartPlotH
 	chartMaxBarW = 36
-	// End-label offsets are sized for the largest chart value text (20
-	// units, on phones): a label's baseline sits endLabelAbove over its
-	// point or endLabelBelow under it, clear of the 4-unit dot, and two
-	// labels need endLabelGap between their baselines.
-	endLabelAbove = -8
-	endLabelBelow = 22
-	endLabelGap   = 22
+	// End labels sit in the gutter, centred on their point's height and
+	// at least endLabelGap apart: the largest chart value text is 20 units
+	// (phones; keep in sync with .chart-value in style.css).
+	endLabelGap = 22
 )
 
 // ChartTick is a horizontal grid line with its axis label.
@@ -140,12 +139,10 @@ type ChartSeries struct {
 	Key, Name string
 	Path      string
 	Points    []ChartPoint
-	EndX      string
-	EndY      string
-	EndLabel  string
-	// EndDy offsets the end label from its point; see RateChart.
-	EndDy string
-	endY  float64
+	// EndLabel is the latest week's value, drawn in the gutter at LabelY.
+	EndLabel string
+	LabelY   string
+	labelY   float64
 }
 
 // RateChart plots weekly percentages on one 0-100% axis.
@@ -270,7 +267,7 @@ func (t Trends) RateChart() RateChart {
 	}
 	hits := make([][]string, n)
 	for _, s := range series {
-		cs := ChartSeries{Key: s.key, Name: s.name, EndDy: Count(endLabelAbove)}
+		cs := ChartSeries{Key: s.key, Name: s.name}
 		var path strings.Builder
 		open := false
 		for i, week := range t.Weeks {
@@ -290,30 +287,37 @@ func (t Trends) RateChart() RateChart {
 			label := s.name + ": " + Percent(v) + " (" + s.detail(week) + ")"
 			cs.Points = append(cs.Points, ChartPoint{X: x, Y: y, Title: "Week of " + week.Start.Format("2 Jan") + ". " + label})
 			if i == n-1 {
-				cs.EndX, cs.EndY, cs.EndLabel, cs.endY = x, y, Percent(v), scale(v)
+				cs.EndLabel, cs.labelY = Percent(v), scale(v)
 			}
 			hits[i] = append(hits[i], label)
 		}
 		cs.Path = path.String()
 		c.Series = append(c.Series, cs)
 	}
-	// Only the latest week is labelled. With both lines labelled there, the
-	// lower one's label goes below its point unless its baseline would pass
-	// the 0% baseline; then, if the two are closer than endLabelGap, the
-	// upper label is lifted clear instead.
+	// Only the latest week is labelled, in the gutter beside its point.
+	// Labels closer than endLabelGap are pushed apart around their middle,
+	// then kept between the plot's top and baseline.
 	if len(c.Series) == 2 {
 		a, b := &c.Series[0], &c.Series[1]
 		if a.EndLabel != "" && b.EndLabel != "" {
 			upper, lower := a, b
-			if a.endY > b.endY {
+			if a.labelY > b.labelY {
 				upper, lower = b, a
 			}
-			if lower.endY+endLabelBelow <= chartBaseY {
-				lower.EndDy = Count(endLabelBelow)
-			} else if gap := lower.endY - upper.endY; gap < endLabelGap {
-				upper.EndDy = num(endLabelAbove - (endLabelGap - gap))
+			if gap := lower.labelY - upper.labelY; gap < endLabelGap {
+				mid := (upper.labelY + lower.labelY) / 2
+				upper.labelY, lower.labelY = mid-endLabelGap/2.0, mid+endLabelGap/2.0
+			}
+			if shift := lower.labelY - chartBaseY; shift > 0 {
+				upper.labelY, lower.labelY = upper.labelY-shift, lower.labelY-shift
+			}
+			if shift := chartTop - upper.labelY; shift > 0 {
+				upper.labelY, lower.labelY = upper.labelY+shift, lower.labelY+shift
 			}
 		}
+	}
+	for i := range c.Series {
+		c.Series[i].LabelY = num(c.Series[i].labelY)
 	}
 	for i, week := range t.Weeks {
 		c.Hits = append(c.Hits, ChartBar{
@@ -336,6 +340,7 @@ func plural(n int, one, many string) string {
 func ChartViewBox() string    { return "0 0 " + Count(chartWidth) + " " + Count(chartHeight) }
 func ChartLeft() string       { return Count(chartLeft) }
 func ChartRight() string      { return Count(chartWidth - chartRight) }
+func ChartGutterX() string    { return Count(chartWidth - chartRight + 10) }
 func ChartBaseY() string      { return Count(chartBaseY) }
 func ChartAxisLabelY() string { return Count(chartBaseY + 18) }
 func ChartTop() string        { return Count(chartTop) }

@@ -1971,6 +1971,12 @@ dd {
 .series-accuracy .chart-dot {
   fill: #d95926;
 }
+.series-independent .chart-end-label {
+  fill: #3987e5;
+}
+.series-accuracy .chart-end-label {
+  fill: #d95926;
+}
 @media (max-width: 620px) {
   /* Chart text is in viewBox units and shrinks with the chart. */
   .chart-axis {

@@ -70,7 +70,7 @@ Every attempted problem becomes a review card. Card state is never stored: each 
 **Weekly trends** cover Monday-to-Sunday weeks, by local date in the settings time zone, oldest first: at most the last 12 weeks, ending with the current week, leaving out weeks before your first attempt, so a new account shows only the weeks it has. Two charts show them:
 
 - problems solved per week (distinct problems with a solved attempt that week) as columns, labelling the first tallest week, and the latest week when it has solves;
-- the independent-solve rate (solves without help over all solves) and complexity-check accuracy (of the stated time and space complexities on that week's attempts that a completed, current Claude analysis judged, the share it judged right) as two lines on one 0–100% axis, each broken in weeks where it has no value, with the latest week's values labelled.
+- the independent-solve rate (solves without help over all solves) and complexity-check accuracy (of the stated time and space complexities on that week's attempts that a completed, current Claude analysis judged, the share it judged right) as two lines on one 0–100% axis, each broken in weeks where it has no value, with the latest week's values labelled in the series colour to the right of the plot.
 
 Hovering a week shows its numbers. "Show weekly trends as a table" opens one row per week with those values and the average minutes per attempt for Easy, Medium and Hard (a dash when there were none). Last comes a 12-week calendar of goal-met days.
 
