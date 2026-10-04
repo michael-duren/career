@@ -12,7 +12,7 @@ func TestStatsHeadlineAndDifficultyBars(t *testing.T) {
 	page := StatsPage{
 		Progress:     Progress{Attempted: 5, Solved: 4, Independent: 3},
 		Streaks:      Streaks{Current: 2, Longest: 6},
-		DueNow:       1,
+		DueToday:     1,
 		Calendar:     [][]CalendarDay{{{Met: true, Active: true}, {Active: true}, {}, {Met: true}}},
 		Difficulties: []DifficultyStat{{"Easy", 4, 3}, {"Medium", 2, 0}, {"Hard", 0, 0}},
 	}
@@ -148,5 +148,82 @@ func TestStatsPageWithoutRates(t *testing.T) {
 	}
 	if html := out.String(); !strings.Contains(html, "Rates appear after your first solve") || strings.Contains(html, `class="chart-line"`) {
 		t.Fatal("unfinished-only week should explain the missing rates")
+	}
+}
+
+func TestSolvedChartGeometry(t *testing.T) {
+	start := time.Date(2026, 9, 7, 0, 0, 0, 0, time.UTC)
+	tr := Trends{Weeks: []TrendWeek{{Start: start, Solved: 4}, {Start: start.AddDate(0, 0, 7), Solved: 2}}, MaxSolved: 4}
+	c := tr.SolvedChart()
+	// Two weeks share the plot: bands of 294 units, bars capped at 36.
+	b := num(band(2))
+	if c.Bars[0].HitX != ChartLeft()+".0" || c.Bars[0].HitW != b || c.Bars[1].HitX != num(chartLeft+band(2)) {
+		t.Fatalf("hover bands %+v", c.Bars)
+	}
+	if end := chartLeft + 2*band(2); num(end) != ChartRight()+".0" {
+		t.Fatalf("last band ends at %s, want %s", num(end), ChartRight())
+	}
+	// The tallest column reaches the top of the plot with a 4-unit rounded
+	// top, and its label sits 5 units above it.
+	x := centre(0, 2) - chartMaxBarW/2.0
+	top := float64(chartTop)
+	want := "M" + num(x) + "," + ChartBaseY() + ".0V" + num(top+4) + "Q" + num(x) + "," + num(top) + " " + num(x+4) + "," + num(top) + "H" + num(x+chartMaxBarW-4) + "Q" + num(x+chartMaxBarW) + "," + num(top) + " " + num(x+chartMaxBarW) + "," + num(top+4) + "V" + ChartBaseY() + ".0Z"
+	if c.Bars[0].Path != want || c.Bars[0].LabelY != num(top-5) {
+		t.Fatalf("tallest column %q label %s, want %q", c.Bars[0].Path, c.Bars[0].LabelY, want)
+	}
+	// A column at the middle tick's value tops out on that tick.
+	if !strings.Contains(c.Bars[1].Path, "H") || !strings.Contains(c.Bars[1].Path, ","+c.Ticks[1].Y+" ") {
+		t.Fatalf("middle column %q does not reach tick %s", c.Bars[1].Path, c.Ticks[1].Y)
+	}
+}
+
+func TestRateChartSeparatesCloseEndLabels(t *testing.T) {
+	start := time.Date(2026, 9, 7, 0, 0, 0, 0, time.UTC)
+	// 5% independent and 0% of checks right in the same week: the lower
+	// label cannot go under the baseline, so the upper one is lifted.
+	c := (Trends{Weeks: []TrendWeek{{Start: start, Solves: 20, Independent: 1, Checked: 4}}}).RateChart()
+	upper, lower := c.Series[0], c.Series[1]
+	gap := chartPlotH * 0.05
+	if lower.EndDy != Count(endLabelAbove) || upper.EndDy != num(endLabelAbove-(endLabelGap-gap)) {
+		t.Fatalf("end labels upper %s lower %s", upper.EndDy, lower.EndDy)
+	}
+	// Lines ending in different weeks keep their labels above.
+	c = (Trends{Weeks: []TrendWeek{{Start: start, Checked: 1}, {Start: start.AddDate(0, 0, 7), Solves: 1}}}).RateChart()
+	if c.Series[0].EndDy != Count(endLabelAbove) || c.Series[1].EndDy != Count(endLabelAbove) {
+		t.Fatalf("separate weeks %s %s", c.Series[0].EndDy, c.Series[1].EndDy)
+	}
+}
+
+func TestStatsPageRendersChartValues(t *testing.T) {
+	start := time.Date(2026, 9, 7, 0, 0, 0, 0, time.UTC)
+	page := StatsPage{
+		Progress:     Progress{Attempted: 5, Solved: 4, Independent: 3},
+		Streaks:      Streaks{Current: 2, Longest: 6},
+		DueToday:     1,
+		Calendar:     [][]CalendarDay{{{Met: true, Active: true}, {Active: true}, {}, {Met: true}}},
+		Difficulties: []DifficultyStat{{"Easy", 4, 3}, {"Medium", 2, 0}},
+		Trends: Trends{Weeks: []TrendWeek{
+			{Start: start, Solved: 2, Solves: 2, Independent: 1, Checked: 2, Matched: 2},
+			{Start: start.AddDate(0, 0, 7), Solved: 1, Solves: 1, Independent: 1},
+		}, MaxSolved: 2, Limit: 12},
+	}
+	var out bytes.Buffer
+	if err := Stats(page).Render(context.Background(), &out); err != nil {
+		t.Fatal(err)
+	}
+	html := out.String()
+	solved, rates, bars := page.Trends.SolvedChart(), page.Trends.RateChart(), page.DifficultyBars()
+	for _, want := range []string{
+		"<strong>4</strong> <span class=\"muted\">of 5 attempted", "<strong>75%</strong>", "longest 6", "<strong>2</strong> <span class=\"muted\">days of 3 practised", "<strong>1</strong> <span class=\"muted\">review ·",
+		`d="` + solved.Bars[0].Path + `"`, `d="` + solved.Bars[1].Path + `"`,
+		`d="` + rates.Series[0].Path + `"`, `dy="` + rates.Series[1].EndDy + `"`,
+		`width="` + bars[0].SolvedWidth + `"`, `x="` + bars[0].SolvedWidth + `" width="` + bars[0].OpenWidth + `"`,
+		"<title>Week of 7 Sep: 2 problems solved</title>",
+		"<title>Week of 7 Sep. Independent solves: 50% (1 of 2 solves)</title>",
+		"<title>Week of 14 Sep. Independent solves: 100% (1 of 1 solve). Complexity checks right: none</title>",
+	} {
+		if !strings.Contains(html, want) {
+			t.Errorf("stats page missing %q", want)
+		}
 	}
 }

@@ -1842,7 +1842,7 @@ dd {
   background: #3987e5;
 }
 .legend-open {
-  background: var(--soft);
+  background: #46699a;
 }
 .legend-line {
   display: inline-block;
@@ -1881,10 +1881,12 @@ dd {
 .diff-bar-solved {
   fill: #3987e5;
 }
+/* A 2px panel-coloured gap separates the open segment from the solved one. */
 .diff-bar-open {
-  fill: var(--soft);
+  fill: #46699a;
   stroke: var(--panel);
-  stroke-width: 0.6;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
 }
 .diff-bar-value {
   font-size: 0.85rem;

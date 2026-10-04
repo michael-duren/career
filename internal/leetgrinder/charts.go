@@ -23,7 +23,7 @@ type StatsHeadline struct {
 
 // Headline summarises the page's state for its tiles.
 func (p StatsPage) Headline() StatsHeadline {
-	h := StatsHeadline{Attempted: p.Progress.Attempted, Solved: p.Progress.Solved, Independent: "—", Streak: p.Streaks, Due: p.DueNow}
+	h := StatsHeadline{Attempted: p.Progress.Attempted, Solved: p.Progress.Solved, Independent: "—", Streak: p.Streaks, Due: p.DueToday}
 	if p.Progress.Solved > 0 {
 		h.Independent = Percent(float64(p.Progress.Independent) / float64(p.Progress.Solved))
 	}
@@ -76,8 +76,11 @@ const (
 	chartPlotH   = chartHeight - chartTop - chartBottom
 	chartBaseY   = chartTop + chartPlotH
 	chartMaxBarW = 36
-	// endLabelBelow is a label's baseline offset when set under its point.
+	// End labels sit endLabelAbove over their point, or endLabelBelow
+	// under it; two labels need endLabelGap between their baselines.
+	endLabelAbove = -9
 	endLabelBelow = 17
+	endLabelGap   = 14
 )
 
 // ChartTick is a horizontal grid line with its axis label.
@@ -127,8 +130,7 @@ type ChartSeries struct {
 	EndX      string
 	EndY      string
 	EndLabel  string
-	// EndDy places the end label above the point, or below it for the lower
-	// of two lines when there is room above the axis labels.
+	// EndDy offsets the end label from its point; see RateChart.
 	EndDy string
 	endY  float64
 }
@@ -255,7 +257,7 @@ func (t Trends) RateChart() RateChart {
 	}
 	hits := make([][]string, n)
 	for _, s := range series {
-		cs := ChartSeries{Key: s.key, Name: s.name, EndDy: "-9"}
+		cs := ChartSeries{Key: s.key, Name: s.name, EndDy: Count(endLabelAbove)}
 		var path strings.Builder
 		open := false
 		for i, week := range t.Weeks {
@@ -280,15 +282,21 @@ func (t Trends) RateChart() RateChart {
 		cs.Path = path.String()
 		c.Series = append(c.Series, cs)
 	}
-	// With both lines labelled, the lower one's label goes below its point
-	// so the two do not overlap, unless that would reach the axis labels.
-	if a, b := &c.Series[0], &c.Series[1]; a.EndLabel != "" && b.EndLabel != "" {
-		lower := a
-		if b.endY > a.endY {
-			lower = b
-		}
-		if lower.endY+endLabelBelow+4 < chartBaseY {
-			lower.EndDy = Count(endLabelBelow)
+	// When both lines end in the same week, the lower one's label goes below
+	// its point unless that would cross the 0% baseline; then the upper
+	// label is lifted clear of it instead.
+	if len(c.Series) == 2 {
+		a, b := &c.Series[0], &c.Series[1]
+		if a.EndLabel != "" && b.EndLabel != "" && a.EndX == b.EndX {
+			upper, lower := a, b
+			if a.endY > b.endY {
+				upper, lower = b, a
+			}
+			if lower.endY+endLabelBelow+4 < chartBaseY {
+				lower.EndDy = Count(endLabelBelow)
+			} else if gap := lower.endY - upper.endY; gap < endLabelGap {
+				upper.EndDy = num(endLabelAbove - (endLabelGap - gap))
+			}
 		}
 	}
 	for i, week := range t.Weeks {
