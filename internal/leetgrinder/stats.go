@@ -84,6 +84,10 @@ type StatsPage struct {
 	Trends       Trends
 	Filter       StatsFilter
 	Today        time.Time
+	// Progress, Streaks and DueNow feed the headline tiles.
+	Progress Progress
+	Streaks  Streaks
+	DueNow   int
 }
 
 // NewStatsPage summarises today's state by topic and difficulty, with a
@@ -153,7 +157,12 @@ func NewStatsPage(today Today, f StatsFilter, weeks int) StatsPage {
 			}
 		}
 	}
-	page := StatsPage{Filter: f, Today: today.Date}
+	page := StatsPage{Filter: f, Today: today.Date, Progress: Summarize(state), Streaks: today.Streaks}
+	for _, c := range today.Cards {
+		if today.Due(c) {
+			page.DueNow++
+		}
+	}
 	for _, s := range topics {
 		page.Topics = append(page.Topics, *s)
 	}

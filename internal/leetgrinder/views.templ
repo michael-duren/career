@@ -1115,7 +1115,8 @@ templ Stats(page StatsPage) {
 	@layout("Stats", "stats") {
 		<p class="eyebrow">STATS</p>
 		<h1>Stats</h1>
-		<p class="lead">Where recall is weakest, by LeetCode topic, with your difficulty mix and goal calendar.</p>
+		<p class="lead">Where recall is weakest, by LeetCode topic, with your difficulty mix, weekly trends and goal calendar.</p>
+		@statTiles(page.Headline(), len(page.Calendar))
 		<section class="queue" aria-labelledby="topics-title">
 			<div class="section-heading">
 				<h2 id="topics-title">Topics</h2>
@@ -1135,49 +1136,54 @@ templ Stats(page StatsPage) {
 			if len(page.Topics) == 0 {
 				<p class="muted">Log attempts to see how each topic is going.</p>
 			} else {
-				<div class="table-scroll">
-					<table>
-						<caption class="visually-hidden">Topics, weakest recall first by default</caption>
-						<thead><tr><th scope="col">Topic</th><th scope="col">Problems</th><th scope="col">Solved</th><th scope="col">Struggle rate</th><th scope="col">Average recall</th><th scope="col">Due</th></tr></thead>
-						<tbody>
-							for _, t := range page.Topics {
-								<tr>
-									<th scope="row">
-										if t.Key == "other" {
-											{ t.Label }
-										} else {
-											<a href={ templ.SafeURL("/leetgrinder/problems?topic=" + t.Key) }>{ t.Label }</a>
-										}
-									</th>
-									<td class="num">{ Count(t.Problems) }</td>
-									<td class="num">{ Count(t.Solved) }</td>
-									<td class="num">{ Percent(t.StruggleRate()) }</td>
-									<td class="num">{ Percent(t.Recall()) }</td>
-									<td class="num">{ Count(t.Due) }</td>
-								</tr>
-							}
-						</tbody>
-					</table>
-				</div>
+				@topicChart(page.Topics)
+				<details class="chart-table">
+					<summary>Show topics as a table</summary>
+					<div class="table-scroll">
+						<table>
+							<caption class="visually-hidden">Topics, weakest recall first by default</caption>
+							<thead><tr><th scope="col">Topic</th><th scope="col">Problems</th><th scope="col">Solved</th><th scope="col">Struggle rate</th><th scope="col">Average recall</th><th scope="col">Due</th></tr></thead>
+							<tbody>
+								for _, t := range page.Topics {
+									<tr>
+										<th scope="row">{ t.Label }</th>
+										<td class="num">{ Count(t.Problems) }</td>
+										<td class="num">{ Count(t.Solved) }</td>
+										<td class="num">{ Percent(t.StruggleRate()) }</td>
+										<td class="num">{ Percent(t.Recall()) }</td>
+										<td class="num">{ Count(t.Due) }</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				</details>
 				<p class="small muted">Struggle rate counts attempts that struggled, stayed unfinished, or used help. A problem counts under each of its topics; topics with fewer than 3 problems are grouped under Other.</p>
 			}
 		</section>
 		<section class="queue stats-block" aria-labelledby="difficulty-title">
 			<h2 id="difficulty-title">Difficulty mix</h2>
-			<div class="table-scroll">
-				<table>
-					<thead><tr><th scope="col">Difficulty</th><th scope="col">Attempted</th><th scope="col">Solved</th></tr></thead>
-					<tbody>
-						for _, d := range page.Difficulties {
-							<tr>
-								<th scope="row">{ DifficultyLabel(d.Difficulty) }</th>
-								<td class="num">{ Count(d.Attempted) }</td>
-								<td class="num">{ Count(d.Solved) }</td>
-							</tr>
-						}
-					</tbody>
-				</table>
-			</div>
+			<p class="small muted chart-legend"><span class="legend-key legend-solved"></span> solved · <span class="legend-key legend-open"></span> attempted, not solved yet</p>
+			<ul class="diff-bars">
+				for _, d := range page.DifficultyBars() {
+					<li>
+						<span class="diff-bar-label">
+							if d.Difficulty != "" {
+								<span class={ DifficultyClass(d.Difficulty) }>{ d.Difficulty }</span>
+							} else {
+								<span class="muted">Unknown</span>
+							}
+						</span>
+						<svg class="diff-bar" viewBox="0 0 100 12" preserveAspectRatio="none" role="img" aria-label={ DifficultyLabel(d.Difficulty) + ": " + Count(d.Solved) + " solved of " + Count(d.Attempted) + " attempted" }>
+							<title>{ DifficultyLabel(d.Difficulty) + ": " + Count(d.Solved) + " solved of " + Count(d.Attempted) + " attempted" }</title>
+							<rect class="diff-bar-track" width="100" height="12" rx="2"></rect>
+							<rect class="diff-bar-solved" width={ d.SolvedWidth } height="12"></rect>
+							<rect class="diff-bar-open" x={ d.SolvedWidth } width={ d.OpenWidth } height="12"></rect>
+						</svg>
+						<span class="num diff-bar-value"><strong>{ Count(d.Solved) }</strong> of { Count(d.Attempted) }</span>
+					</li>
+				}
+			</ul>
 		</section>
 		@trendsSection(page.Trends)
 		<section class="stats-block" aria-labelledby="calendar-title">
@@ -1201,59 +1207,194 @@ templ Stats(page StatsPage) {
 	}
 }
 
-// trendsSection shows weekly series as a table with inline bars, oldest week
-// first, so it reads without scripts and scrolls sideways on a phone.
+// statTiles is the headline row: progress, streak, goal days and reviews due.
+templ statTiles(h StatsHeadline, weeks int) {
+	<dl class="stat-tiles">
+		<div>
+			<dt>Problems solved</dt>
+			<dd><strong>{ Count(h.Solved) }</strong> <span class="muted">of { Count(h.Attempted) } attempted</span></dd>
+		</div>
+		<div>
+			<dt>Solved independently</dt>
+			<dd><strong>{ h.Independent }</strong> <span class="muted">of solved problems</span></dd>
+		</div>
+		<div>
+			<dt>Current streak</dt>
+			<dd><strong>{ Count(h.Streak.Current) }</strong> <span class="muted">{ DayUnit(h.Streak.Current) } · longest { Count(h.Streak.Longest) }</span></dd>
+		</div>
+		<div>
+			<dt>Goal met</dt>
+			<dd><strong>{ Count(h.GoalMet) }</strong> <span class="muted">{ DayUnit(h.GoalMet) } of { Count(h.Practised) } practised, last { Count(weeks) } weeks</span></dd>
+		</div>
+		<div>
+			<dt>Due now</dt>
+			<dd><strong>{ Count(h.Due) }</strong> <span class="muted">{ plural(h.Due, "review", "reviews") } · <a href="/leetgrinder/reviews">open</a></span></dd>
+		</div>
+	</dl>
+}
+
+// topicChart shows each topic's average recall and struggle rate as bars
+// on a shared 0-100% scale, in the page's sort order.
+templ topicChart(topics []TopicStat) {
+	<div class="topic-chart" role="table" aria-label="Average recall and struggle rate by topic">
+		<div class="topic-row topic-head" role="row">
+			<span role="columnheader">Topic</span>
+			<span role="columnheader">Average recall</span>
+			<span role="columnheader">Struggle rate</span>
+		</div>
+		for _, t := range topics {
+			<div class="topic-row" role="row">
+				<span class="topic-name" role="rowheader">
+					if t.Key == "other" {
+						{ t.Label }
+					} else {
+						<a href={ templ.SafeURL("/leetgrinder/problems?topic=" + t.Key) }>{ t.Label }</a>
+					}
+					<span class="small muted">{ Count(t.Problems) } { plural(t.Problems, "problem", "problems") } · { Count(t.Solved) } solved
+						if t.Due > 0 {
+							· <span class="topic-due">{ Count(t.Due) } due</span>
+						}
+					</span>
+				</span>
+				<span role="cell">
+					@rateBar("recall", t.Label+": average recall "+Percent(t.Recall()), t.Recall())
+				</span>
+				<span role="cell">
+					@rateBar("struggle", t.Label+": struggle rate "+Percent(t.StruggleRate())+" of "+Count(t.Attempts)+" "+plural(t.Attempts, "attempt", "attempts"), t.StruggleRate())
+				</span>
+			</div>
+		}
+	</div>
+}
+
+// rateBar is a share drawn as a bar out of 100% with its value beside it.
+templ rateBar(kind string, title string, f float64) {
+	<span class="rate-cell">
+		<svg class={ "rate-bar rate-" + kind } viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false"><title>{ title }</title><rect class="rate-track" width="100" height="10" rx="2"></rect><rect class="rate-fill" width={ BarWidth(f, 1) } height="10" rx="2"></rect></svg>
+		<span class="num">{ Percent(f) }</span>
+	</span>
+}
+
+// trendsSection charts weekly problems solved and the independent and
+// complexity-check rates, with the full weekly table behind a toggle.
 templ trendsSection(t Trends) {
 	<section class="queue stats-block" aria-labelledby="trends-title">
 		<h2 id="trends-title">Weekly trends</h2>
 		if len(t.Weeks) == 0 {
 			<p class="muted small">Trends appear after your first attempt.</p>
 		} else {
-			<p class="small muted">Weeks run Monday to Sunday in your time zone, for at most the last { Count(t.Limit) } weeks, leaving out weeks before your first attempt. Independent is the share of solves without help; complexity checks are the stated values Claude's analysis judged right.</p>
-			<div class="table-scroll">
-				<table class="trends">
-					<thead>
-						<tr>
-							<th scope="col">Week of</th>
-							<th scope="col">Problems solved</th>
-							<th scope="col">Independent</th>
-							for _, d := range TrendDifficulties {
-								<th scope="col">{ d } avg</th>
-							}
-							<th scope="col">Complexity checks</th>
-						</tr>
-					</thead>
-					<tbody>
-						for _, w := range t.Weeks {
-							<tr>
-								<th scope="row">{ w.Start.Format("2 Jan") }</th>
-								<td>
-									@trendBar(Count(w.Solved), BarWidth(float64(w.Solved), float64(t.MaxSolved)))
-								</td>
-								<td>
-									if rate, ok := w.IndependentRate(); ok {
-										@trendBar(RateLabel(rate, ok)+" of "+Count(w.Solves), BarWidth(rate, 1))
-									} else {
-										—
-									}
-								</td>
-								for _, d := range TrendDifficulties {
-									<td class="num">{ MinutesLabel(w.AverageMinutes(d)) }</td>
-								}
-								<td>
-									if acc, ok := w.Accuracy(); ok {
-										@trendBar(RateLabel(acc, ok)+" of "+Count(w.Checked), BarWidth(acc, 1))
-									} else {
-										—
-									}
-								</td>
-							</tr>
-						}
-					</tbody>
-				</table>
+			<p class="small muted">Weeks run Monday to Sunday in your time zone, for at most the last { Count(t.Limit) } weeks, leaving out weeks before your first attempt. Hover a week for its numbers.</p>
+			<div class="chart-grid">
+				<figure class="chart">
+					<figcaption>Problems solved per week</figcaption>
+					@solvedChart(t.SolvedChart())
+				</figure>
+				<figure class="chart">
+					<figcaption>Independent solves and complexity checks right</figcaption>
+					<p class="small muted chart-legend"><span class="legend-line legend-independent"></span> independent solves · <span class="legend-line legend-accuracy"></span> complexity checks right</p>
+					if c := t.RateChart(); c.Empty() {
+						<p class="muted small">Rates appear after your first solve or Claude complexity check.</p>
+					} else {
+						@rateChart(c)
+					}
+				</figure>
 			</div>
+			<details class="chart-table">
+				<summary>Show weekly trends as a table</summary>
+				<p class="small muted">Independent is the share of solves without help; complexity checks are the stated values Claude's analysis judged right.</p>
+				<div class="table-scroll">
+					<table class="trends">
+						<thead>
+							<tr>
+								<th scope="col">Week of</th>
+								<th scope="col">Problems solved</th>
+								<th scope="col">Independent</th>
+								for _, d := range TrendDifficulties {
+									<th scope="col">{ d } avg</th>
+								}
+								<th scope="col">Complexity checks</th>
+							</tr>
+						</thead>
+						<tbody>
+							for _, w := range t.Weeks {
+								<tr>
+									<th scope="row">{ w.Start.Format("2 Jan") }</th>
+									<td>
+										@trendBar(Count(w.Solved), BarWidth(float64(w.Solved), float64(t.MaxSolved)))
+									</td>
+									<td>
+										if rate, ok := w.IndependentRate(); ok {
+											@trendBar(RateLabel(rate, ok)+" of "+Count(w.Solves), BarWidth(rate, 1))
+										} else {
+											—
+										}
+									</td>
+									for _, d := range TrendDifficulties {
+										<td class="num">{ MinutesLabel(w.AverageMinutes(d)) }</td>
+									}
+									<td>
+										if acc, ok := w.Accuracy(); ok {
+											@trendBar(RateLabel(acc, ok)+" of "+Count(w.Checked), BarWidth(acc, 1))
+										} else {
+											—
+										}
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			</details>
 		}
 	</section>
+}
+
+templ chartAxes(ticks []ChartTick, labels []ChartLabel) {
+	for _, tick := range ticks {
+		<line class="chart-grid-line" x1={ ChartLeft() } x2={ ChartRight() } y1={ tick.Y } y2={ tick.Y }></line>
+		<text class="chart-axis" x={ ChartLeft() } y={ tick.Y } dx="-6" dy="4" text-anchor="end">{ tick.Label }</text>
+	}
+	for _, l := range labels {
+		<text class="chart-axis" x={ l.X } y={ ChartAxisLabelY() } text-anchor="middle">{ l.Label }</text>
+	}
+}
+
+templ solvedChart(c SolvedChart) {
+	<svg class="chart-svg" viewBox={ ChartViewBox() } role="img" aria-label="Problems solved per week; the table below lists every week">
+		@chartAxes(c.Ticks, c.Labels)
+		for _, b := range c.Bars {
+			<g class="chart-mark">
+				<title>{ b.Title }</title>
+				<rect class="chart-hit" x={ b.HitX } y={ ChartTop() } width={ b.HitW } height={ ChartPlotH() }></rect>
+				if b.Path != "" {
+					<path class="chart-bar" d={ b.Path }></path>
+				}
+				if b.Labelled {
+					<text class="chart-value" x={ b.LabelX } y={ b.LabelY } text-anchor="middle">{ Count(b.Value) }</text>
+				}
+			</g>
+		}
+	</svg>
+}
+
+templ rateChart(c RateChart) {
+	<svg class="chart-svg" viewBox={ ChartViewBox() } role="img" aria-label="Weekly independent-solve rate and complexity-check accuracy; the table below lists every week">
+		@chartAxes(c.Ticks, c.Labels)
+		for _, h := range c.Hits {
+			<rect class="chart-hit" x={ h.HitX } y={ ChartTop() } width={ h.HitW } height={ ChartPlotH() }><title>{ h.Title }</title></rect>
+		}
+		for _, s := range c.Series {
+			<g class={ "chart-series series-" + s.Key }>
+				<path class="chart-line" d={ s.Path }></path>
+				for _, p := range s.Points {
+					<circle class="chart-dot" cx={ p.X } cy={ p.Y } r="4"><title>{ p.Title }</title></circle>
+				}
+				if s.EndLabel != "" {
+					<text class="chart-value" x={ s.EndX } y={ s.EndY } dy={ s.EndDy } text-anchor="middle">{ s.EndLabel }</text>
+				}
+			</g>
+		}
+	</svg>
 }
 
 // trendBar is a value with a bar whose width is out of 100.
