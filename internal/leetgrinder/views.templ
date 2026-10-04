@@ -1227,7 +1227,7 @@ templ statTiles(h StatsHeadline, weeks int) {
 			<dd><strong>{ Count(h.GoalMet) }</strong> <span class="muted">{ DayUnit(h.GoalMet) } of { Count(h.Practised) } practised, last { Count(weeks) } weeks</span></dd>
 		</div>
 		<div>
-			<dt>Due now</dt>
+			<dt>Due today</dt>
 			<dd><strong>{ Count(h.Due) }</strong> <span class="muted">{ plural(h.Due, "review", "reviews") } · <a href="/leetgrinder/reviews">open</a></span></dd>
 		</div>
 	</dl>
@@ -1360,7 +1360,7 @@ templ chartAxes(ticks []ChartTick, labels []ChartLabel) {
 }
 
 templ solvedChart(c SolvedChart) {
-	<svg class="chart-svg" viewBox={ ChartViewBox() } role="img" aria-label="Problems solved per week; the table below lists every week">
+	<svg class="chart-svg" viewBox={ ChartViewBox() } role="img" aria-label="Problems solved per week; open Show weekly trends as a table below for every week">
 		@chartAxes(c.Ticks, c.Labels)
 		for _, b := range c.Bars {
 			<g class="chart-mark">
@@ -1378,7 +1378,7 @@ templ solvedChart(c SolvedChart) {
 }
 
 templ rateChart(c RateChart) {
-	<svg class="chart-svg" viewBox={ ChartViewBox() } role="img" aria-label="Weekly independent-solve rate and complexity-check accuracy; the table below lists every week">
+	<svg class="chart-svg" viewBox={ ChartViewBox() } role="img" aria-label="Weekly independent-solve rate and complexity-check accuracy; open Show weekly trends as a table below for every week">
 		@chartAxes(c.Ticks, c.Labels)
 		for _, h := range c.Hits {
 			<rect class="chart-hit" x={ h.HitX } y={ ChartTop() } width={ h.HitW } height={ ChartPlotH() }><title>{ h.Title }</title></rect>

@@ -1970,6 +1970,13 @@ dd {
   fill: #d95926;
 }
 @media (max-width: 620px) {
+  /* Chart text is in viewBox units and shrinks with the chart. */
+  .chart-axis {
+    font-size: 18px;
+  }
+  .chart-value {
+    font-size: 20px;
+  }
   .topic-row {
     grid-template-columns: 1fr 1fr;
   }

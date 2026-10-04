@@ -7,7 +7,8 @@ import (
 
 // Chart geometry for the stats page. Charts are inline SVG drawn on the
 // server, so they need no JavaScript; each mark carries a <title> for its
-// hover tooltip, and every chart has a table view beside it.
+// hover tooltip. The topic and weekly charts keep their tables behind a
+// toggle; the difficulty bars carry their numbers as text.
 
 // StatsHeadline is the stats page's row of headline numbers.
 type StatsHeadline struct {
@@ -75,6 +76,8 @@ const (
 	chartPlotH   = chartHeight - chartTop - chartBottom
 	chartBaseY   = chartTop + chartPlotH
 	chartMaxBarW = 36
+	// endLabelBelow is a label's baseline offset when set under its point.
+	endLabelBelow = 17
 )
 
 // ChartTick is a horizontal grid line with its axis label.
@@ -124,9 +127,10 @@ type ChartSeries struct {
 	EndX      string
 	EndY      string
 	EndLabel  string
-	// EndDy puts the first series' label above its point and the second's
-	// below, so labels on close values do not collide.
+	// EndDy places the end label above the point, or below it for the lower
+	// of two lines when there is room above the axis labels.
 	EndDy string
+	endY  float64
 }
 
 // RateChart plots weekly percentages on one 0-100% axis.
@@ -250,11 +254,8 @@ func (t Trends) RateChart() RateChart {
 		}},
 	}
 	hits := make([][]string, n)
-	for k, s := range series {
+	for _, s := range series {
 		cs := ChartSeries{Key: s.key, Name: s.name, EndDy: "-9"}
-		if k > 0 {
-			cs.EndDy = "17"
-		}
 		var path strings.Builder
 		open := false
 		for i, week := range t.Weeks {
@@ -273,11 +274,22 @@ func (t Trends) RateChart() RateChart {
 			open = true
 			label := s.name + ": " + Percent(v) + " (" + s.detail(week) + ")"
 			cs.Points = append(cs.Points, ChartPoint{X: x, Y: y, Title: "Week of " + week.Start.Format("2 Jan") + ". " + label})
-			cs.EndX, cs.EndY, cs.EndLabel = x, y, Percent(v)
+			cs.EndX, cs.EndY, cs.EndLabel, cs.endY = x, y, Percent(v), scale(v)
 			hits[i] = append(hits[i], label)
 		}
 		cs.Path = path.String()
 		c.Series = append(c.Series, cs)
+	}
+	// With both lines labelled, the lower one's label goes below its point
+	// so the two do not overlap, unless that would reach the axis labels.
+	if a, b := &c.Series[0], &c.Series[1]; a.EndLabel != "" && b.EndLabel != "" {
+		lower := a
+		if b.endY > a.endY {
+			lower = b
+		}
+		if lower.endY+endLabelBelow+4 < chartBaseY {
+			lower.EndDy = Count(endLabelBelow)
+		}
 	}
 	for i, week := range t.Weeks {
 		c.Hits = append(c.Hits, ChartBar{

@@ -52,6 +52,10 @@ func TestStatsPage(t *testing.T) {
 	if d := page.Difficulties; len(d) != 4 || d[0].Attempted != 2 || d[0].Solved != 1 || d[1].Attempted != 1 || d[1].Solved != 1 || d[2].Attempted != 0 || d[3].Difficulty != "" || d[3].Attempted != 1 {
 		t.Fatalf("difficulties: %+v", d)
 	}
+	// Three problems are due: two array problems and the untagged one.
+	if page.DueNow != 3 || page.Streaks != today.Streaks || page.Progress != Summarize(state) {
+		t.Fatalf("tiles: due %d streaks %+v progress %+v", page.DueNow, page.Streaks, page.Progress)
+	}
 	cal := page.Calendar
 	if len(cal) != 12 || cal[11][2].Date != Date(now, time.UTC) || !cal[11][3].Date.IsZero() || cal[11][0].Date.Weekday() != time.Monday {
 		t.Fatalf("calendar last week: %+v", cal[11])

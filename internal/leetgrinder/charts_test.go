@@ -13,7 +13,7 @@ func TestStatsHeadlineAndDifficultyBars(t *testing.T) {
 		Progress:     Progress{Attempted: 5, Solved: 4, Independent: 3},
 		Streaks:      Streaks{Current: 2, Longest: 6},
 		DueNow:       1,
-		Calendar:     [][]CalendarDay{{{Met: true, Active: true}, {Active: true}, {}, {Met: true, Active: true}}},
+		Calendar:     [][]CalendarDay{{{Met: true, Active: true}, {Active: true}, {}, {Met: true}}},
 		Difficulties: []DifficultyStat{{"Easy", 4, 3}, {"Medium", 2, 0}, {"Hard", 0, 0}},
 	}
 	h := page.Headline()
@@ -58,24 +58,59 @@ func TestSolvedChart(t *testing.T) {
 
 func TestRateChartBreaksAtMissingWeeks(t *testing.T) {
 	start := time.Date(2026, 9, 7, 0, 0, 0, 0, time.UTC)
+	week := func(i int) time.Time { return start.AddDate(0, 0, 7*i) }
 	tr := Trends{Weeks: []TrendWeek{
-		{Start: start, Solves: 2, Independent: 1},
-		{Start: start.AddDate(0, 0, 7)},
-		{Start: start.AddDate(0, 0, 14), Solves: 1, Independent: 1, Checked: 2, Matched: 1},
+		{Start: week(0), Solves: 2, Independent: 2},
+		{Start: week(1), Solves: 2, Independent: 1},
+		{Start: week(2)},
+		{Start: week(3), Solves: 1, Checked: 2, Matched: 1},
 	}}
 	c := tr.RateChart()
 	independent, accuracy := c.Series[0], c.Series[1]
-	if strings.Count(independent.Path, "M") != 2 || strings.Contains(independent.Path, "L") || len(independent.Points) != 2 {
-		t.Fatalf("independent path %q must restart after the empty week", independent.Path)
+	// Consecutive weeks join; the empty week breaks the line. 100% is the
+	// top of the plot and 0% the baseline.
+	x := func(i int) string { return num(centre(i, 4)) }
+	top, mid, base := ChartTop()+".0", num(chartTop+chartPlotH/2.0), ChartBaseY()+".0"
+	if want := "M" + x(0) + "," + top + "L" + x(1) + "," + mid + "M" + x(3) + "," + base; independent.Path != want {
+		t.Fatalf("independent path %q, want %q", independent.Path, want)
 	}
-	if len(accuracy.Points) != 1 || accuracy.EndLabel != "50%" || independent.EndLabel != "100%" || independent.EndDy == accuracy.EndDy {
+	if len(accuracy.Points) != 1 || accuracy.EndLabel != "50%" || independent.EndLabel != "0%" {
 		t.Fatalf("series %+v %+v", independent, accuracy)
 	}
-	if !strings.Contains(c.Hits[1].Title, "Independent solves: none") || !strings.Contains(c.Hits[2].Title, "Complexity checks right: 50% (1 of 2 checks)") {
-		t.Fatalf("hover titles %q %q", c.Hits[1].Title, c.Hits[2].Title)
+	// The lower line ends on the axis: its label stays above the point,
+	// clear of the week labels.
+	if independent.EndDy != "-9" || accuracy.EndDy != "-9" {
+		t.Fatalf("end labels %s %s", independent.EndDy, accuracy.EndDy)
+	}
+	if !strings.Contains(c.Hits[2].Title, "Independent solves: none") || !strings.Contains(c.Hits[3].Title, "Complexity checks right: 50% (1 of 2 checks)") {
+		t.Fatalf("hover titles %q %q", c.Hits[2].Title, c.Hits[3].Title)
+	}
+	// With room below, the lower line's label moves under its point.
+	tr.Weeks[3].Independent = 1
+	tr.Weeks[3].Solves = 4
+	if c = tr.RateChart(); c.Series[0].EndDy != Count(endLabelBelow) || c.Series[1].EndDy != "-9" {
+		t.Fatalf("lower line label %s, upper %s", c.Series[0].EndDy, c.Series[1].EndDy)
 	}
 	if c.Empty() || !(Trends{Weeks: []TrendWeek{{Start: start}}}).RateChart().Empty() {
 		t.Fatal("Empty")
+	}
+}
+
+func TestWeekLabelsThinAndKeepTheLatest(t *testing.T) {
+	start := time.Date(2026, 9, 7, 0, 0, 0, 0, time.UTC)
+	var weeks []TrendWeek
+	for i := 0; i < 7; i++ {
+		weeks = append(weeks, TrendWeek{Start: start.AddDate(0, 0, 7*i)})
+	}
+	var got []string
+	for _, l := range (Trends{Weeks: weeks}).SolvedChart().Labels {
+		got = append(got, l.Label)
+	}
+	if want := "7 Sep 21 Sep 5 Oct 19 Oct"; strings.Join(got, " ") != want {
+		t.Fatalf("labels %v, want %s", got, want)
+	}
+	if n := len((Trends{Weeks: weeks[:6]}).RateChart().Labels); n != 6 {
+		t.Fatalf("six weeks show %d labels, want all", n)
 	}
 }
 
@@ -99,5 +134,19 @@ func TestStatsPageCharts(t *testing.T) {
 		if !strings.Contains(html, want) {
 			t.Errorf("stats page missing %q", want)
 		}
+	}
+}
+
+func TestStatsPageWithoutRates(t *testing.T) {
+	now := time.Date(2026, 10, 14, 17, 0, 0, 0, time.UTC)
+	settings := DefaultSettings()
+	settings.Timezone = "UTC"
+	state := State{Attempts: []Attempt{{ID: "a", ProblemSlug: "two-sum", Outcome: "unfinished", Minutes: 10, CreatedAt: now.Add(-time.Hour)}}}
+	var out bytes.Buffer
+	if err := Stats(NewStatsPage(NewToday(settings, state, now), StatsFilter{}, 12)).Render(context.Background(), &out); err != nil {
+		t.Fatal(err)
+	}
+	if html := out.String(); !strings.Contains(html, "Rates appear after your first solve") || strings.Contains(html, `class="chart-line"`) {
+		t.Fatal("unfinished-only week should explain the missing rates")
 	}
 }
