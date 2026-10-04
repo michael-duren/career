@@ -302,13 +302,16 @@ func TestOverviewShowsNextTodosBesideTodaysReview(t *testing.T) {
 		t.Fatalf("next todos must follow today's review in the main column: reviews=%d todos=%d due=%d", reviews, todos, side)
 	}
 	section := html[todos:side]
-	for _, want := range []string{`<a href="/leetgrinder/problem/two-sum">Two Sum</a>`, "#1", "Blind 75", "Individual", "+1", `href="https://leetcode.com/problems/clone-graph/"`, "todo-card todo-card-first"} {
+	for _, want := range []string{`<a href="/leetgrinder/problem/two-sum">Two Sum</a>`, "#1", "Blind 75", "Individual", ">Sorting</span>", "+1</span>", `href="https://leetcode.com/problems/clone-graph/"`, "todo-card todo-card-first"} {
 		if !strings.Contains(section, want) {
 			t.Errorf("next todos missing %q", want)
 		}
 	}
 	if strings.Count(section, "todo-card-first") != 1 {
 		t.Error("only the first todo is highlighted")
+	}
+	if strings.Contains(section, ">Math</span>") {
+		t.Error("more than three topics shown")
 	}
 
 	out.Reset()

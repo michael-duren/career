@@ -327,7 +327,7 @@ ORDER BY created_at,id LIMIT $1`, limit)
 		return items, nil
 	}
 	titles := map[string]string{}
-	rows, err = s.DB.QueryContext(ctx, "SELECT id,title FROM leetgrinder_todo_sets WHERE id::text=ANY($1::text[])", ids)
+	rows, err = s.DB.QueryContext(ctx, "SELECT id,title FROM leetgrinder_todo_sets WHERE id=ANY($1::uuid[])", ids)
 	if err != nil {
 		return nil, err
 	}
