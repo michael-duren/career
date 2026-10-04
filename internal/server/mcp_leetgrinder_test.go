@@ -18,7 +18,14 @@ func TestMCPLeetgrinderTools(t *testing.T) {
 	// clock.
 	now := time.Now().UTC()
 	date := now.Format(time.DateOnly)
-	weekOf := leetgrinder.Date(now, time.UTC).AddDate(0, 0, -((int(now.Weekday()) + 6) % 7)).Format(time.DateOnly)
+	monday := func(t time.Time) time.Time {
+		d := leetgrinder.Date(t, time.UTC)
+		return d.AddDate(0, 0, -((int(d.Weekday()) + 6) % 7))
+	}
+	weekOf := monday(now).Format(time.DateOnly)
+	// Trends start at the first attempt's week, 20 days back: three weeks
+	// before this one, or two when today is Sunday.
+	trendWeeks := min(4, int(monday(now).Sub(monday(now.AddDate(0, 0, -20))).Hours()/24/7)+1)
 	ctx := context.Background()
 	settings, err := db.LeetgrinderSettings(ctx)
 	if err != nil {
@@ -126,10 +133,10 @@ func TestMCPLeetgrinderTools(t *testing.T) {
 		t.Fatal("topics", stats)
 	}
 	weeks := stats["weeklyTrends"].([]any)
-	if len(weeks) != 4 {
-		t.Fatal("weeks", stats)
+	if len(weeks) != trendWeeks {
+		t.Fatal("weeks", trendWeeks, stats)
 	}
-	this := weeks[3].(map[string]any)
+	this := weeks[len(weeks)-1].(map[string]any)
 	if this["weekOf"] != weekOf || this["problemsSolved"] != float64(1) || this["independentRate"] != float64(1) {
 		t.Fatal("this week", this)
 	}
