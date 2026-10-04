@@ -45,6 +45,8 @@ Topic display names come from LeetCode (`topics:[{slug,name}]`), so "depth-first
 - **Changed meaning:** `status=struggled` and `status=unfinished` now match the latest result, not the old combined status. Bookmarked URLs keep working but can list different problems: one solved long ago and unfinished since now appears under Unfinished as well as Ever solved.
 - The stats page, extension API, dashboard totals and MCP tools do not use these labels and are unchanged.
 
+**Todos.** `/leetgrinder/todos` lists individual problems still to do and each todo set with its progress, difficulty and topic tallies. Each unfinished set, on the list and on its own page, names its **next problem**: the oldest entry in the set still to do (a set entry is done once any attempt on the problem was solved or struggled), with its number, difficulty and a link to open it on LeetCode. A finished set shows "all finished" instead.
+
 ## Reviews
 
 Every attempted problem becomes a review card. Card state is never stored: each request replays the problem's attempts through FSRS ([go-fsrs](https://github.com/open-spaced-repetition/go-fsrs) v4, default weights and 90% desired retention), so corrections change due dates immediately. Unfinished rates Again. Struggled, or solved with help, rates Hard. An unassisted solve over 25 minutes rates Good, and 25 minutes or less rates Easy. Only the last attempt on each local day counts. FSRS's minute-scale learning steps are turned off, since reviews happen at most once a day. Every attempt feeds FSRS, practice included.

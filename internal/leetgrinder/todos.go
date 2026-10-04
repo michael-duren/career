@@ -47,6 +47,17 @@ func (s TodoSet) Remaining() int {
 	return n
 }
 
+// Next returns the set's oldest entry still to do, in saved order, or false
+// when every entry is done.
+func (s TodoSet) Next() (TodoItem, bool) {
+	for _, item := range s.Items {
+		if !item.Done() {
+			return item, true
+		}
+	}
+	return TodoItem{}, false
+}
+
 // TodoProblemInput is a problem copied into a todo set. ImportMetadata holds
 // source-specific fields that do not have a catalog column.
 type TodoProblemInput struct {

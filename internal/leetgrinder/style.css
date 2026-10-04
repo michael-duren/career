@@ -422,6 +422,11 @@ details[open] > summary {
 .todo-summary progress::-moz-progress-bar { background: #22c55e; }
 .todo-tallies { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 0.85rem; }
 .todo-tally { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.todo-next { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 16px; margin: 14px 0 0; padding: 12px 14px; border: 1px solid var(--soft); border-left: 3px solid var(--accent); border-radius: 6px; background: rgba(30, 58, 95, 0.25); }
+.todo-next .eyebrow { flex-basis: 100%; margin: 0; }
+.todo-next-title { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; flex: 1 1 14rem; min-width: 0; margin: 0; font-size: 1.05rem; font-weight: 600; overflow-wrap: anywhere; }
+.todo-next-title a { color: var(--ink); text-decoration: none; }
+.todo-next-title a:hover { color: var(--accent); }
 @media (max-width: 560px) { .todo-summary > div { grid-template-columns: 1fr; gap: 4px; } }
 .prose {
   font-size: 0.95rem;
