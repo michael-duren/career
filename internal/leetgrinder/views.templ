@@ -1301,10 +1301,10 @@ templ trendsSection(t Trends) {
 				</figure>
 				<figure class="chart">
 					<figcaption>Independent solves and complexity checks right</figcaption>
-					<p class="small muted chart-legend"><span class="legend-line legend-independent"></span> independent solves · <span class="legend-line legend-accuracy"></span> complexity checks right</p>
 					if c := t.RateChart(); c.Empty() {
 						<p class="muted small">Rates appear after your first solve or Claude complexity check.</p>
 					} else {
+						<p class="small muted chart-legend"><span class="legend-line legend-independent"></span> independent solves · <span class="legend-line legend-accuracy"></span> complexity checks right</p>
 						@rateChart(c)
 					}
 				</figure>

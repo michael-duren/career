@@ -154,7 +154,7 @@ func TestStatsPageWithoutRates(t *testing.T) {
 	if err := Stats(NewStatsPage(NewToday(settings, state, now), StatsFilter{}, 12)).Render(context.Background(), &out); err != nil {
 		t.Fatal(err)
 	}
-	if html := out.String(); !strings.Contains(html, "Rates appear after your first solve") || !strings.Contains(html, "Columns appear after your first solve.") || strings.Contains(html, `class="chart-line"`) || strings.Contains(html, `class="chart-bar"`) {
+	if html := out.String(); !strings.Contains(html, "Rates appear after your first solve") || !strings.Contains(html, "Columns appear after your first solve.") || strings.Contains(html, `class="chart-line"`) || strings.Contains(html, "legend-independent") || strings.Contains(html, `class="chart-bar"`) {
 		t.Fatal("unfinished-only week should explain the missing rates")
 	}
 }
