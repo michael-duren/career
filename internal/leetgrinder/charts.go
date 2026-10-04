@@ -42,7 +42,7 @@ func (p StatsPage) Headline() StatsHeadline {
 
 // DifficultyBar is one difficulty's stacked bar: solved, then attempted but
 // not solved, as widths out of 100 of the largest attempted count. The open
-// segment starts at OpenX, a small gap after the solved one.
+// segment starts at OpenX; see openSegment for when a gap precedes it.
 type DifficultyBar struct {
 	DifficultyStat
 	SolvedWidth, OpenX, OpenWidth string
@@ -70,8 +70,8 @@ const segmentGap = 0.5
 // one with a segmentGap gap when both show, trimmed so the two never pass
 // 100 after BarWidth's rounding and minimum.
 func openSegment(d DifficultyStat, most int) (x, width string) {
-	solved, _ := strconv.ParseFloat(BarWidth(float64(d.Solved), float64(most)), 64)
-	open, _ := strconv.ParseFloat(BarWidth(float64(d.Attempted-d.Solved), float64(most)), 64)
+	solved := barWidth(float64(d.Solved), float64(most))
+	open := barWidth(float64(d.Attempted-d.Solved), float64(most))
 	if open == 0 {
 		return num(solved), "0"
 	}

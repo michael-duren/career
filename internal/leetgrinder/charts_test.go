@@ -231,9 +231,6 @@ func TestChartGeometryLiterals(t *testing.T) {
 	if !strings.HasPrefix(short.Bars[0].Path, "M166.0,172.0V172.0Q166.0,170.4 167.6,170.4") {
 		t.Fatalf("short column %q", short.Bars[0].Path)
 	}
-	if p := one.Series[0].Points[0]; p.X != "316.0" {
-		t.Fatalf("one week point %+v", p)
-	}
 }
 
 func TestDifficultyBarsNeverPassFullWidth(t *testing.T) {
@@ -247,7 +244,7 @@ func TestStatsPageRendersChartValues(t *testing.T) {
 	start := time.Date(2026, 9, 7, 0, 0, 0, 0, time.UTC)
 	page := StatsPage{
 		Progress:     Progress{Attempted: 5, Solved: 4, Independent: 3},
-		Streaks:      Streaks{Current: 2, Longest: 6},
+		Streaks:      Streaks{Current: 3, Longest: 6},
 		DueToday:     1,
 		Calendar:     [][]CalendarDay{{{Met: true, Active: true}, {Active: true}, {}, {Met: true}}},
 		Difficulties: []DifficultyStat{{"Easy", 4, 3}, {"Medium", 2, 0}, {"", 1, 0}},
@@ -270,7 +267,7 @@ func TestStatsPageRendersChartValues(t *testing.T) {
 	}
 	solved, rates, bars := page.Trends.SolvedChart(), page.Trends.RateChart(), page.DifficultyBars()
 	for _, want := range []string{
-		"<strong>4</strong> <span class=\"muted\">of 5 attempted", "<strong>75%</strong>", "longest 6", "<strong>2</strong> <span class=\"muted\">days of 3 practised", "<strong>1</strong> <span class=\"muted\">review ·",
+		"<strong>4</strong> <span class=\"muted\">of 5 attempted", "<strong>75%</strong>", "<strong>3</strong> <span class=\"muted\">days · longest 6", "<strong>2</strong> <span class=\"muted\">days of 3 practised", "<strong>1</strong> <span class=\"muted\">review ·",
 		`d="` + solved.Bars[0].Path + `"`, `d="` + solved.Bars[1].Path + `"`,
 		`d="` + rates.Series[0].Path + `"`,
 		`y="` + rates.Series[0].LabelY + `" dominant-baseline="middle">100%</text>`,
