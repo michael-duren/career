@@ -1146,7 +1146,13 @@ templ Stats(page StatsPage) {
 							<tbody>
 								for _, t := range page.Topics {
 									<tr>
-										<th scope="row">{ t.Label }</th>
+										<th scope="row">
+											if t.Key == "other" {
+												{ t.Label }
+											} else {
+												<a href={ templ.SafeURL("/leetgrinder/problems?topic=" + t.Key) }>{ t.Label }</a>
+											}
+										</th>
 										<td class="num">{ Count(t.Problems) }</td>
 										<td class="num">{ Count(t.Solved) }</td>
 										<td class="num">{ Percent(t.StruggleRate()) }</td>

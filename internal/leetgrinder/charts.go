@@ -58,10 +58,21 @@ func (p StatsPage) DifficultyBars() []DifficultyBar {
 		bars = append(bars, DifficultyBar{
 			DifficultyStat: d,
 			SolvedWidth:    BarWidth(float64(d.Solved), float64(most)),
-			OpenWidth:      BarWidth(float64(d.Attempted-d.Solved), float64(most)),
+			OpenWidth:      openWidth(d, most),
 		})
 	}
 	return bars
+}
+
+// openWidth is the attempted-but-unsolved segment's width, trimmed so the
+// two segments never pass 100 after BarWidth's rounding and minimum.
+func openWidth(d DifficultyStat, most int) string {
+	open := BarWidth(float64(d.Attempted-d.Solved), float64(most))
+	solved, _ := strconv.ParseFloat(BarWidth(float64(d.Solved), float64(most)), 64)
+	if w, _ := strconv.ParseFloat(open, 64); w > 0 && solved+w > 100 {
+		return num(100 - solved)
+	}
+	return open
 }
 
 // Weekly chart frame, in SVG user units.
@@ -76,11 +87,13 @@ const (
 	chartPlotH   = chartHeight - chartTop - chartBottom
 	chartBaseY   = chartTop + chartPlotH
 	chartMaxBarW = 36
-	// End labels sit endLabelAbove over their point, or endLabelBelow
-	// under it; two labels need endLabelGap between their baselines.
-	endLabelAbove = -9
-	endLabelBelow = 17
-	endLabelGap   = 14
+	// End-label offsets are sized for the largest chart value text (20
+	// units, on phones): a label's baseline sits endLabelAbove over its
+	// point or endLabelBelow under it, clear of the 4-unit dot, and two
+	// labels need endLabelGap between their baselines.
+	endLabelAbove = -8
+	endLabelBelow = 22
+	endLabelGap   = 22
 )
 
 // ChartTick is a horizontal grid line with its axis label.
@@ -95,11 +108,11 @@ type ChartLabel struct {
 	Label string
 }
 
-// ChartBar is one week's column.
+// ChartBar is one week's column, or in a RateChart only its hover band.
 type ChartBar struct {
 	// Path draws the column with a rounded top; empty for a zero week.
 	Path string
-	// Hit is a full-height hover target over the week's band.
+	// HitX and HitW span the week's band, a full-height hover target.
 	HitX, HitW string
 	// LabelX and LabelY place the value above the column when it is labelled.
 	LabelX, LabelY string
@@ -122,7 +135,7 @@ type ChartPoint struct {
 }
 
 // ChartSeries is one line: its path, broken where a week has no value, its
-// markers, and a direct label at its last point.
+// markers, and a direct label at its point in the latest week, if any.
 type ChartSeries struct {
 	Key, Name string
 	Path      string
@@ -276,23 +289,26 @@ func (t Trends) RateChart() RateChart {
 			open = true
 			label := s.name + ": " + Percent(v) + " (" + s.detail(week) + ")"
 			cs.Points = append(cs.Points, ChartPoint{X: x, Y: y, Title: "Week of " + week.Start.Format("2 Jan") + ". " + label})
-			cs.EndX, cs.EndY, cs.EndLabel, cs.endY = x, y, Percent(v), scale(v)
+			if i == n-1 {
+				cs.EndX, cs.EndY, cs.EndLabel, cs.endY = x, y, Percent(v), scale(v)
+			}
 			hits[i] = append(hits[i], label)
 		}
 		cs.Path = path.String()
 		c.Series = append(c.Series, cs)
 	}
-	// When both lines end in the same week, the lower one's label goes below
-	// its point unless that would cross the 0% baseline; then the upper
-	// label is lifted clear of it instead.
+	// Only the latest week is labelled. With both lines labelled there, the
+	// lower one's label goes below its point unless its baseline would pass
+	// the 0% baseline; then, if the two are closer than endLabelGap, the
+	// upper label is lifted clear instead.
 	if len(c.Series) == 2 {
 		a, b := &c.Series[0], &c.Series[1]
-		if a.EndLabel != "" && b.EndLabel != "" && a.EndX == b.EndX {
+		if a.EndLabel != "" && b.EndLabel != "" {
 			upper, lower := a, b
 			if a.endY > b.endY {
 				upper, lower = b, a
 			}
-			if lower.endY+endLabelBelow+4 < chartBaseY {
+			if lower.endY+endLabelBelow <= chartBaseY {
 				lower.EndDy = Count(endLabelBelow)
 			} else if gap := lower.endY - upper.endY; gap < endLabelGap {
 				upper.EndDy = num(endLabelAbove - (endLabelGap - gap))

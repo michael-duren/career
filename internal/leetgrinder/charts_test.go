@@ -79,7 +79,7 @@ func TestRateChartBreaksAtMissingWeeks(t *testing.T) {
 	}
 	// The lower line ends on the axis: its label stays above the point,
 	// clear of the week labels.
-	if independent.EndDy != "-9" || accuracy.EndDy != "-9" {
+	if independent.EndDy != Count(endLabelAbove) || accuracy.EndDy != Count(endLabelAbove) {
 		t.Fatalf("end labels %s %s", independent.EndDy, accuracy.EndDy)
 	}
 	if !strings.Contains(c.Hits[2].Title, "Independent solves: none") || !strings.Contains(c.Hits[3].Title, "Complexity checks right: 50% (1 of 2 checks)") {
@@ -88,7 +88,7 @@ func TestRateChartBreaksAtMissingWeeks(t *testing.T) {
 	// With room below, the lower line's label moves under its point.
 	tr.Weeks[3].Independent = 1
 	tr.Weeks[3].Solves = 4
-	if c = tr.RateChart(); c.Series[0].EndDy != Count(endLabelBelow) || c.Series[1].EndDy != "-9" {
+	if c = tr.RateChart(); c.Series[0].EndDy != Count(endLabelBelow) || c.Series[1].EndDy != Count(endLabelAbove) {
 		t.Fatalf("lower line label %s, upper %s", c.Series[0].EndDy, c.Series[1].EndDy)
 	}
 	if c.Empty() || !(Trends{Weeks: []TrendWeek{{Start: start}}}).RateChart().Empty() {
@@ -187,10 +187,40 @@ func TestRateChartSeparatesCloseEndLabels(t *testing.T) {
 	if lower.EndDy != Count(endLabelAbove) || upper.EndDy != num(endLabelAbove-(endLabelGap-gap)) {
 		t.Fatalf("end labels upper %s lower %s", upper.EndDy, lower.EndDy)
 	}
-	// Lines ending in different weeks keep their labels above.
-	c = (Trends{Weeks: []TrendWeek{{Start: start, Checked: 1}, {Start: start.AddDate(0, 0, 7), Solves: 1}}}).RateChart()
+	// Equal values at 0%: the second line keeps its place and the first is
+	// lifted a full gap above it.
+	c = (Trends{Weeks: []TrendWeek{{Start: start, Solves: 1, Checked: 1}}}).RateChart()
+	if c.Series[0].EndDy != num(endLabelAbove-endLabelGap) || c.Series[1].EndDy != Count(endLabelAbove) {
+		t.Fatalf("equal values %s %s", c.Series[0].EndDy, c.Series[1].EndDy)
+	}
+	// 20% and 0% are already far enough apart: both stay above.
+	c = (Trends{Weeks: []TrendWeek{{Start: start, Solves: 5, Independent: 1, Checked: 1}}}).RateChart()
 	if c.Series[0].EndDy != Count(endLabelAbove) || c.Series[1].EndDy != Count(endLabelAbove) {
-		t.Fatalf("separate weeks %s %s", c.Series[0].EndDy, c.Series[1].EndDy)
+		t.Fatalf("far apart %s %s", c.Series[0].EndDy, c.Series[1].EndDy)
+	}
+	// Only the latest week is labelled: a line with no value there has none.
+	c = (Trends{Weeks: []TrendWeek{{Start: start, Checked: 1}, {Start: start.AddDate(0, 0, 7), Solves: 1}}}).RateChart()
+	if c.Series[0].EndLabel != "0%" || c.Series[1].EndLabel != "" || len(c.Series[1].Points) != 1 {
+		t.Fatalf("latest-week labels %+v", c.Series)
+	}
+}
+
+func TestChartGeometryLiterals(t *testing.T) {
+	start := time.Date(2026, 9, 7, 0, 0, 0, 0, time.UTC)
+	two := (Trends{Weeks: []TrendWeek{{Start: start, Solved: 1}, {Start: start.AddDate(0, 0, 7), Solved: 1}}, MaxSolved: 1}).SolvedChart()
+	if two.Bars[0].HitW != "294.0" || two.Bars[1].HitX != "330.0" || !strings.HasPrefix(two.Bars[0].Path, "M165.0,172.0V20.0") {
+		t.Fatalf("two weeks %+v", two.Bars)
+	}
+	one := (Trends{Weeks: []TrendWeek{{Start: start, Solves: 1, Independent: 1}}}).RateChart()
+	if p := one.Series[0].Points[0]; p.X != "330.0" || p.Y != "16.0" {
+		t.Fatalf("one week point %+v", p)
+	}
+}
+
+func TestDifficultyBarsNeverPassFullWidth(t *testing.T) {
+	bars := (StatsPage{Difficulties: []DifficultyStat{{"Medium", 400, 399}}}).DifficultyBars()
+	if bars[0].SolvedWidth != "99.8" || bars[0].OpenWidth != "0.2" {
+		t.Fatalf("bars %+v", bars[0])
 	}
 }
 
