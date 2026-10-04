@@ -240,3 +240,46 @@ func TestGoalCardNewPicks(t *testing.T) {
 		}
 	}
 }
+
+func TestTodosShowEachSetsNextProblem(t *testing.T) {
+	done := time.Date(2026, 10, 2, 17, 0, 0, 0, time.UTC)
+	sets := []TodoSet{
+		{ID: uuid.NewString(), Title: "Blind 75", Items: []TodoItem{
+			{ID: "a", Problem: Problem{Slug: "two-sum", Number: 1, Title: "Two Sum", Difficulty: "Easy"}, DoneAt: done},
+			{ID: "b", Problem: Problem{Slug: "valid-anagram", Number: 242, Title: "Valid Anagram", Difficulty: "Easy"}},
+			{ID: "c", Problem: Problem{Slug: "group-anagrams", Number: 49, Title: "Group Anagrams", Difficulty: "Medium"}},
+		}},
+		{ID: uuid.NewString(), Title: "Finished", Items: []TodoItem{{ID: "d", Problem: Problem{Slug: "climbing-stairs", Title: "Climbing Stairs"}, DoneAt: done}}},
+		{ID: uuid.NewString(), Title: "Empty", Items: []TodoItem{}},
+	}
+	if next, ok := sets[0].Next(); !ok || next.ID != "b" {
+		t.Fatalf("next = %+v, %v; want the oldest entry still to do", next, ok)
+	}
+	if _, ok := sets[1].Next(); ok {
+		t.Fatal("finished set has a next problem")
+	}
+	var out bytes.Buffer
+	if err := Todos(TodosPage{Sets: sets, Location: time.UTC}).Render(context.Background(), &out); err != nil {
+		t.Fatal(err)
+	}
+	html := out.String()
+	for _, want := range []string{`<a href="/leetgrinder/problem/valid-anagram">Valid Anagram</a>`, `href="https://leetcode.com/problems/valid-anagram/"`, "all finished", "No problems in this set."} {
+		if !strings.Contains(html, want) {
+			t.Errorf("todos page missing %q", want)
+		}
+	}
+	if n := strings.Count(html, "NEXT PROBLEM"); n != 1 {
+		t.Errorf("next problem shown %d times, want once (only the unfinished set)", n)
+	}
+	if strings.Contains(html, `href="/leetgrinder/problem/group-anagrams"`) {
+		t.Error("todos page shows more than the next problem")
+	}
+
+	out.Reset()
+	if err := TodoSetView(NewTodoSetPage(sets[0], TodoFilter{}, time.UTC)).Render(context.Background(), &out); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.String(), "NEXT PROBLEM") {
+		t.Error("set page does not name the next problem")
+	}
+}

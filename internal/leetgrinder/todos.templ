@@ -37,9 +37,30 @@ templ Todos(page TodosPage) {
 				if set.Description != "" {
 					<p class="muted small">{ set.Description }</p>
 				}
+				@todoNext(set)
 				@todoSummary(set.Summary(), 6)
 			</section>
 		}
+	}
+}
+
+// todoNext names the set's next problem to work on; a finished set relies on
+// the summary's "all finished".
+templ todoNext(set TodoSet) {
+	if next, ok := set.Next(); ok {
+			<div class="todo-next">
+				<p class="eyebrow">NEXT PROBLEM</p>
+				<p class="todo-next-title">
+					if next.Problem.Number > 0 {
+						<span class="muted">{ Count(next.Problem.Number) }.</span>
+					}
+					<a href={ templ.SafeURL(ProblemURL(next.Problem.Slug)) }>{ next.Problem.DisplayTitle() }</a>
+					if next.Problem.Difficulty != "" {
+						<span class={ DifficultyClass(next.Problem.Difficulty) }>{ next.Problem.Difficulty }</span>
+					}
+				</p>
+				<a class="button primary" href={ templ.SafeURL(next.Problem.URL()) } target="_blank" rel="noopener noreferrer">Open on LeetCode<span class="visually-hidden"> { next.Problem.DisplayTitle() } (opens in a new tab)</span></a>
+			</div>
 	}
 }
 
@@ -113,6 +134,7 @@ templ TodoSetView(page TodoSetPage) {
 			</div>
 		</header>
 		<section class="panel" aria-label="Set summary">
+			@todoNext(page.Set)
 			@todoSummary(page.Summary, 0)
 		</section>
 		if page.Summary.Total > 0 {
