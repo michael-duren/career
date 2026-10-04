@@ -14,7 +14,10 @@ import (
 type TodoItem struct {
 	ID      string
 	SetID   string
-	Problem Problem
+	// SetTitle names the entry's set; only the dashboard's next-todos query
+	// fills it.
+	SetTitle string
+	Problem  Problem
 	// SourceData is the exact imported problem detail snapshot for this todo.
 	SourceData map[string]any
 	// DoneAt is the latest solved or struggled attempt that completes this

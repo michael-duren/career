@@ -300,8 +300,8 @@ ORDER BY created_at,id`, nullableUUID(setID))
 }
 
 // LeetgrinderNextTodoItems returns the oldest queued entry for each problem
-// still to do. A problem present in several sets appears only once on the
-// dashboard.
+// still to do, with its set's title. A problem present in several sets
+// appears only once on the dashboard.
 func (s *Store) LeetgrinderNextTodoItems(ctx context.Context, limit int) ([]leetgrinder.TodoItem, error) {
 	rows, err := s.DB.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,source_data,done_at
 FROM (
@@ -313,7 +313,39 @@ ORDER BY created_at,id LIMIT $1`, limit)
 	if err != nil {
 		return nil, err
 	}
-	return scanLeetgrinderTodoItems(ctx, s.DB, rows)
+	items, err := scanLeetgrinderTodoItems(ctx, s.DB, rows)
+	if err != nil {
+		return nil, err
+	}
+	ids := []string{}
+	for _, item := range items {
+		if item.SetID != "" {
+			ids = append(ids, item.SetID)
+		}
+	}
+	if len(ids) == 0 {
+		return items, nil
+	}
+	titles := map[string]string{}
+	rows, err = s.DB.QueryContext(ctx, "SELECT id,title FROM leetgrinder_todo_sets WHERE id=ANY($1::uuid[])", ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id, title string
+		if err = rows.Scan(&id, &title); err != nil {
+			return nil, err
+		}
+		titles[id] = title
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	for i := range items {
+		items[i].SetTitle = titles[items[i].SetID]
+	}
+	return items, nil
 }
 
 func scanLeetgrinderTodoItems(ctx context.Context, q queryer, rows *sql.Rows) ([]leetgrinder.TodoItem, error) {

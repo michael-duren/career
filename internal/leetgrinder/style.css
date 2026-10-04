@@ -1088,6 +1088,92 @@ dd {
 .stats progress::-moz-progress-bar {
   background: #3b82f6;
 }
+.next-todos {
+  margin-bottom: 38px;
+}
+.todo-cards {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.todo-card {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+}
+.todo-card-first {
+  border-color: #1e40af;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, rgba(30, 58, 95, 0.45), var(--panel) 60%);
+}
+.todo-card-rank {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(--line);
+  color: var(--muted);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.todo-card-first .todo-card-rank {
+  background: var(--soft);
+  color: #bfdbfe;
+}
+.todo-card-body {
+  min-width: 0;
+}
+.todo-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.todo-card-set {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 16rem;
+}
+.todo-card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  overflow-wrap: anywhere;
+}
+.todo-card h3 a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.todo-card h3 a:hover {
+  color: var(--accent);
+}
+.todo-card .button {
+  gap: 4px;
+}
+.todo-card .row-topics {
+  margin: 6px 0 0;
+}
+@media (max-width: 560px) {
+  .todo-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 12px 14px;
+  }
+  .todo-card-rank {
+    display: none;
+  }
+}
 .dash-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
