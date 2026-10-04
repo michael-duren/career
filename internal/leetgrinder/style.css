@@ -1881,12 +1881,8 @@ dd {
 .diff-bar-solved {
   fill: #3987e5;
 }
-/* A 2px panel-coloured gap separates the open segment from the solved one. */
 .diff-bar-open {
   fill: #46699a;
-  stroke: var(--panel);
-  stroke-width: 2;
-  vector-effect: non-scaling-stroke;
 }
 .diff-bar-value {
   font-size: 0.85rem;

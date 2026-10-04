@@ -25,7 +25,9 @@ func TestStatsHeadlineAndDifficultyBars(t *testing.T) {
 	}
 	bars := page.DifficultyBars()
 	// Bars scale to the most attempted: Easy is full width, 3 solved of 4.
-	if bars[0].SolvedWidth != "75.0" || bars[0].OpenWidth != "25.0" || bars[1].SolvedWidth != "0" || bars[1].OpenWidth != "50.0" || bars[2].OpenWidth != "0" {
+	// The open segment starts half a unit after the solved one; with nothing
+	// solved it starts at 0 with no gap.
+	if bars[0].SolvedWidth != "75.0" || bars[0].OpenX != "75.5" || bars[0].OpenWidth != "24.5" || bars[1].SolvedWidth != "0" || bars[1].OpenX != "0.0" || bars[1].OpenWidth != "50.0" || bars[2].OpenWidth != "0" {
 		t.Fatalf("bars %+v", bars)
 	}
 }
@@ -161,7 +163,7 @@ func TestSolvedChartGeometry(t *testing.T) {
 	start := time.Date(2026, 9, 7, 0, 0, 0, 0, time.UTC)
 	tr := Trends{Weeks: []TrendWeek{{Start: start, Solved: 4}, {Start: start.AddDate(0, 0, 7), Solved: 2}}, MaxSolved: 4}
 	c := tr.SolvedChart()
-	// Two weeks share the plot: bands of 294 units, bars capped at 36.
+	// Two weeks share the plot: bands of 264 units, bars capped at 36.
 	b := num(band(2))
 	if c.Bars[0].HitX != ChartLeft()+".0" || c.Bars[0].HitW != b || c.Bars[1].HitX != num(chartLeft+band(2)) {
 		t.Fatalf("hover bands %+v", c.Bars)
@@ -203,6 +205,10 @@ func TestRateChartSeparatesCloseEndLabels(t *testing.T) {
 	if a, b := label(TrendWeek{Solves: 10, Independent: 6, Checked: 2, Matched: 1}); a != "75.2" || b != "97.2" {
 		t.Fatalf("60%% and 50%%: %s %s", a, b)
 	}
+	// The first line lower than the second: 50% and 55%.
+	if a, b := label(TrendWeek{Solves: 2, Independent: 1, Checked: 20, Matched: 11}); a != "101.1" || b != "79.1" {
+		t.Fatalf("50%% and 55%%: %s %s", a, b)
+	}
 	// Only the latest week is labelled: a line with no value there has none.
 	c := (Trends{Weeks: []TrendWeek{{Start: start, Checked: 1}, {Start: start.AddDate(0, 0, 7), Solves: 1}}}).RateChart()
 	if c.Series[0].EndLabel != "0%" || c.Series[1].EndLabel != "" || len(c.Series[1].Points) != 1 {
@@ -213,18 +219,26 @@ func TestRateChartSeparatesCloseEndLabels(t *testing.T) {
 func TestChartGeometryLiterals(t *testing.T) {
 	start := time.Date(2026, 9, 7, 0, 0, 0, 0, time.UTC)
 	two := (Trends{Weeks: []TrendWeek{{Start: start, Solved: 1}, {Start: start.AddDate(0, 0, 7), Solved: 1}}, MaxSolved: 1}).SolvedChart()
-	if two.Bars[0].HitW != "272.0" || two.Bars[1].HitX != "308.0" || !strings.HasPrefix(two.Bars[0].Path, "M154.0,172.0V20.0") {
+	if two.Bars[0].HitW != "264.0" || two.Bars[1].HitX != "316.0" || !strings.HasPrefix(two.Bars[0].Path, "M166.0,172.0V20.0") {
 		t.Fatalf("two weeks %+v", two.Bars)
 	}
 	one := (Trends{Weeks: []TrendWeek{{Start: start, Solves: 1, Independent: 1}}}).RateChart()
-	if p := one.Series[0].Points[0]; p.X != "308.0" || p.Y != "16.0" {
+	if p := one.Series[0].Points[0]; p.X != "316.0" || p.Y != "16.0" {
+		t.Fatalf("one week point %+v", p)
+	}
+	// A very short column keeps its rounded corner above the baseline.
+	short := (Trends{Weeks: []TrendWeek{{Start: start, Solved: 1}, {Start: start.AddDate(0, 0, 7), Solved: 100}}, MaxSolved: 100}).SolvedChart()
+	if !strings.HasPrefix(short.Bars[0].Path, "M166.0,172.0V172.0Q166.0,170.4 167.6,170.4") {
+		t.Fatalf("short column %q", short.Bars[0].Path)
+	}
+	if p := one.Series[0].Points[0]; p.X != "316.0" {
 		t.Fatalf("one week point %+v", p)
 	}
 }
 
 func TestDifficultyBarsNeverPassFullWidth(t *testing.T) {
 	bars := (StatsPage{Difficulties: []DifficultyStat{{"Medium", 400, 399}}}).DifficultyBars()
-	if bars[0].SolvedWidth != "99.8" || bars[0].OpenWidth != "0.2" {
+	if bars[0].SolvedWidth != "99.8" || bars[0].OpenX != "99.8" || bars[0].OpenWidth != "0.2" {
 		t.Fatalf("bars %+v", bars[0])
 	}
 }
@@ -261,7 +275,10 @@ func TestStatsPageRendersChartValues(t *testing.T) {
 		`d="` + rates.Series[0].Path + `"`,
 		`y="` + rates.Series[0].LabelY + `" dominant-baseline="middle">100%</text>`,
 		`y="` + rates.Series[1].LabelY + `" dominant-baseline="middle">100%</text>`,
-		`width="` + bars[0].SolvedWidth + `"`, `x="` + bars[0].SolvedWidth + `" width="` + bars[0].OpenWidth + `"`,
+		`width="` + bars[0].SolvedWidth + `"`, `x="` + bars[0].OpenX + `" width="` + bars[0].OpenWidth + `"`,
+		`rate-recall" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false"><title>Array: average recall 50%</title><rect class="rate-track" width="100" height="10" rx="2"></rect><rect class="rate-fill" width="50.0" height="10" rx="2"></rect></svg> <span class="num">50%</span>`,
+		`rate-struggle" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false"><title>Array: struggle rate 20% of 5 attempts</title><rect class="rate-track" width="100" height="10" rx="2"></rect><rect class="rate-fill" width="20.0" height="10" rx="2"></rect></svg> <span class="num">20%</span>`,
+		`href="/leetgrinder/reviews">open reviews</a>`,
 		"<title>Array: average recall 50%</title>", "<title>Array: struggle rate 20% of 5 attempts</title>",
 		`<span class="topic-due">2 due</span>`, `href="/leetgrinder/problems?topic=array"`,
 		"Unknown: 0 solved of 1 attempted", `<span class="muted">Unknown</span>`,

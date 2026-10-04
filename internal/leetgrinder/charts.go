@@ -41,10 +41,11 @@ func (p StatsPage) Headline() StatsHeadline {
 }
 
 // DifficultyBar is one difficulty's stacked bar: solved, then attempted but
-// not solved, as widths out of 100 of the largest attempted count.
+// not solved, as widths out of 100 of the largest attempted count. The open
+// segment starts at OpenX, a small gap after the solved one.
 type DifficultyBar struct {
 	DifficultyStat
-	SolvedWidth, OpenWidth string
+	SolvedWidth, OpenX, OpenWidth string
 }
 
 // DifficultyBars scales the difficulty mix to the largest attempted count.
@@ -55,31 +56,37 @@ func (p StatsPage) DifficultyBars() []DifficultyBar {
 	}
 	bars := make([]DifficultyBar, 0, len(p.Difficulties))
 	for _, d := range p.Difficulties {
-		bars = append(bars, DifficultyBar{
-			DifficultyStat: d,
-			SolvedWidth:    BarWidth(float64(d.Solved), float64(most)),
-			OpenWidth:      openWidth(d, most),
-		})
+		bar := DifficultyBar{DifficultyStat: d, SolvedWidth: BarWidth(float64(d.Solved), float64(most))}
+		bar.OpenX, bar.OpenWidth = openSegment(d, most)
+		bars = append(bars, bar)
 	}
 	return bars
 }
 
-// openWidth is the attempted-but-unsolved segment's width, trimmed so the
-// two segments never pass 100 after BarWidth's rounding and minimum.
-func openWidth(d DifficultyStat, most int) string {
-	open := BarWidth(float64(d.Attempted-d.Solved), float64(most))
+// segmentGap separates the solved and open segments, out of 100.
+const segmentGap = 0.5
+
+// openSegment places the attempted-but-unsolved segment: after the solved
+// one with a segmentGap gap when both show, trimmed so the two never pass
+// 100 after BarWidth's rounding and minimum.
+func openSegment(d DifficultyStat, most int) (x, width string) {
 	solved, _ := strconv.ParseFloat(BarWidth(float64(d.Solved), float64(most)), 64)
-	if w, _ := strconv.ParseFloat(open, 64); w > 0 && solved+w > 100 {
-		return num(100 - solved)
+	open, _ := strconv.ParseFloat(BarWidth(float64(d.Attempted-d.Solved), float64(most)), 64)
+	if open == 0 {
+		return num(solved), "0"
 	}
-	return open
+	open = min(open, 100-solved)
+	if solved > 0 && open > 2*segmentGap {
+		return num(solved + segmentGap), num(open - segmentGap)
+	}
+	return num(solved), num(open)
 }
 
 // Weekly chart frame, in SVG user units.
 const (
 	chartWidth  = 640
 	chartHeight = 200
-	chartLeft   = 36
+	chartLeft   = 52
 	// chartRight leaves a gutter right of the plot for the rate chart's
 	// latest values; both charts share it so their weeks line up.
 	chartRight   = 60
@@ -134,7 +141,7 @@ type ChartPoint struct {
 }
 
 // ChartSeries is one line: its path, broken where a week has no value, its
-// markers, and a direct label at its point in the latest week, if any.
+// markers, and its latest week's value, if any, drawn in the right gutter.
 type ChartSeries struct {
 	Key, Name string
 	Path      string
@@ -196,8 +203,9 @@ func solvedTop(most int) int {
 	return (most + 1) / 2 * 2
 }
 
-// SolvedChart lays out problems solved per week. The tallest and latest
-// columns are labelled; every column has a tooltip.
+// SolvedChart lays out problems solved per week. The first tallest column,
+// and the latest when it has solves, are labelled; every column has a
+// tooltip.
 func (t Trends) SolvedChart() SolvedChart {
 	top := solvedTop(t.MaxSolved)
 	scale := func(v int) float64 { return chartBaseY - float64(chartPlotH)*float64(v)/float64(top) }
@@ -211,7 +219,7 @@ func (t Trends) SolvedChart() SolvedChart {
 	}
 	n := len(t.Weeks)
 	w := min(band(n)*0.6, chartMaxBarW)
-	// Label the first tallest column and the latest one.
+	// Label the first tallest column and the latest one with solves.
 	tallest := -1
 	for i, week := range t.Weeks {
 		if tallest < 0 && week.Solved == t.MaxSolved {
