@@ -239,6 +239,9 @@ func TestDoneTodosLeaveTheQueueAndCountInSets(t *testing.T) {
 	if !strings.Contains(section, "/leetgrinder/problem/three-sum") || !strings.Contains(section, "/leetgrinder/problem/clone-graph") {
 		t.Fatal("dashboard queue lost open problems")
 	}
+	if !strings.Contains(section, `<span class="todo-card-set">Blind 75</span>`) || !strings.Contains(section, `<span class="todo-card-set">Individual</span>`) {
+		t.Fatal("dashboard queue does not name each problem's set")
+	}
 
 	if _, err = db.AddLeetgrinderTodoItem(ctx, "", "merge-intervals"); err != nil {
 		t.Fatal(err)

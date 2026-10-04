@@ -110,10 +110,10 @@ templ Overview(page OverviewPage) {
 		<div class="dash-grid">
 			<div>
 				@todaysReviews(page.Today, page.IDs, "overview")
+				@nextTodos(page.NextTodos)
 			</div>
 			<div>
 				@dueList(page.Today, 10)
-				@nextTodos(page.NextTodos)
 				@progressPanel(page)
 				<section class="panel side-list" aria-labelledby="recent-title">
 					<h2 id="recent-title">Recent attempts</h2>
@@ -141,24 +141,53 @@ templ Overview(page OverviewPage) {
 	}
 }
 
+// nextTodos shows the next five todo problems as cards beside today's
+// review, so the queue reads as part of the day's work.
 templ nextTodos(items []TodoItem) {
-	<section class="panel side-list" aria-labelledby="next-todos-title">
+	<section class="next-todos" aria-labelledby="next-todos-title">
+		<p class="eyebrow">PRACTICE QUEUE</p>
 		<h2 id="next-todos-title">Next 5 todo problems</h2>
 		if len(items) == 0 {
-			<p class="muted small">No todo problems yet. <a href="/leetgrinder/todos/add">Add a problem</a> to start your queue.</p>
+			<p class="muted">No todo problems yet. <a href="/leetgrinder/todos/add">Add a problem</a> to start your queue.</p>
 		} else {
-			<ol>
-				for _, item := range items {
-					<li>
-						<a href={ templ.SafeURL(ProblemURL(item.Problem.Slug)) }>{ item.Problem.DisplayTitle() }</a>
-						if item.Problem.Difficulty != "" {
-							<span class="small muted">{ item.Problem.Difficulty }</span>
-						}
+			<p class="muted">The oldest problems still to do across your todos. <a href="/leetgrinder/todos">All todos</a></p>
+			<ol class="todo-cards">
+				for i, item := range items {
+					<li class={ "todo-card", templ.KV("todo-card-first", i == 0) }>
+						<span class="todo-card-rank" aria-hidden="true">{ Count(i + 1) }</span>
+						<div class="todo-card-body">
+							<p class="todo-card-meta">
+								if item.Problem.Number > 0 {
+									<span>#{ Count(item.Problem.Number) }</span>
+								}
+								if item.Problem.Difficulty != "" {
+									<span class={ DifficultyClass(item.Problem.Difficulty) }>{ item.Problem.Difficulty }</span>
+								}
+								if item.SetTitle != "" {
+									<span class="todo-card-set">{ item.SetTitle }</span>
+								} else if item.SetID == "" {
+									<span class="todo-card-set">Individual</span>
+								}
+							</p>
+							<h3><a href={ templ.SafeURL(ProblemURL(item.Problem.Slug)) }>{ item.Problem.DisplayTitle() }</a></h3>
+							if len(item.Problem.Topics) > 0 {
+								<p class="row-topics">
+									for j, topic := range item.Problem.Topics {
+										if j < 3 {
+											<span class="topic-tag">{ item.Problem.TopicLabel(topic) }</span>
+										}
+									}
+									if len(item.Problem.Topics) > 3 {
+										<span class="small muted">+{ Count(len(item.Problem.Topics) - 3) }</span>
+									}
+								</p>
+							}
+						</div>
+						<a class={ "button", templ.KV("primary", i == 0) } href={ templ.SafeURL(item.Problem.URL()) } target="_blank" rel="noopener noreferrer">Solve<span aria-hidden="true"> ↗</span><span class="visually-hidden"> { item.Problem.DisplayTitle() } on LeetCode (opens in a new tab)</span></a>
 					</li>
 				}
 			</ol>
 		}
-		<a class="small" href="/leetgrinder/todos">All todos</a>
 	</section>
 }
 

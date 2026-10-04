@@ -283,3 +283,39 @@ func TestTodosShowEachSetsNextProblem(t *testing.T) {
 		t.Error("set page does not name the next problem")
 	}
 }
+
+func TestOverviewShowsNextTodosBesideTodaysReview(t *testing.T) {
+	now := time.Date(2026, 10, 2, 17, 0, 0, 0, time.UTC)
+	settings := DefaultSettings()
+	settings.Timezone = "UTC"
+	items := []TodoItem{
+		{ID: "a", SetID: "s1", SetTitle: "Blind 75", Problem: Problem{Slug: "two-sum", Number: 1, Title: "Two Sum", Difficulty: "Easy", Topics: []string{"array", "hash-table", "sorting", "math"}}},
+		{ID: "b", Problem: Problem{Slug: "clone-graph", Number: 133, Title: "Clone Graph", Difficulty: "Medium"}},
+	}
+	var out bytes.Buffer
+	if err := Overview(OverviewPage{Today: NewToday(settings, State{}, now), NextTodos: items}).Render(context.Background(), &out); err != nil {
+		t.Fatal(err)
+	}
+	html := out.String()
+	reviews, todos, side := strings.Index(html, `id="reviews-title"`), strings.Index(html, `id="next-todos-title"`), strings.Index(html, `id="due-title"`)
+	if reviews < 0 || todos < reviews || side < todos {
+		t.Fatalf("next todos must follow today's review in the main column: reviews=%d todos=%d due=%d", reviews, todos, side)
+	}
+	section := html[todos:side]
+	for _, want := range []string{`<a href="/leetgrinder/problem/two-sum">Two Sum</a>`, "#1", "Blind 75", "Individual", "+1", `href="https://leetcode.com/problems/clone-graph/"`, "todo-card todo-card-first"} {
+		if !strings.Contains(section, want) {
+			t.Errorf("next todos missing %q", want)
+		}
+	}
+	if strings.Count(section, "todo-card-first") != 1 {
+		t.Error("only the first todo is highlighted")
+	}
+
+	out.Reset()
+	if err := Overview(OverviewPage{Today: NewToday(settings, State{}, now)}).Render(context.Background(), &out); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.String(), "No todo problems yet.") {
+		t.Error("empty queue has no prompt")
+	}
+}
