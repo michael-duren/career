@@ -832,25 +832,36 @@ test('double-clicking today splits the gap at now into recorded work or a future
   }
 });
 
-test('double-clicking a past gap in a week without goals opens nothing', async ({ page, request }) => {
+test('double-clicking a past gap in a week without goals opens nothing', async ({ page, request, baseURL }) => {
   await controlledWeek(page, request);
   await page.route('**/api/scheduler/week?*', async route => {
     const response = await request.get(`/api/scheduler/week?week=${new URL(route.request().url()).searchParams.get('week')}`);
     await route.fulfill({ json: { ...(await response.json()), goals: [] } });
   });
+  // Settings saves return the week too; keep it goal-free.
+  await page.route('**/api/scheduler/mutate', async route => {
+    const response = await route.fetch();
+    await route.fulfill({ response, json: { ...(await response.json()), goals: [] } });
+  });
   await page.reload();
   await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
   await page.clock.pauseAt(new Date('2030-01-07T16:40:30Z'));
   await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
-  await expect(page.locator('.scheduler-goal')).toHaveCount(0);
-  const dialog = page.locator('.scheduler-editor-dialog');
-  const doubleClickAt = await doubleClickerFor(page, '2030-01-07');
-  await doubleClickAt('10:07');
-  await expect(page.locator('.scheduler-status')).toContainText('Add a goal to record past work.');
-  await expect(dialog).toBeHidden();
-  await doubleClickAt('10:50');
-  await expect(dialog.getByRole('heading', { name: 'New session', exact: true })).toBeVisible();
-  await expect(dialog.getByLabel('Start time')).toHaveValue('10:45');
+  try {
+    await setDateOverride(page, '2030-01-07', '09:00', '17:00');
+    await expect(page.locator('.scheduler-goal')).toHaveCount(0);
+    const dialog = page.locator('.scheduler-editor-dialog');
+    const doubleClickAt = await doubleClickerFor(page, '2030-01-07');
+    await doubleClickAt('10:07');
+    await expect(page.locator('.scheduler-status')).toContainText('Add a goal to record past work.');
+    await expect(dialog).toBeHidden();
+    await doubleClickAt('10:50');
+    await expect(dialog.getByRole('heading', { name: 'New session', exact: true })).toBeVisible();
+    await expect(dialog.getByLabel('Start time')).toHaveValue('10:45');
+    await expect(page.locator('.scheduler-status')).not.toContainText('Add a goal');
+  } finally {
+    await clearDateOverride(request, baseURL!, '2030-01-07', '2030-01-07');
+  }
 });
 
 test('spring daylight gap shows a specific invalid preview and saves nothing', async ({ page, request, baseURL }) => {

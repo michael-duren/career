@@ -207,6 +207,10 @@ test('double-click gap fills from the quarter hour to the next block, day end, o
  assert.equal(gapAt(week,'2026-10-05',at('17:00'),before),null);
  assert.equal(gapAt(week,'2026-10-06',at('10:00'),before),null);
  assert.deepEqual(gapAt(week,'2026-10-05',at('10:07'),new Date('2026-10-07T00:00:00Z')),{start:at('10:00'),end:at('11:00')});
+ const offQuarter=placementWeek('2026-10-05','America/Chicago','09:10','17:00');
+ assert.deepEqual(gapAt(offQuarter,'2026-10-05',at('09:12'),before),{start:at('09:10'),end:at('10:10')});
+ offQuarter.busy.push({ id:'empty', title:'Empty', start:'2026-10-05T15:30:00Z', end:'2026-10-05T15:30:00Z' });
+ assert.deepEqual(gapAt(offQuarter,'2026-10-05',at('10:07'),before),{start:at('10:00'),end:at('11:00')});
  const invalid=placementWeek('2026-10-05'); invalid.days[0].valid=false;
  assert.equal(gapAt(invalid,'2026-10-05',at('10:07'),before),null);
  const session = { id:'s', date:'2026-10-05', state:'accepted' as const, assignment:{title:'Block'}, plan:{start:'2026-10-05T15:30:00Z',end:'2026-10-05T16:00:00Z'}, actual:null, conflictIds:[], exception:false };

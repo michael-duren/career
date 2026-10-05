@@ -130,9 +130,10 @@ export function displayAxis(week: SchedulerWeek) {
 // maxMinutes and still stopping at the next block or day end (a future plan).
 // Timed sessions owned by neighbouring dates count as blocks where they overlap
 // this column, even though the grid draws them only in their own column. Blocks
-// end at their real wall-clock end; a session crossing the spring-forward hour is
-// drawn shorter than that, by elapsed minutes. Returns null
-// for an unknown or invalid day, outside the day's interval, inside a block,
+// end at their real wall-clock end; sessions are drawn by elapsed minutes, so
+// across a daylight-saving change their drawn end differs from it. Whether the
+// draft is actual work or a plan is decided by the caller; pass it the same now.
+// Returns null for an unknown or invalid day, outside the day's interval, inside a block,
 // when nothing is left after cutting at now, or when a daylight-saving change
 // makes an edge a skipped wall time, makes the real span differ from its
 // wall-clock length (a repeated hour shares grid rows with its first
@@ -149,11 +150,10 @@ export function gapAt(week: SchedulerWeek, date: string, clickMinute: number, no
     // The grid draws a session without an interval as an hour at its day's start.
     if (!interval) return 'assignment' in item && (item.actual?.date ?? item.date) === date ? [{ start: dayStart, end: dayStart + 60 }] : [];
     const { top, height } = intervalGeometry(interval, date, zone);
-    // minuteOf drops seconds; widen to whole minutes so the draft stays clear of second-level edges.
-    // Across a daylight-saving change the wall-clock end differs from start + elapsed minutes; use the wall clock.
-    const exact = top + (Date.parse(interval.start) % 60000) / 60000;
+    // minuteOf drops seconds, which already floors the start; round the end up so the draft stays clear of
+    // second-level edges. Across a daylight-saving change the wall-clock end differs from start + elapsed minutes; use the wall clock.
     const wallEnd = minuteOf(interval.end, date, zone) + (Date.parse(interval.end) % 60000) / 60000;
-    return height > 0 ? [{ start: Math.floor(exact), end: Math.ceil(wallEnd) }] : [];
+    return height > 0 ? [{ start: top, end: Math.ceil(wallEnd) }] : [];
   });
   if (blocks.some(block => block.start <= clickMinute && clickMinute < block.end)) return null;
   let start = Math.max(dayStart, Math.floor(clickMinute / 15) * 15, ...blocks.filter(block => block.end <= clickMinute).map(block => block.end));
