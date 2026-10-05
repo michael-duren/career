@@ -739,9 +739,15 @@ test('double-clicking empty grid space drafts an entry that fills the gap up to 
     await setDateOverride(page, date, '09:00', '17:00');
     const doubleClickAt = await doubleClickerFor(page, date);
 
+    await page.getByRole('button', { name: `Add session on ${date}` }).click();
+    const quickAddAssignment = await dialog.getByLabel('Assignment').inputValue();
+    await dialog.getByRole('button', { name: 'Discard draft' }).click();
+    await expect(dialog).toBeHidden();
+
     await doubleClickAt('10:07');
     await expect(dialog.getByLabel('Start time')).toHaveValue('10:00');
     await expect(dialog.getByLabel('End time')).toHaveValue('11:00');
+    await expect(dialog.getByLabel('Assignment')).toHaveValue(quickAddAssignment);
     await dialog.getByRole('button', { name: 'Discard draft' }).click();
     await expect(dialog).toBeHidden();
 
@@ -784,6 +790,8 @@ test('double-clicking empty grid space drafts an entry that fills the gap up to 
 });
 
 test('double-clicking today splits the gap at now into recorded work or a future plan', async ({ page, request, baseURL }) => {
+  // Recorded work needs a goal to assign; without one a past double-click opens nothing.
+  await createGoal(request, baseURL!, { startDate: '2030-01-07', endDate: '2030-12-31', dailyHours: 0 });
   await controlledWeek(page, request);
   await page.clock.pauseAt(new Date('2030-01-07T16:40:30Z'));
   await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');

@@ -132,7 +132,8 @@ export function displayAxis(week: SchedulerWeek) {
 // for an unknown or invalid day, outside the day's interval, inside a block,
 // when nothing is left after cutting at now, or when a daylight-saving change
 // makes the edges skipped wall times or stretches the real span past them
-// (a repeated hour shares grid rows with its first occurrence).
+// (a repeated hour shares grid rows with its first occurrence), or when the
+// repeated hour would move the draft to the other side of now.
 export function gapAt(week: SchedulerWeek, date: string, clickMinute: number, now: Date, maxMinutes = 60): {start: number; end: number} | null {
   const day = week.days.find(day => day.date === date);
   if (!day?.valid) return null;
@@ -159,7 +160,10 @@ export function gapAt(week: SchedulerWeek, date: string, clickMinute: number, no
     else { start = nowMinute + 1; end = Math.min(limit, start + maxMinutes); }
   }
   const instant = (minute: number) => { try { return Date.parse(localInstant(addDays(date, Math.floor(minute / 1440)), clockLabel(minute).slice(0, 5), zone)); } catch { return NaN; } };
-  return end > start && (instant(end) - instant(start)) / 60000 === end - start ? { start, end } : null;
+  const from = instant(start), to = instant(end);
+  // The resolved draft must keep its wall-clock length and stay on the clicked side of now.
+  const sideOfNow = clickMinute < nowMinute ? to <= now.getTime() : from > now.getTime();
+  return end > start && (to - from) / 60000 === end - start && sideOfNow ? { start, end } : null;
 }
 export function quickAddSlot(week: SchedulerWeek, date: string, now: Date, duration: number): {start: string; end: string; reason?: string} {
   const day = week.days.find(day => day.date === date);

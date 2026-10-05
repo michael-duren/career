@@ -210,6 +210,11 @@ test('double-click gap fills from the quarter hour to the next block, day end, o
  week.sessions.push(session);
  assert.deepEqual(gapAt(week,'2026-10-05',at('10:07'),before),{start:at('10:00'),end:at('10:30')});
  assert.equal(gapAt(week,'2026-10-05',at('10:45'),before),null);
+ assert.equal(gapAt(week,'2026-10-05',at('10:30'),before),null);
+ assert.deepEqual(gapAt(week,'2026-10-05',at('11:00'),before),{start:at('11:00'),end:at('12:00')});
+ week.sessions.push({ ...session, id:'elsewhere', date:'2026-10-06', plan:null });
+ assert.deepEqual(gapAt(week,'2026-10-05',at('09:30'),before),{start:at('09:30'),end:at('10:30')});
+ week.sessions.pop();
  assert.deepEqual(gapAt(week,'2026-10-05',at('11:05'),before),{start:at('11:00'),end:at('12:00')});
  week.busy.push({ id:'b', title:'Busy', start:'2026-10-05T17:10:00Z', end:'2026-10-05T17:40:00Z' });
  assert.deepEqual(gapAt(week,'2026-10-05',at('11:50'),before),{start:at('11:45'),end:at('12:10')});
@@ -228,6 +233,7 @@ test('double-click gap is cut at now so the draft can be saved as actual work or
  assert.deepEqual(gapAt(week,'2026-10-05',at('10:42'),now),{start:at('10:41'),end:at('11:41')});
  assert.deepEqual(gapAt(week,'2026-10-05',at('10:50'),now),{start:at('10:45'),end:at('11:45')});
  assert.deepEqual(gapAt(week,'2026-10-05',at('09:10'),now),{start:at('09:00'),end:at('10:00')});
+ assert.deepEqual(gapAt(week,'2026-10-05',at('10:07'),new Date('2026-10-05T15:00:30Z')),{start:at('10:01'),end:at('11:01')});
  assert.deepEqual(gapAt(week,'2026-10-05',at('10:07'),new Date('2026-10-04T15:40:30Z')),{start:at('10:00'),end:at('11:00')});
  week.busy.push({ id:'b', title:'Busy', start:'2026-10-05T16:00:00Z', end:'2026-10-05T17:00:00Z' });
  assert.deepEqual(gapAt(week,'2026-10-05',at('10:42'),now),{start:at('10:41'),end:at('11:00')});
@@ -244,6 +250,11 @@ test('double-click gap is unavailable when daylight saving skips or repeats its 
  fall.sessions.push({ id:'std', date:'2026-11-01', state:'accepted', assignment:{title:'Second 1 AM'}, plan:{start:'2026-11-01T06:00:00Z',end:'2026-11-01T06:30:00Z'}, actual:null, conflictIds:[], exception:false });
  assert.equal(gapAt(fall,'2026-11-01',100,before),null);
  assert.deepEqual(gapAt(fall,'2026-11-01',190,before),{start:180,end:240});
+ const fold=placementWeek('2026-11-01','America/New_York','00:00','06:00');
+ fold.sessions.push({ id:'late', date:'2026-11-01', state:'accepted', assignment:{title:'Second 1:40'}, plan:{start:'2026-11-01T06:40:00Z',end:'2026-11-01T07:00:00Z'}, actual:null, conflictIds:[], exception:false });
+ const inSecondHour=new Date('2026-11-01T06:20:30Z');
+ assert.equal(gapAt(fold,'2026-11-01',90,inSecondHour),null);
+ assert.deepEqual(gapAt(fold,'2026-11-01',70,inSecondHour),{start:60,end:80});
 });
 test('double-click gap follows overnight days, active intervals, and sessions drawn without one', async () => {
  const { gapAt } = await import('../src/lib/scheduler.ts');
