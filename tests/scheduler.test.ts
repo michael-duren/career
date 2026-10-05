@@ -255,3 +255,11 @@ test('double-click gap follows overnight days, active intervals, and sessions dr
  assert.equal(gapAt(week,'2026-10-05',at('09:30'),before),null);
  assert.deepEqual(gapAt(week,'2026-10-05',at('10:07'),before),{start:at('10:00'),end:at('11:00')});
 });
+test('double-click gap stays clear of blocks with second-level edges', async () => {
+ const { gapAt } = await import('../src/lib/scheduler.ts');
+ const week=placementWeek('2026-10-05');
+ const before=new Date('2026-10-01T00:00:00Z');
+ week.busy.push({ id:'b', title:'Busy', start:'2026-10-05T15:00:30Z', end:'2026-10-05T15:20:30Z' });
+ assert.deepEqual(gapAt(week,'2026-10-05',10*60+25,before),{start:10*60+21,end:11*60+21});
+ assert.deepEqual(gapAt(week,'2026-10-05',9*60+50,before),{start:9*60+45,end:10*60});
+});

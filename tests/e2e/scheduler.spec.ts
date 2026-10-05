@@ -758,6 +758,13 @@ test('double-clicking empty grid space drafts an entry that fills the gap up to 
     await expect(dialog.getByRole('button', { name: 'Remove this session' })).toBeVisible();
     await expect(dialog.getByLabel('Start time')).toHaveValue('10:30');
     await dialog.getByRole('button', { name: 'Discard draft' }).click();
+    await expect(dialog).toBeHidden();
+
+    await doubleClickAt('09:05');
+    await expect(dialog.getByLabel('Start time')).toHaveValue('09:00');
+    await expect(dialog.getByLabel('End time')).toHaveValue('10:00');
+    await dialog.getByRole('button', { name: 'Discard draft' }).click();
+    await expect(dialog).toBeHidden();
 
     await doubleClickAt('08:00');
     await page.waitForTimeout(300);
@@ -772,7 +779,7 @@ test('double-clicking empty grid space drafts an entry that fills the gap up to 
 
 test('double-clicking today splits the gap at now into recorded work or a future plan', async ({ page, request, baseURL }) => {
   await controlledWeek(page, request);
-  await page.clock.setSystemTime(new Date('2030-01-07T16:40:30Z'));
+  await page.clock.pauseAt(new Date('2030-01-07T16:40:30Z'));
   const dialog = page.locator('.scheduler-editor-dialog');
   try {
     await setDateOverride(page, '2030-01-07', '09:00', '17:00');
