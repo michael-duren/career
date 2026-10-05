@@ -320,19 +320,26 @@ test('the session editor creates a new subgoal only when the session saves', asy
   }
 });
 
-test('creating a fixed commitment with no goal saves it as a plain reservation', async ({ page, request, baseURL }) => {
+test('creating a non-goal entry saves it as a plain reservation', async ({ page, request, baseURL }) => {
   const date = await goToNextWeek(page);
   const dialog = page.locator('.scheduler-editor-dialog');
-  const title = `Commute ${crypto.randomUUID()}`;
+  const title = `Lunch ${crypto.randomUUID()}`;
 
-  await page.getByRole('button', { name: 'Add commitment' }).click();
-  await dialog.getByLabel('Commitment name').fill(title);
+  // From a ＋ draft the non-goal option and its hint are easy to find.
+  await page.getByRole('button', { name: `Add session on ${date}` }).click();
+  await dialog.getByLabel('Assignment').selectOption({ label: 'Not a goal (e.g. lunch)' });
+  await expect(dialog).toContainText("Use for meals, breaks, appointments. Doesn't count toward goal hours.");
+  await dialog.getByRole('button', { name: 'Discard draft' }).click();
+
+  await page.getByRole('button', { name: 'Add non-goal entry' }).click();
+  await dialog.getByLabel('Title', { exact: true }).fill(title);
   await dialog.getByLabel('Scheduling date').fill(date!);
   await dialog.getByLabel('Start time').fill('15:00');
   await dialog.getByLabel('End time').fill('16:00');
   await dialog.getByRole('button', { name: 'Save session' }).click();
   await expect(dialog).toBeHidden();
   await expect(page.locator('[role="alert"]')).toHaveCount(0);
+  await expect(sessionFor(page, title)).toContainText('Non-goal');
 
   const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
   const session = state.sessions.find((s: { assignment: { title: string } }) => s.assignment.title === title);
@@ -1097,9 +1104,9 @@ async function controlledWeek(page: Page, request: APIRequestContext, date = '20
 }
 
 async function pendingCommitment(page: Page) {
-  await page.getByRole('button', { name: 'Add commitment', exact: true }).click();
+  await page.getByRole('button', { name: 'Add non-goal entry', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Session editor' });
-  await dialog.getByLabel('Commitment name').fill('Request ordering commitment');
+  await dialog.getByLabel('Title', { exact: true }).fill('Request ordering commitment');
   await dialog.getByLabel('Start time', { exact: true }).fill('11:00');
   await dialog.getByLabel('End time', { exact: true }).fill('12:00');
   return dialog;
@@ -1229,7 +1236,7 @@ test('local refresh keeps drafts, clears resolved errors and pauses while the pa
   failing = false;
   await dialog.getByRole('button', { name: 'Refresh schedule', exact: true }).click();
   await expect(dialog.getByRole('alert')).toHaveCount(0);
-  await expect(dialog.getByLabel('Commitment name')).toHaveValue('Request ordering commitment');
+  await expect(dialog.getByLabel('Title', { exact: true })).toHaveValue('Request ordering commitment');
   await page.evaluate(() => { Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' }); document.dispatchEvent(new Event('visibilitychange')); });
   const before = { reads, healthReads };
   await page.clock.fastForward(180000);
@@ -1254,7 +1261,7 @@ test('failed drag after ordinary navigation opens its original week draft and sa
   const day = (await page.locator('[data-scheduler-date]').first().boundingBox())!;
   await mouseDrag(page, { x: source.x + source.width / 2, y: source.y + source.height / 2 }, { x: day.x + day.width / 2, y: day.y + 60 });
   await expect.poll(() => writes.length).toBe(1);
-  await expect(page.getByRole('button', { name: 'Add commitment', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Add non-goal entry', exact: true })).toBeDisabled();
   await expect(page.locator('.scheduler-edge').first()).toHaveCount(0);
   await page.getByRole('button', { name: 'Next week' }).click();
   await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', '2030-01-14');
