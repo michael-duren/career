@@ -644,8 +644,14 @@ async function clearDateOverride(request: APIRequestContext, origin: string, wee
 
 test('unavailable hours and ineligible dates show invalid previews and save nothing', async ({ page, request, baseURL }) => {
   const available = await createGoal(request, baseURL!, { dailyHours: 0 });
-  const ineligible = await createGoal(request, baseURL!, { dailyHours: 0, startDate: '2026-10-06' });
-  const date = await goToNextWeek(page);
+  let date = await goToNextWeek(page);
+  // The ineligible goal starts the day after the target date, so it is listed
+  // for the week but cannot be placed on its first day.
+  const startDate = new Date(Date.parse(`${date}T00:00:00Z`) + 86400000).toISOString().slice(0, 10);
+  const ineligible = await createGoal(request, baseURL!, { dailyHours: 0, startDate });
+  await page.reload();
+  await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
+  date = await goToNextWeek(page);
   await setDateOverride(page, date!, '09:00', '12:00');
   const day = page.locator(`[data-scheduler-date="${date}"]`);
   const target = (await day.boundingBox())!;
@@ -674,7 +680,9 @@ test('spring daylight gap shows a specific invalid preview and saves nothing', a
   await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
   await setDateOverride(page, '2027-03-14', '00:00', '04:00');
   const targetWeek = '2027-03-08';
-  for (let i = 0; i < 23; i++) await goToNextWeek(page);
+  // Step forward from the current week rather than a fixed count, so the test
+  // keeps reaching the target as the calendar moves on.
+  for (let i = 0; i < 80 && (await page.locator('[data-scheduler-date]').first().getAttribute('data-scheduler-date'))! < targetWeek; i++) await goToNextWeek(page);
   await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', targetWeek);
   await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
   const day = page.locator('[data-scheduler-date="2027-03-14"]');
