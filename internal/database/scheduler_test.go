@@ -570,7 +570,7 @@ func TestSchedulerNewStepIsCreatedOnlyWithTheSave(t *testing.T) {
 	}
 	planned := w.Sessions[0]
 	_, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "actual", ID: planned.ID, Session: &planned, Actual: &scheduler.Actual{Status: "explicit", Date: "2030-01-07", Start: planned.Plan.Start, End: planned.Plan.End}, NewStep: &scheduler.NewStep{Title: "Orphan"}}, later, nil)
-	if !errors.Is(err, ErrInvalid) || !strings.Contains(err.Error(), "planned session") {
+	if !errors.Is(err, ErrInvalid) || !strings.Contains(err.Error(), "existing session") {
 		t.Fatalf("planned actual: %v", err)
 	}
 	if got := stepTitles(); len(got) != 1 {
@@ -617,7 +617,8 @@ func TestSchedulerNewStepIsCreatedOnlyWithTheSave(t *testing.T) {
 	if occurrence.ID == "" {
 		t.Fatalf("no rule occurrence: %+v", w.Sessions)
 	}
-	occurrence.Exception = true
+	occurrence.Exception = true // as the editor's draftMutation sends a "This date" edit
+	ruleStep := w.Rules[0].Assignment.StepID
 	w, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "session", ID: occurrence.ID, Session: &occurrence, NewStep: &scheduler.NewStep{Title: "Mock interview"}}, later, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -625,10 +626,17 @@ func TestSchedulerNewStepIsCreatedOnlyWithTheSave(t *testing.T) {
 	if got := stepTitles(); len(got) != 4 || got[3] != "Mock interview" {
 		t.Fatalf("steps %v", got)
 	}
+	found := false
 	for _, ses := range w.Sessions {
-		if ses.ID == occurrence.ID && (ses.Assignment.Title != "Mock interview" || ses.Assignment.StepID == "") {
-			t.Fatalf("exception %+v", ses)
+		if ses.ID == occurrence.ID {
+			found = true
+			if !ses.Exception || ses.Assignment.Title != "Mock interview" || ses.Assignment.StepID == "" || ses.Assignment.StepID == ruleStep {
+				t.Fatalf("exception %+v", ses)
+			}
 		}
+	}
+	if !found || w.Rules[0].Assignment.StepID != ruleStep {
+		t.Fatalf("occurrence found=%v rules %+v", found, w.Rules)
 	}
 
 	// A recurring plan that collides with the first rule's occurrence is rejected and adds no step.
@@ -661,38 +669,41 @@ func TestSchedulerNewStepIsCreatedOnlyWithTheSave(t *testing.T) {
 		t.Fatalf("rules %+v", w.Rules)
 	}
 
-	// A finished goal takes no new step, even through unplanned actual work.
-	done := dependencyGoal(uuid.NewString())
-	done["startDate"], done["endDate"], done["status"] = "2030-01-01", "2030-12-31", "done"
-	if _, err = s.Save(ctx, "goal", done, nil); err != nil {
-		t.Fatal(err)
+	// A done or dropped goal takes no new step, even through unplanned actual work.
+	unplannedOn := func(goal string, hour int, title string) error {
+		if w, err = s.SchedulerWeek(ctx, w.Week, later, nil); err != nil {
+			t.Fatal(err)
+		}
+		session := scheduler.Session{Date: "2030-01-07", Assignment: scheduler.Assignment{GoalID: goal}}
+		_, e := s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "actual", Session: &session, Actual: &scheduler.Actual{Status: "explicit", Date: "2030-01-07", Start: now.Add(time.Duration(hour) * time.Hour), End: now.Add(time.Duration(hour+1) * time.Hour)}, NewStep: &scheduler.NewStep{Title: title}}, later, nil)
+		return e
 	}
-	if w, err = s.SchedulerWeek(ctx, w.Week, later, nil); err != nil {
-		t.Fatal(err)
-	}
-	finished := scheduler.Session{Date: "2030-01-07", Assignment: scheduler.Assignment{GoalID: done["id"].(string)}}
-	if _, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "actual", Session: &finished, Actual: &scheduler.Actual{Status: "explicit", Date: "2030-01-07", Start: now.Add(18 * time.Hour), End: now.Add(19 * time.Hour)}, NewStep: &scheduler.NewStep{Title: "Too late"}}, later, nil); !errors.Is(err, ErrInvalid) || !strings.Contains(err.Error(), "done goal") {
-		t.Fatalf("done goal: %v", err)
+	for _, status := range []string{"done", "dropped"} {
+		finished := dependencyGoal(uuid.NewString())
+		finished["startDate"], finished["endDate"], finished["status"] = "2030-01-01", "2030-12-31", status
+		if _, err = s.Save(ctx, "goal", finished, nil); err != nil {
+			t.Fatal(err)
+		}
+		if e := unplannedOn(finished["id"].(string), 18, "Too late"); !errors.Is(e, ErrInvalid) || !strings.Contains(e.Error(), status+" goal") {
+			t.Fatalf("%s goal: %v", status, e)
+		}
 	}
 
-	// The 200-step limit holds.
+	// The 200-step limit allows the 200th subgoal and refuses the 201st.
 	full := dependencyGoal(uuid.NewString())
 	full["startDate"], full["endDate"] = "2030-01-01", "2030-12-31"
 	steps := []any{}
-	for i := 0; i < 200; i++ {
+	for i := 0; i < 199; i++ {
 		steps = append(steps, map[string]any{"id": uuid.NewString(), "title": "Step", "done": false})
 	}
 	full["steps"] = steps
 	if _, err = s.Save(ctx, "goal", full, nil); err != nil {
 		t.Fatal(err)
 	}
-	w, err = s.SchedulerWeek(ctx, w.Week, later, nil)
-	if err != nil {
-		t.Fatal(err)
+	if e := unplannedOn(full["id"].(string), 12, "200th"); e != nil {
+		t.Fatalf("200th: %v", e)
 	}
-	limited := session(17)
-	limited.Assignment.GoalID = full["id"].(string)
-	if _, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "session", Session: limited, NewStep: &scheduler.NewStep{Title: "One more"}}, later, nil); !errors.Is(err, ErrInvalid) || !strings.Contains(err.Error(), "200 subgoals") {
-		t.Fatalf("limit: %v", err)
+	if e := unplannedOn(full["id"].(string), 13, "201st"); !errors.Is(e, ErrInvalid) || !strings.Contains(e.Error(), "200 subgoals") {
+		t.Fatalf("limit: %v", e)
 	}
 }

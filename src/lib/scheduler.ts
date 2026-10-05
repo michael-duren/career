@@ -83,7 +83,7 @@ export function draftMutation(draft: SessionDraft, week: SchedulerWeek): Mutatio
   const start = resolve(draft.startDate ?? draft.date, draft.start, draft.originalStart);
   const end = resolve(draft.endDate, draft.end, draft.originalEnd);
   if (Date.parse(end) <= Date.parse(start)) throw new Error('End must be after start.');
-  // Recording actual work on a planned session keeps its assignment, so it never adds a subgoal.
+  // Recording actual work on an existing session keeps its assignment, so it never adds a subgoal.
   const newStepTitle = draft.mode === 'actual' && draft.id ? undefined : draft.newStepTitle;
   if (newStepTitle !== undefined && !newStepTitle.trim()) throw new Error('Enter a subgoal title.');
   const base = { revision: week.revision, week: week.week, ...(newStepTitle !== undefined ? { newStep: { title: newStepTitle.trim() } } : {}) };

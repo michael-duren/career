@@ -272,6 +272,12 @@ test('the session editor creates a new subgoal only when the session saves', asy
     await expect(dialog).toBeHidden();
     expect(await goalSteps()).toEqual([]);
 
+    // Switching to another goal drops the typed subgoal.
+    await draftNewSubgoal('13:00', '14:00', 'Switched away');
+    await dialog.getByLabel('Assignment').selectOption(blocker.id);
+    await expect(dialog.getByLabel('New subgoal title')).toHaveCount(0);
+    await dialog.getByRole('button', { name: 'Discard draft' }).click();
+
     // A blank title blocks the save.
     await draftNewSubgoal('13:00', '14:00', '   ');
     await dialog.getByRole('button', { name: 'Save session' }).click();
