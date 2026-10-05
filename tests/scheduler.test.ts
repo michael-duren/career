@@ -196,3 +196,24 @@ test('quick add uses the selected future day and available remaining duration', 
  assert.deepEqual(quickAddSlot(week,'2026-11-02',new Date('2026-11-02T22:30:00Z'),60),{start:'2026-11-02T22:31:00.000Z',end:'2026-11-02T23:00:00.000Z'});
  assert.match(quickAddSlot(week,'2026-11-02',new Date('2026-11-03T00:00:00Z'),60).reason!,/No valid future slot/);
 });
+test('double-click gap fills from the quarter hour to the next block, day end, or one hour', async () => {
+ const { gapAt } = await import('../src/lib/scheduler.ts');
+ const week=placementWeek('2026-10-05');
+ const at=(clock: string) => Number(clock.slice(0, 2)) * 60 + Number(clock.slice(3));
+ assert.deepEqual(gapAt(week,'2026-10-05',at('10:07')),{start:at('10:00'),end:at('11:00')});
+ assert.deepEqual(gapAt(week,'2026-10-05',at('16:40')),{start:at('16:30'),end:at('17:00')});
+ assert.equal(gapAt(week,'2026-10-05',at('08:59')),null);
+ assert.equal(gapAt(week,'2026-10-05',at('17:00')),null);
+ assert.equal(gapAt(week,'2026-10-06',at('10:00')),null);
+ const session = { id:'s', date:'2026-10-05', state:'accepted' as const, assignment:{title:'Block'}, plan:{start:'2026-10-05T15:30:00Z',end:'2026-10-05T16:00:00Z'}, actual:null, conflictIds:[], exception:false };
+ week.sessions.push(session);
+ assert.deepEqual(gapAt(week,'2026-10-05',at('10:07')),{start:at('10:00'),end:at('10:30')});
+ assert.equal(gapAt(week,'2026-10-05',at('10:45')),null);
+ assert.deepEqual(gapAt(week,'2026-10-05',at('11:05')),{start:at('11:00'),end:at('12:00')});
+ week.busy.push({ id:'b', title:'Busy', start:'2026-10-05T17:10:00Z', end:'2026-10-05T17:40:00Z' });
+ assert.deepEqual(gapAt(week,'2026-10-05',at('11:50')),{start:at('11:45'),end:at('12:10')});
+ assert.equal(gapAt(week,'2026-10-05',at('12:20')),null);
+ assert.deepEqual(gapAt(week,'2026-10-05',at('12:41')),{start:at('12:40'),end:at('13:40')});
+ week.sessions.push({ ...session, id:'gone', state:'canceled' as const, plan:{start:'2026-10-05T19:00:00Z',end:'2026-10-05T20:00:00Z'} });
+ assert.deepEqual(gapAt(week,'2026-10-05',at('13:50')),{start:at('13:45'),end:at('14:45')});
+});

@@ -719,6 +719,51 @@ test('unavailable hours and ineligible dates show invalid previews and save noth
   }
 });
 
+test('double-clicking empty grid space drafts an entry that fills the gap up to one hour', async ({ page, request, baseURL }) => {
+  const goal = await createGoal(request, baseURL!, { dailyHours: 0 });
+  const monday = await goToNextWeek(page);
+  const date = new Date(Date.parse(`${monday}T00:00:00Z`) + 2 * 86400000).toISOString().slice(0, 10);
+  const dialog = page.locator('.scheduler-editor-dialog');
+  try {
+    await setDateOverride(page, date, '09:00', '17:00');
+    const label = (await page.locator('.scheduler-axis span').first().textContent())!.match(/^(\d+):(\d+) (AM|PM)$/)!;
+    const axisStart = (Number(label[1]) % 12 + (label[3] === 'PM' ? 12 : 0)) * 60 + Number(label[2]);
+    const day = page.locator(`[data-scheduler-date="${date}"]`);
+    const doubleClickAt = async (clock: string) => {
+      const box = await visibleBox(day);
+      await page.mouse.dblclick(box.x + box.width / 2, box.y + Number(clock.slice(0, 2)) * 60 + Number(clock.slice(3)) - axisStart);
+    };
+
+    await doubleClickAt('10:37');
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByLabel('Start time')).toHaveValue('10:30');
+    await expect(dialog.getByLabel('End time')).toHaveValue('11:30');
+    await dialog.getByLabel('Assignment').selectOption(goal.id);
+    await dialog.getByRole('button', { name: 'Save session' }).click();
+    await expect(dialog).toBeHidden();
+
+    await doubleClickAt('10:07');
+    await expect(dialog.getByLabel('Scheduling date')).toHaveValue(date);
+    await expect(dialog.getByLabel('Start time')).toHaveValue('10:00');
+    await expect(dialog.getByLabel('End time')).toHaveValue('10:30');
+    await dialog.getByRole('button', { name: 'Discard draft' }).click();
+    await expect(dialog).toBeHidden();
+
+    await doubleClickAt('11:00');
+    await expect(dialog.getByRole('button', { name: 'Remove this session' })).toBeVisible();
+    await expect(dialog.getByLabel('Start time')).toHaveValue('10:30');
+    await dialog.getByRole('button', { name: 'Discard draft' }).click();
+
+    await doubleClickAt('08:00');
+    await expect(dialog).toBeHidden();
+    const state = await (await request.get(`/api/scheduler/week?week=${monday}`)).json();
+    const sessions = state.sessions.filter((s: { state: string; assignment: { goalId?: string } }) => s.state !== 'canceled' && s.assignment.goalId === goal.id);
+    expect(sessions.map((s: { date: string; plan: { start: string; end: string } }) => [s.date, localTimeOf(s.plan.start), localTimeOf(s.plan.end)])).toEqual([[date, '10:30', '11:30']]);
+  } finally {
+    await clearDateOverride(request, baseURL!, monday!, date);
+  }
+});
+
 test('spring daylight gap shows a specific invalid preview and saves nothing', async ({ page, request, baseURL }) => {
   // Reaching next March can take up to ~52 week navigations.
   test.setTimeout(120_000);

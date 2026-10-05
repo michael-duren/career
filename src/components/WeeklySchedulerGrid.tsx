@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type PointerEvent } from 'react';
-import { displayAxis, intervalGeometry, displayClock, localFields, minuteOf, snapMinutes, type Assignment, type SchedulerSession, type SchedulerWeek } from '../lib/scheduler';
+import { displayAxis, gapAt, intervalGeometry, displayClock, localFields, minuteOf, snapMinutes, type Assignment, type SchedulerSession, type SchedulerWeek } from '../lib/scheduler';
 import { proposePlacement, type PlacementResult } from '../lib/scheduler-placement';
 
 type DragItem = { kind: 'assignment'; assignment: Assignment; durationMinutes: number } | { kind: 'session'; session: SchedulerSession };
@@ -12,7 +12,7 @@ type Preview = { date: string; top: number; height: number; start: string; end: 
 export type SchedulerGridHandle = { beginAssignment: (event: PointerEvent<HTMLElement>, assignment: Assignment, durationMinutes: number) => void; consumeClick: () => boolean };
 type Props = {
   busy: boolean; now: number; week: SchedulerWeek; selectedDay: string; conflicts: string[];
-  selectDay: (date: string) => void; addSession: (date: string, minute: number) => void;
+  selectDay: (date: string) => void; addSession: (date: string, minute?: number, durationMinutes?: number) => void;
   edit: (session: SchedulerSession) => void; deleteSession: (session: SchedulerSession) => void;
   place: (result: PlacementResult) => void;
 };
@@ -161,8 +161,13 @@ export const WeeklySchedulerGrid = forwardRef<SchedulerGridHandle, Props>(functi
         const lanes=displayLanes(week.sessions,day.date,week.settings.timeZone);
         const shown = preview?.date === day.date ? preview : null;
         return <section className={`scheduler-day ${day.date === selectedDay ? 'is-selected' : ''}`} key={day.date} aria-label={dayName(day.date)}>
-          <div className="scheduler-day-heading"><strong>{dayName(day.date)}</strong><button disabled={busy} aria-label={`Add session on ${day.date}`} onClick={() => addSession(day.date, startMinute)}>＋</button></div>
-          <div className="scheduler-day-body" data-scheduler-date={day.date} style={{ height }}>
+          <div className="scheduler-day-heading"><strong>{dayName(day.date)}</strong><button disabled={busy} aria-label={`Add session on ${day.date}`} onClick={() => addSession(day.date)}>＋</button></div>
+          <div className="scheduler-day-body" data-scheduler-date={day.date} style={{ height }} onDoubleClick={event => {
+            // Double-clicking empty space drafts an entry that fills the gap; blocks keep their own click handling.
+            if (busy || (event.target as HTMLElement).closest('.scheduler-block')) return;
+            const gap = gapAt(week, day.date, event.clientY - event.currentTarget.getBoundingClientRect().top + axisStart);
+            if (gap) addSession(day.date, gap.start, gap.end - gap.start);
+          }}>
             {!day.valid && <p className="scheduler-invalid-day" role="status">{day.reason}</p>}
             <div className="scheduler-unavailable" style={{ top: 0, height: startMinute - axisStart }} /><div className="scheduler-unavailable" style={{ top: endMinute - axisStart, height: axisEnd - endMinute }} />
             {week.busy.map(busy => { const start = Math.max(axisStart, minuteOf(busy.start, day.date, week.settings.timeZone)), end = Math.min(axisEnd, minuteOf(busy.end, day.date, week.settings.timeZone)); return end > start ? <div className={`scheduler-block scheduler-busy ${conflicts.includes(busy.id) ? 'scheduler-conflict' : ''}`} key={busy.id} style={{ top: start - axisStart, height: end - start }}><strong>{busy.title || 'Google busy'}</strong><small>Google busy · {displayClock(start)}–{displayClock(end)}</small></div> : null; })}

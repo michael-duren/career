@@ -120,6 +120,28 @@ export function displayAxis(week: SchedulerWeek) {
   }
   return { start: Math.min(...starts, 300), end: Math.max(...ends, 1230) };
 }
+// gapAt finds the free gap for a double-click on empty grid space. clickMinute
+// counts from local midnight of date, as on the grid axis. The gap starts at the
+// quarter hour at or before the click (never inside an earlier block) and ends at
+// the next session or busy block, the end of the scheduling day, or maxMinutes,
+// whichever is first. Returns null outside the day's interval or inside a block.
+export function gapAt(week: SchedulerWeek, date: string, clickMinute: number, maxMinutes = 60): {start: number; end: number} | null {
+  const day = week.days.find(day => day.date === date);
+  if (!day?.valid) return null;
+  const clock = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3));
+  const dayStart = clock(day.interval.start), dayEnd = clock(day.interval.end) + (day.interval.nextDay ? 1440 : 0);
+  if (clickMinute < dayStart || clickMinute >= dayEnd) return null;
+  const intervals = [...week.busy, ...week.sessions.filter(session => session.state !== 'canceled').map(session => session.actual && session.actual.status !== 'skipped' ? session.actual : session.plan)];
+  const blocks = intervals.flatMap(interval => {
+    if (!interval) return [];
+    const { top, height } = intervalGeometry(interval, date, week.settings.timeZone);
+    return height > 0 ? [{ start: top, end: top + height }] : [];
+  });
+  if (blocks.some(block => block.start <= clickMinute && clickMinute < block.end)) return null;
+  const start = Math.max(dayStart, Math.floor(clickMinute / 15) * 15, ...blocks.filter(block => block.end <= clickMinute).map(block => block.end));
+  const end = Math.min(dayEnd, start + maxMinutes, ...blocks.filter(block => block.start > clickMinute).map(block => block.start));
+  return end > start ? { start, end } : null;
+}
 export function quickAddSlot(week: SchedulerWeek, date: string, now: Date, duration: number): {start: string; end: string; reason?: string} {
   const day = week.days.find(day => day.date === date);
   const fallback = {start: '', end: '', reason: day?.reason || 'No valid future slot is available on this scheduling date. Choose another date or record actual work.'};
