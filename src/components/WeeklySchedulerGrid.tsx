@@ -12,7 +12,7 @@ type Preview = { date: string; top: number; height: number; start: string; end: 
 export type SchedulerGridHandle = { beginAssignment: (event: PointerEvent<HTMLElement>, assignment: Assignment, durationMinutes: number) => void; consumeClick: () => boolean };
 type Props = {
   busy: boolean; now: number; week: SchedulerWeek; selectedDay: string; conflicts: string[];
-  selectDay: (date: string) => void; addSession: (date: string, minute?: number, durationMinutes?: number) => void;
+  selectDay: (date: string) => void; addSession: (date: string, minute?: number, durationMinutes?: number, at?: number) => void;
   edit: (session: SchedulerSession) => void; deleteSession: (session: SchedulerSession) => void;
   place: (result: PlacementResult) => void;
 };
@@ -165,8 +165,10 @@ export const WeeklySchedulerGrid = forwardRef<SchedulerGridHandle, Props>(functi
           <div className="scheduler-day-body" data-scheduler-date={day.date} style={{ height }} onDoubleClick={event => {
             // Double-clicking empty space drafts an entry that fills the gap; double-clicks on session or busy blocks are ignored.
             if (busy || (event.target as HTMLElement).closest('.scheduler-block')) return;
-            const gap = gapAt(week, day.date, event.clientY - event.currentTarget.getBoundingClientRect().top + axisStart, new Date());
-            if (gap) addSession(day.date, gap.start, gap.end - gap.start);
+            // One clock reading decides both the cut at now and whether the draft is a plan or actual work.
+            const clicked = new Date();
+            const gap = gapAt(week, day.date, event.clientY - event.currentTarget.getBoundingClientRect().top + axisStart, clicked);
+            if (gap) addSession(day.date, gap.start, gap.end - gap.start, clicked.getTime());
           }}>
             {!day.valid && <p className="scheduler-invalid-day" role="status">{day.reason}</p>}
             <div className="scheduler-unavailable" style={{ top: 0, height: startMinute - axisStart }} /><div className="scheduler-unavailable" style={{ top: endMinute - axisStart, height: axisEnd - endMinute }} />

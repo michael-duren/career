@@ -206,6 +206,9 @@ test('double-click gap fills from the quarter hour to the next block, day end, o
  assert.equal(gapAt(week,'2026-10-05',at('08:59'),before),null);
  assert.equal(gapAt(week,'2026-10-05',at('17:00'),before),null);
  assert.equal(gapAt(week,'2026-10-06',at('10:00'),before),null);
+ assert.deepEqual(gapAt(week,'2026-10-05',at('10:07'),new Date('2026-10-07T00:00:00Z')),{start:at('10:00'),end:at('11:00')});
+ const invalid=placementWeek('2026-10-05'); invalid.days[0].valid=false;
+ assert.equal(gapAt(invalid,'2026-10-05',at('10:07'),before),null);
  const session = { id:'s', date:'2026-10-05', state:'accepted' as const, assignment:{title:'Block'}, plan:{start:'2026-10-05T15:30:00Z',end:'2026-10-05T16:00:00Z'}, actual:null, conflictIds:[], exception:false };
  week.sessions.push(session);
  assert.deepEqual(gapAt(week,'2026-10-05',at('10:07'),before),{start:at('10:00'),end:at('10:30')});
@@ -246,6 +249,10 @@ test('double-click gap is unavailable when daylight saving skips or repeats its 
  assert.equal(gapAt(week,'2026-03-08',150,before),null);
  assert.equal(gapAt(week,'2026-03-08',80,before),null);
  assert.deepEqual(gapAt(week,'2026-03-08',190,before),{start:180,end:240});
+ const across=placementWeek('2026-03-08','America/Chicago','00:00','06:00');
+ across.busy.push({ id:'b', title:'Busy', start:'2026-03-08T07:00:00Z', end:'2026-03-08T09:10:00Z' });
+ assert.equal(gapAt(across,'2026-03-08',245,before),null);
+ assert.deepEqual(gapAt(across,'2026-03-08',252,before),{start:250,end:310});
  const fall=placementWeek('2026-11-01','America/New_York','00:00','06:00');
  fall.sessions.push({ id:'std', date:'2026-11-01', state:'accepted', assignment:{title:'Second 1 AM'}, plan:{start:'2026-11-01T06:00:00Z',end:'2026-11-01T06:30:00Z'}, actual:null, conflictIds:[], exception:false });
  assert.equal(gapAt(fall,'2026-11-01',100,before),null);
