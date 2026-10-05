@@ -83,8 +83,10 @@ export function draftMutation(draft: SessionDraft, week: SchedulerWeek): Mutatio
   const start = resolve(draft.startDate ?? draft.date, draft.start, draft.originalStart);
   const end = resolve(draft.endDate, draft.end, draft.originalEnd);
   if (Date.parse(end) <= Date.parse(start)) throw new Error('End must be after start.');
-  if (draft.newStepTitle !== undefined && !draft.newStepTitle.trim()) throw new Error('Enter a subgoal title.');
-  const base = { revision: week.revision, week: week.week, ...(draft.newStepTitle !== undefined ? { newStep: { title: draft.newStepTitle.trim() } } : {}) };
+  // Recording actual work on a planned session keeps its assignment, so it never adds a subgoal.
+  const newStepTitle = draft.mode === 'actual' && draft.id ? undefined : draft.newStepTitle;
+  if (newStepTitle !== undefined && !newStepTitle.trim()) throw new Error('Enter a subgoal title.');
+  const base = { revision: week.revision, week: week.week, ...(newStepTitle !== undefined ? { newStep: { title: newStepTitle.trim() } } : {}) };
   const session: SchedulerSession = { id: draft.id ?? '', ruleId: draft.ruleId, date: draft.date, assignment: draft.assignment, plan: draft.mode === 'plan' ? { start, end } : null, actual: null, state: 'accepted', exception: Boolean(draft.ruleId), conflictIds: [] };
   if (draft.mode === 'actual') return { ...base, action: 'actual', id: draft.id, session, actual: { status: 'explicit', date: draft.date, start, end } };
   if (draft.repeat || draft.ruleId && draft.scope === 'future') return { ...base, action: 'rule', id: draft.ruleId, effectiveFrom: draft.date, rule: { id: draft.ruleId ?? '', weekday: (new Date(`${draft.date}T12:00Z`).getUTCDay() + 6) % 7 + 1, localStart: draft.start, durationMinutes: (Date.parse(end) - Date.parse(start)) / 60000, effectiveFrom: draft.date, assignment: draft.assignment } };

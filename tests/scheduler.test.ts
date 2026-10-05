@@ -319,4 +319,9 @@ test('a draft with a new subgoal title sends it trimmed and rejects a blank one'
  assert.deepEqual(draftMutation({...draft,newStepTitle:'  Write cover letter '},week).newStep,{title:'Write cover letter'});
  assert.deepEqual(draftMutation({...draft,repeat:true,newStepTitle:'Weekly'},week).newStep,{title:'Weekly'});
  assert.throws(()=>draftMutation({...draft,newStepTitle:'   '},week),/Enter a subgoal title/);
+ // Recording actual work on a planned session keeps its assignment and never sends a new subgoal.
+ const recorded=draftMutation({...draft,id:'planned',mode:'actual',start:'08:00',end:'08:30',newStepTitle:''},week);
+ assert.equal(recorded.action,'actual');
+ assert.equal(recorded.newStep,undefined);
+ assert.deepEqual(draftMutation({...draft,mode:'actual',start:'08:00',end:'08:30',newStepTitle:'Unplanned'},week).newStep,{title:'Unplanned'});
 });

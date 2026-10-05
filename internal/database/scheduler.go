@@ -375,9 +375,12 @@ func (s *Store) SchedulerWeek(ctx context.Context, week string, now time.Time, b
 // the mutation's assignments at it. It runs inside the scheduler transaction, so
 // a save rejected later (conflict, availability, validation) rolls the step back.
 func schedulerCreateStep(ctx context.Context, tx *sql.Tx, m *scheduler.Mutation) error {
-	assignments := []*scheduler.Assignment{}
 	// Recording actual work on a planned session keeps its assignment, so only an unplanned actual can take a new step.
-	if m.Session != nil && (m.Action == "session" || m.Action == "actual" && m.ID == "") {
+	if m.Action == "actual" && m.ID != "" {
+		return fmt.Errorf("%w: a new subgoal can't be added when recording work on a planned session", ErrInvalid)
+	}
+	assignments := []*scheduler.Assignment{}
+	if m.Session != nil && (m.Action == "session" || m.Action == "actual") {
 		assignments = append(assignments, &m.Session.Assignment)
 	}
 	if m.Rule != nil && m.Action == "rule" {
@@ -394,6 +397,7 @@ func schedulerCreateStep(ctx context.Context, tx *sql.Tx, m *scheduler.Mutation)
 	if e != nil {
 		return e
 	}
+	goalTitle, _ := goal.Entry["title"].(string)
 	steps, _ := goal.Entry["steps"].([]any)
 	if len(steps) >= 200 {
 		return fmt.Errorf("%w: this goal already has 200 subgoals", ErrInvalid)
@@ -402,7 +406,7 @@ func schedulerCreateStep(ctx context.Context, tx *sql.Tx, m *scheduler.Mutation)
 	goal.Entry["steps"] = append(slices.Clone(steps), map[string]any{"id": id, "title": title, "done": false})
 	entry, e := PrepareSave("goal", goal.Entry)
 	if e != nil {
-		return fmt.Errorf("%w: %v", ErrInvalid, e)
+		return fmt.Errorf("%w: could not add a subgoal to %q: %w", ErrInvalid, goalTitle, e)
 	}
 	if _, e = saveTx(ctx, tx, "goal", entry, &goal.Revision, false); e != nil {
 		return dbError(e)
@@ -410,7 +414,6 @@ func schedulerCreateStep(ctx context.Context, tx *sql.Tx, m *scheduler.Mutation)
 	if e = bump(ctx, tx, "goal"); e != nil {
 		return e
 	}
-	goalTitle, _ := goal.Entry["title"].(string)
 	for _, a := range assignments {
 		a.StepID, a.Title, a.GoalTitle = id, title, goalTitle
 	}
