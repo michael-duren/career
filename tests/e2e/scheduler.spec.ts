@@ -646,7 +646,7 @@ async function clearDateOverride(request: APIRequestContext, origin: string, wee
 // Sunday whose scheduler week (starting Monday) begins after today, so the test
 // never targets a past week.
 function nextSpringForward() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago' }).format(new Date());
   for (let year = Number(today.slice(0, 4)); ; year++) {
     const firstSunday = 1 + (7 - new Date(Date.UTC(year, 2, 1)).getUTCDay()) % 7;
     const gap = new Date(Date.UTC(year, 2, firstSunday + 7));
@@ -662,12 +662,13 @@ test('unavailable hours and ineligible dates show invalid previews and save noth
   // for the week but cannot be placed on its first day.
   const startDate = new Date(Date.parse(`${date}T00:00:00Z`) + 86400000).toISOString().slice(0, 10);
   const ineligible = await createGoal(request, baseURL!, { dailyHours: 0, startDate });
+  // Reload so the sidebar lists the new goal; next week is still the same date.
   await page.reload();
   await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
   date = await goToNextWeek(page);
-  await setDateOverride(page, date!, '09:00', '12:00');
   // Clear the override even on failure; a leftover one invalidates later tests' drops on this date.
   try {
+    await setDateOverride(page, date!, '09:00', '12:00');
     const day = page.locator(`[data-scheduler-date="${date}"]`);
     for (const [goal, minute, explanation] of [
       [available, 60, 'fit inside one scheduling day'],
@@ -691,12 +692,14 @@ test('unavailable hours and ineligible dates show invalid previews and save noth
 });
 
 test('spring daylight gap shows a specific invalid preview and saves nothing', async ({ page, request, baseURL }) => {
+  // Reaching next March can take up to ~52 week navigations.
+  test.setTimeout(120_000);
   const goal = await createGoal(request, baseURL!, { dailyHours: 0, startDate: '2026-01-01' });
   await page.reload();
   await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
   const { gapDate, targetWeek } = nextSpringForward();
-  await setDateOverride(page, gapDate, '00:00', '04:00');
   try {
+    await setDateOverride(page, gapDate, '00:00', '04:00');
     for (let i = 0; i < 80 && (await page.locator('[data-scheduler-date]').first().getAttribute('data-scheduler-date'))! < targetWeek; i++) await goToNextWeek(page);
     await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', targetWeek);
     await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
