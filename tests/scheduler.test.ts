@@ -312,3 +312,11 @@ test('double-click gap stays clear of blocks with second-level edges', async () 
  early.busy.push({ id:'b', title:'Busy', start:'2026-10-05T15:00:00Z', end:'2026-10-05T15:20:20Z' });
  assert.deepEqual(gapAt(early,'2026-10-05',10*60+25,before),{start:10*60+21,end:11*60+21});
 });
+test('a draft with a new subgoal title sends it trimmed and rejects a blank one', () => {
+ const week=placementWeek('2026-10-05');
+ const draft={ assignment:{goalId:'goal',title:'Learn'}, date:'2026-10-05', start:'10:00', endDate:'2026-10-05', end:'11:00', mode:'plan' as const, repeat:false, scope:'date' as const };
+ assert.equal(draftMutation(draft,week).newStep,undefined);
+ assert.deepEqual(draftMutation({...draft,newStepTitle:'  Write cover letter '},week).newStep,{title:'Write cover letter'});
+ assert.deepEqual(draftMutation({...draft,repeat:true,newStepTitle:'Weekly'},week).newStep,{title:'Weekly'});
+ assert.throws(()=>draftMutation({...draft,newStepTitle:'   '},week),/Enter a subgoal title/);
+});

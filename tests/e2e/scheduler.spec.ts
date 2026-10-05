@@ -248,6 +248,71 @@ test('editing an existing planned session can assign it to a subgoal', async ({ 
   expect(session?.assignment.stepId).toBe(stepId);
 });
 
+test('the session editor creates a new subgoal only when the session saves', async ({ page, request, baseURL }) => {
+  const goal = await createGoal(request, baseURL!, { dailyHours: 0 });
+  const blocker = await createGoal(request, baseURL!, { dailyHours: 0 });
+  const monday = await goToNextWeek(page);
+  // Thursday keeps clear of the sessions other tests leave on next Monday.
+  const date = new Date(Date.parse(`${monday}T00:00:00Z`) + 3 * 86400000).toISOString().slice(0, 10);
+  const dialog = page.locator('.scheduler-editor-dialog');
+  const goalSteps = async () => ((await (await request.get('/api/goals')).json()).goals.find((g: { id: string }) => g.id === goal.id).steps as { id: string; title: string }[]).map(step => step.title);
+  const draftNewSubgoal = async (start: string, end: string, title: string) => {
+    await page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`).click();
+    await dialog.getByLabel('Scheduling date').fill(date!);
+    await dialog.getByLabel('Start time').fill(start);
+    await dialog.getByLabel('End time').fill(end);
+    await dialog.getByRole('combobox', { name: 'Subgoal', exact: true }).selectOption({ label: '+ New subgoal…' });
+    await dialog.getByLabel('New subgoal title').fill(title);
+  };
+
+  try {
+    // Discarding the draft creates nothing.
+    await draftNewSubgoal('13:00', '14:00', 'Discarded subgoal');
+    await dialog.getByRole('button', { name: 'Discard draft' }).click();
+    await expect(dialog).toBeHidden();
+    expect(await goalSteps()).toEqual([]);
+
+    // A blank title blocks the save.
+    await draftNewSubgoal('13:00', '14:00', '   ');
+    await dialog.getByRole('button', { name: 'Save session' }).click();
+    await expect(dialog.getByRole('alert')).toContainText('Enter a subgoal title.');
+    await dialog.getByRole('button', { name: 'Discard draft' }).click();
+    expect(await goalSteps()).toEqual([]);
+
+    // A save rejected for a conflict keeps the typed title and creates no step.
+    await page.locator(`#scheduler-goal-${blocker.id} .scheduler-goal-title`).click();
+    await dialog.getByLabel('Scheduling date').fill(date!);
+    await dialog.getByLabel('Start time').fill('15:00');
+    await dialog.getByLabel('End time').fill('16:00');
+    await dialog.getByRole('button', { name: 'Save session' }).click();
+    await expect(dialog).toBeHidden();
+    await draftNewSubgoal('15:30', '16:30', 'Conflicted subgoal');
+    await dialog.getByRole('button', { name: 'Save session' }).click();
+    await expect(page.locator('[role="alert"]')).toContainText('draft');
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByLabel('New subgoal title')).toHaveValue('Conflicted subgoal');
+    expect(await goalSteps()).toEqual([]);
+
+    // Moving the draft clear of the conflict saves the session and its new subgoal together.
+    await dialog.getByLabel('Start time').fill('13:00');
+    await dialog.getByLabel('End time').fill('14:00');
+    await dialog.getByLabel('New subgoal title').fill('Write cover letter');
+    await dialog.getByRole('button', { name: 'Save session' }).click();
+    await expect(dialog).toBeHidden();
+    expect(await goalSteps()).toEqual(['Write cover letter']);
+    const card = page.locator(`#scheduler-goal-${goal.id}`);
+    await card.locator('summary', { hasText: 'Subgoals' }).click();
+    await expect(card.locator('.scheduler-step')).toContainText(['Write cover letter']);
+    await expect(sessionFor(page, 'Write cover letter')).toHaveCount(1);
+    const state = await (await request.get(`/api/scheduler/week?week=${monday}`)).json();
+    const session = state.sessions.find((s: { assignment: { goalId?: string } }) => s.assignment.goalId === goal.id);
+    expect([session.assignment.title, session.assignment.goalTitle, Boolean(session.assignment.stepId)]).toEqual(['Write cover letter', goal.title, true]);
+  } finally {
+    await cancelGoalSessions(request, baseURL!, monday!, goal.id);
+    await cancelGoalSessions(request, baseURL!, monday!, blocker.id);
+  }
+});
+
 test('creating a fixed commitment with no goal saves it as a plain reservation', async ({ page, request, baseURL }) => {
   const date = await goToNextWeek(page);
   const dialog = page.locator('.scheduler-editor-dialog');
