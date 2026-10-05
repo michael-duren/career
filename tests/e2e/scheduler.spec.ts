@@ -110,6 +110,34 @@ test('held assignment shows its snapped destination before the matching interval
   expect(localTimeOf(session.plan.end)).toBe('07:00');
 });
 
+test('dragging a goal or subgoal with many uncovered hours places a one-hour block', async ({ page, request, baseURL }) => {
+  const stepId = crypto.randomUUID();
+  const goal = await createGoal(request, baseURL!, { dailyHours: 8, steps: [{ id: stepId, title: 'One-hour subgoal', done: false }] });
+  const date = await goToNextWeek(page);
+  const card = page.locator(`#scheduler-goal-${goal.id}`);
+  await expect(card.locator('.scheduler-shortfall')).toBeVisible();
+  await card.locator('summary', { hasText: 'Subgoals' }).click();
+  const day = page.locator(`[data-scheduler-date="${date}"]`);
+  const preview = day.locator('.scheduler-drop-preview');
+
+  for (const [source, offset, start, end] of [[card.locator('.scheduler-goal-title'), 60, '06:00', '07:00'], [card.locator('.scheduler-step'), 180, '08:00', '09:00']] as const) {
+    const from = await visibleBox(source);
+    const target = (await day.boundingBox())!;
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(target.x + target.width / 2, target.y + offset, { steps: 8 });
+    await expect(preview).toContainText(`${start}–${end}`);
+    await expect(preview).toHaveAttribute('data-duration-minutes', '60');
+    await page.mouse.up();
+    await expect(page.locator('.scheduler-status')).toContainText('Saved.');
+  }
+
+  const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
+  const sessions = state.sessions.filter((s: { assignment: { goalId: string } }) => s.assignment.goalId === goal.id);
+  expect(sessions.map((s: { assignment: { stepId?: string }; plan: { start: string; end: string } }) => [s.assignment.stepId ?? null, localTimeOf(s.plan.start), localTimeOf(s.plan.end)]).sort())
+    .toEqual([[null, '06:00', '07:00'], [stepId, '08:00', '09:00']].sort());
+});
+
 test('dragging a session to another day saves without flashing the editor or erroring', async ({ page, request, baseURL }) => {
   const goal = await createGoal(request, baseURL!);
   const date = await goToNextWeek(page);
