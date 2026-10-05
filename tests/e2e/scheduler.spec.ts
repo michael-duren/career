@@ -642,54 +642,82 @@ async function clearDateOverride(request: APIRequestContext, origin: string, wee
   expect(response.ok(), await response.text()).toBeTruthy();
 }
 
+// US clocks spring forward on the second Sunday of March. Returns the first such
+// Sunday whose scheduler week (starting Monday) begins after today, so the test
+// never targets a past week.
+function nextSpringForward() {
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago' }).format(new Date());
+  for (let year = Number(today.slice(0, 4)); ; year++) {
+    const firstSunday = 1 + (7 - new Date(Date.UTC(year, 2, 1)).getUTCDay()) % 7;
+    const gap = new Date(Date.UTC(year, 2, firstSunday + 7));
+    const targetWeek = new Date(gap.getTime() - 6 * 86400000).toISOString().slice(0, 10);
+    if (targetWeek > today) return { gapDate: gap.toISOString().slice(0, 10), targetWeek };
+  }
+}
+
 test('unavailable hours and ineligible dates show invalid previews and save nothing', async ({ page, request, baseURL }) => {
   const available = await createGoal(request, baseURL!, { dailyHours: 0 });
-  const ineligible = await createGoal(request, baseURL!, { dailyHours: 0, startDate: '2026-10-06' });
-  const date = await goToNextWeek(page);
-  await setDateOverride(page, date!, '09:00', '12:00');
-  const day = page.locator(`[data-scheduler-date="${date}"]`);
-  const target = (await day.boundingBox())!;
-  for (const [goal, minute, explanation] of [
-    [available, 60, 'fit inside one scheduling day'],
-    [ineligible, 270, 'not eligible'],
-  ] as const) {
-    const source = await visibleBox(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`));
-    const currentTarget = (await day.boundingBox())!;
-    await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(currentTarget.x + currentTarget.width / 2, currentTarget.y + minute, { steps: 8 });
-    const preview = day.locator('.scheduler-drop-preview');
-    await expect(preview).toHaveClass(/is-invalid/);
-    await expect(preview).toContainText(explanation);
-    await page.mouse.up();
+  let date = await goToNextWeek(page);
+  // The ineligible goal starts the day after the target date, so it is listed
+  // for the week but cannot be placed on its first day.
+  const startDate = new Date(Date.parse(`${date}T00:00:00Z`) + 86400000).toISOString().slice(0, 10);
+  const ineligible = await createGoal(request, baseURL!, { dailyHours: 0, startDate });
+  // Reload so the sidebar lists the new goal; next week is still the same date.
+  await page.reload();
+  await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
+  date = await goToNextWeek(page);
+  // Clear the override even on failure; a leftover one invalidates later tests' drops on this date.
+  try {
+    await setDateOverride(page, date!, '09:00', '12:00');
+    const day = page.locator(`[data-scheduler-date="${date}"]`);
+    for (const [goal, minute, explanation] of [
+      [available, 60, 'fit inside one scheduling day'],
+      [ineligible, 270, 'not eligible'],
+    ] as const) {
+      const source = await visibleBox(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`));
+      const currentTarget = (await day.boundingBox())!;
+      await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(currentTarget.x + currentTarget.width / 2, currentTarget.y + minute, { steps: 8 });
+      const preview = day.locator('.scheduler-drop-preview');
+      await expect(preview).toHaveClass(/is-invalid/);
+      await expect(preview).toContainText(explanation);
+      await page.mouse.up();
+    }
+    const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
+    expect(state.sessions.some((value: { assignment: { goalId: string } }) => new Set<string>([available.id, ineligible.id]).has(value.assignment.goalId))).toBe(false);
+  } finally {
+    await clearDateOverride(request, baseURL!, date!, date!);
   }
-  const state = await (await request.get(`/api/scheduler/week?week=${date}`)).json();
-  expect(state.sessions.some((value: { assignment: { goalId: string } }) => new Set<string>([available.id, ineligible.id]).has(value.assignment.goalId))).toBe(false);
-  await clearDateOverride(request, baseURL!, date!, date!);
 });
 
 test('spring daylight gap shows a specific invalid preview and saves nothing', async ({ page, request, baseURL }) => {
+  // Reaching next March can take up to ~52 week navigations.
+  test.setTimeout(120_000);
   const goal = await createGoal(request, baseURL!, { dailyHours: 0, startDate: '2026-01-01' });
   await page.reload();
   await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
-  await setDateOverride(page, '2027-03-14', '00:00', '04:00');
-  const targetWeek = '2027-03-08';
-  for (let i = 0; i < 23; i++) await goToNextWeek(page);
-  await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', targetWeek);
-  await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
-  const day = page.locator('[data-scheduler-date="2027-03-14"]');
-  const source = await visibleBox(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`));
-  const target = (await day.boundingBox())!;
-  await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(target.x + target.width / 2, target.y + 150, { steps: 8 });
-  const preview = day.locator('.scheduler-drop-preview');
-  await expect(preview).toHaveClass(/is-invalid/);
-  await expect(preview).toContainText('does not exist');
-  await page.mouse.up();
-  const state = await (await request.get(`/api/scheduler/week?week=${targetWeek}`)).json();
-  expect(state.sessions.some((value: { assignment: { goalId: string } }) => value.assignment.goalId === goal.id)).toBe(false);
-  await clearDateOverride(request, baseURL!, targetWeek, '2027-03-14');
+  const { gapDate, targetWeek } = nextSpringForward();
+  try {
+    await setDateOverride(page, gapDate, '00:00', '04:00');
+    for (let i = 0; i < 80 && (await page.locator('[data-scheduler-date]').first().getAttribute('data-scheduler-date'))! < targetWeek; i++) await goToNextWeek(page);
+    await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', targetWeek);
+    await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
+    const day = page.locator(`[data-scheduler-date="${gapDate}"]`);
+    const source = await visibleBox(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`));
+    const target = (await day.boundingBox())!;
+    await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(target.x + target.width / 2, target.y + 150, { steps: 8 });
+    const preview = day.locator('.scheduler-drop-preview');
+    await expect(preview).toHaveClass(/is-invalid/);
+    await expect(preview).toContainText('does not exist');
+    await page.mouse.up();
+    const state = await (await request.get(`/api/scheduler/week?week=${targetWeek}`)).json();
+    expect(state.sessions.some((value: { assignment: { goalId: string } }) => value.assignment.goalId === goal.id)).toBe(false);
+  } finally {
+    await clearDateOverride(request, baseURL!, targetWeek, gapDate);
+  }
 });
 
 test('mobile touch scrolls the requirement list and drags only from its handle', async ({ page, request, baseURL }) => {
