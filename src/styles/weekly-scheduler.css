@@ -33,3 +33,5 @@
 .scheduler-micro{border-top:0;border-bottom:0}
 .weekly-scheduler .scheduler-micro .scheduler-edge{display:none}
 .weekly-scheduler .scheduler-micro .scheduler-block-main{min-height:1px}
+
+.scheduler-paste{margin-bottom:.7rem;font-size:.8rem}.weekly-scheduler .scheduler-day-heading strong button{font-size:inherit;text-align:left}.weekly-scheduler .scheduler-day.is-selected .scheduler-day-heading{background:#164e63}

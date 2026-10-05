@@ -190,3 +190,18 @@ export function quickAddSlot(week: SchedulerWeek, date: string, now: Date, durat
   if (start >= end) return fallback;
   return {start:new Date(start).toISOString(),end:new Date(Math.min(end,start+duration*60000)).toISOString()};
 }
+
+export type CopiedSessionItem = { assignment: Assignment; durationMinutes: number };
+export function copySessionItem(session: SchedulerSession, week: SchedulerWeek): CopiedSessionItem {
+  const interval = session.actual && session.actual.status !== 'skipped' ? session.actual : session.plan;
+  const durationMinutes = interval ? (Date.parse(interval.end) - Date.parse(interval.start)) / 60000 : week.rules.find(rule => rule.id === session.ruleId)?.durationMinutes ?? 60;
+  return { assignment: { ...session.assignment }, durationMinutes };
+}
+export function pasteSessionItem(item: CopiedSessionItem, week: SchedulerWeek, date: string, now: Date): SessionDraft {
+  const slot = quickAddSlot(week, date, now, item.durationMinutes);
+  const base: SessionDraft = { assignment: { ...item.assignment }, date, startDate: date, start: '', endDate: date, end: '', mode: 'plan', repeat: false, scope: 'date' };
+  if (slot.reason) return { ...base, explanation: slot.reason };
+  const endInstant = new Date(Date.parse(slot.start) + item.durationMinutes * 60000).toISOString();
+  const start = localFields(slot.start, week.settings.timeZone), end = localFields(endInstant, week.settings.timeZone);
+  return { ...base, startDate: start.date, start: start.time, endDate: end.date, end: end.time, originalStart: slot.start, originalEnd: endInstant };
+}

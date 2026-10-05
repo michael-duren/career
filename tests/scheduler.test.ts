@@ -330,3 +330,40 @@ test('a draft with a new subgoal title sends it trimmed and rejects a blank one'
  const future=draftMutation({...draft,id:'occ',ruleId:'rule',scope:'future',newStepTitle:'Weekly'},week);
  assert.deepEqual([future.action,future.newStep],['rule',{title:'Weekly'}]);
 });
+
+test('copying a recurring item snapshots activity and duration without its identity or history', async () => {
+  const { copySessionItem, pasteSessionItem } = await import('../src/lib/scheduler.ts');
+  const week = weekSchema.parse({ revision: 'r1', week: '2026-09-28', settings: { timeZone: 'UTC', defaultDay: { start: '05:00', end: '20:30', nextDay: false }, weekdays: {}, dates: {} }, remainingCapacityHours: 0, days: [{ date: '2026-10-01', interval: { start: '05:00', end: '20:30', nextDay: false }, start: '2026-10-01T05:00:00Z', end: '2026-10-01T20:30:00Z', valid: true }], sessions: [], rules: [] });
+  const source = { id: 'original', ruleId: 'weekly', date: '2026-09-28', assignment: { goalId: 'goal', stepId: 'step', title: 'Study', goalTitle: 'Learn', color: '#67e8f9' }, plan: { start: '2026-09-28T09:00:00Z', end: '2026-09-28T10:15:00Z' }, actual: null, state: 'accepted', conflictIds: [], exception: false };
+  const copied = copySessionItem(source, week);
+  assert.deepEqual(copied, { assignment: source.assignment, durationMinutes: 75 });
+  source.assignment.title = 'Changed';
+  assert.equal(copied.assignment.title, 'Study');
+  const draft = pasteSessionItem(copied, week, '2026-10-01', new Date('2026-09-28T00:00Z'));
+  assert.equal(draft.start, '05:00');
+  assert.equal(draft.end, '06:15');
+  const mutation = draftMutation(draft, week);
+  assert.equal(mutation.action, 'session');
+  if (mutation.action !== 'session') throw new Error('Expected a new session');
+  assert.equal(mutation.id, undefined);
+  assert.equal(mutation.session.ruleId, undefined);
+  assert.equal(mutation.session.actual, null);
+  assert.equal(mutation.session.assignment.stepId, 'step');
+  draft.assignment.title = 'Independent';
+  assert.equal(copied.assignment.title, 'Study');
+  week.busy = [{ id: 'busy', title: 'Meeting', start: '2026-10-01T05:30:00Z', end: '2026-10-01T06:00:00Z' }];
+  const crowded = pasteSessionItem(copied, week, '2026-10-01', new Date('2026-09-28T00:00Z'));
+  assert.equal(crowded.end, '06:15', 'a short free gap must not truncate the copied duration');
+  const unavailable = pasteSessionItem(copied, week, '2026-10-01', new Date('2026-10-02T00:00Z'));
+  assert.equal(unavailable.start, '');
+  assert.match(unavailable.explanation ?? '', /No valid future slot/);
+});
+
+test('copy uses recorded duration, skipped plans, and unresolved recurrence duration', async () => {
+  const { copySessionItem } = await import('../src/lib/scheduler.ts');
+  const week = weekSchema.parse({ revision: 'r1', week: '2026-09-28', settings: { timeZone: 'UTC', defaultDay: { start: '05:00', end: '20:30', nextDay: false }, weekdays: {}, dates: {} }, remainingCapacityHours: 0, rules: [{ id: 'rule', weekday: 1, localStart: '09:00', durationMinutes: 45, effectiveFrom: '2026-09-28', assignment: { title: 'Lunch' } }] });
+  const source = { id: 'original', ruleId: 'rule', date: '2026-09-28', assignment: { title: 'Lunch', color: '#818cf8' }, plan: { start: '2026-09-28T09:00:00Z', end: '2026-09-28T10:00:00Z' }, actual: { status: 'explicit' as const, date: '2026-09-28', start: '2026-09-28T09:00:00Z', end: '2026-09-28T09:20:00Z' }, state: 'accepted', conflictIds: [], exception: false };
+  assert.equal(copySessionItem(source, week).durationMinutes, 20);
+  assert.equal(copySessionItem({ ...source, actual: { ...source.actual, status: 'skipped' } }, week).durationMinutes, 60);
+  assert.deepEqual(copySessionItem({ ...source, plan: null, actual: null }, week), { assignment: { title: 'Lunch', color: '#818cf8' }, durationMinutes: 45 });
+});
