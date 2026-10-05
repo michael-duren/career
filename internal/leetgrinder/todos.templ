@@ -60,6 +60,7 @@ templ todoNext(set TodoSet) {
 					}
 				</p>
 				<a class="button primary" href={ templ.SafeURL(next.Problem.URL()) } target="_blank" rel="noopener noreferrer">Open on LeetCode<span class="visually-hidden"> { next.Problem.DisplayTitle() } (opens in a new tab)</span></a>
+				@neetcodeLink(next.Problem, "button")
 			</div>
 	}
 }
@@ -238,7 +239,7 @@ templ todoTable(items []TodoItem, caption string, loc *time.Location, setID stri
 								</span>
 							}
 						</td>
-						<td><a href={ templ.SafeURL(item.Problem.URL()) } target="_blank" rel="noopener noreferrer">Open<span class="visually-hidden"> { item.Problem.DisplayTitle() } on LeetCode</span></a></td>
+						<td><div class="problem-site-links"><a href={ templ.SafeURL(item.Problem.URL()) } target="_blank" rel="noopener noreferrer">Open<span class="visually-hidden"> { item.Problem.DisplayTitle() } on LeetCode</span></a> @neetcodeLink(item.Problem, "")</div></td>
 						<td><form method="post" action={ templ.SafeURL("/leetgrinder/todos/items/" + item.ID + "/delete") }>
 							if setID != "" {
 								<input type="hidden" name="setID" value={ setID }/>

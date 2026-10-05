@@ -7,8 +7,41 @@ import (
 	"testing"
 	"time"
 
+	"github.com/a-h/templ"
 	"github.com/google/uuid"
 )
+
+func TestProblemSiteLinks(t *testing.T) {
+	for _, slug := range []string{"two-sum", "some-unmapped-problem"} {
+		p := Problem{Slug: slug}
+		pages := map[string]templ.Component{
+			"history":   ProblemHistory(p, State{}, NewForm(uuid.NewString()), AnalysisAvailability{}, ProblemReview{}),
+			"review":    reviewCard(ReviewItem{Problem: p}, AttemptForm{}),
+			"catalog":   Problems(ProblemsPage{Rows: []ProblemRow{{Problem: p}}, Total: 1, Location: time.UTC}),
+			"dashboard": nextTodos([]TodoItem{{Problem: p}}),
+			"todos":     Todos(TodosPage{Sets: []TodoSet{{ID: uuid.NewString(), Title: "Practice", Items: []TodoItem{{Problem: p}}}}, Location: time.UTC}),
+		}
+		for name, page := range pages {
+			t.Run(slug+"/"+name, func(t *testing.T) {
+				var out bytes.Buffer
+				if err := page.Render(context.Background(), &out); err != nil {
+					t.Fatal(err)
+				}
+				html := out.String()
+				if !strings.Contains(html, `href="https://leetcode.com/problems/`+slug+`/"`) {
+					t.Fatal("missing LeetCode link")
+				}
+				if slug == "two-sum" {
+					if !strings.Contains(html, `href="https://neetcode.io/problems/two-integer-sum" target="_blank" rel="noopener noreferrer"`) {
+						t.Fatal("missing NeetCode link or new-tab protection")
+					}
+				} else if strings.Contains(html, "https://neetcode.io/") {
+					t.Fatal("unmapped problem has a NeetCode link")
+				}
+			})
+		}
+	}
+}
 
 func TestAttemptDraftEscapesAndRetainsInput(t *testing.T) {
 	problem := Problem{Number: 1, Slug: "two-sum", Title: "Two Sum"}
@@ -64,7 +97,7 @@ func TestProblemHistoryForAnyProblem(t *testing.T) {
 		}
 	}
 	html = render(testProblems["two-sum"], State{Attempts: []Attempt{attempt("two-sum", "solved", 10, false, now)}})
-	for _, want := range []string{"Best-known bounds", `href="/leetgrinder/problems?topic=hash-table"`, "Hash Table"} {
+	for _, want := range []string{"Best-known bounds", `href="https://neetcode.io/problems/two-integer-sum"`, `href="/leetgrinder/problems?topic=hash-table"`, "Hash Table"} {
 		if !strings.Contains(html, want) {
 			t.Errorf("curated optimum page missing %q", want)
 		}
@@ -263,7 +296,7 @@ func TestTodosShowEachSetsNextProblem(t *testing.T) {
 		t.Fatal(err)
 	}
 	html := out.String()
-	for _, want := range []string{`<a href="/leetgrinder/problem/valid-anagram">Valid Anagram</a>`, `href="https://leetcode.com/problems/valid-anagram/"`, "all finished", "No problems in this set."} {
+	for _, want := range []string{`<a href="/leetgrinder/problem/valid-anagram">Valid Anagram</a>`, `href="https://leetcode.com/problems/valid-anagram/"`, `href="https://neetcode.io/problems/is-anagram"`, "all finished", "No problems in this set."} {
 		if !strings.Contains(html, want) {
 			t.Errorf("todos page missing %q", want)
 		}
@@ -302,7 +335,7 @@ func TestOverviewShowsNextTodosBesideTodaysReview(t *testing.T) {
 		t.Fatalf("next todos must follow today's review in the main column: reviews=%d todos=%d due=%d", reviews, todos, side)
 	}
 	section := html[todos:side]
-	for _, want := range []string{`<a href="/leetgrinder/problem/two-sum">Two Sum</a>`, "#1", "Blind 75", "Individual", ">Sorting</span>", "+1</span>", `href="https://leetcode.com/problems/clone-graph/"`, "todo-card todo-card-first"} {
+	for _, want := range []string{`<a href="/leetgrinder/problem/two-sum">Two Sum</a>`, "#1", "Blind 75", "Individual", ">Sorting</span>", "+1</span>", `href="https://leetcode.com/problems/clone-graph/"`, `href="https://neetcode.io/problems/two-integer-sum"`, "todo-card todo-card-first"} {
 		if !strings.Contains(section, want) {
 			t.Errorf("next todos missing %q", want)
 		}

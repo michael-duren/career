@@ -88,6 +88,10 @@ login blocks the connector.
   by difficulty and complexity-check accuracy. With `create_leetgrinder_todo_set` this
   supports requests such as "build me a two-week set for my weakest topics".
 
+Problem entries in `get_leetgrinder_today`, `list_leetgrinder_reviews` and
+`list_leetgrinder_todos` include `url` for LeetCode and `neetcodeUrl` when a
+matching NeetCode problem is known. Unmapped problems omit `neetcodeUrl`.
+
 Kinds: `goal`, `work_journal`, `personal_journal`, `note`, `page`, `book`, `company`,
 `connection`, `audio_thought`. Audio thoughts are private and only returned when
 requested by kind. Prompt `career_conversation` offers a guided entry point.

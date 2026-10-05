@@ -183,7 +183,10 @@ templ nextTodos(items []TodoItem) {
 								</p>
 							}
 						</div>
-						<a class={ "button", templ.KV("primary", i == 0) } href={ templ.SafeURL(item.Problem.URL()) } target="_blank" rel="noopener noreferrer">Solve<span aria-hidden="true"> ↗</span><span class="visually-hidden"> { item.Problem.DisplayTitle() } on LeetCode (opens in a new tab)</span></a>
+						<div class="problem-site-links">
+							<a class={ "button", templ.KV("primary", i == 0) } href={ templ.SafeURL(item.Problem.URL()) } target="_blank" rel="noopener noreferrer">Solve<span aria-hidden="true"> ↗</span><span class="visually-hidden"> { item.Problem.DisplayTitle() } on LeetCode (opens in a new tab)</span></a>
+							@neetcodeLink(item.Problem, "button")
+						</div>
 					</li>
 				}
 			</ol>
@@ -364,6 +367,7 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, avail Analy
 				target="_blank"
 				rel="noopener noreferrer"
 			>Open on LeetCode ↗</a>
+			@neetcodeLink(problem, "button")
 			{{ latest, best := state.ProblemLatest(problem.Slug), state.ProblemBest(problem.Slug) }}
 			if latest != ResultNone {
 				<span class="status-group">
@@ -561,7 +565,8 @@ templ reviewCard(item ReviewItem, form AttemptForm) {
 		if item.Reason != "" {
 			<p class="reason">{ item.Reason }</p>
 		}
-		<div class="problem-actions">
+		<div class="problem-actions problem-site-links">
+			@neetcodeLink(item.Problem, "")
 			<a href={ templ.SafeURL(ProblemURL(item.Problem.Slug)) }>Log attempt</a>
 		</div>
 		if !item.Done && form.ID != "" {
@@ -875,7 +880,10 @@ templ Problems(page ProblemsPage) {
 									}
 								</td>
 								<td>
-									<a href={ templ.SafeURL(row.Problem.URL()) } target="_blank" rel="noopener noreferrer">Open<span aria-hidden="true"> ↗</span><span class="visually-hidden"> { row.Problem.DisplayTitle() } on LeetCode (opens in a new tab)</span></a>
+									<div class="problem-site-links">
+										<a href={ templ.SafeURL(row.Problem.URL()) } target="_blank" rel="noopener noreferrer">Open<span aria-hidden="true"> ↗</span><span class="visually-hidden"> { row.Problem.DisplayTitle() } on LeetCode (opens in a new tab)</span></a>
+										@neetcodeLink(row.Problem, "")
+									</div>
 								</td>
 							</tr>
 						}
@@ -1413,4 +1421,10 @@ templ trendBar(label string, width string) {
 		<svg class="trend-bar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true" focusable="false"><rect class="trend-track" width="100" height="8"></rect><rect class="trend-fill" width={ width } height="8"></rect></svg>
 		<span class="num">{ label }</span>
 	</span>
+}
+
+templ neetcodeLink(problem Problem, class string) {
+	if link := problem.NeetCodeURL(); link != "" {
+		<a class={ class } href={ templ.SafeURL(link) } target="_blank" rel="noopener noreferrer">NeetCode<span aria-hidden="true"> ↗</span><span class="visually-hidden"> { problem.DisplayTitle() } (opens in a new tab)</span></a>
+	}
 }

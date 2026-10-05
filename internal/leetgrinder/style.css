@@ -530,6 +530,12 @@ dd {
   font-size: 0.75rem;
   white-space: nowrap;
 }
+.problem-site-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
 .problem-actions {
   margin-top: 14px;
   font-size: 0.8rem;
@@ -1158,6 +1164,10 @@ dd {
 }
 .todo-card h3 a:hover {
   color: var(--accent);
+}
+.todo-card .problem-site-links {
+  flex-direction: column;
+  align-items: stretch;
 }
 .todo-card .button {
   gap: 4px;
