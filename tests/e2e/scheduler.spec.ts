@@ -1438,10 +1438,35 @@ test('copy and paste preserves a subgoal and duration, rejects conflicts, and sa
   await expect(pasted).toHaveAttribute('data-duration-minutes', '75');
   expect(await pasted.getAttribute('data-session-id')).not.toBe(originalId);
   await pasted.hover();
-  await pasted.getByRole('button', { name: `Edit Copy study ${stepId}`, exact: true }).click();
+  await pasted.locator('.scheduler-block-main').click();
   await dialog.getByLabel('End time', { exact: true }).fill('10:30');
   await dialog.getByRole('button', { name: 'Save session' }).click();
   await expect(dialog).toBeHidden();
   await expect(page.locator(`[data-session-id="${originalId}"]`)).toHaveAttribute('data-duration-minutes', '75');
   await expect(pasted).toHaveAttribute('data-duration-minutes', '90');
+});
+
+test('a compact non-goal item can be copied and pasted on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const monday = await goToNextWeek(page);
+  const title = `Copy lunch ${crypto.randomUUID()}`;
+  const dialog = page.locator('.scheduler-editor-dialog');
+  await page.getByRole('button', { name: 'Add non-goal entry', exact: true }).click();
+  await dialog.getByLabel('Title', { exact: true }).fill(title);
+  await dialog.getByLabel('Scheduling date').fill(monday!);
+  await dialog.getByLabel('Start time', { exact: true }).fill('09:00');
+  await dialog.getByLabel('End time', { exact: true }).fill('09:20');
+  await dialog.getByRole('button', { name: 'Save session' }).click();
+  await expect(dialog).toBeHidden();
+  await page.locator('.scheduler-short-details').getByRole('button', { name: `Copy ${title}`, exact: true }).click();
+  const thursday = await page.locator('[data-scheduler-date]').nth(3).getAttribute('data-scheduler-date');
+  await page.getByLabel('Selected day').selectOption(thursday!);
+  await page.locator('.scheduler-paste button').click();
+  await expect(dialog.getByLabel('Title', { exact: true })).toHaveValue(title);
+  await expect(dialog.getByLabel('Scheduling date')).toHaveValue(thursday!);
+  await expect(dialog.getByLabel('Start time', { exact: true })).toHaveValue('05:00');
+  await expect(dialog.getByLabel('End time', { exact: true })).toHaveValue('05:20');
+  await dialog.getByRole('button', { name: 'Save session' }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.locator(`[data-scheduler-date="${thursday}"] [data-session-id]`).filter({ hasText: title })).toHaveAttribute('data-duration-minutes', '20');
 });
