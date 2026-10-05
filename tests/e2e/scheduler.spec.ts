@@ -719,6 +719,17 @@ test('unavailable hours and ineligible dates show invalid previews and save noth
   }
 });
 
+// Double-clicks a day column at a local clock time, using the axis's first label as its origin.
+async function doubleClickerFor(page: Page, date: string) {
+  const label = (await page.locator('.scheduler-axis span').first().textContent())!.match(/^(\d+):(\d+) (AM|PM)$/)!;
+  const axisStart = (Number(label[1]) % 12 + (label[3] === 'PM' ? 12 : 0)) * 60 + Number(label[2]);
+  const day = page.locator(`[data-scheduler-date="${date}"]`);
+  return async (clock: string) => {
+    const box = await visibleBox(day);
+    await page.mouse.dblclick(box.x + box.width / 2, box.y + Number(clock.slice(0, 2)) * 60 + Number(clock.slice(3)) - axisStart);
+  };
+}
+
 test('double-clicking empty grid space drafts an entry that fills the gap up to one hour', async ({ page, request, baseURL }) => {
   const goal = await createGoal(request, baseURL!, { dailyHours: 0 });
   const monday = await goToNextWeek(page);
@@ -726,13 +737,7 @@ test('double-clicking empty grid space drafts an entry that fills the gap up to 
   const dialog = page.locator('.scheduler-editor-dialog');
   try {
     await setDateOverride(page, date, '09:00', '17:00');
-    const label = (await page.locator('.scheduler-axis span').first().textContent())!.match(/^(\d+):(\d+) (AM|PM)$/)!;
-    const axisStart = (Number(label[1]) % 12 + (label[3] === 'PM' ? 12 : 0)) * 60 + Number(label[2]);
-    const day = page.locator(`[data-scheduler-date="${date}"]`);
-    const doubleClickAt = async (clock: string) => {
-      const box = await visibleBox(day);
-      await page.mouse.dblclick(box.x + box.width / 2, box.y + Number(clock.slice(0, 2)) * 60 + Number(clock.slice(3)) - axisStart);
-    };
+    const doubleClickAt = await doubleClickerFor(page, date);
 
     await doubleClickAt('10:37');
     await expect(dialog).toBeVisible();
@@ -755,12 +760,33 @@ test('double-clicking empty grid space drafts an entry that fills the gap up to 
     await dialog.getByRole('button', { name: 'Discard draft' }).click();
 
     await doubleClickAt('08:00');
+    await page.waitForTimeout(300);
     await expect(dialog).toBeHidden();
     const state = await (await request.get(`/api/scheduler/week?week=${monday}`)).json();
     const sessions = state.sessions.filter((s: { state: string; assignment: { goalId?: string } }) => s.state !== 'canceled' && s.assignment.goalId === goal.id);
     expect(sessions.map((s: { date: string; plan: { start: string; end: string } }) => [s.date, localTimeOf(s.plan.start), localTimeOf(s.plan.end)])).toEqual([[date, '10:30', '11:30']]);
   } finally {
     await clearDateOverride(request, baseURL!, monday!, date);
+  }
+});
+
+test('double-clicking today splits the gap at now into recorded work or a future plan', async ({ page, request, baseURL }) => {
+  await controlledWeek(page, request);
+  await page.clock.setSystemTime(new Date('2030-01-07T16:40:30Z'));
+  const dialog = page.locator('.scheduler-editor-dialog');
+  try {
+    await setDateOverride(page, '2030-01-07', '09:00', '17:00');
+    const doubleClickAt = await doubleClickerFor(page, '2030-01-07');
+    for (const [clock, start, end, actual] of [['10:07', '10:00', '10:40', true], ['10:42', '10:41', '11:41', false], ['10:50', '10:45', '11:45', false]] as const) {
+      await doubleClickAt(clock);
+      await expect(dialog.getByLabel('Start time')).toHaveValue(start);
+      await expect(dialog.getByLabel('End time')).toHaveValue(end);
+      await expect(dialog.getByRole('heading', { name: 'Record actual work', exact: true })).toHaveCount(actual ? 1 : 0);
+      await dialog.getByRole('button', { name: 'Discard draft' }).click();
+      await expect(dialog).toBeHidden();
+    }
+  } finally {
+    await clearDateOverride(request, baseURL!, '2030-01-07', '2030-01-07');
   }
 });
 

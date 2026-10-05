@@ -165,7 +165,7 @@ export const WeeklySchedulerGrid = forwardRef<SchedulerGridHandle, Props>(functi
           <div className="scheduler-day-body" data-scheduler-date={day.date} style={{ height }} onDoubleClick={event => {
             // Double-clicking empty space drafts an entry that fills the gap; blocks keep their own click handling.
             if (busy || (event.target as HTMLElement).closest('.scheduler-block')) return;
-            const gap = gapAt(week, day.date, event.clientY - event.currentTarget.getBoundingClientRect().top + axisStart);
+            const gap = gapAt(week, day.date, event.clientY - event.currentTarget.getBoundingClientRect().top + axisStart, new Date());
             if (gap) addSession(day.date, gap.start, gap.end - gap.start);
           }}>
             {!day.valid && <p className="scheduler-invalid-day" role="status">{day.reason}</p>}
