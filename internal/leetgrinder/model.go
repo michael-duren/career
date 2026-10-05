@@ -50,6 +50,14 @@ type Problem struct {
 
 func (p Problem) URL() string { return "https://leetcode.com/problems/" + p.Slug + "/" }
 
+// NeetCodeURL returns the matching problem link, or empty when no match is known.
+func (p Problem) NeetCodeURL() string {
+	if slug, ok := neetcodeByLeetCode[p.Slug]; ok {
+		return "https://neetcode.io/problems/" + slug
+	}
+	return ""
+}
+
 // Known reports whether the problem's metadata has been filled in.
 func (p Problem) Known() bool { return p.Title != "" }
 

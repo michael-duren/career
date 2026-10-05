@@ -46,7 +46,11 @@ func (s *Server) mcpLeetgrinderToday(ctx context.Context) (leetgrinder.Today, er
 }
 
 func mcpLeetgrinderProblem(p leetgrinder.Problem) map[string]any {
-	return map[string]any{"slug": p.Slug, "title": p.DisplayTitle(), "number": p.Number, "difficulty": p.Difficulty, "topics": p.Topics, "url": p.URL()}
+	out := map[string]any{"slug": p.Slug, "title": p.DisplayTitle(), "number": p.Number, "difficulty": p.Difficulty, "topics": p.Topics, "url": p.URL()}
+	if url := p.NeetCodeURL(); url != "" {
+		out["neetcodeUrl"] = url
+	}
+	return out
 }
 
 // mcpLeetgrinderCard describes a review card as of now.
@@ -65,7 +69,7 @@ func mcpLeetgrinderCard(today leetgrinder.Today, c leetgrinder.Card) map[string]
 
 func (s *Server) addLeetgrinderTools(server *mcp.Server) {
 	mcp.AddTool(server, &mcp.Tool{
-		Name: "get_leetgrinder_today", Description: "Today's Leetgrinder practice: the daily goal and progress (new, review, bonus, practice), whether it is met, the streak, today's review picks with their reasons and recall, today's new problems picked from todos (when that option is on), and how many more reviews are due. Like opening the dashboard, the first access of a day freezes that day's goal and picks.",
+		Name: "get_leetgrinder_today", Description: "Today's Leetgrinder practice: the daily goal and progress (new, review, bonus, practice), whether it is met, the streak, today's review picks with their reasons and recall, today's new problems picked from todos (when that option is on), and how many more reviews are due. Problem entries include a LeetCode url and neetcodeUrl when a match is known. Like opening the dashboard, the first access of a day freezes that day's goal and picks.",
 		Annotations: readOnly,
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, any, error) {
 		today, err := s.mcpLeetgrinderToday(ctx)
@@ -101,7 +105,7 @@ func (s *Server) addLeetgrinderTools(server *mcp.Server) {
 		}, nil
 	})
 	mcp.AddTool(server, &mcp.Tool{
-		Name: "list_leetgrinder_reviews", Description: "Upcoming Leetgrinder reviews in the order to do them: today's review picks in plan order (attemptedToday says whether each is done), the other problems due by the end of today (flagged first, then lowest recall, most overdue), then those due within the next days, soonest first. Each has its due date, estimated recall, review reason, whether it is flagged, and its last outcome.",
+		Name: "list_leetgrinder_reviews", Description: "Upcoming Leetgrinder reviews in the order to do them: today's review picks in plan order (attemptedToday says whether each is done), the other problems due by the end of today (flagged first, then lowest recall, most overdue), then those due within the next days, soonest first. Each has a LeetCode url, neetcodeUrl when a match is known, its due date, estimated recall, review reason, whether it is flagged, and its last outcome.",
 		Annotations: readOnly,
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, in leetgrinderReviewsInput) (*mcp.CallToolResult, any, error) {
 		days, limit := 7, 30

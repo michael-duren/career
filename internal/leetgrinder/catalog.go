@@ -143,6 +143,16 @@ var neetcodeSlugs = func() map[string]string {
 	return m
 }()
 
+var neetcodeByLeetCode = func() map[string]string {
+	out := make(map[string]string, len(neetcodeSlugs))
+	for nc, lc := range neetcodeSlugs {
+		if previous, ok := out[lc]; !ok || nc < previous {
+			out[lc] = nc
+		}
+	}
+	return out
+}()
+
 // NeetCodeSlugs returns a copy of the NeetCode slug to LeetCode slug table.
 // It is generated with the extension's neetcode-slugs.js.
 func NeetCodeSlugs() map[string]string {

@@ -53,7 +53,7 @@ type removeTodoInput struct {
 
 func (s *Server) addLeetgrinderTodoTools(server *mcp.Server) {
 	mcp.AddTool(server, &mcp.Tool{
-		Name: "list_leetgrinder_todos", Description: "List saved Leetgrinder problem sets and individual todo problems, including IDs for editing. A problem is done once a solved or struggled attempt is logged: set problems stay listed with done=true and count against remainingCount; individual problems leave the list once done.",
+		Name: "list_leetgrinder_todos", Description: "List saved Leetgrinder problem sets and individual todo problems, including IDs for editing. Problem entries include a LeetCode url and neetcodeUrl when a match is known. A problem is done once a solved or struggled attempt is logged: set problems stay listed with done=true and count against remainingCount; individual problems leave the list once done.",
 		Annotations: readOnly,
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, any, error) {
 		sets, err := s.db.LeetgrinderTodoSets(ctx)
@@ -165,7 +165,8 @@ func todoResults(items []leetgrinder.TodoItem) []map[string]any {
 		if metadata == nil {
 			metadata = map[string]any{}
 		}
-		result := map[string]any{"id": item.ID, "slug": item.Problem.Slug, "number": item.Problem.Number, "title": item.Problem.DisplayTitle(), "url": item.Problem.URL(), "difficulty": item.Problem.Difficulty, "topics": item.Problem.Topics, "metadata": metadata, "sourceProblem": item.SourceData, "done": item.Done()}
+		result := mcpLeetgrinderProblem(item.Problem)
+		result["id"], result["metadata"], result["sourceProblem"], result["done"] = item.ID, metadata, item.SourceData, item.Done()
 		if item.Done() {
 			result["doneAt"] = item.DoneAt
 		}
