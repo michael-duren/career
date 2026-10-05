@@ -375,6 +375,9 @@ func (s *Store) SchedulerWeek(ctx context.Context, week string, now time.Time, b
 // the mutation's assignments at it. It runs inside the scheduler transaction, so
 // a save rejected later (conflict, availability, validation) rolls the step back.
 func schedulerCreateStep(ctx context.Context, tx *sql.Tx, m *scheduler.Mutation) error {
+	if m.Action != "session" && m.Action != "actual" && m.Action != "rule" {
+		return fmt.Errorf("%w: a new subgoal can only be added when saving a session or recurring plan", ErrInvalid)
+	}
 	// Recording actual work on an existing session keeps its assignment, so only a new unplanned actual can take a new step.
 	if m.Action == "actual" && m.ID != "" {
 		return fmt.Errorf("%w: a new subgoal can't be added when recording work on an existing session", ErrInvalid)
@@ -406,7 +409,7 @@ func schedulerCreateStep(ctx context.Context, tx *sql.Tx, m *scheduler.Mutation)
 	}
 	steps, ok := goal.Entry["steps"].([]any)
 	if !ok && goal.Entry["steps"] != nil {
-		return fmt.Errorf("goal %s has unreadable subgoals", assignments[0].GoalID)
+		return fmt.Errorf("%w: goal %q has unreadable subgoals; open the goal to repair them", ErrInvalid, goalTitle)
 	}
 	if len(steps) >= 200 {
 		return fmt.Errorf("%w: this goal already has 200 subgoals", ErrInvalid)

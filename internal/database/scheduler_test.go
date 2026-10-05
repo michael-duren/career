@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -554,10 +555,13 @@ func TestSchedulerNewStepIsCreatedOnlyWithTheSave(t *testing.T) {
 	}
 
 	// A reservation conflict rejects the save after writing the step, and the step rolls back.
-	_, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "session", Session: session(15), NewStep: &scheduler.NewStep{Title: "Overlap"}}, now, nil)
+	rejected, err := s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "session", Session: session(15), NewStep: &scheduler.NewStep{Title: "Overlap"}}, now, nil)
 	var reservation *scheduler.Conflict
 	if !errors.As(err, &reservation) {
 		t.Fatalf("overlap: %v", err)
+	}
+	if len(rejected.Goals) != 1 || len(rejected.Goals[0].Goal.Steps) != 1 {
+		t.Fatalf("rejected week shows rolled-back step: %+v", rejected.Goals)
 	}
 	if got := stepTitles(); len(got) != 1 {
 		t.Fatalf("steps after conflict %v", got)
@@ -687,6 +691,9 @@ func TestSchedulerNewStepIsCreatedOnlyWithTheSave(t *testing.T) {
 		if e := unplannedOn(finished["id"].(string), 18, "Too late"); !errors.Is(e, ErrInvalid) || !strings.Contains(e.Error(), status+" goal") {
 			t.Fatalf("%s goal: %v", status, e)
 		}
+		if r, e := s.Detail(ctx, "goal", finished["id"].(string)); e != nil || len(r.Entry["steps"].([]any)) != 0 {
+			t.Fatalf("%s goal steps: %v %v", status, r.Entry["steps"], e)
+		}
 	}
 
 	// The 200-step limit allows the 200th subgoal and refuses the 201st.
@@ -705,5 +712,42 @@ func TestSchedulerNewStepIsCreatedOnlyWithTheSave(t *testing.T) {
 	}
 	if e := unplannedOn(full["id"].(string), 13, "201st"); !errors.Is(e, ErrInvalid) || !strings.Contains(e.Error(), "200 subgoals") {
 		t.Fatalf("limit: %v", e)
+	}
+	if r, e := s.Detail(ctx, "goal", full["id"].(string)); e != nil || len(r.Entry["steps"].([]any)) != 200 {
+		t.Fatalf("limit steps: %d %v", len(r.Entry["steps"].([]any)), e)
+	}
+
+	// A goal deleted after the editor opened explains itself instead of a bare not-found.
+	if e := unplannedOn(uuid.NewString(), 14, "Ghost"); !errors.Is(e, ErrInvalid) || !strings.Contains(e.Error(), "no longer exists") {
+		t.Fatalf("missing goal: %v", e)
+	}
+
+	// A goal edited elsewhere (here: a step added on the timeline) makes an open editor stale; the save is refused and the edit survives.
+	if w, err = s.SchedulerWeek(ctx, w.Week, later, nil); err != nil {
+		t.Fatal(err)
+	}
+	staleWeek := w.Revision
+	current, err := s.Detail(ctx, "goal", goalID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	current.Entry["steps"] = append(current.Entry["steps"].([]any), map[string]any{"id": uuid.NewString(), "title": "From timeline", "done": false})
+	if _, err = s.Save(ctx, "goal", current.Entry, &current.Revision); err != nil {
+		t.Fatal(err)
+	}
+	unplanned2 := scheduler.Session{Date: "2030-01-07", Assignment: scheduler.Assignment{GoalID: goalID}}
+	if _, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: staleWeek, Week: w.Week, Action: "actual", Session: &unplanned2, Actual: &scheduler.Actual{Status: "explicit", Date: "2030-01-07", Start: now.Add(10 * time.Hour), End: now.Add(11 * time.Hour)}, NewStep: &scheduler.NewStep{Title: "Stale"}}, later, nil); !errors.Is(err, ErrConflict) {
+		t.Fatalf("stale after goal edit: %v", err)
+	}
+	if got := stepTitles(); got[len(got)-1] != "From timeline" || slices.Contains(got, "Stale") {
+		t.Fatalf("steps after goal edit %v", got)
+	}
+
+	// Actions that carry no assignment refuse a new subgoal with their own message.
+	if w, err = s.SchedulerWeek(ctx, w.Week, later, nil); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "cancel", ID: "x", NewStep: &scheduler.NewStep{Title: "Nope"}}, later, nil); err == nil || !strings.Contains(err.Error(), "only be added when saving") {
+		t.Fatalf("cancel: %v", err)
 	}
 }

@@ -324,4 +324,9 @@ test('a draft with a new subgoal title sends it trimmed and rejects a blank one'
  assert.equal(recorded.action,'actual');
  assert.equal(recorded.newStep,undefined);
  assert.deepEqual(draftMutation({...draft,mode:'actual',start:'08:00',end:'08:30',newStepTitle:'Unplanned'},week).newStep,{title:'Unplanned'});
+ // Rule occurrences: "This date" saves the occurrence, "This and future" saves the rule; both carry the new subgoal.
+ const thisDate=draftMutation({...draft,id:'occ',ruleId:'rule',scope:'date',newStepTitle:'Once'},week);
+ assert.deepEqual([thisDate.action,thisDate.newStep],['session',{title:'Once'}]);
+ const future=draftMutation({...draft,id:'occ',ruleId:'rule',scope:'future',newStepTitle:'Weekly'},week);
+ assert.deepEqual([future.action,future.newStep],['rule',{title:'Weekly'}]);
 });
