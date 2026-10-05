@@ -512,21 +512,25 @@ func TestSchedulerNewStepIsCreatedOnlyWithTheSave(t *testing.T) {
 		return &scheduler.Session{Date: "2030-01-07", Assignment: scheduler.Assignment{GoalID: goalID}, Plan: &scheduler.Plan{Start: now.Add(time.Duration(hour) * time.Hour), End: now.Add(time.Duration(hour+1) * time.Hour)}}
 	}
 
-	// Rejected saves leave the goal's steps unchanged.
-	for name, m := range map[string]scheduler.Mutation{
-		"stale revision": {Revision: "stale", Week: w.Week, Action: "session", Session: session(15), NewStep: &scheduler.NewStep{Title: "Stale"}},
-		"blank title":    {Revision: w.Revision, Week: w.Week, Action: "session", Session: session(15), NewStep: &scheduler.NewStep{Title: "  "}},
-		"no goal":        {Revision: w.Revision, Week: w.Week, Action: "session", Session: &scheduler.Session{Date: "2030-01-07", Assignment: scheduler.Assignment{Title: "Lunch"}, Plan: session(15).Plan}, NewStep: &scheduler.NewStep{Title: "Orphan"}},
-		"invalid plan":   {Revision: w.Revision, Week: w.Week, Action: "session", Session: &scheduler.Session{Date: "2030-01-07", Assignment: scheduler.Assignment{GoalID: goalID}}, NewStep: &scheduler.NewStep{Title: "Orphan"}},
+	// Rejected saves leave the goal's steps unchanged. "invalid plan" writes the step and then rolls it back.
+	for name, c := range map[string]struct {
+		m    scheduler.Mutation
+		want string
+	}{
+		"stale revision": {scheduler.Mutation{Revision: "stale", Week: w.Week, Action: "session", Session: session(15), NewStep: &scheduler.NewStep{Title: "Stale"}}, "content changed"},
+		"blank title":    {scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "session", Session: session(15), NewStep: &scheduler.NewStep{Title: "  "}}, "enter a subgoal title"},
+		"no goal":        {scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "session", Session: &scheduler.Session{Date: "2030-01-07", Assignment: scheduler.Assignment{Title: "Lunch"}, Plan: session(15).Plan}, NewStep: &scheduler.NewStep{Title: "Orphan"}}, "needs a goal assignment"},
+		"invalid plan":   {scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "session", Session: &scheduler.Session{Date: "2030-01-07", Assignment: scheduler.Assignment{GoalID: goalID}}, NewStep: &scheduler.NewStep{Title: "Orphan"}}, "plans must start in the future"},
 	} {
-		if _, err = s.SchedulerMutate(ctx, m, now, nil); err == nil {
-			t.Fatalf("%s: saved", name)
+		if _, err = s.SchedulerMutate(ctx, c.m, now, nil); err == nil || !strings.Contains(err.Error(), c.want) {
+			t.Fatalf("%s: %v", name, err)
 		}
 		if got := stepTitles(); len(got) != 0 {
 			t.Fatalf("%s: steps %v", name, got)
 		}
 	}
 
+	beforeSave := w.Revision
 	w, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "session", Session: session(15), NewStep: &scheduler.NewStep{Title: " Write cover letter "}}, now, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -541,9 +545,19 @@ func TestSchedulerNewStepIsCreatedOnlyWithTheSave(t *testing.T) {
 		t.Fatalf("week goals %+v", w.Goals)
 	}
 
-	// A reservation conflict rejects the save and creates no step.
-	if _, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "session", Session: session(15), NewStep: &scheduler.NewStep{Title: "Overlap"}}, now, nil); err == nil {
-		t.Fatal("overlap saved")
+	// An editor still holding the revision from before that save gets a retryable conflict and creates no step.
+	if _, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: beforeSave, Week: w.Week, Action: "session", Session: session(17), NewStep: &scheduler.NewStep{Title: "Stale editor"}}, now, nil); !errors.Is(err, ErrConflict) {
+		t.Fatalf("stale editor: %v", err)
+	}
+	if got := stepTitles(); len(got) != 1 {
+		t.Fatalf("steps after stale editor %v", got)
+	}
+
+	// A reservation conflict rejects the save after writing the step, and the step rolls back.
+	_, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "session", Session: session(15), NewStep: &scheduler.NewStep{Title: "Overlap"}}, now, nil)
+	var reservation *scheduler.Conflict
+	if !errors.As(err, &reservation) {
+		t.Fatalf("overlap: %v", err)
 	}
 	if got := stepTitles(); len(got) != 1 {
 		t.Fatalf("steps after conflict %v", got)
@@ -619,11 +633,46 @@ func TestSchedulerNewStepIsCreatedOnlyWithTheSave(t *testing.T) {
 
 	// A recurring plan that collides with the first rule's occurrence is rejected and adds no step.
 	clash := &scheduler.Rule{Weekday: 2, LocalStart: "11:30", DurationMinutes: 60, EffectiveFrom: "2030-01-08", Assignment: scheduler.Assignment{GoalID: goalID}}
-	if _, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "rule", EffectiveFrom: "2030-01-08", Rule: clash, NewStep: &scheduler.NewStep{Title: "Clash"}}, later, nil); err == nil {
-		t.Fatal("clashing rule saved")
+	if _, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "rule", EffectiveFrom: "2030-01-08", Rule: clash, NewStep: &scheduler.NewStep{Title: "Clash"}}, later, nil); err == nil || !strings.Contains(err.Error(), "Recurring plan needs placement") {
+		t.Fatalf("clashing rule: %v", err)
 	}
 	if got := stepTitles(); len(got) != 4 {
 		t.Fatalf("steps after rule clash %v", got)
+	}
+
+	// "This and future" edits an existing rule and can take a new step.
+	if w, err = s.SchedulerWeek(ctx, w.Week, later, nil); err != nil {
+		t.Fatal(err)
+	}
+	existing := w.Rules[0]
+	existing.LocalStart = "13:00"
+	w, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "rule", ID: existing.ID, EffectiveFrom: "2030-01-08", Rule: &existing, NewStep: &scheduler.NewStep{Title: "Weekly retro"}}, later, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := stepTitles(); len(got) != 5 || got[4] != "Weekly retro" {
+		t.Fatalf("steps %v", got)
+	}
+	retro := false
+	for _, r := range w.Rules {
+		retro = retro || r.LocalStart == "13:00" && r.Assignment.Title == "Weekly retro" && r.Assignment.StepID == w.Goals[0].Goal.Steps[4].ID
+	}
+	if !retro {
+		t.Fatalf("rules %+v", w.Rules)
+	}
+
+	// A finished goal takes no new step, even through unplanned actual work.
+	done := dependencyGoal(uuid.NewString())
+	done["startDate"], done["endDate"], done["status"] = "2030-01-01", "2030-12-31", "done"
+	if _, err = s.Save(ctx, "goal", done, nil); err != nil {
+		t.Fatal(err)
+	}
+	if w, err = s.SchedulerWeek(ctx, w.Week, later, nil); err != nil {
+		t.Fatal(err)
+	}
+	finished := scheduler.Session{Date: "2030-01-07", Assignment: scheduler.Assignment{GoalID: done["id"].(string)}}
+	if _, err = s.SchedulerMutate(ctx, scheduler.Mutation{Revision: w.Revision, Week: w.Week, Action: "actual", Session: &finished, Actual: &scheduler.Actual{Status: "explicit", Date: "2030-01-07", Start: now.Add(18 * time.Hour), End: now.Add(19 * time.Hour)}, NewStep: &scheduler.NewStep{Title: "Too late"}}, later, nil); !errors.Is(err, ErrInvalid) || !strings.Contains(err.Error(), "done goal") {
+		t.Fatalf("done goal: %v", err)
 	}
 
 	// The 200-step limit holds.

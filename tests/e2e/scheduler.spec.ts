@@ -289,6 +289,7 @@ test('the session editor creates a new subgoal only when the session saves', asy
     await draftNewSubgoal('15:30', '16:30', 'Conflicted subgoal');
     await dialog.getByRole('button', { name: 'Save session' }).click();
     await expect(page.locator('[role="alert"]')).toContainText('draft');
+    await expect(page.locator('.scheduler-conflict')).toHaveCount(1);
     await expect(dialog).toBeVisible();
     await expect(dialog.getByLabel('New subgoal title')).toHaveValue('Conflicted subgoal');
     expect(await goalSteps()).toEqual([]);

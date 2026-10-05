@@ -398,6 +398,9 @@ func schedulerCreateStep(ctx context.Context, tx *sql.Tx, m *scheduler.Mutation)
 		return e
 	}
 	goalTitle, _ := goal.Entry["title"].(string)
+	if status, _ := goal.Entry["status"].(string); status == "done" || status == "dropped" {
+		return fmt.Errorf("%w: can't add a subgoal to a %s goal", ErrInvalid, status)
+	}
 	steps, _ := goal.Entry["steps"].([]any)
 	if len(steps) >= 200 {
 		return fmt.Errorf("%w: this goal already has 200 subgoals", ErrInvalid)
