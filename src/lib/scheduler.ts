@@ -166,7 +166,8 @@ export function gapAt(week: SchedulerWeek, date: string, clickMinute: number, no
   }
   const instant = (minute: number) => { try { return Date.parse(localInstant(addDays(date, Math.floor(minute / 1440)), clockLabel(minute).slice(0, 5), zone)); } catch { return NaN; } };
   const from = instant(start), to = instant(end);
-  // The resolved draft must keep its wall-clock length and stay on the clicked side of now.
+  // The resolved draft must keep its wall-clock length and stay on the clicked side of now. The past side is
+  // defensive (the cut already ends at now's minute); the future side catches now inside a repeated hour.
   const sideOfNow = clickMinute < nowMinute ? to <= now.getTime() : from > now.getTime();
   return end > start && (to - from) / 60000 === end - start && sideOfNow ? { start, end } : null;
 }
