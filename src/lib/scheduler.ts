@@ -126,10 +126,12 @@ export function displayAxis(week: SchedulerWeek) {
 // the next session or busy block, the end of the scheduling day, or maxMinutes
 // after its start, whichever is first. A gap containing now is cut at now: a
 // click before now gets the elapsed part (recorded as actual work), a click at
-// or after now gets the part starting next minute (a future plan). Sessions
-// owned by neighbouring dates count as blocks where they overlap this column.
-// Returns null for an unknown or invalid day, outside the day's interval, inside
-// a block, or when nothing is left after cutting at now.
+// or after now gets the part starting next minute (a future plan). Timed
+// sessions owned by neighbouring dates count as blocks where they overlap this
+// column, even though the grid draws them only in their own column. Returns null
+// for an unknown or invalid day, outside the day's interval, inside a block,
+// when nothing is left after cutting at now, or when either edge falls in a
+// skipped daylight-saving hour.
 export function gapAt(week: SchedulerWeek, date: string, clickMinute: number, now: Date, maxMinutes = 60): {start: number; end: number} | null {
   const day = week.days.find(day => day.date === date);
   if (!day?.valid) return null;
@@ -140,7 +142,7 @@ export function gapAt(week: SchedulerWeek, date: string, clickMinute: number, no
   const blocks = [...week.busy, ...week.sessions.filter(session => session.state !== 'canceled')].flatMap(item => {
     const interval = 'assignment' in item ? (item.actual && item.actual.status !== 'skipped' ? item.actual : item.plan) : item;
     // The grid draws a session without an interval as an hour at its day's start.
-    if (!interval) return 'assignment' in item && item.date === date ? [{ start: dayStart, end: dayStart + 60 }] : [];
+    if (!interval) return 'assignment' in item && (item.actual?.date ?? item.date) === date ? [{ start: dayStart, end: dayStart + 60 }] : [];
     const { top, height } = intervalGeometry(interval, date, zone);
     // minuteOf drops seconds; widen to whole minutes so the draft stays clear of second-level edges.
     const exact = top + (Date.parse(interval.start) % 60000) / 60000;
@@ -155,7 +157,8 @@ export function gapAt(week: SchedulerWeek, date: string, clickMinute: number, no
     if (clickMinute < nowMinute) end = nowMinute;
     else { start = nowMinute + 1; end = Math.min(limit, start + maxMinutes); }
   }
-  return end > start ? { start, end } : null;
+  const exists = (minute: number) => { try { localInstant(addDays(date, Math.floor(minute / 1440)), clockLabel(minute).slice(0, 5), zone); return true; } catch { return false; } };
+  return end > start && exists(start) && exists(end) ? { start, end } : null;
 }
 export function quickAddSlot(week: SchedulerWeek, date: string, now: Date, duration: number): {start: string; end: string; reason?: string} {
   const day = week.days.find(day => day.date === date);

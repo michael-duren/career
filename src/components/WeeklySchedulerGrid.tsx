@@ -163,7 +163,7 @@ export const WeeklySchedulerGrid = forwardRef<SchedulerGridHandle, Props>(functi
         return <section className={`scheduler-day ${day.date === selectedDay ? 'is-selected' : ''}`} key={day.date} aria-label={dayName(day.date)}>
           <div className="scheduler-day-heading"><strong>{dayName(day.date)}</strong><button disabled={busy} aria-label={`Add session on ${day.date}`} onClick={() => addSession(day.date)}>＋</button></div>
           <div className="scheduler-day-body" data-scheduler-date={day.date} style={{ height }} onDoubleClick={event => {
-            // Double-clicking empty space drafts an entry that fills the gap; blocks keep their own click handling.
+            // Double-clicking empty space drafts an entry that fills the gap; double-clicks on session or busy blocks are ignored.
             if (busy || (event.target as HTMLElement).closest('.scheduler-block')) return;
             const gap = gapAt(week, day.date, event.clientY - event.currentTarget.getBoundingClientRect().top + axisStart, new Date());
             if (gap) addSession(day.date, gap.start, gap.end - gap.start);

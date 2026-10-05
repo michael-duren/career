@@ -228,8 +228,18 @@ test('double-click gap is cut at now so the draft can be saved as actual work or
  assert.deepEqual(gapAt(week,'2026-10-05',at('10:42'),now),{start:at('10:41'),end:at('11:41')});
  assert.deepEqual(gapAt(week,'2026-10-05',at('10:50'),now),{start:at('10:45'),end:at('11:45')});
  assert.deepEqual(gapAt(week,'2026-10-05',at('09:10'),now),{start:at('09:00'),end:at('10:00')});
+ assert.deepEqual(gapAt(week,'2026-10-05',at('10:07'),new Date('2026-10-04T15:40:30Z')),{start:at('10:00'),end:at('11:00')});
  week.busy.push({ id:'b', title:'Busy', start:'2026-10-05T16:00:00Z', end:'2026-10-05T17:00:00Z' });
  assert.deepEqual(gapAt(week,'2026-10-05',at('10:42'),now),{start:at('10:41'),end:at('11:00')});
+ assert.equal(gapAt(week,'2026-10-05',at('10:59')+0.5,new Date('2026-10-05T15:59:30Z')),null);
+});
+test('double-click gap is unavailable when an edge falls in the spring-forward hour', async () => {
+ const { gapAt } = await import('../src/lib/scheduler.ts');
+ const week=placementWeek('2026-03-08','America/Chicago','00:00','06:00');
+ const before=new Date('2026-03-01T00:00:00Z');
+ assert.equal(gapAt(week,'2026-03-08',150,before),null);
+ assert.equal(gapAt(week,'2026-03-08',80,before),null);
+ assert.deepEqual(gapAt(week,'2026-03-08',190,before),{start:180,end:240});
 });
 test('double-click gap follows overnight days, active intervals, and sessions drawn without one', async () => {
  const { gapAt } = await import('../src/lib/scheduler.ts');

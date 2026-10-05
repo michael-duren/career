@@ -739,6 +739,12 @@ test('double-clicking empty grid space drafts an entry that fills the gap up to 
     await setDateOverride(page, date, '09:00', '17:00');
     const doubleClickAt = await doubleClickerFor(page, date);
 
+    await doubleClickAt('10:07');
+    await expect(dialog.getByLabel('Start time')).toHaveValue('10:00');
+    await expect(dialog.getByLabel('End time')).toHaveValue('11:00');
+    await dialog.getByRole('button', { name: 'Discard draft' }).click();
+    await expect(dialog).toBeHidden();
+
     await doubleClickAt('10:37');
     await expect(dialog).toBeVisible();
     await expect(dialog.getByLabel('Start time')).toHaveValue('10:30');
@@ -780,6 +786,7 @@ test('double-clicking empty grid space drafts an entry that fills the gap up to 
 test('double-clicking today splits the gap at now into recorded work or a future plan', async ({ page, request, baseURL }) => {
   await controlledWeek(page, request);
   await page.clock.pauseAt(new Date('2030-01-07T16:40:30Z'));
+  await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
   const dialog = page.locator('.scheduler-editor-dialog');
   try {
     await setDateOverride(page, '2030-01-07', '09:00', '17:00');
@@ -788,7 +795,7 @@ test('double-clicking today splits the gap at now into recorded work or a future
       await doubleClickAt(clock);
       await expect(dialog.getByLabel('Start time')).toHaveValue(start);
       await expect(dialog.getByLabel('End time')).toHaveValue(end);
-      await expect(dialog.getByRole('heading', { name: 'Record actual work', exact: true })).toHaveCount(actual ? 1 : 0);
+      await expect(dialog.getByRole('heading', { name: actual ? 'Record actual work' : 'New session', exact: true })).toBeVisible();
       await dialog.getByRole('button', { name: 'Discard draft' }).click();
       await expect(dialog).toBeHidden();
     }
