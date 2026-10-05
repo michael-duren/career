@@ -130,8 +130,9 @@ export function displayAxis(week: SchedulerWeek) {
 // sessions owned by neighbouring dates count as blocks where they overlap this
 // column, even though the grid draws them only in their own column. Returns null
 // for an unknown or invalid day, outside the day's interval, inside a block,
-// when nothing is left after cutting at now, or when either edge falls in a
-// skipped daylight-saving hour.
+// when nothing is left after cutting at now, or when a daylight-saving change
+// makes the edges skipped wall times or stretches the real span past them
+// (a repeated hour shares grid rows with its first occurrence).
 export function gapAt(week: SchedulerWeek, date: string, clickMinute: number, now: Date, maxMinutes = 60): {start: number; end: number} | null {
   const day = week.days.find(day => day.date === date);
   if (!day?.valid) return null;
@@ -157,8 +158,8 @@ export function gapAt(week: SchedulerWeek, date: string, clickMinute: number, no
     if (clickMinute < nowMinute) end = nowMinute;
     else { start = nowMinute + 1; end = Math.min(limit, start + maxMinutes); }
   }
-  const exists = (minute: number) => { try { localInstant(addDays(date, Math.floor(minute / 1440)), clockLabel(minute).slice(0, 5), zone); return true; } catch { return false; } };
-  return end > start && exists(start) && exists(end) ? { start, end } : null;
+  const instant = (minute: number) => { try { return Date.parse(localInstant(addDays(date, Math.floor(minute / 1440)), clockLabel(minute).slice(0, 5), zone)); } catch { return NaN; } };
+  return end > start && (instant(end) - instant(start)) / 60000 === end - start ? { start, end } : null;
 }
 export function quickAddSlot(week: SchedulerWeek, date: string, now: Date, duration: number): {start: string; end: string; reason?: string} {
   const day = week.days.find(day => day.date === date);
