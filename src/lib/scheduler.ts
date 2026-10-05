@@ -120,6 +120,57 @@ export function displayAxis(week: SchedulerWeek) {
   }
   return { start: Math.min(...starts, 300), end: Math.max(...ends, 1230) };
 }
+// gapAt finds the free gap for a double-click on empty grid space. clickMinute
+// counts from local midnight of date, as on the grid axis. The gap starts at the
+// quarter hour at or before the click (never inside an earlier block) and ends at
+// the next session or busy block, the end of the scheduling day, or maxMinutes
+// after its start, whichever is first. A gap containing now is cut at now: a
+// click before now's minute gets the elapsed part (recorded as actual work), a
+// click in or after now's minute gets a new span from the next minute, up to
+// maxMinutes and still stopping at the next block or day end (a future plan).
+// Timed sessions owned by neighbouring dates count as blocks where they overlap
+// this column, even though the grid draws them only in their own column. Blocks
+// end at their real wall-clock end; sessions are drawn by elapsed minutes, so
+// across a daylight-saving change their drawn end differs from it. Whether the
+// draft is actual work or a plan is decided by the caller; pass it the same now.
+// Returns null for an unknown or invalid day, outside the day's interval, inside a block,
+// when nothing is left after cutting at now, or when a daylight-saving change
+// makes an edge a skipped wall time, makes the real span differ from its
+// wall-clock length (a repeated hour shares grid rows with its first
+// occurrence), or would move the draft to the other side of now.
+export function gapAt(week: SchedulerWeek, date: string, clickMinute: number, now: Date, maxMinutes = 60): {start: number; end: number} | null {
+  const day = week.days.find(day => day.date === date);
+  if (!day?.valid) return null;
+  const clock = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3));
+  const dayStart = clock(day.interval.start), dayEnd = clock(day.interval.end) + (day.interval.nextDay ? 1440 : 0);
+  if (clickMinute < dayStart || clickMinute >= dayEnd) return null;
+  const zone = week.settings.timeZone;
+  const blocks = [...week.busy, ...week.sessions.filter(session => session.state !== 'canceled')].flatMap(item => {
+    const interval = 'assignment' in item ? (item.actual && item.actual.status !== 'skipped' ? item.actual : item.plan) : item;
+    // The grid draws a session without an interval as an hour at its day's start.
+    if (!interval) return 'assignment' in item && (item.actual?.date ?? item.date) === date ? [{ start: dayStart, end: dayStart + 60 }] : [];
+    const { top, height } = intervalGeometry(interval, date, zone);
+    // minuteOf drops seconds, which already floors the start; round the end up so the draft stays clear of
+    // second-level edges. Across a daylight-saving change the wall-clock end differs from start + elapsed minutes; use the wall clock.
+    const wallEnd = minuteOf(interval.end, date, zone) + (Date.parse(interval.end) % 60000) / 60000;
+    return height > 0 ? [{ start: top, end: Math.ceil(wallEnd) }] : [];
+  });
+  if (blocks.some(block => block.start <= clickMinute && clickMinute < block.end)) return null;
+  let start = Math.max(dayStart, Math.floor(clickMinute / 15) * 15, ...blocks.filter(block => block.end <= clickMinute).map(block => block.end));
+  const limit = Math.min(dayEnd, ...blocks.filter(block => block.start > clickMinute).map(block => block.start));
+  let end = Math.min(limit, start + maxMinutes);
+  const nowMinute = minuteOf(now.toISOString(), date, zone);
+  if (start <= nowMinute && nowMinute < end) {
+    if (clickMinute < nowMinute) end = nowMinute;
+    else { start = nowMinute + 1; end = Math.min(limit, start + maxMinutes); }
+  }
+  const instant = (minute: number) => { try { return Date.parse(localInstant(addDays(date, Math.floor(minute / 1440)), clockLabel(minute).slice(0, 5), zone)); } catch { return NaN; } };
+  const from = instant(start), to = instant(end);
+  // The resolved draft must keep its wall-clock length and stay on the clicked side of now. The past side is
+  // defensive (the cut already ends at now's minute); the future side catches now inside a repeated hour.
+  const sideOfNow = clickMinute < nowMinute ? to <= now.getTime() : from > now.getTime();
+  return end > start && (to - from) / 60000 === end - start && sideOfNow ? { start, end } : null;
+}
 export function quickAddSlot(week: SchedulerWeek, date: string, now: Date, duration: number): {start: string; end: string; reason?: string} {
   const day = week.days.find(day => day.date === date);
   const fallback = {start: '', end: '', reason: day?.reason || 'No valid future slot is available on this scheduling date. Choose another date or record actual work.'};
