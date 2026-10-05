@@ -67,14 +67,14 @@ export type SchedulerWeek = z.infer<typeof weekSchema>;
 export type SchedulerSession = z.infer<typeof sessionSchema>;
 export type Settings = z.infer<typeof settingsSchema>;
 export type Assignment = z.infer<typeof assignmentSchema>;
-export type Mutation = { revision: string; week: string } & (
+export type Mutation = { revision: string; week: string; newStep?: { title: string } } & (
   { action: 'settings'; settings: Settings } |
   { action: 'rule'; id?: string; rule: z.infer<typeof ruleSchema>; effectiveFrom?: string } |
   { action: 'session'; id?: string; session: SchedulerSession } |
   { action: 'cancel'; id: string; scope?: 'date' | 'future' } |
   { action: 'actual'; id?: string; session?: SchedulerSession; actual: z.infer<typeof actualSchema> }
 );
-export type SessionDraft = { id?: string; ruleId?: string; assignment: Assignment; date: string; startDate?: string; start: string; endDate: string; end: string; mode: 'plan' | 'actual'; repeat: boolean; scope: 'date' | 'future'; originalStart?: string; originalEnd?: string; explanation?: string };
+export type SessionDraft = { id?: string; ruleId?: string; assignment: Assignment; newStepTitle?: string; date: string; startDate?: string; start: string; endDate: string; end: string; mode: 'plan' | 'actual'; repeat: boolean; scope: 'date' | 'future'; originalStart?: string; originalEnd?: string; explanation?: string };
 export function draftMutation(draft: SessionDraft, week: SchedulerWeek): Mutation {
   const resolve = (date: string, time: string, original?: string) => {
     if (original) { const fields = localFields(original, week.settings.timeZone); if (fields.date === date && fields.time === time) return original; }
@@ -83,7 +83,10 @@ export function draftMutation(draft: SessionDraft, week: SchedulerWeek): Mutatio
   const start = resolve(draft.startDate ?? draft.date, draft.start, draft.originalStart);
   const end = resolve(draft.endDate, draft.end, draft.originalEnd);
   if (Date.parse(end) <= Date.parse(start)) throw new Error('End must be after start.');
-  const base = { revision: week.revision, week: week.week };
+  // Recording actual work on an existing session keeps its assignment, so it never adds a subgoal.
+  const newStepTitle = draft.mode === 'actual' && draft.id ? undefined : draft.newStepTitle;
+  if (newStepTitle !== undefined && !newStepTitle.trim()) throw new Error('Enter a subgoal title.');
+  const base = { revision: week.revision, week: week.week, ...(newStepTitle !== undefined ? { newStep: { title: newStepTitle.trim() } } : {}) };
   const session: SchedulerSession = { id: draft.id ?? '', ruleId: draft.ruleId, date: draft.date, assignment: draft.assignment, plan: draft.mode === 'plan' ? { start, end } : null, actual: null, state: 'accepted', exception: Boolean(draft.ruleId), conflictIds: [] };
   if (draft.mode === 'actual') return { ...base, action: 'actual', id: draft.id, session, actual: { status: 'explicit', date: draft.date, start, end } };
   if (draft.repeat || draft.ruleId && draft.scope === 'future') return { ...base, action: 'rule', id: draft.ruleId, effectiveFrom: draft.date, rule: { id: draft.ruleId ?? '', weekday: (new Date(`${draft.date}T12:00Z`).getUTCDay() + 6) % 7 + 1, localStart: draft.start, durationMinutes: (Date.parse(end) - Date.parse(start)) / 60000, effectiveFrom: draft.date, assignment: draft.assignment } };

@@ -148,6 +148,12 @@ type Mutation struct {
 	// before it and removes later, not-yet-started occurrences of that rule.
 	// Anything else (including empty) cancels only this occurrence.
 	Scope string `json:"scope,omitempty"`
+	// NewStep creates a subgoal on the assignment's goal in the same
+	// transaction as the save, and assigns the session or rule to it.
+	NewStep *NewStep `json:"newStep,omitempty"`
+}
+type NewStep struct {
+	Title string `json:"title"`
 }
 type Conflict struct {
 	Message string   `json:"error"`

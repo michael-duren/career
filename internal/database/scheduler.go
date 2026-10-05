@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -264,6 +266,15 @@ func (s *Store) schedulerUpdate(ctx context.Context, w string, m *scheduler.Muta
 		if be != nil {
 			return scheduler.Week{}, be
 		}
+		if m.NewStep != nil {
+			if e = schedulerCreateStep(ctx, tx, m); e != nil {
+				return d.Week(w, now, busy), e
+			}
+			if goals, e = schedulerGoals(ctx, tx); e != nil {
+				return scheduler.Week{}, e
+			}
+			d.Reconcile(goals, now)
+		}
 		if m.Action == "actual" && m.Actual != nil && m.Actual.Status == "explicit" && scheduler.ValidDate(m.Actual.Date) {
 			actual := *m.Actual
 			actual.Date = d.ActualDate(actual.Start)
@@ -358,6 +369,67 @@ func (s *Store) schedulerUpdate(ctx context.Context, w string, m *scheduler.Muta
 }
 func (s *Store) SchedulerWeek(ctx context.Context, week string, now time.Time, busy []scheduler.Busy) (scheduler.Week, error) {
 	return s.schedulerUpdate(ctx, week, nil, now, busy)
+}
+
+// schedulerCreateStep appends m.NewStep to the assigned goal's steps and points
+// the mutation's assignments at it. It runs inside the scheduler transaction, so
+// a save rejected later (conflict, availability, validation) rolls the step back.
+func schedulerCreateStep(ctx context.Context, tx *sql.Tx, m *scheduler.Mutation) error {
+	if m.Action != "session" && m.Action != "actual" && m.Action != "rule" {
+		return fmt.Errorf("%w: a new subgoal can only be added when saving a session or recurring plan", ErrInvalid)
+	}
+	// Recording actual work on an existing session keeps its assignment, so only a new unplanned actual can take a new step.
+	if m.Action == "actual" && m.ID != "" {
+		return fmt.Errorf("%w: a new subgoal can't be added when recording work on an existing session", ErrInvalid)
+	}
+	assignments := []*scheduler.Assignment{}
+	if m.Session != nil && (m.Action == "session" || m.Action == "actual") {
+		assignments = append(assignments, &m.Session.Assignment)
+	}
+	if m.Rule != nil && m.Action == "rule" {
+		assignments = append(assignments, &m.Rule.Assignment)
+	}
+	if len(assignments) == 0 || assignments[0].GoalID == "" {
+		return fmt.Errorf("%w: a new subgoal needs a goal assignment", ErrInvalid)
+	}
+	title := strings.TrimSpace(m.NewStep.Title)
+	if title == "" {
+		return fmt.Errorf("%w: enter a subgoal title", ErrInvalid)
+	}
+	goal, e := readOne(ctx, tx, "goal", assignments[0].GoalID)
+	if errors.Is(e, ErrNotFound) || errors.Is(e, ErrInvalid) {
+		return fmt.Errorf("%w: the goal for this subgoal no longer exists; refresh the schedule", ErrInvalid)
+	}
+	if e != nil {
+		return e
+	}
+	goalTitle, _ := goal.Entry["title"].(string)
+	if status, _ := goal.Entry["status"].(string); status == "done" || status == "dropped" {
+		return fmt.Errorf("%w: can't add a subgoal to a %s goal", ErrInvalid, status)
+	}
+	steps, ok := goal.Entry["steps"].([]any)
+	if !ok && goal.Entry["steps"] != nil {
+		return fmt.Errorf("%w: goal %q has unreadable subgoals; open the goal to repair them", ErrInvalid, goalTitle)
+	}
+	if len(steps) >= 200 {
+		return fmt.Errorf("%w: this goal already has 200 subgoals", ErrInvalid)
+	}
+	id := uuid.NewString()
+	goal.Entry["steps"] = append(slices.Clone(steps), map[string]any{"id": id, "title": title, "done": false})
+	entry, e := PrepareSave("goal", goal.Entry)
+	if e != nil {
+		return fmt.Errorf("%w: could not add a subgoal to %q: %w", ErrInvalid, goalTitle, e)
+	}
+	if _, e = saveTx(ctx, tx, "goal", entry, &goal.Revision, false); e != nil {
+		return dbError(e)
+	}
+	if e = bump(ctx, tx, "goal"); e != nil {
+		return e
+	}
+	for _, a := range assignments {
+		a.StepID, a.Title, a.GoalTitle = id, title, goalTitle
+	}
+	return nil
 }
 func (s *Store) SchedulerMutate(ctx context.Context, m scheduler.Mutation, now time.Time, busy []scheduler.Busy) (scheduler.Week, error) {
 	return s.schedulerUpdate(ctx, m.Week, &m, now, busy)
