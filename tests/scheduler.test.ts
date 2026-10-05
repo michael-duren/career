@@ -262,6 +262,9 @@ test('double-click gap is unavailable when daylight saving skips or repeats its 
  const inSecondHour=new Date('2026-11-01T06:20:30Z');
  assert.equal(gapAt(fold,'2026-11-01',90,inSecondHour),null);
  assert.deepEqual(gapAt(fold,'2026-11-01',70,inSecondHour),{start:60,end:80});
+ const spanning=placementWeek('2026-11-01','America/New_York','00:00','06:00');
+ spanning.busy.push({ id:'b', title:'Busy', start:'2026-11-01T04:30:00Z', end:'2026-11-01T06:30:00Z' });
+ assert.deepEqual(gapAt(spanning,'2026-11-01',130,before),{start:120,end:180});
 });
 test('double-click gap follows overnight days, active intervals, and sessions drawn without one', async () => {
  const { gapAt } = await import('../src/lib/scheduler.ts');
@@ -270,6 +273,13 @@ test('double-click gap follows overnight days, active intervals, and sessions dr
  const night=placementWeek('2026-10-05','America/Chicago','20:00','02:00',true);
  assert.deepEqual(gapAt(night,'2026-10-05',at('23:50'),before),{start:at('23:45'),end:at('24:45')});
  assert.deepEqual(gapAt(night,'2026-10-05',at('25:55'),before),{start:at('25:45'),end:at('26:00')});
+ const overnightNow=new Date('2026-10-06T05:40:30Z');
+ assert.deepEqual(gapAt(night,'2026-10-05',at('24:07'),overnightNow),{start:at('24:00'),end:at('24:40')});
+ assert.deepEqual(gapAt(night,'2026-10-05',at('24:50'),overnightNow),{start:at('24:45'),end:at('25:45')});
+ const early=placementWeek('2026-10-05','America/Chicago','00:00','06:00');
+ early.sessions.push({ id:'spill', date:'2026-10-04', state:'accepted', assignment:{title:'Spill'}, plan:{start:'2026-10-05T04:00:00Z',end:'2026-10-05T06:30:00Z'}, actual:null, conflictIds:[], exception:false });
+ assert.equal(gapAt(early,'2026-10-05',at('00:50'),before),null);
+ assert.deepEqual(gapAt(early,'2026-10-05',at('01:40'),before),{start:at('01:30'),end:at('02:30')});
  const base = { date:'2026-10-05', state:'accepted' as const, assignment:{title:'Block'}, actual:null, conflictIds:[], exception:false };
  night.sessions.push({ ...base, id:'late', date:'2026-10-06', plan:{start:'2026-10-06T04:00:00Z',end:'2026-10-06T05:30:00Z'} });
  assert.deepEqual(gapAt(night,'2026-10-05',at('24:40'),before),{start:at('24:30'),end:at('25:30')});
@@ -294,4 +304,7 @@ test('double-click gap stays clear of blocks with second-level edges', async () 
  week.busy.push({ id:'b', title:'Busy', start:'2026-10-05T15:00:30Z', end:'2026-10-05T15:20:30Z' });
  assert.deepEqual(gapAt(week,'2026-10-05',10*60+25,before),{start:10*60+21,end:11*60+21});
  assert.deepEqual(gapAt(week,'2026-10-05',9*60+50,before),{start:9*60+45,end:10*60});
+ const early=placementWeek('2026-10-05');
+ early.busy.push({ id:'b', title:'Busy', start:'2026-10-05T15:00:00Z', end:'2026-10-05T15:20:20Z' });
+ assert.deepEqual(gapAt(early,'2026-10-05',10*60+25,before),{start:10*60+21,end:11*60+21});
 });

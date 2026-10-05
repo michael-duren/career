@@ -846,7 +846,7 @@ test('double-clicking a past gap in a week without goals opens nothing', async (
   const dialog = page.locator('.scheduler-editor-dialog');
   const doubleClickAt = await doubleClickerFor(page, '2030-01-07');
   await doubleClickAt('10:07');
-  await page.waitForTimeout(300);
+  await expect(page.locator('.scheduler-status')).toContainText('Add a goal to record past work.');
   await expect(dialog).toBeHidden();
   await doubleClickAt('10:50');
   await expect(dialog.getByRole('heading', { name: 'New session', exact: true })).toBeVisible();
