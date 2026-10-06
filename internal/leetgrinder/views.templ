@@ -460,6 +460,13 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, avail Analy
 						<details>
 							<summary>Correct this attempt</summary>@attemptFields(problem, EditForm(a))
 						</details>
+						<details>
+							<summary>Delete this attempt</summary>
+							<p class="small muted">Permanently delete this attempt, its saved code, and its analysis? Your stats and review schedule will use the remaining attempts. This cannot be undone.</p>
+							<form method="post" action={ templ.SafeURL(ProblemURL(problem.Slug) + "/attempts/" + a.ID + "/delete") }>
+								<button class="button" type="submit" name="confirm" value="yes">Delete attempt</button>
+							</form>
+						</details>
 					</article>
 				}
 			</section>

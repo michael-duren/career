@@ -1,5 +1,32 @@
 import { expect, test } from '@playwright/test';
 
+test('delete an accidental attempt from problem history', async ({ page }) => {
+  const slug = `delete-check-${Date.now()}`;
+  await page.goto(`/leetgrinder/problem/${slug}`);
+  for (const notes of ['Keep this attempt', 'Accidental attempt']) {
+    const form = page.locator('form.attempt-form').first();
+    await form.getByLabel('Outcome').selectOption('unfinished');
+    await form.getByLabel('Notes').fill(notes);
+    await form.getByRole('button', { name: 'Save attempt' }).click();
+    await expect(page.locator('article.attempt').filter({ hasText: notes })).toBeVisible();
+  }
+
+  const accidental = page.locator('article.attempt').filter({ hasText: 'Accidental attempt' });
+  await expect(accidental.getByRole('button', { name: 'Delete attempt', exact: true })).toBeHidden();
+  await accidental.getByText('Delete this attempt', { exact: true }).click();
+  await expect(accidental.getByText(/This cannot be undone/)).toBeVisible();
+  await accidental.getByRole('button', { name: 'Delete attempt', exact: true }).click();
+  await expect(page.locator('article.attempt')).toHaveCount(1);
+  await expect(page.locator('article.attempt')).toContainText('Keep this attempt');
+  await page.reload();
+  await expect(page.locator('article.attempt')).toHaveCount(1);
+
+  const remaining = page.locator('article.attempt');
+  await remaining.getByText('Delete this attempt', { exact: true }).click();
+  await remaining.getByRole('button', { name: 'Delete attempt', exact: true }).click();
+  await expect(page.getByText('No attempts recorded yet.')).toBeVisible();
+});
+
 // Layout guards for the Leetgrinder attempt form and problems table: the
 // approach radios stay radio-sized, and a struggle's flag fits the table
 // without pushing columns out of view.

@@ -14,6 +14,25 @@ import (
 
 const leetgrinderAttemptColumns = "id,problem_slug,outcome,minutes,assisted,notes,created_at,revision,source,is_review,time_complexity,space_complexity,code,code_language,wants_review,approach,marked_at"
 
+func (s *Store) DeleteLeetgrinderAttempt(ctx context.Context, slug, id string) error {
+	parsed, err := uuid.Parse(id)
+	if err != nil || !leetgrinder.ValidSlug(slug) {
+		return ErrInvalid
+	}
+	result, err := s.DB.ExecContext(ctx, "DELETE FROM leetgrinder_attempts WHERE id=$1 AND problem_slug=$2", parsed.String(), slug)
+	if err != nil {
+		return err
+	}
+	n, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func scanLeetgrinderAttempt(row interface{ Scan(...any) error }) (leetgrinder.Attempt, error) {
 	var a leetgrinder.Attempt
 	err := row.Scan(&a.ID, &a.ProblemSlug, &a.Outcome, &a.Minutes, &a.Assisted, &a.Notes, &a.CreatedAt, &a.Revision, &a.Source, &a.IsReview, &a.TimeComplexity, &a.SpaceComplexity, &a.Code, &a.CodeLanguage, &a.WantsReview, &a.Approach, &a.MarkedAt)
