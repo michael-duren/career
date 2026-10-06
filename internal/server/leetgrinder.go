@@ -45,6 +45,7 @@ func (s *Server) registerLeetgrinder(r chi.Router) {
 		r.Get("/leetgrinder/problem/{slug}", s.leetgrinderProblem)
 		r.Get("/leetgrinder/problem/{slug}/compare", s.leetgrinderCompareCode)
 		r.Post("/leetgrinder/problem/{slug}/attempts", s.leetgrinderAttempt)
+		r.Post("/leetgrinder/problem/{slug}/attempts/{id}/delete", s.leetgrinderDeleteAttempt)
 		r.Get("/leetgrinder/problems", s.leetgrinderProblems)
 		r.Get("/leetgrinder/todos", s.leetgrinderTodos)
 		r.Get("/leetgrinder/todos/add", s.leetgrinderTodoAddProblem)
@@ -197,6 +198,27 @@ func (s *Server) leetgrinderProblem(w http.ResponseWriter, r *http.Request) {
 		form.OptimalNotice = "Claude's estimate was cleared. The next analysed attempt, or Re-analyse on an attempt with captured code, estimates it again."
 	}
 	renderLeetgrinder(w, r, 200, leetgrinder.ProblemHistory(problem, state, form, s.historyAnalysis(r), s.problemReview(r, state, problem.Slug)))
+}
+
+func (s *Server) leetgrinderDeleteAttempt(w http.ResponseWriter, r *http.Request) {
+	if !s.leetgrinderForm(w, r) {
+		return
+	}
+	if r.PostForm.Get("confirm") != "yes" {
+		http.Error(w, "Confirm deletion using the Delete attempt button.", http.StatusBadRequest)
+		return
+	}
+	slug := chi.URLParam(r, "slug")
+	err := s.db.DeleteLeetgrinderAttempt(r.Context(), slug, chi.URLParam(r, "id"))
+	if errors.Is(err, database.ErrInvalid) || errors.Is(err, database.ErrNotFound) {
+		http.NotFound(w, r)
+		return
+	}
+	if err != nil {
+		renderLeetgrinder(w, r, http.StatusServiceUnavailable, leetgrinder.Unavailable("The attempt could not be deleted. Please retry."))
+		return
+	}
+	http.Redirect(w, r, leetgrinder.ProblemURL(slug), http.StatusSeeOther)
 }
 
 // leetgrinderCompareCode shows a line diff between two attempts' code on one
