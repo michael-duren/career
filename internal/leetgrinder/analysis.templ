@@ -1,11 +1,11 @@
 package leetgrinder
 
-// analysisSettings shows whether LLM complexity analysis runs and lets the
+// analysisSettings shows whether LLM solution analysis runs and lets the
 // learner turn it off. The API key itself is never rendered.
 templ analysisSettings(p AnalysisPanel) {
 	<section class="panel" id="analysis" aria-labelledby="analysis-settings-title">
-		<h2 id="analysis-settings-title">Complexity analysis</h2>
-		<p class="muted">Claude reviews the code the browser extension captures, reports its actual time and space complexity, checks the complexity you stated, and says whether the solution is optimal. Your code is sent to Anthropic only while analysis is on and an API key is configured.</p>
+		<h2 id="analysis-settings-title">Correctness and complexity analysis</h2>
+		<p class="muted">Claude reviews your saved code and correctness reasoning, checks for gaps in your argument, reports time and space complexity, and assesses whether the solution is optimal. Your code and reasoning are sent to Anthropic only while analysis is on and an API key is configured.</p>
 		<dl class="analysis-status">
 			<dt>API key</dt>
 			<dd>
@@ -83,6 +83,9 @@ templ analysisCard(slug string, a Attempt, state State, avail AnalysisAvailabili
 						}
 					</dd>
 				</dl>
+				if an.CorrectnessFeedback != "" {
+					<h5>Correctness analysis</h5><p class="notes">{ an.CorrectnessFeedback }</p>
+				}
 				if an.Explanation != "" {
 					<p class="analysis-explanation">{ an.Explanation }</p>
 				}

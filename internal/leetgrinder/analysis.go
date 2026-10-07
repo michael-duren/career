@@ -26,7 +26,7 @@ const (
 
 // Analysis is the LLM's assessment of an attempt's captured code. It is
 // derived data: it is never exported, and it is re-created when the attempt's
-// code, language or stated complexities change.
+// code, language, stated complexities or correctness answers change.
 type Analysis struct {
 	AttemptID   string
 	Status      string
@@ -36,13 +36,14 @@ type Analysis struct {
 	// TimeMatches and SpaceMatches are nil when that complexity was not
 	// stated. Optimal is nil until the analysis is done.
 	TimeMatches, SpaceMatches, Optimal *bool
+	CorrectnessFeedback                string
 	Explanation                        string
 	Model                              string
 	// Error is a redacted summary of the latest failure.
 	Error     string
 	UpdatedAt time.Time
 	// Current reports whether the analysis was made for the attempt's
-	// current code, language and stated complexities.
+	// current code, language, stated complexities and correctness answers.
 	Current bool
 }
 
@@ -51,6 +52,7 @@ type AnalysisResult struct {
 	ActualTime, ActualSpace   string
 	TimeMatches, SpaceMatches *bool
 	Optimal                   bool
+	CorrectnessFeedback       string
 	Explanation               string
 	// OptimalTime, OptimalSpace and OptimalNote are the model's estimate of
 	// the problem's optimum, asked for only when no reference is known.
@@ -60,6 +62,7 @@ type AnalysisResult struct {
 
 // MaxOptimalNote caps a model-estimated optimal note, in characters.
 const MaxOptimalNote = 300
+const MaxCorrectnessFeedback = 6000
 
 // Analysable reports whether an attempt can be analysed: it has code and at
 // least one stated complexity.

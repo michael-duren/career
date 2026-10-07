@@ -81,6 +81,9 @@ func NeedsComplexity(outcome string) bool { return outcome == "solved" || outcom
 // checks them and the captured code. Complexity is required for solved and
 // struggled attempts. Code and its language are both set or both empty.
 func (a *Attempt) NormalizeDetails() error {
+	if err := a.Correctness.Validate(); err != nil {
+		return err
+	}
 	var err error
 	if a.TimeComplexity, err = NormalizeComplexity(a.TimeComplexity); err != nil {
 		return err

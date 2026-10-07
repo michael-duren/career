@@ -252,7 +252,7 @@
   const STYLE = `
     :host { all: initial; }
     .box { position: fixed; right: 20px; bottom: 20px; z-index: 2147483647; width: min(360px, calc(100vw - 40px));
-      box-sizing: border-box; padding: 16px; border: 1px solid #56704a; border-radius: 8px; background: #191d1b;
+      max-height: calc(100dvh - 40px); overflow-y: auto; box-sizing: border-box; padding: 16px; border: 1px solid #56704a; border-radius: 8px; background: #191d1b;
       color: #edf3ed; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; box-shadow: 0 8px 30px rgba(0,0,0,.45); }
     h2 { margin: 0 0 4px; font-size: 15px; }
     p { margin: 0 0 10px; }
@@ -262,6 +262,7 @@
     label.check { display: flex; gap: 8px; align-items: center; }
     select, input[type=number], input[type=text], textarea { box-sizing: border-box; width: 100%; padding: 6px 8px; border: 1px solid #303832;
       border-radius: 6px; background: #101312; color: #edf3ed; font: inherit; }
+    fieldset { min-width: 0; margin: 0 0 12px; padding: 10px; border: 1px solid #303832; border-radius: 6px; }
     textarea { min-height: 64px; resize: vertical; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .actions { display: flex; gap: 8px; justify-content: flex-end; }
@@ -454,6 +455,11 @@
     ]);
     const wantsReview = el("input", { type: "checkbox", name: "wantsReview", checked: false });
     const notes = el("textarea", { name: "notes", maxLength: lib.MAX_NOTES, placeholder: "What to remember next time" });
+    const correctness = lib.CORRECTNESS_FIELDS.map((field) => ({ ...field, input: el("textarea", { name: field.name, maxLength: 2000, placeholder: field.hint }) }));
+    const correctnessSection = el("fieldset", {}, [el("legend", { text: "Correctness reasoning (optional)" }), ...correctness.flatMap((field) => [
+      ...(field.name === "initially" ? [el("p", { text: "Why it holds" })] : []),
+      el("label", {}, [field.label, el("span", { className: "muted", text: field.hint }), field.input]),
+    ])]);
     const status = el("p", { className: "status", role: "status" });
     const submit = el("button", { type: "submit", className: "primary", text: "Log attempt" });
     const dismiss = el("button", { type: "button", text: "Dismiss" });
@@ -483,7 +489,7 @@
       el("label", {}, ["Language", pasteLang]),
       el("label", {}, ["Code", pasteCode]),
     ]);
-    const fields = [outcome, minutes, ...time.fields, ...space.fields, approach, assisted, wantsReview, includeCode, pasteLang, pasteCode, notes];
+    const fields = [outcome, minutes, ...time.fields, ...space.fields, approach, assisted, wantsReview, includeCode, pasteLang, pasteCode, notes, ...correctness.map((field) => field.input)];
     // After an ambiguous failure the server may have saved the entry, so the
     // fields lock and retries resend exactly the same attempt.
     let locked = null;
@@ -498,6 +504,7 @@
       ...heading(state, info),
       el("div", { className: "row" }, [el("label", {}, ["Outcome", outcome]), el("label", {}, ["Minutes", minutes])]),
       ...(lib.showOpenTime(prefill.minutes, prefill.openMinutes) ? [el("p", { className: "muted", text: `Active ${prefill.minutes} min (open ${prefill.openMinutes} min)` })] : []),
+      correctnessSection,
       el("div", { className: "row" }, [time.node, space.node]),
       required,
       ...codeRow,
@@ -540,6 +547,7 @@
             wantsReview: wantsReview.checked,
             approach: approach.value,
             notes: notes.value,
+            ...Object.fromEntries(correctness.map((field) => [field.name, field.input.value])),
             // The app decides whether an attempt is a review.
             isReview: false,
             problem: state.meta || undefined,

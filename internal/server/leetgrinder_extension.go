@@ -15,7 +15,7 @@ import (
 
 // leetgrinderAPIBodyLimit fits 64 KiB of captured code plus JSON escaping
 // and the other fields; the extension checks the encoded size before sending.
-const leetgrinderAPIBodyLimit = 96 << 10
+const leetgrinderAPIBodyLimit = 128 << 10
 
 // registerLeetgrinderExtension adds token management (cookie session) and the
 // extension API (bearer token). /api/ bypasses pageAccess, so the API
@@ -127,6 +127,7 @@ type leetgrinderAPIAttemptInput struct {
 	Minutes     int    `json:"minutes"`
 	Assisted    bool   `json:"assisted"`
 	Notes       string `json:"notes"`
+	leetgrinder.Correctness
 	// IsReview is accepted from older extensions and ignored: the server
 	// decides whether an attempt is a review.
 	IsReview *bool `json:"isReview"`
@@ -168,7 +169,10 @@ func newLeetgrinderAttempt(input leetgrinderAPIAttemptInput, source string) (lee
 	if !leetgrinder.ValidApproach(input.Approach) {
 		return leetgrinder.Attempt{}, 400, "approach must be optimal, suboptimal, or empty."
 	}
-	attempt := leetgrinder.Attempt{ID: input.ID, ProblemSlug: input.ProblemSlug, Outcome: input.Outcome, Minutes: input.Minutes, Assisted: input.Assisted, Notes: input.Notes, Source: source,
+	if err := input.Correctness.Validate(); err != nil {
+		return leetgrinder.Attempt{}, 400, err.Error() + "."
+	}
+	attempt := leetgrinder.Attempt{Correctness: input.Correctness, ID: input.ID, ProblemSlug: input.ProblemSlug, Outcome: input.Outcome, Minutes: input.Minutes, Assisted: input.Assisted, Notes: input.Notes, Source: source,
 		TimeComplexity: input.TimeComplexity, SpaceComplexity: input.SpaceComplexity, Code: input.Code, CodeLanguage: input.CodeLanguage, WantsReview: input.WantsReview, Approach: input.Approach}
 	switch err := attempt.NormalizeDetails(); {
 	case errors.Is(err, leetgrinder.ErrComplexityRequired), errors.Is(err, leetgrinder.ErrComplexityFormat):

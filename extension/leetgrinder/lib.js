@@ -6,6 +6,15 @@
   const NUDGE_MINUTES = 25;
   const MAX_MINUTES = 240;
   const MAX_NOTES = 2000;
+  const CORRECTNESS_FIELDS = [
+    { name: "claim", label: "Claim", hint: "What exactly does my algorithm guarantee?" },
+    { name: "invariant", label: "Invariant / induction hypothesis / recurrence relation", hint: "What remains true throughout the algorithm?" },
+    { name: "initially", label: "1. Initially...", hint: "Why does it hold initially?" },
+    { name: "afterStep", label: "2. After one step...", hint: "Why does one step preserve it?" },
+    { name: "therefore", label: "3. Therefore...", hint: "What follows from initialization and preservation?" },
+    { name: "termination", label: "Termination", hint: "When the algorithm ends, why does this imply the answer is correct?" },
+  ];
+
   const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const TOKEN = /^lg_[A-Za-z0-9_-]{43}$/;
@@ -27,7 +36,7 @@
   const CONTROL = /[\u0000-\u001f\u007f-\u009f]/;
   const MAX_CODE_BYTES = 64 * 1024;
   // The app's API body limit. Payloads over it are refused before sending.
-  const MAX_BODY_BYTES = 96 * 1024;
+  const MAX_BODY_BYTES = 128 * 1024;
   const CODE_LANGUAGE = /^[A-Za-z0-9_+#.-]{1,32}$/;
   const SUBMISSION_ID = /^[0-9]{1,20}$/;
   const MAX_STATUS = 64;
@@ -226,6 +235,10 @@
     // Both are optional, so the payload works with servers that predate them.
     if ((a.wantsReview !== undefined && typeof a.wantsReview !== "boolean") || (a.approach !== undefined && !APPROACHES.includes(a.approach))) return "Invalid attempt.";
     if (typeof a.notes !== "string" || [...a.notes].length > MAX_NOTES || a.notes.includes("\u0000")) return `Keep notes to ${MAX_NOTES} characters or fewer.`;
+    for (const { name } of CORRECTNESS_FIELDS) {
+      const value = a[name];
+      if (value !== undefined && (typeof value !== "string" || [...value].length > 2000 || value.includes("\u0000"))) return "Keep each correctness answer to 2,000 characters or fewer.";
+    }
     const time = normalizeComplexity(a.timeComplexity);
     const space = normalizeComplexity(a.spaceComplexity);
     if (time === null || space === null) return "Write complexity like O(m·n): start with O( and end with ), in 40 characters or fewer.";
@@ -260,6 +273,7 @@
     // accept the attempt.
     if (fields.wantsReview) a.wantsReview = true;
     if (fields.approach) a.approach = fields.approach;
+    for (const { name } of CORRECTNESS_FIELDS) if (fields[name]) a[name] = fields[name];
     const meta = cleanMetadata(fields.problem);
     if (meta) a.problem = meta;
     if (includeCode && capture && capture.slug === fields.problemSlug) {
@@ -502,6 +516,7 @@
       code: text(a.code),
       codeLanguage: text(a.codeLanguage),
     };
+    for (const { name } of CORRECTNESS_FIELDS) if (a[name] !== undefined && a[name] !== "") out[name] = a[name];
     if (a.problem !== undefined) out.problem = a.problem;
     if (a.wantsReview !== undefined && a.wantsReview !== false) out.wantsReview = a.wantsReview;
     if (a.approach !== undefined && a.approach !== "") out.approach = a.approach;
@@ -631,7 +646,7 @@
 
   const OUTBOX_KEY = "outbox";
   // At most this many attempts wait; storage.local holds 10 MB and each
-  // attempt is at most 96 KiB.
+  // attempt is at most 128 KiB.
   const MAX_OUTBOX = 50;
 
   // outboxRetryable reports whether a failed send may succeed later without
@@ -792,6 +807,7 @@
     NUDGE_MINUTES,
     MAX_MINUTES,
     MAX_NOTES,
+    CORRECTNESS_FIELDS,
     siteOf,
     neetcodeProblem,
     problemFromPath,

@@ -1,0 +1,31 @@
+package leetgrinder
+
+templ correctnessFields(c Correctness) {
+	<fieldset class="correctness">
+		<legend>Correctness reasoning <span class="muted">(optional)</span></legend>
+		for _, field := range c.Fields() {
+			if field.Name == "initially" {
+				<p>Why it holds</p>
+			}
+			<label>
+				{ field.Label }
+				<span class="small muted">{ field.Hint }</span>
+				<textarea name={ field.Name } rows="3" maxlength="2000">{ "\n" + field.Value }</textarea>
+			</label>
+		}
+	</fieldset>
+}
+
+templ correctnessAnswers(c Correctness) {
+	if c != (Correctness{}) {
+		<details class="correctness-answers" open>
+			<summary>Correctness reasoning</summary>
+			for _, field := range c.Fields() {
+				if field.Value != "" {
+					<p><strong>{ field.Label }</strong></p>
+					<p class="notes">{ field.Value }</p>
+				}
+			}
+		</details>
+	}
+}

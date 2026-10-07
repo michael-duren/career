@@ -28,15 +28,15 @@ type LeetgrinderAnalysisJob struct {
 
 // leetgrinderAnalysisColumns reads an analysis joined to its attempt "a". An
 // analysis is current when its code_sha256 equals the attempt's input_sha256:
-// the SHA-256 of the analysed inputs (language, stated time and space, code),
-// which a trigger (migration 026) sets on insert and on updates that change
+// the SHA-256 of the analysed inputs, including correctness answers,
+// which a trigger (migrations 026 and 032) sets on insert and on updates that change
 // an input.
-const leetgrinderAnalysisColumns = "an.attempt_id,an.status,an.tries,an.actual_time,an.actual_space,an.time_matches,an.space_matches,an.optimal,an.explanation,an.model,an.error,an.updated_at,an.code_sha256=a.input_sha256"
+const leetgrinderAnalysisColumns = "an.attempt_id,an.status,an.tries,an.actual_time,an.actual_space,an.time_matches,an.space_matches,an.optimal,an.explanation,an.model,an.error,an.updated_at,an.code_sha256=a.input_sha256,an.correctness_feedback"
 
 func scanLeetgrinderAnalysis(row interface{ Scan(...any) error }) (leetgrinder.Analysis, error) {
 	var a leetgrinder.Analysis
 	var timeMatches, spaceMatches, optimal sql.NullBool
-	err := row.Scan(&a.AttemptID, &a.Status, &a.Tries, &a.ActualTime, &a.ActualSpace, &timeMatches, &spaceMatches, &optimal, &a.Explanation, &a.Model, &a.Error, &a.UpdatedAt, &a.Current)
+	err := row.Scan(&a.AttemptID, &a.Status, &a.Tries, &a.ActualTime, &a.ActualSpace, &timeMatches, &spaceMatches, &optimal, &a.Explanation, &a.Model, &a.Error, &a.UpdatedAt, &a.Current, &a.CorrectnessFeedback)
 	a.TimeMatches, a.SpaceMatches, a.Optimal = nullBool(timeMatches), nullBool(spaceMatches), nullBool(optimal)
 	return a, err
 }
@@ -80,14 +80,14 @@ func (s *Store) NextLeetgrinderAnalysis(ctx context.Context, now time.Time) (Lee
 	var job LeetgrinderAnalysisJob
 	var current bool
 	a := &job.Attempt
-	err := s.DB.QueryRowContext(ctx, `SELECT a.id,a.problem_slug,a.outcome,a.created_at,a.time_complexity,a.space_complexity,a.code,a.code_language,a.input_sha256,COALESCE(an.tries,0),COALESCE(an.code_sha256=a.input_sha256,false)
+	err := s.DB.QueryRowContext(ctx, `SELECT a.id,a.problem_slug,a.outcome,a.created_at,a.time_complexity,a.space_complexity,a.code,a.code_language,a.claim,a.invariant,a.correctness_initially,a.after_step,a.therefore,a.termination,a.input_sha256,COALESCE(an.tries,0),COALESCE(an.code_sha256=a.input_sha256,false)
 FROM leetgrinder_attempts a
 LEFT JOIN leetgrinder_analyses an ON an.attempt_id=a.id
 WHERE `+leetgrinderAnalysable+`
   AND (an.attempt_id IS NULL OR an.code_sha256<>a.input_sha256
        OR (an.status='pending' AND an.tries<$2 AND an.updated_at <= $1::timestamptz - make_interval(mins => an.tries*an.tries)))
 ORDER BY a.created_at DESC, a.id
-LIMIT 1`, now, leetgrinder.AnalysisMaxTries).Scan(&a.ID, &a.ProblemSlug, &a.Outcome, &a.CreatedAt, &a.TimeComplexity, &a.SpaceComplexity, &a.Code, &a.CodeLanguage, &job.Hash, &job.Tries, &current)
+LIMIT 1`, now, leetgrinder.AnalysisMaxTries).Scan(&a.ID, &a.ProblemSlug, &a.Outcome, &a.CreatedAt, &a.TimeComplexity, &a.SpaceComplexity, &a.Code, &a.CodeLanguage, &a.Claim, &a.Invariant, &a.Initially, &a.AfterStep, &a.Therefore, &a.Termination, &job.Hash, &job.Tries, &current)
 	if errors.Is(err, sql.ErrNoRows) {
 		return job, false, nil
 	}
@@ -118,12 +118,12 @@ func (s *Store) FinishLeetgrinderAnalysis(ctx context.Context, job LeetgrinderAn
 		return err
 	}
 	defer tx.Rollback()
-	_, err = tx.ExecContext(ctx, `INSERT INTO leetgrinder_analyses(attempt_id,code_sha256,status,tries,actual_time,actual_space,time_matches,space_matches,optimal,explanation,model,error,updated_at)
-VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+	_, err = tx.ExecContext(ctx, `INSERT INTO leetgrinder_analyses(attempt_id,code_sha256,status,tries,actual_time,actual_space,time_matches,space_matches,optimal,explanation,model,error,updated_at,correctness_feedback)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
 ON CONFLICT (attempt_id) DO UPDATE SET code_sha256=EXCLUDED.code_sha256,status=EXCLUDED.status,tries=EXCLUDED.tries,actual_time=EXCLUDED.actual_time,actual_space=EXCLUDED.actual_space,
-time_matches=EXCLUDED.time_matches,space_matches=EXCLUDED.space_matches,optimal=EXCLUDED.optimal,explanation=EXCLUDED.explanation,model=EXCLUDED.model,error=EXCLUDED.error,updated_at=EXCLUDED.updated_at`,
+time_matches=EXCLUDED.time_matches,space_matches=EXCLUDED.space_matches,optimal=EXCLUDED.optimal,explanation=EXCLUDED.explanation,model=EXCLUDED.model,error=EXCLUDED.error,updated_at=EXCLUDED.updated_at,correctness_feedback=EXCLUDED.correctness_feedback`,
 		job.Attempt.ID, job.Hash, status, tries, result.ActualTime, result.ActualSpace, result.TimeMatches, result.SpaceMatches, optimal,
-		leetgrinder.CleanAnalysisText(result.Explanation, leetgrinder.MaxAnalysisExplanation), leetgrinder.CleanAnalysisText(model, 100), leetgrinder.CleanAnalysisText(detail, leetgrinder.MaxAnalysisError), now)
+		leetgrinder.CleanAnalysisText(result.Explanation, leetgrinder.MaxAnalysisExplanation), leetgrinder.CleanAnalysisText(model, 100), leetgrinder.CleanAnalysisText(detail, leetgrinder.MaxAnalysisError), now, leetgrinder.CleanAnalysisText(result.CorrectnessFeedback, leetgrinder.MaxCorrectnessFeedback))
 	if err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func (s *Store) RequeueLeetgrinderAnalysis(ctx context.Context, slug, attemptID 
 	}
 	res, err := s.DB.ExecContext(ctx, `INSERT INTO leetgrinder_analyses(attempt_id,code_sha256,status,tries,updated_at)
 SELECT a.id,a.input_sha256,'pending',0,$3 FROM leetgrinder_attempts a WHERE a.id=$1 AND a.problem_slug=$2 AND `+leetgrinderAnalysable+`
-ON CONFLICT (attempt_id) DO UPDATE SET code_sha256=EXCLUDED.code_sha256,status='pending',tries=0,actual_time='',actual_space='',time_matches=NULL,space_matches=NULL,optimal=NULL,explanation='',model='',error='',updated_at=EXCLUDED.updated_at`,
+ON CONFLICT (attempt_id) DO UPDATE SET code_sha256=EXCLUDED.code_sha256,status='pending',tries=0,actual_time='',actual_space='',time_matches=NULL,space_matches=NULL,optimal=NULL,explanation='',model='',error='',updated_at=EXCLUDED.updated_at,correctness_feedback=EXCLUDED.correctness_feedback`,
 		attemptID, slug, now)
 	if err != nil {
 		return err
