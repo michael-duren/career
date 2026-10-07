@@ -107,6 +107,7 @@ func (p Problem) OptimalRevision() string {
 
 // Attempt IDs make retries safe; revisions prevent silent overwrites during corrections.
 type Attempt struct {
+	Correctness
 	ID          string    `json:"id"`
 	ProblemSlug string    `json:"problemSlug"`
 	Outcome     string    `json:"outcome"`

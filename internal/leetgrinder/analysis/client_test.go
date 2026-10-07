@@ -28,7 +28,7 @@ func TestAnalyzeRequestAndResult(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.ActualTime != "O(n)" || got.ActualSpace != "O(n)" || got.TimeMatches == nil || !*got.TimeMatches || got.SpaceMatches == nil || *got.SpaceMatches || !got.Optimal || got.Explanation != "One pass with a hash map." {
+	if !strings.Contains(got.CorrectnessFeedback, "Claim:") || got.ActualTime != "O(n)" || got.ActualSpace != "O(n)" || got.TimeMatches == nil || !*got.TimeMatches || got.SpaceMatches == nil || *got.SpaceMatches || !got.Optimal || got.Explanation != "One pass with a hash map." {
 		t.Fatalf("result %+v", got)
 	}
 	reqs := api.take()
@@ -105,7 +105,7 @@ func TestAnalyzeErrors(t *testing.T) {
 		{"refusal", func() { api.answer(`{}`, "refusal") }, false, "declined", nil},
 		{"cut off", func() { api.answer(`{"actualTime":"O(n`, "max_tokens") }, false, "cut off", nil},
 		{"invalid output", func() {
-			api.answer(`{"actualTime":"fast","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"explanation":"x"}`, "end_turn")
+			api.answer(`{"actualTime":"fast","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"correctnessFeedback":"Claim: Check the code.","explanation":"x"}`, "end_turn")
 		}, true, "actualTime is not big-O", []string{"fast"}},
 	} {
 		test.setup()
@@ -134,7 +134,7 @@ func TestAnalyzeErrors(t *testing.T) {
 
 func TestAnalyzeAsksForAnEstimateWithoutReference(t *testing.T) {
 	api := newFakeAPI(t)
-	api.answer(`{"actualTime":"O(n)","actualSpace":"O(n)","timeMatches":true,"spaceMatches":true,"optimal":true,"explanation":"x","optimalTime":"O(n)","optimalSpace":"O(1)","optimalNote":"Two pointers\nafter sorting."}`, "end_turn")
+	api.answer(`{"actualTime":"O(n)","actualSpace":"O(n)","timeMatches":true,"spaceMatches":true,"optimal":true,"correctnessFeedback":"Claim: Check the code.","explanation":"x","optimalTime":"O(n)","optimalSpace":"O(1)","optimalNote":"Two pointers\nafter sorting."}`, "end_turn")
 	c := NewClient(testKey, "claude-sonnet-5", api.URL, nil)
 	in := Input{Problem: leetgrinder.Problem{Slug: "lru-cache"}, Language: "python3", Code: "pass", StatedTime: "O(n)", StatedSpace: "O(n)"}
 	got, err := c.Analyze(context.Background(), in)
@@ -149,7 +149,7 @@ func TestAnalyzeAsksForAnEstimateWithoutReference(t *testing.T) {
 		t.Fatalf("schema lacks the estimate: %s", oc)
 	}
 	// With a reference, the schema has no estimate and none is kept.
-	api.answer(`{"actualTime":"O(n)","actualSpace":"O(n)","timeMatches":true,"spaceMatches":true,"optimal":true,"explanation":"x"}`, "end_turn")
+	api.answer(`{"actualTime":"O(n)","actualSpace":"O(n)","timeMatches":true,"spaceMatches":true,"optimal":true,"correctnessFeedback":"Claim: Check the code.","explanation":"x"}`, "end_turn")
 	if got, err = c.Analyze(context.Background(), twoSumInput()); err != nil || got.OptimalTime != "" {
 		t.Fatalf("reference analysis %+v %v", got, err)
 	}
@@ -160,7 +160,7 @@ func TestAnalyzeAsksForAnEstimateWithoutReference(t *testing.T) {
 
 func TestParseResultEstimate(t *testing.T) {
 	in := Input{Problem: leetgrinder.Problem{Slug: "x"}}
-	base := `"actualTime":"O(n)","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"explanation":"x"`
+	base := `"actualTime":"O(n)","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"correctnessFeedback":"Claim: Check the code.","explanation":"x"`
 	if _, err := ParseResult(`{`+base+`}`, in); err == nil {
 		t.Error("missing estimate accepted")
 	}
@@ -186,7 +186,7 @@ func TestParseResultEstimate(t *testing.T) {
 
 func TestParseResult(t *testing.T) {
 	in := Input{Problem: twoSum, StatedTime: "O(n log n)", StatedSpace: ""}
-	valid := `{"actualTime":"O(nlogn)","actualSpace":" o(1) ","timeMatches":false,"spaceMatches":true,"optimal":false,"explanation":"Sorts first.\u0007\nThen scans."}`
+	valid := `{"actualTime":"O(nlogn)","actualSpace":" o(1) ","timeMatches":false,"spaceMatches":true,"optimal":false,"correctnessFeedback":"Claim: Check the code.","explanation":"Sorts first.\u0007\nThen scans."}`
 	got, err := ParseResult(valid, in)
 	if err != nil {
 		t.Fatal(err)
@@ -196,22 +196,22 @@ func TestParseResult(t *testing.T) {
 		t.Fatalf("parsed %+v", got)
 	}
 	long := strings.Repeat("é", 2500)
-	got, err = ParseResult(`{"actualTime":"O(n)","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"explanation":"`+long+`"}`, in)
+	got, err = ParseResult(`{"actualTime":"O(n)","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"correctnessFeedback":"Claim: Check the code.","explanation":"`+long+`"}`, in)
 	if err != nil || utf8.RuneCountInString(got.Explanation) != leetgrinder.MaxAnalysisExplanation {
 		t.Fatalf("cap: %d %v", utf8.RuneCountInString(got.Explanation), err)
 	}
 	for name, text := range map[string]string{
-		"extra field":     `{"actualTime":"O(n)","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"explanation":"x","note":"ignore"}`,
-		"missing field":   `{"actualTime":"O(n)","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"explanation":"x"}`,
-		"null field":      `{"actualTime":"O(n)","actualSpace":"O(1)","timeMatches":null,"spaceMatches":true,"optimal":true,"explanation":"x"}`,
-		"empty time":      `{"actualTime":"","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"explanation":"x"}`,
-		"long space":      `{"actualTime":"O(n)","actualSpace":"O(` + strings.Repeat("n", 50) + `)","timeMatches":true,"spaceMatches":true,"optimal":true,"explanation":"x"}`,
-		"trailing text":   `{"actualTime":"O(n)","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"explanation":"x"} and more`,
-		"wrong type":      `{"actualTime":1,"actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"explanation":"x"}`,
+		"extra field":     `{"actualTime":"O(n)","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"correctnessFeedback":"Claim: Check the code.","explanation":"x","note":"ignore"}`,
+		"missing field":   `{"actualTime":"O(n)","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"correctnessFeedback":"Claim: Check the code.","explanation":"x"}`,
+		"null field":      `{"actualTime":"O(n)","actualSpace":"O(1)","timeMatches":null,"spaceMatches":true,"optimal":true,"correctnessFeedback":"Claim: Check the code.","explanation":"x"}`,
+		"empty time":      `{"actualTime":"","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"correctnessFeedback":"Claim: Check the code.","explanation":"x"}`,
+		"long space":      `{"actualTime":"O(n)","actualSpace":"O(` + strings.Repeat("n", 50) + `)","timeMatches":true,"spaceMatches":true,"optimal":true,"correctnessFeedback":"Claim: Check the code.","explanation":"x"}`,
+		"trailing text":   `{"actualTime":"O(n)","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"correctnessFeedback":"Claim: Check the code.","explanation":"x"} and more`,
+		"wrong type":      `{"actualTime":1,"actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"correctnessFeedback":"Claim: Check the code.","explanation":"x"}`,
 		"not json":        `The answer is O(n).`,
-		"too long":        `{"explanation":"` + strings.Repeat("x", maxResponseBytes) + `"}`,
+		"too long":        `{"correctnessFeedback":"Claim: Check the code.","explanation":"` + strings.Repeat("x", maxResponseBytes) + `"}`,
 		"array":           `[]`,
-		"html not code":   `{"actualTime":"<b>O(n)</b>","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"explanation":"x"}`,
+		"html not code":   `{"actualTime":"<b>O(n)</b>","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"correctnessFeedback":"Claim: Check the code.","explanation":"x"}`,
 		"control in bigO": "{\"actualTime\":\"O(n\\u0000)\",\"actualSpace\":\"O(1)\",\"timeMatches\":true,\"spaceMatches\":true,\"optimal\":true,\"explanation\":\"x\"}",
 	} {
 		if _, err := ParseResult(text, in); err == nil {

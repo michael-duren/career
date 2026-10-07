@@ -125,7 +125,7 @@ func (w *Worker) analyse(ctx context.Context, job database.LeetgrinderAnalysisJo
 		return false, err
 	}
 	client := w.api()
-	result, err := client.Analyze(ctx, Input{Problem: problem, Language: a.CodeLanguage, Code: a.Code, StatedTime: a.TimeComplexity, StatedSpace: a.SpaceComplexity})
+	result, err := client.Analyze(ctx, Input{Correctness: a.Correctness, Problem: problem, Language: a.CodeLanguage, Code: a.Code, StatedTime: a.TimeComplexity, StatedSpace: a.SpaceComplexity})
 	if err != nil && ctx.Err() != nil {
 		return false, nil
 	}

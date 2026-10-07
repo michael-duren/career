@@ -1,5 +1,5 @@
 // Package analysis asks an LLM, through the Anthropic Messages API, for the
-// actual time and space complexity of captured Leetgrinder attempt code.
+// correctness reasoning and complexity of saved Leetgrinder attempt code.
 package analysis
 
 import (
@@ -27,6 +27,7 @@ const (
 
 // Input is one attempt to analyse.
 type Input struct {
+	Correctness leetgrinder.Correctness
 	// Problem is the catalog entry; it may have only Slug set.
 	Problem     leetgrinder.Problem
 	Language    string

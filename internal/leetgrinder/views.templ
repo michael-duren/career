@@ -449,6 +449,7 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, avail Analy
 								· Marked for review
 							}
 						</p>
+						@correctnessAnswers(a.Correctness)
 						@statedComplexity(a)
 						if a.Notes!="" {
 							<p class="notes">
@@ -916,6 +917,7 @@ templ attemptFields(problem Problem, form AttemptForm) {
 			</p>
 		}
 		<div class="form-row"><label>Outcome<select name="outcome" required><option value="unfinished" selected?={ form.Outcome=="unfinished" }>Unfinished</option><option value="struggled" selected?={ form.Outcome=="struggled" }>Struggled</option><option value="solved" selected?={ form.Outcome=="solved" }>Solved</option></select></label><label>Minutes spent<input type="number" name="minutes" min="1" max="240" required value={ form.Minutes }/></label></div>
+		@correctnessFields(form.Correctness)
 		<fieldset class="complexity">
 			<legend>Complexity <span class="muted">(required when solved or struggled)</span></legend>
 			<div class="form-row">

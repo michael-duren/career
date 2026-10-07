@@ -11,6 +11,7 @@ import (
 var Styles string
 
 type AttemptForm struct {
+	Correctness
 	ID       string
 	Revision string
 	Outcome  string
@@ -197,7 +198,7 @@ func NewReviewForm(id string, ret string) AttemptForm {
 	return f
 }
 func EditForm(a Attempt) AttemptForm {
-	return AttemptForm{ID: a.ID, Revision: a.Revision, Outcome: a.Outcome, Minutes: Count(a.Minutes), Assisted: a.Assisted, Notes: a.Notes, WantsReview: a.WantsReview, Approach: a.Approach, Time: NewComplexityInput(a.TimeComplexity), Space: NewComplexityInput(a.SpaceComplexity)}
+	return AttemptForm{Correctness: a.Correctness, ID: a.ID, Revision: a.Revision, Outcome: a.Outcome, Minutes: Count(a.Minutes), Assisted: a.Assisted, Notes: a.Notes, WantsReview: a.WantsReview, Approach: a.Approach, Time: NewComplexityInput(a.TimeComplexity), Space: NewComplexityInput(a.SpaceComplexity)}
 }
 func orDash(s string) string {
 	if s == "" {

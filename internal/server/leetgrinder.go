@@ -314,8 +314,9 @@ func (s *Server) leetgrinderFormLimit(w http.ResponseWriter, r *http.Request, li
 }
 
 // attemptFormLimit fits 64 KiB of pasted code even when URL encoding grows
-// it sixfold (a CRLF line break is %0D%0A), with the rest of the form.
-const attemptFormLimit = 448 << 10
+// it sixfold (a CRLF line break is %0D%0A), plus six correctness answers
+// and notes containing up to 2,000 four-byte characters each.
+const attemptFormLimit = 640 << 10
 
 func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 	if !s.leetgrinderFormLimit(w, r, attemptFormLimit, "Invalid or oversized form. Notes must be 2,000 characters or fewer and code 64 KiB or less.") {
@@ -325,7 +326,13 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	form := leetgrinder.AttemptForm{ID: r.PostForm.Get("id"), Revision: r.PostForm.Get("revision"), Outcome: r.PostForm.Get("outcome"), Minutes: r.PostForm.Get("minutes"), Assisted: r.PostForm.Get("assisted") == "true", Notes: r.PostForm.Get("notes"), Review: r.PostForm.Get("review") == "true",
+	form := leetgrinder.AttemptForm{
+		Correctness: leetgrinder.Correctness{
+			Claim: r.PostForm.Get("claim"), Invariant: r.PostForm.Get("invariant"),
+			Initially: r.PostForm.Get("initially"), AfterStep: r.PostForm.Get("afterStep"),
+			Therefore: r.PostForm.Get("therefore"), Termination: r.PostForm.Get("termination"),
+		},
+		ID: r.PostForm.Get("id"), Revision: r.PostForm.Get("revision"), Outcome: r.PostForm.Get("outcome"), Minutes: r.PostForm.Get("minutes"), Assisted: r.PostForm.Get("assisted") == "true", Notes: r.PostForm.Get("notes"), Review: r.PostForm.Get("review") == "true",
 		WantsReview: r.PostForm.Get("wantsReview") == "true", Approach: r.PostForm.Get("approach"),
 		Time:  leetgrinder.ComplexityInput{Choice: r.PostForm.Get("timeComplexity"), Other: r.PostForm.Get("timeComplexityOther")},
 		Space: leetgrinder.ComplexityInput{Choice: r.PostForm.Get("spaceComplexity"), Other: r.PostForm.Get("spaceComplexityOther")}}
@@ -385,7 +392,11 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 		reject(400, "Choose whether you reached the optimal solution or took a simpler approach.")
 		return
 	}
-	attempt := leetgrinder.Attempt{ID: form.ID, ProblemSlug: problem.Slug, Outcome: form.Outcome, Minutes: minutes, Assisted: form.Assisted, Notes: form.Notes, Source: "web", WantsReview: form.WantsReview, Approach: form.Approach, TimeComplexity: form.Time.Value(), SpaceComplexity: form.Space.Value(), Code: form.Code, CodeLanguage: form.CodeLanguage}
+	if err := form.Correctness.Validate(); err != nil {
+		reject(400, err.Error()+".")
+		return
+	}
+	attempt := leetgrinder.Attempt{Correctness: form.Correctness, ID: form.ID, ProblemSlug: problem.Slug, Outcome: form.Outcome, Minutes: minutes, Assisted: form.Assisted, Notes: form.Notes, Source: "web", WantsReview: form.WantsReview, Approach: form.Approach, TimeComplexity: form.Time.Value(), SpaceComplexity: form.Space.Value(), Code: form.Code, CodeLanguage: form.CodeLanguage}
 	if form.Code != "" && !slices.Contains(leetgrinder.CodeLanguages, form.CodeLanguage) {
 		reject(400, "Choose the language of your code.")
 		return

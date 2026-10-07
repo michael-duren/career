@@ -33,7 +33,7 @@ type fakeRequest struct {
 }
 
 func newFakeAPI(t *testing.T) *fakeAPI {
-	f := &fakeAPI{status: 200, stop: "end_turn", text: `{"actualTime":"O(n)","actualSpace":"O(n)","timeMatches":true,"spaceMatches":false,"optimal":true,"explanation":"One pass with a hash map."}`}
+	f := &fakeAPI{status: 200, stop: "end_turn", text: `{"actualTime":"O(n)","actualSpace":"O(n)","timeMatches":true,"spaceMatches":false,"optimal":true,"correctnessFeedback":"Claim: Check the code.","explanation":"One pass with a hash map."}`}
 	f.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		raw, _ := io.ReadAll(r.Body)
 		var body map[string]any

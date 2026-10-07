@@ -507,7 +507,7 @@ test("escape-heavy pasted code under 64 KiB can still be too large to send", () 
   const code = '"\\\n\t'.repeat(15000);
   const pasted = lib.pastedCode(code, "text", "two-sum").capture;
   assert.ok(pasted, "passes the byte check");
-  const a = lib.buildAttempt({ id: "00000000-0000-4000-8000-000000000001", problemSlug: "two-sum", outcome: "unfinished", minutes: 5, assisted: false, notes: "", isReview: false, timeComplexity: "", spaceComplexity: "" }, pasted, true);
+  const a = lib.buildAttempt({ id: "00000000-0000-4000-8000-000000000001", problemSlug: "two-sum", outcome: "unfinished", minutes: 5, assisted: false, notes: "", claim: "😀".repeat(2000), invariant: "😀".repeat(2000), isReview: false, timeComplexity: "", spaceComplexity: "" }, pasted, true);
   // The panel refuses when buildAttempt drops pasted code like this.
   assert.equal(a.code, "");
 });
