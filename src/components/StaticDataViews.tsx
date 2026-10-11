@@ -103,8 +103,10 @@ export function ProgressView() {
   const { data, error } = useJSON<{ entries: WeekEntry[] }>('/api/summaries/progress');
   const goals = useJSON<{ goals: Goal[] }>('/api/goals');
   const hours = useJSON<{ goals: Record<string, GoalHours> }>('/api/scheduler/goal-hours');
-  if (!data || !goals.data || !hours.data) return <State error={error || goals.error || hours.error} />;
-  const tracks: GoalTrack[] = goals.data.goals.flatMap(goal => hours.data!.goals[goal.id] ? [{ id: goal.id, title: goal.title, color: goal.color, weekHours: hours.data!.goals[goal.id].weekHours }] : []);
+  // Goal hours are supplementary: if either goal request fails, show the journal-only dashboard.
+  const goalsSettled = (goals.data && hours.data) || goals.error || hours.error;
+  if (!data || !goalsSettled) return <State error={error} />;
+  const tracks: GoalTrack[] = goals.data && hours.data ? goals.data.goals.flatMap(goal => hours.data!.goals[goal.id] ? [{ id: goal.id, title: goal.title, color: goal.color, weekHours: hours.data!.goals[goal.id].weekHours }] : []) : [];
   return <ProgressDashboard data={buildDashboard(withGoalHours(data.entries, tracks), new Date(), tracks)} />;
 }
 

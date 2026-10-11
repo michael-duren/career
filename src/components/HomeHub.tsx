@@ -56,7 +56,8 @@ function useLive<T>(load: () => Promise<T>, deps: unknown[]) {
 const loadGoals = async () => {
   const [saved, recorded] = await Promise.all([
     getJSON<{ goals: Goal[] }>('/api/goals'),
-    getJSON<{ goals: Record<string, GoalHours> }>('/api/scheduler/goal-hours'),
+    // Logged hours are supplementary; goals still show without them, as on the timeline.
+    getJSON<{ goals: Record<string, GoalHours> }>('/api/scheduler/goal-hours').catch(() => ({ goals: {} })),
   ]);
   return { goals: saved.goals, hours: recorded.goals };
 };
@@ -132,6 +133,7 @@ function LogWorkForm({ goals, today, timeZone, onSaved }: { goals: Goal[]; today
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
+  const completed = useRef(new Map<string, string>());
   useEffect(() => { if (!goalId && current[0]) setGoalId(current[0].id); }, [current[0]?.id]);
   const goal = goals.find(item => item.id === goalId);
   const step = goal?.steps.find(item => item.id === stepId);
@@ -182,20 +184,29 @@ function LogWorkForm({ goals, today, timeZone, onSaved }: { goals: Goal[]; today
   }
   async function submit() {
     setBusy(true); setError(''); setStatus('');
-    const done: string[] = [];
+    // Steps saved by an earlier, partly failed attempt are skipped so a retry never logs them twice.
+    const done = completed.current;
+    const once = async (key: string, label: string, run: () => Promise<void>) => {
+      if (done.has(key)) return;
+      await run(); done.set(key, label);
+    };
     try {
-      if (goal && amount > 0) { await recordHours(goal); done.push(`${formatHours(amount)}h logged to ${goal.title}`); }
-      if (goal && (note.trim() || (completeStep && step))) { await saveGoalNote(goal); done.push(note.trim() ? 'note added to the goal' : 'mini goal completed'); }
+      if (goal && amount > 0) await once('hours', `${formatHours(amount)}h logged to ${goal.title}`, () => recordHours(goal));
+      if (goal && (note.trim() || (completeStep && step))) await once('goal', note.trim() ? 'note added to the goal' : 'mini goal completed', () => saveGoalNote(goal));
       const line = journalLine({ goalTitle: goal?.title, stepTitle: step?.title, hours: amount, note });
-      if (line) { await appendToWorkJournal(date, line); done.push('journal updated'); }
-      setNote(''); setStartTime(''); setCompleteStep(false); setStepId('');
-      setStatus(`Saved: ${done.join(', ')}.`);
+      if (line) await once('journal', 'journal updated', () => appendToWorkJournal(date, line));
+      setStatus(`Saved: ${[...done.values()].join(', ')}.`);
+      resetForm();
       onSaved();
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Could not save.';
-      setError(done.length ? `${message} Already saved: ${done.join(', ')}.` : message);
-      if (done.length) onSaved();
+      setError(done.size ? `${message} Already saved: ${[...done.values()].join(', ')}. Saving again finishes the rest.` : message);
+      if (done.size) onSaved();
     } finally { setBusy(false); }
+  }
+  function resetForm() {
+    completed.current = new Map();
+    setNote(''); setStartTime(''); setCompleteStep(false); setStepId('');
   }
   const canSave = goal ? amount > 0 || Boolean(note.trim()) || (completeStep && Boolean(step)) : Boolean(note.trim());
   return <section className="rounded-xl border border-blue-900/60 bg-zinc-900 p-5 space-y-4" aria-labelledby="reflect-heading">
@@ -206,7 +217,7 @@ function LogWorkForm({ goals, today, timeZone, onSaved }: { goals: Goal[]; today
     <form className="space-y-3" onSubmit={e => { e.preventDefault(); void submit(); }}>
       <fieldset disabled={busy} className="space-y-3">
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block text-sm">Goal<select className={field} value={goalId} onChange={e => { setGoalId(e.target.value); setStepId(''); setCompleteStep(false); }}>
+          <label className="block text-sm">Goal<select className={field} value={goalId} onChange={e => { setGoalId(e.target.value); setStepId(''); setCompleteStep(false); completed.current = new Map(); }}>
             <option value="">No goal (journal only)</option>
             {current.length > 0 && <optgroup label="Current goals">{current.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</optgroup>}
             {others.length > 0 && <optgroup label="Other open goals">{others.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</optgroup>}
@@ -217,8 +228,8 @@ function LogWorkForm({ goals, today, timeZone, onSaved }: { goals: Goal[]; today
           </select></label>}
         </div>
         <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
-          <label className="block text-sm">Date<input className={field} type="date" required min="2026-04-20" max={today} value={date} onChange={e => setDate(e.target.value)} /></label>
-          {goal && <label className="block text-sm">Hours<input className={field} type="number" min="0" max="16" step="0.25" value={hours} onChange={e => setHours(e.target.value)} /></label>}
+          <label className="block text-sm">Date<input className={field} type="date" required min="2026-04-20" max={today} value={date} onChange={e => { setDate(e.target.value); completed.current = new Map(); }} /></label>
+          {goal && <label className="block text-sm">Hours<input className={field} type="number" min="0" max="16" step="0.25" value={hours} onChange={e => { setHours(e.target.value); completed.current = new Map(); }} /></label>}
           {goal && amount > 0 && <label className="block text-sm">Start time<input className={field} type="time" value={startTime} onChange={e => setStartTime(e.target.value)} aria-describedby="start-help" /><span id="start-help" className="text-xs text-zinc-500">Blank: latest free slot{timeZone ? ` (${timeZone})` : ''}</span></label>}
         </div>
         {step && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={completeStep} onChange={e => setCompleteStep(e.target.checked)} />Mark “{step.title}” done</label>}
