@@ -20,7 +20,7 @@ case "${1:-deploy}" in
     echo "Built $image"
     ;;
   deploy|rollback)
-    echo 'Career deployment and rollback now use home-infra GitOps; see docs/releases.md.' >&2
+    echo 'Career deployment and rollback now use home-infra GitOps; see docs/developer.md#releases.' >&2
     echo 'Local apply/import is disabled to protect Argo ownership and UNRELEASED templates.' >&2
     exit 1
     ;;

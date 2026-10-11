@@ -204,5 +204,4 @@ filters, duplicate detection and linking.
 ## History
 
 An earlier TypeScript MCP (Netlify Functions with an external OAuth provider) lives in
-`src/lib/mcp-*.ts`, `scripts/career-mcp.mjs` and [oauth-plan.md](oauth-plan.md). It is not
-deployed. The Go server replaces it.
+`src/lib/mcp-*.ts` and `scripts/career-mcp.mjs`. It is not deployed. The Go server replaces it.

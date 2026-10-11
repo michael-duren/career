@@ -15,7 +15,6 @@
 !internal/
 !internal/**
 src/content/
-src/lib/workspace-seed.ts
 **/.env*
 **/*.map
 **/.DS_Store
