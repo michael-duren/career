@@ -4,7 +4,8 @@ test('delete an accidental attempt from problem history', async ({ page }) => {
   const slug = `delete-check-${Date.now()}`;
   await page.goto(`/leetgrinder/problem/${slug}`);
   for (const notes of ['Keep this attempt', 'Accidental attempt']) {
-    const form = page.locator('form.attempt-form').first();
+    await page.getByRole('tab', { name: 'Record an attempt' }).click();
+    const form = page.getByRole('tabpanel').locator('form.attempt-form');
     await form.getByLabel('Outcome').selectOption('unfinished');
     await form.getByLabel('Notes').fill(notes);
     await form.getByRole('button', { name: 'Save attempt' }).click();
@@ -24,6 +25,9 @@ test('delete an accidental attempt from problem history', async ({ page }) => {
   const remaining = page.locator('article.attempt');
   await remaining.getByText('Delete this attempt', { exact: true }).click();
   await remaining.getByRole('button', { name: 'Delete attempt', exact: true }).click();
+  // With no attempts left the page opens on the form.
+  await expect(page.getByRole('tab', { name: 'Record an attempt' })).toHaveAttribute('aria-selected', 'true');
+  await page.getByRole('tab', { name: /^Attempts/ }).click();
   await expect(page.getByText('No attempts recorded yet.')).toBeVisible();
 });
 
@@ -55,4 +59,46 @@ test('attempt form and problems table keep their layout with flags', async ({ pa
   const overflow = await scroll.evaluate(el => el.scrollWidth - el.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
   await expect(row.getByRole('link', { name: /on LeetCode/ })).toBeInViewport();
+});
+
+// The problem page splits attempts, the attempt form and the optimal panel
+// into tabs instead of squeezing them side by side.
+test('problem page sections are tabs', async ({ page }) => {
+  const slug = `tabs-check-${Date.now()}`;
+  await page.goto(`/leetgrinder/problem/${slug}`);
+
+  const record = page.getByRole('tab', { name: 'Record an attempt' });
+  const attempts = page.getByRole('tab', { name: /^Attempts/ });
+  const optimal = page.getByRole('tab', { name: 'Optimal complexity' });
+  // A problem with no attempts opens on the form, with the other panels hidden.
+  await expect(record).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('tabpanel')).toHaveCount(1);
+  await expect(page.getByRole('tabpanel')).toHaveAttribute('aria-labelledby', 'tab-record');
+  await expect(page.getByText('No attempts recorded yet.')).toBeHidden();
+
+  // Arrow keys move between tabs.
+  await record.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(optimal).toBeFocused();
+  await expect(optimal).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByText('appears after your first attempt')).toBeVisible();
+  await page.keyboard.press('Home');
+  await expect(attempts).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByText('No attempts recorded yet.')).toBeVisible();
+
+  // After saving, the page opens on the attempts, which now count one.
+  await record.click();
+  const form = page.getByRole('tabpanel').locator('form.attempt-form');
+  await form.getByLabel('Outcome').selectOption('unfinished');
+  await form.getByLabel('Notes').fill('Tabbed attempt');
+  await form.getByRole('button', { name: 'Save attempt' }).click();
+  await expect(attempts).toHaveAttribute('aria-selected', 'true');
+  await expect(attempts).toContainText('1');
+  await expect(page.locator('article.attempt')).toContainText('Tabbed attempt');
+  await expect(page.getByRole('heading', { name: 'Record an attempt' })).toBeHidden();
+
+  // A link to the optimal panel opens its tab.
+  await page.goto(`/leetgrinder/problem/${slug}#optimal`);
+  await expect(optimal).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('heading', { name: 'Optimal complexity' })).toBeVisible();
 });

@@ -355,3 +355,36 @@ func TestOverviewShowsNextTodosBesideTodaysReview(t *testing.T) {
 		t.Error("empty queue has no prompt")
 	}
 }
+
+func TestHistoryTab(t *testing.T) {
+	for _, c := range []struct {
+		name      string
+		form      AttemptForm
+		attempted bool
+		want      string
+	}{
+		{"new problem", AttemptForm{}, false, "record"},
+		{"attempted", AttemptForm{}, true, "attempts"},
+		{"form error", AttemptForm{Error: "Please retry"}, true, "record"},
+		{"correction draft", AttemptForm{Revision: "r"}, true, "record"},
+		{"re-estimated", AttemptForm{OptimalNotice: "cleared"}, true, "optimal"},
+	} {
+		if got := HistoryTab(c.form, c.attempted); got != c.want {
+			t.Errorf("%s: got %q, want %q", c.name, got, c.want)
+		}
+	}
+	var out bytes.Buffer
+	if err := ProblemHistory(Problem{Slug: "two-sum"}, State{}, NewForm(uuid.NewString()), AnalysisAvailability{}, ProblemReview{}).Render(context.Background(), &out); err != nil {
+		t.Fatal(err)
+	}
+	html := out.String()
+	for _, want := range []string{`data-tabs="record"`, `role="tablist"`, `id="tab-attempts"`, `aria-controls="tab-panel-record"`, `id="tab-panel-optimal" role="tabpanel"`, `id="optimal"`} {
+		if !strings.Contains(html, want) {
+			t.Errorf("tabs missing %q", want)
+		}
+	}
+	// Without the script every panel stays visible.
+	if strings.Contains(html, `role="tabpanel" aria-labelledby="tab-attempts" hidden`) {
+		t.Error("panel hidden before the script runs")
+	}
+}

@@ -42,6 +42,7 @@ templ layout(title string, active string) {
 			</div>
 			@complexityScript()
 			@copyScript()
+			@tabsScript()
 		</body>
 	</html>
 }
@@ -398,32 +399,21 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, avail Analy
 				<p class="flag" role="status">{ review.FlagReason }</p>
 			}
 		}
-		<div class="history-grid">
-			<section class="panel">
-				<h2>
-					if form.Revision!="" {
-						Correct your attempt
-					} else {
-						Record an attempt
-					}
-				</h2>@attemptFields(problem, form)
-				if form.Error!="" && form.Revision!="" {
-					<p>
-						<a
-							href={ templ.SafeURL(ProblemURL(problem.Slug)) }
-						>Reload current history</a> before reapplying a conflicting correction. Your draft is shown above.
-					</p>
-				}
-			</section>
-			<section>
-				@optimalPanel(problem, len(state.ProblemAttempts(problem.Slug)) > 0, form.OptimalNotice)
+		{{ attempts := state.ProblemAttempts(problem.Slug) }}
+		<div class="tabs" data-tabs={ HistoryTab(form, len(attempts) > 0) }>
+			<div class="tab-list" role="tablist" aria-label="Problem sections" hidden>
+				@historyTabButton("attempts", "Attempts", len(attempts))
+				@historyTabButton("record", RecordTabLabel(form), -1)
+				@historyTabButton("optimal", "Optimal complexity", -1)
+			</div>
+			<section class="tab-panel" id="tab-panel-attempts" role="tabpanel" aria-labelledby="tab-attempts">
 				<h2>Previous attempts</h2>
-				if len(state.ProblemAttempts(problem.Slug))==0 {
+				if len(attempts)==0 {
 					<p class="muted">No attempts recorded yet.</p>
 				}
-				{{ latestCode := LatestCodeID(state.ProblemAttempts(problem.Slug)) }}
-				@compareForm(problem.Slug, CodeAttempts(state.ProblemAttempts(problem.Slug)), "", "", review)
-				for _, a:=range state.ProblemAttempts(problem.Slug) {
+				{{ latestCode := LatestCodeID(attempts) }}
+				@compareForm(problem.Slug, CodeAttempts(attempts), "", "", review)
+				for _, a:=range attempts {
 					<article class="panel attempt" id={ AttemptAnchor(a.ID) }>
 						<div class="problem-heading">
 							<h3>
@@ -471,8 +461,31 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, avail Analy
 					</article>
 				}
 			</section>
+			<section class="tab-panel panel" id="tab-panel-record" role="tabpanel" aria-labelledby="tab-record">
+				<h2>{ RecordTabLabel(form) }</h2>@attemptFields(problem, form)
+				if form.Error!="" && form.Revision!="" {
+					<p>
+						<a
+							href={ templ.SafeURL(ProblemURL(problem.Slug)) }
+						>Reload current history</a> before reapplying a conflicting correction. Your draft is shown above.
+					</p>
+				}
+			</section>
+			<section class="tab-panel" id="tab-panel-optimal" role="tabpanel" aria-labelledby="tab-optimal">
+				@optimalPanel(problem, len(attempts) > 0, form.OptimalNotice)
+			</section>
 		</div>
 	}
+}
+
+// historyTabButton is one tab of the problem page. count is shown when not negative.
+templ historyTabButton(key, label string, count int) {
+	<button class="tab" id={ "tab-" + key } type="button" role="tab" aria-controls={ "tab-panel-" + key } aria-selected="false" tabindex="-1" data-tab={ key }>
+		{ label }
+		if count >= 0 {
+			<span class="tab-count">{ Count(count) }</span>
+		}
+	</button>
 }
 
 // optimalCell shows a problem's optimal time and space in the problems table.
@@ -1092,6 +1105,51 @@ templ CompareCode(page CompareCodePage) {
 			</div>
 		}
 	}
+}
+
+// tabsScript turns a [data-tabs] block into tabs. Without it every panel
+// stays visible, stacked. A URL hash inside a panel opens that panel.
+templ tabsScript() {
+	<script>
+		(() => {
+			document.querySelectorAll("[data-tabs]").forEach((root) => {
+				const tabs = [...root.querySelectorAll("[role=tab]")];
+				const panels = tabs.map((tab) => document.getElementById(tab.getAttribute("aria-controls")));
+				const select = (index, focus) => {
+					tabs.forEach((tab, i) => {
+						const on = i === index;
+						tab.setAttribute("aria-selected", String(on));
+						tab.tabIndex = on ? 0 : -1;
+						panels[i].hidden = !on;
+					});
+					if (focus) tabs[index].focus();
+				};
+				const fromHash = () => {
+					const id = decodeURIComponent(location.hash.slice(1));
+					const target = id && document.getElementById(id);
+					const index = target ? panels.findIndex((panel) => panel.contains(target)) : -1;
+					if (index < 0) return false;
+					select(index, false);
+					target.scrollIntoView();
+					return true;
+				};
+				tabs.forEach((tab, i) => {
+					tab.addEventListener("click", () => select(i, false));
+					tab.addEventListener("keydown", (event) => {
+						const last = tabs.length - 1;
+						const next = { ArrowRight: i === last ? 0 : i + 1, ArrowLeft: i === 0 ? last : i - 1, Home: 0, End: last }[event.key];
+						if (next === undefined) return;
+						event.preventDefault();
+						select(next, true);
+					});
+				});
+				root.querySelector("[role=tablist]").hidden = false;
+				root.classList.add("tabs-ready");
+				if (!fromHash()) select(Math.max(0, tabs.findIndex((tab) => tab.dataset.tab === root.dataset.tabs)), false);
+				window.addEventListener("hashchange", fromHash);
+			});
+		})();
+	</script>
 }
 
 // copyScript shows each Copy code button and copies its code block.

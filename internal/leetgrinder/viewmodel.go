@@ -224,3 +224,27 @@ func OutcomeLabel(s string) string {
 		return "Unfinished"
 	}
 }
+
+// HistoryTab is the problem page tab to open first: the attempt form while
+// it shows a draft or an error, the optimal panel after Re-estimate, the
+// attempts once there are any, and otherwise the form.
+func HistoryTab(form AttemptForm, attempted bool) string {
+	switch {
+	case form.Error != "" || form.Revision != "":
+		return "record"
+	case form.OptimalNotice != "":
+		return "optimal"
+	case attempted:
+		return "attempts"
+	default:
+		return "record"
+	}
+}
+
+// RecordTabLabel names the attempt form's tab and heading.
+func RecordTabLabel(form AttemptForm) string {
+	if form.Revision != "" {
+		return "Correct your attempt"
+	}
+	return "Record an attempt"
+}
