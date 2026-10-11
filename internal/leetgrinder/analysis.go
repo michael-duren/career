@@ -37,6 +37,7 @@ type Analysis struct {
 	// stated. Optimal is nil until the analysis is done.
 	TimeMatches, SpaceMatches, Optimal *bool
 	CorrectnessFeedback                string
+	CodeFeedback                       string
 	Explanation                        string
 	Model                              string
 	// Error is a redacted summary of the latest failure.
@@ -53,6 +54,7 @@ type AnalysisResult struct {
 	TimeMatches, SpaceMatches *bool
 	Optimal                   bool
 	CorrectnessFeedback       string
+	CodeFeedback              string
 	Explanation               string
 	// OptimalTime, OptimalSpace and OptimalNote are the model's estimate of
 	// the problem's optimum, asked for only when no reference is known.
@@ -63,6 +65,9 @@ type AnalysisResult struct {
 // MaxOptimalNote caps a model-estimated optimal note, in characters.
 const MaxOptimalNote = 300
 const MaxCorrectnessFeedback = 6000
+
+// MaxCodeFeedback caps the model's code review, in characters.
+const MaxCodeFeedback = 3000
 
 // Analysable reports whether an attempt can be analysed: it has code and at
 // least one stated complexity.

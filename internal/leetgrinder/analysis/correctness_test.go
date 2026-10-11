@@ -35,7 +35,7 @@ func TestCorrectnessPromptAndFeedback(t *testing.T) {
 			t.Error("correctness feedback is not required")
 		}
 	}
-	raw := map[string]any{"actualTime": "O(n)", "actualSpace": "O(n)", "timeMatches": true, "spaceMatches": false, "optimal": true, "explanation": "One pass.", "correctnessFeedback": "Claim: Valid.\nTermination: Correct under the stated assumptions."}
+	raw := map[string]any{"actualTime": "O(n)", "actualSpace": "O(n)", "timeMatches": true, "spaceMatches": false, "optimal": true, "explanation": "One pass.", "correctnessFeedback": "Claim: Valid.\nTermination: Correct under the stated assumptions.", "codeFeedback": "Clear names."}
 	data, _ := json.Marshal(raw)
 	got, err := ParseResult(string(data), in)
 	if err != nil || got.CorrectnessFeedback != raw["correctnessFeedback"] {
@@ -58,5 +58,47 @@ func TestCorrectnessPromptAndFeedback(t *testing.T) {
 	data, _ = json.Marshal(raw)
 	if _, err := ParseResult(string(data), in); err == nil {
 		t.Error("accepted missing feedback")
+	}
+}
+
+func TestCodeFeedback(t *testing.T) {
+	in := twoSumInput()
+	if !strings.Contains(systemPrompt, "codeFeedback") {
+		t.Error("system prompt does not ask for code feedback")
+	}
+	for _, schema := range []map[string]any{resultSchema, estimateSchema} {
+		found := false
+		for _, field := range schema["required"].([]string) {
+			if field == "codeFeedback" {
+				found = true
+			}
+		}
+		if !found {
+			t.Error("code feedback is not required")
+		}
+	}
+	raw := map[string]any{"actualTime": "O(n)", "actualSpace": "O(n)", "timeMatches": true, "spaceMatches": false, "optimal": true, "explanation": "One pass.", "correctnessFeedback": "Claim: Valid.", "codeFeedback": "Naming: rename m to seen.\nEdge cases: handles an empty array."}
+	data, _ := json.Marshal(raw)
+	got, err := ParseResult(string(data), in)
+	if err != nil || got.CodeFeedback != raw["codeFeedback"] {
+		t.Fatalf("feedback: %+v %v", got, err)
+	}
+	raw["codeFeedback"] = strings.Repeat("界", 4000)
+	data, _ = json.Marshal(raw)
+	got, err = ParseResult(string(data), in)
+	if err != nil || utf8.RuneCountInString(got.CodeFeedback) != leetgrinder.MaxCodeFeedback {
+		t.Fatalf("bounded Unicode feedback: %d %v", utf8.RuneCountInString(got.CodeFeedback), err)
+	}
+	for _, invalid := range []any{nil, "", " \n ", "\u0000", 7} {
+		raw["codeFeedback"] = invalid
+		data, _ = json.Marshal(raw)
+		if _, err := ParseResult(string(data), in); err == nil {
+			t.Errorf("accepted invalid code feedback: %v", invalid)
+		}
+	}
+	delete(raw, "codeFeedback")
+	data, _ = json.Marshal(raw)
+	if _, err := ParseResult(string(data), in); err == nil {
+		t.Error("accepted missing code feedback")
 	}
 }

@@ -27,6 +27,7 @@ Assess the submitted algorithm as written. The learner's correctness answers are
 
 Answer fields:
 - correctnessFeedback: plain text under 6,000 characters, with labeled sections Claim, Invariant / induction hypothesis / recurrence relation, Why it holds (1. Initially, 2. After one step, 3. Therefore), and Termination. Assess the learner's answers and explain necessary corrections in these sections. Keep complexity in its existing fields.
+- codeFeedback: plain text under 3,000 characters reviewing the code as interview code, separate from correctness and complexity. Cover readability and naming, idiomatic use of the language, simpler or clearer ways to write the same algorithm, and edge cases or bugs the code mishandles (empty input, single element, duplicates, overflow, off-by-one). Use short labeled points and quote the lines you refer to. Say briefly what is already good. If there is little to improve, say so in one or two sentences instead of inventing issues.
 - actualTime, actualSpace: the code's complexity.
 - timeMatches, spaceMatches: whether the learner's stated value describes the same bound as the actual one, even if written differently. When the learner stated nothing, answer false; it is ignored.
 - optimal: true when the code's time and space match the reference optimum, or the standard accepted optimum that the reference note describes. The reference is the best-known bound; its note may say the usual interview solution is slower (for example an O(n) dynamic programme where matrix exponentiation reaches O(log n)). A solution that reaches that accepted interview optimum counts as optimal. Without a reference entry, compare with the best-known bounds for the problem.
@@ -59,8 +60,9 @@ func schema(estimate bool) map[string]any {
 		"optimal":             map[string]any{"type": "boolean"},
 		"explanation":         map[string]any{"type": "string"},
 		"correctnessFeedback": map[string]any{"type": "string"},
+		"codeFeedback":        map[string]any{"type": "string"},
 	}
-	required := []string{"actualTime", "actualSpace", "timeMatches", "spaceMatches", "optimal", "explanation", "correctnessFeedback"}
+	required := []string{"actualTime", "actualSpace", "timeMatches", "spaceMatches", "optimal", "explanation", "correctnessFeedback", "codeFeedback"}
 	if estimate {
 		properties["optimalTime"] = map[string]any{"type": "string", "description": "Best-known time complexity for the problem in big-O notation."}
 		properties["optimalSpace"] = map[string]any{"type": "string", "description": "Best-known auxiliary space complexity for the problem in big-O notation."}
@@ -123,6 +125,7 @@ type rawResult struct {
 	Optimal             *bool   `json:"optimal"`
 	Explanation         *string `json:"explanation"`
 	CorrectnessFeedback *string `json:"correctnessFeedback"`
+	CodeFeedback        *string `json:"codeFeedback"`
 	OptimalTime         *string `json:"optimalTime"`
 	OptimalSpace        *string `json:"optimalSpace"`
 	OptimalNote         *string `json:"optimalNote"`
@@ -166,6 +169,13 @@ func ParseResult(text string, in Input) (leetgrinder.AnalysisResult, error) {
 	out.CorrectnessFeedback = leetgrinder.CleanAnalysisText(*raw.CorrectnessFeedback, leetgrinder.MaxCorrectnessFeedback)
 	if out.CorrectnessFeedback == "" {
 		return out, errors.New("correctness feedback is missing")
+	}
+	if raw.CodeFeedback == nil {
+		return out, errors.New("code feedback is missing")
+	}
+	out.CodeFeedback = leetgrinder.CleanAnalysisText(*raw.CodeFeedback, leetgrinder.MaxCodeFeedback)
+	if out.CodeFeedback == "" {
+		return out, errors.New("code feedback is missing")
 	}
 	out.Optimal = *raw.Optimal
 	out.Explanation = leetgrinder.CleanAnalysisText(*raw.Explanation, leetgrinder.MaxAnalysisExplanation)
