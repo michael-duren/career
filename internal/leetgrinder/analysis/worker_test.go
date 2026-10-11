@@ -127,7 +127,7 @@ func TestWorkerQueueAndInvalidation(t *testing.T) {
 	if got, _ = analysisOf(t, db, withCode.ID); got.Current || got.Done() || got.StatedWrong() {
 		t.Fatalf("stale analysis still current: %+v", got)
 	}
-	api.answer(`{"actualTime":"O(n)","actualSpace":"O(n)","timeMatches":true,"spaceMatches":true,"optimal":true,"correctnessFeedback":"Claim: Check the code.","explanation":"Right."}`, "end_turn")
+	api.answer(`{"actualTime":"O(n)","actualSpace":"O(n)","timeMatches":true,"spaceMatches":true,"optimal":true,"correctnessFeedback":"Claim: Check the code.","codeFeedback":"Clear names.","explanation":"Right."}`, "end_turn")
 	step(t, w)
 	if reqs = api.take(); len(reqs) != 1 {
 		t.Fatalf("correction: %d requests", len(reqs))
@@ -297,7 +297,7 @@ func TestWorkerOutageAndConfigErrors(t *testing.T) {
 		t.Fatalf("sent during the configuration pause: %d", n)
 	}
 	// Once the key works, everything is analysed with no re-analyse needed.
-	api.answer(`{"actualTime":"O(n)","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"correctnessFeedback":"Claim: Check the code.","explanation":"Fine."}`, "end_turn")
+	api.answer(`{"actualTime":"O(n)","actualSpace":"O(1)","timeMatches":true,"spaceMatches":true,"optimal":true,"correctnessFeedback":"Claim: Check the code.","codeFeedback":"Clear names.","explanation":"Fine."}`, "end_turn")
 	c.advance(2 * time.Minute)
 	step(t, w)
 	if n := len(api.take()); n != 3 {
@@ -409,7 +409,7 @@ func TestWorkerStoresEstimatedOptimumOnce(t *testing.T) {
 	api := newFakeAPI(t)
 	c := newClock()
 	w := c.worker(db, api)
-	api.answer(`{"actualTime":"O(n)","actualSpace":"O(n)","timeMatches":true,"spaceMatches":true,"optimal":false,"correctnessFeedback":"Claim: Check the code.","explanation":"x","optimalTime":"O(n)","optimalSpace":"O(1)","optimalNote":"Two pointers."}`, "end_turn")
+	api.answer(`{"actualTime":"O(n)","actualSpace":"O(n)","timeMatches":true,"spaceMatches":true,"optimal":false,"correctnessFeedback":"Claim: Check the code.","codeFeedback":"Clear names.","explanation":"x","optimalTime":"O(n)","optimalSpace":"O(1)","optimalNote":"Two pointers."}`, "end_turn")
 	saveAttempt(t, db, leetgrinder.Attempt{ProblemSlug: "not-seeded-problem", TimeComplexity: "O(n)", SpaceComplexity: "O(n)", Code: "a", CodeLanguage: "python3", Source: "extension"})
 	step(t, w)
 	p, err := db.LeetgrinderProblem(ctx, "not-seeded-problem")
@@ -417,7 +417,7 @@ func TestWorkerStoresEstimatedOptimumOnce(t *testing.T) {
 		t.Fatalf("estimate not stored: %+v %v", p, err)
 	}
 	// A known optimum is sent as the reference, and later estimates never replace it.
-	api.answer(`{"actualTime":"O(n)","actualSpace":"O(n)","timeMatches":true,"spaceMatches":true,"optimal":false,"correctnessFeedback":"Claim: Check the code.","explanation":"x"}`, "end_turn")
+	api.answer(`{"actualTime":"O(n)","actualSpace":"O(n)","timeMatches":true,"spaceMatches":true,"optimal":false,"correctnessFeedback":"Claim: Check the code.","codeFeedback":"Clear names.","explanation":"x"}`, "end_turn")
 	saveAttempt(t, db, leetgrinder.Attempt{ProblemSlug: "not-seeded-problem", TimeComplexity: "O(n)", SpaceComplexity: "O(n)", Code: "b", CodeLanguage: "python3", Source: "extension"})
 	step(t, w)
 	reqs := api.take()
@@ -426,7 +426,7 @@ func TestWorkerStoresEstimatedOptimumOnce(t *testing.T) {
 		t.Fatalf("second request lacks the stored estimate: %s", user)
 	}
 	// Curated optima are never replaced.
-	api.answer(`{"actualTime":"O(n)","actualSpace":"O(n)","timeMatches":true,"spaceMatches":true,"optimal":true,"correctnessFeedback":"Claim: Check the code.","explanation":"x"}`, "end_turn")
+	api.answer(`{"actualTime":"O(n)","actualSpace":"O(n)","timeMatches":true,"spaceMatches":true,"optimal":true,"correctnessFeedback":"Claim: Check the code.","codeFeedback":"Clear names.","explanation":"x"}`, "end_turn")
 	saveAttempt(t, db, leetgrinder.Attempt{ProblemSlug: "two-sum", TimeComplexity: "O(n)", SpaceComplexity: "O(n)", Code: "c", CodeLanguage: "python3", Source: "extension"})
 	step(t, w)
 	if p, _ = db.LeetgrinderProblem(ctx, "two-sum"); p.OptimalSource != "curated" || p.OptimalTime != "O(n)" {

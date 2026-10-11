@@ -86,6 +86,9 @@ templ analysisCard(slug string, a Attempt, state State, avail AnalysisAvailabili
 				if an.CorrectnessFeedback != "" {
 					<h5>Correctness analysis</h5><p class="notes">{ an.CorrectnessFeedback }</p>
 				}
+				if an.CodeFeedback != "" {
+					<h5>Code feedback</h5><p class="notes">{ an.CodeFeedback }</p>
+				}
 				if an.Explanation != "" {
 					<p class="analysis-explanation">{ an.Explanation }</p>
 				}

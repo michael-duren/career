@@ -35,7 +35,7 @@ func TestLeetgrinderCorrectnessPersistenceAndAnalysis(t *testing.T) {
 	if err != nil || !found || job.Attempt.Correctness != answers {
 		t.Fatalf("job: %+v %v %v", job, found, err)
 	}
-	result := leetgrinder.AnalysisResult{ActualTime: "O(1)", ActualSpace: "O(1)", CorrectnessFeedback: "Claim: The code returns no pair.\nTermination: The empty result violates the claim."}
+	result := leetgrinder.AnalysisResult{ActualTime: "O(1)", ActualSpace: "O(1)", CorrectnessFeedback: "Claim: The code returns no pair.\nTermination: The empty result violates the claim.", CodeFeedback: "Edge cases: an empty array returns nothing."}
 	if err := s.FinishLeetgrinderAnalysis(ctx, job, leetgrinder.AnalysisDone, 1, result, "test", "", time.Now()); err != nil {
 		t.Fatal(err)
 	}
@@ -43,7 +43,7 @@ func TestLeetgrinderCorrectnessPersistenceAndAnalysis(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := state.Analyses[saved.ID]; !got.Done() || got.CorrectnessFeedback != result.CorrectnessFeedback {
+	if got := state.Analyses[saved.ID]; !got.Done() || got.CorrectnessFeedback != result.CorrectnessFeedback || got.CodeFeedback != result.CodeFeedback {
 		t.Fatalf("analysis: %+v", got)
 	}
 	// Editing each answer invalidates the previous assessment, including removing it.
