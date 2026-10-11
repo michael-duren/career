@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { buildBoard, appendCompanyNote, filterCompanies, type RawCompany, type Company, type CompanyStatus } from "../lib/companies";
+import { buildBoard, appendCompanyNote, filterCompanies, connectedCompanyCount, CONNECTED_COMPANY_GOAL, type RawCompany, type Company, type CompanyStatus } from "../lib/companies";
 import { avatarStack, connectionsByCompany, relativeDays, type Connection } from '../lib/connections';
 import { ConnectionAvatar } from './ConnectionAvatar';
 
@@ -98,6 +98,7 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
   const [hasConnections, setHasConnections] = useState(false);
   const visibleCompanies = filterCompanies(data, { category: activeCategory, hasConnections }, slug => connectionsBySlug.get(slug)?.length ?? 0);
   const totalCompanies = data.categories.reduce((sum, group) => sum + group.companies.length, 0);
+  const connectedCompanies = connectedCompanyCount(data, slug => connectionsBySlug.get(slug)?.length ?? 0);
 
   return (
     <div className="space-y-6">
@@ -106,6 +107,12 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
           {totalCompanies} companies · {data.totals.applied} applied ·{" "}
           {data.totals.interviewing} interviewing
         </span>
+        <div className="flex min-w-56 flex-1 items-center gap-3 sm:max-w-sm">
+          <label htmlFor="connected-companies" className="shrink-0 text-zinc-300">
+            {connections ? connectedCompanies : connectionsFailed ? '?' : '…'}/{CONNECTED_COMPANY_GOAL} companies with connections
+          </label>
+          <progress id="connected-companies" className="block h-1.5 w-full min-w-16 overflow-hidden rounded accent-emerald-500" value={connections ? Math.min(connectedCompanies, CONNECTED_COMPANY_GOAL) : 0} max={CONNECTED_COMPANY_GOAL} />
+        </div>
       </div>}
 
       {error && <div role="alert" className="rounded-lg border border-red-800 p-3 text-sm text-red-200">{error} <button type="button" disabled={busy} className="underline disabled:opacity-50" onClick={() => void reload()}>Reload latest (keep drafts)</button></div>}

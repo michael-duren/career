@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { appendCompanyNote, buildBoard, filterCompanies, type RawCompany } from '../src/lib/companies.ts';
+import { appendCompanyNote, buildBoard, connectedCompanyCount, filterCompanies, type RawCompany } from '../src/lib/companies.ts';
 import { toggleTask } from '../src/lib/checklist.ts';
 const company: RawCompany = {
   slug: 'test', title: 'Test', type: 'company', category: 'Infra', url: 'https://example.com', status: 'not_started', priority: 'high', featured: false, tags: [],
@@ -51,4 +51,16 @@ test('company filters combine category and has-connections', () => {
   // Before connections load (or with none), the filter shows nothing rather than everything.
   assert.deepEqual(filterCompanies(board, { category: 'all', hasConnections: true }, () => 0), []);
   assert.deepEqual(filterCompanies(board, { category: 'all', hasConnections: false }, () => 0).length, 3);
+});
+
+test('connected company count includes every category and ignores companies without connections', () => {
+  const board = buildBoard([
+    { ...company, slug: 'a', title: 'A', category: 'Infra' },
+    { ...company, slug: 'b', title: 'B', category: 'Infra' },
+    { ...company, slug: 'c', title: 'C', category: 'AI', status: 'rejected' },
+  ]);
+  const counts: Record<string, number> = { a: 3, c: 1 };
+  assert.equal(connectedCompanyCount(board, slug => counts[slug] ?? 0), 2);
+  assert.equal(connectedCompanyCount(board, () => 0), 0);
+  assert.equal(connectedCompanyCount(buildBoard([]), () => 1), 0);
 });
