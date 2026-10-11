@@ -51,7 +51,7 @@ func (s *Server) schedulerMutate(w http.ResponseWriter, r *http.Request) {
 	}
 	var busy []scheduler.Busy
 	var err error
-	if input.Action != "actual" && input.Action != "cancel" {
+	if input.Action != "actual" && input.Action != "cancel" && input.Action != "endRule" {
 		busy, err = s.schedulerPlanningAvailability(r.Context(), input.Week)
 		if err != nil {
 			respond(w, 503, map[string]string{"error": "Google availability check failed; your draft is kept. Retry or disconnect Google."})

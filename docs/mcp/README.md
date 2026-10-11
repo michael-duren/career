@@ -88,6 +88,12 @@ login blocks the connector.
   by difficulty and complexity-check accuracy. With `create_leetgrinder_todo_set` this
   supports requests such as "build me a two-week set for my weakest topics".
 
+- `get_weekly_schedule`: one week (Monday to Sunday) of the weekly scheduler for any
+  `date` in it (default: the current week in the schedule time zone). Returns settings,
+  day windows, sessions (plans, recorded actual work, canceled dates), recurring rules,
+  goal hour summaries, Google busy time, warnings and the `revision` every schedule write
+  needs. Times are RFC 3339 instants; weekday 1 is Monday.
+
 Problem entries in `get_leetgrinder_today`, `list_leetgrinder_reviews` and
 `list_leetgrinder_todos` include `url` for LeetCode and `neetcodeUrl` when a
 matching NeetCode problem is known. Unmapped problems omit `neetcodeUrl`.
@@ -154,6 +160,30 @@ Write tools (need **Allow read and edit**):
   different values is refused. A problem whose LeetCode details are not known yet is
   logged with a `warning`, in case the slug is a typo, including on a retry. `historyUrl` is the problem's page in the app.
 
+- Weekly schedule writes take the `revision` from `get_weekly_schedule` and return the
+  updated week; a stale revision is rejected. They go through the same scheduler rules as
+  the website: planning changes check Google availability fresh, and overlaps, day
+  windows and goal eligibility are validated. Times accept RFC 3339 or a local
+  `YYYY-MM-DDTHH:MM` in the schedule time zone.
+  - `save_schedule_session`: create or edit a one-off future session. Assign `goalId`
+    (optional `stepId`, or `newStepTitle` to add a subgoal) or a `title` for a fixed
+    commitment such as lunch. Editing a recurring occurrence changes that date only.
+  - `remove_schedule_session`: cancel a session that has not started. It stays listed with
+    `state: canceled`. `scope: "future"` also ends its rule from that occurrence. An
+    unplanned log is deleted; other recorded work is kept.
+  - `save_schedule_rule`: create or change a weekly rule (`weekday`, `localStart`,
+    `durationMinutes`, `effectiveFrom`, optional `effectiveTo`). A change with `id` ends
+    the old rule the day before `effectiveFrom` and starts a replacement with a new ID.
+  - `end_schedule_rule`: delete a rule from `from` (today or later). Later sessions that
+    have not started or recorded work are removed; earlier history is kept. A rule
+    that already ended before `from` is rejected; one ended on or before its first date
+    is removed.
+  - `record_schedule_actual`: with `sessionId`, `status` `explicit` (with `start`/`end`),
+    `assumed` (as planned, once it ended) or `skipped`. Without `sessionId`, logs unplanned
+    explicit work for `goalId`.
+  - `update_schedule_settings`: replace the IANA `timeZone`, `defaultDay` window and
+    optional `weekdays`/`dates` overrides (`start`, `end`, `nextDay`).
+
 Saves and deletes use the website's validation. Claude clients ask before
 running write tools unless you allow them permanently. Request
 bodies are limited to 64 KiB.
@@ -167,7 +197,8 @@ make test-postgres   # includes the OAuth flow and MCP tool tests
 `internal/server/mcp_test.go` covers discovery, registration, login redirect, consent,
 cross-origin approval rejection, PKCE, code replay, refresh rotation, read tools, and write
 tools (scope enforcement, revision conflicts, validation) and the connection company tools
-through the Go MCP client. `internal/database/connection_companies_test.go` covers grouping,
+through the Go MCP client. `internal/server/mcp_scheduler_test.go` covers weekly schedule
+reads and writes. `internal/database/connection_companies_test.go` covers grouping,
 filters, duplicate detection and linking.
 
 ## History

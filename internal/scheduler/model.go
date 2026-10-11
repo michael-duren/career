@@ -133,7 +133,7 @@ type Document struct {
 }
 
 // All writes use POST /api/scheduler/mutate, including settings, rule, session,
-// cancel and actual. Week identifies the response week. ID is optional for creates.
+// cancel, endRule and actual. Week identifies the response week. ID is optional for creates.
 type Mutation struct {
 	Revision      string    `json:"revision"`
 	Week          string    `json:"week"`
