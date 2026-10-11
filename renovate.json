@@ -53,6 +53,13 @@
       "dependencyDashboardApproval": true
     },
     {
+      "description": "astro check does not support TypeScript 7 yet, so TypeScript majors wait for approval on the dependency dashboard. See #120.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["typescript"],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
       "groupName": "react",
       "matchManagers": ["npm"],
       "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"]
