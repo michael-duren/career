@@ -43,6 +43,14 @@ export function buildBoard(raws: RawCompany[]): CompanyBoardData {
   return { categories: Array.from(groups, ([label, companies]) => ({ label, companies: companies.sort((a, b) => priority[a.priority] - priority[b.priority] || a.title.localeCompare(b.title)) })).sort((a, b) => (categories.includes(a.label) ? categories.indexOf(a.label) : categories.length) - (categories.includes(b.label) ? categories.indexOf(b.label) : categories.length) || a.label.localeCompare(b.label)), totals };
 }
 
+/** Target number of companies where you know at least one person. */
+export const CONNECTED_COMPANY_GOAL = 60;
+
+/** Companies on the board with at least one linked connection. */
+export function connectedCompanyCount(board: CompanyBoardData, connectionCount: (slug: string) => number): number {
+  return board.categories.reduce((sum, group) => sum + group.companies.filter(company => connectionCount(company.slug) > 0).length, 0);
+}
+
 export interface CompanyFilter { category: string; hasConnections: boolean }
 
 /** Companies matching every active filter, in board order. */
