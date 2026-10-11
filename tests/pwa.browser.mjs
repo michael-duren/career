@@ -72,7 +72,7 @@ try {
   await send('Network.enable');
   await send('Network.setCookie', { name: 'session', value: session, url: base, httpOnly: true, sameSite: 'Lax' });
 
-  const routes = new Set(['/', '/login', '/agents', '/personal-journal', '/journal', '/journal/new', '/timeline', '/documents', '/notes', '/companies', '/progress', '/logs', '/books', '/manage/books', '/manage/companies']);
+  const routes = new Set(['/', '/login', '/agents', '/personal-journal', '/?tab=journal', '/journal/new', '/timeline', '/documents', '/notes', '/companies', '/progress', '/?tab=week', '/?tab=logs', '/books', '/manage/books', '/manage/companies']);
   const { readdir } = await import('node:fs/promises');
   for (const route of ['/2026/career-study-plan', '/2026/languages', '/2026/os-oss', '/2026/os-oss/ostep', '/2026/os-oss/build-runtime', '/2026/os-oss/conference-talk', '/2026/os-oss/container-internals', '/2026/system-design', '/2026/system-design/alex-xu-vol1', '/2026/system-design/ddia-read', '/2026/system-design/hello-interview', '/2026/random/vintage-computers']) routes.add(route);
   for (const kind of ['notes', 'docs']) {
@@ -89,9 +89,9 @@ try {
       await navigate('Page.navigate', { url: base + route });
       await wait(`[...document.querySelectorAll('astro-island[component-url]')].every(el => !el.hasAttribute('ssr'))`);
       await pause(150);
-      if (width === 390 && ['/', '/books', '/timeline', '/journal', '/companies', '/agents'].includes(route)) {
+      if (width === 390 && ['/', '/books', '/timeline', '/?tab=journal', '/companies', '/agents'].includes(route)) {
         const shot = await send('Page.captureScreenshot', { format: 'png' });
-        await writeFile('/tmp/career-pwa-screenshots/' + (route.slice(1) || 'home') + '.png', Buffer.from(shot.data, 'base64'));
+        await writeFile('/tmp/career-pwa-screenshots/' + (route.slice(1).replace('?tab=', 'home-') || 'home') + '.png', Buffer.from(shot.data, 'base64'));
       }
       const result = await evaluate(`({width:innerWidth,scroll:document.documentElement.scrollWidth,title:document.title,overflow:[...document.querySelectorAll('main *')].filter(e=>e.getBoundingClientRect().right>innerWidth+1 && getComputedStyle(e).position!=='absolute').slice(0,8).map(e=>e.tagName+'.'+e.className)})`);
       if (result.scroll > width) failures.push({route,width,...result});

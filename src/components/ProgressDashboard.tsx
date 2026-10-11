@@ -4,6 +4,9 @@ import type { DashboardData } from '../lib/progress';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 export function ProgressDashboard({ data }: { data: DashboardData }) {
+  // Once goal tracks exist, the older per-track hours are history and only goals with work this week are shown.
+  const hasGoals = data.tracks.some(track => track.key.startsWith('goal:'));
+  const thisWeek = hasGoals ? data.tracks.filter(track => track.key.startsWith('goal:') && track.current > 0) : data.tracks.filter(track => !track.name.includes('(historical)'));
   return <div className="space-y-6">
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {[[`${data.currentHours.toFixed(1)}h`, `Week ${data.currentWeek}`], [`${data.totalHours.toFixed(1)}h`, 'All recorded study'], [String(data.weeksLogged), 'Weeks with hours'], [`${data.recentAverage.toFixed(1)}h`, '4-week average']].map(([value, label]) =>
@@ -11,7 +14,8 @@ export function ProgressDashboard({ data }: { data: DashboardData }) {
     </div>
     <section className="space-y-3">
       <h2 className="text-xl font-semibold">This week · {data.currentDates || 'No entry yet'}</h2>
-      <div className="grid sm:grid-cols-2 gap-3">{data.tracks.filter(t => !t.name.includes('(historical)')).map(track =>
+      <p className="text-sm text-zinc-400">Goal hours come from work recorded in the <a className="text-blue-400 hover:underline" href="/weekly-scheduler">weekly scheduler</a>.</p>
+      <div className="grid sm:grid-cols-2 gap-3">{thisWeek.map(track =>
         <div key={track.key} className="rounded-lg border border-zinc-800 p-4">
           <h3 style={{ color: track.color }}>{track.name}</h3>
           <p>{track.current}h {track.target !== undefined && <span className="text-zinc-400">/ {track.target}h planned</span>}</p>

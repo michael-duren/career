@@ -646,7 +646,7 @@ function DocRow({
               ))}
           </div>
           <div className="text-[10px] text-zinc-600 font-mono">
-            <a href="/journal" className="text-blue-400 hover:underline">Edit in journal →</a>
+            <a href="/?tab=journal" className="text-blue-400 hover:underline">Edit in journal →</a>
           </div>
         </div>
       )}

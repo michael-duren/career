@@ -142,3 +142,44 @@ func TestSchedulerActualRouteDerivesOvernightDates(t *testing.T) {
 		})
 	}
 }
+
+func TestSchedulerGoalHoursRouteTotalsRecordedWork(t *testing.T) {
+	db := testDB(t)
+	h := newOAuthHarness(t, db)
+	read := h.do("GET", "/api/scheduler/week?week=2026-09-14", "", nil, true)
+	if read.Code != 200 {
+		t.Fatalf("week: %d %s", read.Code, read.Body.String())
+	}
+	var week scheduler.Week
+	if err := json.Unmarshal(read.Body.Bytes(), &week); err != nil {
+		t.Fatal(err)
+	}
+	goal := "22222222-2222-4222-8222-222222222222"
+	raw, err := json.Marshal(scheduler.Mutation{
+		Action: "actual", Week: week.Week, Revision: week.Revision,
+		Session: &scheduler.Session{Date: "2026-09-15", Assignment: scheduler.Assignment{GoalID: goal}},
+		Actual:  &scheduler.Actual{Status: "explicit", Date: "2026-09-15", Start: mustSchedulerTime(t, "2026-09-15T09:00:00Z"), End: mustSchedulerTime(t, "2026-09-15T10:30:00Z")},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if write := h.do("POST", "/api/scheduler/mutate", string(raw), map[string]string{"Origin": testOrigin, "Content-Type": "application/json"}, true); write.Code != 200 {
+		t.Fatalf("actual: %d %s", write.Code, write.Body.String())
+	}
+	got := h.do("GET", "/api/scheduler/goal-hours", "", nil, true)
+	if got.Code != 200 {
+		t.Fatalf("goal hours: %d %s", got.Code, got.Body.String())
+	}
+	var out struct {
+		Goals map[string]scheduler.GoalHours `json:"goals"`
+	}
+	if err := json.Unmarshal(got.Body.Bytes(), &out); err != nil {
+		t.Fatal(err)
+	}
+	if hours := out.Goals[goal]; hours.TotalHours != 1.5 || hours.WeekHours["2026-09-14"] != 1.5 {
+		t.Fatalf("goal hours: %+v", out.Goals)
+	}
+	if anonymous := h.do("GET", "/api/scheduler/goal-hours", "", nil, false); anonymous.Code != 401 {
+		t.Fatalf("anonymous goal hours: %d", anonymous.Code)
+	}
+}

@@ -21,6 +21,6 @@ test('indexes live workspace collections with usable destinations', () => {
   });
   assert.equal(entries.find(e => e.title === 'Fresh note')?.href, '/notes/new/note');
   assert.equal(entries.find(e => e.title === 'Fresh page')?.href, '/documents/new/page');
-  assert.equal(entries.find(e => e.kind === 'Work journal')?.href, '/journal?id=2026%2Fweek-01');
+  assert.equal(entries.find(e => e.kind === 'Work journal')?.href, '/?tab=journal&id=2026%2Fweek-01');
   assert.ok(entries.some(e => e.href === '/timeline'));
 });

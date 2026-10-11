@@ -1,4 +1,4 @@
-import { TRACK_META, type WeekEntry } from './progress';
+import { TRACK_META, type WeekEntry } from './progress.ts';
 
 // ---------------------------------------------------------------------------
 // Log document model

@@ -1,7 +1,7 @@
 import { checklist, toggleTask } from '../lib/checklist';
 import type { WorkspaceEntry } from '../lib/workspace';
 import { BOOK_CATEGORIES } from '../lib/books';
-import { TRACK_META } from '../lib/progress';
+import { JournalWeekHours } from './JournalWeekHours';
 import { Combobox } from './NoteInputs';
 import { isAutoTitle } from '../lib/audio-thoughts';
 
@@ -15,7 +15,7 @@ function Select({ label, value, options, onChange }: { label: string; value: str
 export default function EntryFields({ entry, change, topics = [] }: { entry: WorkspaceEntry; change: (patch: Partial<WorkspaceEntry>) => void; topics?: string[] }) {
   if ('week' in entry) return <>
     <h2 className="text-lg font-semibold">Week {entry.week} · {entry.dates}</h2>
-    <div className="grid grid-cols-2 gap-3">{[...new Set(['ostep', 'ebpf', 'database', 'systemDesign', ...Object.keys(entry.hours)])].map(key => <label className="block text-xs text-zinc-400" key={key}>{TRACK_META[key]?.name ?? key} hours<input className={field} type="number" min="0" max="168" step="0.25" value={entry.hours[key] ?? 0} onChange={e => change({ hours: { ...entry.hours, [key]: Number(e.target.value) } })} /></label>)}</div>
+    <JournalWeekHours weekStart={entry.dates.slice(0, 10)} tracks={entry.hours} />
   </>;
   return <>
     {'runDate' in entry

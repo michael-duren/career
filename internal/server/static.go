@@ -16,13 +16,16 @@ import (
 
 var staticPages = map[string]string{
 	"/": "index.html", "/login": "login/index.html", "/books": "books/index.html",
-	"/companies": "companies/index.html", "/connections": "connections/index.html", "/logs": "logs/index.html", "/progress": "progress/index.html",
-	"/goals/graph": "goals/graph/index.html", "/agents": "agents/index.html", "/timeline": "timeline/index.html", "/journal": "journal/index.html",
+	"/companies": "companies/index.html", "/connections": "connections/index.html", "/progress": "progress/index.html",
+	"/goals/graph": "goals/graph/index.html", "/agents": "agents/index.html", "/timeline": "timeline/index.html",
 	"/journal/new": "journal/new/index.html", "/personal-journal": "personal-journal/index.html", "/notes": "notes/index.html", "/audio-thoughts": "audio-thoughts/index.html",
 	"/documents": "documents/index.html", "/manage/books": "manage/books/index.html",
 	"/manage/companies": "manage/companies/index.html",
- "/weekly-scheduler": "weekly-scheduler/index.html",
+	"/weekly-scheduler": "weekly-scheduler/index.html",
 }
+
+// homeTabs maps pages folded into the home page to their tab.
+var homeTabs = map[string]string{"/journal": "journal", "/logs": "logs"}
 
 var referenceAliases = map[string]string{
 	"/2026/algorithms": "/2026/career-study-plan", "/2026/algorithms/leetcode": "/2026/career-study-plan",
@@ -110,6 +113,15 @@ func (s *Server) registerStatic(r chi.Router) {
 		if route != "/" {
 			r.Get(route+"/", s.page)
 		}
+	}
+	for route, tab := range homeTabs {
+		redirect := func(w http.ResponseWriter, r *http.Request) {
+			query := r.URL.Query()
+			query.Set("tab", tab)
+			http.Redirect(w, r, "/?"+query.Encode(), http.StatusMovedPermanently)
+		}
+		r.Get(route, redirect)
+		r.Get(route+"/", redirect)
 	}
 	// Audio thoughts lived at /running before the rename; keep old links and installed PWAs working.
 	for _, legacy := range []string{"/running", "/running/"} {

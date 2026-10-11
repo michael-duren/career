@@ -39,3 +39,22 @@ func TestNewJournalEntryPageRoute(t *testing.T) {
 		}
 	}
 }
+
+func TestJournalAndLogsRedirectToHomeTabs(t *testing.T) {
+	s := &Server{config: config.Config{StaticDir: t.TempDir(), Username: "test", JWTSecret: "test-secret"}}
+	handler := s.RegisterRoutes()
+	for path, want := range map[string]string{
+		"/journal":                   "/?tab=journal",
+		"/journal/":                  "/?tab=journal",
+		"/journal?id=2026%2Fweek-25": "/?id=2026%2Fweek-25&tab=journal",
+		"/logs":                      "/?tab=logs",
+	} {
+		request := httptest.NewRequest(http.MethodGet, path, nil)
+		request.AddCookie(&http.Cookie{Name: "session", Value: s.token()})
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, request)
+		if response.Code != http.StatusMovedPermanently || response.Header().Get("Location") != want {
+			t.Fatalf("%s: %d %q, want %q", path, response.Code, response.Header().Get("Location"), want)
+		}
+	}
+}

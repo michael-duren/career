@@ -6,7 +6,8 @@ import MarkdownPreview from './MarkdownPreview';
 import { ProgressDashboard } from './ProgressDashboard';
 import { buildShelf, type RawBook } from '../lib/books';
 import { buildLogDocs, type WeekSummary } from '../lib/logs';
-import { buildDashboard, TRACK_KEYS, type WeekEntry } from '../lib/progress';
+import { buildDashboard, withGoalHours, type GoalTrack, type WeekEntry } from '../lib/progress';
+import type { GoalHours } from '../lib/goal-progress';
 import type { RawCompany } from '../lib/companies';
 import type { Document } from '../lib/workspace';
 import type { Goal } from '../lib/timeline';
@@ -98,12 +99,15 @@ export function LogsView() {
   return <LogExplorer docs={buildLogDocs(entries)} weeks={summaries} />;
 }
 
-export function ProgressView({ compact = false }: { compact?: boolean }) {
+export function ProgressView() {
   const { data, error } = useJSON<{ entries: WeekEntry[] }>('/api/summaries/progress');
-  if (!data) return <State error={error} />;
-  const dashboard = buildDashboard(data.entries);
-  if (!compact) return <ProgressDashboard data={dashboard} />;
-  return <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 space-y-4"><h2 className="text-xl font-semibold">This week · W{dashboard.currentWeek}</h2><p className="text-zinc-400">{dashboard.currentDates} · {dashboard.currentHours}h logged</p><div className="grid grid-cols-2 gap-3">{dashboard.tracks.filter(track => TRACK_KEYS.some(key => key === track.key)).map(track => <div key={track.key} className="rounded bg-zinc-800 p-3"><h3 style={{ color: track.color }}>{track.name}</h3><p>{track.current}h</p></div>)}</div><a href="/progress" className="text-blue-400 hover:underline">Progress dashboard →</a></section>;
+  const goals = useJSON<{ goals: Goal[] }>('/api/goals');
+  const hours = useJSON<{ goals: Record<string, GoalHours> }>('/api/scheduler/goal-hours');
+  // Goal hours are supplementary: if either goal request fails, show the journal-only dashboard.
+  const goalsSettled = (goals.data && hours.data) || goals.error || hours.error;
+  if (!data || !goalsSettled) return <State error={error} />;
+  const tracks: GoalTrack[] = goals.data && hours.data ? goals.data.goals.flatMap(goal => hours.data!.goals[goal.id] ? [{ id: goal.id, title: goal.title, color: goal.color, weekHours: hours.data!.goals[goal.id].weekHours }] : []) : [];
+  return <ProgressDashboard data={buildDashboard(withGoalHours(data.entries, tracks), new Date(), tracks)} />;
 }
 
 export function DocumentView({ id, home = false }: { id?: string; home?: boolean }) {

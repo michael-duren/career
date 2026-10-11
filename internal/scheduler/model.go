@@ -93,6 +93,10 @@ type Summary struct {
 	ExcessHours             float64  `json:"excessHours"`
 	UnscheduledStepIDs      []string `json:"unscheduledStepIds"`
 }
+type GoalHours struct {
+	TotalHours float64            `json:"totalHours"`
+	WeekHours  map[string]float64 `json:"weekHours"`
+}
 type Day struct {
 	Valid    bool        `json:"valid"`
 	Reason   string      `json:"reason,omitempty"`
