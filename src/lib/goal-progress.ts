@@ -92,3 +92,16 @@ export function weekTotals(week: SchedulerWeek) {
     uncovered: sum.uncovered + item.uncoveredHours,
   }), { required: 0, actual: 0, scheduled: 0, uncovered: 0 });
 }
+
+export interface SaveStep { key: string; label: string; run: () => Promise<void> }
+/**
+ * Runs save steps in order, skipping any that `done` already records, so retrying
+ * after a partial failure never repeats a saved step. Finished steps are added to `done`.
+ */
+export async function runSaveSteps(steps: SaveStep[], done: Map<string, string>): Promise<void> {
+  for (const step of steps) {
+    if (done.has(step.key)) continue;
+    await step.run();
+    done.set(step.key, step.label);
+  }
+}

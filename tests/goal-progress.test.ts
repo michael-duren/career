@@ -87,3 +87,21 @@ test('with goal tracks, empty journal tracks drop out and used ones are labelled
   assert.deepEqual(names, ['OSTEP (journal)', 'OSTEP']);
   assert.deepEqual(buildDashboard(weeks, new Date('2026-10-08T12:00:00Z')).tracks.map(t => t.key).slice(0, 4), ['ostep', 'ebpf', 'database', 'systemDesign']);
 });
+
+test('save steps resume after a partial failure without repeating saved steps', async () => {
+  const { runSaveSteps } = await import('../src/lib/goal-progress.ts');
+  const calls: string[] = [];
+  let failNote = true;
+  const steps = [
+    { key: 'hours', label: '1h logged', run: async () => { calls.push('hours'); } },
+    { key: 'goal', label: 'note added', run: async () => { calls.push('goal'); if (failNote) throw new Error('conflict'); } },
+    { key: 'journal', label: 'journal updated', run: async () => { calls.push('journal'); } },
+  ];
+  const done = new Map<string, string>();
+  await assert.rejects(runSaveSteps(steps, done), /conflict/);
+  assert.deepEqual([...done.keys()], ['hours']);
+  failNote = false;
+  await runSaveSteps(steps, done);
+  assert.deepEqual(calls, ['hours', 'goal', 'goal', 'journal']);
+  assert.deepEqual([...done.values()], ['1h logged', 'note added', 'journal updated']);
+});

@@ -3,7 +3,7 @@ import { CalendarDays, ChartGantt, ChevronLeft, ChevronRight, ListFilter, Notebo
 import { DocumentView, LogsView } from './StaticDataViews';
 import { WorkspaceEditor, appendToWorkJournal } from './WorkspaceEditor';
 import { buildLogDocs, type LogDoc } from '../lib/logs';
-import { currentGoals, formatHours, goalNoteBody, goalPace, journalLine, logSlot, upcomingGoals, weekTotals, type GoalHours } from '../lib/goal-progress';
+import { currentGoals, formatHours, goalNoteBody, goalPace, journalLine, logSlot, runSaveSteps, upcomingGoals, weekTotals, type GoalHours, type SaveStep } from '../lib/goal-progress';
 import { addDays, localInstant, mondayOf, schedulerRequest, SchedulerError, weekSchema, zonedDate, type SchedulerWeek } from '../lib/scheduler';
 import type { Goal } from '../lib/timeline';
 import { localDate, newWeek, type JournalWeek } from '../lib/workspace';
@@ -133,7 +133,9 @@ function LogWorkForm({ goals, today, timeZone, onSaved }: { goals: Goal[]; today
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
+  // Steps an earlier, partly failed attempt saved. While any exist, what is being logged is locked so a retry finishes the same entry.
   const completed = useRef(new Map<string, string>());
+  const [partial, setPartial] = useState(false);
   useEffect(() => { if (!goalId && current[0]) setGoalId(current[0].id); }, [current[0]?.id]);
   const goal = goals.find(item => item.id === goalId);
   const step = goal?.steps.find(item => item.id === stepId);
@@ -184,28 +186,25 @@ function LogWorkForm({ goals, today, timeZone, onSaved }: { goals: Goal[]; today
   }
   async function submit() {
     setBusy(true); setError(''); setStatus('');
-    // Steps saved by an earlier, partly failed attempt are skipped so a retry never logs them twice.
     const done = completed.current;
-    const once = async (key: string, label: string, run: () => Promise<void>) => {
-      if (done.has(key)) return;
-      await run(); done.set(key, label);
-    };
     try {
-      if (goal && amount > 0) await once('hours', `${formatHours(amount)}h logged to ${goal.title}`, () => recordHours(goal));
-      if (goal && (note.trim() || (completeStep && step))) await once('goal', note.trim() ? 'note added to the goal' : 'mini goal completed', () => saveGoalNote(goal));
+      const steps: SaveStep[] = [];
+      if (goal && amount > 0) steps.push({ key: 'hours', label: `${formatHours(amount)}h logged to ${goal.title}`, run: () => recordHours(goal) });
+      if (goal && (note.trim() || (completeStep && step))) steps.push({ key: 'goal', label: note.trim() ? 'note added to the goal' : 'mini goal completed', run: () => saveGoalNote(goal) });
       const line = journalLine({ goalTitle: goal?.title, stepTitle: step?.title, hours: amount, note });
-      if (line) await once('journal', 'journal updated', () => appendToWorkJournal(date, line));
+      if (line) steps.push({ key: 'journal', label: 'journal updated', run: () => appendToWorkJournal(date, line) });
+      await runSaveSteps(steps, done);
       setStatus(`Saved: ${[...done.values()].join(', ')}.`);
       resetForm();
       onSaved();
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Could not save.';
       setError(done.size ? `${message} Already saved: ${[...done.values()].join(', ')}. Saving again finishes the rest.` : message);
-      if (done.size) onSaved();
+      if (done.size) { setPartial(true); onSaved(); }
     } finally { setBusy(false); }
   }
   function resetForm() {
-    completed.current = new Map();
+    completed.current = new Map(); setPartial(false);
     setNote(''); setStartTime(''); setCompleteStep(false); setStepId('');
   }
   const canSave = goal ? amount > 0 || Boolean(note.trim()) || (completeStep && Boolean(step)) : Boolean(note.trim());
@@ -216,8 +215,9 @@ function LogWorkForm({ goals, today, timeZone, onSaved }: { goals: Goal[]; today
     </div>
     <form className="space-y-3" onSubmit={e => { e.preventDefault(); void submit(); }}>
       <fieldset disabled={busy} className="space-y-3">
+        <fieldset disabled={partial} className="space-y-3" aria-describedby={partial ? 'partial-help' : undefined}>
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block text-sm">Goal<select className={field} value={goalId} onChange={e => { setGoalId(e.target.value); setStepId(''); setCompleteStep(false); completed.current = new Map(); }}>
+          <label className="block text-sm">Goal<select className={field} value={goalId} onChange={e => { setGoalId(e.target.value); setStepId(''); setCompleteStep(false); }}>
             <option value="">No goal (journal only)</option>
             {current.length > 0 && <optgroup label="Current goals">{current.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</optgroup>}
             {others.length > 0 && <optgroup label="Other open goals">{others.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</optgroup>}
@@ -228,19 +228,22 @@ function LogWorkForm({ goals, today, timeZone, onSaved }: { goals: Goal[]; today
           </select></label>}
         </div>
         <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
-          <label className="block text-sm">Date<input className={field} type="date" required min="2026-04-20" max={today} value={date} onChange={e => { setDate(e.target.value); completed.current = new Map(); }} /></label>
-          {goal && <label className="block text-sm">Hours<input className={field} type="number" min="0" max="16" step="0.25" value={hours} onChange={e => { setHours(e.target.value); completed.current = new Map(); }} /></label>}
+          <label className="block text-sm">Date<input className={field} type="date" required min="2026-04-20" max={today} value={date} onChange={e => setDate(e.target.value)} /></label>
+          {goal && <label className="block text-sm">Hours<input className={field} type="number" min="0" max="16" step="0.25" value={hours} onChange={e => setHours(e.target.value)} /></label>}
           {goal && amount > 0 && <label className="block text-sm">Start time<input className={field} type="time" value={startTime} onChange={e => setStartTime(e.target.value)} aria-describedby="start-help" /><span id="start-help" className="text-xs text-zinc-500">Blank: latest free slot{timeZone ? ` (${timeZone})` : ''}</span></label>}
         </div>
         {step && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={completeStep} onChange={e => setCompleteStep(e.target.checked)} />Mark “{step.title}” done</label>}
+        </fieldset>
         <label className="block text-sm">What did you learn, finish, or get stuck on?<textarea aria-label="Reflection" className={`${field} min-h-28`} maxLength={20000} placeholder="Today I learned…" value={note} onChange={e => { setNote(e.target.value); setStatus(''); }} /></label>
         <div className="flex flex-wrap items-center gap-3">
           <button className={primary} type="submit" disabled={!canSave}>{busy ? 'Saving…' : goal && amount > 0 ? 'Log work' : 'Save reflection'}</button>
+          {partial && <button type="button" className={button} onClick={() => { if (window.confirm('Start a new entry? Steps already saved stay saved; the rest of this entry is dropped.')) resetForm(); }}>Start over</button>}
           <a className="text-sm text-blue-400 hover:underline" href="/?tab=journal">Open journal →</a>
         </div>
       </fieldset>
     </form>
     {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
+    {partial && <p id="partial-help" className="text-sm text-zinc-400">Goal, date and hours are locked until this entry finishes saving, so nothing is logged twice.</p>}
     <p role="status" className="text-sm text-zinc-400">{status}</p>
   </section>;
 }

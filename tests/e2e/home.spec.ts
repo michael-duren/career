@@ -3,6 +3,8 @@ import { test, expect, type APIRequestContext } from '@playwright/test';
 // The home page combines current goals, the week, the work journal and logs.
 // Logging work there must land in every place that reads it: the weekly
 // scheduler (hours), the timeline goal (note, mini goal), and the journal.
+// Like the other specs, it expects a disposable workspace: afterAll removes
+// its goals, but the recorded session and journal line remain.
 const ownedGoals = new Set<string>();
 
 function chicagoDate(offsetDays = 0) {
