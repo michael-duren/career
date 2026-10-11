@@ -91,8 +91,6 @@ func scheduleIntervals(in map[string]scheduleDayInput) map[string]scheduler.DayI
 	return out
 }
 
-var scheduleWrite = &mcp.ToolAnnotations{DestructiveHint: new(bool), OpenWorldHint: new(bool)}
-
 func (s *Server) addSchedulerTools(server *mcp.Server) {
 	mcp.AddTool(server, &mcp.Tool{
 		Name: "get_weekly_schedule", Description: "Read one week (Monday to Sunday) of the weekly schedule: settings and time zone, day windows, planned and recorded sessions, recurring weekly rules, goal hour summaries, Google busy time, warnings, and the revision every schedule write needs. Times are RFC 3339 instants; weekday 1 is Monday.",
