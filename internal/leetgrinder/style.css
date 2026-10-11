@@ -613,11 +613,48 @@ dd {
   margin-bottom: 35px;
   font-size: 0.85rem;
 }
-.history-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
-  align-items: start;
+.tab-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 12px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.tab-list[hidden] {
+  display: none;
+}
+.tab {
+  padding: 8px 16px;
+  background: none;
+  border: 0;
+  border-radius: 7px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tab:hover {
+  background: var(--line);
+  color: var(--ink);
+}
+.tab[aria-selected="true"] {
+  background: #2563eb;
+  color: #fff;
+}
+.tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.tab-count {
+  margin-left: 6px;
+  opacity: 0.7;
+}
+.tab-panel + .tab-panel {
+  margin-top: 32px;
+}
+.tabs-ready .tab-panel + .tab-panel {
+  margin-top: 0;
 }
 .attempt h3 {
   font-size: 1rem;
@@ -878,9 +915,6 @@ dd {
   }
   .session-nav {
     justify-content: center;
-  }
-  .history-grid {
-    grid-template-columns: 1fr;
   }
   .weeks {
     gap: 16px;
