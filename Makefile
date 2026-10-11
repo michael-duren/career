@@ -113,13 +113,7 @@ homelab-check: ## Run homelab source checks
 homelab-build: ## Build the homelab image
 	./scripts/deploy-homelab.sh build
 
-homelab-deploy: ## Build and deploy to the homelab
-	./scripts/deploy-homelab.sh deploy
-
-homelab-rollback: ## Restore the previous homelab deployment
-	./scripts/deploy-homelab.sh rollback
-
-.PHONY: homelab-check homelab-build homelab-deploy homelab-rollback
+.PHONY: homelab-check homelab-build
 
 # Run these steps in order, including when make is invoked with -j.
 dev: ## Install dependencies, set up .env, start PostgreSQL, build, and serve
