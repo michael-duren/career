@@ -32,6 +32,8 @@ jobs:
         run: npm ci
       - if: matrix.task == 'test'
         run: npm test
+      - if: matrix.task == 'test'
+        run: npm run tc
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 20

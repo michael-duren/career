@@ -5,7 +5,7 @@
   "scripts": {
     "setup": "bash scripts/setup-env.sh",
     "dev": "node scripts/dev.mjs",
-    "tc": "tsc",
+    "tc": "astro sync && tsc",
     "start": "node scripts/dev.mjs",
     "build": "astro build",
     "preview": "astro preview",
