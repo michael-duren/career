@@ -89,7 +89,8 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Could not delete. Please retry.');
       window.dispatchEvent(new Event('workspace-saved'));
-      if (detailSlug) { window.location.assign('/companies'); return; }
+      // Release the lock first so the beforeunload guard doesn't prompt on the way out.
+      if (detailSlug) { lock.current = false; window.location.assign('/companies'); return; }
       setCompanies(current => current.filter(item => item.slug !== slug));
       setDrafts(({ [slug]: _, ...rest }) => rest);
       setStatus(`${company.title} deleted.`);
