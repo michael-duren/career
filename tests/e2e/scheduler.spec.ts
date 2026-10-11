@@ -1470,3 +1470,25 @@ test('a compact non-goal item can be copied and pasted on mobile', async ({ page
   await expect(dialog).toBeHidden();
   await expect(page.locator(`[data-scheduler-date="${thursday}"] [data-session-id]`).filter({ hasText: title })).toHaveAttribute('data-duration-minutes', '20');
 });
+
+test('clicking outside the session editor closes it, clicking inside does not', async ({ page, request, baseURL }) => {
+  const goal = await createGoal(request, baseURL!);
+  await goToNextWeek(page);
+  const dialog = page.locator('.scheduler-editor-dialog');
+
+  await page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-title`).click();
+  await expect(dialog).toBeVisible();
+  // The dialog's own padding targets the dialog element too, but is inside its box.
+  await dialog.click({ position: { x: 4, y: 4 } });
+  await expect(dialog).toBeVisible();
+  // A selection dragged from the form out to the backdrop keeps the draft.
+  const box = (await dialog.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + 20);
+  await page.mouse.down();
+  await page.mouse.move(5, 5);
+  await page.mouse.up();
+  await expect(dialog).toBeVisible();
+
+  await page.mouse.click(5, 5);
+  await expect(dialog).toBeHidden();
+});
