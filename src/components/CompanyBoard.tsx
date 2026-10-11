@@ -80,6 +80,22 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not save. Please retry.'); setStatus('Change not saved. Your drafts are kept.'); }
     finally { lock.current = false; setBusy(false); }
   }
+  async function remove(slug: string) {
+    const company = companies.find(company => company.slug === slug);
+    if (lock.current || !company || !window.confirm(`Delete ${company.title}? This cannot be undone.`)) return;
+    lock.current = true; setBusy(true); setError(''); setStatus('Deleting…');
+    try {
+      const response = await fetch('/api/entries/company', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: slug, revision: revisions[slug] ?? revision }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not delete. Please retry.');
+      window.dispatchEvent(new Event('workspace-saved'));
+      if (detailSlug) { window.location.assign('/companies'); return; }
+      setCompanies(current => current.filter(item => item.slug !== slug));
+      setDrafts(({ [slug]: _, ...rest }) => rest);
+      setStatus(`${company.title} deleted.`);
+    } catch (e) { setError(e instanceof Error ? e.message : 'Could not delete. Please retry.'); setStatus('Company not deleted.'); }
+    finally { lock.current = false; setBusy(false); }
+  }
   async function reload() {
     if (lock.current) return;
     lock.current = true; setBusy(true); setError('');
@@ -192,6 +208,10 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
                 <span>{company.priority} priority</span>
               </div>
               <progress id={`progress-${company.slug}`} className="mt-1 block h-1 w-full overflow-hidden rounded accent-blue-500" value={company.completed} max={company.steps.length || 1} />
+            </div>
+            <div className="mt-2 flex gap-3 text-xs">
+              <a href={`/manage/companies?id=${encodeURIComponent(company.slug)}`} aria-label={`Edit ${company.title}`} className="text-blue-400 hover:underline">Edit</a>
+              <button type="button" disabled={busy} aria-label={`Delete ${company.title}`} onClick={() => void remove(company.slug)} className="text-red-400 hover:underline disabled:opacity-50">Delete</button>
             </div>
             <Details className={`mt-2 ${detailSlug ? 'text-sm' : 'text-xs'} text-zinc-400`}>
               {!detailSlug && <summary className="cursor-pointer py-1 hover:text-zinc-100">Details, notes & connections</summary>}

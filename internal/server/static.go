@@ -72,16 +72,6 @@ func (s *Server) page(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	if requestPath == "/manage/companies" {
-		if id := r.URL.Query().Get("id"); id != "" {
-			if !database.ValidID("company", id) {
-				http.NotFound(w, r)
-				return
-			}
-			http.Redirect(w, r, "/companies/"+strings.Join(strings.Split(id, "/"), "/"), http.StatusFound)
-			return
-		}
-	}
 	s.staticFile(w, r, name, r.URL.Path != "/login")
 }
 
