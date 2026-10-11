@@ -431,6 +431,15 @@ func schedulerCreateStep(ctx context.Context, tx *sql.Tx, m *scheduler.Mutation)
 	}
 	return nil
 }
+
+// SchedulerGoalHours returns recorded hours per goal from the saved schedule.
+func (s *Store) SchedulerGoalHours(ctx context.Context) (map[string]scheduler.GoalHours, error) {
+	d, e := s.SchedulerDocument(ctx)
+	if e != nil {
+		return nil, e
+	}
+	return d.GoalHours(), nil
+}
 func (s *Store) SchedulerMutate(ctx context.Context, m scheduler.Mutation, now time.Time, busy []scheduler.Busy) (scheduler.Week, error) {
 	return s.schedulerUpdate(ctx, m.Week, &m, now, busy)
 }

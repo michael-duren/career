@@ -84,7 +84,7 @@
       const li = document.createElement('li');
       const link = document.createElement('a');
       const encoded = item.id.split('/').map(encodeURIComponent).join('/');
-      link.href = item.kind === 'run' ? `/audio-thoughts?id=${encodeURIComponent(item.id)}` : item.kind === 'note' ? `/notes/${encoded}` : item.kind === 'document' ? (item.id === 'index' ? '/' : `/documents/${encoded}`) : item.kind === 'company' ? `/companies/${encoded}` : item.kind === 'connection' ? `/connections?id=${encodeURIComponent(item.id)}` : item.kind === 'book' ? `/books?id=${encodeURIComponent(item.id)}` : item.kind === 'personal' ? `/personal-journal?id=${encodeURIComponent(item.id)}` : `/journal?id=${encodeURIComponent(item.id)}`;
+      link.href = item.kind === 'run' ? `/audio-thoughts?id=${encodeURIComponent(item.id)}` : item.kind === 'note' ? `/notes/${encoded}` : item.kind === 'document' ? (item.id === 'index' ? '/' : `/documents/${encoded}`) : item.kind === 'company' ? `/companies/${encoded}` : item.kind === 'connection' ? `/connections?id=${encodeURIComponent(item.id)}` : item.kind === 'book' ? `/books?id=${encodeURIComponent(item.id)}` : item.kind === 'personal' ? `/personal-journal?id=${encodeURIComponent(item.id)}` : `/?tab=journal&id=${encodeURIComponent(item.id)}`;
       link.className = 'search-result';
       const title = document.createElement('div');
       title.className = 'search-result-title';

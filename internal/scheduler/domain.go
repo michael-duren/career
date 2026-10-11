@@ -968,6 +968,26 @@ func (d *Document) Week(w string, now time.Time, busy []Busy) Week {
 	return out
 }
 
+// GoalHours totals recorded (non-skipped) work per goal, overall and by the
+// Monday of each actual's scheduling date, matching Week's actual accounting.
+func (d *Document) GoalHours() map[string]GoalHours {
+	out := map[string]GoalHours{}
+	for _, s := range d.Sessions {
+		if s.Assignment.GoalID == "" || s.Actual == nil || s.Actual.Status == "skipped" {
+			continue
+		}
+		hours := s.Actual.End.Sub(s.Actual.Start).Hours()
+		sum, ok := out[s.Assignment.GoalID]
+		if !ok {
+			sum.WeekHours = map[string]float64{}
+		}
+		sum.TotalHours += hours
+		sum.WeekHours[Monday(s.Actual.Date)] += hours
+		out[s.Assignment.GoalID] = sum
+	}
+	return out
+}
+
 func (d *Document) ActualDate(start time.Time) string {
 	loc, _ := time.LoadLocation(d.Settings.TimeZone)
 	date := start.In(loc).Format(dateLayout)

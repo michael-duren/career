@@ -123,17 +123,17 @@ try {
   assert.equal(await evaluate(`document.querySelector('textarea').value`),'Recovered browser draft');
   await click('Cancel'); await click('Delete'); await wait(visibleList);
   assert.equal(await evaluate(`document.querySelector('nav[aria-label="note entries"]').textContent.includes('Reader Alpha')`),false);
-  for (const [path,label,title] of [['/personal-journal','personal journal entry entries','Personal reflection'],['/journal','week entries','Week 22']]) {
+  for (const [path,label,title] of [['/personal-journal','personal journal entry entries','Personal reflection'],['/?tab=journal','week entries','Week 22']]) {
     await open(path); await wait(`document.querySelector('nav[aria-label=${JSON.stringify(label)}] button')`);
     assert.equal(await evaluate(visibleList),true);
-    if(path==='/journal') await setValue('textarea[aria-label="Journal entry in Markdown"]','Quick draft survives reading');
+    if(path==='/?tab=journal') await setValue('textarea[aria-label="Journal entry in Markdown"]','Quick draft survives reading');
     await evaluate(`document.querySelector('nav[aria-label=${JSON.stringify(label)}] button').click()`); await wait(reader);
     assert.equal(await evaluate(visibleList),false);
     assert.equal(await evaluate(`document.querySelector('textarea[aria-label="Journal entry in Markdown"]')?.checkVisibility() ?? false`),false);
     await click('Edit'); await click('Cancel'); await wait(`Array.from(document.querySelectorAll('button')).some(b=>b.checkVisibility() && b.textContent==='Edit')`);
-    assert.equal(await evaluate(`document.body.textContent.includes(${JSON.stringify(path==='/journal' ? 'Work body' : 'Personal body')})`),true,'Cancel restores full journal detail');
+    assert.equal(await evaluate(`document.body.textContent.includes(${JSON.stringify(path==='/?tab=journal' ? 'Work body' : 'Personal body')})`),true,'Cancel restores full journal detail');
     await click('← Back to journal'); assert.equal(await evaluate(visibleList),true);
-    if(path==='/journal') assert.equal(await evaluate(`document.querySelector('textarea[aria-label="Journal entry in Markdown"]').value`),'Quick draft survives reading');
+    if(path==='/?tab=journal') assert.equal(await evaluate(`document.querySelector('textarea[aria-label="Journal entry in Markdown"]').value`),'Quick draft survives reading');
   }
   await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
   await open('/personal-journal'); await wait(`document.querySelector('nav[aria-label="personal journal entry entries"] button')`);

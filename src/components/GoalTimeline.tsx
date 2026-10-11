@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react';
 import { dayNumber, dayString, monthOffset, shiftGoal, timelineHours, type Goal } from '../lib/timeline';
 import { localDate } from '../lib/workspace';
+import { formatHours, goalPace, type GoalHours } from '../lib/goal-progress';
+import { mondayOf } from '../lib/scheduler';
 import '../styles/timeline.css';
 import { dependencyCycle } from '../lib/goal-dependencies';
 import { GoalDependencies } from './GoalDependencies';
@@ -11,6 +13,7 @@ const colors = ['#67e8f9', '#c4b5fd', '#fda4af', '#86efac', '#fcd34d', '#93c5fd'
 export function GoalTimeline() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [revisions, setRevisions] = useState<Record<string, string>>({});
+  const [logged, setLogged] = useState<Record<string, GoalHours>>({});
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -30,13 +33,16 @@ export function GoalTimeline() {
   const saving = useRef(false);
   const start = dayNumber(anchor), end = dayNumber(monthOffset(anchor, months)), days = end - start;
   const today = dayNumber(localDate());
+  const pace = (goal: Goal) => goalPace(goal, logged[goal.id], localDate(), mondayOf(localDate()));
   const pct = (day: number) => `${(day - start) / days * 100}%`;
   async function load() {
     setBusy(true); setError('');
     try {
-      const response = await fetch('/api/goals', { cache: 'no-store' });
+      const [response, hoursResponse] = await Promise.all([fetch('/api/goals', { cache: 'no-store' }), fetch('/api/scheduler/goal-hours', { cache: 'no-store' })]);
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
+      // Logged hours are supplementary; the timeline stays editable without them.
+      if (hoursResponse.ok) setLogged((await hoursResponse.json()).goals ?? {});
       setGoals(result.goals); setRevisions(result.revisions); setLoaded(true); setStatus('All changes saved');
       const selected = new URLSearchParams(location.search).get('goal');
       if (selected && !draft) { const goal = result.goals.find((g: Goal) => g.id === selected); if (goal) open(goal); history.replaceState(null, '', location.pathname); }
@@ -146,7 +152,7 @@ export function GoalTimeline() {
             return <div data-goal key={goal.id} className="timeline-goal" style={{ top: index * 72 + 30, left: pct(left), width: `${Math.max(0, right - left) / days * 100}%`, background: goal.color }}>
               <button className="goal-handle" aria-label={`Resize start of ${goal.title}`} disabled={busy} onPointerDown={e => pointerDown(e, goal, 'start')} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={() => { drag.current = null; setPreview(null); }} onClick={() => { if (!suppressClick.current) open(goal); }}>‖</button>
               <button className="goal-body" disabled={busy} title={`${goal.title}: ${goal.startDate} to ${goal.endDate}`} onPointerDown={e => pointerDown(e, goal, 'move')} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={() => { drag.current = null; setPreview(null); }} onClick={() => { if (!suppressClick.current) open(goal); suppressClick.current = false; }}>
-                <strong>{goal.title}</strong><small>{goal.startDate} → {goal.endDate} · {goal.dailyHours === undefined ? 'Hours not set' : `${goal.dailyHours} h/selected day`}</small>
+                <strong>{goal.title}</strong><small>{goal.startDate} → {goal.endDate} · {goal.dailyHours === undefined ? 'Hours not set' : `${goal.dailyHours} h/selected day`} · {formatHours(pace(goal).logged)}h logged</small>
               </button>
               <button className="goal-handle" aria-label={`Resize end of ${goal.title}`} disabled={busy} onPointerDown={e => pointerDown(e, goal, 'end')} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={() => { drag.current = null; setPreview(null); }} onClick={() => { if (!suppressClick.current) open(goal); }}>‖</button>
             </div>;
@@ -154,7 +160,7 @@ export function GoalTimeline() {
         </div>
       </div>
     </div>
-    <details className="timeline-list" open><summary>All goals ({goals.length})</summary>{goals.map(goal => <button key={goal.id} disabled={busy} onClick={() => open(goal)}><span style={{ color: goal.color }}>●</span> {goal.title} · {goal.startDate} → {goal.endDate}</button>)}</details>
+    <details className="timeline-list" open><summary>All goals ({goals.length})</summary>{goals.map(goal => <button key={goal.id} disabled={busy} onClick={() => open(goal)}><span style={{ color: goal.color }}>●</span> {goal.title} · {goal.startDate} → {goal.endDate} · {formatHours(pace(goal).logged)}h logged</button>)}</details>
     <dialog ref={dialog} onCancel={event => { event.preventDefault(); if (!busy) setDraft(null); }}>
       {draft && <form onSubmit={event => {
         event.preventDefault();
@@ -173,6 +179,8 @@ export function GoalTimeline() {
           <GoalDependencies draft={draft} goals={goals} onChange={setDraft} />
           <GoalSchedule draft={draft} goals={goals} onChange={setDraft} />
           {!creating && <>
+            <h3>Logged work</h3>
+            {(() => { const p = pace(draft); return <p className="timeline-help">{formatHours(p.logged)}h logged{p.plannedTotal !== undefined ? ` of ${formatHours(p.plannedTotal)}h planned` : ''}{p.expectedToDate ? ` · ${formatHours(p.expectedToDate)}h expected by today` : ''} · {formatHours(p.thisWeek)}h this week. <a href="/">Log work or a reflection</a> · <a href="/weekly-scheduler">Plan the week</a></p>; })()}
             <h3>Notes</h3>
             <label>Add a note<textarea maxLength={20000} value={note} onChange={e => setNote(e.target.value)} placeholder="What changed? What did you learn?" /></label>
             {[...draft.notes].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map(n => <article className="goal-note" key={n.id}><time>{new Date(n.createdAt).toLocaleString()}</time><p>{n.body}</p></article>)}

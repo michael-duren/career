@@ -14,6 +14,7 @@ func (s *Server) registerScheduler(r chi.Router) {
 		r.Use(s.private)
 		r.Get("/api/scheduler/week", s.schedulerWeek)
 		r.Post("/api/scheduler/mutate", s.schedulerMutate)
+		r.Get("/api/scheduler/goal-hours", s.schedulerGoalHours)
 	})
 }
 func (s *Server) schedulerNow() time.Time {
@@ -40,6 +41,14 @@ func (s *Server) schedulerWeek(w http.ResponseWriter, r *http.Request) {
 		out.Warnings = append(out.Warnings, "Google availability is stale or unavailable; refresh before planning")
 	}
 	respond(w, 200, out)
+}
+func (s *Server) schedulerGoalHours(w http.ResponseWriter, r *http.Request) {
+	goals, err := s.db.SchedulerGoalHours(r.Context())
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	respond(w, 200, map[string]any{"goals": goals})
 }
 func (s *Server) schedulerMutate(w http.ResponseWriter, r *http.Request) {
 	if !s.mutation(w, r) {

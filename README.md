@@ -18,10 +18,17 @@ Then open http://localhost:8080 and log in with `admin` / `password123`. See the
 
 ### Home, progress and logs
 
-The home page (`/`) shows the home page document, a quick work-journal entry box, a compact
-progress summary, and links to the main sections. **Progress** (`/progress`)
-is a dashboard of weekly study hours, metrics and notes. **Logs** (`/logs`) is a searchable,
-faceted explorer over the weekly study journal.
+The home page (`/`) has four tabs. **Overview** shows the current timeline goals with hours
+logged against what each goal expects by today, a summary of this week from the weekly
+scheduler, a form to log work and a reflection against a goal or mini goal, and the strategy
+page. **Week** shows goal hours and each day's recorded work and journal lines for any week.
+**Journal** is the weekly work journal (formerly `/journal`) and **Logs** is the searchable,
+faceted explorer over it (formerly `/logs`); the old URLs redirect to these tabs.
+
+Logged hours are recorded as actual sessions in the weekly scheduler, which is the single
+source for goal hours on the home page, the timeline, the journal week editor and **Progress**
+(`/progress`). A reflection is saved both as a note on the timeline goal and as a dated
+`Goal:` line in the week's journal. Older per-track journal hours stay as read-only history.
 
 ### Goals: timeline, graph and agent context
 

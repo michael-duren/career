@@ -461,6 +461,16 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
   </section>;
 }
 
+/** Adds text under the date's day heading in that week's work journal, creating the week if needed. */
+export async function appendToWorkJournal(date: string, text: string) {
+  const candidate = newWeek(date);
+  const page = await request('week');
+  const summary = page.entries.find((item: EntryResult) => 'dates' in item.entry && item.entry.dates === candidate.dates) as EntryResult | undefined;
+  const detail = summary ? await request('week', 'GET', undefined, entryId(summary.entry)) as EntryResult : null;
+  const week = detail?.entry as JournalWeek | undefined ?? candidate;
+  await request('week', 'POST', { revision: detail?.revision ?? null, entry: { ...week, body: appendDailyEntry(week.body, date, text) } });
+  window.dispatchEvent(new Event('workspace-saved'));
+}
 export function QuickJournal({ returnTo }: { returnTo?: string } = {}) {
   const [date, setDate] = useState('');
   const [body, setBody] = useState('');
@@ -488,14 +498,8 @@ export function QuickJournal({ returnTo }: { returnTo?: string } = {}) {
     setBusy(true); setError(''); setStatus('');
     let leaving = false;
     try {
-      const candidate = newWeek(date);
-      const page = await request('week');
-      const summary = page.entries.find((item: EntryResult) => 'dates' in item.entry && item.entry.dates === candidate.dates) as EntryResult | undefined;
-      const detail = summary ? await request('week', 'GET', undefined, entryId(summary.entry)) as EntryResult : null;
-      const week = detail?.entry as JournalWeek | undefined ?? candidate;
-      await request('week', 'POST', { revision: detail?.revision ?? null, entry: { ...week, body: appendDailyEntry(week.body, date, body) } });
+      await appendToWorkJournal(date, body);
       setBody(''); setPreview(false); setStatus('Saved to your journal.');
-      window.dispatchEvent(new Event('workspace-saved'));
       if (returnTo) {
         try { localStorage.removeItem(draftKey('quick')); } catch { /* Draft recovery is optional. */ }
         // Keep the form disabled while the browser navigates away.
@@ -506,7 +510,7 @@ export function QuickJournal({ returnTo }: { returnTo?: string } = {}) {
     finally { if (!leaving) setBusy(false); }
   }
   return <section className="rounded-xl border border-blue-900/60 bg-zinc-900 p-5 space-y-4">
-    <div className="flex flex-wrap justify-between gap-2"><div>{!returnTo && <h2 className="text-xl font-semibold">A moment to reflect</h2>}<p className={`${returnTo ? '' : 'mt-1 '}text-sm text-zinc-400`}>What did you learn, finish, or get stuck on?</p></div>{returnTo ? <a className="text-sm text-blue-400 hover:underline" href={returnTo}>← Back to journal</a> : <a className="text-sm text-blue-400 hover:underline" href="/journal">Open journal →</a>}</div>
+    <div className="flex flex-wrap justify-between gap-2"><div>{!returnTo && <h2 className="text-xl font-semibold">A moment to reflect</h2>}<p className={`${returnTo ? '' : 'mt-1 '}text-sm text-zinc-400`}>What did you learn, finish, or get stuck on?</p></div>{returnTo ? <a className="text-sm text-blue-400 hover:underline" href={returnTo}>← Back to journal</a> : <a className="text-sm text-blue-400 hover:underline" href="/?tab=journal">Open journal →</a>}</div>
     <form onSubmit={e => { e.preventDefault(); void save(); }} className="space-y-3"><fieldset disabled={busy || !ready} className="space-y-3">
       <div className="flex flex-wrap gap-3 items-end"><label className="text-sm">Entry date<input type="date" required min="2026-04-20" max="2199-12-31" className={`${field} mt-1`} value={date} onChange={e => setDate(e.target.value)} /></label><button type="button" className={button} aria-pressed={preview} onClick={() => setPreview(!preview)}>{preview ? 'Write' : 'Markdown preview'}</button></div>
       {preview ? <div className="min-h-32 rounded-lg bg-zinc-950 p-4"><Preview body={body} /></div> : <textarea aria-label="Journal entry in Markdown" className={`${field} min-h-32`} required maxLength={50000} placeholder="Today I learned…" value={body} onChange={e => { setBody(e.target.value); setStatus(''); }} />}

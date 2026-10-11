@@ -693,3 +693,16 @@ func TestEndRuleNeverExtendsAnEndedRule(t *testing.T) {
 		t.Fatal("unstarted rule kept with an inverted range")
 	}
 }
+
+func TestGoalHoursTotalsRecordedWorkByWeek(t *testing.T) {
+	d := testDocument()
+	d.Sessions["a"] = Session{ID: "a", Date: "2026-09-28", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Actual: &Actual{Status: "explicit", Date: "2026-09-28", Start: instant("2026-09-28T09:00:00Z"), End: instant("2026-09-28T10:30:00Z")}}
+	d.Sessions["b"] = Session{ID: "b", Date: "2026-10-06", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Actual: &Actual{Status: "assumed", Date: "2026-10-06", Start: instant("2026-10-06T09:00:00Z"), End: instant("2026-10-06T10:00:00Z")}}
+	d.Sessions["skipped"] = Session{ID: "skipped", Date: "2026-10-06", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Actual: &Actual{Status: "skipped", Date: "2026-10-06", Start: instant("2026-10-06T11:00:00Z"), End: instant("2026-10-06T12:00:00Z")}}
+	d.Sessions["planned"] = Session{ID: "planned", Date: "2026-10-07", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-10-07T09:00:00Z"), End: instant("2026-10-07T10:00:00Z")}}
+	d.Sessions["other"] = Session{ID: "other", Date: "2026-10-06", Assignment: Assignment{Title: "Work"}, State: "accepted", Actual: &Actual{Status: "explicit", Date: "2026-10-06", Start: instant("2026-10-06T13:00:00Z"), End: instant("2026-10-06T14:00:00Z")}}
+	got := d.GoalHours()
+	if len(got) != 1 || got["goal"].TotalHours != 2.5 || got["goal"].WeekHours["2026-09-28"] != 1.5 || got["goal"].WeekHours["2026-10-05"] != 1 || len(got["goal"].WeekHours) != 2 {
+		t.Fatalf("goal hours: %+v", got)
+	}
+}
