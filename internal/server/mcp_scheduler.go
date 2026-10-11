@@ -177,7 +177,7 @@ func (s *Server) addSchedulerTools(server *mcp.Server) {
 		return s.scheduleMutate(ctx, m)
 	})
 	mcp.AddTool(server, &mcp.Tool{
-		Name: "end_schedule_rule", Description: "Delete a recurring weekly rule from a date on: the rule stops the day before from, and its later sessions that have not started or recorded work are removed. Earlier sessions and recorded work are kept. Requires edit access.",
+		Name: "end_schedule_rule", Description: "Delete a recurring weekly rule from a date on: the rule stops the day before from, and its later sessions that have not started or recorded work are removed. Earlier sessions and recorded work are kept. A rule that already ended before from is rejected; a rule ended on or before its first date is removed. Requires edit access.",
 		Annotations: &mcp.ToolAnnotations{Title: "End schedule rule", DestructiveHint: &deleteIsDestructive, IdempotentHint: true, OpenWorldHint: new(bool)},
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in endScheduleRuleInput) (*mcp.CallToolResult, any, error) {
 		if !canWrite(req) {

@@ -666,3 +666,30 @@ func TestEndRuleKeepsHistoryAndRemovesLaterOccurrences(t *testing.T) {
 		}
 	}
 }
+
+func TestEndRuleNeverExtendsAnEndedRule(t *testing.T) {
+	d := testDocument()
+	now := instant("2026-09-30T12:00:00Z")
+	d.Rules["ended"] = Rule{ID: "ended", Weekday: 1, LocalStart: "09:00", DurationMinutes: 60, EffectiveFrom: "2026-09-21", EffectiveTo: "2026-10-20", Assignment: Assignment{GoalID: "goal"}}
+	if err := d.Apply(Mutation{Action: "endRule", ID: "ended", EffectiveFrom: "2026-12-01"}, now, nil); err == nil {
+		t.Fatal("ended an already ended rule")
+	}
+	if d.Rules["ended"].EffectiveTo != "2026-10-20" {
+		t.Fatalf("rule extended: %+v", d.Rules["ended"])
+	}
+	// cancel scope=future shares endRule and must not extend it either.
+	start := instant("2026-10-12T09:00:00Z")
+	d.Sessions["occ"] = Session{ID: "occ", RuleID: "ended", Date: "2026-10-12", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: start, End: start.Add(time.Hour)}}
+	d.endRule("ended", "2026-12-01", now)
+	if d.Rules["ended"].EffectiveTo != "2026-10-20" {
+		t.Fatalf("helper extended rule: %+v", d.Rules["ended"])
+	}
+	// Ending a future rule from its first date removes it.
+	d.Rules["future"] = Rule{ID: "future", Weekday: 2, LocalStart: "09:00", DurationMinutes: 60, EffectiveFrom: "2026-10-13", Assignment: Assignment{GoalID: "goal"}}
+	if err := d.Apply(Mutation{Action: "endRule", ID: "future", EffectiveFrom: "2026-10-06"}, now, nil); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := d.Rules["future"]; ok {
+		t.Fatal("unstarted rule kept with an inverted range")
+	}
+}

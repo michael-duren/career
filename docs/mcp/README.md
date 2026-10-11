@@ -175,7 +175,9 @@ Write tools (need **Allow read and edit**):
     `durationMinutes`, `effectiveFrom`, optional `effectiveTo`). A change with `id` ends
     the old rule the day before `effectiveFrom` and starts a replacement with a new ID.
   - `end_schedule_rule`: delete a rule from `from` (today or later). Later sessions that
-    have not started or recorded work are removed; earlier history is kept.
+    have not started or recorded work are removed; earlier history is kept. A rule
+    that already ended before `from` is rejected; one ended on or before its first date
+    is removed.
   - `record_schedule_actual`: with `sessionId`, `status` `explicit` (with `start`/`end`),
     `assumed` (as planned, once it ended) or `skipped`. Without `sessionId`, logs unplanned
     explicit work for `goalId`.

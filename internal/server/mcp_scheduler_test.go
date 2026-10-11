@@ -150,6 +150,9 @@ func TestMCPWeeklyScheduleCRUD(t *testing.T) {
 			t.Fatal("rule not ended", rule)
 		}
 	}
+	if out, failed := call("end_schedule_rule", map[string]any{"revision": ended["revision"], "id": ruleID, "from": scheduler.DateAdd(mon, 28)}); !failed || !strings.Contains(out["error"].(string), "already ended") {
+		t.Fatal("replaced rule extended", out)
+	}
 
 	// Actual work: skip a plan, and log unplanned past work.
 	skipped, failed := call("record_schedule_actual", map[string]any{"revision": ended["revision"], "sessionId": sessionID, "status": "skipped"})

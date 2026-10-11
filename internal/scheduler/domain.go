@@ -682,11 +682,15 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 		s.Exception = true
 		d.Sessions[m.ID] = s
 	case "endRule":
-		if _, ok := d.Rules[m.ID]; !ok {
+		r, ok := d.Rules[m.ID]
+		if !ok {
 			return fmt.Errorf("rule not found")
 		}
 		if !ValidDate(m.EffectiveFrom) {
 			return fmt.Errorf("effectiveFrom required to end a rule")
+		}
+		if r.EffectiveTo != "" && m.EffectiveFrom > r.EffectiveTo {
+			return fmt.Errorf("rule already ended on %s", r.EffectiveTo)
 		}
 		loc, _ := time.LoadLocation(d.Settings.TimeZone)
 		if m.EffectiveFrom < now.In(loc).Format(dateLayout) {
@@ -774,21 +778,37 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 }
 
 // endRule stops a recurring rule before the from date and removes its later
-// occurrences that have neither started nor recorded actual work.
+// occurrences that have neither started nor recorded actual work. It never
+// extends a rule that already ends earlier. A rule ended on or before its
+// first date is dropped once no session refers to it.
 func (d *Document) endRule(ruleID, from string, now time.Time) {
-	if r, ok := d.Rules[ruleID]; ok {
-		r.EffectiveTo = DateAdd(from, -1)
-		d.Rules[ruleID] = r
-	}
+	referenced := false
 	for id, other := range d.Sessions {
+		if other.RuleID != ruleID {
+			continue
+		}
 		occ := other.OccurrenceDate
 		if occ == "" {
 			occ = other.Date
 		}
 		started := other.Plan != nil && !other.Plan.Start.After(now)
-		if other.RuleID == ruleID && occ >= from && !started && other.Actual == nil {
+		if occ >= from && !started && other.Actual == nil {
 			delete(d.Sessions, id)
+			continue
 		}
+		referenced = true
+	}
+	r, ok := d.Rules[ruleID]
+	if !ok {
+		return
+	}
+	if from <= r.EffectiveFrom && !referenced {
+		delete(d.Rules, ruleID)
+		return
+	}
+	if to := DateAdd(from, -1); r.EffectiveTo == "" || to < r.EffectiveTo {
+		r.EffectiveTo = to
+		d.Rules[ruleID] = r
 	}
 }
 func (d *Document) Week(w string, now time.Time, busy []Busy) Week {
