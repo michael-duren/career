@@ -622,3 +622,47 @@ func TestWeekWarningTargetsKeepDuplicateGoalIdentity(t *testing.T) {
 		t.Fatalf("lost warning identities: %+v", week.WarningTargets)
 	}
 }
+
+func TestEndRuleKeepsHistoryAndRemovesLaterOccurrences(t *testing.T) {
+	d := testDocument()
+	now := instant("2026-09-30T12:00:00Z")
+	d.Rules["rule"] = Rule{ID: "rule", Weekday: 1, LocalStart: "09:00", DurationMinutes: 60, EffectiveFrom: "2026-09-21", Assignment: Assignment{GoalID: "goal"}}
+	session := func(id, date string, actual bool) Session {
+		start := instant(date + "T09:00:00Z")
+		s := Session{ID: id, RuleID: "rule", Date: date, Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: start, End: start.Add(time.Hour)}}
+		if actual {
+			s.Actual = &Actual{Status: "assumed", Date: date, Start: start, End: start.Add(time.Hour)}
+		}
+		return s
+	}
+	d.Sessions["past"] = session("past", "2026-09-28", true)
+	d.Sessions["next"] = session("next", "2026-10-05", false)
+	d.Sessions["later"] = session("later", "2026-10-12", false)
+	if err := d.Apply(Mutation{Action: "endRule", ID: "rule", EffectiveFrom: "2026-09-29"}, now, nil); err == nil {
+		t.Fatal("ended a rule from a past date")
+	}
+	if err := d.Apply(Mutation{Action: "endRule", ID: "missing", EffectiveFrom: "2026-10-05"}, now, nil); err == nil {
+		t.Fatal("ended a missing rule")
+	}
+	if err := d.Apply(Mutation{Action: "endRule", ID: "rule", EffectiveFrom: "2026-10-05"}, now, nil); err != nil {
+		t.Fatal(err)
+	}
+	if d.Rules["rule"].EffectiveTo != "2026-10-04" {
+		t.Fatalf("rule not ended: %+v", d.Rules["rule"])
+	}
+	if _, ok := d.Sessions["past"]; !ok {
+		t.Fatal("recorded history removed")
+	}
+	if _, ok := d.Sessions["next"]; ok {
+		t.Fatal("future occurrence kept")
+	}
+	if _, ok := d.Sessions["later"]; ok {
+		t.Fatal("later occurrence kept")
+	}
+	d.Generate("2026-09-28", "2026-10-31", now, nil, time.Time{})
+	for _, s := range d.Sessions {
+		if s.RuleID == "rule" && s.Date >= "2026-10-05" {
+			t.Fatalf("ended rule regenerated %s", s.Date)
+		}
+	}
+}

@@ -675,25 +675,24 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 			if occurrence == "" {
 				occurrence = s.Date
 			}
-			if r, ok := d.Rules[s.RuleID]; ok {
-				r.EffectiveTo = DateAdd(occurrence, -1)
-				d.Rules[s.RuleID] = r
-			}
-			for id, other := range d.Sessions {
-				occ := other.OccurrenceDate
-				if occ == "" {
-					occ = other.Date
-				}
-				started := other.Plan != nil && !other.Plan.Start.After(now)
-				if other.RuleID == s.RuleID && occ >= occurrence && !started && other.Actual == nil {
-					delete(d.Sessions, id)
-				}
-			}
+			d.endRule(s.RuleID, occurrence, now)
 			return nil
 		}
 		s.State = "canceled"
 		s.Exception = true
 		d.Sessions[m.ID] = s
+	case "endRule":
+		if _, ok := d.Rules[m.ID]; !ok {
+			return fmt.Errorf("rule not found")
+		}
+		if !ValidDate(m.EffectiveFrom) {
+			return fmt.Errorf("effectiveFrom required to end a rule")
+		}
+		loc, _ := time.LoadLocation(d.Settings.TimeZone)
+		if m.EffectiveFrom < now.In(loc).Format(dateLayout) {
+			return fmt.Errorf("a rule can only be ended from today or later; past occurrences are preserved")
+		}
+		d.endRule(m.ID, m.EffectiveFrom, now)
 	case "actual":
 		if m.Actual == nil {
 			return fmt.Errorf("actual required")
@@ -772,6 +771,25 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 		return fmt.Errorf("unknown scheduler action")
 	}
 	return nil
+}
+
+// endRule stops a recurring rule before the from date and removes its later
+// occurrences that have neither started nor recorded actual work.
+func (d *Document) endRule(ruleID, from string, now time.Time) {
+	if r, ok := d.Rules[ruleID]; ok {
+		r.EffectiveTo = DateAdd(from, -1)
+		d.Rules[ruleID] = r
+	}
+	for id, other := range d.Sessions {
+		occ := other.OccurrenceDate
+		if occ == "" {
+			occ = other.Date
+		}
+		started := other.Plan != nil && !other.Plan.Start.After(now)
+		if other.RuleID == ruleID && occ >= from && !started && other.Actual == nil {
+			delete(d.Sessions, id)
+		}
+	}
 }
 func (d *Document) Week(w string, now time.Time, busy []Busy) Week {
 	out := Week{Revision: d.Revision, Week: w, Settings: d.Settings, Days: []Day{}, Goals: []Summary{}, Sessions: []Session{}, Rules: []Rule{}, Busy: busy, Warnings: []string{}, WarningTargets: []Warning{}}
