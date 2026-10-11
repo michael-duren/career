@@ -102,3 +102,15 @@ test('problem page sections are tabs', async ({ page }) => {
   await expect(optimal).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByRole('heading', { name: 'Optimal complexity' })).toBeVisible();
 });
+
+test.describe('without JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+
+  test('problem page sections stack with no tab bar', async ({ page }) => {
+    await page.goto(`/leetgrinder/problem/no-js-check-${Date.now()}`);
+    await expect(page.getByRole('tablist')).toBeHidden();
+    await expect(page.getByRole('heading', { name: 'Previous attempts' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Record an attempt' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Optimal complexity' })).toBeVisible();
+  });
+});

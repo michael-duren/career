@@ -383,8 +383,12 @@ func TestHistoryTab(t *testing.T) {
 			t.Errorf("tabs missing %q", want)
 		}
 	}
-	// Without the script every panel stays visible.
-	if strings.Contains(html, `role="tabpanel" aria-labelledby="tab-attempts" hidden`) {
-		t.Error("panel hidden before the script runs")
+	// Without the script every panel stays visible and the tablist stays
+	// hidden, which needs a [hidden] rule because .tab-list sets display.
+	if strings.Count(html, `role="tabpanel"`) != 3 || strings.Contains(html, `class="tab-panel" hidden`) || !strings.Contains(html, `role="tablist" aria-label="Problem sections" hidden`) {
+		t.Error("server HTML does not degrade to stacked panels")
+	}
+	if !strings.Contains(Styles, ".tab-list[hidden] {\n  display: none;") {
+		t.Error("style.css lets .tab-list display override hidden")
 	}
 }
