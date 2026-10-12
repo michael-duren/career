@@ -7,7 +7,7 @@ COPY src ./src
 COPY public ./public
 RUN npm run build
 
-FROM golang:1.27.1-bookworm AS backend
+FROM golang:1.27.2-bookworm AS backend
 WORKDIR /build
 COPY go.mod go.sum ./
 RUN go mod download
