@@ -53,7 +53,7 @@ services:
       - "127.0.0.1:9090:9090"
 
   grafana:
-    image: grafana/grafana:13.2.3
+    image: grafana/grafana:13.2.4
     restart: unless-stopped
     environment:
       # Local-only (bound to 127.0.0.1): skip the login screen.
