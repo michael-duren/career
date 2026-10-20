@@ -487,3 +487,51 @@ func TestLeetgrinderNewPicksTurnedOnSameDay(t *testing.T) {
 		t.Fatalf("turned on: %v %v", newPickSlots(today), err)
 	}
 }
+
+// Todo picks take sets oldest first, each in its saved order, so an entry
+// added to an older set later still comes before a newer set, and a reorder
+// changes what is offered next.
+func TestLeetgrinderTodoPicksFollowSetOrder(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	older, err := s.CreateLeetgrinderTodoSet(ctx, "Older", []string{"two-sum", "valid-anagram"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.CreateLeetgrinderTodoSet(ctx, "Newer", []string{"binary-search"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.AddLeetgrinderTodoItem(ctx, older.ID, "group-anagrams"); err != nil {
+		t.Fatal(err)
+	}
+	next := func() []string {
+		t.Helper()
+		items, err := s.LeetgrinderNextTodoItems(ctx, 10)
+		if err != nil {
+			t.Fatal(err)
+		}
+		candidates, err := leetgrinderNewPickCandidates(ctx, s.DB, time.Now(), nil, 10)
+		if err != nil {
+			t.Fatal(err)
+		}
+		out := []string{}
+		for i, item := range items {
+			if candidates[i].Slug != item.Problem.Slug {
+				t.Fatalf("new picks %v differ from next todos at %d", candidates, i)
+			}
+			out = append(out, item.Problem.Slug)
+		}
+		return out
+	}
+	if got, want := next(), []string{"two-sum", "valid-anagram", "group-anagrams", "binary-search"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("got %v, want %v", got, want)
+	}
+	if _, _, err = s.ReorderLeetgrinderTodoSet(ctx, older.ID, func(items []leetgrinder.TodoItem) ([]string, error) {
+		return leetgrinder.OrderTodosFront(older.ID, items, []string{items[2].ID})
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := next(), []string{"group-anagrams", "two-sum", "valid-anagram", "binary-search"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("after reorder got %v, want %v", got, want)
+	}
+}
