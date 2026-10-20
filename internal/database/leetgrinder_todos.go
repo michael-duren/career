@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"slices"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -28,7 +29,7 @@ func (s *Store) CreateLeetgrinderTodoSetDetailed(ctx context.Context, set leetgr
 	set.Title = strings.TrimSpace(set.Title)
 	set.Description = strings.TrimSpace(set.Description)
 	if set.Title == "" || utf8.RuneCountInString(set.Title) > 120 || !utf8.ValidString(set.Title) || strings.IndexFunc(set.Title, unicode.IsControl) >= 0 ||
-		!utf8.ValidString(set.Description) || strings.ContainsRune(set.Description, 0) || utf8.RuneCountInString(set.Description) > 2000 || len(problems) > 200 {
+		!utf8.ValidString(set.Description) || strings.ContainsRune(set.Description, 0) || utf8.RuneCountInString(set.Description) > 2000 || len(problems) > leetgrinder.MaxTodoSetProblems {
 		return leetgrinder.TodoSet{}, ErrInvalid
 	}
 	setMetadata, err := todoMetadataJSON(set.Metadata)
@@ -51,13 +52,13 @@ func (s *Store) CreateLeetgrinderTodoSetDetailed(ctx context.Context, set leetgr
 	if _, err = tx.ExecContext(ctx, "INSERT INTO leetgrinder_todo_sets(id,title,description,metadata) VALUES($1,$2,$3,$4::jsonb)", set.ID, set.Title, set.Description, setMetadata); err != nil {
 		return leetgrinder.TodoSet{}, err
 	}
-	for _, problem := range problems {
+	for position, problem := range problems {
 		if err = saveTodoProblem(ctx, tx, problem); err != nil {
 			return leetgrinder.TodoSet{}, err
 		}
 		itemID := uuid.NewString()
 		source, _ := todoSourceJSON(problem)
-		if _, err = tx.ExecContext(ctx, "INSERT INTO leetgrinder_todo_items(id,set_id,problem_slug,source_data) VALUES($1,$2,$3,$4::jsonb)", itemID, set.ID, problem.Slug, source); err != nil {
+		if _, err = tx.ExecContext(ctx, "INSERT INTO leetgrinder_todo_items(id,set_id,problem_slug,source_data,position) VALUES($1,$2,$3,$4::jsonb,$5)", itemID, set.ID, problem.Slug, source, position); err != nil {
 			return leetgrinder.TodoSet{}, err
 		}
 		if err = recordTodoSource(ctx, tx, problem.Slug, itemID, source); err != nil {
@@ -226,10 +227,10 @@ func (s *Store) LeetgrinderTodoSets(ctx context.Context) ([]leetgrinder.TodoSet,
 	if err != nil {
 		return nil, err
 	}
-	rows, err = tx.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,source_data,done_at
+	rows, err = tx.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,source_data,position,done_at
 FROM (`+leetgrinderTodoRows+`) todo
 WHERE set_key IS NOT NULL
-ORDER BY created_at,id`)
+ORDER BY position,id`)
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +268,10 @@ func (s *Store) LeetgrinderTodoSet(ctx context.Context, id string) (leetgrinder.
 	return set, err
 }
 
-// leetgrinderTodoRows selects todo entries with done_at, the latest solved or
+// leetgrinderTodoRows selects todo entries with queued_at and done_at.
+// queued_at is when the entry's set was made, or for an individual entry when
+// it was added; with position it orders entries across sets, so a set is
+// worked in its saved order. done_at is the latest solved or
 // struggled attempt that completes the entry. Any such attempt completes a set
 // entry, so a set shows problems done before it was made. An individual entry
 // counts only attempts since it was added, so adding a done problem again
@@ -275,11 +279,16 @@ func (s *Store) LeetgrinderTodoSet(ctx context.Context, id string) (leetgrinder.
 // correcting an older attempt to solved does not complete an individual entry.
 const leetgrinderTodoRows = `SELECT i.id,COALESCE(i.set_id::text,'') AS set_id,i.set_id AS set_key,p.slug,
   COALESCE(p.number,0) AS number,p.title,p.difficulty,array_to_json(p.topics)::text AS topics,
-  i.source_data::text AS source_data,i.created_at,
+  i.source_data::text AS source_data,i.created_at,COALESCE(i.position,0) AS position,
+  COALESCE((SELECT s.created_at FROM leetgrinder_todo_sets s WHERE s.id=i.set_id),i.created_at) AS queued_at,
   (SELECT max(a.created_at) FROM leetgrinder_attempts a
    WHERE a.problem_slug=i.problem_slug AND a.outcome IN ('solved','struggled')
      AND (i.set_id IS NOT NULL OR a.created_at>=i.created_at)) AS done_at
 FROM leetgrinder_todo_items i JOIN leetgrinder_problems p ON p.slug=i.problem_slug`
+
+// leetgrinderTodoQueueOrder orders leetgrinderTodoRows oldest first: sets and
+// individual entries by queued_at, and a set's entries by position.
+const leetgrinderTodoQueueOrder = `queued_at,set_key,position,id`
 
 // LeetgrinderTodoItems lists a set's entries, done or not, or with setID ""
 // the individual entries still to do. A done individual entry leaves the list.
@@ -289,10 +298,10 @@ func (s *Store) LeetgrinderTodoItems(ctx context.Context, setID string) ([]leetg
 			return nil, ErrInvalid
 		}
 	}
-	rows, err := s.DB.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,source_data,done_at
+	rows, err := s.DB.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,source_data,position,done_at
 FROM (`+leetgrinderTodoRows+`) todo
 WHERE set_key IS NOT DISTINCT FROM $1::uuid AND (set_key IS NOT NULL OR done_at IS NULL)
-ORDER BY created_at,id`, nullableUUID(setID))
+ORDER BY position,created_at,id`, nullableUUID(setID))
 	if err != nil {
 		return nil, err
 	}
@@ -303,13 +312,13 @@ ORDER BY created_at,id`, nullableUUID(setID))
 // still to do, with its set's title. A problem present in several sets
 // appears only once on the dashboard.
 func (s *Store) LeetgrinderNextTodoItems(ctx context.Context, limit int) ([]leetgrinder.TodoItem, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,source_data,done_at
+	rows, err := s.DB.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,source_data,position,done_at
 FROM (
   SELECT DISTINCT ON (slug) * FROM (`+leetgrinderTodoRows+`) todo
   WHERE done_at IS NULL
-  ORDER BY slug,created_at,id
+  ORDER BY slug,`+leetgrinderTodoQueueOrder+`
 ) next
-ORDER BY created_at,id LIMIT $1`, limit)
+ORDER BY `+leetgrinderTodoQueueOrder+` LIMIT $1`, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -355,7 +364,7 @@ func scanLeetgrinderTodoItems(ctx context.Context, q queryer, rows *sql.Rows) ([
 		var item leetgrinder.TodoItem
 		var topics, metadata string
 		var doneAt sql.NullTime
-		if err := rows.Scan(&item.ID, &item.SetID, &item.Problem.Slug, &item.Problem.Number, &item.Problem.Title, &item.Problem.Difficulty, &topics, &metadata, &doneAt); err != nil {
+		if err := rows.Scan(&item.ID, &item.SetID, &item.Problem.Slug, &item.Problem.Number, &item.Problem.Title, &item.Problem.Difficulty, &topics, &metadata, &item.Position, &doneAt); err != nil {
 			return nil, err
 		}
 		if doneAt.Valid {
@@ -402,13 +411,23 @@ func (s *Store) AddLeetgrinderTodoItem(ctx context.Context, setID, slug string) 
 }
 
 func (s *Store) AddLeetgrinderTodoProblem(ctx context.Context, setID string, problem leetgrinder.TodoProblemInput) (leetgrinder.TodoItem, error) {
+	return s.AddLeetgrinderTodoProblemAt(ctx, setID, problem, leetgrinder.TodoMove{})
+}
+
+// AddLeetgrinderTodoProblemAt adds a problem and, in a set, places its entry
+// as place says, ignoring place.ID. With no target in place a new set entry
+// goes last and an existing one stays where it is.
+func (s *Store) AddLeetgrinderTodoProblemAt(ctx context.Context, setID string, problem leetgrinder.TodoProblemInput, place leetgrinder.TodoMove) (leetgrinder.TodoItem, error) {
 	if validateTodoProblem(problem) != nil {
 		return leetgrinder.TodoItem{}, ErrInvalid
 	}
+	placed := place.BeforeID != "" || place.AfterID != "" || place.ToIndex != nil
 	if setID != "" {
 		if _, err := uuid.Parse(setID); err != nil {
 			return leetgrinder.TodoItem{}, ErrInvalid
 		}
+	} else if placed {
+		return leetgrinder.TodoItem{}, ErrInvalid
 	}
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
@@ -416,12 +435,8 @@ func (s *Store) AddLeetgrinderTodoProblem(ctx context.Context, setID string, pro
 	}
 	defer tx.Rollback()
 	if setID != "" {
-		var exists bool
-		if err = tx.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM leetgrinder_todo_sets WHERE id=$1)", setID).Scan(&exists); err != nil {
+		if err = lockLeetgrinderTodoSet(ctx, tx, setID); err != nil {
 			return leetgrinder.TodoItem{}, err
-		}
-		if !exists {
-			return leetgrinder.TodoItem{}, ErrNotFound
 		}
 	}
 	if err = saveTodoProblem(ctx, tx, problem); err != nil {
@@ -435,8 +450,9 @@ ON CONFLICT (problem_slug) WHERE set_id IS NULL DO UPDATE SET source_data=CASE W
 created_at=CASE WHEN EXISTS (SELECT 1 FROM leetgrinder_attempts a WHERE a.problem_slug=EXCLUDED.problem_slug AND a.outcome IN ('solved','struggled') AND a.created_at>=leetgrinder_todo_items.created_at)
   THEN clock_timestamp() ELSE leetgrinder_todo_items.created_at END RETURNING id`, item.ID, problem.Slug, source).Scan(&item.ID)
 	} else {
-		err = tx.QueryRowContext(ctx, `INSERT INTO leetgrinder_todo_items(id,set_id,problem_slug,source_data) VALUES($1,$2,$3,$4::jsonb)
-ON CONFLICT (set_id,problem_slug) DO UPDATE SET source_data=CASE WHEN EXCLUDED.source_data='{}'::jsonb THEN leetgrinder_todo_items.source_data ELSE EXCLUDED.source_data END RETURNING id`, item.ID, setID, problem.Slug, source).Scan(&item.ID)
+		err = tx.QueryRowContext(ctx, `INSERT INTO leetgrinder_todo_items(id,set_id,problem_slug,source_data,position)
+VALUES($1,$2,$3,$4::jsonb,(SELECT count(*) FROM leetgrinder_todo_items WHERE set_id=$2))
+ON CONFLICT (set_id,problem_slug) DO UPDATE SET source_data=CASE WHEN EXCLUDED.source_data='{}'::jsonb THEN leetgrinder_todo_items.source_data ELSE EXCLUDED.source_data END RETURNING id,position`, item.ID, setID, problem.Slug, source).Scan(&item.ID, &item.Position)
 	}
 	if err != nil {
 		return leetgrinder.TodoItem{}, err
@@ -444,25 +460,138 @@ ON CONFLICT (set_id,problem_slug) DO UPDATE SET source_data=CASE WHEN EXCLUDED.s
 	if err = recordTodoSource(ctx, tx, problem.Slug, item.ID, source); err != nil {
 		return leetgrinder.TodoItem{}, err
 	}
+	if placed {
+		place.ID = item.ID
+		items, _, err := reorderLeetgrinderTodoSet(ctx, tx, setID, func(items []leetgrinder.TodoItem) ([]string, error) {
+			return leetgrinder.MoveTodos(setID, items, []leetgrinder.TodoMove{place})
+		})
+		if err != nil {
+			return leetgrinder.TodoItem{}, err
+		}
+		item.Position = slices.IndexFunc(items, func(i leetgrinder.TodoItem) bool { return i.ID == item.ID })
+	}
 	return item, tx.Commit()
 }
 
+// lockLeetgrinderTodoSet locks a set's row until the transaction ends, so
+// changes to its entries' positions do not interleave.
+func lockLeetgrinderTodoSet(ctx context.Context, tx *sql.Tx, setID string) error {
+	var id string
+	err := tx.QueryRowContext(ctx, "SELECT id FROM leetgrinder_todo_sets WHERE id=$1 FOR UPDATE", setID).Scan(&id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return ErrNotFound
+	}
+	return err
+}
+
+// ReorderLeetgrinderTodoSet saves a new order for a set's entries in one
+// transaction. order receives the entries in their saved order and returns
+// every entry ID in the new order; its error aborts the reorder. It returns
+// the entries in the new order and how many changed position.
+func (s *Store) ReorderLeetgrinderTodoSet(ctx context.Context, setID string, order func([]leetgrinder.TodoItem) ([]string, error)) ([]leetgrinder.TodoItem, int, error) {
+	if _, err := uuid.Parse(setID); err != nil {
+		return nil, 0, ErrInvalid
+	}
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer tx.Rollback()
+	if err = lockLeetgrinderTodoSet(ctx, tx, setID); err != nil {
+		return nil, 0, err
+	}
+	items, moved, err := reorderLeetgrinderTodoSet(ctx, tx, setID, order)
+	if err != nil {
+		return nil, 0, err
+	}
+	return items, moved, tx.Commit()
+}
+
+// reorderLeetgrinderTodoSet rewrites a locked set's positions in the order
+// returned, which must hold each entry exactly once.
+func reorderLeetgrinderTodoSet(ctx context.Context, tx *sql.Tx, setID string, order func([]leetgrinder.TodoItem) ([]string, error)) ([]leetgrinder.TodoItem, int, error) {
+	rows, err := tx.QueryContext(ctx, `SELECT id,set_id,slug,number,title,difficulty,topics,source_data,position,done_at
+FROM (`+leetgrinderTodoRows+`) todo
+WHERE set_key=$1
+ORDER BY position,id`, setID)
+	if err != nil {
+		return nil, 0, err
+	}
+	items, err := scanLeetgrinderTodoItems(ctx, tx, rows)
+	if err != nil {
+		return nil, 0, err
+	}
+	ids, err := order(items)
+	if err != nil {
+		return nil, 0, err
+	}
+	byID := make(map[string]leetgrinder.TodoItem, len(items))
+	for _, item := range items {
+		byID[item.ID] = item
+	}
+	reordered := make([]leetgrinder.TodoItem, 0, len(ids))
+	moved := 0
+	for position, id := range ids {
+		item, ok := byID[id]
+		if !ok {
+			return nil, 0, ErrInvalid
+		}
+		delete(byID, id)
+		if item.Position != position {
+			moved++
+		}
+		item.Position = position
+		reordered = append(reordered, item)
+	}
+	if len(byID) != 0 {
+		return nil, 0, ErrInvalid
+	}
+	if _, err = tx.ExecContext(ctx, `UPDATE leetgrinder_todo_items i SET position=o.n-1
+FROM unnest($2::uuid[]) WITH ORDINALITY AS o(id,n)
+WHERE i.set_id=$1 AND i.id=o.id AND i.position<>o.n-1`, setID, ids); err != nil {
+		return nil, 0, err
+	}
+	return reordered, moved, nil
+}
+
+// DeleteLeetgrinderTodoItem removes an entry; later entries in its set move
+// up one place.
 func (s *Store) DeleteLeetgrinderTodoItem(ctx context.Context, id string) error {
 	if _, err := uuid.Parse(id); err != nil {
 		return ErrInvalid
 	}
-	result, err := s.DB.ExecContext(ctx, "DELETE FROM leetgrinder_todo_items WHERE id=$1", id)
+	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
-	n, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if n == 0 {
+	defer tx.Rollback()
+	var setID sql.NullString
+	err = tx.QueryRowContext(ctx, "SELECT set_id FROM leetgrinder_todo_items WHERE id=$1", id).Scan(&setID)
+	if errors.Is(err, sql.ErrNoRows) {
 		return ErrNotFound
 	}
-	return nil
+	if err != nil {
+		return err
+	}
+	if setID.Valid {
+		if err = lockLeetgrinderTodoSet(ctx, tx, setID.String); err != nil {
+			return err
+		}
+	}
+	var position sql.NullInt64
+	err = tx.QueryRowContext(ctx, "DELETE FROM leetgrinder_todo_items WHERE id=$1 RETURNING position", id).Scan(&position)
+	if errors.Is(err, sql.ErrNoRows) {
+		return ErrNotFound
+	}
+	if err != nil {
+		return err
+	}
+	if position.Valid {
+		if _, err = tx.ExecContext(ctx, "UPDATE leetgrinder_todo_items SET position=position-1 WHERE set_id=$1 AND position>$2", setID.String, position.Int64); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
 }
 
 func (s *Store) DeleteLeetgrinderTodoSet(ctx context.Context, id string) error {
@@ -494,7 +623,8 @@ func (s *Store) DeleteLeetgrinderTodoSet(ctx context.Context, id string) error {
 }
 
 // loadLeetgrinderTodoExport returns every todo set with all its entries, and
-// the standalone entries, done or not, in creation order. Entries carry only
+// the standalone entries, done or not, sets' entries in saved order and the
+// standalone entries in creation order. Entries carry only
 // the problem slug, source data and CreatedAt.
 func loadLeetgrinderTodoExport(ctx context.Context, tx queryer) ([]leetgrinder.TodoSet, []leetgrinder.TodoItem, error) {
 	rows, err := tx.QueryContext(ctx, "SELECT id,title,description,metadata::text,created_at FROM leetgrinder_todo_sets ORDER BY created_at,id")
@@ -522,7 +652,7 @@ func loadLeetgrinderTodoExport(ctx context.Context, tx queryer) ([]leetgrinder.T
 	if err != nil {
 		return nil, nil, err
 	}
-	rows, err = tx.QueryContext(ctx, "SELECT id,COALESCE(set_id::text,''),problem_slug,source_data::text,created_at FROM leetgrinder_todo_items ORDER BY created_at,id")
+	rows, err = tx.QueryContext(ctx, "SELECT id,COALESCE(set_id::text,''),problem_slug,source_data::text,created_at FROM leetgrinder_todo_items ORDER BY position,created_at,id")
 	if err != nil {
 		return nil, nil, err
 	}

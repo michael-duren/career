@@ -170,7 +170,8 @@ ORDER BY n.plan_date,n.slot`)
 }
 
 // leetgrinderNewPickCandidates returns up to limit todo problems to pick as
-// new problems on the day starting at dayStart, oldest entry first. A
+// new problems on the day starting at dayStart, oldest entry first, a set's
+// entries in its saved order. A
 // candidate is still to do, has no attempt before that day (so an attempt on
 // it counts as new), and is not in picked. A problem queued more than once
 // is offered once, from its oldest entry still to do.
@@ -181,12 +182,12 @@ func leetgrinderNewPickCandidates(ctx context.Context, tx queryer, dayStart time
 	}
 	rows, err := tx.QueryContext(ctx, `SELECT slug,COALESCE(set_key::text,''),COALESCE(s.title,'')
 FROM (
-  SELECT DISTINCT ON (slug) slug,set_key,created_at,id FROM (`+leetgrinderTodoRows+`) todo
+  SELECT DISTINCT ON (slug) slug,set_key,queued_at,position,id FROM (`+leetgrinderTodoRows+`) todo
   WHERE done_at IS NULL AND NOT (slug = ANY($2::text[]))
     AND NOT EXISTS (SELECT 1 FROM leetgrinder_attempts a WHERE a.problem_slug=todo.slug AND a.created_at<$1)
-  ORDER BY slug,created_at,id
+  ORDER BY slug,`+leetgrinderTodoQueueOrder+`
 ) next LEFT JOIN leetgrinder_todo_sets s ON s.id=next.set_key
-ORDER BY next.created_at,next.id LIMIT $3`, dayStart, skip, limit)
+ORDER BY next.queued_at,next.set_key,next.position,next.id LIMIT $3`, dayStart, skip, limit)
 	if err != nil {
 		return nil, err
 	}

@@ -70,7 +70,14 @@ login blocks the connector.
 - `list_leetgrinder_todos`: named problem sets and individual problems. Returns set and
   item IDs for removal. A problem is done once a solved or struggled attempt is logged.
   Sets keep done problems with `done: true` and report `problemCount` and
-  `remainingCount`; individual problems leave the list once done.
+  `remainingCount`; individual problems leave the list once done. Set problems come in
+  the set's saved order with their 0-based `position`. Optional: `setID` lists one set
+  (individual problems are then left out); `fields: "compact"` returns only `id`,
+  `title`, `number`, `difficulty`, `done`, `position`, `pattern` and `neetcode150`
+  (from `metadata`); `done` and `pattern` (matches `metadata.pattern`, ignoring case)
+  filter; `limit` and `cursor` page. With any of these, each list reports
+  `matchingCount` and, while more remain, `nextCursor` (`individualMatchingCount` and
+  `individualNextCursor` for individual problems). Without them the output is unchanged.
 - `get_leetgrinder_today`: today's goal and progress (new, review, bonus, practice), whether
   it is met, the streak, today's review picks with reason and recall, today's new picks
   from todos when that option is on (`newPicksFailed` is true when picking them failed this
@@ -135,17 +142,33 @@ Write tools (need **Allow read and edit**):
   employer best matches them among all companies; the total is returned as
   `linkedConnections` and last-talked dates are not changed. The batch is all or nothing
   if any company fails validation.
-- `create_leetgrinder_todo_set`: create a named set with up to 200 problems. Pass plain
+- `create_leetgrinder_todo_set`: create a named set with up to 1000 problems, in the
+  order given. Pass plain
   links or slugs in `problems`. Pass objects in `problemDetails` to copy each problem's
   `number`, `title`, `difficulty`, `topics`, and `metadata`. The set also accepts a
   `description` and `metadata`. Omit both problem arrays to create an empty set.
 - `add_leetgrinder_todo_problem`: add a problem to a set with `setID`, or to the individual
   list without it. It accepts the same problem fields. Adding the same problem twice to one
   list keeps one entry; adding a done individual problem again queues it for another
-  pass. `list_leetgrinder_todos` returns each entry's `sourceProblem` snapshot and
+  pass. A new set entry goes last unless `position` (0-based index), `beforeId` or
+  `afterId` places it; these also move an entry already in the set, and need `setID`.
+  `list_leetgrinder_todos` returns each entry's `sourceProblem` snapshot and
   catalog fields. Imported source snapshots stay on the catalog problem if
   a todo is removed.
-- `remove_leetgrinder_todo_problem`: remove one todo entry by its ID.
+- `reorder_leetgrinder_set`: change a set's saved order. Pass `setID` and exactly one of
+  `orderedIds` (entry IDs to put first, in that order; the rest keep their relative
+  order after them; repeated IDs are ignored), `moves` (`[{id, beforeId | afterId |
+  toIndex}]`, applied in turn), or `orderBy`, sort keys applied in turn with ties keeping
+  the current order. A key's `field` is `title`, `number`, `difficulty`, `done`, `slug`
+  or `metadata.<key>`; with `values` matching entries come first in that order, without
+  them entries sort by value (`descending` to flip) and those lacking it go last. For
+  example `[{"field":"metadata.pattern","values":["Trees","Graphs"]},
+  {"field":"metadata.neetcode150","values":[true]},{"field":"metadata.positionInPattern"}]`.
+  IDs not in the set are rejected by name and nothing changes; done status, attempts and
+  metadata are untouched. Returns `moved`, `problemCount` and the first 20 entries (`id`,
+  `title`, `done`, `position`). Daily new picks from todos follow each set's order.
+- `remove_leetgrinder_todo_problem`: remove one todo entry by its ID; later entries in its
+  set move up.
 - `remove_leetgrinder_todo_set`: remove a set and its todo entries by set ID. These tools
   do not delete attempt history or problem metadata.
 - `log_leetgrinder_attempt`: log an attempt from chat, for a problem solved on a

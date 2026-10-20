@@ -20,6 +20,9 @@ type TodoItem struct {
 	Problem  Problem
 	// SourceData is the exact imported problem detail snapshot for this todo.
 	SourceData map[string]any
+	// Position is a set entry's 0-based index in its set's saved order; it
+	// is 0 for an individual entry.
+	Position int
 	// DoneAt is the latest solved or struggled attempt that completes this
 	// entry, zero while it is still to do.
 	DoneAt time.Time
@@ -199,7 +202,7 @@ type TodosPage struct {
 }
 
 // MaxTodoRefs is how many problems one pasted list may hold.
-const MaxTodoRefs = 200
+const MaxTodoRefs = MaxTodoSetProblems
 
 // ErrTooManyTodoRefs is returned for a list longer than MaxTodoRefs.
 var ErrTooManyTodoRefs = errors.New("too many todo problems")

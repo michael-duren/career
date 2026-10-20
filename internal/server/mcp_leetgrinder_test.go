@@ -57,7 +57,7 @@ func TestMCPLeetgrinderTools(t *testing.T) {
 		}
 		return tokens["access_token"].(string)
 	}
-	call := connectMCP(t, h, token("write"), 25)
+	call := connectMCP(t, h, token("write"), 26)
 
 	today, failed := call("get_leetgrinder_today", nil)
 	if failed || today["date"] != date || today["met"] != false || today["alsoDue"] != float64(1) {
@@ -145,7 +145,7 @@ func TestMCPLeetgrinderTools(t *testing.T) {
 	}
 
 	// A read-only connection reads but cannot log.
-	read := connectMCP(t, h, token("read"), 25)
+	read := connectMCP(t, h, token("read"), 26)
 	if out, failed := read("get_leetgrinder_today", nil); failed {
 		t.Fatal(out)
 	}
@@ -188,7 +188,7 @@ func TestMCPLeetgrinderLogFirst(t *testing.T) {
 	if status != 200 {
 		t.Fatal(status, tokens)
 	}
-	call := connectMCP(t, h, tokens["access_token"].(string), 25)
+	call := connectMCP(t, h, tokens["access_token"].(string), 26)
 	logged, failed := call("log_leetgrinder_attempt", map[string]any{"problem": "two-sum", "outcome": "unfinished", "minutes": 10})
 	if failed || logged["kind"] != "review" {
 		t.Fatal(logged)

@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"crypto/sha256"
+	"database/sql"
 	"fmt"
 	"strconv"
 	"strings"
@@ -226,5 +227,71 @@ func TestLeetgrinderAttemptSlugIndex(t *testing.T) {
 	}
 	if !strings.Contains(plan.String(), "leetgrinder_attempts_problem_slug_created_at_idx") {
 		t.Fatalf("done_at lookup does not use the index:\n%s", plan.String())
+	}
+}
+
+// Migration 034 numbers each set's entries in creation order and leaves
+// individual entries without a position.
+func TestLeetgrinderTodoPositionMigration(t *testing.T) {
+	s := emptyStore(t)
+	ctx := context.Background()
+	if _, err := s.DB.Exec(`CREATE TABLE schema_migrations(version INTEGER PRIMARY KEY, checksum TEXT NOT NULL, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())`); err != nil {
+		t.Fatal(err)
+	}
+	files, err := migrations.ReadDir("migrations")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, file := range files {
+		version, err := strconv.Atoi(strings.SplitN(file.Name(), "_", 2)[0])
+		if err != nil {
+			t.Fatal(err)
+		}
+		if version > 33 {
+			continue
+		}
+		sql, err := migrations.ReadFile("migrations/" + file.Name())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err = s.DB.Exec(string(sql)); err != nil {
+			t.Fatalf("%s: %v", file.Name(), err)
+		}
+		if _, err = s.DB.Exec("INSERT INTO schema_migrations(version,checksum) VALUES($1,$2)", version, fmt.Sprintf("%x", sha256.Sum256(sql))); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err = s.DB.Exec(`INSERT INTO leetgrinder_problems(slug) VALUES('two-sum'),('valid-anagram'),('lru-cache');
+INSERT INTO leetgrinder_todo_sets(id,title) VALUES('11111111-1111-4111-8111-111111111111','A'),('11111111-1111-4111-8111-111111111112','B');
+INSERT INTO leetgrinder_todo_items(id,set_id,problem_slug,created_at) VALUES
+('21111111-1111-4111-8111-111111111111','11111111-1111-4111-8111-111111111111','two-sum',now()),
+('21111111-1111-4111-8111-111111111112','11111111-1111-4111-8111-111111111111','valid-anagram',now()-interval '2 days'),
+('21111111-1111-4111-8111-111111111113','11111111-1111-4111-8111-111111111111','lru-cache',now()-interval '1 day'),
+('21111111-1111-4111-8111-111111111114','11111111-1111-4111-8111-111111111112','two-sum',now()),
+('21111111-1111-4111-8111-111111111115',NULL,'two-sum',now())`); err != nil {
+		t.Fatal(err)
+	}
+	if err = s.Migrate(ctx); err != nil {
+		t.Fatal(err)
+	}
+	rows, err := s.DB.Query(`SELECT id,position FROM leetgrinder_todo_items ORDER BY id`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+	got := map[string]sql.NullInt64{}
+	for rows.Next() {
+		var id string
+		var position sql.NullInt64
+		if err = rows.Scan(&id, &position); err != nil {
+			t.Fatal(err)
+		}
+		got[id[len(id)-1:]] = position
+	}
+	want := map[string]sql.NullInt64{"1": {Int64: 2, Valid: true}, "2": {Int64: 0, Valid: true}, "3": {Int64: 1, Valid: true}, "4": {Int64: 0, Valid: true}, "5": {}}
+	for id, position := range want {
+		if got[id] != position {
+			t.Errorf("entry %s: position %v, want %v", id, got[id], position)
+		}
 	}
 }
