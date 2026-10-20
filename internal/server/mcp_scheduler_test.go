@@ -22,7 +22,7 @@ func TestMCPWeeklyScheduleCRUD(t *testing.T) {
 		}
 		return tokens["access_token"].(string)
 	}
-	call := connectMCP(t, h, token("write"), 25)
+	call := connectMCP(t, h, token("write"), 26)
 	today := time.Now().UTC().Format(time.DateOnly)
 	mon := scheduler.Monday(scheduler.DateAdd(today, 14))
 	wed := scheduler.DateAdd(mon, 2)
@@ -45,7 +45,7 @@ func TestMCPWeeklyScheduleCRUD(t *testing.T) {
 		return out
 	}
 
-	read := connectMCP(t, h, token("read"), 25)
+	read := connectMCP(t, h, token("read"), 26)
 	if out, failed := read("save_schedule_session", map[string]any{"revision": week["revision"], "date": mon, "start": mon + "T10:00", "end": mon + "T11:00", "goalId": goalID}); !failed || !strings.Contains(out["error"].(string), "read-only") {
 		t.Fatal("read-only token saved a session", out)
 	}

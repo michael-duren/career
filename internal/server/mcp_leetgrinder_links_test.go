@@ -17,7 +17,7 @@ func TestMCPLeetgrinderProblemLinks(t *testing.T) {
 			results := []map[string]any{
 				mcpLeetgrinderProblem(p),
 				mcpLeetgrinderCard(leetgrinder.Today{Settings: leetgrinder.DefaultSettings()}, leetgrinder.Card{Problem: p}),
-				todoResults([]leetgrinder.TodoItem{{Problem: p}})[0],
+				todoResults([]leetgrinder.TodoItem{{Problem: p}}, false)[0],
 			}
 			for _, result := range results {
 				if result["url"] != "https://leetcode.com/problems/"+tc.slug+"/" {
