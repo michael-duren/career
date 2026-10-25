@@ -274,6 +274,9 @@ func TestSchedulerGoogleChangedPlanDuringBatchKeepsNewGeneration(t *testing.T) {
 	if f.events[id].Summary != "New plan" {
 		t.Fatalf("new plan lost: %+v", f.events[id])
 	}
+	if r := f.events[id].Reminders; r.UseDefault || len(r.Overrides) != 1 || r.Overrides[0] != (scheduler.GoogleReminder{Method: "popup", Minutes: 0}) {
+		t.Fatalf("start reminder missing: %+v", r)
+	}
 	if len(f.writes)-before != 1 {
 		t.Fatalf("changed retry performed %d writes", len(f.writes)-before)
 	}

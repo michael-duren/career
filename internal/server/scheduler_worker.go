@@ -138,7 +138,7 @@ func (s *Server) syncSchedulerGoogle(ctx context.Context, now time.Time, periodi
 		if session.Plan == nil || session.State != "accepted" || !session.Plan.Start.After(now) {
 			continue
 		}
-		event := scheduler.GoogleEvent{ID: scheduler.GoogleEventID(c.AccountID, id), Summary: session.Assignment.Title, Description: "Managed by Career Weekly Scheduler. Changes in Google are overwritten. " + s.config.PublicOrigin + "/weekly-scheduler", Start: scheduler.GoogleEventTime{DateTime: session.Plan.Start.Format(time.RFC3339)}, End: scheduler.GoogleEventTime{DateTime: session.Plan.End.Format(time.RFC3339)}}
+		event := scheduler.GoogleEvent{ID: scheduler.GoogleEventID(c.AccountID, id), Summary: session.Assignment.Title, Description: "Managed by Career Weekly Scheduler. Changes in Google are overwritten. " + s.config.PublicOrigin + "/weekly-scheduler", Start: scheduler.GoogleEventTime{DateTime: session.Plan.Start.Format(time.RFC3339)}, End: scheduler.GoogleEventTime{DateTime: session.Plan.End.Format(time.RFC3339)}, Reminders: scheduler.GoogleReminders{Overrides: []scheduler.GoogleReminder{{Method: "popup", Minutes: 0}}}}
 		if session.Assignment.StepID != "" {
 			event.Summary = session.Assignment.GoalTitle + ": " + session.Assignment.Title
 		}
