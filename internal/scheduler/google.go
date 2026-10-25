@@ -49,12 +49,21 @@ type GoogleEventTime struct {
 	DateTime string `json:"dateTime"`
 	TimeZone string `json:"timeZone,omitempty"`
 }
+type GoogleReminder struct {
+	Method  string `json:"method"`
+	Minutes int    `json:"minutes"`
+}
+type GoogleReminders struct {
+	UseDefault bool             `json:"useDefault"`
+	Overrides  []GoogleReminder `json:"overrides"`
+}
 type GoogleEvent struct {
 	ID                 string          `json:"id,omitempty"`
 	Summary            string          `json:"summary"`
 	Description        string          `json:"description"`
 	Start              GoogleEventTime `json:"start"`
 	End                GoogleEventTime `json:"end"`
+	Reminders          GoogleReminders `json:"reminders"`
 	ExtendedProperties struct {
 		Private map[string]string `json:"private"`
 	} `json:"extendedProperties"`
