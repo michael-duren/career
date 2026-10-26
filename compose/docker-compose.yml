@@ -24,7 +24,7 @@ services:
   # Receives OTLP metrics from the Go API (running on the host) and
   # remote-writes them to Prometheus.
   alloy:
-    image: grafana/alloy:v1.20.1
+    image: grafana/alloy:v1.21.2
     restart: unless-stopped
     command:
       - run
@@ -41,7 +41,7 @@ services:
       - prometheus
 
   prometheus:
-    image: prom/prometheus:v3.15.0
+    image: prom/prometheus:v3.15.1
     restart: unless-stopped
     command:
       - --config.file=/etc/prometheus/prometheus.yml
