@@ -29,3 +29,24 @@ templ correctnessAnswers(c Correctness) {
 		</details>
 	}
 }
+
+// correctnessFeedback lays Claude's correctness feedback out by section, or as
+// plain text when it has no recognisable labels.
+templ correctnessFeedback(text string) {
+	if sections := CorrectnessSections(text); sections != nil {
+		<div class="feedback-sections">
+			for _, s := range sections {
+				<section class={ "feedback-section", templ.KV("feedback-step", s.Step) }>
+					if s.Label != "" {
+						<h6>{ s.Label }</h6>
+					}
+					if s.Body != "" {
+						<p class="notes">{ s.Body }</p>
+					}
+				</section>
+			}
+		</div>
+	} else {
+		<p class="notes">{ text }</p>
+	}
+}

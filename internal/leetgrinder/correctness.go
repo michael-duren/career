@@ -2,6 +2,7 @@ package leetgrinder
 
 import (
 	"errors"
+	"regexp"
 	"strings"
 	"unicode/utf8"
 )
@@ -39,4 +40,52 @@ func (c Correctness) Validate() error {
 		}
 	}
 	return nil
+}
+
+// FeedbackSection is one labeled part of Claude's correctness feedback. Step
+// marks the numbered parts of "Why it holds".
+type FeedbackSection struct {
+	Label, Body string
+	Step        bool
+}
+
+// feedbackLabel matches the section labels the analysis prompt asks for. A
+// match counts when it ends in a colon, stands alone at the start of a line,
+// or is "Why it holds" or a numbered step, so prose such as "Termination is
+// fine" is not split.
+var feedbackLabel = regexp.MustCompile(`(?m)(^|\s)(Claim|Invariant(?: / induction hypothesis / recurrence relation)?|Why it holds(?: \([^)\n]*\))?|[123]\. (?:Initially|After one step|Therefore)|Termination)(\s*:|,)?`)
+
+// CorrectnessSections splits correctness feedback into its labeled sections.
+// It returns nil when the text has no recognisable labels.
+func CorrectnessSections(text string) []FeedbackSection {
+	var sections []FeedbackSection
+	body := 0
+	add := func(end int) {
+		if len(sections) == 0 {
+			if s := strings.TrimSpace(text[:end]); s != "" {
+				sections = append(sections, FeedbackSection{Body: s})
+			}
+			return
+		}
+		sections[len(sections)-1].Body = strings.TrimSpace(text[body:end])
+	}
+	for _, m := range feedbackLabel.FindAllStringSubmatchIndex(text, -1) {
+		before, label, colon := text[m[2]:m[3]], text[m[4]:m[5]], m[6] >= 0 && strings.Contains(text[m[6]:m[7]], ":")
+		step := label[0] >= '1' && label[0] <= '3'
+		ownLine := (before == "" || before == "\n") && (m[6] >= 0 || m[1] == len(text) || text[m[1]] == '\n')
+		if !colon && !step && !ownLine && !strings.HasPrefix(label, "Why it holds") {
+			continue
+		}
+		add(m[2])
+		if i := strings.Index(label, " ("); i >= 0 {
+			label = label[:i]
+		}
+		sections = append(sections, FeedbackSection{Label: label, Step: step})
+		body = m[1]
+	}
+	if len(sections) == 0 {
+		return nil
+	}
+	add(len(text))
+	return sections
 }

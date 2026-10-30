@@ -1606,6 +1606,29 @@ dd {
 .match-no {
   color: #fca5a5;
 }
+.feedback-sections {
+  display: grid;
+  gap: 14px;
+  margin: 8px 0 14px;
+}
+.feedback-section h6 {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.feedback-section .notes {
+  margin: 0;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+.feedback-step {
+  margin-left: 4px;
+  padding-left: 12px;
+  border-left: 2px solid var(--line);
+}
 .analysis-explanation {
   margin: 10px 0 0;
   white-space: pre-line;
