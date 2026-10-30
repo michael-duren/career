@@ -69,10 +69,22 @@
     send({ type: "timer:get", slug: current.slug, sample: activitySample(!nowVisible) });
   });
 
+  // timerSnapshot is the open problem's timer as the background worker last
+  // returned it, {slug, timer, at}, for the banner's running clock.
+  let timerSnapshot = null;
+
   async function send(message) {
     if (message.type.startsWith("timer:") && message.type !== "timer:restart" && !message.sample) message = { ...message, sample: activitySample() };
     try {
       const res = await ext.runtime.sendMessage(message);
+      if (res && res.ok && res.data && message.type.startsWith("timer:")) {
+        const at = Number.isFinite(res.data.lastSeenAt) ? res.data.lastSeenAt : Date.now();
+        timerSnapshot = { slug: message.slug, timer: res.data, at };
+        updateClock();
+        // A restarted timer has no sample from this tab; take one so the
+        // clock counts from now rather than from the next heartbeat.
+        if (message.type === "timer:restart") send({ type: "timer:get", slug: message.slug });
+      }
       return res || { ok: false, status: 0, error: "No response from the extension." };
     } catch {
       return { ok: false, status: 0, error: "The extension was reloaded. Refresh this page." };
@@ -330,9 +342,27 @@
     .log { margin: 6px 0; padding: 4px 10px; border: 1px solid #56704a; border-radius: 999px; background: #191d1b; color: #bee48a;
       cursor: pointer; font: 600 12px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
     .log:hover, .log:focus-visible { border-color: #bee48a; outline: none; }
+    .clock { margin: 6px 0; padding: 4px 10px; border: 1px solid #56704a; border-radius: 999px; background: #191d1b; color: #edf3ed;
+      font: 600 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .clock[hidden] { display: none; }
+    .clock.paused { color: #a7b4a9; }
   `;
-  // banner is the mounted pill: {host, slug, text}.
+  // banner is the mounted pill: {host, slug, text, clock}.
   let banner = null;
+
+  // updateClock shows the open problem's active time in the banner, counting
+  // up between heartbeats. It says "paused" while active time is not
+  // accruing: the tab is hidden or there has been no input for a while.
+  function updateClock() {
+    if (!banner || !banner.clock) return;
+    const snap = timerSnapshot && timerSnapshot.slug === banner.slug ? timerSnapshot : null;
+    banner.clock.hidden = !snap;
+    if (!snap) return;
+    const live = lib.liveActiveMs(snap.timer, snap.at, activitySample(), Date.now());
+    const text = `⏱ ${lib.formatClock(live.ms)}${live.counting ? "" : " paused"}`;
+    if (banner.clock.textContent !== text) banner.clock.textContent = text;
+    banner.clock.classList.toggle("paused", !live.counting);
+  }
 
   function removeBanner() {
     if (banner) banner.host.remove();
@@ -372,10 +402,14 @@
     // Logs an attempt without a submission, such as one solved elsewhere.
     const log = el("button", { type: "button", className: "log", text: "Log attempt", title: "Log an attempt on this problem to Leetgrinder" });
     log.addEventListener("click", () => logManually(state));
-    root.append(el("style", { text: BANNER_STYLE }), el("div", { className: anchor ? "bar" : "bar fixed" }, [pill, log]));
+    // Active time on this problem, as used to prefill minutes.
+    const clock = el("span", { className: "clock", title: "Active time on this problem. It pauses while the tab is hidden or after 10 minutes without input." });
+    clock.setAttribute("role", "timer");
+    root.append(el("style", { text: BANNER_STYLE }), el("div", { className: anchor ? "bar" : "bar fixed" }, [pill, log, clock]));
     if (anchor) anchor.after(host);
     else document.documentElement.append(host);
-    banner = { host, slug: state.slug, text, anchored: Boolean(anchor) };
+    banner = { host, slug: state.slug, text, anchored: Boolean(anchor), clock };
+    updateClock();
   }
 
   function closeUI() {
@@ -662,4 +696,5 @@
   watchLocation();
   setInterval(watchLocation, 1000);
   setInterval(tick, 30000);
+  setInterval(updateClock, 1000);
 })();
