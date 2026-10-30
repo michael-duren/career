@@ -139,7 +139,7 @@ func TestUpcomingReviews(t *testing.T) {
 	settings.Timezone = "UTC"
 	date := time.Date(2026, 10, 14, 0, 0, 0, 0, time.UTC)
 	card := func(slug string, due time.Time, flagged bool) Card {
-		c := Card{Problem: Problem{Slug: slug}, Due: due, Reviews: 1}
+		c := Card{Problem: Problem{Slug: slug}, Due: due, Reviews: 1, Struggled: true}
 		if flagged {
 			c.Flag = &Flag{}
 		}
@@ -158,6 +158,9 @@ func TestUpcomingReviews(t *testing.T) {
 			card("pick", date.Add(-time.Hour), false),
 			card("pick-done", date.AddDate(0, 0, 4), false),
 			card("later-1", date.AddDate(0, 0, 1).Add(time.Hour), false),
+			// Never struggled with nor flagged, so never listed.
+			{Problem: Problem{Slug: "clean"}, Due: date.Add(-time.Hour), Reviews: 1},
+			{Problem: Problem{Slug: "clean-later"}, Due: date.AddDate(0, 0, 1), Reviews: 1},
 		},
 		Reviews: []ReviewItem{{Slot: 1, Problem: Problem{Slug: "pick"}}, {Slot: 2, Problem: Problem{Slug: "pick-done"}, Done: true}},
 	}

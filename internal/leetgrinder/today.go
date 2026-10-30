@@ -162,13 +162,24 @@ func (t Today) Backlog() int { return len(t.DueOptional()) }
 // Calendar is the last n days of goal results, oldest first.
 func (t Today) Calendar(n int) []CalendarDay { return GoalMetDays(t.history, t.Progress, n) }
 
-// Due reports whether a card is due by the end of today.
-func (t Today) Due(c Card) bool { return c.Due.Before(EndOfDate(t.Date, t.Settings.Location())) }
+// Due reports whether a reviewable card is due by the end of today.
+func (t Today) Due(c Card) bool { return c.DueBefore(EndOfDate(t.Date, t.Settings.Location())) }
+
+// ReviewCards are the cards in the review queue, ordered by due time.
+func (t Today) ReviewCards() []Card {
+	var out []Card
+	for _, c := range t.Cards {
+		if c.Reviewable() {
+			out = append(out, c)
+		}
+	}
+	return out
+}
 
 // UpcomingReviews lists review cards in the order to do them: today's
 // picks in plan order (attempted today or not), then the other cards due by
-// the end of today as DueCards orders them, then those due within days
-// after today, soonest first.
+// the end of today as DueCards orders them, then reviewable cards due
+// within days after today, soonest first.
 func UpcomingReviews(t Today, days int) []Card {
 	loc := t.Settings.Location()
 	seen := map[string]bool{}
@@ -183,7 +194,7 @@ func UpcomingReviews(t Today, days int) []Card {
 	end, until := EndOfDate(t.Date, loc), EndOfDate(t.Date.AddDate(0, 0, days), loc)
 	var later []Card
 	for _, c := range t.Cards {
-		if !seen[c.Problem.Slug] && !c.Due.Before(end) && c.Due.Before(until) {
+		if !seen[c.Problem.Slug] && !c.Due.Before(end) && c.DueBefore(until) {
 			later = append(later, c)
 		}
 	}

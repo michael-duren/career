@@ -291,7 +291,10 @@ func (s *Server) leetgrinderAPIProblem(w http.ResponseWriter, r *http.Request) {
 				out.FlagReason = card.Flag.Label()
 			}
 		} else {
-			out.Status, out.NextDue = "notDue", due
+			out.Status = "notDue"
+			if card.Reviewable() {
+				out.NextDue = due
+			}
 		}
 	}
 	out.TodayKind = today.Kind(slug)

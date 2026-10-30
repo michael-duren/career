@@ -2,6 +2,7 @@ package leetgrinder
 
 import (
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -157,5 +158,59 @@ func TestTodayReviewsAndDueList(t *testing.T) {
 	state.Attempts = append(state.Attempts, attempt("binary-search", "solved", 20, false, now))
 	if m := NewToday(settings, state, now).MissingReviews(); len(m) != 0 {
 		t.Fatalf("finished reviews still missing %+v", m)
+	}
+}
+
+// Only problems struggled with, or flagged, are queued for review.
+func TestOnlyStruggledProblemsAreQueued(t *testing.T) {
+	loc := time.UTC
+	date := day("2026-11-01")
+	old := date.AddDate(0, 0, -90)
+	marked := attempt("ransom-note", "solved", 10, false, old)
+	marked.WantsReview = true
+	state := State{Problems: testProblems, Attempts: []Attempt{
+		// Clean solves, long overdue by FSRS.
+		attempt("two-sum", "solved", 10, false, old),
+		attempt("two-sum", "solved", 10, false, old.AddDate(0, 0, 1)),
+		// A struggle replaced by a solve the same day still counts.
+		attempt("binary-search", "struggled", 40, false, old.Add(time.Hour)),
+		attempt("binary-search", "solved", 10, false, old.Add(2*time.Hour)),
+		marked,
+	}}
+	all := BuildCards(state, loc)
+	byCard := map[string]Card{}
+	for _, c := range all {
+		byCard[c.Problem.Slug] = c
+	}
+	if c := byCard["two-sum"]; c.Struggled || c.Reviewable() || !c.Due.Before(date) {
+		t.Fatalf("clean card %+v", c)
+	}
+	if c := byCard["binary-search"]; !c.Struggled || !c.Reviewable() {
+		t.Fatalf("struggled card %+v", c)
+	}
+	if c := byCard["ransom-note"]; c.Struggled || !c.Reviewable() {
+		t.Fatalf("marked card %+v", c)
+	}
+	var got []string
+	for _, c := range DueCards(all, date, loc, nil) {
+		got = append(got, c.Problem.Slug)
+	}
+	slices.Sort(got)
+	if want := []string{"binary-search", "ransom-note"}; !slices.Equal(got, want) {
+		t.Fatalf("due %v, want %v", got, want)
+	}
+	if plan := PlanReviews(all, date, loc, 3, nil); slices.Contains(plan, "two-sum") {
+		t.Fatalf("plan %v picks a clean problem", plan)
+	}
+
+	// Re-solving the clean problem still counts as a review, but alone it
+	// does not raise the review target.
+	state.Attempts = []Attempt{attempt("two-sum", "solved", 10, false, old), attempt("two-sum", "solved", 10, false, date)}
+	d := History(state, loc)[date]
+	if d.Kinds["two-sum"] != KindReview || d.Available != 1 {
+		t.Fatalf("re-solve day %+v", d)
+	}
+	if d := History(state, loc, date.AddDate(0, 0, 1))[date.AddDate(0, 0, 1)]; d.Available != 0 {
+		t.Fatalf("next day available %d, want 0", d.Available)
 	}
 }

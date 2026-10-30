@@ -81,7 +81,7 @@ func oldHistory(state State, loc *time.Location, extra ...time.Time) map[time.Ti
 				continue
 			}
 			i := sort.Search(len(snaps), func(i int) bool { return !snaps[i].date.Before(date) })
-			if i > 0 && dueBy(snaps[i-1].after, state, date, loc) {
+			if i > 0 && queuedBy(snaps[i-1].after, state, date, loc) {
 				count++
 			}
 		}

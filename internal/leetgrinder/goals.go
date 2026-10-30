@@ -133,8 +133,9 @@ func history(replays map[string]*slugReplay, state State, loc *time.Location, ex
 			history[slug] = append(history[slug], snapshot{date, after})
 		}
 	}
-	// Available counts problems due or flagged by the end of each day, as
-	// they stood before it, plus reviews counted through a pick.
+	// Available counts problems in the review queue by the end of each day,
+	// as they stood before it, plus reviews counted through a pick or a
+	// re-solve of another due problem.
 	for date, d := range days {
 		count := 0
 		for slug, snaps := range history {
@@ -143,7 +144,7 @@ func history(replays map[string]*slugReplay, state State, loc *time.Location, ex
 				continue
 			}
 			i := sort.Search(len(snaps), func(i int) bool { return !snaps[i].date.Before(date) })
-			if i > 0 && dueBy(snaps[i-1].after, state, date, loc) {
+			if i > 0 && queuedBy(snaps[i-1].after, state, date, loc) {
 				count++
 			}
 		}
@@ -155,12 +156,20 @@ func history(replays map[string]*slugReplay, state State, loc *time.Location, ex
 // dueBy reports whether a card as it stood before date is due or flagged by
 // the end of date.
 func dueBy(before Card, state State, date time.Time, loc *time.Location) bool {
-	if before.Reviews == 0 {
-		return false
-	}
-	if before.FSRSDue.Before(EndOfDate(date, loc)) {
-		return true
-	}
+	return before.Reviews > 0 && (before.FSRSDue.Before(EndOfDate(date, loc)) || flaggedBy(before, state, date, loc))
+}
+
+// queuedBy reports whether a card as it stood before date was in the review
+// queue by the end of date: due and struggled with, or flagged. A re-solve of
+// any due problem still counts as a review, but only queued problems are
+// picked, listed and raise the day's review target.
+func queuedBy(before Card, state State, date time.Time, loc *time.Location) bool {
+	return before.Reviews > 0 && (before.Struggled && before.FSRSDue.Before(EndOfDate(date, loc)) || flaggedBy(before, state, date, loc))
+}
+
+// flaggedBy reports whether a card as it stood before date was flagged
+// before date.
+func flaggedBy(before Card, state State, date time.Time, loc *time.Location) bool {
 	f := flagFor(before.Last, before.Problem, state.Analyses, loc)
 	return f != nil && f.Date.Before(date)
 }
