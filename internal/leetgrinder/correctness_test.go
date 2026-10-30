@@ -65,6 +65,8 @@ func TestCorrectnessSections(t *testing.T) {
 			{Label: "Why it holds"}, {Label: "1. Initially", Body: "empty.", Step: true}, {Label: "Termination", Body: "Done."},
 		}},
 		{"unlabeled", "Termination is fine and the Claim stands.", nil},
+		{"labels in prose", "Termination, however, needs n > 0.\nClaim, as stated, holds.\nWhy it holds is subtle.", nil},
+		{"heading alone", "Some preamble.\nWhy it holds\nTermination: Done.", []FeedbackSection{{Body: "Some preamble."}, {Label: "Why it holds"}, {Label: "Termination", Body: "Done."}}},
 	}
 	for _, tt := range tests {
 		got := CorrectnessSections(tt.text)
@@ -76,5 +78,24 @@ func TestCorrectnessSections(t *testing.T) {
 				t.Errorf("%s: section %d = %#v, want %#v", tt.name, i, got[i], tt.want[i])
 			}
 		}
+	}
+}
+
+func TestCorrectnessFeedbackRendering(t *testing.T) {
+	var b bytes.Buffer
+	if err := correctnessFeedback("Claim: <Pair>.\nWhy it holds:\n1. Initially: Empty.").Render(context.Background(), &b); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"<h6>Claim</h6>", "&lt;Pair&gt;.", "<h6>Why it holds</h6>", `class="feedback-section feedback-step"`, "<h6>1. Initially</h6>"} {
+		if !strings.Contains(b.String(), want) {
+			t.Errorf("missing %q in %s", want, b.String())
+		}
+	}
+	b.Reset()
+	if err := correctnessFeedback("Looks right.").Render(context.Background(), &b); err != nil {
+		t.Fatal(err)
+	}
+	if got := b.String(); got != `<p class="notes">Looks right.</p>` {
+		t.Errorf("fallback = %s", got)
 	}
 }

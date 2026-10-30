@@ -50,9 +50,9 @@ type FeedbackSection struct {
 }
 
 // feedbackLabel matches the section labels the analysis prompt asks for. A
-// match counts when it ends in a colon, stands alone at the start of a line,
-// or is "Why it holds" or a numbered step, so prose such as "Termination is
-// fine" is not split.
+// match counts when it ends in a colon, stands alone on its line, is a
+// numbered step, or is "Why it holds" followed by its parenthesised steps, so
+// prose such as "Termination, however, is fine" is not split.
 var feedbackLabel = regexp.MustCompile(`(?m)(^|\s)(Claim|Invariant(?: / induction hypothesis / recurrence relation)?|Why it holds(?: \([^)\n]*\))?|[123]\. (?:Initially|After one step|Therefore)|Termination)(\s*:|,)?`)
 
 // CorrectnessSections splits correctness feedback into its labeled sections.
@@ -72,8 +72,8 @@ func CorrectnessSections(text string) []FeedbackSection {
 	for _, m := range feedbackLabel.FindAllStringSubmatchIndex(text, -1) {
 		before, label, colon := text[m[2]:m[3]], text[m[4]:m[5]], m[6] >= 0 && strings.Contains(text[m[6]:m[7]], ":")
 		step := label[0] >= '1' && label[0] <= '3'
-		ownLine := (before == "" || before == "\n") && (m[6] >= 0 || m[1] == len(text) || text[m[1]] == '\n')
-		if !colon && !step && !ownLine && !strings.HasPrefix(label, "Why it holds") {
+		ownLine := (before == "" || before == "\n") && (m[1] == len(text) || text[m[1]] == '\n')
+		if !colon && !step && !ownLine && !strings.HasPrefix(label, "Why it holds (") {
 			continue
 		}
 		add(m[2])
