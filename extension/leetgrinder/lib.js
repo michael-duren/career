@@ -444,6 +444,32 @@
     return minutesFromMs(activeMs(timer, now));
   }
 
+  // liveActiveMs estimates the timer's active time at now, for the banner's
+  // running clock. snapshot is the timer as the background worker last
+  // returned it at snapshotAt; the time since then is projected with the
+  // worker's own rules (visible, input within ACTIVE_IDLE_MS, at most one
+  // heartbeat's credit), so the next heartbeat only corrects it slightly.
+  // A snapshot that holds no tab sample taken at snapshotAt, such as a fresh
+  // restart, earns nothing at the next sample, so nothing is projected.
+  // counting reports whether the clock is advancing.
+  function liveActiveMs(snapshot, snapshotAt, sample, now) {
+    const base = activeMs(snapshot, snapshotAt);
+    const sampled = Boolean(snapshot) && Object.values(snapshot.tabs || {}).includes(snapshotAt);
+    if (!sampled || !sample || !sample.visible || !Number.isFinite(snapshotAt)) return { ms: base, counting: false };
+    const start = Math.max(snapshotAt, Number.isFinite(snapshot.creditedTo) ? snapshot.creditedTo : snapshotAt);
+    const end = Math.min(now, snapshotAt + SAMPLE_MAX_CREDIT_MS, sample.lastInputAt + ACTIVE_IDLE_MS);
+    return { ms: base + Math.max(0, end - start), counting: now < sample.lastInputAt + ACTIVE_IDLE_MS && now < snapshotAt + SAMPLE_MAX_CREDIT_MS };
+  }
+
+  // formatClock shows a duration as m:ss, or h:mm:ss from an hour.
+  function formatClock(ms) {
+    const total = Math.max(0, Math.floor((Number.isFinite(ms) ? ms : 0) / 1000));
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const ss = String(total % 60).padStart(2, "0");
+    return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`;
+  }
+
   // showOpenTime is true when the confirm panel should say how long the tab
   // was open because it differs from the active minutes.
   function showOpenTime(active, open) {
@@ -820,6 +846,8 @@
     creditActive,
     activeMs,
     activeMinutes,
+    liveActiveMs,
+    formatClock,
     openedAt,
     showOpenTime,
     inferOutcome,

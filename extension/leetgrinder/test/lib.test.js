@@ -511,3 +511,40 @@ test("escape-heavy pasted code under 64 KiB can still be too large to send", () 
   // The panel refuses when buildAttempt drops pasted code like this.
   assert.equal(a.code, "");
 });
+
+test("liveActiveMs projects active time between heartbeats", () => {
+  const T0 = 1_700_000_000_000;
+  const SEC = 1000;
+  const MIN = 60 * SEC;
+  // The worker credited up to the last heartbeat at T0.
+  const snap = { startedAt: T0 - 10 * MIN, activeMs: 5 * MIN, creditedTo: T0, tabs: { 1: T0 } };
+  const active = { visible: true, lastInputAt: T0 - MIN };
+  assert.deepEqual(lib.liveActiveMs(snap, T0, active, T0 + 12 * SEC), { ms: 5 * MIN + 12 * SEC, counting: true });
+  // Matches what the next heartbeat credits.
+  const credited = lib.creditActive(snap, active, T0 + 30 * SEC, 1);
+  assert.equal(lib.liveActiveMs(snap, T0, active, T0 + 30 * SEC).ms, credited.activeMs);
+  // Hidden: frozen and paused.
+  assert.deepEqual(lib.liveActiveMs(snap, T0, { visible: false, lastInputAt: T0 }, T0 + 20 * SEC), { ms: 5 * MIN, counting: false });
+  // Idle: stops ACTIVE_IDLE_MS after the last input.
+  const idle = { visible: true, lastInputAt: T0 - lib.ACTIVE_IDLE_MS + 5 * SEC };
+  assert.deepEqual(lib.liveActiveMs(snap, T0, idle, T0 + 20 * SEC), { ms: 5 * MIN + 5 * SEC, counting: false });
+  // A missed heartbeat projects at most one heartbeat's credit.
+  assert.deepEqual(lib.liveActiveMs(snap, T0, { visible: true, lastInputAt: T0 + 5 * MIN }, T0 + 5 * MIN), { ms: 5 * MIN + lib.SAMPLE_MAX_CREDIT_MS, counting: false });
+  // Time already credited past the snapshot is not counted twice.
+  assert.equal(lib.liveActiveMs({ ...snap, creditedTo: T0 + 10 * SEC }, T0, active, T0 + 12 * SEC).ms, 5 * MIN + 2 * SEC);
+  assert.deepEqual(lib.liveActiveMs(null, T0, active, T0), { ms: 0, counting: false });
+  // A restarted timer has no tab sample yet, so its first heartbeat credits
+  // nothing and nothing is projected.
+  const restarted = { startedAt: T0, openedAt: T0, lastSeenAt: T0, activeMs: 0, tabs: {}, creditedTo: T0 };
+  assert.deepEqual(lib.liveActiveMs(restarted, T0, active, T0 + 20 * SEC), { ms: 0, counting: false });
+  assert.equal(lib.creditActive(restarted, active, T0 + 20 * SEC, 1).activeMs, 0);
+});
+
+test("formatClock", () => {
+  assert.equal(lib.formatClock(0), "0:00");
+  assert.equal(lib.formatClock(65_400), "1:05");
+  assert.equal(lib.formatClock(25 * 60_000), "25:00");
+  assert.equal(lib.formatClock(3_725_000), "1:02:05");
+  assert.equal(lib.formatClock(-5), "0:00");
+  assert.equal(lib.formatClock(NaN), "0:00");
+});
