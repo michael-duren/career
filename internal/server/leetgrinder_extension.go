@@ -294,10 +294,16 @@ func (s *Server) leetgrinderAPIProblem(w http.ResponseWriter, r *http.Request) {
 			out.Status = "notDue"
 			if card.Reviewable() {
 				out.NextDue = due
+			} else if card.FSRSDue.Before(leetgrinder.EndOfDate(today.Date, loc)) {
+				// Not queued, but a re-solve once FSRS has it due still
+				// counts as a review.
+				out.TodayKind = leetgrinder.KindReview
 			}
 		}
 	}
-	out.TodayKind = today.Kind(slug)
+	if kind := today.Kind(slug); kind != "" {
+		out.TodayKind = kind
+	}
 	if out.TodayKind == "" {
 		switch out.Status {
 		case "new":
