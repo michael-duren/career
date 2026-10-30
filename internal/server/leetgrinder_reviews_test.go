@@ -172,8 +172,16 @@ func TestLeetgrinderTodayAPIAndKinds(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	// A clean solve is never queued, but FSRS has it due, so a re-solve
+	// counts as a review.
+	if _, err := db.SaveLeetgrinderAttempt(ctx, leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "ransom-note", Outcome: "solved", Minutes: 5, TimeComplexity: "O(n)", SpaceComplexity: "O(1)"}, ""); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := db.DB.Exec("UPDATE leetgrinder_attempts SET created_at=$1", now.AddDate(0, 0, -20)); err != nil {
 		t.Fatal(err)
+	}
+	if w := api("GET", "/api/leetgrinder/problem/ransom-note", nil); !strings.Contains(w.Body.String(), `"status":"notDue"`) || strings.Contains(w.Body.String(), `"nextDue"`) || !strings.Contains(w.Body.String(), `"todayKind":"review"`) {
+		t.Errorf("clean solve: %s", w.Body.String())
 	}
 	var today struct {
 		Date      string `json:"date"`

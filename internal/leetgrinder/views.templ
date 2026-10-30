@@ -393,7 +393,11 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, avail Analy
 				<dt>Recall now</dt>
 				<dd>{ Percent(review.Recall) }</dd>
 				<dt>Next due</dt>
-				<dd>{ DateLabel(Date(review.Card.Due, review.Location)) }</dd>
+				if review.Card.Reviewable() {
+					<dd>{ DateLabel(Date(review.Card.Due, review.Location)) }</dd>
+				} else {
+					<dd>Not scheduled</dd>
+				}
 			</dl>
 			if review.FlagReason != "" {
 				<p class="flag" role="status">{ review.FlagReason }</p>
@@ -602,24 +606,24 @@ templ Reviews(page ReviewsPage) {
 	@layout("Reviews", "reviews") {
 		<p class="eyebrow">SPACED REPETITION</p>
 		<h1>Reviews</h1>
-		<p class="lead">Every problem you have attempted, scheduled by how likely you are to recall it. A struggle, a simpler approach, a review request, or a complexity mistake found by the analysis makes a problem due the next day.</p>
+		<p class="lead">Problems you struggled with, scheduled by how likely you are to recall them. A struggle, a simpler approach, a review request, or a complexity mistake found by the analysis makes a problem due the next day.</p>
 		<section class="stats" aria-label="Review summary">
 			<div><strong>{ Count(len(page.Today.Reviews)) }</strong><p>Picked today</p></div>
 			<div><strong>{ Count(page.Today.Backlog()) }</strong><p>Backlog</p></div>
-			<div><strong>{ Count(len(page.Today.Cards)) }</strong><p>Problems tracked</p></div>
+			<div><strong>{ Count(len(page.Today.ReviewCards())) }</strong><p>Problems tracked</p></div>
 			<div><strong>{ Count(page.Today.Progress.Reviews()) }/{ Count(page.Today.Progress.ReviewTarget()) }</strong><p>Reviews toward today's goal</p></div>
 		</section>
 		@todaysReviews(page.Today, page.IDs, "reviews")
 		<section class="queue" aria-labelledby="queue-title">
 			<h2 id="queue-title">All cards</h2>
-			if len(page.Today.Cards) == 0 {
-				<p class="muted">Record an attempt on any problem to start its review schedule.</p>
+			if len(page.Today.ReviewCards()) == 0 {
+				<p class="muted">A problem joins the review schedule once you struggle with it or flag it for review.</p>
 			} else {
 				<div class="table-scroll">
 					<table>
 						<thead><tr><th scope="col">Problem</th><th scope="col">Last counted attempt</th><th scope="col">Due</th><th scope="col">Recall now</th><th scope="col">Flag</th></tr></thead>
 						<tbody>
-							for _, card := range page.Today.Cards {
+							for _, card := range page.Today.ReviewCards() {
 								<tr>
 									<td>
 										<a href={ templ.SafeURL(ProblemURL(card.Problem.Slug)) }>{ card.Problem.DisplayTitle() }</a>
@@ -896,7 +900,7 @@ templ Problems(page ProblemsPage) {
 								<td class="num">{ Count(row.Attempts) }</td>
 								<td class="date">{ CompactDate(Date(row.Last.CreatedAt, page.Location)) }</td>
 								<td class="date">
-									if row.Card.Reviews > 0 {
+									if row.Card.Reviewable() {
 										{ CompactDate(Date(row.Card.Due, page.Location)) }
 									}
 								</td>

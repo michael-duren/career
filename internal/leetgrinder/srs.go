@@ -47,8 +47,11 @@ type Card struct {
 	// Flag is set when Last was a struggle, was marked for review, or its
 	// analysis found a mistake.
 	Flag *Flag
-	fsrs fsrs.Card
-	loc  *time.Location
+	// Struggled reports that some attempt so far was a struggle (see
+	// Struggle), even one a later attempt the same day replaced.
+	Struggled bool
+	fsrs      fsrs.Card
+	loc       *time.Location
 }
 
 // Flag marks a problem for review the day after its latest attempt said so:
@@ -75,6 +78,13 @@ type Flag struct {
 
 // Flagged reports whether the card carries a flag.
 func (c Card) Flagged() bool { return c.Flag != nil }
+
+// Reviewable reports whether the card is in the review queue: only problems
+// you struggled with, or that carry a flag, are scheduled for review.
+func (c Card) Reviewable() bool { return c.Reviews > 0 && (c.Struggled || c.Flagged()) }
+
+// DueBefore reports whether the card is in the review queue and due before t.
+func (c Card) DueBefore(t time.Time) bool { return c.Reviewable() && c.Due.Before(t) }
 
 // go-fsrs counts elapsed days between UTC calendar dates. Feeding it local
 // wall-clock times labelled as UTC makes those days the learner's local days.
@@ -194,6 +204,7 @@ func daysAgo(from, to time.Time) string {
 // sees each local day with the card as it stood before that day.
 func replaySlug(problem Problem, list []Attempt, loc *time.Location, visit func(date time.Time, before Card)) Card {
 	card := Card{Problem: problem, loc: loc}
+	start := 0
 	for i, a := range list {
 		date := Date(a.CreatedAt, loc)
 		if i+1 < len(list) && Date(list[i+1].CreatedAt, loc).Equal(date) {
@@ -202,6 +213,10 @@ func replaySlug(problem Problem, list []Attempt, loc *time.Location, visit func(
 		if visit != nil {
 			visit(date, card)
 		}
+		if slices.ContainsFunc(list[start:i+1], func(a Attempt) bool { return Struggle(a) != "" }) {
+			card.Struggled = true
+		}
+		start = i + 1
 		state := card.fsrs
 		if card.Reviews == 0 {
 			state = fsrs.NewCard(wallClock(a.CreatedAt, loc))
@@ -341,7 +356,7 @@ func ReplayAttempts(state State, loc *time.Location) Replay {
 // shared, so callers must not modify them.
 func (r Replay) Cards() []Card { return r.cards }
 
-// DueCards lists cards due by the end of date, flagged first, then lowest
+// DueCards lists reviewable cards due by the end of date, flagged first, then lowest
 // estimated recall, then the most overdue. Cards in skip are left out.
 func DueCards(cards []Card, date time.Time, loc *time.Location, skip map[string]bool) []Card {
 	end := EndOfDate(date, loc)
@@ -351,7 +366,7 @@ func DueCards(cards []Card, date time.Time, loc *time.Location, skip map[string]
 	}
 	var candidates []candidate
 	for _, c := range cards {
-		if !skip[c.Problem.Slug] && c.Due.Before(end) {
+		if !skip[c.Problem.Slug] && c.DueBefore(end) {
 			candidates = append(candidates, candidate{c, c.Retrievability(end)})
 		}
 	}

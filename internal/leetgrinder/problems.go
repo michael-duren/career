@@ -163,7 +163,7 @@ func ProblemRows(state State, cards []Card, now time.Time, loc *time.Location) [
 		a := attempts[0]
 		row := ProblemRow{Problem: state.Problem(slug), Best: bestOf(attempts), Latest: latestOf(attempts), Attempts: len(attempts), Last: a, ComplexityWrong: state.StatedWrong(a.ID)}
 		if c, ok := byCard[slug]; ok {
-			row.Card, row.Due, row.Recall = c, c.Due.Before(end), c.Retrievability(now)
+			row.Card, row.Due, row.Recall = c, c.DueBefore(end), c.Retrievability(now)
 		}
 		rows = append(rows, row)
 	}
@@ -181,6 +181,13 @@ func FilterProblems(rows []ProblemRow, f ProblemFilter) []ProblemRow {
 	slices.SortStableFunc(result, func(a, b ProblemRow) int {
 		switch f.Sort {
 		case "due":
+			// Problems not in the review queue have no due date and sort last.
+			if ra, rb := a.Card.Reviewable(), b.Card.Reviewable(); ra != rb {
+				if ra {
+					return -1
+				}
+				return 1
+			}
 			return a.Card.Due.Compare(b.Card.Due)
 		case "number":
 			// Unknown numbers sort last.

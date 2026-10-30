@@ -239,7 +239,9 @@ func TestPlanPutsFlaggedFirst(t *testing.T) {
 	recent := attempt("two-sum", "solved", 10, false, date.AddDate(0, 0, -2))
 	state := State{Problems: testProblems, Attempts: []Attempt{
 		recent,
-		// Overdue and lower recall, but an unassisted solve, so not flagged.
+		// Overdue and lower recall, but its latest attempt is an unassisted
+		// solve, so it is queued for an earlier struggle and not flagged.
+		attempt("binary-search", "struggled", 40, false, old.AddDate(0, 0, -3)),
 		attempt("binary-search", "solved", 20, false, old),
 	}, Analyses: map[string]Analysis{recent.ID: {Status: AnalysisDone, Current: true, SpaceMatches: boolPtr(false), UpdatedAt: date.AddDate(0, 0, -2)}}}
 	all := BuildCards(state, loc)
