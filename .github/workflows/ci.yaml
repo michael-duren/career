@@ -47,7 +47,7 @@ jobs:
         # Each test makes and drops its own schema. A test that still skips
         # for want of the database fails the job instead of passing silently.
         run: |
-          go test -v ./... 2>&1 | tee go-test.log
+          go test -race -v ./... 2>&1 | tee go-test.log
           if grep -B1 'set TEST_DATABASE_URL' go-test.log; then
             echo "::error::database-backed tests skipped"
             exit 1

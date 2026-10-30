@@ -119,7 +119,7 @@ Feature-specific suites:
   (uses port 8088 and temporary credentials, creates and removes one synthetic note)
 
 CI (`.github/workflows/ci.yaml`) runs the Go, npm and Playwright suites on pull requests and pushes to `main`.
-The Go tests run against a PostgreSQL service with `TEST_DATABASE_URL` set, and the job fails if any
+The Go tests run with `-race` against a PostgreSQL service with `TEST_DATABASE_URL` set, and the job fails if any
 database-backed test skips. Each such test creates and drops its own schema.
 
 ## Data import and export
