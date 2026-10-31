@@ -606,52 +606,75 @@ templ Reviews(page ReviewsPage) {
 	@layout("Reviews", "reviews") {
 		<p class="eyebrow">SPACED REPETITION</p>
 		<h1>Reviews</h1>
-		<p class="lead">Problems you struggled with, scheduled by how likely you are to recall them. A struggle, a simpler approach, a review request, or a complexity mistake found by the analysis makes a problem due the next day.</p>
+		<p class="lead">Problems you struggled with, scheduled by how likely you are to recall them. Flagged problems need work now and are due the next day; the rest come back on a spaced schedule.</p>
 		<section class="stats" aria-label="Review summary">
 			<div><strong>{ Count(len(page.Today.Reviews)) }</strong><p>Picked today</p></div>
 			<div><strong>{ Count(page.Today.Backlog()) }</strong><p>Backlog</p></div>
-			<div><strong>{ Count(len(page.Today.ReviewCards())) }</strong><p>Problems tracked</p></div>
+			<div><strong>{ Count(len(page.Today.FlaggedCards())) }</strong><p>Flagged</p></div>
 			<div><strong>{ Count(page.Today.Progress.Reviews()) }/{ Count(page.Today.Progress.ReviewTarget()) }</strong><p>Reviews toward today's goal</p></div>
 		</section>
 		@todaysReviews(page.Today, page.IDs, "reviews")
-		<section class="queue" aria-labelledby="queue-title">
-			<h2 id="queue-title">All cards</h2>
-			if len(page.Today.ReviewCards()) == 0 {
-				<p class="muted">A problem joins the review schedule once you struggle with it or flag it for review.</p>
+		<section class="queue" aria-labelledby="flagged-title">
+			<h2 id="flagged-title">Flagged</h2>
+			<p class="muted">Problems your latest attempt or its analysis flagged: a struggle, a simpler approach, a review request, or a complexity mistake. A clean re-solve clears the flag.</p>
+			if cards := page.Today.FlaggedCards(); len(cards) == 0 {
+				<p class="muted">Nothing is flagged right now.</p>
 			} else {
-				<div class="table-scroll">
-					<table>
-						<thead><tr><th scope="col">Problem</th><th scope="col">Last counted attempt</th><th scope="col">Due</th><th scope="col">Recall now</th><th scope="col">Flag</th></tr></thead>
-						<tbody>
-							for _, card := range page.Today.ReviewCards() {
-								<tr>
-									<td>
-										<a href={ templ.SafeURL(ProblemURL(card.Problem.Slug)) }>{ card.Problem.DisplayTitle() }</a>
-										if page.Today.Picked(card.Problem.Slug) {
-											<span class="badge">Today's pick</span>
-										}
-									</td>
-									<td>{ OutcomeLabel(card.Last.Outcome) } · { DateLabel(Date(card.Last.CreatedAt, page.Today.Settings.Location())) }</td>
-									<td>
-										{ DateLabel(Date(card.Due, page.Today.Settings.Location())) }
-										if page.Today.Due(card) {
-											<span class="small overdue">Due</span>
-										}
-									</td>
-									<td>{ Percent(card.Retrievability(page.Today.Now)) }</td>
-									<td>
-										if card.Flag != nil {
-											<span class="small flag">{ card.Flag.Reason(page.Today.Now, page.Today.Settings.Location()) }</span>
-										}
-									</td>
-								</tr>
-							}
-						</tbody>
-					</table>
-				</div>
+				@reviewTable(page, cards, true)
+			}
+		</section>
+		<section class="queue" aria-labelledby="spaced-title">
+			<h2 id="spaced-title">Spaced review</h2>
+			<p class="muted">Problems you struggled with before and have since solved cleanly. Each comes back when its recall estimate drops, a little later every time you solve it.</p>
+			if cards := page.Today.SpacedCards(); len(cards) == 0 {
+				if len(page.Today.ReviewCards()) == 0 {
+					<p class="muted">A problem joins the review schedule once you struggle with it or flag it for review.</p>
+				} else {
+					<p class="muted">No past struggles are on a spaced schedule yet.</p>
+				}
+			} else {
+				@reviewTable(page, cards, false)
 			}
 		</section>
 	}
+}
+
+templ reviewTable(page ReviewsPage, cards []Card, flagged bool) {
+	<div class="table-scroll">
+		<table>
+			<thead>
+				<tr>
+					<th scope="col">Problem</th><th scope="col">Last counted attempt</th><th scope="col">Due</th><th scope="col">Recall now</th>
+					if flagged {
+						<th scope="col">Flag</th>
+					}
+				</tr>
+			</thead>
+			<tbody>
+				for _, card := range cards {
+					<tr>
+						<td>
+							<a href={ templ.SafeURL(ProblemURL(card.Problem.Slug)) }>{ card.Problem.DisplayTitle() }</a>
+							if page.Today.Picked(card.Problem.Slug) {
+								<span class="badge">Today's pick</span>
+							}
+						</td>
+						<td>{ OutcomeLabel(card.Last.Outcome) } · { DateLabel(Date(card.Last.CreatedAt, page.Today.Settings.Location())) }</td>
+						<td>
+							{ DateLabel(Date(card.Due, page.Today.Settings.Location())) }
+							if page.Today.Due(card) {
+								<span class="small overdue">Due</span>
+							}
+						</td>
+						<td>{ Percent(card.Retrievability(page.Today.Now)) }</td>
+						if flagged {
+							<td><span class="small flag">{ card.Flag.Reason(page.Today.Now, page.Today.Settings.Location()) }</span></td>
+						}
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
 }
 
 templ SettingsView(page SettingsPage) {

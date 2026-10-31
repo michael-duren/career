@@ -91,7 +91,14 @@ func TestSettingsAndReviewPagesRender(t *testing.T) {
 		t.Fatal("settings page rendered the token ciphertext or the retired schedule form")
 	}
 	now := time.Date(2026, 10, 20, 12, 0, 0, 0, time.UTC)
-	state := State{Problems: testProblems, Attempts: []Attempt{attempt("two-sum", "struggled", 30, false, now.AddDate(0, 0, -9))}}
+	state := State{Problems: testProblems, Attempts: []Attempt{
+		attempt("two-sum", "struggled", 30, false, now.AddDate(0, 0, -9)),
+		// A past struggle since solved cleanly: on the spaced schedule, not flagged.
+		attempt("binary-search", "struggled", 30, false, now.AddDate(0, 0, -30)),
+		attempt("binary-search", "solved", 10, false, now.AddDate(0, 0, -20)),
+		// Only ever solved cleanly: not in the review queue at all.
+		attempt("ransom-note", "solved", 10, false, now.AddDate(0, 0, -20)),
+	}}
 	state.Plans = map[time.Time][]string{Date(now, time.UTC): {"two-sum"}}
 	settings.Timezone = "UTC"
 	today := NewToday(settings, state, now)
@@ -110,7 +117,18 @@ func TestSettingsAndReviewPagesRender(t *testing.T) {
 	if err := Reviews(ReviewsPage{Today: today, IDs: ids}).Render(context.Background(), &out); err != nil {
 		t.Fatal(err)
 	}
-	if html = out.String(); !strings.Contains(html, "All cards") || !strings.Contains(html, "Two Sum") || !strings.Contains(html, "Backlog") {
-		t.Fatal("review queue missing cards")
+	html = out.String()
+	flagged, spaced := strings.Index(html, `id="flagged-title"`), strings.Index(html, `id="spaced-title"`)
+	if flagged < 0 || spaced < flagged || !strings.Contains(html, "Backlog") {
+		t.Fatalf("review page sections missing: flagged %d spaced %d", flagged, spaced)
+	}
+	if i := strings.LastIndex(html, "Two Sum"); i < flagged || i > spaced || !strings.Contains(html[flagged:spaced], "Struggled 9 days ago") {
+		t.Error("flagged problem not listed under Flagged")
+	}
+	if i := strings.Index(html, "Binary Search"); i < spaced {
+		t.Error("cleanly re-solved struggle not listed under Spaced review")
+	}
+	if strings.Contains(html, "Ransom Note") {
+		t.Error("clean-only problem listed on the review page")
 	}
 }
