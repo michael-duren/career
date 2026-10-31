@@ -176,6 +176,30 @@ func (t Today) ReviewCards() []Card {
 	return out
 }
 
+// FlaggedCards are the review cards that carry a flag: problems whose
+// latest attempt or analysis says they need work.
+func (t Today) FlaggedCards() []Card {
+	var out []Card
+	for _, c := range t.ReviewCards() {
+		if c.Flagged() {
+			out = append(out, c)
+		}
+	}
+	return out
+}
+
+// SpacedCards are the review cards without a flag: problems struggled with
+// before and since solved cleanly, kept on their FSRS schedule.
+func (t Today) SpacedCards() []Card {
+	var out []Card
+	for _, c := range t.ReviewCards() {
+		if !c.Flagged() {
+			out = append(out, c)
+		}
+	}
+	return out
+}
+
 // UpcomingReviews lists review cards in the order to do them: today's
 // picks in plan order (attempted today or not), then the other cards due by
 // the end of today as DueCards orders them, then reviewable cards due

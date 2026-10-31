@@ -59,7 +59,7 @@ Every attempted problem gets a review card, but only problems you have struggled
 
 **Daily picks.** Each date gets as many picks as its review target, the first time they are needed, frozen in `leetgrinder_review_plan`. Candidates are cards due by the end of the day that were not first attempted that day, ordered flagged first, then lowest estimated recall, then most overdue. Raising the target on a later day adds picks; lowering it never removes them. Any due problem counts toward the review goal, not only the picks. The other due cards form the optional due list; the **backlog** is due cards outside today's picks and not attempted today.
 
-`/leetgrinder/reviews` lists every card in the review queue with its due date, recall now, flag reason and today's pick marked, plus the backlog.
+`/leetgrinder/reviews` lists the review queue in two tables, each with due date, recall now and today's pick marked, plus the backlog. **Flagged** holds cards that carry a flag, with the flag reason: problems that need work now. **Spaced review** holds the rest: problems struggled with before and since solved cleanly, which come back on their FSRS schedule. The summary counts flagged cards. The split is display only; both tables are picked, listed as due and counted toward the goal the same way.
 
 ## Stats
 
