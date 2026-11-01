@@ -540,6 +540,47 @@ test("liveActiveMs projects active time between heartbeats", () => {
   assert.equal(lib.creditActive(restarted, active, T0 + 20 * SEC, 1).activeMs, 0);
 });
 
+test("a paused timer earns nothing until resumed, from any tab", () => {
+  const T0 = 1_700_000_000_000;
+  const SEC = 1000;
+  const MIN = 60 * SEC;
+  const working = (t) => ({ visible: true, lastInputAt: t });
+  let timer = { startedAt: T0, openedAt: T0, activeMs: 0, tabs: {}, creditedTo: T0 };
+  timer = lib.creditActive(timer, working(T0), T0, 1);
+  timer = lib.creditActive(timer, working(T0), T0, 2);
+  timer = lib.creditActive(timer, working(T0 + 30 * SEC), T0 + 30 * SEC, 1);
+  assert.equal(timer.activeMs, 30 * SEC);
+  // Pausing keeps what was earned; heartbeats while paused, with input in
+  // both tabs, add nothing.
+  timer = lib.setPaused(timer, true, T0 + 30 * SEC);
+  assert.equal(timer.paused, true);
+  for (let t = T0 + 60 * SEC; t <= T0 + 5 * MIN; t += 30 * SEC) {
+    timer = lib.creditActive(timer, working(t), t, 1);
+    timer = lib.creditActive(timer, working(t), t, 2);
+  }
+  assert.equal(timer.activeMs, 30 * SEC);
+  // Resuming credits nothing for the pause, even from tab 2, whose previous
+  // sample is from before it.
+  const resumeAt = T0 + 5 * MIN + 10 * SEC;
+  timer = lib.setPaused(timer, false, resumeAt);
+  assert.equal(timer.paused, false);
+  assert.equal(timer.creditedTo, resumeAt);
+  timer = lib.creditActive(timer, working(resumeAt + 20 * SEC), resumeAt + 20 * SEC, 2);
+  assert.equal(timer.activeMs, 30 * SEC + 20 * SEC);
+  timer = lib.creditActive(timer, working(resumeAt + 30 * SEC), resumeAt + 30 * SEC, 1);
+  assert.equal(timer.activeMs, 30 * SEC + 30 * SEC);
+  // Resuming a timer that was never paused leaves earned time alone.
+  const fresh = lib.setPaused({ startedAt: T0, activeMs: 7 * SEC }, false, T0 + MIN);
+  assert.equal(fresh.activeMs, 7 * SEC);
+  assert.equal(fresh.creditedTo, T0 + MIN);
+});
+
+test("liveActiveMs projects nothing for a paused timer", () => {
+  const T0 = 1_700_000_000_000;
+  const snap = { startedAt: T0 - 600000, activeMs: 300000, creditedTo: T0, tabs: { 1: T0 }, paused: true };
+  assert.deepEqual(lib.liveActiveMs(snap, T0, { visible: true, lastInputAt: T0 + 5000 }, T0 + 10000), { ms: 300000, counting: false });
+});
+
 test("formatClock", () => {
   assert.equal(lib.formatClock(0), "0:00");
   assert.equal(lib.formatClock(65_400), "1:05");

@@ -130,6 +130,8 @@ async function readTimer(slug, patch = {}, rawSample = null, tabId = 0) {
   timer.lastSeenAt = now;
   if (patch.assisted === true) timer.assisted = true;
   if (patch.nudged === true) timer.nudged = true;
+  // Applied after the sample, so pausing keeps the time up to now.
+  if (typeof patch.paused === "boolean") timer = lib.setPaused(timer, patch.paused, now);
   await ext.storage.session.set({ [key]: timer });
   return timer;
 }
