@@ -378,10 +378,12 @@
   }
 
   // togglePause pauses or resumes the problem's timer. A paused timer stays
-  // paused until resumed, whatever the learner types.
-  function togglePause(slug) {
-    const snap = timerSnapshot && timerSnapshot.slug === slug ? timerSnapshot : null;
-    if (snap) send({ type: "timer:update", slug, patch: { paused: !snap.timer.paused } });
+  // paused until resumed, whatever the learner types. It reads the timer
+  // first: another tab may have paused or resumed it since this tab's last
+  // heartbeat.
+  async function togglePause(slug) {
+    const res = await send({ type: "timer:get", slug });
+    if (res.ok && res.data) await send({ type: "timer:update", slug, patch: { paused: !res.data.paused } });
   }
 
   function removeBanner() {
