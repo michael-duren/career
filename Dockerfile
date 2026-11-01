@@ -17,7 +17,11 @@ RUN go tool templ generate
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /career ./cmd/api
 
 FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
+# Distrust eMudhra's emSign roots: their intermediate CA keys were trivially
+# weak (Oct 2026) and bookworm's ca-certificates still ships them.
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/* \
+    && sed -i 's|^mozilla/emSign|!mozilla/emSign|' /etc/ca-certificates.conf \
+    && update-ca-certificates --fresh
 WORKDIR /app
 COPY --from=backend /career /app/career
 COPY --from=frontend /build/dist /app/dist
