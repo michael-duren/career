@@ -83,7 +83,7 @@ func TestCorrectnessSections(t *testing.T) {
 
 func TestCorrectnessFeedbackRendering(t *testing.T) {
 	var b bytes.Buffer
-	if err := correctnessFeedback("Claim: <Pair>.\nWhy it holds:\n1. Initially: Empty.").Render(context.Background(), &b); err != nil {
+	if err := feedbackSections(CorrectnessSections("Claim: <Pair>.\nWhy it holds:\n1. Initially: Empty."), "").Render(context.Background(), &b); err != nil {
 		t.Fatal(err)
 	}
 	for _, want := range []string{"<h6>Claim</h6>", "&lt;Pair&gt;.", "<h6>Why it holds</h6>", `class="feedback-section feedback-step"`, "<h6>1. Initially</h6>"} {
@@ -92,10 +92,37 @@ func TestCorrectnessFeedbackRendering(t *testing.T) {
 		}
 	}
 	b.Reset()
-	if err := correctnessFeedback("Looks right.").Render(context.Background(), &b); err != nil {
+	if err := feedbackSections(nil, "Looks right.").Render(context.Background(), &b); err != nil {
 		t.Fatal(err)
 	}
 	if got := b.String(); got != `<p class="notes">Looks right.</p>` {
 		t.Errorf("fallback = %s", got)
+	}
+}
+
+func TestCodeFeedbackSections(t *testing.T) {
+	tests := []struct {
+		name, text string
+		want       []FeedbackSection
+	}{
+		{"labeled points", "What works: Clear names.\n\nEmpty input: \"nums[0]\" fails.\nGuard it first.\n\nSimpler loop:\nUse enumerate.", []FeedbackSection{
+			{Label: "What works", Body: "Clear names."}, {Label: "Empty input", Body: "\"nums[0]\" fails.\nGuard it first."}, {Label: "Simpler loop", Body: "Use enumerate."},
+		}},
+		{"stored with bullets", "Overall tidy.\n- Naming: \"x\" is vague.\n- \"seen[x] = i\" is fine: check comes first.", []FeedbackSection{
+			{Body: "Overall tidy."}, {Label: "Naming", Body: "\"x\" is vague.\n- \"seen[x] = i\" is fine: check comes first."},
+		}},
+		{"prose only", "Little to improve. The code reads well: names are clear.", nil},
+		{"long sentence before colon", "This loop could be written more simply as follows: use a set.", nil},
+	}
+	for _, tt := range tests {
+		got := CodeFeedbackSections(tt.text)
+		if len(got) != len(tt.want) {
+			t.Fatalf("%s: got %#v", tt.name, got)
+		}
+		for i := range got {
+			if got[i] != tt.want[i] {
+				t.Errorf("%s: section %d = %#v, want %#v", tt.name, i, got[i], tt.want[i])
+			}
+		}
 	}
 }

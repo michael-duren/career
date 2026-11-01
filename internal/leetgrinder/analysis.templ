@@ -85,10 +85,11 @@ templ analysisCard(slug string, a Attempt, state State, avail AnalysisAvailabili
 				</dl>
 				if an.CorrectnessFeedback != "" {
 					<h5>Correctness analysis</h5>
-					@correctnessFeedback(an.CorrectnessFeedback)
+					@feedbackSections(CorrectnessSections(an.CorrectnessFeedback), an.CorrectnessFeedback)
 				}
 				if an.CodeFeedback != "" {
-					<h5>Code feedback</h5><p class="notes">{ an.CodeFeedback }</p>
+					<h5>Code feedback</h5>
+					@feedbackSections(CodeFeedbackSections(an.CodeFeedback), an.CodeFeedback)
 				}
 				if an.Explanation != "" {
 					<p class="analysis-explanation">{ an.Explanation }</p>

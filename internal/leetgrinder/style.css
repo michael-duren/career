@@ -1606,10 +1606,17 @@ dd {
 .match-no {
   color: #fca5a5;
 }
+.analysis-card h5 {
+  margin: 18px 0 8px;
+  font-size: 0.9rem;
+}
+.analysis-card h5 + .notes {
+  margin-top: 0;
+}
 .feedback-sections {
   display: grid;
   gap: 14px;
-  margin: 8px 0 14px;
+  margin: 0 0 14px;
 }
 .feedback-section h6 {
   margin: 0 0 4px;
