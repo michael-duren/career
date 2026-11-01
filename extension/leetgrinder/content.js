@@ -346,22 +346,42 @@
       font: 600 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .clock[hidden] { display: none; }
     .clock.paused { color: #a7b4a9; }
+    .toggle { margin: 6px 0; padding: 4px 9px; border: 1px solid #56704a; border-radius: 999px; background: #191d1b; color: #edf3ed;
+      cursor: pointer; font: 600 12px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .toggle:hover, .toggle:focus-visible { border-color: #bee48a; outline: none; }
+    .toggle[hidden] { display: none; }
   `;
-  // banner is the mounted pill: {host, slug, text, clock}.
+  // banner is the mounted pill: {host, slug, text, clock, toggle}.
   let banner = null;
 
   // updateClock shows the open problem's active time in the banner, counting
   // up between heartbeats. It says "paused" while active time is not
-  // accruing: the tab is hidden or there has been no input for a while.
+  // accruing: the tab is hidden, there has been no input for a while, or
+  // the learner pressed pause. The toggle beside it pauses and resumes.
   function updateClock() {
     if (!banner || !banner.clock) return;
     const snap = timerSnapshot && timerSnapshot.slug === banner.slug ? timerSnapshot : null;
-    banner.clock.hidden = !snap;
+    banner.clock.hidden = banner.toggle.hidden = !snap;
     if (!snap) return;
     const live = lib.liveActiveMs(snap.timer, snap.at, activitySample(), Date.now());
     const text = `⏱ ${lib.formatClock(live.ms)}${live.counting ? "" : " paused"}`;
     if (banner.clock.textContent !== text) banner.clock.textContent = text;
     banner.clock.classList.toggle("paused", !live.counting);
+    const paused = Boolean(snap.timer.paused);
+    const label = paused ? "Resume the timer" : "Pause the timer";
+    if (banner.toggle.title !== label) {
+      banner.toggle.textContent = paused ? "▶" : "⏸";
+      banner.toggle.title = label;
+      banner.toggle.setAttribute("aria-label", label);
+      banner.toggle.setAttribute("aria-pressed", String(paused));
+    }
+  }
+
+  // togglePause pauses or resumes the problem's timer. A paused timer stays
+  // paused until resumed, whatever the learner types.
+  function togglePause(slug) {
+    const snap = timerSnapshot && timerSnapshot.slug === slug ? timerSnapshot : null;
+    if (snap) send({ type: "timer:update", slug, patch: { paused: !snap.timer.paused } });
   }
 
   function removeBanner() {
@@ -403,12 +423,14 @@
     const log = el("button", { type: "button", className: "log", text: "Log attempt", title: "Log an attempt on this problem to Leetgrinder" });
     log.addEventListener("click", () => logManually(state));
     // Active time on this problem, as used to prefill minutes.
-    const clock = el("span", { className: "clock", title: "Active time on this problem. It pauses while the tab is hidden or after 10 minutes without input." });
+    const clock = el("span", { className: "clock", title: "Active time on this problem. It pauses while the tab is hidden, after 10 minutes without input, or while you have paused it." });
     clock.setAttribute("role", "timer");
-    root.append(el("style", { text: BANNER_STYLE }), el("div", { className: anchor ? "bar" : "bar fixed" }, [pill, log, clock]));
+    const toggle = el("button", { type: "button", className: "toggle" });
+    toggle.addEventListener("click", () => togglePause(state.slug));
+    root.append(el("style", { text: BANNER_STYLE }), el("div", { className: anchor ? "bar" : "bar fixed" }, [pill, log, clock, toggle]));
     if (anchor) anchor.after(host);
     else document.documentElement.append(host);
-    banner = { host, slug: state.slug, text, anchored: Boolean(anchor), clock };
+    banner = { host, slug: state.slug, text, anchored: Boolean(anchor), clock, toggle };
     updateClock();
   }
 

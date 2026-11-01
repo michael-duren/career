@@ -384,7 +384,7 @@
   // jump: startedAt moves to now and carriedMs keeps the active time earned
   // so far, and openedAt shifts by the step so open time and max age continue
   // as if the gap never happened. The first sample after a jump credits nothing (bounded loss of
-  // under one heartbeat).
+  // under one heartbeat). A paused timer (see setPaused) credits nothing.
   function creditActive(timer, sample, now, tabId = 0) {
     const finite = Number.isFinite;
     const origStart = finite(timer.startedAt) ? timer.startedAt : now;
@@ -409,7 +409,7 @@
     const startedAt = jumped ? now : origStart;
     let activeMs = earned;
     let creditedTo = finite(timer.creditedTo) ? Math.min(timer.creditedTo, now) : startedAt;
-    if (sample && sample.visible && since < now) {
+    if (sample && sample.visible && !timer.paused && since < now) {
       const end = Math.min(now, since + SAMPLE_MAX_CREDIT_MS, sample.lastInputAt + ACTIVE_IDLE_MS);
       const start = Math.max(since, creditedTo);
       if (end > start) {
@@ -424,6 +424,15 @@
     const carriedMs = jumped ? earned : finite(timer.carriedMs) ? timer.carriedMs : 0;
     activeMs = Math.min(activeMs, Math.max(0, now - startedAt) + carriedMs);
     return { ...timer, openedAt, startedAt, activeMs, carriedMs, creditedTo, tabs };
+  }
+
+  // setPaused pauses or resumes a timer from the banner's pause button.
+  // Resuming moves creditedTo to now, so no tab's next sample credits time
+  // from before the resume.
+  function setPaused(timer, paused, now) {
+    if (paused) return { ...timer, paused: true };
+    const creditedTo = Number.isFinite(timer.creditedTo) ? Math.max(timer.creditedTo, now) : now;
+    return { ...timer, paused: false, creditedTo };
   }
 
   // openTime is when the problem was opened, for open minutes and max age.
@@ -451,10 +460,11 @@
   // heartbeat's credit), so the next heartbeat only corrects it slightly.
   // A snapshot that holds no tab sample taken at snapshotAt, such as a fresh
   // restart, earns nothing at the next sample, so nothing is projected.
-  // counting reports whether the clock is advancing.
+  // A paused snapshot projects nothing. counting reports whether the clock
+  // is advancing.
   function liveActiveMs(snapshot, snapshotAt, sample, now) {
     const base = activeMs(snapshot, snapshotAt);
-    const sampled = Boolean(snapshot) && Object.values(snapshot.tabs || {}).includes(snapshotAt);
+    const sampled = Boolean(snapshot) && !snapshot.paused && Object.values(snapshot.tabs || {}).includes(snapshotAt);
     if (!sampled || !sample || !sample.visible || !Number.isFinite(snapshotAt)) return { ms: base, counting: false };
     const start = Math.max(snapshotAt, Number.isFinite(snapshot.creditedTo) ? snapshot.creditedTo : snapshotAt);
     const end = Math.min(now, snapshotAt + SAMPLE_MAX_CREDIT_MS, sample.lastInputAt + ACTIVE_IDLE_MS);
@@ -844,6 +854,7 @@
     elapsedMinutes,
     validSample,
     creditActive,
+    setPaused,
     activeMs,
     activeMinutes,
     liveActiveMs,
