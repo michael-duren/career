@@ -89,3 +89,37 @@ func CorrectnessSections(text string) []FeedbackSection {
 	add(len(text))
 	return sections
 }
+
+// codeFeedbackLabel matches a short label opening a line of code feedback,
+// such as "Edge cases:" or "- Naming:".
+var codeFeedbackLabel = regexp.MustCompile(`^(?:[-•*]\s+)?([A-Z][A-Za-z'/-]*(?: [A-Za-z'/-]+){0,4}):(?:\s+|$)`)
+
+// CodeFeedbackSections splits code feedback into sections at lines that open
+// with a short label. It returns nil when no line does.
+func CodeFeedbackSections(text string) []FeedbackSection {
+	var sections []FeedbackSection
+	labeled := false
+	for _, line := range strings.Split(text, "\n") {
+		if m := codeFeedbackLabel.FindStringSubmatchIndex(line); m != nil {
+			sections = append(sections, FeedbackSection{Label: line[m[2]:m[3]], Body: line[m[1]:]})
+			labeled = true
+			continue
+		}
+		if len(sections) == 0 {
+			sections = append(sections, FeedbackSection{})
+		}
+		last := &sections[len(sections)-1]
+		last.Body += "\n" + line
+	}
+	if !labeled {
+		return nil
+	}
+	out := sections[:0]
+	for _, s := range sections {
+		s.Body = strings.TrimSpace(s.Body)
+		if s.Label != "" || s.Body != "" {
+			out = append(out, s)
+		}
+	}
+	return out
+}
