@@ -207,17 +207,12 @@ const MaxTodoRefs = MaxTodoSetProblems
 // ErrTooManyTodoRefs is returned for a list longer than MaxTodoRefs.
 var ErrTooManyTodoRefs = errors.New("too many todo problems")
 
-// InvalidTodoRefError carries the first entry that is not a LeetCode problem.
-// UnknownNeetCode is set when it is a NeetCode link with no LeetCode mapping.
+// InvalidTodoRefError carries the first entry that is not a problem reference.
 type InvalidTodoRefError struct {
-	Entry           string
-	UnknownNeetCode bool
+	Entry string
 }
 
 func (e InvalidTodoRefError) Error() string {
-	if e.UnknownNeetCode {
-		return "unknown NeetCode problem " + strconv.Quote(e.Entry)
-	}
 	return "invalid todo problem " + strconv.Quote(e.Entry)
 }
 
@@ -234,8 +229,7 @@ func ParseTodoRefs(input string) ([]string, error) {
 	for _, part := range parts {
 		slug, err := ResolveProblemRef(part)
 		if err != nil {
-			part = EchoRef(part)
-			return nil, InvalidTodoRefError{Entry: part, UnknownNeetCode: errors.Is(err, ErrUnknownNeetCodeProblem)}
+			return nil, InvalidTodoRefError{Entry: EchoRef(part)}
 		}
 		if !seen[slug] {
 			out = append(out, slug)

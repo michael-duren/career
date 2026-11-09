@@ -163,15 +163,22 @@ func NeetCodeSlugs() map[string]string {
 	return out
 }
 
-// ErrUnknownNeetCodeProblem is returned for a NeetCode link whose slug is not
-// in the NeetCode to LeetCode table.
-var ErrUnknownNeetCodeProblem = errors.New("unknown NeetCode problem")
+// NeetCodeOnlyPrefix starts the slug of a NeetCode problem with no LeetCode
+// match, such as NeetCode's data structure implementations
+// (neetcode.io/problems/heap is tracked as neetcode-heap). LeetCode has no
+// problem slugs that start this way.
+const NeetCodeOnlyPrefix = "neetcode-"
+
+// IsNeetCodeOnly reports whether slug names a NeetCode-only problem.
+func IsNeetCodeOnly(slug string) bool { return strings.HasPrefix(slug, NeetCodeOnlyPrefix) }
+
+// NeetCodeOnlySlug returns the NeetCode page slug of a NeetCode-only problem.
+func NeetCodeOnlySlug(slug string) (string, bool) {
+	return strings.CutPrefix(slug, NeetCodeOnlyPrefix)
+}
 
 // ErrInvalidProblemRef is returned for input that is not a problem link or slug.
 var ErrInvalidProblemRef = errors.New("invalid problem link or slug")
-
-// UnknownNeetCodeMessage explains a refused NeetCode link.
-const UnknownNeetCodeMessage = "That NeetCode problem has no known LeetCode match. Use its LeetCode link or slug instead."
 
 // MaxEchoedRefRunes is how much of a rejected reference an error repeats.
 const MaxEchoedRefRunes = 60
@@ -189,8 +196,9 @@ func EchoRef(ref string) string {
 // accepts leetcode.com and leetcode.cn problem URLs, neetcode.io problem URLs
 // (mapped to the LeetCode slug they mirror), paths such as
 // /problems/two-sum/description/, and bare LeetCode slugs. A NeetCode slug
-// that is not in the table yields ErrUnknownNeetCodeProblem rather than a
-// guess; any other bad input yields ErrInvalidProblemRef.
+// that is not in the table is a NeetCode-only problem, tracked under
+// NeetCodeOnlyPrefix plus its NeetCode slug. Bad input yields
+// ErrInvalidProblemRef.
 func ResolveProblemRef(input string) (string, error) {
 	s := strings.TrimSpace(input)
 	if s == "" {
@@ -230,11 +238,12 @@ func ResolveProblemRef(input string) (string, error) {
 		return "", ErrInvalidProblemRef
 	}
 	if neetcode {
-		lc, ok := neetcodeSlugs[s]
-		if !ok {
-			return "", ErrUnknownNeetCodeProblem
+		if lc, ok := neetcodeSlugs[s]; ok {
+			return lc, nil
 		}
-		return lc, nil
+		if s = NeetCodeOnlyPrefix + s; !ValidSlug(s) {
+			return "", ErrInvalidProblemRef
+		}
 	}
 	return s, nil
 }

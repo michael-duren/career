@@ -48,9 +48,25 @@ type Problem struct {
 	InCatalog bool
 }
 
-func (p Problem) URL() string { return "https://leetcode.com/problems/" + p.Slug + "/" }
+// URL is the problem's page: on LeetCode, or on NeetCode for a NeetCode-only
+// problem.
+func (p Problem) URL() string {
+	if nc, ok := NeetCodeOnlySlug(p.Slug); ok {
+		return "https://neetcode.io/problems/" + nc
+	}
+	return "https://leetcode.com/problems/" + p.Slug + "/"
+}
 
-// NeetCodeURL returns the matching problem link, or empty when no match is known.
+// Site names the site URL opens: "LeetCode" or "NeetCode".
+func (p Problem) Site() string {
+	if IsNeetCodeOnly(p.Slug) {
+		return "NeetCode"
+	}
+	return "LeetCode"
+}
+
+// NeetCodeURL returns the matching NeetCode link of a LeetCode problem, or
+// empty when no match is known or URL is already the NeetCode page.
 func (p Problem) NeetCodeURL() string {
 	if slug, ok := neetcodeByLeetCode[p.Slug]; ok {
 		return "https://neetcode.io/problems/" + slug
@@ -61,10 +77,14 @@ func (p Problem) NeetCodeURL() string {
 // Known reports whether the problem's metadata has been filled in.
 func (p Problem) Known() bool { return p.Title != "" }
 
-// DisplayTitle is the title, or the slug until the title is known.
+// DisplayTitle is the title, or until the title is known the slug (for a
+// NeetCode-only problem, its NeetCode slug title-cased, as "Heap").
 func (p Problem) DisplayTitle() string {
 	if p.Title != "" {
 		return p.Title
+	}
+	if nc, ok := NeetCodeOnlySlug(p.Slug); ok {
+		return TopicLabel(nc)
 	}
 	return p.Slug
 }
@@ -72,7 +92,7 @@ func (p Problem) DisplayTitle() string {
 // Fetching reports that metadata is missing and the server will still try
 // to fetch it from LeetCode.
 func (p Problem) Fetching() bool {
-	return p.InCatalog && !p.Known() && !p.NotFound && p.FetchAttempts < MaxFetchAttempts
+	return p.InCatalog && !p.Known() && !p.NotFound && !IsNeetCodeOnly(p.Slug) && p.FetchAttempts < MaxFetchAttempts
 }
 
 // HasOptimal reports whether an optimal time and space are known.

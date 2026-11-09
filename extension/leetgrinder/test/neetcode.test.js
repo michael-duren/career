@@ -22,9 +22,10 @@ test("problemFromPath maps NeetCode slugs to LeetCode", () => {
     metadata: { number: 1, title: "Two Sum", difficulty: "Easy", topics: [] },
   });
   assert.equal(lib.slugFromPath("/problems/duplicate-integer", "neetcode"), "contains-duplicate");
-  // NeetCode-only or unknown problems are not tracked.
-  assert.equal(lib.slugFromPath("/problems/not-a-real-problem/question", "neetcode"), null);
-  assert.equal(lib.slugFromPath("/problems/constructor/", "neetcode"), null);
+  // NeetCode-only problems are tracked as neetcode-{slug}.
+  assert.deepEqual(lib.problemFromPath("/problems/heap/question", "neetcode"), { slug: "neetcode-heap", metadata: null });
+  assert.equal(lib.slugFromPath("/problems/constructor/", "neetcode"), "neetcode-constructor");
+  assert.equal(lib.slugFromPath(`/problems/${"a".repeat(92)}`, "neetcode"), null);
   assert.equal(lib.slugFromPath("/roadmap", "neetcode"), null);
   assert.equal(lib.neetcodeProblem("__proto__"), null);
   // LeetCode paths are unchanged.
@@ -116,4 +117,9 @@ test("detector reports failures as submissions only, and ignores runs and other 
   // "Accepted" with failing test cases is not a pass.
   submit(FakeXHR, "/api/executeCodeFunctionHttp", sent, { data: { status: { description: "Accepted" }, test_case_count: 32, correct_test_case_count: 31 } });
   assert.deepEqual(posted.slice(1).map((p) => p.msg.type), ["submission"]);
+});
+
+test("problemURL opens NeetCode-only problems on NeetCode", () => {
+  assert.equal(lib.problemURL("two-sum"), "https://leetcode.com/problems/two-sum/");
+  assert.equal(lib.problemURL("neetcode-heap"), "https://neetcode.io/problems/heap");
 });

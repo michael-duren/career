@@ -104,6 +104,10 @@ login blocks the connector.
 Problem entries in `get_leetgrinder_today`, `list_leetgrinder_reviews` and
 `list_leetgrinder_todos` include `url` for LeetCode and `neetcodeUrl` when a
 matching NeetCode problem is known. Unmapped problems omit `neetcodeUrl`.
+NeetCode-only problems (a NeetCode link with no LeetCode match, such as
+`https://neetcode.io/problems/heap`) are accepted and tracked as
+`neetcode-{slug}`; their `url` is the NeetCode page and they have no
+`neetcodeUrl`.
 
 Kinds: `goal`, `work_journal`, `personal_journal`, `note`, `page`, `book`, `company`,
 `connection`, `audio_thought`. Audio thoughts are private and only returned when

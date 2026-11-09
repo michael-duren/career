@@ -303,20 +303,31 @@
     return m && SLUG.test(m[1]) && m[1].length <= 100 ? m[1] : null;
   }
 
-  // neetcodeProblem maps a NeetCode problem slug to the LeetCode problem it
-  // mirrors: {slug, metadata}, or null for NeetCode-only problems. The app
-  // only knows LeetCode slugs. The table is neetcode-slugs.js.
+  // NEETCODE_ONLY starts the app's slug for a NeetCode problem with no
+  // LeetCode match (neetcode.io/problems/heap is "neetcode-heap"), matching
+  // the server's leetgrinder.NeetCodeOnlyPrefix.
+  const NEETCODE_ONLY = "neetcode-";
+
+  // neetcodeProblem maps a NeetCode problem slug to the app's problem:
+  // {slug, metadata} with the LeetCode problem it mirrors (from the table in
+  // neetcode-slugs.js), or {slug: "neetcode-" + ncSlug, metadata: null} for
+  // a NeetCode-only problem, or null for an invalid slug.
   function neetcodeProblem(ncSlug) {
     const table = root.LeetgrinderNeetCodeSlugs;
-    if (!table || typeof ncSlug !== "string" || !Object.prototype.hasOwnProperty.call(table, ncSlug)) return null;
+    if (typeof ncSlug !== "string") return null;
+    if (!table || !Object.prototype.hasOwnProperty.call(table, ncSlug)) {
+      const slug = NEETCODE_ONLY + ncSlug;
+      return validSlug(slug) ? { slug, metadata: null } : null;
+    }
     const [slug, number, title, difficulty] = table[ncSlug];
     const metadata = cleanMetadata({ number, title, difficulty, topics: [] });
     return validSlug(slug) && metadata ? { slug, metadata } : null;
   }
 
   // problemFromPath returns the problem at a URL path on the given site as
-  // {slug, metadata}: its LeetCode slug, and on NeetCode the metadata known
-  // from the slug table (null on LeetCode, which is asked instead).
+  // {slug, metadata}: the app's slug (see neetcodeProblem), and on NeetCode
+  // the metadata known from the slug table (null on LeetCode, which is asked
+  // instead).
   function problemFromPath(path, site = "leetcode") {
     const slug = pathSlug(path);
     if (!slug) return null;
@@ -324,7 +335,7 @@
     return site === "neetcode" ? neetcodeProblem(slug) : null;
   }
 
-  // slugFromPath returns the LeetCode slug of the problem at a URL path.
+  // slugFromPath returns the app's slug of the problem at a URL path.
   function slugFromPath(path, site = "leetcode") {
     const p = problemFromPath(path, site);
     return p ? p.slug : null;
@@ -656,12 +667,19 @@
     return parts.join(" · ");
   }
 
+  // problemURL is the page of an app problem slug: NeetCode's for a
+  // NeetCode-only problem, LeetCode's otherwise.
+  function problemURL(slug) {
+    if (slug.startsWith(NEETCODE_ONLY)) return `https://neetcode.io/problems/${encodeURIComponent(slug.slice(NEETCODE_ONLY.length))}`;
+    return `https://leetcode.com/problems/${encodeURIComponent(slug)}/`;
+  }
+
   // popupModel shapes a /today response for the popup: progress lines, the
-  // picks and the first ten due problems with LeetCode links.
+  // picks and the first ten due problems with their problem links.
   function popupModel(today, origin) {
     const item = (r) => ({
       title: String(r.title || r.slug),
-      url: `https://leetcode.com/problems/${encodeURIComponent(r.slug)}/`,
+      url: problemURL(String(r.slug || "")),
       reason: String(r.reason || ""),
       done: Boolean(r.done),
     });
@@ -846,6 +864,7 @@
     CORRECTNESS_FIELDS,
     siteOf,
     neetcodeProblem,
+    problemURL,
     problemFromPath,
     slugFromPath,
     isAssistPath,
