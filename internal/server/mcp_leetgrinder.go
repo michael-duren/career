@@ -186,7 +186,7 @@ func (s *Server) addLeetgrinderTools(server *mcp.Server) {
 		}
 		slug, err := leetgrinder.ResolveProblemRef(in.Problem)
 		if err != nil {
-			return nil, nil, refInputError(in.Problem, err)
+			return nil, nil, refInputError(in.Problem)
 		}
 		if in.ID == "" {
 			in.ID = uuid.NewString()

@@ -99,11 +99,13 @@ func TestNormalizeProblemRef(t *testing.T) {
 		"neetcode.io/problems/top-k-elements-in-list":                             "top-k-frequent-elements",
 		"www.neetcode.io/problems/two-integer-sum/":                               "two-sum",
 		"https://NeetCode.io/problems/Two-Integer-Sum/":                           "two-sum",
-		// A NeetCode slug that is not in the table is never guessed.
-		"https://neetcode.io/problems/no-such-neetcode-problem": "",
-		"neetcode.io/problems/two-sum-nope":                     "",
-		"https://neetcode.io/problems/":                         "",
-		"https://neetcode.io/courses/dsa-for-beginners":         "",
+		// A NeetCode slug that is not in the table is a NeetCode-only problem.
+		"https://neetcode.io/problems/heap":   "neetcode-heap",
+		"neetcode.io/problems/Dynamic-Array/": "neetcode-dynamic-array",
+		"https://neetcode.io/problems/" + strings.Repeat("a", MaxSlugLength-len(NeetCodeOnlyPrefix)):   "neetcode-" + strings.Repeat("a", MaxSlugLength-len(NeetCodeOnlyPrefix)),
+		"https://neetcode.io/problems/" + strings.Repeat("a", MaxSlugLength-len(NeetCodeOnlyPrefix)+1): "",
+		"https://neetcode.io/problems/":                 "",
+		"https://neetcode.io/courses/dsa-for-beginners": "",
 		// Host and scheme checks.
 		"https://leetcode.com.evil.com/problems/two-sum/":   "",
 		"https://leetcode.com@evil.com/problems/two-sum/":   "",
@@ -142,12 +144,11 @@ func TestNormalizeProblemRef(t *testing.T) {
 
 func TestResolveProblemRefErrors(t *testing.T) {
 	for in, want := range map[string]error{
-		"https://neetcode.io/problems/no-such-neetcode-problem": ErrUnknownNeetCodeProblem,
-		"neetcode.io/problems/nope":                             ErrUnknownNeetCodeProblem,
-		"https://example.com/problems/two-sum":                  ErrInvalidProblemRef,
-		"two sum":                                               ErrInvalidProblemRef,
-		"":                                                      ErrInvalidProblemRef,
-		"https://neetcode.io/courses/x":                         ErrInvalidProblemRef,
+		"https://neetcode.io/problems/" + strings.Repeat("a", MaxSlugLength): ErrInvalidProblemRef,
+		"https://example.com/problems/two-sum":                               ErrInvalidProblemRef,
+		"two sum":                                                            ErrInvalidProblemRef,
+		"":                                                                   ErrInvalidProblemRef,
+		"https://neetcode.io/courses/x":                                      ErrInvalidProblemRef,
 	} {
 		if _, err := ResolveProblemRef(in); !errors.Is(err, want) {
 			t.Errorf("%q: %v, want %v", in, err, want)
@@ -211,5 +212,20 @@ func TestProblemTopicLabelPrefersStoredName(t *testing.T) {
 	}
 	if got := (Problem{}).TopicLabel("depth-first-search"); got != "Depth First Search" {
 		t.Errorf("no names: %q", got)
+	}
+}
+
+func TestNeetCodeOnlyProblem(t *testing.T) {
+	p := Problem{Slug: "neetcode-heap"}
+	if p.URL() != "https://neetcode.io/problems/heap" || p.Site() != "NeetCode" || p.NeetCodeURL() != "" || p.DisplayTitle() != "Heap" {
+		t.Fatalf("neetcode-only: url %q site %q neetcode %q title %q", p.URL(), p.Site(), p.NeetCodeURL(), p.DisplayTitle())
+	}
+	p.InCatalog = true
+	if p.Fetching() {
+		t.Fatal("a NeetCode-only problem is never fetched from LeetCode")
+	}
+	lc := Problem{Slug: "two-sum"}
+	if lc.URL() != "https://leetcode.com/problems/two-sum/" || lc.Site() != "LeetCode" || lc.NeetCodeURL() != "https://neetcode.io/problems/two-integer-sum" {
+		t.Fatalf("leetcode: url %q site %q neetcode %q", lc.URL(), lc.Site(), lc.NeetCodeURL())
 	}
 }

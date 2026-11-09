@@ -324,10 +324,12 @@ func (s *Store) ClearLeetgrinderModelOptimal(ctx context.Context, slug, revision
 // LeetCode for: a row with no title, or a seeded or extension-saved row of an
 // attempted problem that has no topic tags yet, that LeetCode has not answered for, that is
 // under the attempt cap and past its backoff. Newest rows go first.
+// NeetCode-only problems are never asked about: LeetCode does not know them.
 func (s *Store) NextLeetgrinderFetch(ctx context.Context, now time.Time) (string, bool, error) {
 	var slug string
 	err := s.DB.QueryRowContext(ctx, `SELECT p.slug FROM leetgrinder_problems p
 WHERE p.fetched_at IS NULL AND p.fetch_attempts < $1 AND p.fetch_after <= $2
+  AND p.slug NOT LIKE '`+leetgrinder.NeetCodeOnlyPrefix+`%'
   AND (p.title='' OR (p.metadata_source IN ('seed','extension','mcp') AND cardinality(p.topics)=0 AND EXISTS (SELECT 1 FROM leetgrinder_attempts a WHERE a.problem_slug=p.slug)))
 ORDER BY p.title='' DESC, p.created_at DESC, p.slug LIMIT 1`, leetgrinder.MaxFetchAttempts, now).Scan(&slug)
 	if errors.Is(err, sql.ErrNoRows) {

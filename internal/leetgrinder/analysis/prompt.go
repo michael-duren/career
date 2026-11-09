@@ -90,7 +90,7 @@ func userPrompt(in Input, boundary string) string {
 	case p.Known():
 		fmt.Fprintf(&b, "Problem: %s (slug %s, %s)\n", p.Title, p.Slug, p.Difficulty)
 	default:
-		fmt.Fprintf(&b, "Problem: LeetCode slug %s\n", p.Slug)
+		fmt.Fprintf(&b, "Problem: %s slug %s\n", p.Site(), p.Slug)
 	}
 	fmt.Fprintf(&b, "Link: %s\n", p.URL())
 	if in.Reference() {

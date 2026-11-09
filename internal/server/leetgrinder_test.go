@@ -228,9 +228,12 @@ func TestLeetgrinderLogForm(t *testing.T) {
 	if w.Code != 400 || !strings.Contains(w.Body.String(), "Enter a LeetCode or NeetCode problem link") || !strings.Contains(w.Body.String(), "https://example.com/&lt;b&gt;") {
 		t.Fatalf("bad reference: %d", w.Code)
 	}
-	w = request("GET", "/leetgrinder/log?"+url.Values{"problem": {"https://neetcode.io/problems/no-such-neetcode-problem"}}.Encode(), nil)
-	if w.Code != 400 || !strings.Contains(w.Body.String(), "no known LeetCode match") {
-		t.Fatalf("unknown NeetCode problem: %d", w.Code)
+	w = request("GET", "/leetgrinder/log?"+url.Values{"problem": {"https://neetcode.io/problems/heap"}}.Encode(), nil)
+	if w.Code != 303 || w.Header().Get("Location") != "/leetgrinder/problem/neetcode-heap" {
+		t.Fatalf("NeetCode-only problem: %d %q", w.Code, w.Header().Get("Location"))
+	}
+	if w = request("GET", "/leetgrinder/problem/neetcode-heap", nil); w.Code != 200 || !strings.Contains(w.Body.String(), "https://neetcode.io/problems/heap") || !strings.Contains(w.Body.String(), "Open on NeetCode") || strings.Contains(w.Body.String(), "leetcode.com/problems/neetcode-heap") || strings.Contains(w.Body.String(), "Details load from LeetCode") {
+		t.Fatalf("NeetCode-only page: %d", w.Code)
 	}
 	// Opening a new problem's page adds no catalog row, so a GET never
 	// queues a LeetCode fetch; saving an attempt does.

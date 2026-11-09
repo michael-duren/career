@@ -147,6 +147,14 @@ func TestLeetgrinderMetadataPrecedence(t *testing.T) {
 	if slug, ok, err := s.NextLeetgrinderFetch(ctx, now); err != nil || !ok || slug != "concatenation-of-array" {
 		t.Fatalf("topic-less row not fetched: %q %v %v", slug, ok, err)
 	}
+	// A NeetCode-only problem, newer and untitled, is never asked about.
+	nc := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "neetcode-heap", Outcome: "unfinished", Minutes: 5}
+	if _, err := s.SaveLeetgrinderAttempt(ctx, nc, ""); err != nil {
+		t.Fatal(err)
+	}
+	if slug, ok, err := s.NextLeetgrinderFetch(ctx, now.Add(time.Hour)); err != nil || !ok || slug != "concatenation-of-array" {
+		t.Fatalf("NeetCode-only row fetched: %q %v %v", slug, ok, err)
+	}
 	// Invalid metadata rejects the whole attempt.
 	b := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "lfu-cache", Outcome: "unfinished", Minutes: 30, Source: "extension"}
 	if _, err := s.SaveLeetgrinderAttemptWithProblem(ctx, b, "", &leetgrinder.ProblemMetadata{Number: -1}, now); !errors.Is(err, ErrInvalid) {

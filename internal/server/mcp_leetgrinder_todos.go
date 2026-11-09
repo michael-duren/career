@@ -76,16 +76,13 @@ const (
 func todoProblemFromMCP(in todoProblemDetailsInput) (leetgrinder.TodoProblemInput, error) {
 	slug, err := leetgrinder.ResolveProblemRef(in.Problem)
 	if err != nil {
-		return leetgrinder.TodoProblemInput{}, refInputError(in.Problem, err)
+		return leetgrinder.TodoProblemInput{}, refInputError(in.Problem)
 	}
 	return leetgrinder.TodoProblemInput{Slug: slug, Reference: in.Problem, Number: in.Number, Title: in.Title, Difficulty: in.Difficulty, Topics: in.Topics, ImportMetadata: in.Metadata}, nil
 }
 
 // refInputError explains a refused problem reference to the MCP client.
-func refInputError(ref string, err error) error {
-	if errors.Is(err, leetgrinder.ErrUnknownNeetCodeProblem) {
-		return invalidInput("unknown NeetCode problem %q: no LeetCode match is known; use its LeetCode link or slug", leetgrinder.EchoRef(ref))
-	}
+func refInputError(ref string) error {
 	return invalidInput("invalid LeetCode or NeetCode problem link, or LeetCode slug: %q", leetgrinder.EchoRef(ref))
 }
 
@@ -140,7 +137,7 @@ func (s *Server) addLeetgrinderTodoTools(server *mcp.Server) {
 		return nil, out, nil
 	})
 	mcp.AddTool(server, &mcp.Tool{
-		Name: "create_leetgrinder_todo_set", Description: "Create a named Leetgrinder todo set with up to 1000 problems, kept in the order given. Use problemDetails to copy title, number, difficulty, topics and arbitrary metadata onto each catalog problem; use problems for plain links or slugs (leetcode.com, leetcode.cn or neetcode.io problem links, or LeetCode slugs; a NeetCode link is mapped to its LeetCode slug, and an unknown NeetCode problem is rejected). Set description and metadata are also preserved. Requires edit access.",
+		Name: "create_leetgrinder_todo_set", Description: "Create a named Leetgrinder todo set with up to 1000 problems, kept in the order given. Use problemDetails to copy title, number, difficulty, topics and arbitrary metadata onto each catalog problem; use problems for plain links or slugs (leetcode.com, leetcode.cn or neetcode.io problem links, or LeetCode slugs; a NeetCode link is mapped to the LeetCode problem it mirrors, and a NeetCode-only problem (such as neetcode.io/problems/heap) is tracked as neetcode-{slug}). Set description and metadata are also preserved. Requires edit access.",
 		Annotations: &mcp.ToolAnnotations{Title: "Create Leetgrinder problem set", DestructiveHint: new(bool), OpenWorldHint: new(bool)},
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in createTodoSetInput) (*mcp.CallToolResult, any, error) {
 		if !canWrite(req) {
@@ -154,7 +151,7 @@ func (s *Server) addLeetgrinderTodoTools(server *mcp.Server) {
 		for _, ref := range in.Problems {
 			slug, err := leetgrinder.ResolveProblemRef(ref)
 			if err != nil {
-				return nil, nil, refInputError(ref, err)
+				return nil, nil, refInputError(ref)
 			}
 			if _, exists := seen[slug]; !exists {
 				seen[slug] = len(problems)
@@ -185,7 +182,7 @@ func (s *Server) addLeetgrinderTodoTools(server *mcp.Server) {
 		return nil, map[string]any{"id": set.ID, "title": set.Title, "problemCount": len(problems)}, nil
 	})
 	mcp.AddTool(server, &mcp.Tool{
-		Name: "add_leetgrinder_todo_problem", Description: "Add a LeetCode problem to the individual list or a set. The problem may be a leetcode.com, leetcode.cn or neetcode.io problem link, or a LeetCode slug; a NeetCode link is mapped to its LeetCode slug, and an unknown NeetCode problem is rejected. Optional title, number, difficulty, topics, and arbitrary metadata are saved on the catalog problem. A new set entry goes last unless position, beforeId or afterId places it; these also move an entry already in the set. Repeated additions keep one todo entry; adding a done individual problem again queues it for another pass. Requires edit access.",
+		Name: "add_leetgrinder_todo_problem", Description: "Add a LeetCode problem to the individual list or a set. The problem may be a leetcode.com, leetcode.cn or neetcode.io problem link, or a LeetCode slug; a NeetCode link is mapped to the LeetCode problem it mirrors, and a NeetCode-only problem (such as neetcode.io/problems/heap) is tracked as neetcode-{slug}. Optional title, number, difficulty, topics, and arbitrary metadata are saved on the catalog problem. A new set entry goes last unless position, beforeId or afterId places it; these also move an entry already in the set. Repeated additions keep one todo entry; adding a done individual problem again queues it for another pass. Requires edit access.",
 		Annotations: &mcp.ToolAnnotations{Title: "Add Leetgrinder todo problem", DestructiveHint: new(bool), IdempotentHint: true, OpenWorldHint: new(bool)},
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in addTodoProblemInput) (*mcp.CallToolResult, any, error) {
 		if !canWrite(req) {

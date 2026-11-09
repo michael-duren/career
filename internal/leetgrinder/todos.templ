@@ -59,7 +59,7 @@ templ todoNext(set TodoSet) {
 						<span class={ DifficultyClass(next.Problem.Difficulty) }>{ next.Problem.Difficulty }</span>
 					}
 				</p>
-				<a class="button primary" href={ templ.SafeURL(next.Problem.URL()) } target="_blank" rel="noopener noreferrer">Open on LeetCode<span class="visually-hidden"> { next.Problem.DisplayTitle() } (opens in a new tab)</span></a>
+				<a class="button primary" href={ templ.SafeURL(next.Problem.URL()) } target="_blank" rel="noopener noreferrer">Open on { next.Problem.Site() }<span class="visually-hidden"> { next.Problem.DisplayTitle() } (opens in a new tab)</span></a>
 				@neetcodeLink(next.Problem, "button")
 			</div>
 	}
@@ -197,7 +197,7 @@ templ todoTable(items []TodoItem, caption string, loc *time.Location, setID stri
 				if setID != "" {
 					<th scope="col"><span class="visually-hidden">Done</span></th>
 				}
-				<th scope="col">#</th><th scope="col">Problem</th><th scope="col">Difficulty</th><th scope="col">Type / topics</th><th scope="col">LeetCode</th><th scope="col">Remove</th>
+				<th scope="col">#</th><th scope="col">Problem</th><th scope="col">Difficulty</th><th scope="col">Type / topics</th><th scope="col">Link</th><th scope="col">Remove</th>
 			</tr></thead>
 			<tbody>
 				for _, item := range items {
@@ -239,7 +239,7 @@ templ todoTable(items []TodoItem, caption string, loc *time.Location, setID stri
 								</span>
 							}
 						</td>
-						<td><div class="problem-site-links"><a href={ templ.SafeURL(item.Problem.URL()) } target="_blank" rel="noopener noreferrer">Open<span class="visually-hidden"> { item.Problem.DisplayTitle() } on LeetCode</span></a> @neetcodeLink(item.Problem, "")</div></td>
+						<td><div class="problem-site-links"><a href={ templ.SafeURL(item.Problem.URL()) } target="_blank" rel="noopener noreferrer">Open<span class="visually-hidden"> { item.Problem.DisplayTitle() } on { item.Problem.Site() }</span></a> @neetcodeLink(item.Problem, "")</div></td>
 						<td><form method="post" action={ templ.SafeURL("/leetgrinder/todos/items/" + item.ID + "/delete") }>
 							if setID != "" {
 								<input type="hidden" name="setID" value={ setID }/>

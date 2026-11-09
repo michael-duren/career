@@ -1,5 +1,6 @@
 // Isolated-world content script on leetcode.com and neetcode.io. It tracks
-// the open problem (always by its LeetCode slug, which is what the app knows),
+// the open problem (by its LeetCode slug, or neetcode-{slug} for a NeetCode
+// problem with no LeetCode match, which is what the app knows),
 // keeps its timer (via the background worker), and shows the confirm panel
 // and the 25-minute nudge. It never talks to the app directly and builds all
 // UI with DOM APIs and textContent, never HTML strings.
@@ -11,7 +12,7 @@
   const lib = globalThis.LeetgrinderLib;
   const DETECT_SOURCE = "leetgrinder-detect";
   // "leetcode" or "neetcode"; NeetCode pages use their own slugs, mapped
-  // to LeetCode's by lib.problemFromPath.
+  // to the app's by lib.problemFromPath.
   const site = lib.siteOf(location.href);
 
   // current is the problem on screen: {slug, lookup: Promise<lookup>, meta,

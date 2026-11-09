@@ -120,9 +120,6 @@ func (s *Server) leetgrinderLog(w http.ResponseWriter, r *http.Request) {
 			ref = string([]rune(ref)[:300])
 		}
 		message := "Enter a LeetCode or NeetCode problem link, such as https://leetcode.com/problems/two-sum/, or a LeetCode slug such as two-sum."
-		if errors.Is(err, leetgrinder.ErrUnknownNeetCodeProblem) {
-			message = leetgrinder.UnknownNeetCodeMessage
-		}
 		s.renderOverview(w, r, 400, ref, message)
 		return
 	}
