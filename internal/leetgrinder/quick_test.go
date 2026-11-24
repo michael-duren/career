@@ -181,6 +181,10 @@ func TestSpotChecksRaiseRateUntilThreePass(t *testing.T) {
 			t.Errorf("%s: rate %d", test.name, s.Rate)
 		}
 	}
+	// 0% turns spot checks off, even after failures.
+	if s := SpotChecks(build(false, true, true, false), 0); s.Elevated || s.Rate != 0 || s.Failed != 2 {
+		t.Fatalf("rate 0 after failures: %+v", s)
+	}
 	// Help on the re-solve fails a spot check; an unresolved one counts
 	// for nothing.
 	state := State{Attempts: []Attempt{
