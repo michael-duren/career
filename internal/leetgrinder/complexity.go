@@ -20,11 +20,13 @@ const (
 )
 
 var (
-	ErrComplexityRequired = errors.New("time and space complexity are required for solved and struggled attempts")
+	ErrComplexityRequired = errors.New("time and space complexity are required for solved and struggled attempts and for recalled or partial quick reviews")
 	ErrComplexityFormat   = errors.New("complexity must start with O( and end with ), in 40 characters or fewer")
 	ErrCodeTooLarge       = errors.New("code is over 64 KiB")
 	ErrCodeInvalid        = errors.New("code and its language are invalid")
 	ErrApproachInvalid    = errors.New("approach must be optimal, suboptimal, or empty")
+	ErrOutcomeInvalid     = errors.New("outcome must be solved, struggled or unfinished, or for a quick review recalled, partial or forgot")
+	ErrQuickFields        = errors.New("a quick review takes no code, solution help, review mark, approach or correctness answers, and only a partial one says what it missed")
 )
 
 var codeLanguage = regexp.MustCompile(`^[A-Za-z0-9_+#.-]{1,32}$`)
@@ -74,13 +76,30 @@ func IsCanonicalComplexity(s string) bool {
 	return false
 }
 
-// NeedsComplexity reports whether an outcome requires stated complexity.
-func NeedsComplexity(outcome string) bool { return outcome == "solved" || outcome == "struggled" }
+// NeedsComplexity reports whether an outcome requires stated complexity:
+// solved and struggled attempts, and recalled and partial quick reviews.
+func NeedsComplexity(outcome string) bool {
+	return outcome == "solved" || outcome == "struggled" || outcome == QuickRecalled || outcome == QuickPartial
+}
 
 // NormalizeDetails normalises the attempt's stated complexities in place and
 // checks them and the captured code. Complexity is required for solved and
-// struggled attempts. Code and its language are both set or both empty.
+// struggled attempts. Code and its language are both set or both empty. An
+// empty mode becomes ModeFull; a quick review must carry only its grade,
+// complexities, notes and, when partial, what it missed.
 func (a *Attempt) NormalizeDetails() error {
+	if a.Mode == "" {
+		a.Mode = ModeFull
+	}
+	if !ValidOutcome(a.Mode, a.Outcome) {
+		return ErrOutcomeInvalid
+	}
+	if !ValidMissed(a.Missed) || a.Missed != "" && a.Outcome != QuickPartial || a.SpotCheck && a.Outcome != QuickRecalled {
+		return ErrQuickFields
+	}
+	if a.Quick() && (a.Code != "" || a.CodeLanguage != "" || a.Assisted || a.WantsReview || a.Approach != "" || a.Correctness != (Correctness{})) {
+		return ErrQuickFields
+	}
 	if err := a.Correctness.Validate(); err != nil {
 		return err
 	}

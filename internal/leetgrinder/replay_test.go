@@ -61,8 +61,10 @@ func oldHistory(state State, loc *time.Location, extra ...time.Time) map[time.Ti
 		problem := state.Problem(slug)
 		var dates []time.Time
 		var befores []Card
-		final := replaySlug(problem, list, loc, func(date time.Time, before Card) {
-			day(date).Kinds[slug] = classify(state, slug, problem, date, before, loc)
+		final := replaySlug(problem, list, loc, func(date time.Time, before Card, full bool) {
+			if full {
+				day(date).Kinds[slug] = classify(state, slug, problem, date, before, loc)
+			}
 			dates, befores = append(dates, date), append(befores, before)
 		})
 		for i, date := range dates {

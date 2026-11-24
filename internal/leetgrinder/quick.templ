@@ -1,0 +1,244 @@
+package leetgrinder
+
+// QuickReview is the quick review of one problem: the answer form, then
+// after Reveal the answer beside the last solution, with the grade form.
+templ QuickReview(page QuickReviewPage) {
+	@layout("Quick review · "+page.Problem.DisplayTitle(), "reviews") {
+		<nav class="breadcrumb" aria-label="Breadcrumb">
+			if page.Form.Batch != "" {
+				<a href={ templ.SafeURL(BacklogURL(page.Form.Batch)) }>Clear backlog</a>
+			} else {
+				<a href="/leetgrinder/reviews">Reviews</a>
+			}
+			<span>/</span><span>Quick review</span>
+		</nav>
+		@problemMeta(page.Problem)
+		<h1>{ page.Problem.DisplayTitle() }</h1>
+		<p class="lead">Recall the approach and its complexity without writing code. Open the statement only, not your old solution.</p>
+		<div class="history-links">
+			<a class="button" href={ templ.SafeURL(page.Problem.URL()) } target="_blank" rel="noopener noreferrer">Read the statement on { page.Problem.Site() } ↗</a>
+			if page.Suggested == ModeFull && page.Blocked == "" {
+				<span class="badge">Full suggested</span>
+			}
+		</div>
+		if page.Form.Error != "" {
+			<p class="error" role="alert">{ page.Form.Error }</p>
+		}
+		if page.Blocked != "" {
+			<p class="notice" role="status">{ page.Blocked }</p>
+			<p><a href={ templ.SafeURL(ProblemURL(page.Problem.Slug)) }>Log a full attempt</a></p>
+		} else if !page.Revealed {
+			@quickAnswerForm(page)
+		} else {
+			@quickReveal(page)
+		}
+	}
+}
+
+templ quickHidden(form QuickForm) {
+	<input type="hidden" name="id" value={ form.ID }/>
+	if form.Batch != "" {
+		<input type="hidden" name="batch" value={ form.Batch }/>
+	}
+}
+
+templ quickAnswerForm(page QuickReviewPage) {
+	<section class="panel" aria-labelledby="quick-answer-title">
+		<h2 id="quick-answer-title">Your answer</h2>
+		<p class="quick-timer" data-quick-timer hidden>
+			<button type="button" class="button small">Start a 60-second timer</button>
+			<span class="small muted" aria-live="polite"></span>
+		</p>
+		<form class="attempt-form" method="post" action={ templ.SafeURL(ProblemURL(page.Problem.Slug) + "/quick") }>
+			@quickHidden(page.Form)
+			<input type="hidden" name="step" value="reveal"/>
+			<label>
+				Approach
+				<textarea name="approach" rows="3" maxlength="2000" placeholder="DFS returning height, track max">{ page.Form.Approach }</textarea>
+			</label>
+			<fieldset class="complexity">
+				<legend>Complexity <span class="muted">(required)</span></legend>
+				<div class="form-row">
+					@complexityField("timeComplexity", "time", page.Form.Time)
+					@complexityField("spaceComplexity", "space", page.Form.Space)
+				</div>
+			</fieldset>
+			<button class="button primary" type="submit">Reveal</button>
+		</form>
+		<p class="small muted">The timer is only a guide; take the time you need.</p>
+	</section>
+	@quickTimerScript()
+}
+
+templ quickCheckLine(label string, c ComplexityCheck) {
+	<li>
+		{ label } <strong>{ orDash(c.Stated) }</strong>
+		if !c.Known() {
+			<span class="small muted">· no optimum known</span>
+		} else if c.Matches() {
+			<span class="small">· ✓ matches the optimum</span>
+		} else {
+			<span class="small flag">· ✗ optimum is { c.Optimal }</span>
+		}
+	</li>
+}
+
+templ quickReveal(page QuickReviewPage) {
+	<section class="panel" aria-labelledby="quick-yours-title">
+		<h2 id="quick-yours-title">Your answer</h2>
+		if page.Form.Approach != "" {
+			<p class="notes">{ page.Form.Approach }</p>
+		} else {
+			<p class="muted">No approach written.</p>
+		}
+		<ul class="quick-check">
+			@quickCheckLine("Time", page.Check.Time)
+			@quickCheckLine("Space", page.Check.Space)
+		</ul>
+		if page.Problem.OptimalNote != "" {
+			<p class="small muted">{ page.Problem.OptimalNote }</p>
+		}
+	</section>
+	<section class="panel" aria-labelledby="quick-last-title">
+		<h2 id="quick-last-title">Your last solution</h2>
+		if page.LastCode != nil {
+			<p class="small muted">{ AttemptLabel(*page.LastCode) } on { DateLabel(Date(page.LastCode.CreatedAt, page.Location)) } · { LanguageLabel(page.LastCode.CodeLanguage) }</p>
+			@statedComplexity(*page.LastCode)
+			<pre class="chroma"><code data-language={ page.LastCode.CodeLanguage }>@templ.Raw(string(HighlightCode(page.LastCode.Code, page.LastCode.CodeLanguage)))</code></pre>
+		} else {
+			<p class="muted">No saved code for this problem.</p>
+		}
+		if page.Notes != "" {
+			<h3>Notes</h3>
+			<p class="notes">{ page.Notes }</p>
+		}
+		<div class="problem-actions problem-site-links">
+			@neetcodeLink(page.Problem, "")
+			<a href={ templ.SafeURL(ProblemURL(page.Problem.Slug)) } target="_blank" rel="noopener noreferrer">Attempt history ↗</a>
+		</div>
+	</section>
+	<section class="panel" aria-labelledby="quick-grade-title">
+		<h2 id="quick-grade-title">Grade yourself</h2>
+		<form class="attempt-form" method="post" action={ templ.SafeURL(ProblemURL(page.Problem.Slug) + "/quick") }>
+			@quickHidden(page.Form)
+			<input type="hidden" name="step" value="grade"/>
+			<input type="hidden" name="approach" value={ page.Form.Approach }/>
+			<input type="hidden" name="timeComplexity" value={ page.Form.Time.Choice }/>
+			<input type="hidden" name="timeComplexityOther" value={ page.Form.Time.Other }/>
+			<input type="hidden" name="spaceComplexity" value={ page.Form.Space.Choice }/>
+			<input type="hidden" name="spaceComplexityOther" value={ page.Form.Space.Other }/>
+			<fieldset>
+				<legend>How did it go?</legend>
+				<label class="checkbox"><input type="radio" name="grade" value={ QuickRecalled } required checked?={ page.Form.Grade == QuickRecalled }/><span><strong>Recalled</strong>: approach and both complexities right</span></label>
+				<label class="checkbox"><input type="radio" name="grade" value={ QuickPartial } checked?={ page.Form.Grade == QuickPartial }/><span><strong>Partial</strong>: right approach, but a complexity or a key detail was wrong</span></label>
+				<label class="checkbox"><input type="radio" name="grade" value={ QuickForgot } checked?={ page.Form.Grade == QuickForgot }/><span><strong>Forgot</strong>: wrong approach or a blank</span></label>
+			</fieldset>
+			<div class="form-row">
+				<label>
+					If partial, what did you miss?
+					<select name="missed">
+						for _, m := range []string{MissedTime, MissedSpace, MissedBoth, MissedDetail} {
+							<option value={ m } selected?={ page.Form.Missed == m }>{ MissedLabel(m) }</option>
+						}
+					</select>
+				</label>
+				<label>Minutes spent<input type="number" name="minutes" min="1" max="240" required value={ page.Form.Minutes }/></label>
+			</div>
+			<p class="small muted">Recalled takes the problem off the review list until its next spaced review. Partial keeps it flagged for another look within { Count(QuickPartialDays) } days. Forgot brings it back tomorrow for a full re-solve.</p>
+			<button class="button primary" type="submit">Save grade</button>
+		</form>
+	</section>
+}
+
+// quickTimerScript shows the optional timer. Without JavaScript it stays
+// hidden; the form works the same.
+templ quickTimerScript() {
+	<script>
+		(() => {
+			const box = document.querySelector("[data-quick-timer]");
+			if (!box) return;
+			box.hidden = false;
+			const button = box.querySelector("button");
+			const out = box.querySelector("span");
+			let timer;
+			button.addEventListener("click", () => {
+				clearInterval(timer);
+				let left = 60;
+				out.textContent = left + " s left";
+				timer = setInterval(() => {
+					left--;
+					out.textContent = left > 0 ? left + " s left" : "Time's up. Finish your answer when ready.";
+					if (left <= 0) clearInterval(timer);
+				}, 1000);
+			});
+		})();
+	</script>
+}
+
+// Backlog is the Clear backlog view: quick reviews of every eligible
+// problem in a row, with counts that update as they are reviewed.
+templ Backlog(page BacklogPage) {
+	@layout("Clear backlog", "reviews") {
+		<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/leetgrinder/reviews">Reviews</a><span>/</span><span>Clear backlog</span></nav>
+		<p class="eyebrow">QUICK REVIEW</p>
+		<h1>Clear backlog</h1>
+		<p class="lead quick-progress" role="status">
+			Flagged: { Count(page.Batch.Flagged) } → { Count(page.Flagged) } · Due: { Count(page.Batch.Due) } → { Count(page.Due) }
+		</p>
+		if len(page.Remaining) > 0 {
+			{{ next := page.Remaining[0] }}
+			<section class="panel" aria-labelledby="backlog-next-title">
+				<h2 id="backlog-next-title">Next: { next.Problem.DisplayTitle() }</h2>
+				<p class="reason">{ ReviewReason(next, page.Today.Now, page.Today.Settings.Location()) }</p>
+				<p>
+					<a class="button primary" href={ templ.SafeURL(QuickURL(next.Problem.Slug, page.BatchToken)) }>Quick review</a>
+					if next.SuggestedMode() == ModeFull {
+						<span class="badge">Full suggested</span>
+					}
+				</p>
+				<p class="small muted">{ Count(len(page.Remaining)) } left in this batch, flagged first, then lowest recall. { Count(len(page.Reviewed)) } reviewed so far.</p>
+			</section>
+			<section class="queue" aria-labelledby="backlog-list-title">
+				<h2 id="backlog-list-title">In this batch</h2>
+				<ol>
+					for _, c := range page.Remaining {
+						<li>
+							<a href={ templ.SafeURL(QuickURL(c.Problem.Slug, page.BatchToken)) }>{ c.Problem.DisplayTitle() }</a>
+							if c.Flag != nil {
+								<span class="small flag">{ c.Flag.Label() }</span>
+							}
+							<span class="small muted">· recall { Percent(c.Retrievability(page.Today.Now)) }</span>
+						</li>
+					}
+				</ol>
+			</section>
+		} else {
+			<section class="panel" aria-labelledby="backlog-done-title">
+				<h2 id="backlog-done-title">Batch finished</h2>
+				<p>You quick-reviewed { Count(len(page.Reviewed)) } { problemUnit(len(page.Reviewed)) } in this batch.</p>
+				if page.NeedFull > 0 {
+					<p class="muted">{ Count(page.NeedFull) } due { problemUnit(page.NeedFull) } can't be quick-reviewed today and { needsLabel(page.NeedFull) } a full attempt.</p>
+				}
+				if len(page.StillOnList) == 0 {
+					<p class="muted">Nothing you reviewed is left on the list.</p>
+				} else {
+					<p>Still on the list:</p>
+					<ul>
+						for _, a := range page.StillOnList {
+							<li>
+								<a href={ templ.SafeURL(ProblemURL(a.ProblemSlug)) }>{ page.Today.State.Problem(a.ProblemSlug).DisplayTitle() }</a>
+								<span class="small muted">· { OutcomeLabel(a.Outcome) }</span>
+								if a.Outcome == QuickPartial {
+									<span class="small muted">· { MissedLabel(a.Missed) } missed</span>
+								} else {
+									<span class="small muted">· full re-solve required</span>
+								}
+							</li>
+						}
+					</ul>
+				}
+				<p><a class="button" href="/leetgrinder/reviews">Back to reviews</a></p>
+			</section>
+		}
+	}
+}

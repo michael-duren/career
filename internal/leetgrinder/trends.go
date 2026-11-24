@@ -18,9 +18,13 @@ type TrendWeek struct {
 	// Minutes and Timed sum the minutes and count the attempts of each
 	// difficulty ("Easy", "Medium", "Hard").
 	Minutes, Timed map[string]int
-	// Checked counts stated complexities a completed analysis judged, and
-	// Matched those it judged right.
+	// Checked counts stated complexities a completed analysis judged, or a
+	// quick review's complexity check compared with a known optimum, and
+	// Matched those judged right.
 	Checked, Matched int
+	// QuickReviews counts the week's quick reviews. They are not solves and
+	// have no minutes in the averages.
+	QuickReviews int
 }
 
 // IndependentRate is the share of the week's solves made without help, and
@@ -92,6 +96,19 @@ func WeeklyTrends(today Today, weeks int) Trends {
 			continue
 		}
 		w := &t.Weeks[i]
+		if a.Quick() {
+			w.QuickReviews++
+			check := CheckQuick(state.Problem(a.ProblemSlug), a.TimeComplexity, a.SpaceComplexity)
+			for _, c := range []ComplexityCheck{check.Time, check.Space} {
+				if c.Known() {
+					w.Checked++
+					if c.Matches() {
+						w.Matched++
+					}
+				}
+			}
+			continue
+		}
 		if a.Outcome == "solved" {
 			w.Solves++
 			if !a.Assisted {

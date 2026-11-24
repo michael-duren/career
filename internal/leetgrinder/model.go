@@ -3,6 +3,7 @@ package leetgrinder
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"slices"
 	"time"
 )
 
@@ -156,6 +157,81 @@ type Attempt struct {
 	// again after a correction cleared it: the attempt's time, or the
 	// correction that raised the flag.
 	MarkedAt time.Time `json:"markedAt"`
+	// Mode is ModeFull for an attempt at solving the problem, or ModeQuick
+	// for a quick review, a recall check without code whose Outcome is the
+	// learner's grade: QuickRecalled, QuickPartial or QuickForgot. Notes
+	// hold a quick review's recalled approach. "" reads as ModeFull.
+	Mode string `json:"mode"`
+	// Missed says what a partial quick review got wrong (see MissedLabel).
+	Missed string `json:"missed"`
+	// SpotCheck marks a recalled quick review picked for a full re-solve at
+	// its next review. It is never shown or exported: the learner learns of
+	// the spot check only when it comes due.
+	SpotCheck bool `json:"-"`
+}
+
+// Attempt modes.
+const (
+	ModeFull  = "full"
+	ModeQuick = "quick"
+)
+
+// Quick review grades, stored as a quick review's outcome.
+const (
+	// QuickRecalled means the approach and both complexities were right.
+	QuickRecalled = "recalled"
+	// QuickPartial means the approach was right but a complexity or a key
+	// detail was wrong.
+	QuickPartial = "partial"
+	// QuickForgot means the approach was wrong or blank.
+	QuickForgot = "forgot"
+)
+
+// What a partial quick review missed.
+const (
+	MissedTime   = "time"
+	MissedSpace  = "space"
+	MissedBoth   = "both"
+	MissedDetail = "detail"
+)
+
+// Quick reports whether the attempt is a quick review.
+func (a Attempt) Quick() bool { return a.Mode == ModeQuick }
+
+// ValidOutcome reports whether outcome is a stored outcome for mode ("" is
+// ModeFull).
+func ValidOutcome(mode, outcome string) bool {
+	switch mode {
+	case "", ModeFull:
+		return outcome == "solved" || outcome == "struggled" || outcome == "unfinished"
+	case ModeQuick:
+		return outcome == QuickRecalled || outcome == QuickPartial || outcome == QuickForgot
+	}
+	return false
+}
+
+// ValidMissed reports whether s is a stored missed value.
+func ValidMissed(s string) bool {
+	switch s {
+	case "", MissedTime, MissedSpace, MissedBoth, MissedDetail:
+		return true
+	}
+	return false
+}
+
+// MissedLabel names what a partial quick review missed, as the start of a
+// sentence: "Time complexity", "Space complexity", "Time and space
+// complexity" or "A key detail".
+func MissedLabel(s string) string {
+	switch s {
+	case MissedTime:
+		return "Time complexity"
+	case MissedSpace:
+		return "Space complexity"
+	case MissedBoth:
+		return "Time and space complexity"
+	}
+	return "A key detail"
 }
 
 // Struggle labels an attempt that was not an unassisted solve, the same
@@ -260,12 +336,16 @@ const (
 
 // bestOf is the best result over one problem's attempts: solved
 // independently, else solved with help, else not solved, whatever came later.
+// Quick reviews are not attempts at solving, so they are left out.
 func bestOf(attempts []Attempt) string {
 	if len(attempts) == 0 {
 		return ResultNone
 	}
 	best := ResultNotSolved
 	for _, a := range attempts {
+		if a.Quick() {
+			continue
+		}
 		if a.Outcome == "solved" {
 			if !a.Assisted {
 				return ResultIndependent
@@ -276,12 +356,14 @@ func bestOf(attempts []Attempt) string {
 	return best
 }
 
-// latestOf is the result of the newest attempt, the first of attempts.
+// latestOf is the result of the newest attempt at solving the problem, the
+// first of attempts that is not a quick review.
 func latestOf(attempts []Attempt) string {
-	if len(attempts) == 0 {
+	i := slices.IndexFunc(attempts, func(a Attempt) bool { return !a.Quick() })
+	if i < 0 {
 		return ResultNone
 	}
-	a := attempts[0]
+	a := attempts[i]
 	switch {
 	case a.Outcome == "solved" && a.Assisted:
 		return ResultWithHelp

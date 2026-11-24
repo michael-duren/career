@@ -125,7 +125,12 @@ func history(replays map[string]*slugReplay, state State, loc *time.Location, ex
 	history := map[string][]snapshot{}
 	for slug, r := range replays {
 		for i, date := range r.dates {
-			day(date).Kinds[slug] = classify(state, slug, r.problem, date, r.befores[i], loc)
+			// Quick reviews have their own counter and never count toward
+			// the goal, so a day with only quick reviews of a problem
+			// leaves it out.
+			if r.full[i] {
+				day(date).Kinds[slug] = classify(state, slug, r.problem, date, r.befores[i], loc)
+			}
 			after := r.final
 			if i+1 < len(r.befores) {
 				after = r.befores[i+1]
@@ -160,11 +165,11 @@ func dueBy(before Card, state State, date time.Time, loc *time.Location) bool {
 }
 
 // queuedBy reports whether a card as it stood before date was in the review
-// queue by the end of date: due and struggled with, or flagged. A re-solve of
-// any due problem still counts as a review, but only queued problems are
-// picked, listed and raise the day's review target.
+// queue by the end of date: due and struggled with or a spot check, or
+// flagged. A re-solve of any due problem still counts as a review, but only
+// queued problems are picked, listed and raise the day's review target.
 func queuedBy(before Card, state State, date time.Time, loc *time.Location) bool {
-	return before.Reviews > 0 && (before.Struggled && before.FSRSDue.Before(EndOfDate(date, loc)) || flaggedBy(before, state, date, loc))
+	return before.Reviews > 0 && ((before.Struggled || before.SpotCheck()) && before.FSRSDue.Before(EndOfDate(date, loc)) || flaggedBy(before, state, date, loc))
 }
 
 // flaggedBy reports whether a card as it stood before date was flagged

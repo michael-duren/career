@@ -32,7 +32,10 @@ type Today struct {
 	// on this access; NewPicks holds any planned earlier.
 	NewPicksFailed bool
 	Progress       DayProgress
-	Streaks        Streaks
+	// QuickReviews counts the problems quick-reviewed today. Quick reviews
+	// have their own counter and do not count toward the goal.
+	QuickReviews int
+	Streaks      Streaks
 	// Cards are every problem's review card as of now.
 	Cards []Card
 	// cardBySlug indexes Cards; nil when Today was not built by NewTodayFrom.
@@ -61,6 +64,7 @@ func NewTodayFrom(settings Settings, state State, now time.Time, r Replay) Today
 	t.cardBySlug = indexCards(t.Cards)
 	t.history = history(r.replays, state, loc, t.Date)
 	t.Progress = *t.history[t.Date]
+	t.QuickReviews = len(QuickReviewsOn(state, t.Date, loc))
 	t.Streaks = ComputeStreaks(t.history, t.Progress)
 	for i, slug := range state.Plans[t.Date] {
 		item := ReviewItem{Slot: i + 1, Problem: state.Problem(slug), Done: t.AttemptedOn(slug)}
@@ -84,8 +88,12 @@ func (t Today) AttemptedOn(slug string) bool {
 	return ok
 }
 
-// KindOf is how an attempt's local day counts its problem.
+// KindOf is how an attempt's local day counts its problem, or "" for a quick
+// review, which never counts toward the goal.
 func (t Today) KindOf(a Attempt) string {
+	if a.Quick() {
+		return ""
+	}
 	if d, ok := t.history[Date(a.CreatedAt, t.Settings.Location())]; ok {
 		return d.Kinds[a.ProblemSlug]
 	}
@@ -165,11 +173,12 @@ func (t Today) Calendar(n int) []CalendarDay { return GoalMetDays(t.history, t.P
 // Due reports whether a reviewable card is due by the end of today.
 func (t Today) Due(c Card) bool { return c.DueBefore(EndOfDate(t.Date, t.Settings.Location())) }
 
-// ReviewCards are the cards in the review queue, ordered by due time.
+// ReviewCards are the cards in the review queue, ordered by due time,
+// including spot checks once they are due.
 func (t Today) ReviewCards() []Card {
 	var out []Card
 	for _, c := range t.Cards {
-		if c.Reviewable() {
+		if c.Reviewable() || t.Due(c) {
 			out = append(out, c)
 		}
 	}
@@ -218,7 +227,8 @@ func UpcomingReviews(t Today, days int) []Card {
 	end, until := EndOfDate(t.Date, loc), EndOfDate(t.Date.AddDate(0, 0, days), loc)
 	var later []Card
 	for _, c := range t.Cards {
-		if !seen[c.Problem.Slug] && !c.Due.Before(end) && c.DueBefore(until) {
+		// A spot check stays hidden until it is due.
+		if !seen[c.Problem.Slug] && c.Reviewable() && !c.Due.Before(end) && c.DueBefore(until) {
 			later = append(later, c)
 		}
 	}

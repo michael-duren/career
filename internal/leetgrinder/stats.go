@@ -89,6 +89,10 @@ type StatsPage struct {
 	Progress Progress
 	Streaks  Streaks
 	DueToday int
+	// Quick counts quick reviews by grade, and SpotChecks summarises spot
+	// checks and the current rate.
+	Quick      QuickStats
+	SpotChecks SpotCheckStatus
 }
 
 // NewStatsPage summarises today's state by topic and difficulty, with a
@@ -107,6 +111,10 @@ func NewStatsPage(today Today, f StatsFilter, weeks int) StatsPage {
 	var problems []*problemStat
 	bySlug := map[string]*problemStat{}
 	for _, a := range state.Attempts {
+		// Quick reviews are counted on their own, not as attempts.
+		if a.Quick() {
+			continue
+		}
 		p := bySlug[a.ProblemSlug]
 		if p == nil {
 			p = &problemStat{problem: state.Problem(a.ProblemSlug)}
@@ -158,7 +166,8 @@ func NewStatsPage(today Today, f StatsFilter, weeks int) StatsPage {
 			}
 		}
 	}
-	page := StatsPage{Filter: f, Today: today.Date, Progress: Summarize(state), Streaks: today.Streaks}
+	page := StatsPage{Filter: f, Today: today.Date, Progress: Summarize(state), Streaks: today.Streaks,
+		Quick: CountQuickReviews(state), SpotChecks: SpotChecks(state, today.Settings.SpotCheckRate)}
 	for _, c := range today.Cards {
 		if today.Due(c) {
 			page.DueToday++

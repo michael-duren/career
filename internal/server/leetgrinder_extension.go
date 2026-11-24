@@ -143,6 +143,10 @@ type leetgrinderAPIAttemptInput struct {
 	Approach    string `json:"approach"`
 	// Problem is optional LeetCode metadata read by the extension.
 	Problem *leetgrinder.ProblemMetadata `json:"problem"`
+	// Mode and Missed come from the MCP tool only; the extension API logs
+	// full attempts.
+	Mode   string `json:"-"`
+	Missed string `json:"-"`
 }
 
 // newLeetgrinderAttempt validates an attempt from the extension or MCP and
@@ -152,10 +156,15 @@ func newLeetgrinderAttempt(input leetgrinderAPIAttemptInput, source string) (lee
 	if _, err := uuid.Parse(input.ID); err != nil {
 		return leetgrinder.Attempt{}, 400, "id must be a UUID."
 	}
-	switch input.Outcome {
-	case "solved", "struggled", "unfinished":
-	default:
+	switch {
+	case input.Mode != "" && input.Mode != leetgrinder.ModeFull && input.Mode != leetgrinder.ModeQuick:
+		return leetgrinder.Attempt{}, 400, "mode must be full or quick."
+	case input.Mode == leetgrinder.ModeQuick && !leetgrinder.ValidOutcome(input.Mode, input.Outcome):
+		return leetgrinder.Attempt{}, 400, "outcome of a quick review must be recalled, partial, or forgot."
+	case !leetgrinder.ValidOutcome(input.Mode, input.Outcome):
 		return leetgrinder.Attempt{}, 400, "outcome must be solved, struggled, or unfinished."
+	case !leetgrinder.ValidMissed(input.Missed) || input.Missed != "" && input.Outcome != leetgrinder.QuickPartial:
+		return leetgrinder.Attempt{}, 400, "missed must be time, space, both or detail, and only on a partial quick review."
 	}
 	if input.Minutes < 1 || input.Minutes > 240 {
 		return leetgrinder.Attempt{}, 400, "minutes must be between 1 and 240."
@@ -173,12 +182,15 @@ func newLeetgrinderAttempt(input leetgrinderAPIAttemptInput, source string) (lee
 		return leetgrinder.Attempt{}, 400, err.Error() + "."
 	}
 	attempt := leetgrinder.Attempt{Correctness: input.Correctness, ID: input.ID, ProblemSlug: input.ProblemSlug, Outcome: input.Outcome, Minutes: input.Minutes, Assisted: input.Assisted, Notes: input.Notes, Source: source,
-		TimeComplexity: input.TimeComplexity, SpaceComplexity: input.SpaceComplexity, Code: input.Code, CodeLanguage: input.CodeLanguage, WantsReview: input.WantsReview, Approach: input.Approach}
+		TimeComplexity: input.TimeComplexity, SpaceComplexity: input.SpaceComplexity, Code: input.Code, CodeLanguage: input.CodeLanguage, WantsReview: input.WantsReview, Approach: input.Approach,
+		Mode: input.Mode, Missed: input.Missed}
 	switch err := attempt.NormalizeDetails(); {
 	case errors.Is(err, leetgrinder.ErrComplexityRequired), errors.Is(err, leetgrinder.ErrComplexityFormat):
 		return leetgrinder.Attempt{}, 422, err.Error() + "."
 	case errors.Is(err, leetgrinder.ErrCodeTooLarge):
 		return leetgrinder.Attempt{}, 413, "Code must be 64 KiB or smaller."
+	case errors.Is(err, leetgrinder.ErrQuickFields):
+		return leetgrinder.Attempt{}, 400, err.Error() + "."
 	case err != nil:
 		return leetgrinder.Attempt{}, 400, "code must be valid UTF-8 text with a LeetCode language, or both must be empty."
 	}

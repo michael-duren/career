@@ -20,6 +20,8 @@ type Server struct {
 	attempts map[string]attempt
 	// now overrides the clock in tests.
 	now func() time.Time
+	// rand overrides the spot-check draw in [0, 1) in tests.
+	rand func() float64
 	// ntfyClient sends Leetgrinder test notifications; nil uses the default.
 	ntfyClient            *http.Client
 	schedulerGoogleClient *scheduler.GoogleClient

@@ -177,7 +177,7 @@ func CompareURL(slug, from, to string) string {
 // CodeChoiceLabel names an attempt in the compare selects, by its local
 // time and outcome.
 func CodeChoiceLabel(a Attempt, review ProblemReview) string {
-	return review.AttemptTime(a).Format("02 Jan 2006 15:04") + " · " + OutcomeLabel(a.Outcome)
+	return review.AttemptTime(a).Format("02 Jan 2006 15:04") + " · " + AttemptLabel(a)
 }
 
 // DiffLabel reads a diff line's change for screen readers.

@@ -62,6 +62,7 @@ func (s *Server) registerLeetgrinder(r chi.Router) {
 		s.registerLeetgrinderNotify(r)
 		s.registerLeetgrinderAnalysis(r)
 		s.registerLeetgrinderOptimal(r)
+		s.registerLeetgrinderQuick(r)
 		r.Get("/leetgrinder/export", s.leetgrinderExport)
 	})
 }
@@ -423,6 +424,8 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 			// The ID already belongs to a different saved attempt, so retrying with it can never succeed.
 			form.ID = uuid.NewString()
 			reject(409, "This form was already used to save a different attempt. Your draft now has a new identifier; please save again.")
+		case errors.Is(err, database.ErrQuickCorrection):
+			reject(400, "Quick reviews can't be corrected. Delete the quick review and review the problem again.")
 		case errors.Is(err, database.ErrConflict):
 			reject(409, "This attempt changed since you opened it. Compare your draft with the current history before correcting it again.")
 		case errors.Is(err, database.ErrNotFound):
@@ -510,7 +513,7 @@ func (s *Server) leetgrinderSaveGeneral(w http.ResponseWriter, r *http.Request) 
 	if !s.leetgrinderForm(w, r) {
 		return
 	}
-	form := leetgrinder.GeneralForm{Timezone: strings.TrimSpace(r.PostForm.Get("timezone")), GoalNew: r.PostForm.Get("goalNew"), GoalReview: r.PostForm.Get("goalReview"), Revision: r.PostForm.Get("revision"), NewFromTodos: r.PostForm.Get("newFromTodos") == "true"}
+	form := leetgrinder.GeneralForm{Timezone: strings.TrimSpace(r.PostForm.Get("timezone")), GoalNew: r.PostForm.Get("goalNew"), GoalReview: r.PostForm.Get("goalReview"), Revision: r.PostForm.Get("revision"), NewFromTodos: r.PostForm.Get("newFromTodos") == "true", SpotCheckRate: r.PostForm.Get("spotCheckRate")}
 	reject := func(status int, message string) {
 		settings, err := s.db.LeetgrinderSettings(r.Context())
 		if err != nil {
@@ -525,6 +528,16 @@ func (s *Server) leetgrinderSaveGeneral(w http.ResponseWriter, r *http.Request) 
 	if errNew != nil || errReview != nil || goal.Validate() != nil {
 		reject(400, "Choose daily targets from 0 to 10, with at least one above 0.")
 		return
+	}
+	// An older form without the field keeps the saved rate.
+	spotCheckRate := -1
+	if form.SpotCheckRate != "" {
+		rate, err := strconv.Atoi(form.SpotCheckRate)
+		if err != nil || rate < 0 || rate > leetgrinder.MaxSpotCheckRate {
+			reject(400, "Choose a spot-check rate from 0 to 25%.")
+			return
+		}
+		spotCheckRate = rate
 	}
 	if r.PostForm.Get("confirm") != "1" {
 		impact, needed, err := s.zoneImpact(r, form, goal)
@@ -543,6 +556,9 @@ func (s *Server) leetgrinderSaveGeneral(w http.ResponseWriter, r *http.Request) 
 			return settingsError("Choose an IANA time zone such as America/Chicago.")
 		}
 		settings.Timezone, settings.Goal, settings.NewFromTodos = form.Timezone, goal, form.NewFromTodos
+		if spotCheckRate >= 0 {
+			settings.SpotCheckRate = spotCheckRate
+		}
 		if err := settings.Validate(); err != nil {
 			return settingsError("Check the settings: " + err.Error() + ".")
 		}
@@ -693,6 +709,7 @@ func (s *Server) leetgrinderExport(w http.ResponseWriter, r *http.Request) {
 			"notifications":   notifications,
 			"analysisEnabled": settings.AnalysisEnabled,
 			"newFromTodos":    settings.NewFromTodos,
+			"spotCheckRate":   settings.SpotCheckRate,
 		},
 	})
 }
