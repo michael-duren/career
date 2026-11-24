@@ -21,10 +21,17 @@ const (
 )
 
 // QuickEligible reports whether c can be quick-reviewed today: it is due or
-// flagged, and its next review is not required to be a full attempt (a
-// forgotten quick review or a spot check).
+// flagged, its next review is not required to be a full attempt (a
+// forgotten quick review or a spot check), and it has no full attempt
+// today. Only the last attempt of a day counts, so a quick review must not
+// replace the rating of a full attempt made the same day.
 func (t Today) QuickEligible(c Card) bool {
-	return c.Reviews > 0 && (t.Due(c) || c.Reviewable() && c.Flagged()) && c.RequiredMode() == ""
+	return c.Reviews > 0 && (t.Due(c) || c.Reviewable() && c.Flagged()) && c.RequiredMode() == "" && !t.fullAttemptToday(c)
+}
+
+// fullAttemptToday reports whether c's newest full attempt was today.
+func (t Today) fullAttemptToday(c Card) bool {
+	return c.LastFull.ID != "" && Date(c.LastFull.CreatedAt, t.Settings.Location()).Equal(t.Date)
 }
 
 // QuickCards lists the quick-eligible cards, flagged first, then lowest
@@ -296,6 +303,8 @@ func QuickBlocked(today Today, c Card, ok bool) string {
 		return "You forgot this problem in your last quick review, so it needs a full re-solve before it can be quick-reviewed again."
 	case c.SpotCheck() && today.Due(c):
 		return "This review is a spot check of an earlier quick review: re-solve the problem in full."
+	case today.fullAttemptToday(c):
+		return "You already logged a full attempt on this problem today, and only a day's last attempt counts. Quick-review it on a later day."
 	case !today.QuickEligible(c):
 		return "This problem is not due or flagged for review, so there is nothing to quick-review."
 	}

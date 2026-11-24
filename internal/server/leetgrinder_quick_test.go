@@ -146,8 +146,14 @@ func TestLeetgrinderQuickReviewFlow(t *testing.T) {
 	if w = request("POST", "/leetgrinder/problem/binary-search/attempts", url.Values{"id": {uuid.NewString()}, "outcome": {"struggled"}, "minutes": {"30"}, "timeComplexity": {"O(n)"}, "spaceComplexity": {"O(n)"}}); w.Code != 303 {
 		t.Fatalf("full attempt: %d", w.Code)
 	}
-	if w = request("GET", "/leetgrinder/problem/binary-search/quick", nil); strings.Contains(w.Body.String(), "needs a full re-solve") {
-		t.Fatal("full attempt must lift the block")
+	// Today's full attempt counts for today, so quick review waits a day.
+	if w = request("GET", "/leetgrinder/problem/binary-search/quick", nil); strings.Contains(w.Body.String(), "needs a full re-solve") || !strings.Contains(w.Body.String(), "already logged a full attempt on this problem today") {
+		t.Fatal("full attempt must lift the forgot block, then wait a day")
+	}
+	if today, err := db.LeetgrinderToday(ctx, s.clock().AddDate(0, 0, 1)); err != nil {
+		t.Fatal(err)
+	} else if c, _ := today.Card("binary-search"); !today.QuickEligible(c) {
+		t.Fatal("quick review allowed again the next day")
 	}
 	// Quick reviews cannot be corrected.
 	state, _ := db.LeetgrinderState(ctx)

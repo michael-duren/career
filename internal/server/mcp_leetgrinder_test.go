@@ -292,6 +292,26 @@ func TestMCPLeetgrinderQuickReview(t *testing.T) {
 	if r := found["binary-search"]; r == nil || r["requiredMode"] != nil || r["flagged"] != true || !strings.Contains(r["reason"].(string), "Space complexity missed in quick review") {
 		t.Fatal("partial review", r)
 	}
+	// A spot check of the recalled review stays unnamed until it is due,
+	// though two-sum, struggled before, is still listed as upcoming.
+	if _, err = db.DB.Exec("UPDATE leetgrinder_attempts SET spot_check=true WHERE problem_slug='two-sum' AND mode='quick'"); err != nil {
+		t.Fatal(err)
+	}
+	reviews, failed = call("list_leetgrinder_reviews", map[string]any{"days": 30})
+	listed := false
+	for _, r := range reviews["reviews"].([]any) {
+		r := r.(map[string]any)
+		if r["slug"] != "two-sum" {
+			continue
+		}
+		listed = true
+		if r["spotCheck"] != nil || r["requiredMode"] != nil || strings.Contains(r["reason"].(string), "Spot check") {
+			t.Fatal("pending spot check named", r)
+		}
+	}
+	if failed || !listed {
+		t.Fatal("two-sum not listed", reviews)
+	}
 	stats, failed := call("get_leetgrinder_stats", nil)
 	quick, _ := stats["quickReviews"].(map[string]any)
 	spot, _ := stats["spotChecks"].(map[string]any)

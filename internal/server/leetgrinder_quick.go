@@ -40,7 +40,9 @@ func (e errQuickBlocked) Error() string { return string(e) }
 // for a recalled review, decides whether it becomes a spot check at the
 // current rate. It plans today first, like any attempt. A retry of a saved
 // attempt skips the checks, so saving it again returns the saved attempt
-// (or a conflict when its values differ).
+// (or a conflict when its values differ). The check and the save are not
+// one transaction: two reviews submitted at the same moment could both
+// pass. With a single learner that is accepted rather than locked against.
 func (s *Server) prepareQuickReview(ctx context.Context, a leetgrinder.Attempt) (leetgrinder.Attempt, error) {
 	today, err := s.db.LeetgrinderToday(ctx, s.clock())
 	if err != nil {

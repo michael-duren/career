@@ -90,8 +90,8 @@ login blocks the connector.
   those due within `days` (0-30, default 7; 0 lists only today's), soonest first, up to
   `limit` (1-100, default 30). Each has its due date, `due`, recall, review reason,
   `flagged`, last outcome and `lastMode`, `todaysPick` and `attemptedToday`; `total` counts
-  them all. `suggestedMode` is a hint: `full` when a full attempt is required or the last
-  full attempt was struggled or unfinished, else `quick`. `requiredMode: "full"` appears
+  them all. `suggestedMode` is a hint: `full` after a forgotten quick review, on a due spot
+  check, or when the last full attempt was struggled or unfinished, else `quick`. `requiredMode: "full"` appears
   when only a full attempt may review the problem (a forgotten quick review, or a spot
   check), and `spotCheck: true` on a spot check, which is listed only once it is due.
 - `get_leetgrinder_stats`: per-topic weakness (weakest recall first; problems, solved,
@@ -198,8 +198,9 @@ Write tools (need **Allow read and edit**):
   (required unless forgot), `minutes` (default 3) and, for partial, `missed` (time,
   space, both or detail; by default what the complexity check against the optimum found,
   else detail); `assisted`, code, `wantsReview`, `approach` and correctness answers are
-  refused. It is refused for a problem that is not due or flagged, or that needs a full
-  attempt (a forgotten quick review or a due spot check). The response has `mode`,
+  refused. It is refused for a problem that is not due or flagged, that needs a full
+  attempt (a forgotten quick review or a due spot check), or that already has a full
+  attempt today. The response has `mode`,
   `missed` when set, and `quickReviewsToday` instead of `kind`; it never says whether the
   review was picked for a spot check.
 

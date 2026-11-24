@@ -127,11 +127,13 @@ func (c Card) RequiredMode() string {
 	return ""
 }
 
-// SuggestedMode hints at the review mode: ModeFull when a full attempt is
-// required or the last full attempt was struggled or unfinished, otherwise
-// ModeQuick. A quick review is still allowed unless RequiredMode says no.
+// SuggestedMode hints at the review mode: ModeFull after a forgotten quick
+// review or when the last full attempt was struggled or unfinished,
+// otherwise ModeQuick. A quick review is still allowed unless RequiredMode
+// says no. A spot check is left out so the hint never gives it away before
+// it is due; callers that show a due spot check suggest ModeFull for it.
 func (c Card) SuggestedMode() string {
-	if c.RequiredMode() != "" || c.LastFull.Outcome == "struggled" || c.LastFull.Outcome == "unfinished" {
+	if c.RequiresFull() || c.LastFull.Outcome == "struggled" || c.LastFull.Outcome == "unfinished" {
 		return ModeFull
 	}
 	return ModeQuick
@@ -507,7 +509,8 @@ func (c Card) firstAttemptOn(date time.Time) bool {
 // ReviewReason explains a card in plain text: its flag, or its last counted
 // attempt and recall, e.g. "Struggled 9 days ago · recall estimate 62%".
 func ReviewReason(c Card, now time.Time, loc *time.Location) string {
-	if c.SpotCheck() {
+	// A spot check is named only once it is due.
+	if c.SpotCheck() && c.DueBefore(EndOfDate(Date(now, loc), loc)) {
 		return SpotCheckReason(c, loc)
 	}
 	// A struggle reads with its recall, as unflagged cards do.

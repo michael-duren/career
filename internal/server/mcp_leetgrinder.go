@@ -74,7 +74,7 @@ func mcpLeetgrinderCard(today leetgrinder.Today, c leetgrinder.Card) map[string]
 		out["requiredMode"] = leetgrinder.ModeFull
 	}
 	if spotCheck {
-		out["spotCheck"] = true
+		out["spotCheck"], out["suggestedMode"] = true, leetgrinder.ModeFull
 	}
 	return out
 }

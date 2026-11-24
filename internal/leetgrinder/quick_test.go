@@ -310,3 +310,48 @@ func TestNormalizeQuickDetails(t *testing.T) {
 		t.Fatal("forgot may leave complexity blank", err)
 	}
 }
+
+func TestSpotCheckOnScheduledProblemStaysUnnamed(t *testing.T) {
+	now := time.Date(2026, 11, 24, 15, 0, 0, 0, time.UTC)
+	// Struggled, then solved cleanly: on the spaced schedule either way.
+	solve := Attempt{ID: "s", ProblemSlug: "two-sum", Mode: ModeFull, Outcome: "solved", Minutes: 10, TimeComplexity: "O(n)", SpaceComplexity: "O(n)", CreatedAt: now.AddDate(0, 0, -10)}
+	spot := quickAttempt("q", QuickRecalled, now.Add(-time.Minute))
+	spot.SpotCheck = true
+	state := quickState(now, solve, spot)
+	today, c := quickToday(t, state, now)
+	if !c.Reviewable() || today.Due(c) {
+		t.Fatal("expected a scheduled, not yet due card")
+	}
+	listed := false
+	for _, u := range UpcomingReviews(today, 365) {
+		if u.Problem.Slug == "two-sum" {
+			listed = true
+		}
+	}
+	if !listed {
+		t.Fatal("scheduled card should be listed as upcoming")
+	}
+	if r := ReviewReason(c, now, time.UTC); strings.Contains(r, "Spot check") || c.SuggestedMode() != ModeQuick {
+		t.Fatalf("pending spot check named: reason %q, suggested %q", r, c.SuggestedMode())
+	}
+	later := c.Due.Add(time.Hour)
+	_, c = quickToday(t, state, later)
+	if r := ReviewReason(c, later, time.UTC); !strings.HasPrefix(r, "Spot check of quick review from ") || c.RequiredMode() != ModeFull {
+		t.Fatalf("due spot check: %q", r)
+	}
+}
+
+func TestQuickReviewBlockedAfterFullAttemptToday(t *testing.T) {
+	now := time.Date(2026, 11, 24, 15, 0, 0, 0, time.UTC)
+	// Flagged by a struggle this morning: not quick-reviewable until tomorrow.
+	struggle := Attempt{ID: "s", ProblemSlug: "two-sum", Mode: ModeFull, Outcome: "struggled", Minutes: 30, TimeComplexity: "O(n)", SpaceComplexity: "O(n)", CreatedAt: now.Add(-6 * time.Hour)}
+	today, c := quickToday(t, quickState(now, struggle), now)
+	if !c.Flagged() || today.QuickEligible(c) || !strings.Contains(QuickBlocked(today, c, true), "full attempt on this problem today") || len(today.QuickCards(nil)) != 0 {
+		t.Fatal("quick review must not replace today's full attempt")
+	}
+	tomorrow := now.AddDate(0, 0, 1)
+	today, c = quickToday(t, quickState(tomorrow, struggle), tomorrow)
+	if !today.QuickEligible(c) {
+		t.Fatal("quick review allowed the next day")
+	}
+}
