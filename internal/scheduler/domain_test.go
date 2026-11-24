@@ -877,3 +877,47 @@ func TestPastSessionsCanBeRemoved(t *testing.T) {
 		t.Fatalf("rule should end before today: %+v", d.Rules["r"])
 	}
 }
+func TestMovingCheckedOffSessionEdgeCases(t *testing.T) {
+	setup := func() Document {
+		d := testDocument()
+		d.Settings.TimeZone = "UTC"
+		d.Sessions["s"] = Session{ID: "s", Date: "2026-09-28", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-09-28T06:00:00Z"), End: instant("2026-09-28T07:00:00Z")}, Actual: &Actual{Status: "assumed", Date: "2026-09-28", Start: instant("2026-09-28T06:00:00Z"), End: instant("2026-09-28T07:00:00Z")}}
+		return d
+	}
+	now := instant("2026-09-30T12:00:00Z")
+
+	// Rescheduling to a later day makes it a todo again instead of future "done" work.
+	d := setup()
+	moved := d.Sessions["s"]
+	moved.Date = "2026-10-01"
+	moved.Plan = &Plan{Start: instant("2026-10-01T06:00:00Z"), End: instant("2026-10-01T07:00:00Z")}
+	if e := d.Apply(Mutation{Action: "session", ID: "s", Session: &moved}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	if d.Sessions["s"].Actual != nil {
+		t.Fatalf("check-off carried into the future: %+v", d.Sessions["s"].Actual)
+	}
+
+	// Reassigning to a non-goal commitment drops the check-off; actual work needs a goal.
+	d = setup()
+	moved = d.Sessions["s"]
+	moved.Assignment = Assignment{Title: "Lunch"}
+	if e := d.Apply(Mutation{Action: "session", ID: "s", Session: &moved}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	if d.Sessions["s"].Actual != nil {
+		t.Fatal("non-goal session kept a check-off")
+	}
+
+	// A kept check-off can't land on other recorded work.
+	d = setup()
+	d.Sessions["work"] = Session{ID: "work", Date: "2026-09-28", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Actual: &Actual{Status: "explicit", Date: "2026-09-28", Start: instant("2026-09-28T09:00:00Z"), End: instant("2026-09-28T10:00:00Z")}}
+	moved = d.Sessions["s"]
+	moved.Plan = &Plan{Start: instant("2026-09-28T09:30:00Z"), End: instant("2026-09-28T10:30:00Z")}
+	if e := d.Apply(Mutation{Action: "session", ID: "s", Session: &moved}, now, nil); e == nil {
+		t.Fatal("moved check-off overlapping recorded work was accepted")
+	}
+	if d.Sessions["s"].Plan.Start != instant("2026-09-28T06:00:00Z") {
+		t.Fatal("rejected move changed the session")
+	}
+}

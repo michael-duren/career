@@ -643,6 +643,11 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 		if e = d.validateSession(s, busy); e != nil {
 			return e
 		}
+		// Rescheduled to a later day, or to a non-goal commitment, the session is a todo again.
+		loc, _ := time.LoadLocation(d.Settings.TimeZone)
+		if kept != nil && (s.Date > now.In(loc).Format(dateLayout) || s.Assignment.GoalID == "") {
+			kept = nil
+		}
 		if kept != nil {
 			a := Actual{Status: kept.Status, Date: s.Date, Start: s.Plan.Start, End: s.Plan.End}
 			if e = d.validateActual(s.ID, a); e != nil {

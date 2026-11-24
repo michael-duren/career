@@ -196,11 +196,12 @@ Write tools (need **Allow read and edit**):
     session's plan, past ones included. Assign `goalId` (optional `stepId`, or
     `newStepTitle` to add a subgoal) or a `title` for a fixed commitment such as lunch.
     Editing a recurring occurrence changes that date only. A checked-off or skipped
-    session keeps that outcome at its new time; explicit recorded times are edited with
-    `record_schedule_actual`.
+    session keeps that outcome at its new time, unless it moves to a later day or off a
+    goal; explicit recorded times are edited with `record_schedule_actual`.
   - `remove_schedule_session`: cancel a session, past or future. It stays listed with
     `state: canceled` and any check-off or skip is cleared. `scope: "future"` also ends
-    its rule from that occurrence (from today for a past one). An unplanned log is
+    its rule from that occurrence (from today for a past one, keeping the occurrences in
+    between as history). An unplanned log is
     deleted; sessions with explicit recorded times are kept.
   - `save_schedule_rule`: create or change a weekly rule (`weekday`, `localStart`,
     `durationMinutes`, `effectiveFrom`, optional `effectiveTo`). A change with `id` ends
