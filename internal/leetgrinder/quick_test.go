@@ -355,3 +355,14 @@ func TestQuickReviewBlockedAfterFullAttemptToday(t *testing.T) {
 		t.Fatal("quick review allowed the next day")
 	}
 }
+
+func TestBacklogCountsProblemsNeedingFullAttempt(t *testing.T) {
+	now := time.Date(2026, 11, 24, 15, 0, 0, 0, time.UTC)
+	tomorrow := now.AddDate(0, 0, 1)
+	state := quickState(tomorrow, quickAttempt("q", QuickForgot, now))
+	today, _ := quickToday(t, state, tomorrow)
+	page := NewBacklogPage(today, StartBatch(today))
+	if len(page.Remaining) != 0 || page.NeedFull != 1 || page.Due != 1 || page.Flagged != 1 {
+		t.Fatalf("backlog: remaining %d, need full %d, due %d, flagged %d", len(page.Remaining), page.NeedFull, page.Due, page.Flagged)
+	}
+}

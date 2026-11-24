@@ -266,10 +266,11 @@ func (s *Store) SaveLeetgrinderAttemptWithProblem(ctx context.Context, a leetgri
 	}
 	a.ID = id.String()
 	if expectedRevision != "" {
-		// A quick review is a grade, not a solution to correct; delete it
-		// and review again instead.
-		if _, err = uuid.Parse(expectedRevision); err != nil || a.Quick() {
+		if _, err = uuid.Parse(expectedRevision); err != nil {
 			return leetgrinder.Attempt{}, ErrInvalid
+		}
+		if a.Quick() {
+			return leetgrinder.Attempt{}, ErrQuickCorrection
 		}
 	}
 	tx, err := s.DB.BeginTx(ctx, nil)
@@ -315,6 +316,12 @@ VALUES($1,$2,$3,$4,$5,$6,$7,$8,EXISTS (SELECT 1 FROM leetgrinder_attempts b, lee
 	saved, err := scanLeetgrinderAttempt(tx.QueryRowContext(ctx, `UPDATE leetgrinder_attempts SET outcome=$3,minutes=$4,assisted=$5,notes=$6,revision=$7,time_complexity=$9,space_complexity=$10,wants_review=$11,approach=$12,claim=$13,invariant=$14,correctness_initially=$15,after_step=$16,therefore=$17,termination=$18,
 	marked_at=CASE WHEN ($3<>'solved' OR $5 OR $11 OR $12='suboptimal') AND NOT (outcome<>'solved' OR assisted OR wants_review OR approach='suboptimal') THEN clock_timestamp() ELSE marked_at END WHERE id=$1 AND revision=$2 AND problem_slug=$8 AND mode='full' RETURNING `+leetgrinderAttemptColumns, a.ID, expectedRevision, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString(), a.ProblemSlug, a.TimeComplexity, a.SpaceComplexity, a.WantsReview, a.Approach, a.Claim, a.Invariant, a.Initially, a.AfterStep, a.Therefore, a.Termination))
 	if errors.Is(err, sql.ErrNoRows) {
+		// A quick review is never corrected; say so rather than report a
+		// stale revision.
+		var quick bool
+		if qErr := tx.QueryRowContext(ctx, "SELECT mode='quick' FROM leetgrinder_attempts WHERE id=$1 AND problem_slug=$2", a.ID, a.ProblemSlug).Scan(&quick); qErr == nil && quick {
+			return leetgrinder.Attempt{}, ErrQuickCorrection
+		}
 		return leetgrinder.Attempt{}, ErrConflict
 	}
 	if err != nil {
@@ -322,3 +329,7 @@ VALUES($1,$2,$3,$4,$5,$6,$7,$8,EXISTS (SELECT 1 FROM leetgrinder_attempts b, lee
 	}
 	return saved, tx.Commit()
 }
+
+// ErrQuickCorrection refuses a correction of a quick review: it is a grade,
+// not a solution, so it is deleted and logged again instead.
+var ErrQuickCorrection = errors.New("quick reviews cannot be corrected")

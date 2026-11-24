@@ -117,7 +117,7 @@ func (s *Server) addLeetgrinderTools(server *mcp.Server) {
 		}, nil
 	})
 	mcp.AddTool(server, &mcp.Tool{
-		Name: "list_leetgrinder_reviews", Description: "Upcoming Leetgrinder reviews in the order to do them: today's review picks in plan order (attemptedToday says whether each is done), the other problems due by the end of today (flagged first, then lowest recall, most overdue), then those due within the next days, soonest first. Each has a LeetCode url, neetcodeUrl when a match is known, its due date, estimated recall, review reason, whether it is flagged, its last outcome and mode, suggestedMode (full when the last full attempt was struggled or unfinished, else quick; only a hint), requiredMode full when only a full attempt may review it (a forgotten quick review, or a spot check), and spotCheck true on a due spot check.",
+		Name: "list_leetgrinder_reviews", Description: "Upcoming Leetgrinder reviews in the order to do them: today's review picks in plan order (attemptedToday says whether each is done), the other problems due by the end of today (flagged first, then lowest recall, most overdue), then those due within the next days, soonest first. Each has a LeetCode url, neetcodeUrl when a match is known, its due date, estimated recall, review reason, whether it is flagged, its last outcome and mode, suggestedMode (full after a forgotten quick review, on a due spot check, or when the last full attempt was struggled or unfinished, else quick; only a hint), requiredMode full when only a full attempt may review it (a forgotten quick review, or a spot check), and spotCheck true on a due spot check.",
 		Annotations: readOnly,
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, in leetgrinderReviewsInput) (*mcp.CallToolResult, any, error) {
 		days, limit := 7, 30
@@ -194,7 +194,7 @@ func (s *Server) addLeetgrinderTools(server *mcp.Server) {
 		return nil, map[string]any{"topics": topics, "difficulties": difficulties, "weeklyTrends": trends, "quickReviews": quick, "spotChecks": spotChecks}, nil
 	})
 	mcp.AddTool(server, &mcp.Tool{
-		Name: "log_leetgrinder_attempt", Description: "Log a Leetgrinder attempt from chat, for a problem solved on a whiteboard, in an IDE or a mock interview. It counts as new, review or practice like any attempt, dated now. Time and space complexity are required for solved and struggled attempts. With mode quick it logs a quick review instead: a self-graded recall check (recalled, partial or forgot) of a problem that is due or flagged, with the recalled approach in notes. Recalled clears the problem's flags and schedules it like a solved review; partial keeps it flagged and due again in 2 days; forgot requires a full attempt next. Quick reviews do not count toward the daily goal. Generate one UUID per attempt and pass it as id, so a retry after a lost response does not log twice. A problem the app has never seen gets a warning, since it may be a typo. Only log when the user asked to. Requires edit access.",
+		Name: "log_leetgrinder_attempt", Description: "Log a Leetgrinder attempt from chat, for a problem solved on a whiteboard, in an IDE or a mock interview. It counts as new, review or practice like any attempt, dated now. Time and space complexity are required for solved and struggled attempts. With mode quick it logs a quick review instead: a self-graded recall check (recalled, partial or forgot) of a problem that is due or flagged, with the recalled approach in notes. Recalled clears the problem's flags and schedules it like a solved review; partial keeps it flagged and due again within 2 days; forgot requires a full attempt next. Quick reviews do not count toward the daily goal. Generate one UUID per attempt and pass it as id, so a retry after a lost response does not log twice. A problem the app has never seen gets a warning, since it may be a typo. Only log when the user asked to. Requires edit access.",
 		// Not idempotent: without an id each call logs a new attempt.
 		Annotations: &mcp.ToolAnnotations{Title: "Log Leetgrinder attempt", DestructiveHint: new(bool), OpenWorldHint: new(bool)},
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in logLeetgrinderAttemptInput) (*mcp.CallToolResult, any, error) {
@@ -229,11 +229,8 @@ func (s *Server) addLeetgrinderTools(server *mcp.Server) {
 		}
 		if quick {
 			// Loading today plans it, as below for full attempts.
-			if attempt.Outcome == leetgrinder.QuickPartial && attempt.Missed == "" {
-				attempt.Missed = leetgrinder.CheckQuick(known, attempt.TimeComplexity, attempt.SpaceComplexity).Missed()
-			}
 			var blocked errQuickBlocked
-			attempt, err = s.prepareQuickReview(ctx, attempt)
+			attempt, err = s.prepareQuickReview(ctx, attempt, true)
 			switch {
 			case errors.As(err, &blocked):
 				return nil, nil, invalidInput("%s", blocked.Error())

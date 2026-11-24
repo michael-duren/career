@@ -199,7 +199,8 @@ func flagFor(a Attempt, problem Problem, analyses map[string]Analysis, loc *time
 }
 
 // QuickPartialDays is how many days after a partial quick review the
-// problem is due again; other flags are due the next day.
+// problem is due again at the latest (FSRS may make it due sooner); other
+// flags are due the next day.
 const QuickPartialDays = 2
 
 // DueAt is the start of the local day after the flag was raised, or for a

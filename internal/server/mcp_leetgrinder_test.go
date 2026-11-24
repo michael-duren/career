@@ -265,6 +265,10 @@ func TestMCPLeetgrinderQuickReview(t *testing.T) {
 	if failed || logged["missed"] != "space" {
 		t.Fatal(logged)
 	}
+	// A retry with the same id derives nothing new and returns the saved review.
+	if again, failed := call("log_leetgrinder_attempt", map[string]any{"id": logged["id"], "problem": "binary-search", "mode": "quick", "outcome": "partial", "timeComplexity": "O(log n)", "spaceComplexity": "O(n)"}); failed || again["id"] != logged["id"] || again["missed"] != "space" {
+		t.Fatal("partial retry", again)
+	}
 	if logged, failed = call("log_leetgrinder_attempt", map[string]any{"problem": "valid-anagram", "mode": "quick", "outcome": "forgot"}); failed {
 		t.Fatal(logged)
 	}
@@ -321,5 +325,48 @@ func TestMCPLeetgrinderQuickReview(t *testing.T) {
 	today, failed := call("get_leetgrinder_today", nil)
 	if failed || today["done"].(map[string]any)["quick"] != float64(3) || today["done"].(map[string]any)["review"] != float64(0) {
 		t.Fatal(today)
+	}
+}
+
+// A recalled quick review picked for a spot check is named in the MCP review
+// list only once it is due, as a required full re-solve.
+func TestMCPLeetgrinderDueSpotCheck(t *testing.T) {
+	db := testDB(t)
+	h := newOAuthHarness(t, db)
+	ctx := context.Background()
+	settings, _ := db.LeetgrinderSettings(ctx)
+	if _, err := db.UpdateLeetgrinderSettings(ctx, settings.Revision, func(v *leetgrinder.Settings) error { v.Timezone = "UTC"; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	// Solved long ago, then a recalled quick review picked for a spot check
+	// whose normal interval has passed.
+	solve := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "two-sum", Outcome: "solved", Minutes: 10, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}
+	spot := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "two-sum", Mode: leetgrinder.ModeQuick, Outcome: leetgrinder.QuickRecalled, SpotCheck: true, Minutes: 3, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}
+	for i, a := range []leetgrinder.Attempt{solve, spot} {
+		if _, err := db.SaveLeetgrinderAttempt(ctx, a, ""); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := db.DB.Exec("UPDATE leetgrinder_attempts SET created_at=$1,marked_at=$1 WHERE id=$2", time.Now().AddDate(-2, i, 0), a.ID); err != nil {
+			t.Fatal(err)
+		}
+	}
+	clientID := h.register(testCallback)
+	verifier := strings.Repeat("lgspot", 10)
+	code := h.approve(h.consent(clientID, testCallback, pkce(verifier)), "write").Query().Get("code")
+	status, tokens := h.token(url.Values{"grant_type": {"authorization_code"}, "code": {code}, "redirect_uri": {testCallback}, "client_id": {clientID}, "code_verifier": {verifier}})
+	if status != 200 {
+		t.Fatal(status, tokens)
+	}
+	call := connectMCP(t, h, tokens["access_token"].(string), 26)
+	reviews, failed := call("list_leetgrinder_reviews", map[string]any{"days": 0})
+	if failed || reviews["total"] != float64(1) {
+		t.Fatal(reviews)
+	}
+	r := reviews["reviews"].([]any)[0].(map[string]any)
+	if r["slug"] != "two-sum" || r["spotCheck"] != true || r["requiredMode"] != "full" || r["suggestedMode"] != "full" || !strings.HasPrefix(r["reason"].(string), "Spot check of quick review from ") {
+		t.Fatal("due spot check", r)
+	}
+	if out, failed := call("log_leetgrinder_attempt", map[string]any{"problem": "two-sum", "mode": "quick", "outcome": "recalled", "timeComplexity": "O(n)", "spaceComplexity": "O(n)"}); !failed || !strings.Contains(out["error"].(string), "spot check") {
+		t.Fatal("due spot check must refuse quick review", out)
 	}
 }

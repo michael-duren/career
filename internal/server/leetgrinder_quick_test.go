@@ -1,10 +1,14 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"net/http/httptest"
 	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -155,15 +159,45 @@ func TestLeetgrinderQuickReviewFlow(t *testing.T) {
 	} else if c, _ := today.Card("binary-search"); !today.QuickEligible(c) {
 		t.Fatal("quick review allowed again the next day")
 	}
-	// Quick reviews cannot be corrected.
+	// Quick reviews cannot be corrected, in the store or through the
+	// correction form.
 	state, _ := db.LeetgrinderState(ctx)
-	for _, a := range state.Attempts {
-		if a.Quick() {
-			if _, err := db.SaveLeetgrinderAttempt(ctx, a, a.Revision); err != database.ErrInvalid {
-				t.Fatalf("correction of a quick review: %v", err)
-			}
-			break
-		}
+	i := slices.IndexFunc(state.Attempts, func(a leetgrinder.Attempt) bool { return a.ProblemSlug == "two-sum" && a.Quick() })
+	quick := state.Attempts[i]
+	if _, err := db.SaveLeetgrinderAttempt(ctx, quick, quick.Revision); !errors.Is(err, database.ErrQuickCorrection) {
+		t.Fatalf("store correction of a quick review: %v", err)
+	}
+	w = request("POST", "/leetgrinder/problem/two-sum/attempts", url.Values{"id": {quick.ID}, "revision": {quick.Revision}, "outcome": {"solved"}, "minutes": {"10"}, "timeComplexity": {"O(n)"}, "spaceComplexity": {"O(n)"}})
+	if w.Code != 400 || !strings.Contains(w.Body.String(), "Quick reviews can&#39;t be corrected") {
+		t.Fatalf("form correction of a quick review: %d", w.Code)
+	}
+	if state, _ = db.LeetgrinderState(ctx); state.Attempts[slices.IndexFunc(state.Attempts, func(a leetgrinder.Attempt) bool { return a.ID == quick.ID })].Outcome != leetgrinder.QuickRecalled {
+		t.Fatal("quick review changed")
+	}
+	// The extension API logs only full attempts.
+	_, plain, err := db.CreateLeetgrinderToken(ctx, "ext")
+	if err != nil {
+		t.Fatal(err)
+	}
+	payload, _ := json.Marshal(map[string]any{"id": uuid.NewString(), "problemSlug": "valid-anagram", "mode": "quick", "outcome": "recalled", "minutes": 3, "timeComplexity": "O(n)", "spaceComplexity": "O(1)"})
+	r := httptest.NewRequest("POST", "/api/leetgrinder/attempts", bytes.NewReader(payload))
+	r.Header.Set("Content-Type", "application/json")
+	r.Header.Set("Authorization", "Bearer "+plain)
+	rec := httptest.NewRecorder()
+	s.RegisterRoutes().ServeHTTP(rec, r)
+	// The API refuses unknown fields, so mode itself is rejected; without
+	// it, a quick grade is not an outcome.
+	if rec.Code != 400 {
+		t.Fatalf("extension quick review: %d %s", rec.Code, rec.Body.String())
+	}
+	payload, _ = json.Marshal(map[string]any{"id": uuid.NewString(), "problemSlug": "valid-anagram", "outcome": "recalled", "minutes": 3, "timeComplexity": "O(n)", "spaceComplexity": "O(1)"})
+	r = httptest.NewRequest("POST", "/api/leetgrinder/attempts", bytes.NewReader(payload))
+	r.Header.Set("Content-Type", "application/json")
+	r.Header.Set("Authorization", "Bearer "+plain)
+	rec = httptest.NewRecorder()
+	s.RegisterRoutes().ServeHTTP(rec, r)
+	if rec.Code != 400 || !strings.Contains(rec.Body.String(), "outcome must be solved") {
+		t.Fatalf("extension quick grade: %d %s", rec.Code, rec.Body.String())
 	}
 }
 
@@ -185,8 +219,10 @@ func TestLeetgrinderQuickSpotCheckStaysSecret(t *testing.T) {
 		t.Fatal("not picked for a spot check")
 	}
 	// Nothing names it yet: not the pages, the export or the APIs.
-	for _, path := range []string{"/leetgrinder", "/leetgrinder/reviews", "/leetgrinder/problem/two-sum", "/leetgrinder/problems", "/leetgrinder/export"} {
-		if body := request("GET", path, nil).Body.String(); strings.Contains(strings.ToLower(body), "spot check of") || strings.Contains(body, "spotCheck\":true") || strings.Contains(body, ">Spot check<") {
+	backlog := request("GET", "/leetgrinder/reviews/backlog", nil).Header().Get("Location")
+	for _, path := range []string{"/leetgrinder", "/leetgrinder/reviews", "/leetgrinder/problem/two-sum", "/leetgrinder/problems", "/leetgrinder/export", "/leetgrinder/stats", backlog} {
+		w := request("GET", path, nil)
+		if body := strings.ToLower(w.Body.String()); w.Code != 200 || strings.Contains(body, "spot check of") || strings.Contains(body, `"spotcheck":`) || strings.Contains(body, "spot_check") || strings.Contains(body, ">spot check<") {
 			t.Errorf("%s reveals the spot check", path)
 		}
 	}

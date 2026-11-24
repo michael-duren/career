@@ -149,9 +149,12 @@ type SpotCheckStatus struct {
 // SpotChecks resolves every spot check in state and works out the current
 // rate from the settings' rate base. A spot check resolves with the next
 // full attempt on its problem: it passes when that attempt is a solve
-// without help, and fails otherwise. A quick review logged first leaves it
-// unresolved. When 2 of the last 5 resolved spot checks fail, the rate goes
-// up to ElevatedSpotCheckRate until 3 in a row pass.
+// without help, and fails otherwise. Quick review is refused while a spot
+// check is pending or due, so another quick review cannot follow one; if
+// one does (say, from data changed by hand), the spot check is dropped,
+// matching Card.SpotCheck, which looks only at the newest attempt. When 2 of
+// the last 5 resolved spot checks fail, the rate goes up to
+// ElevatedSpotCheckRate until 3 in a row pass.
 func SpotChecks(state State, base int) SpotCheckStatus {
 	type result struct {
 		at   time.Time
@@ -380,8 +383,11 @@ type BacklogPage struct {
 	Remaining    []Card
 	Reviewed     []Attempt
 	StillOnList  []Attempt
-	Today        Today
-	BatchToken   string
+	// NeedFull counts due cards that only a full attempt can review: a
+	// forgotten quick review, a due spot check, or a full attempt today.
+	NeedFull   int
+	Today      Today
+	BatchToken string
 }
 
 // NewBacklogPage builds the backlog view of batch from today.
@@ -396,6 +402,11 @@ func NewBacklogPage(today Today, batch Batch) BacklogPage {
 		}
 	}
 	page.Remaining = today.QuickCards(skip)
+	for _, c := range today.Cards {
+		if today.Due(c) && !today.QuickEligible(c) {
+			page.NeedFull++
+		}
+	}
 	return page
 }
 
@@ -417,4 +428,11 @@ func problemUnit(n int) string {
 		return "problem"
 	}
 	return "problems"
+}
+
+func needsLabel(n int) string {
+	if n == 1 {
+		return "needs"
+	}
+	return "need"
 }

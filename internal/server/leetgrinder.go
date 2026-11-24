@@ -424,6 +424,8 @@ func (s *Server) leetgrinderAttempt(w http.ResponseWriter, r *http.Request) {
 			// The ID already belongs to a different saved attempt, so retrying with it can never succeed.
 			form.ID = uuid.NewString()
 			reject(409, "This form was already used to save a different attempt. Your draft now has a new identifier; please save again.")
+		case errors.Is(err, database.ErrQuickCorrection):
+			reject(400, "Quick reviews can't be corrected. Delete the quick review and review the problem again.")
 		case errors.Is(err, database.ErrConflict):
 			reject(409, "This attempt changed since you opened it. Compare your draft with the current history before correcting it again.")
 		case errors.Is(err, database.ErrNotFound):

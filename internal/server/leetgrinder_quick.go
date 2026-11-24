@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"log"
 	"math/rand/v2"
 	"net/http"
 	"slices"
@@ -38,22 +39,31 @@ func (e errQuickBlocked) Error() string { return string(e) }
 
 // prepareQuickReview checks that a's problem can be quick-reviewed now and,
 // for a recalled review, decides whether it becomes a spot check at the
-// current rate. It plans today first, like any attempt. A retry of a saved
-// attempt skips the checks, so saving it again returns the saved attempt
-// (or a conflict when its values differ). The check and the save are not
+// current rate. With deriveMissed, a partial review without Missed gets what
+// the complexity check against the optimum found. It plans today first,
+// like any attempt. A retry of a saved attempt skips the checks and reuses
+// the saved Missed it derived, so saving it again returns the saved attempt
+// (or a conflict when the caller's values differ). The check and the save are not
 // one transaction: two reviews submitted at the same moment could both
 // pass. With a single learner that is accepted rather than locked against.
-func (s *Server) prepareQuickReview(ctx context.Context, a leetgrinder.Attempt) (leetgrinder.Attempt, error) {
+func (s *Server) prepareQuickReview(ctx context.Context, a leetgrinder.Attempt, deriveMissed bool) (leetgrinder.Attempt, error) {
 	today, err := s.db.LeetgrinderToday(ctx, s.clock())
 	if err != nil {
 		return a, err
 	}
-	if slices.ContainsFunc(today.State.Attempts, func(saved leetgrinder.Attempt) bool { return saved.ID == a.ID }) {
+	derive := deriveMissed && a.Outcome == leetgrinder.QuickPartial && a.Missed == ""
+	if i := slices.IndexFunc(today.State.Attempts, func(saved leetgrinder.Attempt) bool { return saved.ID == a.ID }); i >= 0 {
+		if derive && today.State.Attempts[i].Outcome == leetgrinder.QuickPartial {
+			a.Missed = today.State.Attempts[i].Missed
+		}
 		return a, nil
 	}
 	card, ok := today.Card(a.ProblemSlug)
 	if reason := leetgrinder.QuickBlocked(today, card, ok); reason != "" {
 		return a, errQuickBlocked(reason)
+	}
+	if derive {
+		a.Missed = leetgrinder.CheckQuick(today.State.Problem(a.ProblemSlug), a.TimeComplexity, a.SpaceComplexity).Missed()
 	}
 	if a.Outcome == leetgrinder.QuickRecalled {
 		rate := leetgrinder.SpotChecks(today.State, today.Settings.SpotCheckRate).Rate
@@ -77,6 +87,7 @@ func (s *Server) leetgrinderQuick(w http.ResponseWriter, r *http.Request) {
 	}
 	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
 	if err != nil {
+		log.Printf("leetgrinder: quick review %s: %v", problem.Slug, err)
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your review queue is unavailable. Please retry."))
 		return
 	}
@@ -108,6 +119,7 @@ func (s *Server) leetgrinderQuickPost(w http.ResponseWriter, r *http.Request) {
 		form.Error = message
 		today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
 		if err != nil {
+			log.Printf("leetgrinder: quick review %s: %v", problem.Slug, err)
 			renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your review queue is unavailable. Please retry."))
 			return
 		}
@@ -115,6 +127,7 @@ func (s *Server) leetgrinderQuickPost(w http.ResponseWriter, r *http.Request) {
 		if revealed && page.Blocked == "" {
 			state, err := s.db.LeetgrinderProblemState(r.Context(), problem.Slug)
 			if err != nil {
+				log.Printf("leetgrinder: quick review history %s: %v", problem.Slug, err)
 				renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your attempt history is unavailable. Please retry."))
 				return
 			}
@@ -170,13 +183,14 @@ func (s *Server) leetgrinderQuickPost(w http.ResponseWriter, r *http.Request) {
 		render(400, "Check your answer and try again.", true)
 		return
 	}
-	attempt, err = s.prepareQuickReview(r.Context(), attempt)
+	attempt, err = s.prepareQuickReview(r.Context(), attempt, false)
 	var blocked errQuickBlocked
 	switch {
 	case errors.As(err, &blocked):
 		render(409, "", false)
 		return
 	case err != nil:
+		log.Printf("leetgrinder: quick review check %s: %v", problem.Slug, err)
 		render(503, "The quick review could not be saved. Your answer is retained; please retry.", true)
 		return
 	}
@@ -188,6 +202,7 @@ func (s *Server) leetgrinderQuickPost(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, database.ErrInvalid):
 			render(400, "Check your answer and try again.", true)
 		default:
+			log.Printf("leetgrinder: save quick review %s: %v", problem.Slug, err)
 			render(503, "The quick review could not be saved. Your answer is retained; please retry.", true)
 		}
 		return
@@ -205,6 +220,7 @@ func (s *Server) leetgrinderQuickPost(w http.ResponseWriter, r *http.Request) {
 func (s *Server) leetgrinderBacklog(w http.ResponseWriter, r *http.Request) {
 	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
 	if err != nil {
+		log.Printf("leetgrinder: clear backlog: %v", err)
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your review queue is unavailable. Please retry."))
 		return
 	}

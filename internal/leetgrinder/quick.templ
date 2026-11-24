@@ -144,7 +144,7 @@ templ quickReveal(page QuickReviewPage) {
 				</label>
 				<label>Minutes spent<input type="number" name="minutes" min="1" max="240" required value={ page.Form.Minutes }/></label>
 			</div>
-			<p class="small muted">Recalled takes the problem off the review list until its next spaced review. Partial keeps it flagged for another look in { Count(QuickPartialDays) } days. Forgot brings it back tomorrow for a full re-solve.</p>
+			<p class="small muted">Recalled takes the problem off the review list until its next spaced review. Partial keeps it flagged for another look within { Count(QuickPartialDays) } days. Forgot brings it back tomorrow for a full re-solve.</p>
 			<button class="button primary" type="submit">Save grade</button>
 		</form>
 	</section>
@@ -216,6 +216,9 @@ templ Backlog(page BacklogPage) {
 			<section class="panel" aria-labelledby="backlog-done-title">
 				<h2 id="backlog-done-title">Batch finished</h2>
 				<p>You quick-reviewed { Count(len(page.Reviewed)) } { problemUnit(len(page.Reviewed)) } in this batch.</p>
+				if page.NeedFull > 0 {
+					<p class="muted">{ Count(page.NeedFull) } due { problemUnit(page.NeedFull) } can't be quick-reviewed today and { needsLabel(page.NeedFull) } a full attempt.</p>
+				}
 				if len(page.StillOnList) == 0 {
 					<p class="muted">Nothing you reviewed is left on the list.</p>
 				} else {
