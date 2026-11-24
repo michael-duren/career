@@ -58,7 +58,7 @@ type endScheduleRuleInput struct {
 type recordScheduleActualInput struct {
 	Revision  string `json:"revision" jsonschema:"schedule revision from get_weekly_schedule"`
 	SessionID string `json:"sessionId,omitempty" jsonschema:"planned session ID; omit to log unplanned work, which needs goalId"`
-	Status    string `json:"status" jsonschema:"explicit (worked start to end), assumed (worked as planned, after the plan ends) or skipped (planned session not done)"`
+	Status    string `json:"status" jsonschema:"explicit (worked start to end), assumed (done as planned, on or after its scheduled date) or skipped (planned session not done)"`
 	Start     string `json:"start,omitempty" jsonschema:"explicit work start as RFC 3339 or local YYYY-MM-DDTHH:MM"`
 	End       string `json:"end,omitempty" jsonschema:"explicit work end as RFC 3339 or local YYYY-MM-DDTHH:MM, not in the future"`
 	GoalID    string `json:"goalId,omitempty" jsonschema:"goal for unplanned work"`
@@ -187,7 +187,7 @@ func (s *Server) addSchedulerTools(server *mcp.Server) {
 		return s.scheduleMutate(ctx, scheduler.Mutation{Action: "endRule", Revision: in.Revision, Week: scheduler.Monday(in.From), ID: in.ID, EffectiveFrom: in.From})
 	})
 	mcp.AddTool(server, &mcp.Tool{
-		Name: "record_schedule_actual", Description: "Record work against the schedule. With sessionId: explicit saves the actual start and end, assumed restores the plan as worked once it has ended, skipped marks it not done. Without sessionId: logs unplanned explicit work for goalId. Actual work must be on a goal and cannot end in the future. Requires edit access.",
+		Name: "record_schedule_actual", Description: "Record work against the schedule. With sessionId: explicit saves the actual start and end, assumed checks the session off as done as planned (on or after its scheduled date), skipped marks it not done. Without sessionId: logs unplanned explicit work for goalId. Actual work must be on a goal and cannot end in the future. Requires edit access.",
 		Annotations: &mcp.ToolAnnotations{Title: "Record schedule actual work", DestructiveHint: new(bool), OpenWorldHint: new(bool)},
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in recordScheduleActualInput) (*mcp.CallToolResult, any, error) {
 		if !canWrite(req) {

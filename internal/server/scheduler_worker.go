@@ -16,7 +16,7 @@ import (
 
 const schedulerGoogleBatchSize = 20
 
-// RunScheduler finalizes plans even with no browser open and retries durable exports.
+// RunScheduler generates routine sessions even with no browser open and retries durable exports.
 func RunScheduler(ctx context.Context, c config.Config, db *database.Store) {
 	s := &Server{db: db, config: c}
 	ticker := time.NewTicker(time.Minute)

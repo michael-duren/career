@@ -242,23 +242,9 @@ func (d *Document) validateSession(s Session, busy []Busy) error {
 	}
 	return nil
 }
-func (d *Document) Finalize(now time.Time) {
-	ids := d.sessionIDs()
-	for _, id := range ids {
-		s := d.Sessions[id]
-		if s.Assignment.GoalID == "" || s.Plan == nil || s.Actual != nil || s.State != "accepted" || s.Plan.End.After(now) {
-			continue
-		}
-		a := Actual{Status: "assumed", Date: s.Date, Start: s.Plan.Start, End: s.Plan.End}
-		if e := d.validateActual(id, a); e != nil {
-			s.State = "attention"
-			s.Attention = "Actual time overlaps recorded work"
-		} else {
-			s.Actual = &a
-		}
-		d.Sessions[id] = s
-	}
-}
+
+const replacedPlan = "Recorded actual work has replaced the future plan"
+
 func (d *Document) sessionIDs() []string {
 	ids := make([]string, 0, len(d.Sessions))
 	for id := range d.Sessions {
@@ -309,7 +295,6 @@ func (d *Document) Reconcile(goals []Goal, now time.Time) {
 		}
 	}
 	d.LastDate = today
-	d.Finalize(now)
 	next := map[string]Goal{}
 	stepParents := map[string]string{}
 	for _, g := range goals {
@@ -356,8 +341,12 @@ func (d *Document) Reconcile(goals []Goal, now time.Time) {
 			continue
 		}
 		if s.Actual != nil {
+			if s.Actual.Status == "assumed" {
+				// Checked off early as planned; the plan still stands.
+				continue
+			}
 			s.State = "attention"
-			s.Attention = "Recorded actual work has replaced the future plan"
+			s.Attention = replacedPlan
 			d.Sessions[id] = s
 			continue
 		}
@@ -380,8 +369,7 @@ func (d *Document) Reconcile(goals []Goal, now time.Time) {
 // occurrence with no existing session and a computed start at or before that
 // instant is skipped, so a goal or subgoal becoming eligible again (an
 // extended end date, an unfinished subgoal, even mid-day today) never
-// fabricates a session, and Finalize never invents assumed actual time for
-// it. A genuinely missed occurrence (its start falls after sinceInstant, even
+// fabricates a session. A genuinely missed occurrence (its start falls after sinceInstant, even
 // if now has since moved past it) still generates normally, so downtime
 // catch-up keeps working. A zero sinceInstant (never reconciled) leaves the
 // full range unrestricted.
@@ -395,7 +383,6 @@ func (d *Document) Generate(from, to string, now time.Time, busy []Busy, sinceIn
 		d.generateDate(date, rules, now, busy, sinceInstant)
 	}
 	d.Revalidate(now, busy)
-	d.Finalize(now)
 }
 
 // GenerateDates materializes only the supplied dates. It is used to validate
@@ -422,7 +409,6 @@ func (d *Document) GenerateDates(dates []string, now time.Time, busy []Busy, sin
 		d.generateDate(date, rules, now, busy, sinceInstant)
 	}
 	d.Revalidate(now, busy)
-	d.Finalize(now)
 }
 
 func (d *Document) generateDate(date string, rules []string, now time.Time, busy []Busy, sinceInstant time.Time) {
@@ -736,8 +722,9 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 			if s.Plan == nil {
 				return fmt.Errorf("no original plan")
 			}
-			if s.Plan.End.After(now) {
-				return fmt.Errorf("actual work cannot be assumed before the planned session ends")
+			loc, _ := time.LoadLocation(d.Settings.TimeZone)
+			if s.Date > now.In(loc).Format(dateLayout) {
+				return fmt.Errorf("a session can only be completed on or after its scheduled date")
 			}
 			a.Start = s.Plan.Start
 			a.End = s.Plan.End
@@ -766,9 +753,23 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 		g := d.Goals[s.Assignment.GoalID]
 		a.OutsideTimeline = !Eligible(g, a.Date)
 		s.Actual = &a
-		if s.Plan != nil && s.Plan.Start.After(now) {
+		if s.Plan != nil && s.Plan.Start.After(now) && a.Status != "assumed" {
 			s.State = "attention"
-			s.Attention = "Recorded actual work has replaced the future plan"
+			s.Attention = replacedPlan
+		}
+		d.Sessions[s.ID] = s
+	case "clearActual":
+		s, ok := d.Sessions[m.ID]
+		if !ok || s.Actual == nil {
+			return fmt.Errorf("session has no recorded work to clear")
+		}
+		if s.Plan == nil {
+			return fmt.Errorf("unplanned work has no plan to restore; remove the session instead")
+		}
+		s.Actual = nil
+		if s.State == "attention" && s.Attention == replacedPlan {
+			s.State = "accepted"
+			s.Attention = ""
 		}
 		d.Sessions[s.ID] = s
 	default:

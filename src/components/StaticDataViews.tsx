@@ -3,11 +3,9 @@ import { BookShelf } from './BookShelf';
 import { CompanyBoard } from './CompanyBoard';
 import { LogExplorer } from './LogExplorer';
 import MarkdownPreview from './MarkdownPreview';
-import { ProgressDashboard } from './ProgressDashboard';
 import { buildShelf, type RawBook } from '../lib/books';
 import { buildLogDocs, type WeekSummary } from '../lib/logs';
-import { buildDashboard, withGoalHours, type GoalTrack, type WeekEntry } from '../lib/progress';
-import type { GoalHours } from '../lib/goal-progress';
+import type { WeekEntry } from '../lib/progress';
 import type { RawCompany } from '../lib/companies';
 import type { Document } from '../lib/workspace';
 import type { Goal } from '../lib/timeline';
@@ -99,25 +97,14 @@ export function LogsView() {
   return <LogExplorer docs={buildLogDocs(entries)} weeks={summaries} />;
 }
 
-export function ProgressView() {
-  const { data, error } = useJSON<{ entries: WeekEntry[] }>('/api/summaries/progress');
-  const goals = useJSON<{ goals: Goal[] }>('/api/goals');
-  const hours = useJSON<{ goals: Record<string, GoalHours> }>('/api/scheduler/goal-hours');
-  // Goal hours are supplementary: if either goal request fails, show the journal-only dashboard.
-  const goalsSettled = (goals.data && hours.data) || goals.error || hours.error;
-  if (!data || !goalsSettled) return <State error={error} />;
-  const tracks: GoalTrack[] = goals.data && hours.data ? goals.data.goals.flatMap(goal => hours.data!.goals[goal.id] ? [{ id: goal.id, title: goal.title, color: goal.color, weekHours: hours.data!.goals[goal.id].weekHours }] : []) : [];
-  return <ProgressDashboard data={buildDashboard(withGoalHours(data.entries, tracks), new Date(), tracks)} />;
-}
-
-export function DocumentView({ id, home = false }: { id?: string; home?: boolean }) {
+export function DocumentView({ id }: { id?: string }) {
   const rawPath = location.pathname.replace(/^\//, '').replace(/\/$/, '');
   const pathID = decodeURIComponent(rawPath.startsWith('documents/') ? rawPath.slice('documents/'.length) : (/^2026\/(languages|system-design|os-oss)$/.test(rawPath) ? `${rawPath}/index` : rawPath));
   const documentID = id ?? pathID;
   const { data, error } = useJSON<Result<Document>>(`/api/entries/document?id=${encodeURIComponent(documentID)}`);
   if (!data) return <State error={error} />;
   const page = data.entry;
-  return <>{home && <header><h1 className="text-3xl font-bold">{page.title}</h1><p className="text-zinc-400 mt-2">{page.description}</p><a className="mt-2 inline-block text-sm text-blue-400 hover:underline" href="/documents?id=index">Edit home page →</a></header>}{!home && <a className="mb-6 inline-block text-sm text-blue-400 hover:underline" href={`/documents?id=${encodeURIComponent(page.id)}`}>Edit this page →</a>}{!home && !/^# /m.test(page.body) ? <h1 className="mb-6 text-3xl font-bold">{page.title}</h1> : null}<MarkdownPreview body={page.body} /></>;
+  return <>{!/^# /m.test(page.body) ? <h1 className="mb-6 text-3xl font-bold">{page.title}</h1> : null}<MarkdownPreview body={page.body} /></>;
 }
 
 type AgentContext = { goals: Goal[]; rules: string[] };

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { addDays, mondayOf, snapMinutes, zonedDate, localInstant, localFields, clockLabel, displayClock, draftMutation, weekSchema } from '../src/lib/scheduler.ts';
+import { addDays, mondayOf, snapMinutes, zonedDate, localInstant, localFields, clockLabel, displayClock, draftMutation, todaysTodos, weekSchema } from '../src/lib/scheduler.ts';
 import { proposePlacement } from '../src/lib/scheduler-placement.ts';
 
 test('Monday weeks cross month/year and leap-day boundaries without browser timezone', () => {
@@ -366,4 +366,17 @@ test('copy uses recorded duration, skipped plans, and unresolved recurrence dura
   assert.equal(copySessionItem(source, week).durationMinutes, 20);
   assert.equal(copySessionItem({ ...source, actual: { ...source.actual, status: 'skipped' } }, week).durationMinutes, 60);
   assert.deepEqual(copySessionItem({ ...source, plan: null, actual: null }, week), { assignment: { title: 'Lunch', color: '#818cf8' }, durationMinutes: 45 });
+});
+
+test("today's todos are the day's planned goal sessions in start order, done or not", () => {
+  const session = (id: string, date: string, start: string, extra: Record<string, unknown> = {}) => ({ id, date, assignment: { goalId: 'g', title: id }, plan: { start, end: start.replace(/T(\d\d)/, (_, h) => `T${String(Number(h) + 1).padStart(2, '0')}`) }, actual: null, state: 'accepted', conflictIds: [], exception: false, ...extra });
+  const week = weekSchema.parse({ revision: 'r', week: '2026-11-23', settings: { timeZone: 'UTC', defaultDay: { start: '06:00', end: '22:00', nextDay: false }, weekdays: null, dates: null }, days: [], goals: [], rules: [], busy: [], warnings: [], warningTargets: [], remainingCapacityHours: 0, sessions: [
+    session('late', '2026-11-24', '2026-11-24T15:00:00Z'),
+    session('early', '2026-11-24', '2026-11-24T09:00:00Z', { actual: { status: 'assumed', date: '2026-11-24', start: '2026-11-24T09:00:00Z', end: '2026-11-24T10:00:00Z' } }),
+    session('lunch', '2026-11-24', '2026-11-24T12:00:00Z', { assignment: { title: 'lunch' } }),
+    session('canceled', '2026-11-24', '2026-11-24T13:00:00Z', { state: 'canceled' }),
+    session('tomorrow', '2026-11-25', '2026-11-25T09:00:00Z'),
+    { ...session('unplanned', '2026-11-24', '2026-11-24T08:00:00Z'), plan: null, actual: { status: 'explicit', date: '2026-11-24', start: '2026-11-24T08:00:00Z', end: '2026-11-24T09:00:00Z' } },
+  ] });
+  assert.deepEqual(todaysTodos(week, '2026-11-24').map(s => s.id), ['early', 'late']);
 });
