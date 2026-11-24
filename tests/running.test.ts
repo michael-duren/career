@@ -143,8 +143,8 @@ test('service worker caches only data-free audio thoughts shell and public asset
   const fetchEvent = (path: string, mode = 'navigate') => { let result: Promise<Response> | undefined; listeners.fetch({ request: { url: `https://career.example${path}`, method: 'GET', mode }, respondWith: (promise: Promise<Response>) => { result = promise; } }); return result; };
   assert.equal(fetchEvent('/api/running/run/status', 'cors'), undefined);
   assert.equal(fetchEvent('/api/running/clips/run/clip/audio', 'cors'), undefined);
-  await fetchEvent('/personal-journal');
-  assert.equal(stored.has('/personal-journal'), false);
+  await fetchEvent('/journal');
+  assert.equal(stored.has('/journal'), false);
   loginRedirect = true; await fetchEvent('/audio-thoughts'); assert.equal(stored.has('/audio-thoughts'), false);
   loginRedirect = false; await fetchEvent('/audio-thoughts?id=run'); assert.equal(stored.has('/audio-thoughts'), true);
   offline = true; assert.equal(await (await fetchEvent('/audio-thoughts'))!.clone().text(), 'data-free shell');

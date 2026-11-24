@@ -1191,9 +1191,9 @@ test('visible local refresh updates worker actuals, clock editability and reconn
   await expect(page.getByRole('button', { name: 'Delete Clock commitment', exact: true })).toHaveCount(0);
   await sessionFor(page, 'Clock commitment').locator('.scheduler-block-main').click();
   const clockDialog = page.getByRole('dialog', { name: 'Session editor' });
-  await expect(clockDialog.getByRole('button', { name: 'Restore as planned' })).toBeDisabled();
-  await page.clock.fastForward(30000);
+  // Checking off as planned is allowed from the session's scheduled date, before it ends.
   await expect(clockDialog.getByRole('button', { name: 'Restore as planned' })).toBeEnabled();
+  await page.clock.fastForward(30000);
   await clockDialog.getByRole('button', { name: 'Discard draft' }).click();
   await expect(sessionFor(page, 'Clock commitment')).toContainText('assumed actual');
   await expect(page.locator(`#scheduler-goal-${goal.id} dd`).nth(1)).toHaveText('0.01h');

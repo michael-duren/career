@@ -72,7 +72,8 @@ export type Mutation = { revision: string; week: string; newStep?: { title: stri
   { action: 'rule'; id?: string; rule: z.infer<typeof ruleSchema>; effectiveFrom?: string } |
   { action: 'session'; id?: string; session: SchedulerSession } |
   { action: 'cancel'; id: string; scope?: 'date' | 'future' } |
-  { action: 'actual'; id?: string; session?: SchedulerSession; actual: z.infer<typeof actualSchema> }
+  { action: 'actual'; id?: string; session?: SchedulerSession; actual: z.infer<typeof actualSchema> } |
+  { action: 'clearActual'; id: string }
 );
 export type SessionDraft = { id?: string; ruleId?: string; assignment: Assignment; newStepTitle?: string; date: string; startDate?: string; start: string; endDate: string; end: string; mode: 'plan' | 'actual'; repeat: boolean; scope: 'date' | 'future'; originalStart?: string; originalEnd?: string; explanation?: string };
 export function draftMutation(draft: SessionDraft, week: SchedulerWeek): Mutation {
@@ -91,6 +92,12 @@ export function draftMutation(draft: SessionDraft, week: SchedulerWeek): Mutatio
   if (draft.mode === 'actual') return { ...base, action: 'actual', id: draft.id, session, actual: { status: 'explicit', date: draft.date, start, end } };
   if (draft.repeat || draft.ruleId && draft.scope === 'future') return { ...base, action: 'rule', id: draft.ruleId, effectiveFrom: draft.date, rule: { id: draft.ruleId ?? '', weekday: (new Date(`${draft.date}T12:00Z`).getUTCDay() + 6) % 7 + 1, localStart: draft.start, durationMinutes: (Date.parse(end) - Date.parse(start)) / 60000, effectiveFrom: draft.date, assignment: draft.assignment } };
   return { ...base, action: 'session', id: draft.id, session };
+}
+/** Today's planned goal sessions in start order. Only goal work can be checked off. */
+export function todaysTodos(week: SchedulerWeek, today: string): SchedulerSession[] {
+  return week.sessions
+    .filter(session => session.date === today && session.state !== 'canceled' && session.plan && session.assignment.goalId)
+    .sort((a, b) => Date.parse(a.plan!.start) - Date.parse(b.plan!.start));
 }
 export class SchedulerError extends Error {
   current?: SchedulerWeek;

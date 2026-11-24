@@ -206,8 +206,15 @@ func TestAccountingActualReplacement(t *testing.T) {
 	now := instant("2026-09-30T12:00:00Z")
 	d.Sessions["a"] = Session{ID: "a", Date: "2026-09-28", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-09-28T06:00:00Z"), End: instant("2026-09-28T08:00:00Z")}}
 	d.Sessions["b"] = Session{ID: "b", Date: "2026-10-03", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-10-03T06:00:00Z"), End: instant("2026-10-03T10:00:00Z")}}
-	d.Finalize(now)
 	sum := d.Week("2026-09-28", now, nil).Goals[0]
+	if sum.ActualHours != 0 || sum.RemainingScheduledHours != 6 {
+		t.Fatalf("elapsed plan must stay planned until checked off: %+v", sum)
+	}
+	done := Actual{Status: "assumed"}
+	if e := d.Apply(Mutation{Action: "actual", ID: "a", Actual: &done}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	sum = d.Week("2026-09-28", now, nil).Goals[0]
 	if sum.ActualHours != 2 || sum.RemainingScheduledHours != 4 || sum.UncoveredHours != 1 {
 		t.Fatalf("accounting: %+v", sum)
 	}
@@ -248,8 +255,8 @@ func TestRecurrenceIdentityExceptionAndCatchup(t *testing.T) {
 		t.Fatal("exception overwritten")
 	}
 	d.Generate("2026-09-28", "2026-10-05", instant("2026-10-06T00:00:00Z"), nil, time.Time{})
-	if d.Sessions[s.ID].Actual == nil {
-		t.Fatal("catchup did not assume actual")
+	if d.Sessions[s.ID].Actual != nil {
+		t.Fatal("catchup must not complete elapsed sessions")
 	}
 }
 func TestGenerateDoesNotReviveSessionsBeforeLastReconcile(t *testing.T) {
@@ -525,16 +532,103 @@ func TestCancelFutureScopeRejectedWhenTargetHasRecordedActual(t *testing.T) {
 		t.Fatal("rule should be untouched when the cancel is rejected")
 	}
 }
-func TestAssumedActualRejectedBeforePlannedEnd(t *testing.T) {
+func TestCompleteSessionManually(t *testing.T) {
 	d := testDocument()
-	now := instant("2026-09-28T06:30:00Z")
+	d.Settings.TimeZone = "UTC"
 	d.Sessions["s"] = Session{ID: "s", Date: "2026-09-28", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-09-28T06:00:00Z"), End: instant("2026-09-28T08:00:00Z")}}
 	a := Actual{Status: "assumed"}
-	if e := d.Apply(Mutation{Action: "actual", ID: "s", Actual: &a}, now, nil); e == nil {
-		t.Fatal("assumed actual accepted before the planned session ended")
+	if e := d.Apply(Mutation{Action: "actual", ID: "s", Actual: &a}, instant("2026-09-27T23:00:00Z"), nil); e == nil {
+		t.Fatal("session completed before its scheduled date")
 	}
-	if e := d.Apply(Mutation{Action: "actual", ID: "s", Actual: &a}, instant("2026-09-28T08:00:01Z"), nil); e != nil {
-		t.Fatalf("assumed actual rejected after the planned session ended: %v", e)
+	early := instant("2026-09-28T05:00:00Z")
+	if e := d.Apply(Mutation{Action: "actual", ID: "s", Actual: &a}, early, nil); e != nil {
+		t.Fatalf("session could not be completed early on its date: %v", e)
+	}
+	s := d.Sessions["s"]
+	if s.Actual == nil || s.Actual.Start != s.Plan.Start || s.Actual.End != s.Plan.End || s.State != "accepted" {
+		t.Fatalf("completed session: %+v", s)
+	}
+	d.Reconcile([]Goal{d.Goals["goal"]}, early)
+	if d.Sessions["s"].State != "accepted" {
+		t.Fatalf("early completion flagged by reconcile: %+v", d.Sessions["s"])
+	}
+	if e := d.Apply(Mutation{Action: "clearActual", ID: "s"}, early, nil); e != nil {
+		t.Fatal(e)
+	}
+	if d.Sessions["s"].Actual != nil {
+		t.Fatal("clearActual kept the actual")
+	}
+	if e := d.Apply(Mutation{Action: "clearActual", ID: "s"}, early, nil); e == nil {
+		t.Fatal("clearActual accepted a session with nothing recorded")
+	}
+}
+func TestEarlyCompletionCountsPlannedHours(t *testing.T) {
+	d := testDocument()
+	d.Settings.TimeZone = "UTC"
+	d.Sessions["s"] = Session{ID: "s", Date: "2026-09-28", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-09-28T06:00:00Z"), End: instant("2026-09-28T08:00:00Z")}}
+	early := instant("2026-09-28T05:00:00Z")
+	if e := d.Apply(Mutation{Action: "actual", ID: "s", Actual: &Actual{Status: "assumed"}}, early, nil); e != nil {
+		t.Fatal(e)
+	}
+	sum := d.Week("2026-09-28", early, nil).Goals[0]
+	if sum.ActualHours != 2 || sum.RemainingScheduledHours != 0 {
+		t.Fatalf("checked-off session should count its planned hours as worked: %+v", sum)
+	}
+}
+func TestClearActualKeepsExplicitWork(t *testing.T) {
+	d := testDocument()
+	d.Settings.TimeZone = "UTC"
+	now := instant("2026-09-28T12:00:00Z")
+	d.Sessions["s"] = Session{ID: "s", Date: "2026-09-28", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-09-28T06:00:00Z"), End: instant("2026-09-28T08:00:00Z")}}
+	explicit := Actual{Status: "explicit", Date: "2026-09-28", Start: instant("2026-09-28T06:30:00Z"), End: instant("2026-09-28T09:00:00Z")}
+	if e := d.Apply(Mutation{Action: "actual", ID: "s", Actual: &explicit}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	if e := d.Apply(Mutation{Action: "clearActual", ID: "s"}, now, nil); e == nil {
+		t.Fatal("clearActual erased explicit recorded work")
+	}
+	if a := d.Sessions["s"].Actual; a == nil || a.Status != "explicit" {
+		t.Fatalf("explicit actual changed: %+v", a)
+	}
+	skipped := Actual{Status: "skipped"}
+	if e := d.Apply(Mutation{Action: "actual", ID: "s", Actual: &skipped}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	if e := d.Apply(Mutation{Action: "clearActual", ID: "s"}, now, nil); e != nil || d.Sessions["s"].Actual != nil {
+		t.Fatalf("skipped session should be clearable: %v", e)
+	}
+}
+func TestClearActualFlagsRestoredPlanConflict(t *testing.T) {
+	d := testDocument()
+	d.Settings.TimeZone = "UTC"
+	now := instant("2026-09-28T05:00:00Z")
+	plan := Plan{Start: instant("2026-09-28T06:00:00Z"), End: instant("2026-09-28T08:00:00Z")}
+	d.Sessions["s"] = Session{ID: "s", Date: "2026-09-28", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &plan}
+	if e := d.Apply(Mutation{Action: "actual", ID: "s", Actual: &Actual{Status: "assumed"}}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	// Another block is planned in the freed time while the session is checked off.
+	d.Sessions["other"] = Session{ID: "other", Date: "2026-09-28", Assignment: Assignment{Title: "Lunch"}, State: "accepted", Plan: &Plan{Start: instant("2026-09-28T07:00:00Z"), End: instant("2026-09-28T07:30:00Z")}}
+	if e := d.Apply(Mutation{Action: "clearActual", ID: "s"}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	if s := d.Sessions["s"]; s.State != "attention" || len(s.ConflictIDs) != 1 || s.ConflictIDs[0] != "other" {
+		t.Fatalf("restored plan overlap not flagged: %+v", s)
+	}
+}
+func TestElapsedPlanStaysUnchecked(t *testing.T) {
+	d := testDocument()
+	d.Settings.TimeZone = "UTC"
+	d.Rules["r"] = Rule{ID: "r", Weekday: 1, LocalStart: "09:00", DurationMinutes: 60, EffectiveFrom: "2026-09-28", Assignment: Assignment{GoalID: "goal"}}
+	d.Generate("2026-09-28", "2026-09-28", instant("2026-09-28T08:00:00Z"), nil, time.Time{})
+	d.Generate("2026-09-28", "2026-09-28", instant("2026-09-28T12:00:00Z"), nil, time.Time{})
+	for _, s := range d.Sessions {
+		if s.Actual != nil {
+			t.Fatalf("elapsed session completed automatically: %+v", s)
+		}
+	}
+	if len(d.Sessions) != 1 {
+		t.Fatalf("sessions: %d", len(d.Sessions))
 	}
 }
 func TestNewSessionIgnoresClientSuppliedRecurringIdentity(t *testing.T) {

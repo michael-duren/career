@@ -16,25 +16,16 @@ Then open http://localhost:8080 and log in with `admin` / `password123`. See the
 
 ## Features
 
-### Home, progress and logs
+### Home
 
-The home page (`/`) has four tabs. **Overview** shows the current timeline goals with hours
-logged against what each goal expects by today, a summary of this week from the weekly
-scheduler, a form to log work and a reflection against a goal or mini goal, and the strategy
-page. **Week** shows goal hours and each day's recorded work and journal lines for any week.
-**Journal** is the weekly work journal (formerly `/journal`) and **Logs** is the searchable,
-faceted explorer over it (formerly `/logs`); the old URLs redirect to these tabs.
+The home page (`/`) is today's todo list: the goal sessions planned for today in the weekly
+scheduler. Nothing is completed automatically; checking an item records its planned time as
+done, and unchecking it clears that again.
 
-Logged hours are recorded as actual sessions in the weekly scheduler, which is the single
-source for goal hours on the home page, the timeline, the journal week editor and **Progress**
-(`/progress`). A reflection is saved both as a note on the timeline goal and as a dated
-`Goal:` line in the week's journal. Older per-track journal hours stay as read-only history.
-
-### Goals: timeline, graph and agent context
+### Goals: timeline and agent context
 
 **Timeline** (`/timeline`) is the source of truth for goals, their dates and their steps (mini
-goals), which can be reordered or moved between goals. **Goal graph** (`/goals/graph`) shows
-prerequisites between goals and their critical paths. **Agent context** (`/agents`) renders the
+goals), which can be reordered or moved between goals. **Agent context** (`/agents`) renders the
 saved goals as Markdown or JSON (`/api/agent-context`) to hand to an AI assistant.
 
 ### Weekly scheduler
@@ -68,14 +59,15 @@ and status. Companies can be edited or deleted from their cards, and managed at
 a catch-up queue. Import contacts and messages from a LinkedIn data export; re-importing updates
 names, roles and companies but keeps your notes.
 
-### Journals, notes and pages
+### Journal and notes
 
-- **Work journal** (`/journal`): dated work reflections and the weekly work journal.
-- **Personal journal** (`/personal-journal`): life and personal background.
+- **Journal** (`/journal`): the weekly work journal, the personal journal and the searchable,
+  faceted **Logs** explorer over the work journal, as tabs. `/logs` and `/personal-journal`
+  redirect to their tabs.
 - **Notes** (`/notes`): ideas, questions and references organized by topic.
-- **Pages** (`/documents`): the study plan and other reference pages, edited in Markdown.
 
-Site search covers all of them.
+Reference pages such as the study plan are read-only views at `/documents/<id>`. Site search
+covers all of them.
 
 ### Audio thoughts
 

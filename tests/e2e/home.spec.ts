@@ -1,91 +1,82 @@
-import { test, expect, type APIRequestContext } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
-// The home page combines current goals, the week, the work journal and logs.
-// Logging work there must land in every place that reads it: the weekly
-// scheduler (hours), the timeline goal (note, mini goal), and the journal.
-// Like the other specs, it expects a disposable workspace: afterAll removes
-// its goals, but the recorded session and journal line remain.
-const ownedGoals = new Set<string>();
+// Home is today's todo list: the day's planned goal sessions, checked off by hand.
+// The scheduler API is mocked so the list is deterministic at any time of day;
+// the server side of completing a session is covered by the Go scheduler tests.
 
-function chicagoDate(offsetDays = 0) {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago' }).format(new Date(Date.now() + offsetDays * 86400000));
+const today = new Date().toISOString().slice(0, 10);
+function mondayOf(date: string) {
+  const day = new Date(`${date}T12:00:00Z`);
+  day.setUTCDate(day.getUTCDate() - (day.getUTCDay() + 6) % 7);
+  return day.toISOString().slice(0, 10);
 }
+const plan = (hour: number) => ({ start: `${today}T${String(hour).padStart(2, '0')}:00:00Z`, end: `${today}T${String(hour + 1).padStart(2, '0')}:00:00Z` });
+const session = (id: string, title: string, hour: number) => ({
+  id, date: today, assignment: { goalId: 'goal', title, goalTitle: 'Systems', color: '#86efac' },
+  plan: plan(hour), actual: null as null | Record<string, string>, state: 'accepted', conflictIds: [], exception: false,
+});
 
-async function createGoal(request: APIRequestContext, origin: string) {
-  const id = crypto.randomUUID(), stepId = crypto.randomUUID();
-  const goal = {
-    id, title: `Home goal ${id.slice(0, 8)}`, status: 'active', startDate: chicagoDate(-30), endDate: chicagoDate(60),
-    dailyHours: 1, selectedWeekdays: [1, 2, 3, 4, 5, 6, 7], color: '#86efac', dependsOn: [], notes: [], metadata: {},
-    steps: [{ id: stepId, title: `Step ${id.slice(0, 8)}`, done: false }],
-    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+async function mockWeek(page: Page) {
+  const state = {
+    revision: 'r1', week: mondayOf(today), days: [], goals: [], rules: [], busy: [], warnings: [], warningTargets: [], remainingCapacityHours: 0,
+    settings: { timeZone: 'UTC', defaultDay: { start: '06:00', end: '22:00', nextDay: false }, weekdays: {}, dates: {} },
+    sessions: [session('late', 'Read chapter 4', 15), session('early', 'Practice problems', 9), { ...session('lunch', 'Lunch', 12), assignment: { title: 'Lunch' } },
+      { ...session('logged', 'Logged in scheduler', 7), actual: { status: 'explicit', date: today, start: `${today}T07:15:00Z`, end: `${today}T08:00:00Z` } }],
   };
-  const response = await request.post('/api/goals', { headers: { origin }, data: { revision: null, goal } });
-  expect(response.ok(), await response.text()).toBeTruthy();
-  ownedGoals.add(id);
-  return goal;
+  const writes: Record<string, unknown>[] = [];
+  await page.route('**/api/scheduler/week?*', route => route.fulfill({ json: state }));
+  await page.route('**/api/scheduler/mutate', async route => {
+    const body = route.request().postDataJSON();
+    writes.push(body);
+    const target = state.sessions.find(item => item.id === body.id)!;
+    target.actual = body.action === 'clearActual' ? null : body.actual;
+    state.revision = `r${writes.length + 1}`;
+    await route.fulfill({ json: state });
+  });
+  return writes;
 }
 
-test.afterAll(async ({ request, baseURL }) => {
-  for (const id of ownedGoals) {
-    const list = await (await request.get('/api/goals')).json();
-    await request.delete('/api/goals', { headers: { origin: baseURL! }, data: { id, revision: list.revisions[id] } });
-  }
-});
-
-test('logging work from home syncs hours, goal notes and the journal', async ({ page, request, baseURL }) => {
-  const goal = await createGoal(request, baseURL!);
-  const step = goal.steps[0];
-  const yesterday = chicagoDate(-1);
-
+test('home lists today\'s goal sessions and checks them off only when clicked', async ({ page }) => {
+  const writes = await mockWeek(page);
   await page.goto('/');
-  const card = page.locator('article').filter({ has: page.getByRole('heading', { name: goal.title }) });
-  await expect(card).toContainText('0h logged');
-  await expect(page.getByRole('heading', { name: /^This week ·/ })).toBeVisible();
+  const list = page.getByRole('list', { name: "Today's todos" });
+  await expect(list.getByRole('listitem')).toHaveCount(3);
+  // Work recorded with explicit times in the scheduler shows as done but can't be unchecked here.
+  const logged = list.getByRole('listitem').first();
+  await expect(logged).toContainText('recorded in scheduler');
+  await expect(logged.getByRole('checkbox')).toBeChecked();
+  await expect(logged.getByRole('checkbox')).toBeDisabled();
+  await expect(list.getByRole('listitem').nth(1)).toContainText('Systems › Practice problems');
+  await expect(page.getByText('1 of 3 done')).toBeVisible();
+  const first = list.getByRole('checkbox').nth(1);
+  await expect(first).not.toBeChecked();
+  expect(writes).toHaveLength(0);
 
-  const form = page.locator('section').filter({ has: page.getByRole('heading', { name: 'A moment to reflect' }) });
-  await form.getByRole('combobox', { name: /^Goal/ }).selectOption(goal.id);
-  await form.getByRole('combobox', { name: /^Mini goal/ }).selectOption(step.id);
-  await form.getByLabel('Date', { exact: true }).fill(yesterday);
-  await form.getByLabel('Hours', { exact: true }).fill('1.5');
-  await form.getByLabel(`Mark “${step.title}” done`).check();
-  await form.getByLabel('Reflection').fill('Worked through the examples');
-  await form.getByRole('button', { name: 'Log work' }).click();
-  await expect(form.getByRole('status')).toContainText(`1.5h logged to ${goal.title}`);
-  await expect(form.getByRole('status')).toContainText('journal updated');
-  await expect(card).toContainText('1.5h logged');
+  await list.getByText('Systems › Practice problems').click();
+  await expect(first).toBeChecked();
+  await expect(page.getByText('2 of 3 done')).toBeVisible();
+  expect(writes[0]).toMatchObject({ action: 'actual', id: 'early', revision: 'r1', actual: { status: 'assumed', date: today, ...plan(9) } });
 
-  // Scheduler holds the hours as a recorded session.
-  const hours = await (await request.get('/api/scheduler/goal-hours')).json();
-  expect(hours.goals[goal.id].totalHours).toBe(1.5);
-  // The timeline goal holds the note and the completed mini goal.
-  const saved = (await (await request.get('/api/goals')).json()).goals.find((g: { id: string }) => g.id === goal.id);
-  expect(saved.notes[0].body).toBe(`${yesterday} · ${step.title} · 1.5h logged — Worked through the examples`);
-  expect(saved.steps[0].done).toBe(true);
-
-  // Week view shows the session and the journal line on that day.
-  await page.getByRole('tab', { name: 'Week' }).click();
-  await expect(page).toHaveURL(/tab=week/);
-  const weekPanel = page.getByRole('tabpanel', { name: 'Week' });
-  // On a Monday, yesterday belongs to the previous week.
-  if (new Date(`${chicagoDate(0)}T12:00:00Z`).getUTCDay() === 1) await weekPanel.getByRole('button', { name: 'Previous week' }).click();
-  await expect(weekPanel).toContainText(`${goal.title} › ${step.title} · 1.5h`);
-  await expect(weekPanel).toContainText(`${goal.title} › ${step.title} (1.5h) — Worked through the examples`);
-
-  // Logs explorer and journal editor live in the same page.
-  await page.getByRole('tab', { name: 'Logs' }).click();
-  await expect(page.getByRole('tabpanel', { name: 'Logs' })).toContainText('Worked through the examples');
-  await page.getByRole('tab', { name: 'Journal' }).click();
-  await expect(page.getByRole('tabpanel', { name: 'Journal' }).getByRole('link', { name: '+ Add entry' })).toBeVisible();
-
-  // Timeline reads the same logged hours.
-  await page.goto(`/timeline`);
-  await expect(page.locator('.timeline-list')).toContainText(`${goal.title} · ${goal.startDate} → ${goal.endDate} · 1.5h logged`);
+  await list.getByText('Systems › Practice problems').click();
+  await expect(first).not.toBeChecked();
+  expect(writes[1]).toMatchObject({ action: 'clearActual', id: 'early', revision: 'r2' });
 });
 
-test('old journal and logs URLs open their home tabs', async ({ page }) => {
-  await page.goto('/logs');
-  await expect(page).toHaveURL(/\/\?tab=logs$/);
-  await expect(page.getByRole('tab', { name: 'Logs' })).toHaveAttribute('aria-selected', 'true');
+test('journal page combines the work journal, personal journal and logs', async ({ page }) => {
   await page.goto('/journal');
-  await expect(page.getByRole('tab', { name: 'Journal' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('tab', { name: 'Work' })).toHaveAttribute('aria-selected', 'true');
+  await page.getByRole('tab', { name: 'Personal' }).click();
+  await expect(page).toHaveURL(/\/journal\?tab=personal$/);
+  await expect(page.getByRole('tabpanel', { name: 'Personal' })).toContainText('Read personal journal as Markdown');
+});
+
+test('old journal, logs and personal journal URLs open their journal tabs', async ({ page }) => {
+  await page.goto('/logs');
+  await expect(page).toHaveURL(/\/journal\?tab=logs$/);
+  await expect(page.getByRole('tab', { name: 'Logs' })).toHaveAttribute('aria-selected', 'true');
+  await page.goto('/personal-journal');
+  await expect(page.getByRole('tab', { name: 'Personal' })).toHaveAttribute('aria-selected', 'true');
+  await page.goto('/?tab=journal');
+  await expect(page).toHaveURL(/\/journal$/);
+  await expect(page.getByRole('tab', { name: 'Work' })).toHaveAttribute('aria-selected', 'true');
 });
