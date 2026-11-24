@@ -18,9 +18,16 @@ var scheduler = func() *fsrs.FSRS {
 	return fsrs.NewFSRS(p)
 }()
 
-// ReviewRating maps an attempt onto an FSRS rating.
+// ReviewRating maps an attempt onto an FSRS rating. A recalled quick review
+// rates Good, a normal solve's interval; partial rates Hard and forgot Again.
 func ReviewRating(a Attempt) fsrs.Rating {
 	switch {
+	case a.Outcome == QuickRecalled:
+		return fsrs.Good
+	case a.Outcome == QuickPartial:
+		return fsrs.Hard
+	case a.Outcome == QuickForgot:
+		return fsrs.Again
 	case a.Outcome == "unfinished":
 		return fsrs.Again
 	case a.Outcome == "struggled" || a.Assisted:
@@ -37,8 +44,10 @@ func ReviewRating(a Attempt) fsrs.Rating {
 type Card struct {
 	Problem Problem
 	// Last is the attempt that counted most recently: the newest attempt.
-	Last    Attempt
-	Reviews int
+	Last Attempt
+	// LastFull is the newest attempt that was not a quick review.
+	LastFull Attempt
+	Reviews  int
 	// Due is the effective due time: the FSRS due time, or the flag's due
 	// time when that is earlier.
 	Due time.Time
@@ -74,17 +83,59 @@ type Flag struct {
 	// the attempt's struggle label, or "".
 	WantsReview, Suboptimal bool
 	Struggle                string
+	// Quick is a partial or forgotten quick review's grade, or "". A partial
+	// one says what it Missed; a forgotten one requires a full re-solve.
+	Quick, Missed string
 }
+
+// RequiresFull reports that the flag came from a forgotten quick review, so
+// only a full attempt clears it.
+func (f Flag) RequiresFull() bool { return f.Quick == QuickForgot }
 
 // Flagged reports whether the card carries a flag.
 func (c Card) Flagged() bool { return c.Flag != nil }
 
 // Reviewable reports whether the card is in the review queue: only problems
-// you struggled with, or that carry a flag, are scheduled for review.
+// you struggled with, or that carry a flag, are scheduled for review. A
+// pending spot check is left out until it is due (see DueBefore), so it is
+// not seen before then.
 func (c Card) Reviewable() bool { return c.Reviews > 0 && (c.Struggled || c.Flagged()) }
 
-// DueBefore reports whether the card is in the review queue and due before t.
-func (c Card) DueBefore(t time.Time) bool { return c.Reviewable() && c.Due.Before(t) }
+// DueBefore reports whether the card is in the review queue, or a spot
+// check, and due before t.
+func (c Card) DueBefore(t time.Time) bool {
+	return (c.Reviewable() || c.SpotCheck()) && c.Due.Before(t)
+}
+
+// SpotCheck reports that the last attempt was a recalled quick review picked
+// for a spot check: the next review must be a full re-solve. Callers show
+// it only once the card is due.
+func (c Card) SpotCheck() bool {
+	return c.Reviews > 0 && c.Last.Quick() && c.Last.Outcome == QuickRecalled && c.Last.SpotCheck
+}
+
+// RequiresFull reports that the last attempt was a forgotten quick review,
+// so only a full attempt can review the problem next.
+func (c Card) RequiresFull() bool { return c.Flag != nil && c.Flag.RequiresFull() }
+
+// RequiredMode is ModeFull when the next review must be a full attempt (a
+// forgotten quick review, or a spot check), or "" when either mode will do.
+func (c Card) RequiredMode() string {
+	if c.RequiresFull() || c.SpotCheck() {
+		return ModeFull
+	}
+	return ""
+}
+
+// SuggestedMode hints at the review mode: ModeFull when a full attempt is
+// required or the last full attempt was struggled or unfinished, otherwise
+// ModeQuick. A quick review is still allowed unless RequiredMode says no.
+func (c Card) SuggestedMode() string {
+	if c.RequiredMode() != "" || c.LastFull.Outcome == "struggled" || c.LastFull.Outcome == "unfinished" {
+		return ModeFull
+	}
+	return ModeQuick
+}
 
 // go-fsrs counts elapsed days between UTC calendar dates. Feeding it local
 // wall-clock times labelled as UTC makes those days the learner's local days.
@@ -111,8 +162,16 @@ func (c Card) Retrievability(t time.Time) float64 {
 }
 
 // flagFor derives the flag of an attempt from its outcome, the learner's
-// marks and its analysis, or nil.
+// marks and its analysis, or nil. A quick review flags only when partial or
+// forgotten; a recalled one clears every flag.
 func flagFor(a Attempt, problem Problem, analyses map[string]Analysis, loc *time.Location) *Flag {
+	if a.Quick() {
+		if a.Outcome == QuickRecalled {
+			return nil
+		}
+		date := Date(a.CreatedAt, loc)
+		return &Flag{Date: date, MarkedDate: date, AttemptDate: date, Quick: a.Outcome, Missed: a.Missed}
+	}
 	f := &Flag{WantsReview: a.WantsReview, Suboptimal: a.Approach == ApproachSuboptimal, Struggle: Struggle(a)}
 	if a.SelfFlagged() {
 		marked := a.MarkedAt
@@ -137,9 +196,18 @@ func flagFor(a Attempt, problem Problem, analyses map[string]Analysis, loc *time
 	return f
 }
 
-// DueAt is the start of the local day after the flag was raised.
+// QuickPartialDays is how many days after a partial quick review the
+// problem is due again; other flags are due the next day.
+const QuickPartialDays = 2
+
+// DueAt is the start of the local day after the flag was raised, or for a
+// partial quick review QuickPartialDays days after.
 func (f Flag) DueAt(loc *time.Location) time.Time {
-	return time.Date(f.Date.Year(), f.Date.Month(), f.Date.Day()+1, 0, 0, 0, 0, loc)
+	days := 1
+	if f.Quick == QuickPartial {
+		days = QuickPartialDays
+	}
+	return time.Date(f.Date.Year(), f.Date.Month(), f.Date.Day()+days, 0, 0, 0, 0, loc)
 }
 
 // Reason explains the flag, e.g. "Time complexity judged wrong 2 days ago",
@@ -149,6 +217,10 @@ func (f Flag) Reason(now time.Time, loc *time.Location) string {
 	today := Date(now, loc)
 	when := daysAgo(f.AnalysisDate, today)
 	switch {
+	case f.Quick == QuickPartial:
+		return MissedLabel(f.Missed) + " missed in quick review " + daysAgo(f.AttemptDate, today)
+	case f.Quick == QuickForgot:
+		return "Forgot in quick review " + daysAgo(f.AttemptDate, today) + " · full re-solve required"
 	case f.TimeWrong && f.SpaceWrong:
 		return "Time and space complexity judged wrong " + when
 	case f.TimeWrong:
@@ -172,6 +244,10 @@ func (f Flag) Reason(now time.Time, loc *time.Location) string {
 // Label is a short form for badges, e.g. "Flagged: time complexity judged wrong".
 func (f Flag) Label() string {
 	switch {
+	case f.Quick == QuickPartial:
+		return "Flagged: missed in quick review"
+	case f.Quick == QuickForgot:
+		return "Flagged: full re-solve required"
 	case f.TimeWrong && f.SpaceWrong:
 		return "Flagged: time and space complexity judged wrong"
 	case f.TimeWrong:
@@ -201,8 +277,9 @@ func daysAgo(from, to time.Time) string {
 
 // replaySlug replays one problem's attempts, sorted oldest first, through
 // FSRS. Only the last attempt on each local day counts. visit, when set,
-// sees each local day with the card as it stood before that day.
-func replaySlug(problem Problem, list []Attempt, loc *time.Location, visit func(date time.Time, before Card)) Card {
+// sees each local day with the card as it stood before that day, and
+// whether the day had an attempt that was not a quick review.
+func replaySlug(problem Problem, list []Attempt, loc *time.Location, visit func(date time.Time, before Card, full bool)) Card {
 	card := Card{Problem: problem, loc: loc}
 	start := 0
 	for i, a := range list {
@@ -210,11 +287,18 @@ func replaySlug(problem Problem, list []Attempt, loc *time.Location, visit func(
 		if i+1 < len(list) && Date(list[i+1].CreatedAt, loc).Equal(date) {
 			continue
 		}
+		day := list[start : i+1]
+		full := slices.IndexFunc(day, func(a Attempt) bool { return !a.Quick() })
 		if visit != nil {
-			visit(date, card)
+			visit(date, card, full >= 0)
 		}
-		if slices.ContainsFunc(list[start:i+1], func(a Attempt) bool { return Struggle(a) != "" }) {
+		if slices.ContainsFunc(day, func(a Attempt) bool { return Struggle(a) != "" }) {
 			card.Struggled = true
+		}
+		for _, a := range day {
+			if !a.Quick() {
+				card.LastFull = a
+			}
 		}
 		start = i + 1
 		state := card.fsrs
@@ -254,7 +338,10 @@ type slugReplay struct {
 	list    []Attempt
 	dates   []time.Time
 	befores []Card
-	final   Card
+	// full reports, for each date, whether it had an attempt that was not
+	// a quick review.
+	full  []bool
+	final Card
 	// ordered reports that the attempts' local dates never go back, as they
 	// can when a clock change moves back across midnight. While it holds,
 	// dates are strictly increasing, which before's binary search needs.
@@ -271,8 +358,8 @@ func replayAll(state State, loc *time.Location) map[string]*slugReplay {
 				r.ordered = false
 			}
 		}
-		r.final = replaySlug(r.problem, list, loc, func(date time.Time, before Card) {
-			r.dates, r.befores = append(r.dates, date), append(r.befores, before)
+		r.final = replaySlug(r.problem, list, loc, func(date time.Time, before Card, full bool) {
+			r.dates, r.befores, r.full = append(r.dates, date), append(r.befores, before), append(r.full, full)
 		})
 		replays[slug] = r
 	}
@@ -420,6 +507,9 @@ func (c Card) firstAttemptOn(date time.Time) bool {
 // ReviewReason explains a card in plain text: its flag, or its last counted
 // attempt and recall, e.g. "Struggled 9 days ago · recall estimate 62%".
 func ReviewReason(c Card, now time.Time, loc *time.Location) string {
+	if c.SpotCheck() {
+		return SpotCheckReason(c, loc)
+	}
 	// A struggle reads with its recall, as unflagged cards do.
 	if c.Flag != nil && (c.Flag.Struggle == "" || c.Flag.TimeWrong || c.Flag.SpaceWrong || c.Flag.NotOptimal) {
 		return c.Flag.Reason(now, loc)
@@ -428,5 +518,14 @@ func ReviewReason(c Card, now time.Time, loc *time.Location) string {
 	if c.Last.Outcome == "solved" && c.Last.Assisted {
 		label = "Solved with help"
 	}
+	if c.Last.Quick() {
+		label += " in quick review"
+	}
 	return fmt.Sprintf("%s %s · recall estimate %d%%", label, daysAgo(Date(c.Last.CreatedAt, loc), Date(now, loc)), int(c.Retrievability(now)*100+0.5))
+}
+
+// SpotCheckReason is a spot check's review reason, e.g. "Spot check of quick
+// review from Mon 2 Nov 2026".
+func SpotCheckReason(c Card, loc *time.Location) string {
+	return "Spot check of quick review from " + DateLabel(Date(c.Last.CreatedAt, loc))
 }

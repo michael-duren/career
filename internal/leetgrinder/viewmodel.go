@@ -79,10 +79,20 @@ type ReviewsPage struct {
 type GeneralForm struct {
 	Timezone, GoalNew, GoalReview, Revision string
 	NewFromTodos                            bool
+	SpotCheckRate                           string
 }
 
 func NewGeneralForm(s Settings) GeneralForm {
-	return GeneralForm{Timezone: s.Timezone, GoalNew: strconv.Itoa(s.Goal.New), GoalReview: strconv.Itoa(s.Goal.Review), Revision: s.Revision, NewFromTodos: s.NewFromTodos}
+	return GeneralForm{Timezone: s.Timezone, GoalNew: strconv.Itoa(s.Goal.New), GoalReview: strconv.Itoa(s.Goal.Review), Revision: s.Revision, NewFromTodos: s.NewFromTodos, SpotCheckRate: strconv.Itoa(s.SpotCheckRate)}
+}
+
+// SpotCheckRateOptions are the spot-check rate choices, in percent.
+func SpotCheckRateOptions() []string {
+	out := make([]string, 0, MaxSpotCheckRate+1)
+	for n := 0; n <= MaxSpotCheckRate; n++ {
+		out = append(out, strconv.Itoa(n))
+	}
+	return out
 }
 
 // GoalOptions are the choices for each daily target.
@@ -214,12 +224,28 @@ func ByteSize(n int) string {
 	}
 	return fmt.Sprintf("%.1f KB", float64(n)/1024)
 }
+
+// AttemptLabel names an attempt's result: its outcome, or for a quick
+// review "Quick review · Recalled" and so on.
+func AttemptLabel(a Attempt) string {
+	if a.Quick() {
+		return "Quick review · " + OutcomeLabel(a.Outcome)
+	}
+	return OutcomeLabel(a.Outcome)
+}
+
 func OutcomeLabel(s string) string {
 	switch s {
 	case "solved":
 		return "Solved"
 	case "struggled":
 		return "Struggled"
+	case QuickRecalled:
+		return "Recalled"
+	case QuickPartial:
+		return "Partial"
+	case QuickForgot:
+		return "Forgot"
 	default:
 		return "Unfinished"
 	}

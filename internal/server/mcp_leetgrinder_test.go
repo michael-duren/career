@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"net/url"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -197,5 +198,108 @@ func TestMCPLeetgrinderLogFirst(t *testing.T) {
 	var picks int
 	if err = db.DB.QueryRow("SELECT count(*) FROM leetgrinder_review_plan WHERE problem_slug='two-sum'").Scan(&picks); err != nil || picks != 1 {
 		t.Fatalf("picks %d: %v", picks, err)
+	}
+}
+
+func TestMCPLeetgrinderQuickReview(t *testing.T) {
+	db := testDB(t)
+	h := newOAuthHarness(t, db)
+	ctx := context.Background()
+	settings, err := db.LeetgrinderSettings(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// No spot checks, so the outcome is deterministic.
+	if _, err = db.UpdateLeetgrinderSettings(ctx, settings.Revision, func(v *leetgrinder.Settings) error {
+		v.Timezone, v.SpotCheckRate = "UTC", 0
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	for _, slug := range []string{"two-sum", "valid-anagram", "binary-search"} {
+		a := leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: slug, Outcome: "struggled", Minutes: 30, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}
+		if _, err = db.SaveLeetgrinderAttempt(ctx, a, ""); err != nil {
+			t.Fatal(err)
+		}
+		if _, err = db.DB.Exec("UPDATE leetgrinder_attempts SET created_at=$1,marked_at=$1 WHERE id=$2", time.Now().AddDate(0, 0, -20), a.ID); err != nil {
+			t.Fatal(err)
+		}
+	}
+	clientID := h.register(testCallback)
+	verifier := strings.Repeat("lgquick", 10)
+	code := h.approve(h.consent(clientID, testCallback, pkce(verifier)), "write").Query().Get("code")
+	status, tokens := h.token(url.Values{"grant_type": {"authorization_code"}, "code": {code}, "redirect_uri": {testCallback}, "client_id": {clientID}, "code_verifier": {verifier}})
+	if status != 200 {
+		t.Fatal(status, tokens)
+	}
+	call := connectMCP(t, h, tokens["access_token"].(string), 26)
+
+	reviews, failed := call("list_leetgrinder_reviews", map[string]any{"days": 0})
+	if failed || reviews["total"] != float64(3) {
+		t.Fatal(reviews)
+	}
+	for _, r := range reviews["reviews"].([]any) {
+		if r := r.(map[string]any); r["suggestedMode"] != "full" || r["requiredMode"] != nil || r["spotCheck"] != nil {
+			t.Fatal("struggled problems suggest a full review", r)
+		}
+	}
+	for _, bad := range []map[string]any{
+		{"problem": "two-sum", "mode": "quick", "outcome": "solved", "timeComplexity": "O(n)", "spaceComplexity": "O(n)"},
+		{"problem": "two-sum", "mode": "fast", "outcome": "recalled"},
+		{"problem": "two-sum", "mode": "quick", "outcome": "recalled"},
+		{"problem": "two-sum", "mode": "quick", "outcome": "recalled", "missed": "time", "timeComplexity": "O(n)", "spaceComplexity": "O(n)"},
+		{"problem": "two-sum", "mode": "quick", "outcome": "recalled", "assisted": true, "timeComplexity": "O(n)", "spaceComplexity": "O(n)"},
+		{"problem": "two-sum", "outcome": "recalled", "minutes": 3, "timeComplexity": "O(n)", "spaceComplexity": "O(n)"},
+	} {
+		if out, failed := call("log_leetgrinder_attempt", bad); !failed {
+			t.Errorf("accepted %v: %v", bad, out)
+		}
+	}
+	logged, failed := call("log_leetgrinder_attempt", map[string]any{"problem": "two-sum", "mode": "quick", "outcome": "recalled", "notes": "hash map of complements", "timeComplexity": "O(n)", "spaceComplexity": "O(n)"})
+	if failed || logged["mode"] != "quick" || logged["outcome"] != "recalled" || logged["minutes"] != float64(3) || logged["quickReviewsToday"] != float64(1) || logged["kind"] != nil || logged["spotCheck"] != nil {
+		t.Fatal(logged)
+	}
+	// Partial defaults what was missed from the complexity check: two-sum's
+	// optimum is O(n) time and space, binary search's O(log n) and O(1).
+	logged, failed = call("log_leetgrinder_attempt", map[string]any{"problem": "binary-search", "mode": "quick", "outcome": "partial", "timeComplexity": "O(log n)", "spaceComplexity": "O(n)"})
+	if failed || logged["missed"] != "space" {
+		t.Fatal(logged)
+	}
+	if logged, failed = call("log_leetgrinder_attempt", map[string]any{"problem": "valid-anagram", "mode": "quick", "outcome": "forgot"}); failed {
+		t.Fatal(logged)
+	}
+	if out, failed := call("log_leetgrinder_attempt", map[string]any{"problem": "valid-anagram", "mode": "quick", "outcome": "recalled", "timeComplexity": "O(n)", "spaceComplexity": "O(1)"}); !failed || !strings.Contains(out["error"].(string), "full re-solve") {
+		t.Fatal("forgot must block quick mode", out)
+	}
+	if out, failed := call("log_leetgrinder_attempt", map[string]any{"problem": "two-sum", "mode": "quick", "outcome": "recalled", "timeComplexity": "O(n)", "spaceComplexity": "O(n)"}); !failed || !strings.Contains(out["error"].(string), "not due") {
+		t.Fatal("recalled problem is no longer due", out)
+	}
+	state, _ := db.LeetgrinderState(ctx)
+	if i := slices.IndexFunc(state.Attempts, func(a leetgrinder.Attempt) bool { return a.ProblemSlug == "two-sum" && a.Quick() }); i < 0 || state.Attempts[i].Notes != "hash map of complements" || state.Attempts[i].Source != "mcp" {
+		t.Fatal("approach not saved to notes")
+	}
+	reviews, failed = call("list_leetgrinder_reviews", map[string]any{"days": 3})
+	if failed {
+		t.Fatal(reviews)
+	}
+	found := map[string]map[string]any{}
+	for _, r := range reviews["reviews"].([]any) {
+		found[r.(map[string]any)["slug"].(string)] = r.(map[string]any)
+	}
+	if r := found["valid-anagram"]; r == nil || r["requiredMode"] != "full" || r["suggestedMode"] != "full" || r["flagged"] != true {
+		t.Fatal("forgot review", r)
+	}
+	if r := found["binary-search"]; r == nil || r["requiredMode"] != nil || r["flagged"] != true || !strings.Contains(r["reason"].(string), "Space complexity missed in quick review") {
+		t.Fatal("partial review", r)
+	}
+	stats, failed := call("get_leetgrinder_stats", nil)
+	quick, _ := stats["quickReviews"].(map[string]any)
+	spot, _ := stats["spotChecks"].(map[string]any)
+	if failed || quick["count"] != float64(3) || quick["recallRate"] != 1.0/3 || spot["passed"] != float64(0) || spot["failed"] != float64(0) || spot["currentRate"] != float64(0) {
+		t.Fatal(stats)
+	}
+	today, failed := call("get_leetgrinder_today", nil)
+	if failed || today["done"].(map[string]any)["quick"] != float64(3) || today["done"].(map[string]any)["review"] != float64(0) {
+		t.Fatal(today)
 	}
 }

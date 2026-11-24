@@ -12,7 +12,7 @@ import (
 	"github.com/michael-duren/career-strategy/internal/leetgrinder"
 )
 
-const leetgrinderAttemptColumns = "id,problem_slug,outcome,minutes,assisted,notes,created_at,revision,source,is_review,time_complexity,space_complexity,code,code_language,wants_review,approach,marked_at,claim,invariant,correctness_initially,after_step,therefore,termination"
+const leetgrinderAttemptColumns = "id,problem_slug,outcome,minutes,assisted,notes,created_at,revision,source,is_review,time_complexity,space_complexity,code,code_language,wants_review,approach,marked_at,claim,invariant,correctness_initially,after_step,therefore,termination,mode,missed,spot_check"
 
 func (s *Store) DeleteLeetgrinderAttempt(ctx context.Context, slug, id string) error {
 	parsed, err := uuid.Parse(id)
@@ -35,7 +35,7 @@ func (s *Store) DeleteLeetgrinderAttempt(ctx context.Context, slug, id string) e
 
 func scanLeetgrinderAttempt(row interface{ Scan(...any) error }) (leetgrinder.Attempt, error) {
 	var a leetgrinder.Attempt
-	err := row.Scan(&a.ID, &a.ProblemSlug, &a.Outcome, &a.Minutes, &a.Assisted, &a.Notes, &a.CreatedAt, &a.Revision, &a.Source, &a.IsReview, &a.TimeComplexity, &a.SpaceComplexity, &a.Code, &a.CodeLanguage, &a.WantsReview, &a.Approach, &a.MarkedAt, &a.Claim, &a.Invariant, &a.Initially, &a.AfterStep, &a.Therefore, &a.Termination)
+	err := row.Scan(&a.ID, &a.ProblemSlug, &a.Outcome, &a.Minutes, &a.Assisted, &a.Notes, &a.CreatedAt, &a.Revision, &a.Source, &a.IsReview, &a.TimeComplexity, &a.SpaceComplexity, &a.Code, &a.CodeLanguage, &a.WantsReview, &a.Approach, &a.MarkedAt, &a.Claim, &a.Invariant, &a.Initially, &a.AfterStep, &a.Therefore, &a.Termination, &a.Mode, &a.Missed, &a.SpotCheck)
 	return a, err
 }
 
@@ -252,11 +252,6 @@ func (s *Store) SaveLeetgrinderAttemptWithProblem(ctx context.Context, a leetgri
 	if err != nil || !leetgrinder.ValidSlug(a.ProblemSlug) || a.Minutes < 1 || a.Minutes > 240 || !utf8.ValidString(a.Notes) || strings.ContainsRune(a.Notes, 0) || utf8.RuneCountInString(a.Notes) > 2000 {
 		return leetgrinder.Attempt{}, ErrInvalid
 	}
-	switch a.Outcome {
-	case "solved", "struggled", "unfinished":
-	default:
-		return leetgrinder.Attempt{}, ErrInvalid
-	}
 	if a.NormalizeDetails() != nil {
 		return leetgrinder.Attempt{}, ErrInvalid
 	}
@@ -271,7 +266,9 @@ func (s *Store) SaveLeetgrinderAttemptWithProblem(ctx context.Context, a leetgri
 	}
 	a.ID = id.String()
 	if expectedRevision != "" {
-		if _, err = uuid.Parse(expectedRevision); err != nil {
+		// A quick review is a grade, not a solution to correct; delete it
+		// and review again instead.
+		if _, err = uuid.Parse(expectedRevision); err != nil || a.Quick() {
 			return leetgrinder.Attempt{}, ErrInvalid
 		}
 	}
@@ -291,10 +288,10 @@ func (s *Store) SaveLeetgrinderAttemptWithProblem(ctx context.Context, a leetgri
 	if expectedRevision == "" {
 		// is_review is decided here: the problem has an attempt on an earlier
 		// local day in the settings time zone.
-		_, err = tx.ExecContext(ctx, `INSERT INTO leetgrinder_attempts(id,problem_slug,outcome,minutes,assisted,notes,revision,source,is_review,time_complexity,space_complexity,code,code_language,wants_review,approach,claim,invariant,correctness_initially,after_step,therefore,termination)
+		_, err = tx.ExecContext(ctx, `INSERT INTO leetgrinder_attempts(id,problem_slug,outcome,minutes,assisted,notes,revision,source,is_review,time_complexity,space_complexity,code,code_language,wants_review,approach,claim,invariant,correctness_initially,after_step,therefore,termination,mode,missed,spot_check)
 VALUES($1,$2,$3,$4,$5,$6,$7,$8,EXISTS (SELECT 1 FROM leetgrinder_attempts b, leetgrinder_settings s WHERE s.id=1 AND b.problem_slug=$2
-	AND (b.created_at AT TIME ZONE s.timezone)::date < (clock_timestamp() AT TIME ZONE s.timezone)::date),$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20) ON CONFLICT(id) DO NOTHING`,
-			a.ID, a.ProblemSlug, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString(), a.Source, a.TimeComplexity, a.SpaceComplexity, a.Code, a.CodeLanguage, a.WantsReview, a.Approach, a.Claim, a.Invariant, a.Initially, a.AfterStep, a.Therefore, a.Termination)
+	AND (b.created_at AT TIME ZONE s.timezone)::date < (clock_timestamp() AT TIME ZONE s.timezone)::date),$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23) ON CONFLICT(id) DO NOTHING`,
+			a.ID, a.ProblemSlug, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString(), a.Source, a.TimeComplexity, a.SpaceComplexity, a.Code, a.CodeLanguage, a.WantsReview, a.Approach, a.Claim, a.Invariant, a.Initially, a.AfterStep, a.Therefore, a.Termination, a.Mode, a.Missed, a.SpotCheck)
 		if err != nil {
 			return leetgrinder.Attempt{}, err
 		}
@@ -304,7 +301,9 @@ VALUES($1,$2,$3,$4,$5,$6,$7,$8,EXISTS (SELECT 1 FROM leetgrinder_attempts b, lee
 		}
 		if saved.ProblemSlug != a.ProblemSlug || saved.Outcome != a.Outcome || saved.Minutes != a.Minutes || saved.Assisted != a.Assisted || saved.Notes != a.Notes || saved.Source != a.Source ||
 			saved.TimeComplexity != a.TimeComplexity || saved.SpaceComplexity != a.SpaceComplexity || saved.Code != a.Code || saved.CodeLanguage != a.CodeLanguage ||
-			saved.WantsReview != a.WantsReview || saved.Approach != a.Approach || saved.Correctness != a.Correctness {
+			saved.WantsReview != a.WantsReview || saved.Approach != a.Approach || saved.Correctness != a.Correctness ||
+			saved.Mode != a.Mode || saved.Missed != a.Missed {
+			// A retry may pick a spot check differently; the first save holds.
 			return leetgrinder.Attempt{}, ErrConflict
 		}
 		return saved, tx.Commit()
@@ -314,7 +313,7 @@ VALUES($1,$2,$3,$4,$5,$6,$7,$8,EXISTS (SELECT 1 FROM leetgrinder_attempts b, lee
 	// when the correction makes the attempt flag its problem (a struggle or
 	// a mark, see Attempt.SelfFlagged) and it did not before.
 	saved, err := scanLeetgrinderAttempt(tx.QueryRowContext(ctx, `UPDATE leetgrinder_attempts SET outcome=$3,minutes=$4,assisted=$5,notes=$6,revision=$7,time_complexity=$9,space_complexity=$10,wants_review=$11,approach=$12,claim=$13,invariant=$14,correctness_initially=$15,after_step=$16,therefore=$17,termination=$18,
-	marked_at=CASE WHEN ($3<>'solved' OR $5 OR $11 OR $12='suboptimal') AND NOT (outcome<>'solved' OR assisted OR wants_review OR approach='suboptimal') THEN clock_timestamp() ELSE marked_at END WHERE id=$1 AND revision=$2 AND problem_slug=$8 RETURNING `+leetgrinderAttemptColumns, a.ID, expectedRevision, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString(), a.ProblemSlug, a.TimeComplexity, a.SpaceComplexity, a.WantsReview, a.Approach, a.Claim, a.Invariant, a.Initially, a.AfterStep, a.Therefore, a.Termination))
+	marked_at=CASE WHEN ($3<>'solved' OR $5 OR $11 OR $12='suboptimal') AND NOT (outcome<>'solved' OR assisted OR wants_review OR approach='suboptimal') THEN clock_timestamp() ELSE marked_at END WHERE id=$1 AND revision=$2 AND problem_slug=$8 AND mode='full' RETURNING `+leetgrinderAttemptColumns, a.ID, expectedRevision, a.Outcome, a.Minutes, a.Assisted, a.Notes, uuid.NewString(), a.ProblemSlug, a.TimeComplexity, a.SpaceComplexity, a.WantsReview, a.Approach, a.Claim, a.Invariant, a.Initially, a.AfterStep, a.Therefore, a.Termination))
 	if errors.Is(err, sql.ErrNoRows) {
 		return leetgrinder.Attempt{}, ErrConflict
 	}

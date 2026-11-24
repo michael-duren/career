@@ -14,12 +14,12 @@ import (
 	"github.com/michael-duren/career-strategy/internal/leetgrinder"
 )
 
-const leetgrinderSettingsColumns = "timezone,goal_new,goal_review,ntfy_url,ntfy_topic,ntfy_token_ciphertext,notifications,analysis_enabled,new_from_todos,revision"
+const leetgrinderSettingsColumns = "timezone,goal_new,goal_review,ntfy_url,ntfy_topic,ntfy_token_ciphertext,notifications,analysis_enabled,new_from_todos,spot_check_rate,revision"
 
 func scanLeetgrinderSettings(row interface{ Scan(...any) error }) (leetgrinder.Settings, error) {
 	var s leetgrinder.Settings
 	var notifications []byte
-	if err := row.Scan(&s.Timezone, &s.Goal.New, &s.Goal.Review, &s.NtfyURL, &s.NtfyTopic, &s.NtfyTokenCiphertext, &notifications, &s.AnalysisEnabled, &s.NewFromTodos, &s.Revision); err != nil {
+	if err := row.Scan(&s.Timezone, &s.Goal.New, &s.Goal.Review, &s.NtfyURL, &s.NtfyTopic, &s.NtfyTokenCiphertext, &notifications, &s.AnalysisEnabled, &s.NewFromTodos, &s.SpotCheckRate, &s.Revision); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return s, ErrNotFound
 		}
@@ -73,8 +73,8 @@ func (s *Store) UpdateLeetgrinderSettings(ctx context.Context, expectedRevision 
 	if len(next.NtfyTokenCiphertext) > 0 {
 		token = next.NtfyTokenCiphertext
 	}
-	saved, err := scanLeetgrinderSettings(tx.QueryRowContext(ctx, `UPDATE leetgrinder_settings SET timezone=$1,goal_new=$2,goal_review=$3,ntfy_url=$4,ntfy_topic=$5,ntfy_token_ciphertext=$6,notifications=$7,analysis_enabled=$8,new_from_todos=$9,revision=$10 WHERE id=1 RETURNING `+leetgrinderSettingsColumns,
-		next.Timezone, next.Goal.New, next.Goal.Review, next.NtfyURL, next.NtfyTopic, token, notifications, next.AnalysisEnabled, next.NewFromTodos, uuid.NewString()))
+	saved, err := scanLeetgrinderSettings(tx.QueryRowContext(ctx, `UPDATE leetgrinder_settings SET timezone=$1,goal_new=$2,goal_review=$3,ntfy_url=$4,ntfy_topic=$5,ntfy_token_ciphertext=$6,notifications=$7,analysis_enabled=$8,new_from_todos=$9,spot_check_rate=$10,revision=$11 WHERE id=1 RETURNING `+leetgrinderSettingsColumns,
+		next.Timezone, next.Goal.New, next.Goal.Review, next.NtfyURL, next.NtfyTopic, token, notifications, next.AnalysisEnabled, next.NewFromTodos, next.SpotCheckRate, uuid.NewString()))
 	if err != nil {
 		return leetgrinder.Settings{}, err
 	}

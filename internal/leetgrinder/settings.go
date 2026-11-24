@@ -42,11 +42,15 @@ type Settings struct {
 	// NewFromTodos picks each day's new problems from the oldest todos still
 	// to do. It defaults to off; todos and the goal work without it.
 	NewFromTodos bool
-	Revision     string
+	// SpotCheckRate is the share of recalled quick reviews, in percent from
+	// 0 to MaxSpotCheckRate, picked for a full re-solve at their next
+	// review. Failing spot checks raise it for a while (see SpotChecks).
+	SpotCheckRate int
+	Revision      string
 }
 
 func DefaultSettings() Settings {
-	return Settings{Timezone: DefaultTimezone, Goal: DefaultGoal, NtfyURL: DefaultNtfyURL, Notifications: map[string]NotificationPref{}, AnalysisEnabled: true}
+	return Settings{Timezone: DefaultTimezone, Goal: DefaultGoal, NtfyURL: DefaultNtfyURL, Notifications: map[string]NotificationPref{}, AnalysisEnabled: true, SpotCheckRate: DefaultSpotCheckRate}
 }
 
 // LoadTimezone accepts IANA names only; "Local" would depend on the host.
@@ -84,6 +88,9 @@ func (s Settings) Validate() error {
 	}
 	if err := s.Goal.Validate(); err != nil {
 		return err
+	}
+	if s.SpotCheckRate < 0 || s.SpotCheckRate > MaxSpotCheckRate {
+		return errors.New("spot-check rate must be 0 to 25%")
 	}
 	if u, err := url.Parse(s.NtfyURL); err != nil || u.Host == "" || (u.Scheme != "http" && u.Scheme != "https") || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
 		return errors.New("ntfy server must be an absolute http(s) URL")

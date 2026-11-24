@@ -78,7 +78,8 @@ login blocks the connector.
   filter; `limit` and `cursor` page. With any of these, each list reports
   `matchingCount` and, while more remain, `nextCursor` (`individualMatchingCount` and
   `individualNextCursor` for individual problems). Without them the output is unchanged.
-- `get_leetgrinder_today`: today's goal and progress (new, review, bonus, practice), whether
+- `get_leetgrinder_today`: today's goal and progress (new, review, bonus, practice, and
+  `quick`, the problems quick-reviewed today, which do not count toward the goal), whether
   it is met, the streak, today's review picks with reason and recall, today's new picks
   from todos when that option is on (`newPicksFailed` is true when picking them failed this
   time; it is retried on the next access), and `alsoDue`, the count of other reviews due
@@ -88,11 +89,17 @@ login blocks the connector.
   other reviews due by the end of today (flagged first, lowest recall, most overdue), then
   those due within `days` (0-30, default 7; 0 lists only today's), soonest first, up to
   `limit` (1-100, default 30). Each has its due date, `due`, recall, review reason,
-  `flagged`, last outcome, `todaysPick` and `attemptedToday`; `total` counts them all.
+  `flagged`, last outcome and `lastMode`, `todaysPick` and `attemptedToday`; `total` counts
+  them all. `suggestedMode` is a hint: `full` when a full attempt is required or the last
+  full attempt was struggled or unfinished, else `quick`. `requiredMode: "full"` appears
+  when only a full attempt may review the problem (a forgotten quick review, or a spot
+  check), and `spotCheck: true` on a spot check, which is listed only once it is due.
 - `get_leetgrinder_stats`: per-topic weakness (weakest recall first; problems, solved,
   struggle rate, recall, due), attempted and solved per difficulty, and `weeks` (1-26,
   default 12) of weekly trends: problems solved, independent-solve rate, average minutes
-  by difficulty and complexity-check accuracy. With `create_leetgrinder_todo_set` this
+  by difficulty, complexity-check accuracy and quick reviews; `quickReviews: {count,
+  recallRate}` (recallRate left out with none) and `spotChecks: {passed, failed,
+  currentRate}`. With `create_leetgrinder_todo_set` this
   supports requests such as "build me a two-week set for my weakest topics".
 
 - `get_weekly_schedule`: one week (Monday to Sunday) of the weekly scheduler for any
@@ -186,6 +193,15 @@ Write tools (need **Allow read and edit**):
   tool generates one when omitted, so Claude should pass its own); the same `id` with
   different values is refused. A problem whose LeetCode details are not known yet is
   logged with a `warning`, in case the slug is a typo, including on a retry. `historyUrl` is the problem's page in the app.
+  `mode` is `full` (default) or `quick`. A quick review takes `outcome` recalled, partial
+  or forgot, the recalled approach in `notes`, `timeComplexity` and `spaceComplexity`
+  (required unless forgot), `minutes` (default 3) and, for partial, `missed` (time,
+  space, both or detail; by default what the complexity check against the optimum found,
+  else detail); `assisted`, code, `wantsReview`, `approach` and correctness answers are
+  refused. It is refused for a problem that is not due or flagged, or that needs a full
+  attempt (a forgotten quick review or a due spot check). The response has `mode`,
+  `missed` when set, and `quickReviewsToday` instead of `kind`; it never says whether the
+  review was picked for a spot check.
 
 - Weekly schedule writes take the `revision` from `get_weekly_schedule` and return the
   updated week; a stale revision is rejected. They go through the same scheduler rules as
