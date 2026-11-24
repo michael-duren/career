@@ -192,12 +192,17 @@ Write tools (need **Allow read and edit**):
   the website: planning changes check Google availability fresh, and overlaps, day
   windows and goal eligibility are validated. Times accept RFC 3339 or a local
   `YYYY-MM-DDTHH:MM` in the schedule time zone.
-  - `save_schedule_session`: create or edit a one-off future session. Assign `goalId`
-    (optional `stepId`, or `newStepTitle` to add a subgoal) or a `title` for a fixed
-    commitment such as lunch. Editing a recurring occurrence changes that date only.
-  - `remove_schedule_session`: cancel a session that has not started. It stays listed with
-    `state: canceled`. `scope: "future"` also ends its rule from that occurrence. An
-    unplanned log is deleted; other recorded work is kept.
+  - `save_schedule_session`: create a one-off future session, or edit any existing
+    session's plan, past ones included. Assign `goalId` (optional `stepId`, or
+    `newStepTitle` to add a subgoal) or a `title` for a fixed commitment such as lunch.
+    Editing a recurring occurrence changes that date only. A checked-off or skipped
+    session keeps that outcome at its new time, unless it moves to a later day or off a
+    goal; explicit recorded times are edited with `record_schedule_actual`.
+  - `remove_schedule_session`: cancel a session, past or future. It stays listed with
+    `state: canceled` and any check-off or skip is cleared. `scope: "future"` also ends
+    its rule from that occurrence (from today for a past one, keeping the occurrences in
+    between as history). An unplanned log is
+    deleted; sessions with explicit recorded times are kept.
   - `save_schedule_rule`: create or change a weekly rule (`weekday`, `localStart`,
     `durationMinutes`, `effectiveFrom`, optional `effectiveTo`). A change with `id` ends
     the old rule the day before `effectiveFrom` and starts a replacement with a new ID.

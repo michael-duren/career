@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
-import { mondayOf, schedulerRequest, SchedulerError, todaysTodos, weekSchema, zonedDate, type SchedulerSession, type SchedulerWeek } from '../lib/scheduler';
+import { mondayOf, schedulerRequest, SchedulerError, earlierUnchecked, todaysTodos, weekSchema, zonedDate, type SchedulerSession, type SchedulerWeek } from '../lib/scheduler';
 import { localDate } from '../lib/workspace';
 
 type Today = { week: SchedulerWeek; today: string };
@@ -34,6 +34,8 @@ export function HomeHub() {
   const [data, setData] = useState<Today>();
   const [error, setError] = useState('');
   const [pending, setPending] = useState<string>();
+  // Earlier sessions checked off here stay listed so a mistaken click can be undone.
+  const [touched, setTouched] = useState<Set<string>>(() => new Set());
   const latest = useRef(0);
   const reload = useCallback(() => {
     const request = ++latest.current;
@@ -52,6 +54,7 @@ export function HomeHub() {
   async function toggle(session: SchedulerSession) {
     if (!data) return;
     setPending(session.id); setError('');
+    setTouched(current => new Set(current).add(session.id));
     const done = isDone(session);
     const body = (week: SchedulerWeek) => done
       ? { revision: week.revision, week: week.week, action: 'clearActual', id: session.id }
@@ -78,10 +81,12 @@ export function HomeHub() {
   }
 
   const todos = data ? todaysTodos(data.week, data.today) : [];
+  const earlier = data ? earlierUnchecked(data.week, data.today, touched) : [];
   const doneCount = todos.filter(isDone).length;
   const zone = data?.week.settings.timeZone;
   const clock = (instant: string) => new Date(instant).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: zone });
   const heading = data ? new Date(`${data.today}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' }) : 'Today';
+  const row = (session: SchedulerSession, showDay = false) => <TodoRow key={session.id} session={session} clock={clock} showDay={showDay} pending={pending} onToggle={() => void toggle(session)} />;
 
   return <div className="mx-auto max-w-2xl space-y-6">
     <header className="flex flex-wrap items-baseline justify-between gap-2">
@@ -94,25 +99,30 @@ export function HomeHub() {
     {error && <p role="alert" className="text-red-300">{error}</p>}
     {!data ? !error && <p role="status" className="text-zinc-400">Loading today…</p>
       : todos.length === 0 ? <p className="text-zinc-400">Nothing scheduled today. <a className="text-blue-400 underline" href="/weekly-scheduler">Plan in the weekly scheduler.</a></p>
-      : <ul className="divide-y divide-zinc-800 rounded-xl border border-zinc-800 bg-zinc-900" aria-label="Today's todos">
-        {todos.map(session => {
-          const done = isDone(session);
-          // Explicit times were recorded in the scheduler; only checked-off sessions can be unchecked here.
-          const recorded = session.actual?.status === 'explicit';
-          const title = session.assignment.goalTitle && session.assignment.title !== session.assignment.goalTitle ? `${session.assignment.goalTitle} › ${session.assignment.title}` : session.assignment.title;
-          return <li key={session.id}>
-            <label className={`flex ${recorded ? '' : 'cursor-pointer'} items-center gap-4 px-4 py-3 hover:bg-zinc-800/50 ${pending === session.id ? 'opacity-60' : ''}`}>
-              <input type="checkbox" className="peer sr-only" checked={done} disabled={pending !== undefined || recorded} onChange={() => void toggle(session)} />
-              <span aria-hidden className={`flex size-6 shrink-0 items-center justify-center rounded-md border-2 peer-focus-visible:ring-2 peer-focus-visible:ring-blue-500 ${done ? 'border-transparent' : 'border-zinc-600'}`} style={done ? { background: session.assignment.color } : { borderColor: session.assignment.color }}>
-                {done && <Check className="size-4 text-zinc-950" strokeWidth={3} />}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className={`block ${done ? 'text-zinc-500 line-through' : 'text-zinc-100'}`}>{title}</span>
-                <span className="block text-sm text-zinc-500">{clock(session.plan!.start)} – {clock(session.plan!.end)}{session.actual?.status === 'skipped' ? ' · skipped' : recorded ? ' · recorded in scheduler' : ''}</span>
-              </span>
-            </label>
-          </li>;
-        })}
-      </ul>}
+      : <ul className="divide-y divide-zinc-800 rounded-xl border border-zinc-800 bg-zinc-900" aria-label="Today's todos">{todos.map(session => row(session))}</ul>}
+    {earlier.length > 0 && <section className="space-y-2" aria-labelledby="earlier-heading">
+      <h2 id="earlier-heading" className="text-sm font-medium text-amber-300">Not checked off earlier this week</h2>
+      <ul className="divide-y divide-zinc-800 rounded-xl border border-zinc-800 bg-zinc-900" aria-label="Earlier unchecked todos">{earlier.map(session => row(session, true))}</ul>
+    </section>}
   </div>;
+}
+
+function TodoRow({ session, clock, showDay, pending, onToggle }: { session: SchedulerSession; clock: (instant: string) => string; showDay: boolean; pending?: string; onToggle: () => void }) {
+  const done = isDone(session);
+  // Explicit times were recorded in the scheduler; only checked-off sessions can be unchecked here.
+  const recorded = session.actual?.status === 'explicit';
+  const title = session.assignment.goalTitle && session.assignment.title !== session.assignment.goalTitle ? `${session.assignment.goalTitle} › ${session.assignment.title}` : session.assignment.title;
+  const day = showDay ? `${new Date(`${session.date}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' })} · ` : '';
+  return <li>
+    <label className={`flex ${recorded ? '' : 'cursor-pointer'} items-center gap-4 px-4 py-3 hover:bg-zinc-800/50 ${pending === session.id ? 'opacity-60' : ''}`}>
+      <input type="checkbox" className="peer sr-only" checked={done} disabled={pending !== undefined || recorded} onChange={onToggle} />
+      <span aria-hidden className={`flex size-6 shrink-0 items-center justify-center rounded-md border-2 peer-focus-visible:ring-2 peer-focus-visible:ring-blue-500 ${done ? 'border-transparent' : 'border-zinc-600'}`} style={done ? { background: session.assignment.color } : { borderColor: session.assignment.color }}>
+        {done && <Check className="size-4 text-zinc-950" strokeWidth={3} />}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className={`block ${done ? 'text-zinc-500 line-through' : 'text-zinc-100'}`}>{title}</span>
+        <span className="block text-sm text-zinc-500">{day}{clock(session.plan!.start)} – {clock(session.plan!.end)}{session.actual?.status === 'skipped' ? ' · skipped' : recorded ? ' · recorded in scheduler' : ''}</span>
+      </span>
+    </label>
+  </li>;
 }

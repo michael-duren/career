@@ -111,7 +111,7 @@ func (s *Server) addSchedulerTools(server *mcp.Server) {
 		return nil, out, nil
 	})
 	mcp.AddTool(server, &mcp.Tool{
-		Name: "save_schedule_session", Description: "Create or edit a one-off planned session that starts in the future. Assign it to a goal (optionally a subgoal, or a new subgoal via newStepTitle) or give a title for a fixed commitment. Editing an occurrence of a recurring rule changes that date only; use save_schedule_rule for the rule. Rejected when it overlaps other plans or busy time, or falls outside the day window. Requires edit access.",
+		Name: "save_schedule_session", Description: "Create a one-off planned session that starts in the future, or edit an existing session's plan at any time, past ones included (a checked-off or skipped session keeps that outcome at its new time unless moved to a later day or off a goal; sessions with explicit recorded times are edited with record_schedule_actual). Assign it to a goal (optionally a subgoal, or a new subgoal via newStepTitle) or give a title for a fixed commitment. Editing an occurrence of a recurring rule changes that date only; use save_schedule_rule for the rule. Rejected when it overlaps other plans or busy time, or falls outside the day window. Requires edit access.",
 		Annotations: &mcp.ToolAnnotations{Title: "Save schedule session", DestructiveHint: new(bool), OpenWorldHint: new(bool)},
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in saveScheduleSessionInput) (*mcp.CallToolResult, any, error) {
 		if !canWrite(req) {
@@ -137,7 +137,7 @@ func (s *Server) addSchedulerTools(server *mcp.Server) {
 		return s.scheduleMutate(ctx, m)
 	})
 	mcp.AddTool(server, &mcp.Tool{
-		Name: "remove_schedule_session", Description: "Cancel a session that has not started; it stays listed with state=canceled so the date keeps no plan. scope=future also ends its recurring rule from this occurrence on. A recorded unplanned log is deleted; other recorded work is kept (use record_schedule_actual with status=skipped instead). Requires edit access.",
+		Name: "remove_schedule_session", Description: "Cancel a session, past or future; it stays listed with state=canceled so the date keeps no plan, and a check-off or skip on it is cleared. scope=future also ends its recurring rule from this occurrence on (from today for a past occurrence). A recorded unplanned log is deleted; sessions with explicit recorded times are kept (use record_schedule_actual with status=skipped instead). Requires edit access.",
 		Annotations: &mcp.ToolAnnotations{Title: "Remove schedule session", DestructiveHint: &deleteIsDestructive, OpenWorldHint: new(bool)},
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in removeScheduleSessionInput) (*mcp.CallToolResult, any, error) {
 		if !canWrite(req) {

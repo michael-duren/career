@@ -800,3 +800,124 @@ func TestGoalHoursTotalsRecordedWorkByWeek(t *testing.T) {
 		t.Fatalf("goal hours: %+v", got)
 	}
 }
+func TestPastSessionsStayEditable(t *testing.T) {
+	d := testDocument()
+	d.Settings.TimeZone = "UTC"
+	now := instant("2026-09-30T12:00:00Z")
+	plan := func(start, end string) *Plan { p := Plan{Start: instant(start), End: instant(end)}; return &p }
+	d.Sessions["past"] = Session{ID: "past", Date: "2026-09-28", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: plan("2026-09-28T06:00:00Z", "2026-09-28T07:00:00Z")}
+	moved := d.Sessions["past"]
+	moved.Plan = plan("2026-09-28T09:00:00Z", "2026-09-28T10:30:00Z")
+	if e := d.Apply(Mutation{Action: "session", ID: "past", Session: &moved}, now, nil); e != nil {
+		t.Fatalf("past plan edit rejected: %v", e)
+	}
+	if got := d.Sessions["past"]; got.Plan.Start != instant("2026-09-28T09:00:00Z") || got.Actual != nil || got.State != "accepted" {
+		t.Fatalf("past plan edit: %+v", got)
+	}
+
+	// Moving a checked-off session moves its counted time with it.
+	if e := d.Apply(Mutation{Action: "actual", ID: "past", Actual: &Actual{Status: "assumed"}}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	moved = d.Sessions["past"]
+	moved.Plan = plan("2026-09-28T11:00:00Z", "2026-09-28T12:00:00Z")
+	if e := d.Apply(Mutation{Action: "session", ID: "past", Session: &moved}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	if a := d.Sessions["past"].Actual; a == nil || a.Status != "assumed" || a.Start != instant("2026-09-28T11:00:00Z") || a.End != instant("2026-09-28T12:00:00Z") {
+		t.Fatalf("checked-off actual did not follow the plan: %+v", a)
+	}
+
+	// Explicit recorded times are still edited as actual work, not as a plan.
+	explicit := Actual{Status: "explicit", Date: "2026-09-28", Start: instant("2026-09-28T11:00:00Z"), End: instant("2026-09-28T11:45:00Z")}
+	if e := d.Apply(Mutation{Action: "actual", ID: "past", Actual: &explicit}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	moved = d.Sessions["past"]
+	moved.Plan = plan("2026-09-28T13:00:00Z", "2026-09-28T14:00:00Z")
+	if e := d.Apply(Mutation{Action: "session", ID: "past", Session: &moved}, now, nil); e == nil {
+		t.Fatal("plan edit overwrote explicit recorded work")
+	}
+
+	// New sessions still can't be planned in the past.
+	fresh := Session{Date: "2026-09-29", Assignment: Assignment{GoalID: "goal"}, Plan: plan("2026-09-29T06:00:00Z", "2026-09-29T07:00:00Z")}
+	if e := d.Apply(Mutation{Action: "session", Session: &fresh}, now, nil); e == nil {
+		t.Fatal("new past plan accepted")
+	}
+}
+func TestPastSessionsCanBeRemoved(t *testing.T) {
+	d := testDocument()
+	d.Settings.TimeZone = "UTC"
+	now := instant("2026-09-30T12:00:00Z")
+	d.Sessions["past"] = Session{ID: "past", Date: "2026-09-28", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-09-28T06:00:00Z"), End: instant("2026-09-28T07:00:00Z")}, Actual: &Actual{Status: "assumed", Date: "2026-09-28", Start: instant("2026-09-28T06:00:00Z"), End: instant("2026-09-28T07:00:00Z")}}
+	if e := d.Apply(Mutation{Action: "cancel", ID: "past"}, now, nil); e != nil {
+		t.Fatalf("past checked-off session could not be removed: %v", e)
+	}
+	if s := d.Sessions["past"]; s.State != "canceled" || s.Actual != nil {
+		t.Fatalf("removed session: %+v", s)
+	}
+	if sum := d.Week("2026-09-28", now, nil).Goals[0]; sum.ActualHours != 0 {
+		t.Fatalf("removed session still counts: %+v", sum)
+	}
+
+	// Removing a past occurrence "and future" cancels it and stops the rule from today.
+	d.Rules["r"] = Rule{ID: "r", Weekday: 1, LocalStart: "09:00", DurationMinutes: 60, EffectiveFrom: "2026-09-21", Assignment: Assignment{GoalID: "goal"}}
+	d.Sessions["r:2026-09-28"] = Session{ID: "r:2026-09-28", RuleID: "r", OccurrenceDate: "2026-09-28", Date: "2026-09-28", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-09-28T09:00:00Z"), End: instant("2026-09-28T10:00:00Z")}}
+	d.Sessions["r:2026-10-05"] = Session{ID: "r:2026-10-05", RuleID: "r", OccurrenceDate: "2026-10-05", Date: "2026-10-05", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-10-05T09:00:00Z"), End: instant("2026-10-05T10:00:00Z")}}
+	if e := d.Apply(Mutation{Action: "cancel", ID: "r:2026-09-28", Scope: "future"}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	if d.Sessions["r:2026-09-28"].State != "canceled" {
+		t.Fatalf("past occurrence not removed: %+v", d.Sessions["r:2026-09-28"])
+	}
+	if _, ok := d.Sessions["r:2026-10-05"]; ok {
+		t.Fatal("future occurrence kept")
+	}
+	if d.Rules["r"].EffectiveTo != "2026-09-29" {
+		t.Fatalf("rule should end before today: %+v", d.Rules["r"])
+	}
+}
+func TestMovingCheckedOffSessionEdgeCases(t *testing.T) {
+	setup := func() Document {
+		d := testDocument()
+		d.Settings.TimeZone = "UTC"
+		d.Sessions["s"] = Session{ID: "s", Date: "2026-09-28", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-09-28T06:00:00Z"), End: instant("2026-09-28T07:00:00Z")}, Actual: &Actual{Status: "assumed", Date: "2026-09-28", Start: instant("2026-09-28T06:00:00Z"), End: instant("2026-09-28T07:00:00Z")}}
+		return d
+	}
+	now := instant("2026-09-30T12:00:00Z")
+
+	// Rescheduling to a later day makes it a todo again instead of future "done" work.
+	d := setup()
+	moved := d.Sessions["s"]
+	moved.Date = "2026-10-01"
+	moved.Plan = &Plan{Start: instant("2026-10-01T06:00:00Z"), End: instant("2026-10-01T07:00:00Z")}
+	if e := d.Apply(Mutation{Action: "session", ID: "s", Session: &moved}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	if d.Sessions["s"].Actual != nil {
+		t.Fatalf("check-off carried into the future: %+v", d.Sessions["s"].Actual)
+	}
+
+	// Reassigning to a non-goal commitment drops the check-off; actual work needs a goal.
+	d = setup()
+	moved = d.Sessions["s"]
+	moved.Assignment = Assignment{Title: "Lunch"}
+	if e := d.Apply(Mutation{Action: "session", ID: "s", Session: &moved}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	if d.Sessions["s"].Actual != nil {
+		t.Fatal("non-goal session kept a check-off")
+	}
+
+	// A kept check-off can't land on other recorded work.
+	d = setup()
+	d.Sessions["work"] = Session{ID: "work", Date: "2026-09-28", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Actual: &Actual{Status: "explicit", Date: "2026-09-28", Start: instant("2026-09-28T09:00:00Z"), End: instant("2026-09-28T10:00:00Z")}}
+	moved = d.Sessions["s"]
+	moved.Plan = &Plan{Start: instant("2026-09-28T09:30:00Z"), End: instant("2026-09-28T10:30:00Z")}
+	if e := d.Apply(Mutation{Action: "session", ID: "s", Session: &moved}, now, nil); e == nil {
+		t.Fatal("moved check-off overlapping recorded work was accepted")
+	}
+	if d.Sessions["s"].Plan.Start != instant("2026-09-28T06:00:00Z") {
+		t.Fatal("rejected move changed the session")
+	}
+}

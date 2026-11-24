@@ -11,9 +11,10 @@ function mondayOf(date: string) {
   return day.toISOString().slice(0, 10);
 }
 const plan = (hour: number) => ({ start: `${today}T${String(hour).padStart(2, '0')}:00:00Z`, end: `${today}T${String(hour + 1).padStart(2, '0')}:00:00Z` });
-const session = (id: string, title: string, hour: number) => ({
-  id, date: today, assignment: { goalId: 'goal', title, goalTitle: 'Systems', color: '#86efac' },
-  plan: plan(hour), actual: null as null | Record<string, string>, state: 'accepted', conflictIds: [], exception: false,
+const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+const session = (id: string, title: string, hour: number, date = today) => ({
+  id, date, assignment: { goalId: 'goal', title, goalTitle: 'Systems', color: '#86efac' },
+  plan: date === today ? plan(hour) : { start: `${date}T${String(hour).padStart(2, '0')}:00:00Z`, end: `${date}T${String(hour + 1).padStart(2, '0')}:00:00Z` }, actual: null as null | Record<string, string>, state: 'accepted', conflictIds: [], exception: false,
 });
 
 async function mockWeek(page: Page) {
@@ -21,7 +22,8 @@ async function mockWeek(page: Page) {
     revision: 'r1', week: mondayOf(today), days: [], goals: [], rules: [], busy: [], warnings: [], warningTargets: [], remainingCapacityHours: 0,
     settings: { timeZone: 'UTC', defaultDay: { start: '06:00', end: '22:00', nextDay: false }, weekdays: {}, dates: {} },
     sessions: [session('late', 'Read chapter 4', 15), session('early', 'Practice problems', 9), { ...session('lunch', 'Lunch', 12), assignment: { title: 'Lunch' } },
-      { ...session('logged', 'Logged in scheduler', 7), actual: { status: 'explicit', date: today, start: `${today}T07:15:00Z`, end: `${today}T08:00:00Z` } }],
+      { ...session('logged', 'Logged in scheduler', 7), actual: { status: 'explicit', date: today, start: `${today}T07:15:00Z`, end: `${today}T08:00:00Z` } },
+      session('missed', 'Missed review', 10, yesterday)],
   };
   const writes: Record<string, unknown>[] = [];
   await page.route('**/api/scheduler/week?*', route => route.fulfill({ json: state }));
@@ -79,4 +81,19 @@ test('old journal, logs and personal journal URLs open their journal tabs', asyn
   await page.goto('/?tab=journal');
   await expect(page).toHaveURL(/\/journal$/);
   await expect(page.getByRole('tab', { name: 'Work' })).toHaveAttribute('aria-selected', 'true');
+});
+
+test('home lists unchecked sessions from earlier in the week and keeps them after checking', async ({ page }) => {
+  const writes = await mockWeek(page);
+  await page.goto('/');
+  const earlier = page.getByRole('list', { name: 'Earlier unchecked todos' });
+  await expect(earlier.getByRole('listitem')).toHaveCount(1);
+  await expect(earlier).toContainText('Systems › Missed review');
+  await earlier.getByText('Systems › Missed review').click();
+  await expect(earlier.getByRole('checkbox')).toBeChecked();
+  expect(writes[0]).toMatchObject({ action: 'actual', id: 'missed', actual: { status: 'assumed', date: yesterday } });
+  // Still listed, so a mistaken check can be undone right away.
+  await earlier.getByText('Systems › Missed review').click();
+  await expect(earlier.getByRole('checkbox')).not.toBeChecked();
+  expect(writes[1]).toMatchObject({ action: 'clearActual', id: 'missed' });
 });

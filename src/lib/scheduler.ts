@@ -99,6 +99,18 @@ export function todaysTodos(week: SchedulerWeek, today: string): SchedulerSessio
     .filter(session => session.date === today && session.state !== 'canceled' && session.plan && session.assignment.goalId)
     .sort((a, b) => Date.parse(a.plan!.start) - Date.parse(b.plan!.start));
 }
+/** This week's planned goal sessions before today that were neither checked off nor skipped, plus any in `keep`. */
+export function earlierUnchecked(week: SchedulerWeek, today: string, keep: ReadonlySet<string> = new Set()): SchedulerSession[] {
+  return week.sessions
+    .filter(session => session.date < today && session.state !== 'canceled' && session.plan && session.assignment.goalId && (!session.actual || keep.has(session.id)))
+    .sort((a, b) => Date.parse(a.plan!.start) - Date.parse(b.plan!.start));
+}
+/** Explicit start/end times are real recorded work, edited as actual work rather than as a plan. */
+export const hasRecordedTimes = (session: SchedulerSession) => session.actual?.status === 'explicit';
+/** Any planned session without explicit recorded times edits as a plan, past or future. */
+export const editsAsPlan = (session: SchedulerSession) => Boolean(session.plan) && !hasRecordedTimes(session);
+/** Sessions holding explicit recorded times are kept (skip them instead), except an unplanned one-off log. */
+export const canRemove = (session: SchedulerSession) => !hasRecordedTimes(session) || (!session.plan && !session.ruleId);
 export class SchedulerError extends Error {
   current?: SchedulerWeek;
   conflictIds: string[];

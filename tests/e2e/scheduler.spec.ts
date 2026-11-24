@@ -1176,7 +1176,7 @@ test('request coordination rejects a delayed read after a newer save and clears 
   await expect(page.locator('.scheduler-warnings')).toContainText('Newly saved state');
 });
 
-test('visible local refresh updates worker actuals, clock editability and reconnect health without availability retries', async ({ page, request, baseURL }) => {
+test('visible local refresh updates worker actuals and reconnect health without availability retries', async ({ page, request, baseURL }) => {
   const goal = await createGoal(request, baseURL!, { title: 'Clock commitment', startDate: '2030-01-07', endDate: '2030-12-31' });
   const state = await controlledWeek(page, request);
   await page.clock.setSystemTime(new Date('2030-01-07T10:59:30Z'));
@@ -1188,12 +1188,13 @@ test('visible local refresh updates worker actuals, clock editability and reconn
   await page.reload();
   await expect(page.getByRole('button', { name: 'Delete Clock commitment', exact: true })).toBeVisible();
   await page.clock.fastForward(31000);
-  await expect(page.getByRole('button', { name: 'Delete Clock commitment', exact: true })).toHaveCount(0);
+  // Starting no longer locks a session: it stays deletable, and the refreshed check-off can be undone.
+  await expect(page.getByRole('button', { name: 'Delete Clock commitment', exact: true })).toBeVisible();
+  await page.clock.fastForward(30000);
+  await expect(sessionFor(page, 'Clock commitment')).toContainText('assumed actual');
   await sessionFor(page, 'Clock commitment').locator('.scheduler-block-main').click();
   const clockDialog = page.getByRole('dialog', { name: 'Session editor' });
-  // Checking off as planned is allowed from the session's scheduled date, before it ends.
-  await expect(clockDialog.getByRole('button', { name: 'Restore as planned' })).toBeEnabled();
-  await page.clock.fastForward(30000);
+  await expect(clockDialog.getByRole('button', { name: 'Undo check-off' })).toBeEnabled();
   await clockDialog.getByRole('button', { name: 'Discard draft' }).click();
   await expect(sessionFor(page, 'Clock commitment')).toContainText('assumed actual');
   await expect(page.locator(`#scheduler-goal-${goal.id} dd`).nth(1)).toHaveText('0.01h');
@@ -1277,7 +1278,7 @@ test('failed drag after ordinary navigation opens its original week draft and sa
   await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', '2030-01-14');
 });
 
-test('an open plan draft locks its original plan at the start boundary and offers actual recording', async ({ page, request, baseURL }) => {
+test('an open plan draft stays editable past its start boundary and offers actual recording', async ({ page, request, baseURL }) => {
   const stepId = crypto.randomUUID();
   const goal = await createGoal(request, baseURL!, { steps: [{ id: stepId, title: 'Unsaved subgoal', done: false }], startDate: '2030-01-07', endDate: '2030-12-31', dailyHours: 0 });
   const state = await controlledWeek(page, request);
@@ -1295,11 +1296,11 @@ test('an open plan draft locks its original plan at the start boundary and offer
   const writes: { week: string; revision: string; action: string; session: { assignment: { goalId: string; title: string } }; actual: { start: string; end: string } }[] = [];
   await page.route('**/api/scheduler/mutate', async route => { const mutation = route.request().postDataJSON(); writes.push(mutation); await route.fulfill({ json: { ...state, sessions: [{ ...session, actual: mutation.actual }] } }); });
   await page.clock.fastForward(31000);
-  await expect(dialog.getByRole('button', { name: 'Save session', exact: true })).toBeDisabled();
-  await expect(dialog.getByRole('button', { name: 'Remove this session' })).toHaveCount(0);
-  await expect(dialog).toContainText('This session has started');
-  await dialog.evaluate(element => element.querySelector('form')!.requestSubmit());
-  expect(writes).toHaveLength(0);
+  // Started plans stay editable; recording exact times is offered alongside.
+  await expect(dialog.getByRole('button', { name: 'Save session', exact: true })).toBeEnabled();
+  await expect(dialog.getByRole('button', { name: 'Remove this session' })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Mark done', exact: true })).toBeEnabled();
+  await expect(dialog).not.toContainText('This session has started');
   await dialog.getByRole('button', { name: 'Record actual work', exact: true }).click();
   await expect(dialog.getByRole('heading', { name: 'Record actual work', exact: true })).toBeVisible();
   await expect(dialog).toContainText(`Actual work is assigned to ${goal.title}.`);
@@ -1318,6 +1319,41 @@ test('an open plan draft locks its original plan at the start boundary and offer
   await expect(dialog).toContainText('Original plan: 05:00–05:30');
   await expect(dialog.getByLabel('Start time', { exact: true })).toHaveValue('05:10');
   await expect(dialog.getByLabel('End time', { exact: true })).toHaveValue('05:40');
+});
+
+test('a past planned session can be moved, checked off and undone from the editor', async ({ page, request, baseURL }) => {
+  const goal = await createGoal(request, baseURL!, { startDate: '2030-01-07', endDate: '2030-12-31', dailyHours: 0 });
+  const state = await controlledWeek(page, request);
+  await page.clock.setSystemTime(new Date('2030-01-07T18:00:00Z'));
+  let session: Record<string, unknown> = { id: crypto.randomUUID(), date: state.week, assignment: { goalId: goal.id, title: goal.title }, state: 'accepted', plan: { start: '2030-01-07T11:00:00Z', end: '2030-01-07T11:30:00Z' }, actual: null, exception: false };
+  const writes: Record<string, any>[] = [];
+  await page.route('**/api/scheduler/week?*', route => route.fulfill({ json: { ...state, sessions: [session] } }));
+  await page.route('**/api/scheduler/mutate', async route => {
+    const mutation = route.request().postDataJSON();
+    writes.push(mutation);
+    if (mutation.action === 'session') session = { ...session, plan: mutation.session.plan };
+    if (mutation.action === 'actual') session = { ...session, actual: mutation.actual };
+    if (mutation.action === 'clearActual') session = { ...session, actual: null };
+    await route.fulfill({ json: { ...state, sessions: [session] } });
+  });
+  await page.reload();
+  const dialog = page.getByRole('dialog', { name: 'Session editor' });
+  await sessionFor(page, goal.title).locator('.scheduler-block-main').click();
+  await expect(dialog.getByRole('heading', { name: 'Edit planned session', exact: true })).toBeVisible();
+  await dialog.getByLabel('Start time', { exact: true }).fill('05:10');
+  await dialog.getByLabel('End time', { exact: true }).fill('05:40');
+  await dialog.getByRole('button', { name: 'Save session', exact: true }).click();
+  await expect(dialog).toBeHidden();
+  expect(writes[0]).toMatchObject({ action: 'session', id: session.id, session: { plan: { start: '2030-01-07T11:10:00.000Z', end: '2030-01-07T11:40:00.000Z' } } });
+
+  await sessionFor(page, goal.title).locator('.scheduler-block-main').click();
+  await dialog.getByRole('button', { name: 'Mark done', exact: true }).click();
+  await expect.poll(() => writes.length).toBe(2);
+  expect(writes[1]).toMatchObject({ action: 'actual', id: session.id, actual: { status: 'assumed' } });
+  await sessionFor(page, goal.title).locator('.scheduler-block-main').click();
+  await dialog.getByRole('button', { name: 'Undo check-off', exact: true }).click();
+  await expect.poll(() => writes.length).toBe(3);
+  expect(writes[2]).toMatchObject({ action: 'clearActual', id: session.id });
 });
 
 test('obsolete Google health errors cannot replace a newer successful status', async ({ page, request }) => {

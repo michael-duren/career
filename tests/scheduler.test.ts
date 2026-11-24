@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { addDays, mondayOf, snapMinutes, zonedDate, localInstant, localFields, clockLabel, displayClock, draftMutation, todaysTodos, weekSchema } from '../src/lib/scheduler.ts';
+import { addDays, mondayOf, snapMinutes, zonedDate, localInstant, localFields, clockLabel, displayClock, draftMutation, earlierUnchecked, todaysTodos, weekSchema } from '../src/lib/scheduler.ts';
 import { proposePlacement } from '../src/lib/scheduler-placement.ts';
 
 test('Monday weeks cross month/year and leap-day boundaries without browser timezone', () => {
@@ -164,6 +164,20 @@ test('proposal marks overlap but rejects invalid plan geometry and future actual
   const actual = proposePlacement({ kind: 'assignment', assignment, targetDate: '2026-10-01', startMinute: 570, durationMinutes: 60 }, week, new Date('2026-10-01T15:00:00Z'));
   assert.equal(actual.kind, 'invalid');
   if (actual.kind === 'invalid') assert.match(actual.message, /future/);
+});
+
+test('moving a past planned session stays a plan edit unless it holds explicit recorded times', () => {
+  const base = placementWeek('2026-10-05');
+  const planned = { id: 'past', date: '2026-10-05', assignment: { goalId: 'goal', title: 'Learn' }, plan: { start: '2026-10-05T14:00:00Z', end: '2026-10-05T15:00:00Z' }, actual: null, state: 'accepted', exception: false, conflictIds: [] };
+  const week = weekSchema.parse({ ...base, sessions: [planned] });
+  const later = new Date('2026-10-07T00:00:00Z');
+  const moved = proposePlacement({ kind: 'move', session: week.sessions[0], targetDate: '2026-10-05', startMinute: 570 }, week, later);
+  assert.equal(moved.kind, 'valid');
+  if (moved.kind === 'valid') assert.equal(moved.draft.mode, 'plan');
+  const recorded = weekSchema.parse({ ...base, sessions: [{ ...planned, actual: { status: 'explicit', date: '2026-10-05', start: '2026-10-05T14:00:00Z', end: '2026-10-05T15:00:00Z' } }] });
+  const asActual = proposePlacement({ kind: 'move', session: recorded.sessions[0], targetDate: '2026-10-05', startMinute: 570 }, recorded, later);
+  assert.equal(asActual.kind, 'valid');
+  if (asActual.kind === 'valid') assert.equal(asActual.draft.mode, 'actual');
 });
 
 test('actual placement allows outside-hours work and reports actual overlap', () => {
@@ -379,4 +393,7 @@ test("today's todos are the day's planned goal sessions in start order, done or 
     { ...session('unplanned', '2026-11-24', '2026-11-24T08:00:00Z'), plan: null, actual: { status: 'explicit', date: '2026-11-24', start: '2026-11-24T08:00:00Z', end: '2026-11-24T09:00:00Z' } },
   ] });
   assert.deepEqual(todaysTodos(week, '2026-11-24').map(s => s.id), ['early', 'late']);
+  // From tomorrow's view, only today's unchecked goal plans count as missed, plus kept ids.
+  assert.deepEqual(earlierUnchecked(week, '2026-11-25').map(s => s.id), ['late']);
+  assert.deepEqual(earlierUnchecked(week, '2026-11-25', new Set(['early'])).map(s => s.id), ['early', 'late']);
 });
