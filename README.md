@@ -20,7 +20,8 @@ Then open http://localhost:8080 and log in with `admin` / `password123`. See the
 
 The home page (`/`) is today's todo list: the goal sessions planned for today in the weekly
 scheduler. Nothing is completed automatically; checking an item records its planned time as
-done, and unchecking it clears that again.
+done, and unchecking it clears that again. Sessions from earlier in the week that were never
+checked off are listed underneath so they can still be checked.
 
 ### Goals: timeline and agent context
 

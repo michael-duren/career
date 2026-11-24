@@ -1,4 +1,4 @@
-import { addDays, clockLabel, localFields, localInstant, type Assignment, type SchedulerSession, type SchedulerWeek, type SessionDraft } from './scheduler.ts';
+import { addDays, clockLabel, editsAsPlan, localFields, localInstant, type Assignment, type SchedulerSession, type SchedulerWeek, type SessionDraft } from './scheduler.ts';
 
 export type PlacementInput =
   | { kind: 'assignment'; assignment: Assignment; targetDate: string; startMinute: number; durationMinutes: number }
@@ -39,10 +39,11 @@ export function proposePlacement(input: PlacementInput, week: SchedulerWeek, now
     }
     const startMs = Date.parse(start), endMs = Date.parse(end);
     if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return { kind: 'invalid', message: 'End must be after start.' };
-    const mode = session ? (!session.actual && session.plan && Date.parse(session.plan.start) > now.getTime() ? 'plan' : 'actual') : startMs > now.getTime() ? 'plan' : 'actual';
+    const mode = session ? (editsAsPlan(session) ? 'plan' : 'actual') : startMs > now.getTime() ? 'plan' : 'actual';
     if (mode === 'actual' && endMs > now.getTime()) return { kind: 'invalid', message: 'Actual work cannot end in the future.' };
     if (mode === 'plan') {
-      if (startMs <= now.getTime()) return { kind: 'invalid', message: 'Plans must start in the future.' };
+      // Existing sessions can be moved anywhere, past included; only new plans must start in the future.
+      if (!session && startMs <= now.getTime()) return { kind: 'invalid', message: 'Plans must start in the future.' };
       const day = week.days.find(value => value.date === date);
       if (!day?.valid) return { kind: 'invalid', message: day?.reason || 'This scheduling day has invalid boundaries.' };
       if (startMs < Date.parse(day.start) || endMs > Date.parse(day.end)) return { kind: 'invalid', message: 'Planned sessions must fit inside one scheduling day.' };

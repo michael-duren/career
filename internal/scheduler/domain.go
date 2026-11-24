@@ -606,12 +606,14 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 		if s.ID == "" {
 			s.ID = uuid.NewString()
 		}
+		// A checked-off or skipped session keeps that outcome when its plan moves.
+		var kept *Actual
 		if old, ok := d.Sessions[s.ID]; ok {
-			if old.Actual != nil {
+			if old.Actual != nil && (old.Actual.Status == "explicit" || old.Plan == nil) {
 				return fmt.Errorf("recorded actual work is preserved; edit actual time instead")
 			}
-			if old.Plan != nil && !old.Plan.Start.After(now) {
-				return fmt.Errorf("started plans are preserved; edit actual time")
+			if old.Actual != nil {
+				kept = old.Actual
 			}
 			s.RuleID = old.RuleID
 			s.OccurrenceDate = old.OccurrenceDate
@@ -622,9 +624,12 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 			s.RuleID = ""
 			s.OccurrenceDate = ""
 			s.Exception = false
+			if s.Plan == nil || !s.Plan.Start.After(now) {
+				return fmt.Errorf("plans must start in the future; record actual work for the past")
+			}
 		}
-		if s.Plan == nil || !s.Plan.Start.After(now) {
-			return fmt.Errorf("plans must start in the future; record actual work for the past")
+		if s.Plan == nil {
+			return fmt.Errorf("planned interval required")
 		}
 		a, e := d.assignment(s.Assignment, s.Date)
 		if e != nil {
@@ -638,16 +643,22 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 		if e = d.validateSession(s, busy); e != nil {
 			return e
 		}
+		if kept != nil {
+			a := Actual{Status: kept.Status, Date: s.Date, Start: s.Plan.Start, End: s.Plan.End}
+			if e = d.validateActual(s.ID, a); e != nil {
+				return e
+			}
+			g := d.Goals[s.Assignment.GoalID]
+			a.OutsideTimeline = !Eligible(g, a.Date)
+			s.Actual = &a
+		}
 		d.Sessions[s.ID] = s
 	case "cancel":
 		s, ok := d.Sessions[m.ID]
 		if !ok {
 			return fmt.Errorf("session not found")
 		}
-		if s.Plan != nil && !s.Plan.Start.After(now) {
-			return fmt.Errorf("started plans are preserved; skip actual instead")
-		}
-		if s.Actual != nil {
+		if s.Actual != nil && s.Actual.Status == "explicit" {
 			if s.Plan != nil || s.RuleID != "" {
 				return fmt.Errorf("recorded actual work is preserved; use skip instead")
 			}
@@ -656,7 +667,8 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 			delete(d.Sessions, m.ID)
 			return nil
 		}
-		if m.Scope == "future" && s.RuleID != "" {
+		started := s.Plan != nil && !s.Plan.Start.After(now)
+		if m.Scope == "future" && s.RuleID != "" && s.Actual == nil && !started {
 			occurrence := s.OccurrenceDate
 			if occurrence == "" {
 				occurrence = s.Date
@@ -664,6 +676,20 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 			d.endRule(s.RuleID, occurrence, now)
 			return nil
 		}
+		if m.Scope == "future" && s.RuleID != "" {
+			// endRule keeps started or checked-off occurrences as history, so
+			// remove this one explicitly and stop the rule from today on.
+			loc, _ := time.LoadLocation(d.Settings.TimeZone)
+			from := s.OccurrenceDate
+			if from == "" {
+				from = s.Date
+			}
+			if today := now.In(loc).Format(dateLayout); from < today {
+				from = today
+			}
+			d.endRule(s.RuleID, from, now)
+		}
+		s.Actual = nil
 		s.State = "canceled"
 		s.Exception = true
 		d.Sessions[m.ID] = s
