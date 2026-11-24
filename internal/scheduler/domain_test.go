@@ -921,3 +921,95 @@ func TestMovingCheckedOffSessionEdgeCases(t *testing.T) {
 		t.Fatal("rejected move changed the session")
 	}
 }
+func TestSkippedSessionKeepsOutcomeWhenMovedAndClearsWhenRemoved(t *testing.T) {
+	d := testDocument()
+	d.Settings.TimeZone = "UTC"
+	now := instant("2026-09-30T12:00:00Z")
+	d.Sessions["s"] = Session{ID: "s", Date: "2026-09-28", Assignment: Assignment{GoalID: "goal"}, State: "accepted", Plan: &Plan{Start: instant("2026-09-28T06:00:00Z"), End: instant("2026-09-28T07:00:00Z")}}
+	if e := d.Apply(Mutation{Action: "actual", ID: "s", Actual: &Actual{Status: "skipped"}}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	moved := d.Sessions["s"]
+	moved.Plan = &Plan{Start: instant("2026-09-28T09:00:00Z"), End: instant("2026-09-28T10:30:00Z")}
+	if e := d.Apply(Mutation{Action: "session", ID: "s", Session: &moved}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	a := d.Sessions["s"].Actual
+	if a == nil || a.Status != "skipped" || a.Start != instant("2026-09-28T09:00:00Z") || a.End != instant("2026-09-28T10:30:00Z") {
+		t.Fatalf("skip did not follow the plan: %+v", a)
+	}
+	if sum := d.Week("2026-09-28", now, nil).Goals[0]; sum.ActualHours != 0 || sum.RemainingScheduledHours != 0 {
+		t.Fatalf("moved skip should count neither worked nor planned hours: %+v", sum)
+	}
+	if e := d.Apply(Mutation{Action: "cancel", ID: "s"}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	if s := d.Sessions["s"]; s.State != "canceled" || s.Actual != nil {
+		t.Fatalf("removed skipped session: %+v", s)
+	}
+}
+func TestRuleEditKeepsEarlyCheckedOffOccurrence(t *testing.T) {
+	d := testDocument()
+	d.Settings.TimeZone = "UTC"
+	now := instant("2026-09-28T08:00:00Z")
+	d.Rules["r"] = Rule{ID: "r", Weekday: 1, LocalStart: "09:00", DurationMinutes: 60, EffectiveFrom: "2026-09-21", Assignment: Assignment{GoalID: "goal"}}
+	d.Generate("2026-09-28", "2026-10-05", now, nil, now)
+	// Checked off early, before its 09:00 start.
+	if e := d.Apply(Mutation{Action: "actual", ID: "r:2026-09-28", Actual: &Actual{Status: "assumed"}}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	r := d.Rules["r"]
+	r.LocalStart = "11:00"
+	if e := d.Apply(Mutation{Action: "rule", ID: "r", EffectiveFrom: "2026-09-28", Rule: &r}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	d.Generate("2026-09-28", "2026-10-05", now, nil, now)
+	var today, next []Session
+	for _, s := range d.Sessions {
+		switch s.Date {
+		case "2026-09-28":
+			today = append(today, s)
+		case "2026-10-05":
+			next = append(next, s)
+		}
+	}
+	// Done work stays as it was, without a duplicate occurrence on the same date.
+	if len(today) != 1 || today[0].Actual == nil || today[0].Actual.Status != "assumed" || today[0].Plan.Start != instant("2026-09-28T09:00:00Z") || !today[0].Exception {
+		t.Fatalf("checked-off occurrence: %+v", today)
+	}
+	if len(next) != 1 || next[0].Plan.Start != instant("2026-10-05T11:00:00Z") || next[0].Actual != nil {
+		t.Fatalf("later occurrence should follow the edited rule: %+v", next)
+	}
+	if today[0].RuleID != next[0].RuleID {
+		t.Fatal("checked-off occurrence should move to the replacement rule so it is not regenerated")
+	}
+}
+func TestCancelFutureScopeFromEarlyCheckedOffOccurrence(t *testing.T) {
+	d := testDocument()
+	d.Settings.TimeZone = "UTC"
+	now := instant("2026-09-28T08:00:00Z")
+	d.Rules["r"] = Rule{ID: "r", Weekday: 1, LocalStart: "09:00", DurationMinutes: 60, EffectiveFrom: "2026-09-21", Assignment: Assignment{GoalID: "goal"}}
+	d.Generate("2026-09-28", "2026-10-05", now, nil, now)
+	if e := d.Apply(Mutation{Action: "actual", ID: "r:2026-09-28", Actual: &Actual{Status: "assumed"}}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	if e := d.Apply(Mutation{Action: "cancel", ID: "r:2026-09-28", Scope: "future"}, now, nil); e != nil {
+		t.Fatal(e)
+	}
+	if s := d.Sessions["r:2026-09-28"]; s.State != "canceled" || s.Actual != nil {
+		t.Fatalf("today's occurrence should be removed with its check-off: %+v", s)
+	}
+	if _, ok := d.Sessions["r:2026-10-05"]; ok {
+		t.Fatal("later occurrence kept")
+	}
+	// The rule ends before today (the occurrence date) and survives while the canceled occurrence refers to it.
+	if r, ok := d.Rules["r"]; !ok || r.EffectiveTo != "2026-09-27" {
+		t.Fatalf("rule: %+v ok=%v", r, ok)
+	}
+	d.Generate("2026-09-28", "2026-10-12", now, nil, now)
+	for id, s := range d.Sessions {
+		if s.State != "canceled" {
+			t.Fatalf("ended rule regenerated %s: %+v", id, s)
+		}
+	}
+}
