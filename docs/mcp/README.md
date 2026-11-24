@@ -206,8 +206,8 @@ Write tools (need **Allow read and edit**):
     that already ended before `from` is rejected; one ended on or before its first date
     is removed.
   - `record_schedule_actual`: with `sessionId`, `status` `explicit` (with `start`/`end`),
-    `assumed` (done as planned, on or after its scheduled date) or `skipped`. Without `sessionId`, logs unplanned
-    explicit work for `goalId`.
+    `assumed` (done as planned, allowed from its scheduled date) or `skipped`. Without
+    `sessionId`, logs unplanned explicit work for `goalId`.
   - `update_schedule_settings`: replace the IANA `timeZone`, `defaultDay` window and
     optional `weekdays`/`dates` overrides (`start`, `end`, `nextDay`).
 

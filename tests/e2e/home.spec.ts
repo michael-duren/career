@@ -20,7 +20,8 @@ async function mockWeek(page: Page) {
   const state = {
     revision: 'r1', week: mondayOf(today), days: [], goals: [], rules: [], busy: [], warnings: [], warningTargets: [], remainingCapacityHours: 0,
     settings: { timeZone: 'UTC', defaultDay: { start: '06:00', end: '22:00', nextDay: false }, weekdays: {}, dates: {} },
-    sessions: [session('late', 'Read chapter 4', 15), session('early', 'Practice problems', 9), { ...session('lunch', 'Lunch', 12), assignment: { title: 'Lunch' } }],
+    sessions: [session('late', 'Read chapter 4', 15), session('early', 'Practice problems', 9), { ...session('lunch', 'Lunch', 12), assignment: { title: 'Lunch' } },
+      { ...session('logged', 'Logged in scheduler', 7), actual: { status: 'explicit', date: today, start: `${today}T07:15:00Z`, end: `${today}T08:00:00Z` } }],
   };
   const writes: Record<string, unknown>[] = [];
   await page.route('**/api/scheduler/week?*', route => route.fulfill({ json: state }));
@@ -39,16 +40,21 @@ test('home lists today\'s goal sessions and checks them off only when clicked', 
   const writes = await mockWeek(page);
   await page.goto('/');
   const list = page.getByRole('list', { name: "Today's todos" });
-  await expect(list.getByRole('listitem')).toHaveCount(2);
-  await expect(list.getByRole('listitem').first()).toContainText('Systems › Practice problems');
-  await expect(page.getByText('0 of 2 done')).toBeVisible();
-  const first = list.getByRole('checkbox').first();
+  await expect(list.getByRole('listitem')).toHaveCount(3);
+  // Work recorded with explicit times in the scheduler shows as done but can't be unchecked here.
+  const logged = list.getByRole('listitem').first();
+  await expect(logged).toContainText('recorded in scheduler');
+  await expect(logged.getByRole('checkbox')).toBeChecked();
+  await expect(logged.getByRole('checkbox')).toBeDisabled();
+  await expect(list.getByRole('listitem').nth(1)).toContainText('Systems › Practice problems');
+  await expect(page.getByText('1 of 3 done')).toBeVisible();
+  const first = list.getByRole('checkbox').nth(1);
   await expect(first).not.toBeChecked();
   expect(writes).toHaveLength(0);
 
   await list.getByText('Systems › Practice problems').click();
   await expect(first).toBeChecked();
-  await expect(page.getByText('1 of 2 done')).toBeVisible();
+  await expect(page.getByText('2 of 3 done')).toBeVisible();
   expect(writes[0]).toMatchObject({ action: 'actual', id: 'early', revision: 'r1', actual: { status: 'assumed', date: today, ...plan(9) } });
 
   await list.getByText('Systems › Practice problems').click();

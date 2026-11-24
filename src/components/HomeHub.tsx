@@ -97,16 +97,18 @@ export function HomeHub() {
       : <ul className="divide-y divide-zinc-800 rounded-xl border border-zinc-800 bg-zinc-900" aria-label="Today's todos">
         {todos.map(session => {
           const done = isDone(session);
+          // Explicit times were recorded in the scheduler; only checked-off sessions can be unchecked here.
+          const recorded = session.actual?.status === 'explicit';
           const title = session.assignment.goalTitle && session.assignment.title !== session.assignment.goalTitle ? `${session.assignment.goalTitle} › ${session.assignment.title}` : session.assignment.title;
           return <li key={session.id}>
-            <label className={`flex cursor-pointer items-center gap-4 px-4 py-3 hover:bg-zinc-800/50 ${pending === session.id ? 'opacity-60' : ''}`}>
-              <input type="checkbox" className="peer sr-only" checked={done} disabled={pending !== undefined} onChange={() => void toggle(session)} />
+            <label className={`flex ${recorded ? '' : 'cursor-pointer'} items-center gap-4 px-4 py-3 hover:bg-zinc-800/50 ${pending === session.id ? 'opacity-60' : ''}`}>
+              <input type="checkbox" className="peer sr-only" checked={done} disabled={pending !== undefined || recorded} onChange={() => void toggle(session)} />
               <span aria-hidden className={`flex size-6 shrink-0 items-center justify-center rounded-md border-2 peer-focus-visible:ring-2 peer-focus-visible:ring-blue-500 ${done ? 'border-transparent' : 'border-zinc-600'}`} style={done ? { background: session.assignment.color } : { borderColor: session.assignment.color }}>
                 {done && <Check className="size-4 text-zinc-950" strokeWidth={3} />}
               </span>
               <span className="min-w-0 flex-1">
                 <span className={`block ${done ? 'text-zinc-500 line-through' : 'text-zinc-100'}`}>{title}</span>
-                <span className="block text-sm text-zinc-500">{clock(session.plan!.start)} – {clock(session.plan!.end)}{session.actual?.status === 'skipped' ? ' · skipped' : ''}</span>
+                <span className="block text-sm text-zinc-500">{clock(session.plan!.start)} – {clock(session.plan!.end)}{session.actual?.status === 'skipped' ? ' · skipped' : recorded ? ' · recorded in scheduler' : ''}</span>
               </span>
             </label>
           </li>;

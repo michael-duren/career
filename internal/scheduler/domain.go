@@ -766,10 +766,25 @@ func (d *Document) Apply(m Mutation, now time.Time, busy []Busy) error {
 		if s.Plan == nil {
 			return fmt.Errorf("unplanned work has no plan to restore; remove the session instead")
 		}
+		if s.Actual.Status == "explicit" {
+			// Explicit times are real recorded work; edit or skip them in the scheduler instead.
+			return fmt.Errorf("recorded work times can't be cleared; edit the session in the scheduler")
+		}
 		s.Actual = nil
 		if s.State == "attention" && s.Attention == replacedPlan {
 			s.State = "accepted"
 			s.Attention = ""
+		}
+		// A restored future plan must not silently overlap sessions saved since it was checked off.
+		// Unchecking skips the Google availability fetch, so busy calendar time is rechecked on the next planning save.
+		if s.State == "accepted" && s.Plan.Start.After(now) {
+			if e := d.validateSession(s, busy); e != nil {
+				s.State = "attention"
+				s.Attention = e.Error()
+				if c, ok := e.(*Conflict); ok {
+					s.ConflictIDs = c.IDs
+				}
+			}
 		}
 		d.Sessions[s.ID] = s
 	default:
