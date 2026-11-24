@@ -788,7 +788,7 @@ templ generalSettings(page SettingsPage) {
 					}
 				</select>
 			</label>
-			<p class="small muted">The share of recalled quick reviews that come back as a full re-solve at their next review, to catch grades that were too generous. If 2 of the last 5 spot checks fail, the rate goes up to 25% until 3 in a row pass.</p>
+			<p class="small muted">The share of recalled quick reviews that come back as a full re-solve at their next review, to catch grades that were too generous. If 2 of the last 5 spot checks fail, the rate goes up to 25% until 3 in a row pass. 0% turns spot checks off.</p>
 			<p class="small muted">
 				A new problem is one you have never attempted before today. A review counts toward the goal when the problem was due, flagged, or today's pick; other re-solves count as practice. Extra work is bonus, and each goal-met day extends your streak.
 				if page.TodayGoal != nil {

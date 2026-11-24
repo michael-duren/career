@@ -154,7 +154,8 @@ type SpotCheckStatus struct {
 // one does (say, from data changed by hand), the spot check is dropped,
 // matching Card.SpotCheck, which looks only at the newest attempt. When 2 of
 // the last 5 resolved spot checks fail, the rate goes up to
-// ElevatedSpotCheckRate until 3 in a row pass.
+// ElevatedSpotCheckRate until 3 in a row pass, unless base is 0, which turns
+// spot checks off.
 func SpotChecks(state State, base int) SpotCheckStatus {
 	type result struct {
 		at   time.Time
@@ -200,6 +201,10 @@ func SpotChecks(state State, base int) SpotCheckStatus {
 		if failed >= 2 {
 			s.Elevated, streak = true, 0
 		}
+	}
+	// A rate of 0 turns spot checks off, failures or not.
+	if base == 0 {
+		s.Elevated = false
 	}
 	s.Rate = base
 	if s.Elevated {
