@@ -176,7 +176,8 @@ off:
   The journal Markdown views of `/api/agent-context` need Journal (or Audio), not Agents.
 - Leetgrinder reminders and the scheduler's background work pause.
 
-Its data is kept, and `GET /api/export` still includes everything. A module missing from the
+Pages (`/documents/*`, the `document` kind, `page` in MCP) belong to no module and are always
+on. A turned-off module keeps its data, and `GET /api/export` still includes everything. A module missing from the
 stored settings counts as on. If the settings cannot be read, guarded routes return 503
 instead of guessing. The settings migration keeps every module on and marks setup done for
 any install that was already migrated. A new database still needs setup.

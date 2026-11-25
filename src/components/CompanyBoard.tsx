@@ -63,8 +63,8 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
       setPeopleOn(on);
       if (!on) return;
       return fetch(url, { cache: 'no-store' }).then(response => {
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return response.json();
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
       }).then(result => setConnections(result.connections)).catch(() => setConnectionsFailed(true));
     });
   }, [detailSlug]);
