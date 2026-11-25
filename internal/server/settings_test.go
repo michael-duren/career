@@ -162,6 +162,9 @@ func TestDisabledModulesReturn404(t *testing.T) {
 	if w := do("GET", "/api/entries/note", ""); w.Code != 401 {
 		t.Error("anonymous API:", w.Code)
 	}
+	if w := do("GET", "/api/leetgrinder/today", "session"); w.Code != 404 {
+		t.Error("cookie request to an extension route while off:", w.Code)
+	}
 	if w := do("GET", "/api/leetgrinder/today", ""); w.Code != 401 {
 		t.Error("anonymous extension:", w.Code)
 	}
@@ -336,14 +339,17 @@ func TestAgentContextLeavesOutDisabledModules(t *testing.T) {
 	if w := get("/api/agent-context"); w.Code != 200 || decodeJSON(w, &before) != nil || len(before.Journals["work"]) == 0 || len(before.References["notes"]) == 0 {
 		t.Fatal("fixture should have work journal and notes", w.Code, w.Body.String())
 	}
-	if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"journal": false, "audio": false, "notes": false}}); err != nil {
+	if len(before.References["books"]) == 0 || len(before.References["companies"]) == 0 {
+		t.Fatal("fixture should have books and companies", before.References)
+	}
+	if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"journal": false, "audio": false, "notes": false, "bookshelf": false, "companies": false}}); err != nil {
 		t.Fatal(err)
 	}
 	var after struct {
 		Journals   map[string][]any `json:"journals"`
 		References map[string][]any `json:"references"`
 	}
-	if w := get("/api/agent-context"); w.Code != 200 || decodeJSON(w, &after) != nil || len(after.Journals["work"]) != 0 || len(after.Journals["personal"]) != 0 || len(after.References["notes"]) != 0 || len(after.References["pages"]) == 0 {
+	if w := get("/api/agent-context"); w.Code != 200 || decodeJSON(w, &after) != nil || len(after.Journals["work"]) != 0 || len(after.Journals["personal"]) != 0 || len(after.References["notes"]) != 0 || len(after.References["books"]) != 0 || len(after.References["companies"]) != 0 || len(after.References["pages"]) == 0 {
 		t.Fatal("disabled modules leaked into agent context", w.Body.String())
 	}
 	for _, journal := range []string{"work", "personal", "running"} {

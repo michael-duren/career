@@ -103,15 +103,16 @@ func moduleOff(w http.ResponseWriter, r *http.Request, m modules.Module) {
 
 // moduleGuard returns 404 for pages and API routes of disabled modules.
 // Unauthenticated API requests pass through so their handlers answer 401
-// without revealing which modules are on. The Leetgrinder extension API
-// authenticates with its own tokens, so it is guarded by requireModule after
-// that check instead.
+// without revealing which modules are on. Leetgrinder extension requests
+// carry their own bearer token, so they are guarded by requireModule after
+// the token check instead.
 func (s *Server) moduleGuard(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 		m, ok := requestModule(path)
 		api := strings.HasPrefix(path, "/api/")
-		if !ok || strings.HasPrefix(path, "/api/leetgrinder/") || (api && !s.authenticated(r)) {
+		extension := strings.HasPrefix(path, "/api/leetgrinder/") && r.Header.Get("Authorization") != ""
+		if !ok || extension || (api && !s.authenticated(r)) {
 			next.ServeHTTP(w, r)
 			return
 		}

@@ -24,7 +24,7 @@ export interface ModuleDef {
   short: string;
   /** Line-drawing icon name. */
   icon: string;
-  /** Main route first; every route the module owns. */
+  /** Main route first; every route the module owns, legacy redirects included. */
   routes: string[];
   /** What the module adds to Home, if anything. */
   homeSection?: string;
@@ -47,15 +47,15 @@ export const MODULES: readonly ModuleDef[] = [
   { id: 'timeline', label: 'Timeline', short: 'TIMELINE', icon: 'timeline', routes: ['/timeline'], homeSection: 'Active goals', search: 'goals', kinds: ['goal'], mcpTools: [], apiPrefixes: ['/api/goals'], dependsOn: [] },
   { id: 'schedule', label: 'Schedule', short: 'SCHEDULE', icon: 'schedule', routes: ['/weekly-scheduler'], homeSection: "Today's sessions, missed", search: 'sessions', kinds: [],
     mcpTools: ['get_weekly_schedule', 'save_schedule_session', 'remove_schedule_session', 'save_schedule_rule', 'end_schedule_rule', 'record_schedule_actual', 'update_schedule_settings'], apiPrefixes: ['/api/scheduler'], dependsOn: ['timeline'] },
-  { id: 'leetgrinder', label: 'Leetgrinder', short: 'LEET', icon: 'leetgrinder', routes: ['/leetgrinder'], homeSection: 'Streak + review card', search: 'problems', kinds: [], reminders: 'ntfy',
+  { id: 'leetgrinder', label: 'Leetgrinder', short: 'LEET', icon: 'leetgrinder', routes: ['/leetgrinder', '/bootcamp'], homeSection: 'Streak + review card', search: 'problems', kinds: [], reminders: 'ntfy',
     mcpTools: ['get_leetgrinder_today', 'list_leetgrinder_reviews', 'get_leetgrinder_stats', 'log_leetgrinder_attempt', 'list_leetgrinder_todos', 'create_leetgrinder_todo_set', 'add_leetgrinder_todo_problem', 'reorder_leetgrinder_set', 'remove_leetgrinder_todo_problem', 'remove_leetgrinder_todo_set'], apiPrefixes: ['/api/leetgrinder'], dependsOn: [] },
   { id: 'companies', label: 'Companies', short: 'COMPANIES', icon: 'companies', routes: ['/companies', '/manage/companies'], search: 'companies', kinds: ['company'], mcpTools: [], apiPrefixes: [], dependsOn: [] },
   { id: 'people', label: 'People', short: 'PEOPLE', icon: 'people', routes: ['/connections'], search: 'people', kinds: ['connection'], mcpTools: ['list_connection_companies', 'add_companies_to_queue'], apiPrefixes: ['/api/connections'], dependsOn: [],
     partsNeed: [{ part: 'Catch-up queue', module: 'companies' }], toolsNeed: { list_connection_companies: 'companies', add_companies_to_queue: 'companies' } },
   { id: 'bookshelf', label: 'Bookshelf', short: 'BOOKS', icon: 'bookshelf', routes: ['/books', '/manage/books'], search: 'books', kinds: ['book'], mcpTools: [], apiPrefixes: [], dependsOn: [] },
-  { id: 'journal', label: 'Journal', short: 'JOURNAL', icon: 'journal', routes: ['/journal'], search: 'entries', kinds: ['week', 'personal'], mcpTools: [], apiPrefixes: ['/api/summaries/progress'], dependsOn: [] },
+  { id: 'journal', label: 'Journal', short: 'JOURNAL', icon: 'journal', routes: ['/journal', '/logs', '/personal-journal'], search: 'entries', kinds: ['week', 'personal'], mcpTools: [], apiPrefixes: ['/api/summaries/progress'], dependsOn: [] },
   { id: 'notes', label: 'Notes', short: 'NOTES', icon: 'notes', routes: ['/notes'], search: 'notes', kinds: ['note'], mcpTools: [], apiPrefixes: [], dependsOn: [] },
-  { id: 'audio', label: 'Audio thoughts', short: 'AUDIO', icon: 'audio', routes: ['/audio-thoughts'], search: 'transcripts', kinds: ['run'], mcpTools: [], apiPrefixes: ['/api/running'], dependsOn: [] },
+  { id: 'audio', label: 'Audio thoughts', short: 'AUDIO', icon: 'audio', routes: ['/audio-thoughts', '/running'], search: 'transcripts', kinds: ['run'], mcpTools: [], apiPrefixes: ['/api/running'], dependsOn: [] },
   { id: 'agents', label: 'Agent context', short: 'AGENTS', icon: 'agents', routes: ['/agents'], kinds: [], mcpTools: [], apiPrefixes: ['/api/agent-context'], dependsOn: ['timeline'] },
 ];
 

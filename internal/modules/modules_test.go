@@ -114,8 +114,8 @@ func TestOwnership(t *testing.T) {
 }
 
 // TestRegistryMatchesFrontend keeps src/lib/modules.ts and this registry in
-// sync: same ids in the same order, dependencies, entry kinds, MCP tools
-// and API prefixes.
+// sync: same ids in the same order, themes, labels, routes, dependencies,
+// entry kinds, MCP tools, tools needing other modules and API prefixes.
 func TestRegistryMatchesFrontend(t *testing.T) {
 	src, err := os.ReadFile("../../src/lib/modules.ts")
 	if err != nil {
@@ -178,11 +178,8 @@ func TestRegistryMatchesFrontend(t *testing.T) {
 				t.Errorf("%s toolsNeed %s: frontend %q, Go %q", m.ID, tool, toolsNeed[tool], need)
 			}
 		}
-		// Frontend routes are the user-facing pages; Go also guards legacy redirects.
-		for _, route := range field(block, "routes") {
-			if !slices.Contains(m.Pages, route) {
-				t.Errorf("%s route %s is not guarded", m.ID, route)
-			}
+		if got := field(block, "routes"); !slices.Equal(got, m.Pages) {
+			t.Errorf("%s routes: frontend %v, Go %v", m.ID, got, m.Pages)
 		}
 	}
 }

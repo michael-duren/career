@@ -10,10 +10,12 @@ async function loadWeek(monday: string): Promise<SchedulerWeek> {
   return weekSchema.parse(await schedulerRequest(`week?week=${monday}`));
 }
 /** Loads the week holding today in the scheduler's time zone, which can differ from the browser's, or 'off' while the schedule module is off. */
+// Module settings are read once per page load; the schedule cannot be turned off from Home.
+let scheduleOn: Promise<boolean> | undefined;
 async function loadToday(): Promise<Today | 'off'> {
   // If settings cannot load, try the schedule anyway; its own error explains a failure.
-  const settings = await loadSettings().catch(() => undefined);
-  if (settings && !isEnabled(settings, 'schedule')) return 'off';
+  scheduleOn ??= loadSettings().then(settings => isEnabled(settings, 'schedule'), () => true);
+  if (!await scheduleOn) return 'off';
   let week = await loadWeek(mondayOf(localDate()));
   const today = zonedDate(new Date(), week.settings.timeZone);
   if (mondayOf(today) !== week.week) week = await loadWeek(mondayOf(today));
