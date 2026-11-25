@@ -4,6 +4,8 @@
 @import "@fontsource-variable/inter-tight/wght.css";
 @import "@fontsource/ibm-plex-mono/400.css";
 @import "@fontsource/ibm-plex-mono/500.css";
+/* The redesign uses 400/500; 700 keeps existing font-mono font-bold text from being faux-bolded. */
+@import "@fontsource/ibm-plex-mono/700.css";
 @import "@fontsource/architects-daughter/400.css";
 
 /*

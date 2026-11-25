@@ -1,53 +1,91 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 // Theme tokens: data-theme on <html> picks the palette, the saved choice is applied
 // before first paint, and fonts come from the app itself.
 
-const paperOf = (page: import('@playwright/test').Page) =>
-  page.evaluate(() => ({ theme: document.documentElement.dataset.theme, body: getComputedStyle(document.body).backgroundColor, color: getComputedStyle(document.body).color }));
+const PALETTE = {
+  dark: { paper: 'rgb(12, 12, 11)', ink: 'rgb(236, 234, 227)', label: 'rgba(236, 234, 227, 0.6)', accent: 'rgb(224, 83, 61)' },
+  vellum: { paper: 'rgb(243, 241, 234)', ink: 'rgb(26, 26, 23)', label: 'rgba(26, 26, 23, 0.64)', accent: 'rgb(194, 54, 30)' },
+  cobalt: { paper: 'rgb(247, 247, 244)', ink: 'rgb(0, 71, 171)', label: 'rgba(0, 71, 171, 0.78)', accent: 'rgb(214, 64, 42)' },
+  concrete: { paper: 'rgb(44, 45, 47)', ink: 'rgb(239, 237, 230)', label: 'rgba(239, 237, 230, 0.6)', accent: 'rgb(242, 194, 48)' },
+};
 
-test('defaults to dark and re-themes when data-theme changes', async ({ page }) => {
-  await page.goto('/books');
-  expect(await paperOf(page)).toEqual({ theme: 'dark', body: 'rgb(12, 12, 11)', color: 'rgb(236, 234, 227)' });
-
-  const expected = { vellum: 'rgb(243, 241, 234)', cobalt: 'rgb(247, 247, 244)', concrete: 'rgb(44, 45, 47)', dark: 'rgb(12, 12, 11)' };
-  for (const [theme, body] of Object.entries(expected)) {
-    await page.evaluate(name => { document.documentElement.dataset.theme = name; }, theme);
-    expect((await paperOf(page)).body).toBe(body);
+// Computed colors on <body> plus a probe painted with the label and accent tokens.
+const paint = (page: Page) => page.evaluate(() => {
+  let probe = document.getElementById('theme-probe');
+  if (!probe) {
+    probe = document.createElement('span');
+    probe.id = 'theme-probe';
+    probe.style.cssText = 'color: var(--ink-60); border: 1px solid var(--accent)';
+    document.body.append(probe);
   }
+  const body = getComputedStyle(document.body), style = getComputedStyle(probe);
+  return { theme: document.documentElement.dataset.theme, paper: body.backgroundColor, ink: body.color, label: style.color, accent: style.borderTopColor };
 });
 
-test('a saved theme is applied before the first paint', async ({ page }) => {
+test('defaults to dark and re-themes every token when data-theme changes', async ({ page }) => {
+  await page.goto('/books');
+  expect(await paint(page)).toEqual({ theme: 'dark', ...PALETTE.dark });
+
+  for (const [theme, colors] of Object.entries(PALETTE)) {
+    await page.evaluate(name => { document.documentElement.dataset.theme = name; }, theme);
+    expect(await paint(page)).toEqual({ theme, ...colors });
+  }
+  // An unknown or missing attribute falls back to the dark palette in CSS too.
+  await page.evaluate(() => { document.documentElement.dataset.theme = 'neon'; });
+  expect(await paint(page)).toMatchObject(PALETTE.dark);
+  await page.evaluate(() => document.documentElement.removeAttribute('data-theme'));
+  expect(await paint(page)).toMatchObject(PALETTE.dark);
+});
+
+test('the theme script runs inline before any stylesheet', async ({ page }) => {
+  const html = await (await page.request.get('/books')).text();
+  const head = html.slice(0, html.indexOf('</head>'));
+  const script = head.indexOf('document.documentElement.dataset.theme');
+  const stylesheet = head.search(/<link[^>]+rel="?stylesheet/);
+  expect(head).toMatch(/<html[^>]*data-theme="dark"/);
+  expect(script).toBeGreaterThan(-1);
+  expect(stylesheet === -1 || script < stylesheet).toBe(true);
+  const tag = head.slice(head.lastIndexOf('<script', script), script);
+  expect(tag).not.toMatch(/\b(defer|async|src=|type="module")/);
+});
+
+test('a saved theme is painted from the first frame', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('career-theme', 'cobalt'));
-  // Record the theme at the moment <body> is parsed, i.e. before anything in it can paint.
+  // Record the theme at the first animation frame, i.e. the first paint.
   await page.addInitScript(() => {
-    const observer = new MutationObserver(() => {
-      if (!document.body) return;
-      (window as unknown as { firstTheme?: string }).firstTheme = document.documentElement.dataset.theme;
-      observer.disconnect();
-    });
-    observer.observe(document, { childList: true, subtree: true });
+    requestAnimationFrame(() => { (window as unknown as { firstTheme?: string }).firstTheme = document.documentElement.dataset.theme; });
   });
   await page.goto('/books');
   expect(await page.evaluate(() => (window as unknown as { firstTheme?: string }).firstTheme)).toBe('cobalt');
-  expect((await paperOf(page)).body).toBe('rgb(247, 247, 244)');
+  expect((await paint(page)).paper).toBe(PALETTE.cobalt.paper);
 });
 
-test('an unknown saved theme falls back to dark', async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('career-theme', 'neon'));
+test('a saved theme is honored and an unknown one falls back to dark', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('career-theme', sessionStorage.getItem('next') ?? 'vellum'));
   await page.goto('/books');
-  expect((await paperOf(page)).theme).toBe('dark');
+  expect(await paint(page)).toMatchObject({ theme: 'vellum', paper: PALETTE.vellum.paper });
+  await page.evaluate(() => sessionStorage.setItem('next', 'neon'));
+  await page.reload();
+  expect(await paint(page)).toMatchObject({ theme: 'dark', paper: PALETTE.dark.paper });
 });
 
-test('fonts are self-hosted', async ({ page }) => {
-  const external: string[] = [];
-  page.on('request', request => { if (/fonts\.(googleapis|gstatic)\.com/.test(request.url())) external.push(request.url()); });
-  await page.goto('/books');
-  await page.evaluate(() => document.fonts.ready);
-  const loaded = await page.evaluate(async () => {
-    await Promise.all(['300 16px "Inter Tight Variable"', '500 10px "IBM Plex Mono"', '16px "Architects Daughter"'].map(font => document.fonts.load(font)));
-    return ['300 16px "Inter Tight Variable"', '500 10px "IBM Plex Mono"', '16px "Architects Daughter"'].map(font => document.fonts.check(font));
+test('blocked storage keeps the dark default', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'localStorage', { get() { throw new DOMException('blocked', 'SecurityError'); } });
   });
-  expect(loaded).toEqual([true, true, true]);
-  expect(external).toEqual([]);
+  await page.goto('/books');
+  expect(await paint(page)).toMatchObject({ theme: 'dark', paper: PALETTE.dark.paper });
+});
+
+test('fonts are self-hosted', async ({ page, baseURL }) => {
+  const fontHosts = new Set<string>();
+  page.on('request', request => { if (request.resourceType() === 'font') fontHosts.add(new URL(request.url()).origin); });
+  await page.goto('/books');
+  const faces = ['300 16px "Inter Tight Variable"', '500 10px "IBM Plex Mono"', '16px "Architects Daughter"'];
+  // load() resolves to the matching faces, so an empty list means the @font-face is missing.
+  const loaded = await page.evaluate(fonts => Promise.all(fonts.map(async font => (await document.fonts.load(font)).filter(face => face.status === 'loaded').length)), faces);
+  for (const count of loaded) expect(count).toBeGreaterThan(0);
+  expect(await page.evaluate(() => getComputedStyle(document.body).fontFamily)).toMatch(/^"Inter Tight Variable"/);
+  expect([...fontHosts]).toEqual([new URL(baseURL!).origin]);
 });

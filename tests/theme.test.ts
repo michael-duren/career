@@ -14,6 +14,9 @@ const SPEC = {
   concrete: { paper: '#2C2D2F', ink: '#EFEDE6', accent: '#F2C230', 'ink-hover': '#FFFFFF' },
 } as const;
 
+// Per-theme label alpha, documented in docs/redesign/design-system.md.
+const LABEL_ALPHA = { dark: 0.6, vellum: 0.64, cobalt: 0.78, concrete: 0.6 } as const;
+
 function themeBlock(theme: string): Record<string, string> {
   const match = css.match(new RegExp(`\\[data-theme="${theme}"\\]\\s*\\{([^}]*)\\}`));
   assert.ok(match, `no [data-theme="${theme}"] block in global.css`);
@@ -62,7 +65,10 @@ test('every theme defines the spec palette', () => {
 });
 
 test('dark is also the default without a data-theme attribute', () => {
-  assert.equal(blockFor(':root,[data-theme="dark"]')?.paper, SPEC.dark.paper);
+  const block = blockFor(':root,[data-theme="dark"]');
+  assert.ok(block, 'no `:root, [data-theme="dark"]` block');
+  for (const [token, value] of Object.entries(SPEC.dark)) assert.equal(block[token]?.toUpperCase(), value, `default --${token}`);
+  assert.equal(block['ink-60-alpha'], '0.6');
 });
 
 // Only --ink-60 carries text; --ink-50 and below are borders, rules and tints.
@@ -70,7 +76,7 @@ test('labels at --ink-60 meet 4.5:1 on --paper in every theme', () => {
   for (const theme of THEMES) {
     const block = themeBlock(theme);
     const alpha = Number(block['ink-60-alpha']);
-    assert.ok(alpha >= 0.6 && alpha <= 1, `${theme} --ink-60-alpha ${alpha}`);
+    assert.equal(alpha, LABEL_ALPHA[theme], `${theme} --ink-60-alpha (documented in design-system.md)`);
     const paper = rgb(block.paper);
     const ratio = contrast(over(rgb(block.ink), paper, alpha), paper);
     assert.ok(ratio >= 4.5, `${theme} --ink-60 contrast ${ratio.toFixed(2)}:1`);
@@ -88,6 +94,12 @@ test('alpha steps resolve per theme root and map into Tailwind', () => {
   assert.ok(tailwind, 'no `@theme inline` block');
   for (const token of ['paper', 'ink', 'accent', 'ink-hover', 'ink-60', 'ink-50', 'ink-30', 'ink-14', 'ink-07', 'ink-05']) assert.equal(tailwind[`color-${token}`], `var(--${token})`, `--color-${token}`);
   assert.match(css, /body\s*\{\s*@apply bg-paper text-ink;/);
+
+  const fonts = blockFor('@theme');
+  assert.ok(fonts, 'no `@theme` font block');
+  assert.match(fonts['font-sans'], /^"Inter Tight Variable"/);
+  assert.match(fonts['font-mono'], /^"IBM Plex Mono"/);
+  assert.match(fonts['font-hand'], /^"Architects Daughter"/);
 });
 
 test('fonts are self-hosted, never loaded from a font CDN', () => {
@@ -96,7 +108,8 @@ test('fonts are self-hosted, never loaded from a font CDN', () => {
     const path = join(dir, name);
     return statSync(path).isDirectory() ? files(path) : [path];
   });
-  for (const file of [...files('src'), ...files('public'), ...files('internal/leetgrinder')]) {
+  const root = new URL('..', import.meta.url).pathname;
+  for (const file of ['src', 'public', 'internal/leetgrinder', 'extension'].flatMap(dir => files(join(root, dir)))) {
     if (!/\.(astro|tsx?|css|html|templ|js|mjs)$/.test(file)) continue;
     assert.doesNotMatch(readFileSync(file, 'utf8'), /fonts\.(googleapis|gstatic)\.com/, file);
   }
