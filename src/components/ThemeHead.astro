@@ -1,0 +1,12 @@
+---
+import { DEFAULT_THEME, THEME_STORAGE_KEY, THEMES } from '../lib/theme';
+---
+<!-- Runs before first paint: swaps the server-rendered default for the saved theme. -->
+<script is:inline define:vars={{ themes: THEMES, fallback: DEFAULT_THEME, key: THEME_STORAGE_KEY }}>
+  let theme = fallback;
+  try {
+    const saved = localStorage.getItem(key);
+    if (themes.includes(saved)) theme = saved;
+  } catch {}
+  document.documentElement.dataset.theme = theme;
+</script>

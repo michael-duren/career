@@ -1,5 +1,7 @@
 ---
 import PwaHead from '../components/PwaHead.astro';
+import ThemeHead from '../components/ThemeHead.astro';
+import { DEFAULT_THEME } from '../lib/theme';
 import '../styles/global.css';
 import Sidebar from '../components/Sidebar.astro';
 import SiteSearch from '../components/SiteSearch.astro';
@@ -17,9 +19,10 @@ const authUsername = 'User';
 ---
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme={DEFAULT_THEME}>
   <head>
     <meta charset="UTF-8" />
+    <ThemeHead />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

@@ -1,5 +1,7 @@
 ---
 import PwaHead from '../components/PwaHead.astro';
+import ThemeHead from '../components/ThemeHead.astro';
+import { DEFAULT_THEME } from '../lib/theme';
 export interface Props {
   title: string;
 }
@@ -8,9 +10,10 @@ const { title } = Astro.props;
 ---
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme={DEFAULT_THEME}>
   <head>
     <meta charset="UTF-8" />
+    <ThemeHead />
     <meta name="description" content="Career Strategy Platform" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
