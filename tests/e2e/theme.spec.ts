@@ -61,12 +61,15 @@ test('a saved theme is painted from the first frame', async ({ page }) => {
   expect((await paint(page)).paper).toBe(PALETTE.cobalt.paper);
 });
 
-test('a saved theme is honored and an unknown one falls back to dark', async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('career-theme', sessionStorage.getItem('next') ?? 'vellum'));
+test('a saved theme is honored', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('career-theme', 'vellum'));
   await page.goto('/books');
   expect(await paint(page)).toMatchObject({ theme: 'vellum', paper: PALETTE.vellum.paper });
-  await page.evaluate(() => sessionStorage.setItem('next', 'neon'));
-  await page.reload();
+});
+
+test('an unknown saved theme falls back to dark', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('career-theme', 'neon'));
+  await page.goto('/books');
   expect(await paint(page)).toMatchObject({ theme: 'dark', paper: PALETTE.dark.paper });
 });
 

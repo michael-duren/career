@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { DEFAULT_THEME, THEMES, isTheme, resolveTheme } from '../src/lib/theme.ts';
+import { DEFAULT_THEME, THEME_STORAGE_KEY, THEMES, applyTheme, isTheme, resolveTheme } from '../src/lib/theme.ts';
 
 const css = readFileSync(new URL('../src/styles/global.css', import.meta.url), 'utf8');
 
@@ -54,6 +54,25 @@ test('theme names and fallback', () => {
   assert.equal(resolveTheme('vellum'), 'vellum');
   assert.equal(resolveTheme('Vellum'), 'dark');
   assert.equal(resolveTheme(undefined), 'dark');
+});
+
+test('applyTheme sets data-theme and remembers it, even without storage', () => {
+  const saved = new Map<string, string>();
+  const root = { dataset: {} as Record<string, string> } as unknown as HTMLElement;
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  try {
+    Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { setItem: (key: string, value: string) => saved.set(key, value) } });
+    applyTheme('concrete', root);
+    assert.equal(root.dataset.theme, 'concrete');
+    assert.equal(saved.get(THEME_STORAGE_KEY), 'concrete');
+
+    Object.defineProperty(globalThis, 'localStorage', { configurable: true, get() { throw new Error('blocked'); } });
+    applyTheme('vellum', root);
+    assert.equal(root.dataset.theme, 'vellum');
+  } finally {
+    if (original) Object.defineProperty(globalThis, 'localStorage', original);
+    else delete (globalThis as { localStorage?: unknown }).localStorage;
+  }
 });
 
 test('every theme defines the spec palette', () => {
