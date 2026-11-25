@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Career — Setup</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;300;400;500&family=IBM+Plex+Mono:wght@400;500&family=Architects+Daughter&display=swap" rel="stylesheet">
+<style>body{margin:0}a{color:#ECEAE3}a:hover{color:#FFFFFF}
+.dim{position:relative;height:0;border-top:1px solid rgba(236,234,227,0.6)}
+.dim::before,.dim::after{content:"";position:absolute;top:-5px;height:10px;border-left:1px solid #ECEAE3;transform:skewX(-45deg)}
+.dim::before{left:0}.dim::after{right:0}
+.lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:rgba(236,234,227,0.6)}
+.btn{height:46px;padding:0 20px;background:transparent;border:1px solid rgba(236,234,227,0.5);color:#ECEAE3;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:0.16em;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}
+.btn.solid{background:#ECEAE3;color:#0C0C0B;border-color:#ECEAE3}
+.fld{display:flex;flex-direction:column;gap:8px}
+.fld input{height:46px;border:0;border-bottom:1px solid #ECEAE3;background:transparent;color:#ECEAE3;font:300 22px 'Inter Tight',sans-serif;outline:none}
+</style>
+</helmet>
+<div style="position: relative; width: 1280px; height: 800px; box-sizing: border-box; background: #0C0C0B; color: #ECEAE3; font-family: 'Inter Tight', sans-serif; padding: 40px 120px; display: flex; flex-direction: column; overflow: hidden">
+  <div style="display: flex; align-items: center; justify-content: space-between; height: 28px">
+    <span style="font-weight: 500; font-size: 13px; letter-spacing: 0.32em">CAREER</span>
+    <span class="lbl">Setup · step {{stepNo}} of 5</span>
+    <a href="#" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-decoration: none; opacity: 0.6">SKIP SETUP</a>
+  </div>
+  <div style="position: relative; height: 44px; margin: 26px 6px 0">
+    <div class="dim" style="position: absolute; left: 0; right: 0; top: 10px"></div>
+    <sc-for list="{{steps}}" as="s" hint-placeholder-count="5"><span style="{{s.pos}}"><span style="{{s.dot}}"></span><span style="{{s.lab}}">{{s.label}}</span></span></sc-for>
+  </div>
+
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; margin-top: 34px">
+    <sc-if value="{{isFocus}}" hint-placeholder-val="{{true}}">
+      <h1 style="margin: 0; font-weight: 200; font-size: 50px; line-height: 1">What are you working on?</h1>
+      <p style="margin: 10px 0 0; font-size: 16px; font-weight: 300; opacity: 0.7">Pick any that fit. We'll turn on the right modules, and you can change them later.</p>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 30px">
+        <sc-for list="{{focusCards}}" as="f" hint-placeholder-count="5">
+          <button type="button" role="checkbox" aria-checked="{{f.sel}}" onClick="{{f.pick}}" style="{{f.style}}"><span style="{{f.box}}"></span><span style="font-weight: 300; font-size: 21px; padding-right: 26px">{{f.name}}</span><span style="font-size: 13px; font-weight: 300; opacity: 0.7">{{f.desc}}</span><span class="lbl" style="font-size: 9px; margin-top: 6px">{{f.mods}}</span></button>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{isMods}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end"><h1 style="margin: 0; font-weight: 200; font-size: 50px; line-height: 1">Your modules</h1><span class="lbl">{{onCount}} of 10 on</span></div>
+      <p style="margin: 10px 0 0; font-size: 16px; font-weight: 300; opacity: 0.7">Suggested from what you picked. Anything off stays out of your menus until you turn it on in Settings.</p>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 56px; margin-top: 22px">
+        <sc-for list="{{mods}}" as="m" hint-placeholder-count="10">
+          <div style="display: flex; align-items: center; gap: 16px; min-height: 58px; border-bottom: 1px solid rgba(236,234,227,0.12)">
+            <button type="button" role="switch" aria-checked="{{m.on}}" aria-label="{{m.name}}" disabled="{{m.locked}}" onClick="{{m.toggle}}" style="{{m.sw}}"><span style="{{m.knob}}"></span></button>
+            <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1"><span style="display: flex; gap: 10px; align-items: baseline"><span style="font-weight: 300; font-size: 16px">{{m.name}}</span><span style="{{m.tagStyle}}">{{m.tag}}</span></span><span style="font-size: 12px; font-weight: 300; opacity: 0.6">{{m.desc}}</span></span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{isConn}}" hint-placeholder-val="{{false}}">
+      <h1 style="margin: 0; font-weight: 200; font-size: 50px; line-height: 1">Connect your tools</h1>
+      <p style="margin: 10px 0 0; font-size: 16px; font-weight: 300; opacity: 0.7">Optional. Only what your modules use is shown. Skip any of these for now.</p>
+      <div style="display: flex; flex-direction: column; margin-top: 24px">
+        <sc-for list="{{conns}}" as="c" hint-placeholder-count="4">
+          <div style="display: grid; grid-template-columns: 220px minmax(0, 1fr) 160px; gap: 24px; align-items: center; min-height: 72px; border-bottom: 1px solid rgba(236,234,227,0.12)">
+            <span style="display: flex; flex-direction: column; gap: 3px"><span style="font-weight: 300; font-size: 18px">{{c.name}}</span><span class="lbl" style="font-size: 9px">For {{c.mod}}</span></span>
+            <span style="font-size: 14px; font-weight: 300; opacity: 0.7">{{c.desc}}</span>
+            <button type="button" class="btn" style="height: 44px">{{c.cta}}</button>
+          </div>
+        </sc-for>
+        <sc-if value="{{noConns}}" hint-placeholder-val="{{false}}"><span style="font-size: 15px; font-weight: 300; opacity: 0.6; padding: 20px 0">Nothing to connect for the modules you picked.</span></sc-if>
+      </div>
+    </sc-if>
+    <sc-if value="{{isTheme}}" hint-placeholder-val="{{false}}">
+      <h1 style="margin: 0; font-weight: 200; font-size: 50px; line-height: 1">Pick a look</h1>
+      <p style="margin: 10px 0 0; font-size: 16px; font-weight: 300; opacity: 0.7">Same drawings, different paper and ink. Change it any time.</p>
+      <div role="radiogroup" aria-label="Theme" style="--ph: 200px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 26px; margin-top: 30px">
+        <sc-for list="{{themes}}" as="t" hint-placeholder-count="4">
+          <button type="button" role="radio" aria-checked="{{t.sel}}" onClick="{{t.pick}}" style="{{t.style}}"><span style="{{t.prev}}"><span style="{{t.l1}}"></span><span style="{{t.l2}}"></span><span style="{{t.l3}}"></span><span style="{{t.bx}}"></span><span style="{{t.dot}}"></span></span><span style="font-weight: 300; font-size: 17px">{{t.name}}</span></button>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{isGoal}}" hint-placeholder-val="{{false}}">
+      <h1 style="margin: 0; font-weight: 200; font-size: 50px; line-height: 1">Add your first goal</h1>
+      <p style="margin: 10px 0 0; font-size: 16px; font-weight: 300; opacity: 0.7">Something with an end date. You can break it into steps on the Timeline.</p>
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) 200px 200px; gap: 30px; margin-top: 40px; max-width: 900px">
+        <label class="fld"><span class="lbl">Goal</span><input type="text" placeholder="e.g. Finish NeetCode 150"></label>
+        <label class="fld"><span class="lbl">Start</span><input type="text" placeholder="Nov 25"></label>
+        <label class="fld"><span class="lbl">End</span><input type="text" placeholder="Dec 31"></label>
+      </div>
+      <div style="margin-top: 44px; display: flex; flex-direction: column; gap: 6px"><span class="lbl">Modules on</span><span style="font-size: 15px; font-weight: 300">{{onList}}</span></div>
+    </sc-if>
+  </main>
+
+  <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(236,234,227,0.3); padding-top: 18px">
+    <sc-if value="{{hasBack}}" hint-placeholder-val="{{false}}"><button type="button" class="btn" onClick="{{back}}">← BACK</button></sc-if>
+    <span style="margin-left: auto; display: flex; gap: 10px">
+      <sc-if value="{{notLast}}" hint-placeholder-val="{{true}}"><button type="button" class="btn solid" onClick="{{next}}">CONTINUE →</button></sc-if>
+      <sc-if value="{{isLast}}" hint-placeholder-val="{{false}}"><a href="#" class="btn solid">FINISH · OPEN HOME →</a></sc-if>
+    </span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { step: 4, focus: { interview: 1, network: 1 }, on: null, theme: 'dark' }; }
+  renderVals() {
+    const F = [
+      ['interview','Interview prep','LeetCode practice, target companies, a study plan',['leet','timeline','schedule','companies']],
+      ['learning','Learning','Books, courses, papers and notes',['books','notes','timeline']],
+      ['network','Networking','Your connections and a catch-up queue',['people','companies']],
+      ['planning','Planning my time','Goals with dates and a weekly schedule',['timeline','schedule','agents']],
+      ['reflect','Reflecting','A weekly journal and voice memos',['journal','audio']]
+    ];
+    const M = [
+      ['timeline','Timeline','Goals, dates and steps',[]],['schedule','Schedule','Weekly plan and Google Calendar sync',['timeline']],
+      ['leet','Leetgrinder','LeetCode practice with spaced reviews',[]],['companies','Companies','Target companies and checklists',[]],
+      ['people','People','Connections and a catch-up queue',[]],['books','Bookshelf','Books, courses and papers',[]],
+      ['journal','Journal','Weekly work and personal journal',[]],['notes','Notes','Ideas and references by topic',[]],
+      ['audio','Audio thoughts','Voice memos, transcribed for you',[]],['agents','Agent context','Your goals, ready for AI assistants',['timeline']]
+    ];
+    const NAMES = Object.fromEntries(M.map((m) => [m[0], m[1]]));
+    const focus = this.state.focus;
+    const suggested = {}; F.forEach(([id, , , mods]) => { if (focus[id]) mods.forEach((m) => { suggested[m] = 1; }); });
+    const on = this.state.on || suggested;
+    const eff = {}; M.forEach(([id, , , deps]) => { eff[id] = !!on[id] && deps.every((d) => on[d]); });
+    const step = this.state.step;
+    const go = (n) => () => this.setState({ step: n, on: n >= 2 ? (this.state.on || suggested) : this.state.on });
+    const hatch = 'repeating-linear-gradient(-45deg,#ECEAE3 0 0.8px,transparent 0.8px 4px)';
+    const STEPS = ['Focus','Modules','Connect','Theme','First goal'];
+    const steps = STEPS.map((label, i) => ({ label, n: String(i + 1).padStart(2, '0'),
+      pos: `position:absolute;left:${(i / 4) * 100}%;top:0;width:0;height:100%`,
+      dot: `position:absolute;left:-6px;top:4px;width:12px;height:12px;border-radius:50%;box-sizing:border-box;border:1px solid #ECEAE3;${i < step ? 'background:#ECEAE3;' : i === step ? `background:${hatch};` : 'background:#0C0C0B;'}`,
+      lab: `position:absolute;top:24px;${i === 0 ? 'left:0' : i === 4 ? 'right:0' : 'left:0;transform:translateX(-50%)'};white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;color:${i === step ? '#ECEAE3' : 'rgba(236,234,227,0.5)'}` }));
+    const focusCards = F.map(([id, name, desc, mods]) => { const sel = !!focus[id]; return { name, desc, sel, mods: mods.map((m) => NAMES[m]).join(' · '),
+      pick: () => this.setState({ focus: { ...focus, [id]: sel ? 0 : 1 }, on: null }),
+      style: `all:unset;box-sizing:border-box;position:relative;display:flex;flex-direction:column;gap:6px;padding:16px 18px;cursor:pointer;border:1px solid ${sel ? '#ECEAE3' : 'rgba(236,234,227,0.3)'};${sel ? 'background:rgba(236,234,227,0.05);' : ''}`,
+      box: `position:absolute;right:14px;top:14px;width:16px;height:16px;box-sizing:border-box;border:1px solid #ECEAE3;${sel ? `background:${hatch};` : ''}` }; });
+    const mods = M.map(([id, name, desc, deps]) => { const blocked = deps.find((d) => !on[d]); const isOn = eff[id]; return { name, desc, on: isOn, locked: !!blocked,
+      tag: blocked ? `needs ${NAMES[blocked]}` : suggested[id] ? 'suggested' : '',
+      tagStyle: `font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;${blocked ? 'color:#E0533D;' : 'opacity:0.55;'}`,
+      toggle: () => this.setState({ on: { ...on, [id]: on[id] ? 0 : 1 } }),
+      sw: `all:unset;position:relative;flex:none;box-sizing:border-box;width:42px;height:22px;border:1px solid ${isOn ? '#ECEAE3' : 'rgba(236,234,227,0.45)'};cursor:pointer;${isOn ? `background:${hatch};` : ''}${blocked ? 'border-style:dashed;' : ''}`,
+      knob: `position:absolute;top:3px;${isOn ? 'right:3px;background:#ECEAE3;' : 'left:3px;background:#0C0C0B;'}width:14px;height:14px;border-radius:50%;box-sizing:border-box;border:1px solid #ECEAE3` }; });
+    const C = [
+      ['schedule','Google Calendar','Read busy time and export accepted plans to a calendar','CONNECT'],
+      ['people','LinkedIn export','Import your connections and messages from a LinkedIn data export','UPLOAD .ZIP'],
+      ['leet','Reminders (ntfy)','Daily nudges for LeetCode reviews','SET UP'],
+      ['leet','Browser extension','Log LeetCode and NeetCode submissions automatically','INSTALL'],
+      ['agents','Claude (MCP)','Let Claude read your goals and schedule','COPY URL']
+    ];
+    const conns = C.filter(([m]) => eff[m]).map(([m, name, desc, cta]) => ({ name, desc, cta, mod: NAMES[m] }));
+    const T = [['dark','Dark','#0C0C0B','#ECEAE3','#E0533D'],['vellum','Vellum','#F3F1EA','#1A1A17','#C2361E'],['cobalt','Cobalt','#F7F7F4','#0047AB','#D6402A'],['concrete','Concrete','#2C2D2F','#EFEDE6','#F2C230']];
+    const themes = T.map(([id, name, bg, ink, acc]) => { const sel = id === this.state.theme; return { name, sel, pick: () => this.setState({ theme: id }),
+      style: `all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;cursor:pointer;padding:8px;${sel ? 'outline:1px solid #ECEAE3;outline-offset:3px;' : ''}`,
+      prev: `position:relative;height:var(--ph);background:${bg};border:1px solid rgba(236,234,227,0.35);overflow:hidden`,
+      l1: `position:absolute;left:12%;right:40%;top:22%;height:0;border-top:2px solid ${ink}`,
+      l2: `position:absolute;left:12%;right:20%;top:42%;height:0;border-top:1px solid ${ink};opacity:0.6`,
+      l3: `position:absolute;left:12%;right:55%;top:58%;height:0;border-top:1px solid ${ink};opacity:0.6`,
+      bx: `position:absolute;left:12%;width:30%;bottom:14%;height:18%;border:1px solid ${ink};background:repeating-linear-gradient(-45deg,${ink} 0 0.8px,transparent 0.8px 4px)`,
+      dot: `position:absolute;right:12%;bottom:16%;width:10px;height:10px;border-radius:50%;background:${acc}` }; });
+    const onList = M.filter(([id]) => eff[id]).map(([, n]) => n).join(' · ');
+    return { steps, isFocus: step === 0, isMods: step === 1, isConn: step === 2, isTheme: step === 3, isGoal: step === 4,
+      focusCards, mods, conns, noConns: conns.length === 0, themes, onList, onCount: String(Object.values(eff).filter(Boolean).length),
+      back: go(Math.max(0, step - 1)), next: go(Math.min(4, step + 1)), hasBack: step > 0, isLast: step === 4, notLast: step < 4,
+      stepNo: String(step + 1) };
+  }
+}
+
+</script>
+</body>
+</html>

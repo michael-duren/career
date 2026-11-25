@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mobile — Schedule</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;300;400;500&family=IBM+Plex+Mono:wght@400;500&family=Architects+Daughter&display=swap" rel="stylesheet">
+<style>body{margin:0}a{color:#ECEAE3}a:hover{color:#FFFFFF}
+.lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:rgba(236,234,227,0.6)}
+.blk{position:absolute;box-sizing:border-box;border:1px solid #ECEAE3;background:#0C0C0B;overflow:hidden;display:flex}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-decoration:none;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.12em;color:rgba(236,234,227,0.55)}</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; background: #0C0C0B; color: #ECEAE3; font-family: 'Inter Tight', sans-serif; overflow: hidden">
+  <div style="position: absolute; inset: 0 0 78px 0; overflow-y: auto; padding: 22px 22px 28px; box-sizing: border-box; display: flex; flex-direction: column">
+    <div style="display: flex; justify-content: space-between; align-items: center; height: 24px"><span style="font-weight: 500; font-size: 12px; letter-spacing: 0.32em">CAREER</span><span style="display: flex; align-items: center; gap: 6px"><a href="M-Search.dc.html" aria-label="Search everything" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; margin: -10px 0"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 14 14" fill="none" stroke="#ECEAE3" stroke-width="1"><circle cx="6" cy="6" r="4.5"></circle><path d="M9.5 9.5 L13 13"></path></svg></a><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px">5:20 PM</span></span></div>
+    <div style="border-top: 1px solid rgba(236,234,227,0.3); margin-top: 12px"></div>
+    <header style="margin-top: 20px; display: flex; justify-content: space-between; align-items: flex-end">
+      <div style="display: flex; flex-direction: column; gap: 8px"><span class="lbl">Week 48</span><h1 style="margin: 0; font-weight: 200; font-size: 40px; line-height: 0.9">23 — 29 Nov</h1></div>
+      <div style="display: flex; gap: 6px">
+        <button type="button" aria-label="Previous week" style="width: 44px; height: 44px; background: transparent; border: 1px solid rgba(236,234,227,0.5); color: #ECEAE3; font-size: 15px; cursor: pointer">←</button>
+        <button type="button" aria-label="Next week" style="width: 44px; height: 44px; background: transparent; border: 1px solid rgba(236,234,227,0.5); color: #ECEAE3; font-size: 15px; cursor: pointer">→</button>
+      </div>
+    </header>
+    <div role="tablist" aria-label="Day" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin-top: 18px; border-top: 1px solid rgba(236,234,227,0.3); border-bottom: 1px solid rgba(236,234,227,0.3)">
+      <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+        <button type="button" role="tab" aria-selected="{{d.sel}}" onClick="{{d.pick}}" style="{{d.style}}"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.12em">{{d.dow}}</span><span style="font-weight: 300; font-size: 18px">{{d.num}}</span></button>
+      </sc-for>
+    </div>
+    <div style="position: relative; height: 620px; margin-top: 14px; display: grid; grid-template-columns: 46px minmax(0, 1fr)">
+      <div aria-hidden="true" style="position: absolute; inset: 0 0 0 46px; pointer-events: none"><sc-for list="{{hours}}" as="h" hint-placeholder-count="8"><span style="{{h.line}}"></span></sc-for></div>
+      <div style="position: relative"><sc-for list="{{hours}}" as="h" hint-placeholder-count="8"><span style="{{h.style}}">{{h.label}}</span></sc-for></div>
+      <div style="position: relative; border-left: 1px solid rgba(236,234,227,0.2)">
+        <sc-for list="{{blocks}}" as="b" hint-placeholder-count="5">
+          <div class="blk" style="{{b.style}}"><span style="{{b.strip}}"></span><span style="display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: 2px 10px"><span style="{{b.tStyle}}">{{b.title}}</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; opacity: 0.6">{{b.time}}</span></span></div>
+        </sc-for>
+        <sc-if value="{{isToday}}" hint-placeholder-val="{{true}}">
+          <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: {{nowTop}}%; border-top: 1px solid #E0533D; z-index: 3"></div>
+          <span style="position: absolute; right: 0; top: calc({{nowTop}}% - 20px); font-family: 'Architects Daughter', cursive; font-size: 13px; color: #E0533D; z-index: 3">now 5:20 PM</span>
+        </sc-if>
+      </div>
+    </div>
+    <h2 style="margin: 28px 0 8px; font-weight: 500; font-size: 11px; letter-spacing: 0.24em">GOAL HOURS · WEEK</h2>
+    <sc-for list="{{hrs}}" as="g" hint-placeholder-count="5">
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; min-height: 40px; border-bottom: 1px solid rgba(236,234,227,0.14)">
+        <span style="font-weight: 300; font-size: 15px"><span style="{{g.sw}}"></span>{{g.name}}</span>
+        <span style="{{g.dStyle}}">{{g.label}}</span>
+      </div>
+    </sc-for>
+    <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 18px; font-size: 14px; font-weight: 300; color: #E0533D">
+      <span class="lbl" style="color: #E0533D">3 warnings</span>
+      <span>Mon walk clashes with Google busy</span><span>Coffee chats: 3.5 h unplaced</span><span>Q1 referrals: hours not set</span>
+    </div>
+  </div>
+  <nav aria-label="Main" style="position: absolute; left: 0; right: 0; bottom: 0; height: 78px; border-top: 1px solid rgba(236,234,227,0.3); background: #0C0C0B; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding-bottom: 16px; box-sizing: border-box">
+    <a href="M-Home.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 10 L11 3 L19 10 V19 H3 Z M9 19 V13 H13 V19"></path></svg>HOME</a>
+    <a href="M-Timeline.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M2 5 H12 M6 11 H18 M10 17 H20"></path><path d="M2 3 V7 M12 3 V7 M6 9 V13 M18 9 V13 M10 15 V19 M20 15 V19"></path></svg>TIMELINE</a>
+    <a href="M-Schedule.dc.html" class="tab" aria-current="page" style="color: #ECEAE3; box-shadow: inset 0 1px 0 #ECEAE3"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="4" width="16" height="15"></rect><path d="M3 9 H19 M8.3 4 V19 M13.6 4 V19"></path></svg>SCHEDULE</a>
+    <a href="M-Leetgrinder.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M7 6 L2 11 L7 16 M15 6 L20 11 L15 16 M12.5 4 L9.5 18"></path></svg>LEET</a>
+    <a href="M-More.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 7 H19 M3 11 H19 M3 15 H19"></path></svg>MORE</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { day: 1 }; }
+  renderVals() {
+    const S = [
+      [0,'09:00','16:00','Work','r'],[0,'16:15','16:45','Walk','r','warn'],[0,'18:45','19:45','LC backlog Mon','LC','skip'],[0,'06:15','09:00','Google busy','busy'],[0,'16:00','18:30','Google busy','busy'],
+      [1,'06:00','07:00','Run · intervals','r'],[1,'07:15','08:45','LeetCode backlog Tue','LC','done'],[1,'09:00','16:00','Work','r'],[1,'16:30','17:30','Lift · upper A','r'],[1,'17:45','18:45','System design','SD'],[1,'19:00','20:00','Contribute to Alloy','AL'],
+      [2,'07:00','08:00','Lift · lower A','r'],[2,'09:00','11:30','LeetCode backlog Wed AM','LC'],[2,'12:00','12:30','Walk','r'],[2,'13:30','15:00','LeetCode backlog Wed PM','LC'],[2,'15:30','17:30','System design','SD'],[2,'18:00','19:00','Alloy','AL','cancel'],
+      [3,'07:00','08:00','Lift · upper B','r'],[3,'08:00','09:00','System design','SD'],[3,'09:00','10:30','LeetCode Thu (light)','LC'],[3,'10:30','11:30','LeetCode re-solve trees','LC'],[3,'13:00','17:00',"Thanksgiving at Mom's",'r'],[3,'17:00','17:30','Walk','r'],
+      [4,'07:00','08:00','Run · tempo','r'],[4,'09:00','11:30','LeetCode backlog Fri AM','LC'],[4,'13:30','15:00','LeetCode quick-review','LC'],[4,'15:30','16:30','Contribute to Alloy','AL'],
+      [5,'07:00','08:00','Lift · lower B','r'],[5,'09:00','11:30','LeetCode backlog Sat AM','LC'],[5,'12:00','12:30','Walk','r'],[5,'14:00','15:30','LeetCode quick-review','LC'],[5,'16:00','18:00','Alloy','AL','cancel'],
+      [6,'07:00','08:00','Run · steady','r'],[6,'09:00','10:30','LeetCode buffer','LC'],[6,'13:00','14:00','Book club','r'],[6,'15:00','15:30','Walk','r'],[6,'16:00','17:00','Contribute to Alloy','AL']
+    ];
+    const H0 = 5, H1 = 20.5, R = H1 - H0;
+    const t = (s) => { const [h, m] = s.split(':').map(Number); return h + m / 60; };
+    const f12 = (s) => { const [h, m] = s.split(':').map(Number); return `${h % 12 || 12}${m ? ':' + String(m).padStart(2, '0') : ''} ${h < 12 ? 'AM' : 'PM'}`; };
+    const top = (s) => ((t(s) - H0) / R) * 100;
+    const hatch = 'repeating-linear-gradient(-45deg,#ECEAE3 0 0.8px,transparent 0.8px 4px)';
+    const P = { LC: hatch, SD: hatch + ',repeating-linear-gradient(45deg,#ECEAE3 0 0.8px,transparent 0.8px 4px)', AL: 'radial-gradient(#ECEAE3 0.9px, transparent 1.2px) 0 0 / 4px 4px' };
+    const day = this.state.day;
+    const blocks = S.filter((s) => s[0] === day).map(([, a, b, title, k, st]) => {
+      const T = top(a), Hh = Math.max(top(b) - T, 3.2);
+      let css = '', strip = 'flex:none;width:0;';
+      if (P[k]) strip = `flex:none;width:8px;background:${P[k]};border-right:1px solid #ECEAE3;`;
+      if (k === 'r') css = 'border-color:rgba(236,234,227,0.35);color:rgba(236,234,227,0.7);';
+      if (k === 'busy') css = 'border:1px dotted rgba(236,234,227,0.35);background:transparent;color:rgba(236,234,227,0.45);right:40%;z-index:0;';
+      if (st === 'done') css += 'opacity:0.4;';
+      if (st === 'skip') css += 'border-color:#E0533D;color:#E0533D;';
+      if (st === 'cancel') css += 'border-style:dashed;opacity:0.4;';
+      if (st === 'warn') css += 'border-color:#E0533D;';
+      const small = t(b) - t(a) < 0.75;
+      return {
+        title, time: small ? '' : `${f12(a)} – ${f12(b)}`, strip,
+        style: `left:6px;right:0;top:${T}%;height:${Hh}%;z-index:1;${css}`,
+        tStyle: `font-size:${small ? 12 : 14}px;font-weight:${P[k] ? 400 : 300};line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${st === 'skip' || st === 'cancel' || st === 'done' ? 'text-decoration:line-through;' : ''}`
+      };
+    });
+    const dl = [['MON',23],['TUE',24],['WED',25],['THU',26],['FRI',27],['SAT',28],['SUN',29]];
+    const days = dl.map(([dow, num], i) => ({ dow, num, sel: i === day, pick: () => this.setState({ day: i }),
+      style: `all:unset;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:56px;cursor:pointer;${i === day ? 'background:#ECEAE3;color:#0C0C0B;' : i === 1 ? 'color:#ECEAE3;box-shadow:inset 0 -1px 0 #E0533D;' : 'color:rgba(236,234,227,0.7);'}` }));
+    const hours = [6,8,10,12,14,16,18,20].map((h) => { const y = ((h - H0) / R) * 100; return { label: `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`, style: `position:absolute;right:8px;top:calc(${y}% - 6px);font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(236,234,227,0.5);white-space:nowrap`, line: `position:absolute;left:0;right:0;top:${y}%;border-top:1px solid rgba(236,234,227,0.07)` }; });
+    const hrs = [['LeetCode', 10.5, 16, P.LC], ['System design', 4, 4, P.SD], ['Alloy', 3, 3, P.AL], ['Coffee chats', 3.5, 0, null], ['Q1 referrals', null, 0, null]].map(([name, req, plan, pat]) => {
+      const short = req != null && plan < req;
+      return { name, label: req == null ? 'not set' : `${plan} / ${req} h`,
+        sw: `display:inline-block;width:10px;height:10px;margin-right:10px;vertical-align:-1px;border:1px solid ${pat ? '#ECEAE3' : 'rgba(236,234,227,0.35)'};${pat ? `background:${pat};` : ''}`,
+        dStyle: `font-family:'IBM Plex Mono',monospace;font-size:12px;${short ? 'color:#E0533D;' : 'opacity:0.8;'}` };
+    });
+    return { days, hours, blocks, hrs, isToday: day === 1, nowTop: top('17:20') };
+  }
+}
+</script>
+</body>
+</html>

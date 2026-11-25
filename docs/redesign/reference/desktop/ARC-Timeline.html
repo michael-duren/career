@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Architect — Timeline</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;300;400;500&family=IBM+Plex+Mono:wght@400;500&family=Architects+Daughter&display=swap" rel="stylesheet">
+<style>body{margin:0}a{color:#ECEAE3}a:hover{color:#FFFFFF}
+.dim{position:relative;height:0;border-top:1px solid rgba(236,234,227,0.6)}
+.dim::before,.dim::after{content:"";position:absolute;top:-5px;height:10px;border-left:1px solid #ECEAE3;transform:skewX(-45deg)}
+.dim::before{left:0}.dim::after{right:0}
+.dim.plan{border-top-style:dashed;border-top-color:rgba(236,234,227,0.5)}
+.dim.late{border-top-color:#E0533D}.dim.late::before,.dim.late::after{border-color:#E0533D}
+.lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:rgba(236,234,227,0.6)}
+.co{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border:1px solid #ECEAE3;border-radius:50%;font-family:'IBM Plex Mono',monospace;font-size:9px;flex:none}
+.a-row:hover{background:rgba(236,234,227,0.03)}.nv{text-decoration:none;font-size:11.5px;letter-spacing:0.06em;opacity:0.6;padding:6px 0}
+.nv.on{opacity:1;border-bottom:1px solid #ECEAE3}
+</style>
+</helmet>
+<div style="position: relative; width: 1280px; height: 800px; box-sizing: border-box; background: #0C0C0B; color: #ECEAE3; font-family: 'Inter Tight', sans-serif; padding: 40px 56px; display: flex; flex-direction: column; overflow: hidden">
+  <nav aria-label="Main" style="display: flex; align-items: center; gap: 17px; height: 28px">
+    <span style="font-weight: 500; font-size: 13px; letter-spacing: 0.32em; margin-right: 18px">CAREER</span>
+    <a href="#" class="nv">HOME</a>
+    <a href="#" class="nv on" aria-current="page">TIMELINE</a>
+    <a href="#" class="nv">SCHEDULE</a>
+    <a href="#" class="nv">LEET</a>
+    <a href="#" class="nv">COMPANIES</a>
+    <a href="#" class="nv">PEOPLE</a>
+    <a href="#" class="nv">BOOKS</a>
+    <a href="#" class="nv">JOURNAL</a>
+    <a href="#" class="nv">NOTES</a>
+    <a href="#" class="nv">AUDIO</a>
+    <a href="#" class="nv">AGENTS</a>
+    <label style="margin-left: auto; display: flex; align-items: center; gap: 10px; height: 34px; width: 210px; padding: 0 12px; border: 1px solid rgba(236,234,227,0.35); box-sizing: border-box">
+      <svg aria-hidden="true" width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#ECEAE3" stroke-width="1"><circle cx="6" cy="6" r="4.5"></circle><path d="M9.5 9.5 L13 13"></path></svg>
+      <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search everything</span>
+      <input type="search" placeholder="Search everything" style="flex: 1; min-width: 0; border: 0; background: transparent; color: #ECEAE3; font: 300 13px 'Inter Tight', sans-serif; outline: none">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; opacity: 0.5">/</span>
+    </label>
+    <a href="#" aria-label="Settings" style="width: 34px; height: 34px; margin-left: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(236,234,227,0.35)"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#ECEAE3" stroke-width="1"><circle cx="8" cy="8" r="2.5"></circle><path d="M8 1 V3.5 M8 12.5 V15 M1 8 H3.5 M12.5 8 H15 M3 3 L4.8 4.8 M11.2 11.2 L13 13 M3 13 L4.8 11.2 M11.2 4.8 L13 3"></path></svg></a>
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; margin-left: 14px">5:20 PM</span>
+  </nav>
+  <div style="border-top: 1px solid rgba(236,234,227,0.3); margin-top: 14px"></div>
+  <header style="display: flex; align-items: flex-end; justify-content: space-between; margin-top: 22px">
+    <div style="display: flex; flex-direction: column; gap: 8px"><span class="lbl">Aug 2026 – Jul 2027</span><h1 style="margin: 0; font-weight: 200; font-size: 58px; line-height: 0.9; letter-spacing: -0.01em">Goal timeline</h1></div>
+    <div style="display: flex; gap: 30px; align-items: flex-end; padding-bottom: 4px">
+      <span style="display: flex; flex-direction: column"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 20px">06</span><span class="lbl">Active</span></span>
+      <span style="display: flex; flex-direction: column"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 20px">07</span><span class="lbl">Planned</span></span>
+      <span style="display: flex; flex-direction: column"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 20px">03</span><span class="lbl">Done</span></span>
+      <span style="display: flex; flex-direction: column; color: #E0533D"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 20px">03</span><span class="lbl" style="color: #E0533D">Late</span></span>
+    </div>
+  </header>
+  <div style="display: grid; grid-template-columns: 236px minmax(0, 1fr); margin-top: 22px; border-bottom: 1px solid rgba(236,234,227,0.3)">
+    <span class="lbl" style="padding-bottom: 6px">Goal</span>
+    <div style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr))"><sc-for list="{{months}}" as="m" hint-placeholder-count="12"><span class="lbl" style="padding: 0 0 6px 5px; border-left: 1px solid rgba(236,234,227,0.18)">{{m}}</span></sc-for></div>
+  </div>
+  <div style="position: relative; display: flex; flex-direction: column">
+    <div aria-hidden="true" style="position: absolute; inset: 0 0 0 236px; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); pointer-events: none"><sc-for list="{{months}}" as="m" hint-placeholder-count="12"><span style="border-left: 1px solid rgba(236,234,227,0.06)"></span></sc-for></div>
+    <div aria-hidden="true" style="position: absolute; top: -40px; bottom: -8px; left: calc(236px + (100% - 236px) * {{todayFrac}}); width: 0; border-left: 1px solid #E0533D; border-image: repeating-linear-gradient(#E0533D 0 10px, transparent 10px 13px, #E0533D 13px 15px, transparent 15px 18px) 1; z-index: 2"></div>
+    <span style="position: absolute; top: -40px; left: calc(236px + (100% - 236px) * {{todayFrac}} + 6px); font-family: 'Architects Daughter', cursive; font-size: 13px; color: #E0533D; white-space: nowrap; z-index: 2">today</span>
+    <sc-for list="{{goals}}" as="g" hint-placeholder-count="16">
+      <button type="button" class="a-row" onClick="{{g.pick}}" style="{{g.rowStyle}}">
+        <span style="display: flex; align-items: center; gap: 10px; min-width: 0; padding-right: 12px"><span style="{{g.nameStyle}}">{{g.name}}</span></span>
+        <span style="position: relative; height: 100%">
+          <span style="{{g.fillStyle}}"></span>
+          <span class="{{g.cls}}" style="{{g.dimStyle}}"></span>
+          <span style="{{g.tagStyle}}">{{g.tag}}</span>
+        </span>
+      </button>
+    </sc-for>
+  </div>
+  <section aria-live="polite" style="flex: 1; min-height: 0; margin-top: 18px; border-top: 1px solid rgba(236,234,227,0.3); padding-top: 14px; display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 30px">
+    <div style="display: flex; gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-weight: 300; font-size: 20px; line-height: 1.15">{{sel.name}}</span><span class="lbl">{{sel.range}} · {{sel.progress}}</span></div>
+    </div>
+    <ol style="margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 30px; align-content: flex-start">
+      <sc-for list="{{sel.steps}}" as="s" hint-placeholder-count="4"><li style="{{s.style}}"><span class="lbl" style="font-size: 9px">{{s.n}}</span><span>{{s.label}}</span></li></sc-for>
+      <sc-if value="{{sel.empty}}" hint-placeholder-val="{{false}}"><li class="lbl">No steps specified</li></sc-if>
+    </ol>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { sel: 6 }; }
+  renderVals() {
+    const G = [
+      ['OSTEP','done','2026-08-25','2026-11-01',0,1],
+      ["Beej's Network Guide",'done','2026-09-13','2026-09-28',0,0],
+      ['Finish Home Lab','done','2026-09-14','2026-09-20',4,4],
+      ['Contribute to Alloy','active','2026-09-14','2026-12-31',0,0],
+      ['LeetCode Curriculum','active','2026-09-29','2026-12-31',1,20],
+      ['Shell Parser','planned','2026-10-12','2026-10-18',0,8],
+      ['Book of Proof','active','2026-10-26','2026-11-15',3,6],
+      ['Coffee chats','planned','2026-10-31','2027-01-15',0,0],
+      ['Hello Interview: Sys Design','active','2026-11-02','2026-12-21',0,3],
+      ['AWS SysDE OA Prep','active','2026-11-13','2026-11-18',0,25],
+      ['Warm up Q1 referrals','active','2026-11-19','2026-12-31',0,4],
+      ['eBPF Book','planned','2026-12-22','2027-02-13',0,0],
+      ['Interview Prep: Mocks','planned','2026-12-22','2027-04-01',0,0],
+      ['freeCodeCamp Course','planned','2027-01-01','2027-02-19',0,0],
+      ['Applications / Interviews','planned','2027-01-01','2027-05-03',0,0],
+      ['Database Internals','planned','2027-05-04','2027-07-19',0,0]
+    ];
+    const STEPS = {
+      4: [['Busiest Folder cold redo',1],['Bit manipulation',0],['Binary search',0],['Backtracking redo',0],['Advanced Algorithms',0],['+15 more',0]],
+      5: [['Ch 4 Scanning',0],['Ch 5 Representing Code',0],['Ch 6 Parsing',0],['AOSA: Bash',0],['POSIX grammar',0],['+3 more',0]],
+      6: [['Ch 1 Sets',1],['Ch 2 Logic, part 1',1],['Ch 2 Logic, part 2',1],['Ch 4 Direct Proof',0],['Ch 6 Contradiction',0],['Ch 10 Induction',0]],
+      8: [['Book club #1',0],['Book club #2',0],['Book club #3',0]],
+      9: [['Warm-up',0],['DP 1',0],['DP review',0],['Timed coding',0],['DP 2',0],['+20 more',0]],
+      10: [['Pick 5–6 contacts',0],['Send first messages',0],['Follow up',0],['Line up referral asks',0]],
+      2: [['Fix arr server',1],['CD for local apps',1],['arr monitoring',1],['Proxmox alerting',1]]
+    };
+    const t0 = Date.UTC(2026, 7, 1), t1 = Date.UTC(2027, 7, 1), span = t1 - t0;
+    const d = (s) => { const [y, m, dd] = s.split('-').map(Number); return Date.UTC(y, m - 1, dd); };
+    const today = Date.UTC(2026, 10, 24);
+    const pct = (x) => Math.max(0, Math.min(100, ((x - t0) / span) * 100));
+    const fmt = (s) => s.slice(8, 10) + '.' + s.slice(5, 7) + '.' + s.slice(2, 4);
+    const hatch = 'repeating-linear-gradient(-45deg,#ECEAE3 0 0.8px,transparent 0.8px 4px)';
+    const sel = this.state.sel;
+    const goals = G.map(([name, st, a, b, done, total], i) => {
+      const late = st !== 'done' && d(b) < today;
+      const L = pct(d(a)), W = Math.max(pct(d(b)) - L, 0.8);
+      const prog = st === 'done' ? 1 : total ? done / total : 0;
+      const isSel = i === sel;
+      const num = String(i + 1).padStart(2, '0');
+      return {
+        num, name,
+        tag: late ? 'late' : st === 'done' ? 'done' : total ? `${done}/${total}` : '',
+        pick: () => this.setState({ sel: i }),
+        cls: 'dim' + (late ? ' late' : st === 'planned' ? ' plan' : ''),
+        rowStyle: `all:unset;box-sizing:border-box;display:grid;grid-template-columns:236px minmax(0,1fr);height:24px;align-items:center;cursor:pointer;${isSel ? 'background:rgba(236,234,227,0.05);' : ''}`,
+        numStyle: `font-family:'IBM Plex Mono',monospace;font-size:10px;${isSel ? 'color:#ECEAE3;' : 'color:rgba(236,234,227,0.45);'}`,
+        nameStyle: `font-size:14px;font-weight:${isSel ? 500 : 300};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${st === 'done' && !isSel ? 'opacity:0.5;' : ''}`,
+        dimStyle: `position:absolute;top:15px;left:${L}%;width:${W}%;${st === 'done' ? 'opacity:0.45;' : ''}`,
+        fillStyle: `position:absolute;top:7px;height:8px;left:${L}%;width:${W * prog}%;background:${hatch};${st === 'done' ? 'opacity:0.45;' : ''}`,
+        tagStyle: `position:absolute;top:4px;left:calc(${L + W}% + 10px);white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.06em;${late ? 'color:#E0533D;' : 'color:rgba(236,234,227,0.55);'}`
+      };
+    });
+    const g = G[sel];
+    const steps = (STEPS[sel] || []).map(([label, dn], j) => ({ n: String(j + 1).padStart(2, '0'), label: label + (dn ? '  ✓' : ''), style: `display:flex;gap:12px;align-items:baseline;font-size:14px;font-weight:300;padding:4px 0;border-bottom:1px solid rgba(236,234,227,0.12);${dn ? 'opacity:0.55;' : ''}` }));
+    return {
+      months: ['Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul'],
+      todayFrac: (today - t0) / span,
+      goals,
+      sel: { num: String(sel + 1).padStart(2, '0'), name: g[0], range: `${fmt(g[2])} — ${fmt(g[3])}`, progress: g[5] ? `${g[4]} / ${g[5]} steps` : g[1], steps, empty: steps.length === 0 }
+    };
+  }
+}
+</script>
+</body>
+</html>

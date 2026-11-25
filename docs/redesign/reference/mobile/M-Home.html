@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mobile — Home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;300;400;500&family=IBM+Plex+Mono:wght@400;500&family=Architects+Daughter&display=swap" rel="stylesheet">
+<style>body{margin:0}a{color:#ECEAE3}a:hover{color:#FFFFFF}
+.bx{position:relative}
+.bx::before{content:"";position:absolute;left:-3px;right:-3px;top:0;bottom:0;border-top:1px solid #ECEAE3;border-bottom:1px solid #ECEAE3;pointer-events:none}
+.bx::after{content:"";position:absolute;top:-3px;bottom:-3px;left:0;right:0;border-left:1px solid #ECEAE3;border-right:1px solid #ECEAE3;pointer-events:none}
+.bx.sm::before{left:-2px;right:-2px}.bx.sm::after{top:-2px;bottom:-2px}
+.dim{position:relative;height:0;border-top:1px solid rgba(236,234,227,0.6)}
+.dim::before,.dim::after{content:"";position:absolute;top:-5px;height:10px;border-left:1px solid #ECEAE3;transform:skewX(-45deg)}
+.dim::before{left:0}.dim::after{right:0}
+.lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:rgba(236,234,227,0.6)}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-decoration:none;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.12em;color:rgba(236,234,227,0.55)}</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; background: #0C0C0B; color: #ECEAE3; font-family: 'Inter Tight', sans-serif; overflow: hidden">
+  <div style="position: absolute; inset: 0 0 78px 0; overflow-y: auto; padding: 22px 22px 28px; box-sizing: border-box; display: flex; flex-direction: column">
+    <div style="display: flex; justify-content: space-between; align-items: center; height: 24px"><span style="font-weight: 500; font-size: 12px; letter-spacing: 0.32em">CAREER</span><span style="display: flex; align-items: center; gap: 6px"><a href="M-Search.dc.html" aria-label="Search everything" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; margin: -10px 0"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 14 14" fill="none" stroke="#ECEAE3" stroke-width="1"><circle cx="6" cy="6" r="4.5"></circle><path d="M9.5 9.5 L13 13"></path></svg></a><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px">5:20 PM</span></span></div>
+    <div style="border-top: 1px solid rgba(236,234,227,0.3); margin-top: 12px"></div>
+    <header style="display: flex; align-items: flex-end; justify-content: space-between; margin-top: 22px">
+      <h1 style="margin: 0; font-weight: 200; font-size: 70px; line-height: 0.8; letter-spacing: -0.03em">24.11.26</h1>
+      <span style="font-weight: 300; font-size: 13px; letter-spacing: 0.24em; padding-bottom: 2px">TUE</span>
+    </header>
+    <div style="display: flex; align-items: center; gap: 10px; margin-top: 16px"><div class="dim" style="flex: 1"></div><span class="lbl" style="font-size: 9px">5 AM — 8:30 PM</span><div class="dim" style="flex: 1"></div></div>
+    <span style="font-family: 'Architects Daughter', cursive; font-size: 15px; color: #E0533D; margin-top: 14px" aria-live="polite">{{doneCount}} of 3 done — next in 25 min</span>
+
+    <h2 style="margin: 22px 0 4px; font-weight: 500; font-size: 11px; letter-spacing: 0.24em">GOAL SESSIONS</h2>
+    <sc-for list="{{sessions}}" as="s" hint-placeholder-count="3">
+      <label style="{{s.rowStyle}}">
+        <span class="bx sm" style="width: 18px; height: 18px">
+          <input type="checkbox" checked="{{s.done}}" onChange="{{s.toggle}}" aria-label="Mark {{s.title}} done" style="position: absolute; inset: -13px; width: 44px; height: 44px; opacity: 0; margin: 0; cursor: pointer">
+          <sc-if value="{{s.done}}" hint-placeholder-val="{{false}}"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 18 18" style="position: absolute; inset: 0"><path d="M0 0 L18 18 M18 0 L0 18" stroke="#ECEAE3" stroke-width="1"></path></svg></sc-if>
+          <sc-if value="{{s.next}}" hint-placeholder-val="{{false}}"><span aria-hidden="true" style="position: absolute; left: -11px; top: -11px; width: 38px; height: 38px; border: 1px solid #E0533D; border-radius: 50%"></span></sc-if>
+        </span>
+        <span style="display: flex; flex-direction: column; gap: 5px; min-width: 0">
+          <span style="display: flex; align-items: center; gap: 10px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{s.start}}</span><span class="dim" style="{{s.dimStyle}}"></span><span class="lbl" style="font-size: 9px">{{s.dur}}</span></span>
+          <span style="{{s.titleStyle}}">{{s.title}}</span>
+        </span>
+      </label>
+    </sc-for>
+    <div style="display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; color: #E0533D; font-size: 14px; font-weight: 300">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 18 18" style="flex: none; margin-top: 1px"><path d="M4 14 L14 4" stroke="#E0533D" stroke-width="1"></path><circle cx="9" cy="9" r="8" fill="none" stroke="#E0533D" stroke-width="1"></circle></svg>
+      <span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px">MON 6:45 PM · SKIPPED</span><br>Re-solve Kth Largest in Stream</span>
+    </div>
+
+    <h2 style="margin: 20px 0 8px; font-weight: 500; font-size: 11px; letter-spacing: 0.24em">ACTIVE GOALS</h2>
+    <sc-for list="{{goals}}" as="g" hint-placeholder-count="4">
+      <div style="display: flex; flex-direction: column; gap: 7px; padding: 8px 0">
+        <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-weight: 300; font-size: 15px">{{g.name}}</span><span style="{{g.labelStyle}}">{{g.label}}</span></div>
+        <span style="position: relative; height: 12px"><span style="{{g.fill}}"></span><span class="dim" style="position: absolute; left: 0; right: 0; bottom: 0"></span></span>
+      </div>
+    </sc-for>
+
+    <h2 style="margin: 24px 0 10px; font-weight: 500; font-size: 11px; letter-spacing: 0.24em; display: flex; justify-content: space-between">LEETGRINDER<span class="lbl" style="color: #ECEAE3">Goal met ✓</span></h2>
+    <div style="display: flex; align-items: flex-end; gap: 14px">
+      <span style="font-weight: 200; font-size: 64px; line-height: 0.78; letter-spacing: -0.03em">02</span>
+      <span style="display: flex; flex-direction: column; gap: 3px"><span style="font-weight: 300; font-size: 13px; letter-spacing: 0.12em">DAY STREAK</span><span class="lbl" style="font-size: 9px">Record 29</span></span>
+      <span style="margin-left: auto; display: flex; gap: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 13px"><span>2/2<br><span class="lbl" style="font-size: 8px">New</span></span><span>61<br><span class="lbl" style="font-size: 8px">Due</span></span></span>
+    </div>
+    <a href="#" class="bx" style="margin: 22px 3px 0; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; text-decoration: none">
+      <span class="lbl" style="font-size: 9px">Review · #703 · Easy</span>
+      <span style="font-weight: 300; font-size: 18px; line-height: 1.2">Kth Largest Element in a Stream</span>
+      <span style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px"><span style="font-size: 12px; opacity: 0.65">Recall 67%</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em">OPEN →</span></span>
+    </a>
+  </div>
+
+  <nav aria-label="Main" style="position: absolute; left: 0; right: 0; bottom: 0; height: 78px; border-top: 1px solid rgba(236,234,227,0.3); background: #0C0C0B; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding-bottom: 16px; box-sizing: border-box">
+    <a href="M-Home.dc.html" class="tab" aria-current="page" style="color: #ECEAE3; box-shadow: inset 0 1px 0 #ECEAE3"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 10 L11 3 L19 10 V19 H3 Z M9 19 V13 H13 V19"></path></svg>HOME</a>
+    <a href="M-Timeline.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M2 5 H12 M6 11 H18 M10 17 H20"></path><path d="M2 3 V7 M12 3 V7 M6 9 V13 M18 9 V13 M10 15 V19 M20 15 V19"></path></svg>TIMELINE</a>
+    <a href="M-Schedule.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="4" width="16" height="15"></rect><path d="M3 9 H19 M8.3 4 V19 M13.6 4 V19"></path></svg>SCHEDULE</a>
+    <a href="M-Leetgrinder.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M7 6 L2 11 L7 16 M15 6 L20 11 L15 16 M12.5 4 L9.5 18"></path></svg>LEET</a>
+    <a href="M-More.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 7 H19 M3 11 H19 M3 15 H19"></path></svg>MORE</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { done: { a: true, b: false, c: false } }; }
+  renderVals() {
+    const raw = [
+      { id: 'a', start: '7:15 AM', h: 1.5, title: 'LeetCode — K Closest Points, Min Cost Stairs' },
+      { id: 'b', start: '5:45 PM', h: 1, title: 'Hello Interview: System Design', next: true },
+      { id: 'c', start: '7:00 PM', h: 1, title: 'Contribute to Alloy' }
+    ];
+    const done = this.state.done;
+    const sessions = raw.map((s) => {
+      const d = !!done[s.id];
+      const isNext = s.next && !d;
+      return {
+        ...s, done: d, next: isNext, dur: s.h + ' H',
+        toggle: () => this.setState({ done: { ...done, [s.id]: !d } }),
+        rowStyle: `position:relative;display:grid;grid-template-columns:34px minmax(0,1fr);gap:14px;align-items:center;min-height:68px;border-bottom:1px solid rgba(236,234,227,0.14);cursor:pointer;${d ? 'opacity:0.45;' : ''}`,
+        dimStyle: `width:${s.h * 40}px`,
+        titleStyle: `font-weight:${isNext ? 400 : 300};font-size:${isNext ? 18 : 16}px;line-height:1.25;${d ? 'text-decoration:line-through;text-decoration-thickness:1px;' : ''}`
+      };
+    });
+    const hatch = 'repeating-linear-gradient(-45deg,#ECEAE3 0 0.8px,transparent 0.8px 4px)';
+    const goals = [['LeetCode Curriculum',1,20,0],['Book of Proof',3,6,1],['AWS SysDE OA Prep',0,25,1],['System Design',0,3,0]].map(([name, a, b, late]) => ({
+      name, label: late ? 'LATE' : `${a} / ${b}`,
+      fill: `position:absolute;left:0;bottom:0;height:8px;width:${(a / b) * 100}%;background:${hatch}`,
+      labelStyle: `font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;${late ? 'color:#E0533D;' : 'opacity:0.75;'}`
+    }));
+    return { sessions, goals, doneCount: sessions.filter((s) => s.done).length };
+  }
+}
+</script>
+</body>
+</html>

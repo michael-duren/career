@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mobile — Timeline</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;300;400;500&family=IBM+Plex+Mono:wght@400;500&family=Architects+Daughter&display=swap" rel="stylesheet">
+<style>body{margin:0}a{color:#ECEAE3}a:hover{color:#FFFFFF}
+.dim{position:relative;height:0;border-top:1px solid rgba(236,234,227,0.6)}
+.dim::before,.dim::after{content:"";position:absolute;top:-5px;height:10px;border-left:1px solid #ECEAE3;transform:skewX(-45deg)}
+.dim::before{left:0}.dim::after{right:0}
+.dim.plan{border-top-style:dashed;border-top-color:rgba(236,234,227,0.5)}
+.dim.late{border-top-color:#E0533D}.dim.late::before,.dim.late::after{border-color:#E0533D}
+.lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:rgba(236,234,227,0.6)}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-decoration:none;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.12em;color:rgba(236,234,227,0.55)}</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; background: #0C0C0B; color: #ECEAE3; font-family: 'Inter Tight', sans-serif; overflow: hidden">
+  <div style="position: absolute; inset: 0 0 78px 0; overflow-y: auto; padding: 22px 22px 28px; box-sizing: border-box; display: flex; flex-direction: column">
+    <div style="display: flex; justify-content: space-between; align-items: center; height: 24px"><span style="font-weight: 500; font-size: 12px; letter-spacing: 0.32em">CAREER</span><span style="display: flex; align-items: center; gap: 6px"><a href="M-Search.dc.html" aria-label="Search everything" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; margin: -10px 0"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 14 14" fill="none" stroke="#ECEAE3" stroke-width="1"><circle cx="6" cy="6" r="4.5"></circle><path d="M9.5 9.5 L13 13"></path></svg></a><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px">5:20 PM</span></span></div>
+    <div style="border-top: 1px solid rgba(236,234,227,0.3); margin-top: 12px"></div>
+    <header style="margin-top: 22px; display: flex; flex-direction: column; gap: 8px">
+      <span class="lbl">Aug 2026 – Jul 2027</span>
+      <h1 style="margin: 0; font-weight: 200; font-size: 44px; line-height: 0.9">Goal timeline</h1>
+      <div style="display: flex; gap: 22px; margin-top: 8px">
+        <span style="display: flex; flex-direction: column"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 17px">06</span><span class="lbl" style="font-size: 9px">Active</span></span>
+        <span style="display: flex; flex-direction: column"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 17px">07</span><span class="lbl" style="font-size: 9px">Planned</span></span>
+        <span style="display: flex; flex-direction: column"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 17px">03</span><span class="lbl" style="font-size: 9px">Done</span></span>
+        <span style="display: flex; flex-direction: column; color: #E0533D"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 17px">03</span><span class="lbl" style="font-size: 9px; color: #E0533D">Late</span></span>
+      </div>
+    </header>
+    <div style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); margin-top: 22px; border-bottom: 1px solid rgba(236,234,227,0.3)"><sc-for list="{{months}}" as="m" hint-placeholder-count="12"><span class="lbl" style="font-size: 8px; letter-spacing: 0.04em; padding: 0 0 5px 2px; border-left: 1px solid rgba(236,234,227,0.18)">{{m}}</span></sc-for></div>
+    <div style="position: relative; display: flex; flex-direction: column">
+      <div aria-hidden="true" style="position: absolute; top: -26px; bottom: 0; left: calc(100% * {{todayFrac}}); width: 0; border-left: 1px solid #E0533D; border-image: repeating-linear-gradient(#E0533D 0 10px, transparent 10px 13px, #E0533D 13px 15px, transparent 15px 18px) 1; z-index: 2; pointer-events: none"></div>
+      <sc-for list="{{goals}}" as="g" hint-placeholder-count="16">
+        <div style="{{g.wrapStyle}}">
+          <button type="button" onClick="{{g.pick}}" aria-expanded="{{g.open}}" style="all: unset; box-sizing: border-box; display: flex; flex-direction: column; gap: 9px; padding: 11px 0 12px; cursor: pointer; width: 100%">
+            <span style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px"><span style="{{g.nameStyle}}">{{g.name}}</span><span style="{{g.tagStyle}}">{{g.tag}}</span></span>
+            <span style="position: relative; height: 10px; width: 100%"><span style="{{g.fillStyle}}"></span><span class="{{g.cls}}" style="{{g.dimStyle}}"></span></span>
+          </button>
+          <sc-if value="{{g.open}}" hint-placeholder-val="{{false}}">
+            <div style="padding: 2px 0 14px; display: flex; flex-direction: column">
+              <span class="lbl" style="font-size: 9px; margin-bottom: 4px">{{g.range}}</span>
+              <sc-for list="{{g.steps}}" as="s" hint-placeholder-count="4"><span style="{{s.style}}"><span class="lbl" style="font-size: 9px">{{s.n}}</span>{{s.label}}</span></sc-for>
+              <sc-if value="{{g.empty}}" hint-placeholder-val="{{false}}"><span style="font-size: 13px; opacity: 0.6">No steps yet</span></sc-if>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <nav aria-label="Main" style="position: absolute; left: 0; right: 0; bottom: 0; height: 78px; border-top: 1px solid rgba(236,234,227,0.3); background: #0C0C0B; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding-bottom: 16px; box-sizing: border-box">
+    <a href="M-Home.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 10 L11 3 L19 10 V19 H3 Z M9 19 V13 H13 V19"></path></svg>HOME</a>
+    <a href="M-Timeline.dc.html" class="tab" aria-current="page" style="color: #ECEAE3; box-shadow: inset 0 1px 0 #ECEAE3"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M2 5 H12 M6 11 H18 M10 17 H20"></path><path d="M2 3 V7 M12 3 V7 M6 9 V13 M18 9 V13 M10 15 V19 M20 15 V19"></path></svg>TIMELINE</a>
+    <a href="M-Schedule.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="4" width="16" height="15"></rect><path d="M3 9 H19 M8.3 4 V19 M13.6 4 V19"></path></svg>SCHEDULE</a>
+    <a href="M-Leetgrinder.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M7 6 L2 11 L7 16 M15 6 L20 11 L15 16 M12.5 4 L9.5 18"></path></svg>LEET</a>
+    <a href="M-More.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 7 H19 M3 11 H19 M3 15 H19"></path></svg>MORE</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { sel: 6 }; }
+  renderVals() {
+    const G = [
+      ['OSTEP','done','2026-08-25','2026-11-01',0,1],
+      ["Beej's Network Guide",'done','2026-09-13','2026-09-28',0,0],
+      ['Finish Home Lab','done','2026-09-14','2026-09-20',4,4],
+      ['Contribute to Alloy','active','2026-09-14','2026-12-31',0,0],
+      ['LeetCode Curriculum','active','2026-09-29','2026-12-31',1,20],
+      ['Shell Parser','planned','2026-10-12','2026-10-18',0,8],
+      ['Book of Proof','active','2026-10-26','2026-11-15',3,6],
+      ['Coffee chats','planned','2026-10-31','2027-01-15',0,0],
+      ['Hello Interview: Sys Design','active','2026-11-02','2026-12-21',0,3],
+      ['AWS SysDE OA Prep','active','2026-11-13','2026-11-18',0,25],
+      ['Warm up Q1 referrals','active','2026-11-19','2026-12-31',0,4],
+      ['eBPF Book','planned','2026-12-22','2027-02-13',0,0],
+      ['Interview Prep: Mocks','planned','2026-12-22','2027-04-01',0,0],
+      ['freeCodeCamp Course','planned','2027-01-01','2027-02-19',0,0],
+      ['Applications / Interviews','planned','2027-01-01','2027-05-03',0,0],
+      ['Database Internals','planned','2027-05-04','2027-07-19',0,0]
+    ];
+    const STEPS = {
+      4: [['Busiest Folder cold redo',1],['Bit manipulation',0],['Binary search',0],['Backtracking redo',0],['+16 more',0]],
+      5: [['Ch 4 Scanning',0],['Ch 5 Representing Code',0],['Ch 6 Parsing',0],['+5 more',0]],
+      6: [['Ch 1 Sets',1],['Ch 2 Logic, part 1',1],['Ch 2 Logic, part 2',1],['Ch 4 Direct Proof',0],['Ch 6 Contradiction',0],['Ch 10 Induction',0]],
+      8: [['Book club #1',0],['Book club #2',0],['Book club #3',0]],
+      9: [['Warm-up',0],['DP 1',0],['DP review',0],['+22 more',0]],
+      10: [['Pick 5–6 contacts',0],['Send first messages',0],['Follow up',0],['Line up referral asks',0]],
+      2: [['Fix arr server',1],['CD for local apps',1],['arr monitoring',1],['Proxmox alerting',1]]
+    };
+    const t0 = Date.UTC(2026, 7, 1), t1 = Date.UTC(2027, 7, 1), span = t1 - t0;
+    const d = (s) => { const [y, m, dd] = s.split('-').map(Number); return Date.UTC(y, m - 1, dd); };
+    const today = Date.UTC(2026, 10, 24);
+    const pct = (x) => Math.max(0, Math.min(100, ((x - t0) / span) * 100));
+    const fmt = (s) => new Date(d(s)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+    const hatch = 'repeating-linear-gradient(-45deg,#ECEAE3 0 0.8px,transparent 0.8px 4px)';
+    const sel = this.state.sel;
+    const goals = G.map(([name, st, a, b, done, total], i) => {
+      const late = st !== 'done' && d(b) < today;
+      const L = pct(d(a)), W = Math.max(pct(d(b)) - L, 1.2);
+      const prog = st === 'done' ? 1 : total ? done / total : 0;
+      const open = i === sel;
+      const steps = (STEPS[i] || []).map(([label, dn], j) => ({ n: String(j + 1).padStart(2, '0'), label: label + (dn ? '  ✓' : ''), style: `display:flex;gap:12px;align-items:baseline;font-size:14px;font-weight:300;padding:7px 0;border-bottom:1px solid rgba(236,234,227,0.12);${dn ? 'opacity:0.55;' : ''}` }));
+      return {
+        name, open, steps, empty: steps.length === 0,
+        range: `${fmt(a)} — ${fmt(b)}`,
+        tag: late ? 'LATE' : st === 'done' ? 'DONE' : total ? `${done}/${total}` : st.toUpperCase(),
+        pick: () => this.setState({ sel: open ? -1 : i }),
+        cls: 'dim' + (late ? ' late' : st === 'planned' ? ' plan' : ''),
+        wrapStyle: `border-bottom:1px solid rgba(236,234,227,0.14);${open ? 'background:rgba(236,234,227,0.03);' : ''}`,
+        nameStyle: `font-size:15px;font-weight:${open ? 500 : 300};${st === 'done' && !open ? 'opacity:0.5;' : ''}`,
+        tagStyle: `flex:none;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;${late ? 'color:#E0533D;' : 'color:rgba(236,234,227,0.55);'}`,
+        dimStyle: `position:absolute;bottom:0;left:${L}%;width:${W}%;${st === 'done' ? 'opacity:0.45;' : ''}`,
+        fillStyle: `position:absolute;bottom:0;height:7px;left:${L}%;width:${W * prog}%;background:${hatch};${st === 'done' ? 'opacity:0.45;' : ''}`
+      };
+    });
+    return { months: ['A','S','O','N','D','J','F','M','A','M','J','J'], todayFrac: (today - t0) / span, goals };
+  }
+}
+</script>
+</body>
+</html>

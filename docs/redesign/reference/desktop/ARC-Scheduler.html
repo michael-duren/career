@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Architect — Schedule</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;300;400;500&family=IBM+Plex+Mono:wght@400;500&family=Architects+Daughter&display=swap" rel="stylesheet">
+<style>body{margin:0}a{color:#ECEAE3}a:hover{color:#FFFFFF}
+.lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:rgba(236,234,227,0.6)}
+.co{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border:1px solid #ECEAE3;border-radius:50%;font-family:'IBM Plex Mono',monospace;font-size:9px;flex:none}
+.blk{position:absolute;box-sizing:border-box;border:1px solid #ECEAE3;background:#0C0C0B;overflow:hidden;display:flex}
+.btn{height:44px;padding:0 16px;background:transparent;border:1px solid rgba(236,234,227,0.5);color:#ECEAE3;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:0.16em;cursor:pointer}.nv{text-decoration:none;font-size:11.5px;letter-spacing:0.06em;opacity:0.6;padding:6px 0}
+.nv.on{opacity:1;border-bottom:1px solid #ECEAE3}
+</style>
+</helmet>
+<div style="position: relative; width: 1280px; height: 800px; box-sizing: border-box; background: #0C0C0B; color: #ECEAE3; font-family: 'Inter Tight', sans-serif; padding: 40px 56px; display: flex; flex-direction: column; overflow: hidden">
+  <nav aria-label="Main" style="display: flex; align-items: center; gap: 17px; height: 28px">
+    <span style="font-weight: 500; font-size: 13px; letter-spacing: 0.32em; margin-right: 18px">CAREER</span>
+    <a href="#" class="nv">HOME</a>
+    <a href="#" class="nv">TIMELINE</a>
+    <a href="#" class="nv on" aria-current="page">SCHEDULE</a>
+    <a href="#" class="nv">LEET</a>
+    <a href="#" class="nv">COMPANIES</a>
+    <a href="#" class="nv">PEOPLE</a>
+    <a href="#" class="nv">BOOKS</a>
+    <a href="#" class="nv">JOURNAL</a>
+    <a href="#" class="nv">NOTES</a>
+    <a href="#" class="nv">AUDIO</a>
+    <a href="#" class="nv">AGENTS</a>
+    <label style="margin-left: auto; display: flex; align-items: center; gap: 10px; height: 34px; width: 210px; padding: 0 12px; border: 1px solid rgba(236,234,227,0.35); box-sizing: border-box">
+      <svg aria-hidden="true" width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#ECEAE3" stroke-width="1"><circle cx="6" cy="6" r="4.5"></circle><path d="M9.5 9.5 L13 13"></path></svg>
+      <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search everything</span>
+      <input type="search" placeholder="Search everything" style="flex: 1; min-width: 0; border: 0; background: transparent; color: #ECEAE3; font: 300 13px 'Inter Tight', sans-serif; outline: none">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; opacity: 0.5">/</span>
+    </label>
+    <a href="#" aria-label="Settings" style="width: 34px; height: 34px; margin-left: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(236,234,227,0.35)"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#ECEAE3" stroke-width="1"><circle cx="8" cy="8" r="2.5"></circle><path d="M8 1 V3.5 M8 12.5 V15 M1 8 H3.5 M12.5 8 H15 M3 3 L4.8 4.8 M11.2 11.2 L13 13 M3 13 L4.8 11.2 M11.2 4.8 L13 3"></path></svg></a>
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; margin-left: 14px">5:20 PM</span>
+  </nav>
+  <div style="border-top: 1px solid rgba(236,234,227,0.3); margin-top: 14px"></div>
+  <header style="display: flex; align-items: flex-end; justify-content: space-between; margin-top: 20px">
+    <div style="display: flex; flex-direction: column; gap: 8px"><span class="lbl">Week 48</span><h1 style="margin: 0; font-weight: 200; font-size: 52px; line-height: 0.9">23 — 29 November</h1></div>
+    <div style="display: flex; gap: 10px">
+      <button type="button" class="btn" aria-label="Previous week" style="width: 44px; padding: 0">←</button>
+      <button type="button" class="btn" aria-label="Next week" style="width: 44px; padding: 0">→</button>
+      <button type="button" class="btn">RULES</button>
+      <button type="button" class="btn">GOOGLE SYNC</button>
+      <button type="button" class="btn" style="background: #ECEAE3; color: #0C0C0B; border-color: #ECEAE3">ACCEPT PLAN</button>
+    </div>
+  </header>
+  <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 40px; margin-top: 22px">
+    <div style="display: flex; flex-direction: column; min-width: 0">
+      <div style="display: grid; grid-template-columns: 46px repeat(7, minmax(0, 1fr)); height: 26px; border-bottom: 1px solid #ECEAE3">
+        <span></span>
+        <sc-for list="{{days}}" as="d" hint-placeholder-count="7"><span style="{{d.style}}">{{d.label}}</span></sc-for>
+      </div>
+      <div style="flex: 1; position: relative; display: grid; grid-template-columns: 46px repeat(7, minmax(0, 1fr))">
+        <div aria-hidden="true" style="position: absolute; inset: 0 0 0 46px; pointer-events: none"><sc-for list="{{hours}}" as="h" hint-placeholder-count="8"><span style="{{h.line}}"></span></sc-for></div>
+        <div style="position: relative"><sc-for list="{{hours}}" as="h" hint-placeholder-count="8"><span style="{{h.style}}">{{h.label}}</span></sc-for></div>
+        <sc-for list="{{cols}}" as="c" hint-placeholder-count="7">
+          <div style="{{c.style}}">
+            <sc-for list="{{c.blocks}}" as="b" hint-placeholder-count="4">
+              <div class="blk" style="{{b.style}}"><span style="{{b.strip}}"></span><span style="display: flex; flex-direction: column; min-width: 0; padding: 2px 5px"><span style="{{b.tStyle}}">{{b.title}}</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; opacity: 0.55">{{b.time}}</span></span></div>
+            </sc-for>
+          </div>
+        </sc-for>
+        <div aria-hidden="true" style="position: absolute; left: calc(46px + (100% - 46px) / 7); width: calc((100% - 46px) / 7); top: {{nowTop}}%; border-top: 1px solid #E0533D; z-index: 3"></div>
+        <span style="position: absolute; left: calc(46px + (100% - 46px) * 2 / 7 + 6px); top: calc({{nowTop}}% - 9px); font-family: 'Architects Daughter', cursive; font-size: 13px; color: #E0533D; z-index: 3">now 5:20 PM</span>
+      </div>
+    </div>
+    <aside style="display: flex; flex-direction: column; gap: 22px">
+      <section>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px"><h2 style="margin: 0; font-weight: 500; font-size: 12px; letter-spacing: 0.24em">GOAL HOURS</h2></div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px">
+          <thead><tr><th class="lbl" style="text-align: left; font-weight: 500; padding: 0 0 6px; border-bottom: 1px solid #ECEAE3">Goal</th><th class="lbl" style="text-align: right; font-weight: 500; padding: 0 0 6px; border-bottom: 1px solid #ECEAE3">Req</th><th class="lbl" style="text-align: right; font-weight: 500; padding: 0 0 6px; border-bottom: 1px solid #ECEAE3">Plan</th><th class="lbl" style="text-align: right; font-weight: 500; padding: 0 0 6px; border-bottom: 1px solid #ECEAE3">Δ</th></tr></thead>
+          <tbody>
+            <sc-for list="{{hrs}}" as="g" hint-placeholder-count="5">
+              <tr><td style="padding: 8px 0; border-bottom: 1px solid rgba(236,234,227,0.14); font-weight: 300"><span style="{{g.sw}}"></span>{{g.name}}</td><td style="padding: 8px 0; border-bottom: 1px solid rgba(236,234,227,0.14); text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{g.req}}</td><td style="padding: 8px 0; border-bottom: 1px solid rgba(236,234,227,0.14); text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{g.plan}}</td><td style="{{g.dStyle}}">{{g.delta}}</td></tr>
+            </sc-for>
+          </tbody>
+        </table>
+        <div class="lbl" style="margin-top: 8px">Capacity remaining 45.5 h</div>
+      </section>
+      <section style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 300; color: #E0533D">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px"><h2 style="margin: 0; font-weight: 500; font-size: 12px; letter-spacing: 0.24em">WARNINGS</h2></div>
+        <span>1 — Mon walk clashes with Google busy</span><span>2 — Coffee chats: 3.5 h unplaced</span><span>3 — Q1 referrals: hours not set</span>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const S = [
+      [0,'09:00','16:00','Work','r'],[0,'16:15','16:45','Walk','r','warn'],[0,'18:45','19:45','LC backlog Mon','LC','skip'],[0,'06:15','09:00','Busy','busy'],[0,'16:00','18:30','Busy','busy'],
+      [1,'06:00','07:00','Run · intervals','r'],[1,'07:15','08:45','LC backlog Tue','LC','done'],[1,'09:00','16:00','Work','r'],[1,'16:30','17:30','Lift · upper A','r'],[1,'17:45','18:45','System design','SD'],[1,'19:00','20:00','Alloy','AL'],
+      [2,'07:00','08:00','Lift · lower A','r'],[2,'09:00','11:30','LC backlog Wed AM','LC'],[2,'12:00','12:30','Walk','r'],[2,'13:30','15:00','LC backlog Wed PM','LC'],[2,'15:30','17:30','System design','SD'],[2,'18:00','19:00','Alloy','AL','cancel'],
+      [3,'07:00','08:00','Lift · upper B','r'],[3,'08:00','09:00','System design','SD'],[3,'09:00','10:30','LC Thu (light)','LC'],[3,'10:30','11:30','LC re-solve trees','LC'],[3,'13:00','17:00',"Thanksgiving at Mom's",'r'],[3,'17:00','17:30','Walk','r'],
+      [4,'07:00','08:00','Run · tempo','r'],[4,'09:00','11:30','LC backlog Fri AM','LC'],[4,'13:30','15:00','LC quick-review','LC'],[4,'15:30','16:30','Alloy','AL'],
+      [5,'07:00','08:00','Lift · lower B','r'],[5,'09:00','11:30','LC backlog Sat AM','LC'],[5,'12:00','12:30','Walk','r'],[5,'14:00','15:30','LC quick-review','LC'],[5,'16:00','18:00','Alloy','AL','cancel'],
+      [6,'07:00','08:00','Run · steady','r'],[6,'09:00','10:30','LC buffer','LC'],[6,'13:00','14:00','Book club','r'],[6,'15:00','15:30','Walk','r'],[6,'16:00','17:00','Alloy','AL']
+    ];
+    const H0 = 5, H1 = 20.5, R = H1 - H0;
+    const t = (s) => { const [h, m] = s.split(':').map(Number); return h + m / 60; };
+    const f12 = (s) => { const [h, m] = s.split(':').map(Number); return `${h % 12 || 12}${m ? ':' + String(m).padStart(2, '0') : ''} ${h < 12 ? 'AM' : 'PM'}`; };
+    const top = (s) => ((t(s) - H0) / R) * 100;
+    const hatch = 'repeating-linear-gradient(-45deg,#ECEAE3 0 0.8px,transparent 0.8px 4px)';
+    const P = { LC: hatch, SD: hatch + ',repeating-linear-gradient(45deg,#ECEAE3 0 0.8px,transparent 0.8px 4px)', AL: 'radial-gradient(#ECEAE3 0.9px, transparent 1.2px) 0 0 / 4px 4px' };
+    const cols = [0,1,2,3,4,5,6].map((di) => ({
+      style: `position:relative;border-left:1px solid rgba(236,234,227,0.14);${di === 1 ? 'background:rgba(236,234,227,0.025);' : ''}`,
+      blocks: S.filter((s) => s[0] === di).map(([, a, b, title, k, st]) => {
+        const T = top(a), Hh = Math.max(top(b) - T, 2.6);
+        let css = '', strip = 'flex:none;width:0;';
+        if (P[k]) strip = `flex:none;width:6px;background:${P[k]};border-right:1px solid #ECEAE3;`;
+        if (k === 'r') css = 'border-color:rgba(236,234,227,0.35);color:rgba(236,234,227,0.7);';
+        if (k === 'busy') css = 'border:1px dotted rgba(236,234,227,0.35);background:transparent;color:rgba(236,234,227,0.4);z-index:0;';
+        if (st === 'done') css += 'opacity:0.4;';
+        if (st === 'skip') css += 'border-color:#E0533D;color:#E0533D;';
+        if (st === 'cancel') css += 'border-style:dashed;opacity:0.4;';
+        if (st === 'warn') css += 'border-color:#E0533D;';
+        return {
+          title: title, time: `${f12(a)}–${f12(b)}`, strip,
+          style: `left:3px;right:3px;top:${T}%;height:${Hh}%;z-index:1;${css}`,
+          tStyle: `font-size:10.5px;font-weight:400;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${st === 'skip' || st === 'cancel' || st === 'done' ? 'text-decoration:line-through;' : ''}`
+        };
+      })
+    }));
+    const dl = ['MON 23','TUE 24','WED 25','THU 26','FRI 27','SAT 28','SUN 29'];
+    const days = dl.map((label, i) => ({ label, style: `display:flex;align-items:center;padding-left:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.14em;${i === 1 ? 'color:#0C0C0B;background:#ECEAE3;' : 'color:rgba(236,234,227,0.65);'}` }));
+    const hours = [6,8,10,12,14,16,18,20].map((h) => { const y = ((h - H0) / R) * 100; return { label: `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`, style: `position:absolute;right:8px;top:calc(${y}% - 6px);font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(236,234,227,0.5)`, line: `position:absolute;left:0;right:0;top:${y}%;border-top:1px solid rgba(236,234,227,0.06)` }; });
+    const hrs = [
+      ['LeetCode', 10.5, 16, P.LC], ['System design', 4, 4, P.SD], ['Alloy', 3, 3, P.AL], ['Coffee chats', 3.5, 0, null], ['Q1 referrals', null, 0, null]
+    ].map(([name, req, plan, pat]) => {
+      const dd = req == null ? null : plan - req;
+      return { name, req: req == null ? '—' : req.toFixed(1), plan: plan.toFixed(1), delta: dd == null ? '—' : (dd > 0 ? '+' : '') + dd.toFixed(1),
+        sw: `display:inline-block;width:10px;height:10px;margin-right:8px;vertical-align:-1px;border:1px solid ${pat ? '#ECEAE3' : 'rgba(236,234,227,0.35)'};${pat ? `background:${pat};` : ''}`,
+        dStyle: `padding:8px 0;border-bottom:1px solid rgba(236,234,227,0.14);text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;${dd != null && dd < 0 ? 'color:#E0533D;' : ''}` };
+    });
+    return { days, hours, cols, hrs, nowTop: top('17:20') };
+  }
+}
+</script>
+</body>
+</html>
