@@ -1,0 +1,60 @@
+/* Architect theme tokens: see docs/redesign/design-system.md. Plain CSS so Go templ pages can link /ui/tokens.css; Astro pages get it bundled through src/styles/global.css. */
+/*
+ * Architect theme tokens (docs/redesign/design-system.md, "Themes and tokens").
+ * Themes only swap values: set data-theme="dark|vellum|cobalt|concrete" on <html>.
+ * Dark is the default, so it also applies when the attribute is missing or unknown.
+ * Legacy zinc/blue colors below and in components are not tokenized yet: only Dark is a
+ * supported theme until the redesign page issues migrate them.
+ */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #0C0C0B;
+  --ink: #ECEAE3;
+  --ink-rgb: 236, 234, 227;
+  --accent: #E0533D;
+  --ink-hover: #FFFFFF;
+  /* Label alpha; raised per theme where 0.6 would fall below 4.5:1 on --paper. */
+  --ink-60-alpha: 0.6;
+}
+
+[data-theme="vellum"] {
+  color-scheme: light;
+  --paper: #F3F1EA;
+  --ink: #1A1A17;
+  --ink-rgb: 26, 26, 23;
+  --accent: #C2361E;
+  --ink-hover: #000000;
+  --ink-60-alpha: 0.64;
+}
+
+[data-theme="cobalt"] {
+  color-scheme: light;
+  --paper: #F7F7F4;
+  --ink: #0047AB;
+  --ink-rgb: 0, 71, 171;
+  --accent: #D6402A;
+  --ink-hover: #002F73;
+  --ink-60-alpha: 0.78;
+}
+
+[data-theme="concrete"] {
+  color-scheme: dark;
+  --paper: #2C2D2F;
+  --ink: #EFEDE6;
+  --ink-rgb: 239, 237, 230;
+  --accent: #F2C230;
+  --ink-hover: #FFFFFF;
+  --ink-60-alpha: 0.6;
+}
+
+/* Declared on every theme root so a nested data-theme (e.g. a theme preview) resolves its own alphas. */
+:root,
+[data-theme] {
+  --ink-60: rgba(var(--ink-rgb), var(--ink-60-alpha));
+  --ink-50: rgba(var(--ink-rgb), 0.5);
+  --ink-30: rgba(var(--ink-rgb), 0.3);
+  --ink-14: rgba(var(--ink-rgb), 0.14);
+  --ink-07: rgba(var(--ink-rgb), 0.07);
+  --ink-05: rgba(var(--ink-rgb), 0.05);
+}

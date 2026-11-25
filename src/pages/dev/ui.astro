@@ -1,0 +1,11 @@
+---
+// Dev-only review page for the drawing primitives. The Go server only routes /dev/ui
+// outside production (internal/server/static.go).
+import Layout from '../../layouts/Layout.astro';
+import UiGallery from '../../components/dev/UiGallery';
+import '../../styles/global.css';
+---
+
+<Layout title="Drawing primitives · dev">
+  <UiGallery client:load />
+</Layout>

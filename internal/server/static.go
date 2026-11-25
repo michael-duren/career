@@ -98,8 +98,15 @@ func (s *Server) dynamicPage(kind, prefix, shell string) http.HandlerFunc {
 	}
 }
 
+// devUIPage is the dev-only gallery of the drawing primitives, routed outside production only.
+const devUIPage = "dev/ui/index.html"
+
 func (s *Server) asset(w http.ResponseWriter, r *http.Request) {
 	clean := strings.TrimPrefix(path.Clean(r.URL.Path), "/")
+	if s.config.Production && strings.HasPrefix(clean, "dev/") {
+		http.NotFound(w, r)
+		return
+	}
 	if clean == "." || (!strings.HasPrefix(clean, "_astro/") && !strings.HasPrefix(clean, "icons/") && !strings.Contains(path.Base(clean), ".")) {
 		http.NotFound(w, r)
 		return
@@ -113,6 +120,11 @@ func (s *Server) registerStatic(r chi.Router) {
 		if route != "/" {
 			r.Get(route+"/", s.page)
 		}
+	}
+	if !s.config.Production {
+		devUI := func(w http.ResponseWriter, r *http.Request) { s.staticFile(w, r, devUIPage, true) }
+		r.Get("/dev/ui", devUI)
+		r.Get("/dev/ui/", devUI)
 	}
 	for route, tab := range journalTabs {
 		redirect := func(w http.ResponseWriter, r *http.Request) {
