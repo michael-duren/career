@@ -44,7 +44,8 @@ export function formatTimeRange(start: TimeValue, end: TimeValue, options: TimeO
 }
 
 // A calendar date: "YYYY-MM-DD" (read as that date, no zone shift) or an
-// instant (read in timeZone, default the browser zone).
+// instant (read in timeZone, default the browser zone). Any other string goes
+// through new Date(), so one without an offset is read as runtime-local time.
 export type DateValue = string | Date;
 
 function dateFields(value: DateValue, timeZone?: string): { year: number; month: number; day: number; weekday: number } {
