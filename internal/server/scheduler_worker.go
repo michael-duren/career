@@ -17,6 +17,7 @@ import (
 const schedulerGoogleBatchSize = 20
 
 // RunScheduler generates routine sessions even with no browser open and retries durable exports.
+// It pauses while the Schedule module is off.
 func RunScheduler(ctx context.Context, c config.Config, db *database.Store) {
 	s := &Server{db: db, config: c}
 	ticker := time.NewTicker(time.Minute)
@@ -32,6 +33,12 @@ func RunScheduler(ctx context.Context, c config.Config, db *database.Store) {
 			cycle, stop := context.WithTimeout(ctx, 55*time.Second)
 			defer stop()
 			now := time.Now()
+			if settings, err := s.moduleSettings(cycle); err != nil {
+				log.Printf("scheduler: %v", err)
+				return
+			} else if !settings.Enabled("schedule") {
+				return
+			}
 			if err := db.SchedulerTick(cycle, now); err != nil {
 				log.Printf("scheduler catch-up: %v", err)
 			} else if s.googleConfigured() {

@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -69,24 +69,18 @@ func (s *Server) patchSettings(w http.ResponseWriter, r *http.Request) {
 	respond(w, 200, newSettingsView(settings))
 }
 
-// appSettings loads the module settings. Without a database (some handler
-// tests) or when they cannot be loaded, every module counts as on: a module
-// left visible during a storage outage exposes nothing, since its own
-// requests fail too.
-func (s *Server) appSettings(r *http.Request) modules.Settings {
-	return s.moduleSettings(r.Context())
-}
-
-func (s *Server) moduleSettings(ctx context.Context) modules.Settings {
+// moduleSettings loads the module settings. Without a database (handler
+// tests that need none) every module is on. A load failure is returned so
+// callers fail closed instead of showing a module that may be off.
+func (s *Server) moduleSettings(ctx context.Context) (modules.Settings, error) {
 	if s.db == nil {
-		return modules.Settings{}.Normalize()
+		return modules.Settings{}.Normalize(), nil
 	}
 	settings, err := s.db.AppSettings(ctx)
 	if err != nil {
-		log.Printf("module settings could not be loaded: %v", err)
-		return modules.Settings{}.Normalize()
+		return settings, fmt.Errorf("load module settings: %w", err)
 	}
-	return settings
+	return settings, nil
 }
 
 // requestModule returns the module that owns a request path.
@@ -121,12 +115,23 @@ func (s *Server) moduleGuard(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		if !s.appSettings(r).Enabled(m.ID) {
-			moduleOff(w, r, m)
-			return
-		}
-		next.ServeHTTP(w, r)
+		s.guardModule(w, r, next, m)
 	})
+}
+
+// guardModule serves next when m is on, 404 when it is off, and 503 when the
+// settings cannot be loaded.
+func (s *Server) guardModule(w http.ResponseWriter, r *http.Request, next http.Handler, m modules.Module) {
+	settings, err := s.moduleSettings(r.Context())
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	if !settings.Enabled(m.ID) {
+		moduleOff(w, r, m)
+		return
+	}
+	next.ServeHTTP(w, r)
 }
 
 // requireModule returns 404 for every request while module id is off.
@@ -134,11 +139,7 @@ func (s *Server) requireModule(id string) func(http.Handler) http.Handler {
 	m, _ := modules.Lookup(id)
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if !s.appSettings(r).Enabled(id) {
-				moduleOff(w, r, m)
-				return
-			}
-			next.ServeHTTP(w, r)
+			s.guardModule(w, r, next, m)
 		})
 	}
 }

@@ -85,7 +85,9 @@ func TestDisabledModulesReturn404(t *testing.T) {
 		t.Fatal(err)
 	}
 	do := func(method, path string, auth string) *httptest.ResponseRecorder {
-		r := httptest.NewRequest(method, path, nil)
+		r := httptest.NewRequest(method, path, strings.NewReader("{}"))
+		r.Header.Set("Origin", testOrigin)
+		r.Header.Set("Content-Type", "application/json")
 		switch auth {
 		case "session":
 			r.AddCookie(&http.Cookie{Name: "session", Value: s.token()})
@@ -117,7 +119,7 @@ func TestDisabledModulesReturn404(t *testing.T) {
 		}
 		return kinds
 	}
-	paths := []string{"/notes", "/notes/", "/api/entries/note", "/weekly-scheduler", "/api/scheduler/week?week=2026-11-23", "/timeline", "/api/goals"}
+	paths := []string{"/notes", "/notes/", "/api/entries/note", "/weekly-scheduler", "/api/scheduler/week?week=2026-11-23", "/timeline", "/api/goals", "/api/summaries/progress"}
 	for _, path := range paths {
 		if w := do("GET", path, "session"); w.Code != 200 {
 			t.Fatalf("%s while on: %d %s", path, w.Code, w.Body.String())
@@ -131,10 +133,20 @@ func TestDisabledModulesReturn404(t *testing.T) {
 	}
 
 	// Timeline off takes Schedule down with it; Notes off hides its entries.
-	set(map[string]bool{"notes": false, "timeline": false, "leetgrinder": false})
-	for _, path := range append(paths, "/notes/systems/nested-note", "/leetgrinder", "/leetgrinder/problem/two-sum", "/api/agent-context") {
+	set(map[string]bool{"notes": false, "timeline": false, "leetgrinder": false, "journal": false})
+	for _, path := range append(paths, "/notes/systems/nested-note", "/leetgrinder", "/leetgrinder/problem/two-sum", "/api/agent-context", "/journal") {
 		if w := do("GET", path, "session"); w.Code != 404 {
 			t.Errorf("%s while off: %d", path, w.Code)
+		}
+	}
+	// Writes are refused too, before their handlers run.
+	for _, call := range [][3]string{
+		{"POST", "/api/entries/note", "session"}, {"DELETE", "/api/entries/note", "session"}, {"POST", "/api/scheduler/mutate", "session"},
+		{"POST", "/leetgrinder/problem/two-sum/attempts", "session"},
+		{"POST", "/api/leetgrinder/attempts", "bearer"}, {"PUT", "/api/leetgrinder/problem/two-sum", "bearer"}, {"GET", "/api/leetgrinder/problem/two-sum", "bearer"},
+	} {
+		if w := do(call[0], call[1], call[2]); w.Code != 404 {
+			t.Errorf("%s %s while off: %d %s", call[0], call[1], w.Code, w.Body.String())
 		}
 	}
 	if w := do("GET", "/api/entries/note", "session"); !strings.Contains(w.Body.String(), "Notes is turned off") {
@@ -170,7 +182,7 @@ func TestDisabledModulesReturn404(t *testing.T) {
 	}
 
 	// Turning them back on restores everything, data included.
-	set(map[string]bool{"notes": true, "timeline": true, "leetgrinder": true})
+	set(map[string]bool{"notes": true, "timeline": true, "leetgrinder": true, "journal": true})
 	for _, path := range paths {
 		if w := do("GET", path, "session"); w.Code != 200 {
 			t.Fatalf("%s after turning on: %d", path, w.Code)
@@ -273,6 +285,26 @@ func TestMCPHidesDisabledModules(t *testing.T) {
 	if _, isErr := call("list_career_entries", map[string]any{"kind": "page"}); isErr {
 		t.Fatal("pages are not a module")
 	}
+	if out, _ := call("get_career_overview", nil); strings.Contains(out, `"note"`) || !strings.Contains(out, `"page"`) {
+		t.Fatal("overview kinds while notes are off:", out)
+	}
+
+	// People stays on without Companies, but its company queue tools need Companies.
+	if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"companies": false}}); err != nil {
+		t.Fatal(err)
+	}
+	if names := toolNames(); slices.Contains(names, "add_companies_to_queue") || slices.Contains(names, "list_connection_companies") {
+		t.Fatal("queue tools listed while Companies is off", names)
+	}
+	if out, isErr := call("list_connection_companies", map[string]any{}); !isErr || !strings.Contains(out, "Companies is turned off") {
+		t.Fatal(out)
+	}
+	if _, isErr := call("list_career_entries", map[string]any{"kind": "connection"}); isErr {
+		t.Fatal("connections stay available while Companies is off")
+	}
+	if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"companies": true}}); err != nil {
+		t.Fatal(err)
+	}
 
 	if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"leetgrinder": true, "timeline": true, "notes": true}}); err != nil {
 		t.Fatal(err)
@@ -282,5 +314,62 @@ func TestMCPHidesDisabledModules(t *testing.T) {
 	}
 	if out, isErr := call("read_career_entry", map[string]any{"kind": "note", "id": "systems/nested-note"}); isErr {
 		t.Fatal(out)
+	}
+}
+
+func TestAgentContextLeavesOutDisabledModules(t *testing.T) {
+	db := testDB(t)
+	ctx := context.Background()
+	s := &Server{db: db, config: config.Config{Username: "admin", JWTSecret: "test-secret", PublicOrigin: testOrigin}}
+	handler := s.RegisterRoutes()
+	get := func(path string) *httptest.ResponseRecorder {
+		r := httptest.NewRequest("GET", path, nil)
+		r.AddCookie(&http.Cookie{Name: "session", Value: s.token()})
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, r)
+		return w
+	}
+	var before struct {
+		Journals   map[string][]any `json:"journals"`
+		References map[string][]any `json:"references"`
+	}
+	if w := get("/api/agent-context"); w.Code != 200 || decodeJSON(w, &before) != nil || len(before.Journals["work"]) == 0 || len(before.References["notes"]) == 0 {
+		t.Fatal("fixture should have work journal and notes", w.Code, w.Body.String())
+	}
+	if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"journal": false, "audio": false, "notes": false}}); err != nil {
+		t.Fatal(err)
+	}
+	var after struct {
+		Journals   map[string][]any `json:"journals"`
+		References map[string][]any `json:"references"`
+	}
+	if w := get("/api/agent-context"); w.Code != 200 || decodeJSON(w, &after) != nil || len(after.Journals["work"]) != 0 || len(after.Journals["personal"]) != 0 || len(after.References["notes"]) != 0 || len(after.References["pages"]) == 0 {
+		t.Fatal("disabled modules leaked into agent context", w.Body.String())
+	}
+	for _, journal := range []string{"work", "personal", "running"} {
+		if w := get("/api/agent-context?journal=" + journal); w.Code != 404 {
+			t.Errorf("journal=%s while off: %d", journal, w.Code)
+		}
+	}
+	if w := get("/api/agent-context?format=markdown"); w.Code != 200 || !strings.Contains(w.Body.String(), "# Work journal\n\nNo entries yet.") || !strings.Contains(w.Body.String(), "# Personal journal\n\nNo entries yet.") {
+		t.Fatal("markdown leaked journal entries", w.Body.String())
+	}
+}
+
+func TestModuleGuardFailsClosed(t *testing.T) {
+	db := testDB(t)
+	if _, err := db.DB.Exec(`INSERT INTO app_settings(id,modules) VALUES(1,'{"notes":"yes"}') ON CONFLICT (id) DO UPDATE SET modules=EXCLUDED.modules`); err != nil {
+		t.Fatal(err)
+	}
+	s := &Server{db: db, config: config.Config{Username: "admin", JWTSecret: "test-secret", PublicOrigin: testOrigin}}
+	handler := s.RegisterRoutes()
+	for _, path := range []string{"/api/entries/note", "/api/search?q=caf%C3%A9", "/api/agent-context"} {
+		r := httptest.NewRequest("GET", path, nil)
+		r.AddCookie(&http.Cookie{Name: "session", Value: s.token()})
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, r)
+		if w.Code != 503 {
+			t.Errorf("%s with unreadable settings: %d", path, w.Code)
+		}
 	}
 }

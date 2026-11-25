@@ -70,11 +70,28 @@ func TestApplyValidates(t *testing.T) {
 	}
 }
 
+func TestToolOff(t *testing.T) {
+	s := Settings{Modules: map[string]bool{"companies": false}}
+	if m, off := s.ToolOff("add_companies_to_queue"); !off || m.ID != "companies" {
+		t.Fatal("queue tool needs Companies", m, off)
+	}
+	if _, off := s.ToolOff("get_leetgrinder_today"); off {
+		t.Fatal("leetgrinder tool off")
+	}
+	s = Settings{Modules: map[string]bool{"people": false}}
+	if m, off := s.ToolOff("list_connection_companies"); !off || m.ID != "people" {
+		t.Fatal("owner off", m, off)
+	}
+	if _, off := s.ToolOff("read_career_entry"); off {
+		t.Fatal("entry tools are not owned")
+	}
+}
+
 func TestOwnership(t *testing.T) {
 	for path, want := range map[string]string{
 		"/notes": "notes", "/notes/a/b": "notes", "/manage/books": "bookshelf", "/api/scheduler/week": "schedule",
 		"/api/connections/photo": "people", "/leetgrinder/problem/two-sum": "leetgrinder", "/journal/new": "journal",
-		"/api/agent-context": "agents", "/running": "audio",
+		"/api/agent-context": "agents", "/running": "audio", "/api/summaries/progress": "journal",
 	} {
 		if m, ok := ForPath(path); !ok || m.ID != want {
 			t.Errorf("%s: got %q", path, m.ID)
@@ -117,6 +134,10 @@ func TestRegistryMatchesFrontend(t *testing.T) {
 	if ids == nil || !slices.Equal(list(ids[1]), IDs()) {
 		t.Fatalf("MODULE_IDS %v, Go %v", ids, IDs())
 	}
+	themes := regexp.MustCompile(`THEMES = \[([^\]]*)\]`).FindStringSubmatch(text)
+	if themes == nil || !slices.Equal(list(themes[1]), Themes) {
+		t.Fatalf("THEMES %v, Go %v", themes, Themes)
+	}
 	_, defs, _ := strings.Cut(text, "export const MODULES")
 	defs, _, _ = strings.Cut(defs, "\n];")
 	blocks := strings.Split(defs, "{ id: '")[1:]
@@ -138,6 +159,23 @@ func TestRegistryMatchesFrontend(t *testing.T) {
 		for name, want := range map[string][]string{"dependsOn": m.DependsOn, "kinds": m.Kinds, "mcpTools": m.MCPTools, "apiPrefixes": m.API} {
 			if got := field(block, name); !slices.Equal(got, append([]string{}, want...)) {
 				t.Errorf("%s %s: frontend %v, Go %v", m.ID, name, got, want)
+			}
+		}
+		if label := regexp.MustCompile(`label: '([^']*)'`).FindStringSubmatch(block); label == nil || label[1] != m.Label {
+			t.Errorf("%s label: frontend %v, Go %q", m.ID, label, m.Label)
+		}
+		toolsNeed := map[string]string{}
+		if tn := regexp.MustCompile(`toolsNeed: \{([^}]*)\}`).FindStringSubmatch(block); tn != nil {
+			for _, pair := range regexp.MustCompile(`(\w+): '(\w+)'`).FindAllStringSubmatch(tn[1], -1) {
+				toolsNeed[pair[1]] = pair[2]
+			}
+		}
+		if len(toolsNeed) != len(m.ToolsNeed) {
+			t.Errorf("%s toolsNeed: frontend %v, Go %v", m.ID, toolsNeed, m.ToolsNeed)
+		}
+		for tool, need := range m.ToolsNeed {
+			if toolsNeed[tool] != need {
+				t.Errorf("%s toolsNeed %s: frontend %q, Go %q", m.ID, tool, toolsNeed[tool], need)
 			}
 		}
 		// Frontend routes are the user-facing pages; Go also guards legacy redirects.

@@ -200,7 +200,11 @@ func (s *Server) newMCPServer() *mcp.Server {
 		if in.Limit < 1 || in.Limit > 20 {
 			return nil, nil, invalidInput("limit must be 1-20")
 		}
-		exclude := s.moduleSettings(ctx).DisabledKinds()
+		settings, err := s.moduleSettings(ctx)
+		if err != nil {
+			return nil, nil, toolError(err)
+		}
+		exclude := settings.DisabledKinds()
 		if kind == "" {
 			exclude = append(exclude, "run")
 		}
@@ -286,7 +290,11 @@ func (s *Server) addOverviewTool(server *mcp.Server) {
 		if err != nil {
 			return nil, nil, toolError(err)
 		}
-		disabled := s.moduleSettings(ctx).DisabledKinds()
+		settings, err := s.moduleSettings(ctx)
+		if err != nil {
+			return nil, nil, toolError(err)
+		}
+		disabled := settings.DisabledKinds()
 		named := map[string]int{}
 		for kind, n := range counts {
 			if !slices.Contains(disabled, kind) {
@@ -315,7 +323,8 @@ func (s *Server) addOverviewTool(server *mcp.Server) {
 				offset = *page.NextOffset
 			}
 		}
-		return nil, map[string]any{"rules": mcpRules, "counts": named, "goals": goals, "kinds": mcpKindNames()}, nil
+		kinds := slices.DeleteFunc(mcpKindNames(), func(name any) bool { return slices.Contains(disabled, mcpKinds[name.(string)]) })
+		return nil, map[string]any{"rules": mcpRules, "counts": named, "goals": goals, "kinds": kinds}, nil
 	})
 }
 

@@ -120,9 +120,12 @@ Kinds: `goal`, `work_journal`, `personal_journal`, `note`, `page`, `book`, `comp
 `connection`, `audio_thought`. Audio thoughts are private and only returned when
 requested by kind. Prompt `career_conversation` offers a guided entry point.
 
-Modules turned off in Settings → Modules are hidden here too: their tools (Leetgrinder,
-weekly schedule, connection queue) are not listed and return an error if called, entry
-tools reject their kinds, and search and `get_career_overview` leave their entries out.
+Modules that are turned off in Settings → Modules are hidden here too:
+
+- Their tools are not listed, and they return an error if called. These are the Leetgrinder,
+  weekly schedule and connection queue tools. The queue tools also need Companies.
+- Entry tools reject their kinds.
+- Search and `get_career_overview` leave their entries out.
 
 Books, video courses, and papers (including short articles and blog posts) all use
 `kind: "book"`. The entry's `type` field is `book`, `course`, or `paper`. List, search,

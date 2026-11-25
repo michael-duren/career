@@ -14,7 +14,7 @@ var mcpEntryTools = []string{"list_career_entries", "search_career_context", "re
 
 // mcpModuleFilter hides the tools of disabled modules from tools/list and
 // refuses calls to them, including entry tools called with a disabled
-// module's kind.
+// module's kind. If the module settings cannot be loaded, both fail.
 func (s *Server) mcpModuleFilter(next mcp.MethodHandler) mcp.MethodHandler {
 	return func(ctx context.Context, method string, req mcp.Request) (mcp.Result, error) {
 		switch method {
@@ -24,11 +24,14 @@ func (s *Server) mcpModuleFilter(next mcp.MethodHandler) mcp.MethodHandler {
 			if err != nil || !ok {
 				return result, err
 			}
-			settings := s.moduleSettings(ctx)
+			settings, err := s.moduleSettings(ctx)
+			if err != nil {
+				return nil, errMCPStorage
+			}
 			filtered := *list
 			filtered.Tools = slices.DeleteFunc(slices.Clone(list.Tools), func(t *mcp.Tool) bool {
-				m, owned := modules.ForTool(t.Name)
-				return owned && !settings.Enabled(m.ID)
+				_, off := settings.ToolOff(t.Name)
+				return off
 			})
 			return &filtered, nil
 		case "tools/call":
@@ -36,26 +39,38 @@ func (s *Server) mcpModuleFilter(next mcp.MethodHandler) mcp.MethodHandler {
 			if !ok || call.Params == nil {
 				break
 			}
-			if m, off := s.mcpToolModuleOff(ctx, call.Params.Name, call.Params.Arguments); off {
-				return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: m.Label + " is turned off in Settings → Modules, so its tools and entries are unavailable."}}}, nil
+			settings, err := s.moduleSettings(ctx)
+			if err != nil {
+				return mcpToolError(errMCPStorage.Error()), nil
+			}
+			if m, off := mcpToolModuleOff(settings, call.Params.Name, call.Params.Arguments); off {
+				return mcpToolError(m.Label + " is turned off in Settings → Modules, so its tools and entries are unavailable."), nil
 			}
 		}
 		return next(ctx, method, req)
 	}
 }
 
+func mcpToolError(text string) *mcp.CallToolResult {
+	return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: text}}}
+}
+
 // mcpToolModuleOff reports the disabled module a tool call needs, if any.
-func (s *Server) mcpToolModuleOff(ctx context.Context, name string, arguments json.RawMessage) (modules.Module, bool) {
-	m, owned := modules.ForTool(name)
-	if !owned && slices.Contains(mcpEntryTools, name) {
-		var args struct {
-			Kind string `json:"kind"`
-		}
-		_ = json.Unmarshal(arguments, &args)
-		m, owned = modules.ForKind(mcpKinds[args.Kind])
+// Entry tools with arguments that do not parse are left to the tool, which
+// rejects them before reading anything.
+func mcpToolModuleOff(settings modules.Settings, name string, arguments json.RawMessage) (modules.Module, bool) {
+	if m, off := settings.ToolOff(name); off {
+		return m, true
 	}
-	if !owned {
+	if !slices.Contains(mcpEntryTools, name) {
 		return modules.Module{}, false
 	}
-	return m, !s.moduleSettings(ctx).Enabled(m.ID)
+	var args struct {
+		Kind string `json:"kind"`
+	}
+	if json.Unmarshal(arguments, &args) != nil {
+		return modules.Module{}, false
+	}
+	m, owned := modules.ForKind(mcpKinds[args.Kind])
+	return m, owned && !settings.Enabled(m.ID)
 }

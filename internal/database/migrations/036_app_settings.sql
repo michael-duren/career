@@ -10,10 +10,10 @@ CREATE TABLE app_settings (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Existing workspaces keep every module on and skip setup.
+-- Existing installs keep every module on and skip setup. An install that
+-- applied earlier migrations in an earlier transaction already existed; a
+-- new database runs every migration in this one transaction, where now() is
+-- the same for every row.
 INSERT INTO app_settings (id, setup_completed_at)
 SELECT 1, now()
-WHERE EXISTS (SELECT 1 FROM goals) OR EXISTS (SELECT 1 FROM notes) OR EXISTS (SELECT 1 FROM documents)
-   OR EXISTS (SELECT 1 FROM journal_weeks) OR EXISTS (SELECT 1 FROM personal_journal_entries)
-   OR EXISTS (SELECT 1 FROM books) OR EXISTS (SELECT 1 FROM companies) OR EXISTS (SELECT 1 FROM connections)
-   OR EXISTS (SELECT 1 FROM running_notes) OR EXISTS (SELECT 1 FROM leetgrinder_attempts);
+WHERE EXISTS (SELECT 1 FROM schema_migrations WHERE applied_at < now());

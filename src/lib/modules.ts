@@ -5,8 +5,9 @@ import { z } from 'zod';
  * Home, search and the phone tab bar are generated from the enabled modules.
  * Home, Search, Settings and Setup are always on and are not modules.
  *
- * The server mirrors the ids, routes, API prefixes, entry kinds and MCP tools
- * in internal/modules/modules.go (a Go test checks the ids match).
+ * The server mirrors the ids, routes, API prefixes, entry kinds, MCP tools and
+ * dependencies in internal/modules/modules.go; TestRegistryMatchesFrontend
+ * checks the two agree.
  * See docs/redesign/modules.md.
  */
 export const MODULE_IDS = ['timeline', 'schedule', 'leetgrinder', 'companies', 'people', 'bookshelf', 'journal', 'notes', 'audio', 'agents'] as const;
@@ -38,6 +39,8 @@ export interface ModuleDef {
   dependsOn: ModuleId[];
   /** Parts that need another module; the module stays on without it. */
   partsNeed?: { part: string; module: ModuleId }[];
+  /** MCP tools that also need another module (the server hides them without it). */
+  toolsNeed?: Partial<Record<string, ModuleId>>;
 }
 
 export const MODULES: readonly ModuleDef[] = [
@@ -48,9 +51,9 @@ export const MODULES: readonly ModuleDef[] = [
     mcpTools: ['get_leetgrinder_today', 'list_leetgrinder_reviews', 'get_leetgrinder_stats', 'log_leetgrinder_attempt', 'list_leetgrinder_todos', 'create_leetgrinder_todo_set', 'add_leetgrinder_todo_problem', 'reorder_leetgrinder_set', 'remove_leetgrinder_todo_problem', 'remove_leetgrinder_todo_set'], apiPrefixes: ['/api/leetgrinder'], dependsOn: [] },
   { id: 'companies', label: 'Companies', short: 'COMPANIES', icon: 'companies', routes: ['/companies', '/manage/companies'], search: 'companies', kinds: ['company'], mcpTools: [], apiPrefixes: [], dependsOn: [] },
   { id: 'people', label: 'People', short: 'PEOPLE', icon: 'people', routes: ['/connections'], search: 'people', kinds: ['connection'], mcpTools: ['list_connection_companies', 'add_companies_to_queue'], apiPrefixes: ['/api/connections'], dependsOn: [],
-    partsNeed: [{ part: 'Catch-up queue', module: 'companies' }] },
+    partsNeed: [{ part: 'Catch-up queue', module: 'companies' }], toolsNeed: { list_connection_companies: 'companies', add_companies_to_queue: 'companies' } },
   { id: 'bookshelf', label: 'Bookshelf', short: 'BOOKS', icon: 'bookshelf', routes: ['/books', '/manage/books'], search: 'books', kinds: ['book'], mcpTools: [], apiPrefixes: [], dependsOn: [] },
-  { id: 'journal', label: 'Journal', short: 'JOURNAL', icon: 'journal', routes: ['/journal'], search: 'entries', kinds: ['week', 'personal'], mcpTools: [], apiPrefixes: [], dependsOn: [] },
+  { id: 'journal', label: 'Journal', short: 'JOURNAL', icon: 'journal', routes: ['/journal'], search: 'entries', kinds: ['week', 'personal'], mcpTools: [], apiPrefixes: ['/api/summaries/progress'], dependsOn: [] },
   { id: 'notes', label: 'Notes', short: 'NOTES', icon: 'notes', routes: ['/notes'], search: 'notes', kinds: ['note'], mcpTools: [], apiPrefixes: [], dependsOn: [] },
   { id: 'audio', label: 'Audio thoughts', short: 'AUDIO', icon: 'audio', routes: ['/audio-thoughts'], search: 'transcripts', kinds: ['run'], mcpTools: [], apiPrefixes: ['/api/running'], dependsOn: [] },
   { id: 'agents', label: 'Agent context', short: 'AGENTS', icon: 'agents', routes: ['/agents'], kinds: [], mcpTools: [], apiPrefixes: ['/api/agent-context'], dependsOn: ['timeline'] },
@@ -74,7 +77,7 @@ export const settingsSchema = z.object({
 });
 export type Settings = z.infer<typeof settingsSchema>;
 
-/** Settings with every module on, as for an existing workspace. */
+/** Settings before any are saved: every module on, dark theme, setup not done. */
 export const DEFAULT_SETTINGS: Settings = {
   modules: Object.fromEntries(MODULE_IDS.map(id => [id, true])),
   moduleOrder: [...MODULE_IDS], theme: 'dark', setupCompletedAt: null,

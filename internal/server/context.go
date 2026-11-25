@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/michael-duren/career-strategy/internal/database"
+	"github.com/michael-duren/career-strategy/internal/modules"
 )
 
 func (s *Server) readGoals(w http.ResponseWriter, r *http.Request) {
@@ -126,6 +127,17 @@ func (s *Server) agentContext(w http.ResponseWriter, r *http.Request) {
 		respond(w, 400, map[string]string{"error": "Use format=json|markdown and optional journal=work|personal|running."})
 		return
 	}
+	settings, err := s.moduleSettings(r.Context())
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	journalModule := map[string]string{"work": "journal", "personal": "journal", "running": "audio"}[journal]
+	if journal != "" && !settings.Enabled(journalModule) {
+		m, _ := modules.Lookup(journalModule)
+		moduleOff(w, r, m)
+		return
+	}
 	var buf bytes.Buffer
 	if err := s.db.Export(r.Context(), &buf); err != nil {
 		failure(w, err)
@@ -135,6 +147,13 @@ func (s *Server) agentContext(w http.ResponseWriter, r *http.Request) {
 	if err := json.Unmarshal(buf.Bytes(), &data); err != nil {
 		failure(w, err)
 		return
+	}
+	// Entries of turned-off modules are left out; the keys stay with no entries.
+	disabled := settings.DisabledKinds()
+	for kind, key := range map[string]string{"week": "weeks", "personal": "personalJournal", "run": "runningNotes", "note": "notes", "book": "books", "company": "companies"} {
+		if slices.Contains(disabled, kind) {
+			data[key] = []any{}
+		}
 	}
 	work, _ := data["weeks"].([]any)
 	personal, _ := data["personalJournal"].([]any)
@@ -182,7 +201,12 @@ func (s *Server) search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	kind := r.URL.Query().Get("kind")
-	disabled := s.appSettings(r).DisabledKinds()
+	settings, err := s.moduleSettings(r.Context())
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	disabled := settings.DisabledKinds()
 	if slices.Contains(disabled, kind) {
 		respond(w, 200, map[string]any{"results": []database.SearchResult{}})
 		return

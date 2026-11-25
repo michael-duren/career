@@ -26,6 +26,9 @@ type Module struct {
 	// MCPTools are the MCP tools only this module uses.
 	MCPTools  []string
 	DependsOn []string
+	// ToolsNeed lists MCP tools that also need another module, such as the
+	// catch-up queue tools that need Companies while People stays on.
+	ToolsNeed map[string]string
 }
 
 // Registry lists every module in default order. Keep the ids in sync with
@@ -38,9 +41,10 @@ var Registry = []Module{
 		MCPTools: []string{"get_leetgrinder_today", "list_leetgrinder_reviews", "get_leetgrinder_stats", "log_leetgrinder_attempt", "list_leetgrinder_todos", "create_leetgrinder_todo_set", "add_leetgrinder_todo_problem", "reorder_leetgrinder_set", "remove_leetgrinder_todo_problem", "remove_leetgrinder_todo_set"}},
 	{ID: "companies", Label: "Companies", Pages: []string{"/companies", "/manage/companies"}, Kinds: []string{"company"}},
 	{ID: "people", Label: "People", Pages: []string{"/connections"}, API: []string{"/api/connections"}, Kinds: []string{"connection"},
-		MCPTools: []string{"list_connection_companies", "add_companies_to_queue"}},
+		MCPTools:  []string{"list_connection_companies", "add_companies_to_queue"},
+		ToolsNeed: map[string]string{"list_connection_companies": "companies", "add_companies_to_queue": "companies"}},
 	{ID: "bookshelf", Label: "Bookshelf", Pages: []string{"/books", "/manage/books"}, Kinds: []string{"book"}},
-	{ID: "journal", Label: "Journal", Pages: []string{"/journal", "/logs", "/personal-journal"}, Kinds: []string{"week", "personal"}},
+	{ID: "journal", Label: "Journal", Pages: []string{"/journal", "/logs", "/personal-journal"}, API: []string{"/api/summaries/progress"}, Kinds: []string{"week", "personal"}},
 	{ID: "notes", Label: "Notes", Pages: []string{"/notes"}, Kinds: []string{"note"}},
 	{ID: "audio", Label: "Audio thoughts", Pages: []string{"/audio-thoughts", "/running"}, API: []string{"/api/running"}, Kinds: []string{"run"}},
 	{ID: "agents", Label: "Agent context", Pages: []string{"/agents"}, API: []string{"/api/agent-context"}, DependsOn: []string{"timeline"}},
@@ -136,19 +140,22 @@ func (s Settings) Enabled(id string) bool {
 	return s.Effective()[id]
 }
 
-// Patch is a partial settings change. Nil fields are left as they are.
+// Patch is a partial settings change. Nil fields are left as they are; an
+// empty non-nil Order resets the order to registry order.
 type Patch struct {
 	Modules map[string]bool
 	Order   []string
 	Theme   *string
-	// SetupCompletedAt is set when ClearSetup is false and it is non-nil.
+	// ClearSetup clears the setup time and wins over SetupCompletedAt.
 	SetupCompletedAt *time.Time
 	ClearSetup       bool
 }
 
 // Apply validates p against the registry and returns the changed settings.
-// Turning a module on while a module it depends on stays off is rejected,
-// since its switch is locked until the dependency is on.
+// Newly turning a module on while a module it depends on stays off is
+// rejected, since its switch is locked until the dependency is on. A module
+// whose switch is already on (locked by an off dependency) may be sent as on
+// again.
 func (s Settings) Apply(p Patch) (Settings, error) {
 	s = s.Normalize()
 	next := Settings{Modules: map[string]bool{}, Order: slices.Clone(s.Order), Theme: s.Theme, SetupCompletedAt: s.SetupCompletedAt}
@@ -236,6 +243,24 @@ func ForTool(name string) (Module, bool) {
 		if slices.Contains(m.MCPTools, name) {
 			return m, true
 		}
+	}
+	return Module{}, false
+}
+
+// ToolOff returns the module that keeps an MCP tool unavailable: its owner
+// when that is off, else a module the tool also needs.
+func (s Settings) ToolOff(name string) (Module, bool) {
+	m, owned := ForTool(name)
+	if !owned {
+		return Module{}, false
+	}
+	effective := s.Effective()
+	if !effective[m.ID] {
+		return m, true
+	}
+	if need, ok := m.ToolsNeed[name]; ok && !effective[need] {
+		n, _ := Lookup(need)
+		return n, true
 	}
 	return Module{}, false
 }

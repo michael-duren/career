@@ -69,8 +69,14 @@ func (s *Store) UpdateAppSettings(ctx context.Context, p modules.Patch) (modules
 	if err != nil {
 		return modules.Settings{}, settingsError(err.Error())
 	}
-	raw, _ := json.Marshal(next.Modules)
-	order, _ := json.Marshal(next.Order)
+	raw, err := json.Marshal(next.Modules)
+	if err != nil {
+		return modules.Settings{}, err
+	}
+	order, err := json.Marshal(next.Order)
+	if err != nil {
+		return modules.Settings{}, err
+	}
 	var completed any
 	if next.SetupCompletedAt != nil {
 		completed = next.SetupCompletedAt.UTC().Truncate(time.Microsecond)

@@ -88,33 +88,47 @@ func TestAppSettingsNewInstall(t *testing.T) {
 
 func TestAppSettingsMigrationKeepsExistingWorkspaces(t *testing.T) {
 	ctx := context.Background()
-	existing := emptyStore(t)
-	migrateThrough(t, existing, 35)
-	if _, err := existing.DB.Exec(`INSERT INTO notes(id,title,description,tags,body,revision,position,topic) VALUES('a','A','','{}','','r',0,'t')`); err != nil {
-		t.Fatal(err)
-	}
-	if err := existing.Migrate(ctx); err != nil {
-		t.Fatal(err)
-	}
-	got, err := existing.AppSettings(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got.SetupCompletedAt == nil {
-		t.Fatal("an existing workspace must skip setup")
-	}
-	for _, id := range modules.IDs() {
-		if !got.Enabled(id) {
-			t.Errorf("%s off after migration", id)
+	// Any install migrated before this release counts as existing, with or
+	// without content.
+	for _, content := range []bool{true, false} {
+		existing := emptyStore(t)
+		migrateThrough(t, existing, 35)
+		if content {
+			if _, err := existing.DB.Exec(`INSERT INTO leetgrinder_todo_sets(id,title) VALUES('11111111-1111-4111-8111-111111111111','A')`); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if err := existing.Migrate(ctx); err != nil {
+			t.Fatal(err)
+		}
+		got, err := existing.AppSettings(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got.SetupCompletedAt == nil {
+			t.Fatalf("content=%v: an existing install must skip setup", content)
+		}
+		for _, id := range modules.IDs() {
+			if !got.Enabled(id) {
+				t.Errorf("%s off after migration", id)
+			}
 		}
 	}
 
-	empty := emptyStore(t)
-	migrateThrough(t, empty, 35)
-	if err := empty.Migrate(ctx); err != nil {
+	// A new database migrates in one transaction and still needs setup.
+	fresh := testStore(t)
+	if got, err := fresh.AppSettings(ctx); err != nil || got.SetupCompletedAt != nil {
+		t.Fatal("a new install still needs setup", got, err)
+	}
+}
+
+func TestAppSettingsUnreadableRowFails(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	if _, err := s.DB.Exec(`INSERT INTO app_settings(id,modules) VALUES(1,'{"notes":"yes"}')`); err != nil {
 		t.Fatal(err)
 	}
-	if got, err = empty.AppSettings(ctx); err != nil || got.SetupCompletedAt != nil {
-		t.Fatal("an empty workspace still needs setup", got, err)
+	if _, err := s.AppSettings(ctx); err == nil {
+		t.Fatal("an unreadable settings row must be an error, not defaults")
 	}
 }
