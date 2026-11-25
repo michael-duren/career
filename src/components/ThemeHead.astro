@@ -1,0 +1,15 @@
+---
+import { DEFAULT_THEME, THEME_STORAGE_KEY, THEMES } from '../lib/theme';
+// Runs before first paint: swaps the server-rendered default for the saved theme.
+// Must stay inline (no defer/async/module) and early in <head>, before any render-blocking CSS link
+// (tests/e2e/theme.spec.ts checks the built order). Mirrors resolveTheme() in src/lib/theme.ts.
+---
+<script is:inline id="theme-init" define:vars={{ themes: THEMES, fallback: DEFAULT_THEME, key: THEME_STORAGE_KEY }}>
+  let saved = null;
+  try {
+    saved = localStorage.getItem(key);
+  } catch {
+    // Storage blocked (private mode, site data disabled): keep the default theme.
+  }
+  document.documentElement.dataset.theme = themes.includes(saved) ? saved : fallback;
+</script>
