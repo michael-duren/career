@@ -9,7 +9,7 @@ type Today = { week: SchedulerWeek; today: string };
 async function loadWeek(monday: string): Promise<SchedulerWeek> {
   return weekSchema.parse(await schedulerRequest(`week?week=${monday}`));
 }
-// Module settings are read once per page load; the schedule cannot be turned off from Home.
+// Module settings are read once per page load (retried after a failed read); the schedule cannot be turned off from Home.
 let scheduleOn: Promise<boolean> | undefined;
 /** Loads the week holding today in the scheduler's time zone, which can differ from the browser's, or 'off' while the schedule module is off. */
 async function loadToday(): Promise<Today | 'off'> {

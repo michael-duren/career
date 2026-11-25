@@ -143,12 +143,12 @@ func (s Settings) Enabled(id string) bool {
 // Patch is a partial settings change. Nil fields are left as they are; an
 // empty non-nil Order resets the order to registry order.
 type Patch struct {
-	Modules map[string]bool
-	Order   []string
-	Theme   *string
-	// ClearSetup clears the setup time and wins over SetupCompletedAt.
+	Modules          map[string]bool
+	Order            []string
+	Theme            *string
 	SetupCompletedAt *time.Time
-	ClearSetup       bool
+	// ClearSetup clears the setup time and wins over SetupCompletedAt.
+	ClearSetup bool
 }
 
 // Apply validates p against the registry and returns the changed settings.
@@ -265,8 +265,9 @@ func (s Settings) ToolOff(name string) (Module, bool) {
 	return Module{}, false
 }
 
-// OffReason says why module id is unusable: "Schedule needs Timeline" when
-// a module it depends on is off, else "<Label> is turned off".
+// OffReason says why module id is unusable: "Schedule needs Timeline, which
+// is turned off" when a module it depends on is off, else "<Label> is turned
+// off".
 func (s Settings) OffReason(id string) string {
 	m, _ := Lookup(id)
 	s = s.Normalize()

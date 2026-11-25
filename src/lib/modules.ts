@@ -2,8 +2,9 @@ import { z } from 'zod';
 import { THEMES, type Theme } from './theme.ts';
 
 /**
- * The module registry. Every feature is a module the user can turn off; menus,
- * Home, search and the phone tab bar are generated from the enabled modules.
+ * The module registry. Every feature is a module the user can turn off. The new
+ * shell, Home, search, Settings and Setup build their menus, tab bar and sections
+ * from it (the helpers below are for them); today the sidebar and a few pages use it.
  * Home, Search, Settings and Setup are always on and are not modules.
  *
  * The server mirrors the ids, routes, API prefixes, entry kinds, MCP tools and
@@ -134,17 +135,22 @@ export function modulesForFocus(focuses: string[]): Record<ModuleId, boolean> {
 
 export type SettingsPatch = Partial<{ modules: Partial<Record<ModuleId, boolean>>; moduleOrder: ModuleId[]; theme: Theme; setupCompletedAt: string | null }>;
 
-async function settingsRequest(init?: RequestInit): Promise<Settings> {
-  const response = await fetch('/api/settings', { cache: 'no-store', ...init });
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(typeof body.error === 'string' ? body.error : 'Settings could not be loaded. Try again.');
-  return settingsSchema.parse(body);
+async function settingsRequest(fallback: string, init?: RequestInit): Promise<Settings> {
+  const response = await fetch('/api/settings', { cache: 'no-store', ...init }).catch(() => { throw new Error(fallback); });
+  const body: unknown = await response.json().catch(() => null);
+  if (!response.ok) {
+    const error = body && typeof body === 'object' && 'error' in body && typeof body.error === 'string' ? body.error : fallback;
+    throw new Error(error);
+  }
+  const parsed = settingsSchema.safeParse(body);
+  if (!parsed.success) throw new Error(fallback);
+  return parsed.data;
 }
 
 export function loadSettings(): Promise<Settings> {
-  return settingsRequest();
+  return settingsRequest('Settings could not be loaded. Try again.');
 }
 
 export function saveSettings(patch: SettingsPatch): Promise<Settings> {
-  return settingsRequest({ method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
+  return settingsRequest('Settings could not be saved. Try again.', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
 }

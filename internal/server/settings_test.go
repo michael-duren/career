@@ -11,6 +11,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/michael-duren/career-strategy/internal/config"
 	"github.com/michael-duren/career-strategy/internal/modules"
@@ -387,5 +388,39 @@ func TestModuleGuardFailsClosed(t *testing.T) {
 		if w.Code != 503 {
 			t.Errorf("%s with unreadable settings: %d", path, w.Code)
 		}
+	}
+}
+
+func TestSchedulerCyclePausesWhileScheduleIsOff(t *testing.T) {
+	db := testDB(t)
+	ctx := context.Background()
+	s := &Server{db: db, config: config.Config{}}
+	now := time.Date(2030, 1, 7, 9, 0, 0, 0, time.UTC)
+	var last time.Time
+	for name, change := range map[string]map[string]bool{
+		"schedule off": {"schedule": false},
+		"timeline off": {"schedule": true, "timeline": false},
+	} {
+		if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"timeline": true, "schedule": true}}); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: change}); err != nil {
+			t.Fatal(err)
+		}
+		if s.schedulerCycle(ctx, now, &last) {
+			t.Errorf("%s: scheduler ran", name)
+		}
+	}
+	if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"timeline": true, "schedule": true}}); err != nil {
+		t.Fatal(err)
+	}
+	if !s.schedulerCycle(ctx, now, &last) {
+		t.Fatal("scheduler did not run with Schedule on")
+	}
+	if _, err := db.DB.Exec(`UPDATE app_settings SET modules='{"schedule":"yes"}'`); err != nil {
+		t.Fatal(err)
+	}
+	if s.schedulerCycle(ctx, now, &last) {
+		t.Fatal("scheduler ran with unreadable settings")
 	}
 }

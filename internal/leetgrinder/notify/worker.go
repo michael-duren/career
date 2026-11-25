@@ -3,6 +3,7 @@ package notify
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -55,7 +56,7 @@ func (w *Worker) Run(ctx context.Context) {
 func (w *Worker) Step(ctx context.Context) error {
 	app, err := w.Store.AppSettings(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("load module settings: %w", err)
 	}
 	if !app.Enabled("leetgrinder") {
 		return nil

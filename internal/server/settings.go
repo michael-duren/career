@@ -142,7 +142,8 @@ func (s *Server) guardModule(w http.ResponseWriter, r *http.Request, next http.H
 	next.ServeHTTP(w, r)
 }
 
-// requireModule returns 404 for every request while module id is off.
+// requireModule returns 404 for every request while module id is unusable
+// (off, or a dependency off) and 503 when settings cannot be loaded.
 func (s *Server) requireModule(id string) func(http.Handler) http.Handler {
 	m, _ := modules.Lookup(id)
 	return func(next http.Handler) http.Handler {
