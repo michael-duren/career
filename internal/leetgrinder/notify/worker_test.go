@@ -3,6 +3,7 @@ package notify
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -15,6 +16,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/michael-duren/career-strategy/internal/database"
 	"github.com/michael-duren/career-strategy/internal/leetgrinder"
+	"github.com/michael-duren/career-strategy/internal/modules"
 )
 
 var testKey = bytes.Repeat([]byte{9}, 32)
@@ -479,5 +481,27 @@ func TestWorkerLogsUnreadableToken(t *testing.T) {
 	}
 	if e := f.logEntry(t, leetgrinder.NotifyGoalIncomplete, at(10, "18:00")); e.Status != leetgrinder.NotifyFailed || !strings.Contains(e.Detail, "re-enter it") {
 		t.Fatalf("log: %+v", e)
+	}
+}
+
+func TestWorkerSkipsWhileModuleIsOff(t *testing.T) {
+	f := newFixture(t)
+	f.quiet(t, leetgrinder.DefaultGoal)
+	ctx := context.Background()
+	if _, err := f.db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"leetgrinder": false}}); err != nil {
+		t.Fatal(err)
+	}
+	if got := f.step(t, at(10, "18:00")); len(got) != 0 {
+		t.Fatalf("sent while Leetgrinder is off: %v", got)
+	}
+	if _, err := f.db.LeetgrinderNotification(ctx, leetgrinder.NotifyGoalIncomplete, leetgrinder.Date(at(10, "18:00"), chicago)); !errors.Is(err, database.ErrNotFound) {
+		t.Fatalf("logged while Leetgrinder is off: %v", err)
+	}
+	// Turning it back on resumes reminders.
+	if _, err := f.db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"leetgrinder": true}}); err != nil {
+		t.Fatal(err)
+	}
+	if got := f.step(t, at(10, "18:01")); len(got) != 1 {
+		t.Fatalf("after turning on: %v", got)
 	}
 }

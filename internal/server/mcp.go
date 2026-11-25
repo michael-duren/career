@@ -146,6 +146,7 @@ type readInput struct {
 
 func (s *Server) newMCPServer() *mcp.Server {
 	server := mcp.NewServer(&mcp.Implementation{Name: "career-strategy", Version: "1.0.0"}, &mcp.ServerOptions{Instructions: strings.Join(mcpRules, "\n")})
+	server.AddReceivingMiddleware(s.mcpModuleFilter)
 
 	s.addOverviewTool(server)
 
@@ -199,11 +200,11 @@ func (s *Server) newMCPServer() *mcp.Server {
 		if in.Limit < 1 || in.Limit > 20 {
 			return nil, nil, invalidInput("limit must be 1-20")
 		}
-		exclude := ""
+		exclude := s.moduleSettings(ctx).DisabledKinds()
 		if kind == "" {
-			exclude = "run"
+			exclude = append(exclude, "run")
 		}
-		results, err := s.db.SearchExcluding(ctx, query, in.Limit, kind, exclude)
+		results, err := s.db.SearchExcluding(ctx, query, in.Limit, kind, exclude...)
 		if err != nil {
 			return nil, nil, toolError(err)
 		}
@@ -285,12 +286,15 @@ func (s *Server) addOverviewTool(server *mcp.Server) {
 		if err != nil {
 			return nil, nil, toolError(err)
 		}
+		disabled := s.moduleSettings(ctx).DisabledKinds()
 		named := map[string]int{}
 		for kind, n := range counts {
-			named[mcpKindName(kind)] = n
+			if !slices.Contains(disabled, kind) {
+				named[mcpKindName(kind)] = n
+			}
 		}
 		goals := []overviewGoal{}
-		for offset := 0; offset >= 0; {
+		for offset := 0; offset >= 0 && !slices.Contains(disabled, "goal"); {
 			page, err := s.db.List(ctx, "goal", database.Filter{Limit: 100, Offset: offset})
 			if err != nil {
 				return nil, nil, toolError(err)

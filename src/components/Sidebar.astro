@@ -17,6 +17,7 @@ import {
   Users,
   BookOpen
 } from 'lucide-react';
+import { moduleForPath } from '../lib/modules';
 
 const currentPath = Astro.url.pathname;
 
@@ -95,6 +96,7 @@ const currentYear = currentPath.match(/\/(\d{4})\//)?.[1];
           return (
             <a
               href={item.href}
+              data-module={moduleForPath(item.href)?.id}
               class={`flex items-center gap-2 px-3 py-1.5 rounded transition-all text-sm relative ${
                 isActive(item.href)
                   ? 'bg-blue-600/20 text-blue-400 font-medium before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-5 before:bg-blue-500 before:rounded-r'
@@ -170,6 +172,7 @@ const currentYear = currentPath.match(/\/(\d{4})\//)?.[1];
                     ) : (
                       <a
                         href={item.href}
+                        data-module={moduleForPath(item.href)?.id}
                         class={`flex items-center gap-2 px-3 py-1.5 rounded transition-all text-sm relative ${
                           isItemActive
                             ? 'bg-blue-600/20 text-blue-400 font-medium before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-5 before:bg-blue-500 before:rounded-r'
@@ -196,6 +199,15 @@ const currentYear = currentPath.match(/\/(\d{4})\//)?.[1];
 </div>
 
 <script>
+  import { isEnabled, loadSettings, type ModuleId } from '../lib/modules';
+
+  // Hide links to turned-off modules. Links stay visible if settings cannot load.
+  loadSettings().then(settings => {
+    for (const link of document.querySelectorAll<HTMLElement>('.sidebar-container [data-module]')) {
+      link.hidden = !isEnabled(settings, link.dataset.module as ModuleId);
+    }
+  }).catch(() => {});
+
   // Initialize all sidebars when DOM ready
   function initSidebars() {
     // Get all sidebar containers (handles both desktop and mobile)

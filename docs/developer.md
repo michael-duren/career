@@ -156,6 +156,20 @@ exact configured `Origin` and a JSON content type.
 - `POST /api/entries/{kind}/toggle` toggles a Markdown checklist item on a book or company.
 - `POST /api/goals/steps/move` reorders or moves a goal step.
 - `GET /api/agent-context`, `GET /api/search`, `GET /api/export`.
+- `GET /api/settings` returns `{ modules, moduleOrder, theme, setupCompletedAt, effective }`.
+  `PATCH /api/settings` changes any of the first four; unknown modules, repeated ids in
+  `moduleOrder`, unknown themes and turning on a module whose dependency is off return 400.
+  `effective` says which modules are usable once dependencies apply.
+
+### Modules
+
+Every feature is a module (registry: `src/lib/modules.ts`, mirrored in
+`internal/modules/modules.go`; see [the redesign spec](redesign/modules.md)). While a module is
+off, its pages and API routes return 404 (`{"error": "<Module> is turned off…"}` for APIs, also
+for the Leetgrinder extension), its MCP tools are not listed and refuse calls, entry tools and
+search skip its entry kinds, and Leetgrinder reminders are not sent. Its data is kept; `GET
+/api/export` still includes everything. A module missing from the stored settings is on. The
+migration that adds settings keeps every module on and marks setup done for existing workspaces.
 
 Leetgrinder, weekly scheduler, connections and audio thought endpoints are described in their
 feature docs. The MCP endpoint is described in [MCP](mcp/README.md).

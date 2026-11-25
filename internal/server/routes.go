@@ -71,6 +71,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	)
 	r.Use(middleware.Recoverer)
 	r.Use(s.pageAccess)
+	r.Use(s.moduleGuard)
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) { respond(w, 200, map[string]string{"status": "up"}) })
 	r.Get("/readyz", s.healthHandler)
 	r.Get("/health", s.healthHandler)
@@ -108,6 +109,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 		r.Post("/api/goals/steps/move", s.moveGoalStep)
 		r.Get("/api/agent-context", s.agentContext)
 		r.Get("/api/search", s.search)
+		r.Get("/api/settings", s.readSettings)
+		r.Patch("/api/settings", s.patchSettings)
 		r.Get("/api/summaries/progress", func(w http.ResponseWriter, r *http.Request) {
 			entries, err := s.db.ProgressSummary(r.Context())
 			if err != nil {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 	"sort"
 	"strings"
 
@@ -180,7 +181,13 @@ func (s *Server) search(w http.ResponseWriter, r *http.Request) {
 		respond(w, 400, map[string]string{"error": "Search must be 2–200 characters."})
 		return
 	}
-	results, err := s.db.Search(r.Context(), query, 50, r.URL.Query().Get("kind"))
+	kind := r.URL.Query().Get("kind")
+	disabled := s.appSettings(r).DisabledKinds()
+	if slices.Contains(disabled, kind) {
+		respond(w, 200, map[string]any{"results": []database.SearchResult{}})
+		return
+	}
+	results, err := s.db.SearchExcluding(r.Context(), query, 50, kind, disabled...)
 	if err != nil {
 		failure(w, err)
 		return
