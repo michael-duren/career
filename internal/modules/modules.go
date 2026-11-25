@@ -50,7 +50,7 @@ var Registry = []Module{
 	{ID: "agents", Label: "Agent context", Pages: []string{"/agents"}, API: []string{"/api/agent-context"}, DependsOn: []string{"timeline"}},
 }
 
-// Themes are the accepted theme names; the first is the default.
+// Themes are the accepted theme names (src/lib/theme.ts); the first is the default.
 var Themes = []string{"dark", "vellum", "cobalt", "concrete"}
 
 // Settings are the user's module switches, tab order, theme and setup state.

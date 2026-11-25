@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { THEMES, type Theme } from './theme.ts';
 
 /**
  * The module registry. Every feature is a module the user can turn off; menus,
@@ -12,9 +13,6 @@ import { z } from 'zod';
  */
 export const MODULE_IDS = ['timeline', 'schedule', 'leetgrinder', 'companies', 'people', 'bookshelf', 'journal', 'notes', 'audio', 'agents'] as const;
 export type ModuleId = typeof MODULE_IDS[number];
-
-export const THEMES = ['dark', 'vellum', 'cobalt', 'concrete'] as const;
-export type Theme = typeof THEMES[number];
 
 export interface ModuleDef {
   id: ModuleId;

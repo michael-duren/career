@@ -144,7 +144,11 @@ func TestRegistryMatchesFrontend(t *testing.T) {
 	if ids == nil || !slices.Equal(list(ids[1]), IDs()) {
 		t.Fatalf("MODULE_IDS %v, Go %v", ids, IDs())
 	}
-	themes := regexp.MustCompile(`THEMES = \[([^\]]*)\]`).FindStringSubmatch(text)
+	themeSrc, err := os.ReadFile("../../src/lib/theme.ts")
+	if err != nil {
+		t.Fatal(err)
+	}
+	themes := regexp.MustCompile(`THEMES = \[([^\]]*)\]`).FindStringSubmatch(string(themeSrc))
 	if themes == nil || !slices.Equal(list(themes[1]), Themes) {
 		t.Fatalf("THEMES %v, Go %v", themes, Themes)
 	}
