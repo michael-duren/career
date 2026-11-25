@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
 import { join } from 'node:path';
 import { DEFAULT_THEME, THEME_STORAGE_KEY, THEMES, applyTheme, isTheme, resolveTheme } from '../src/lib/theme.ts';
 
-const css = readFileSync(new URL('../src/styles/global.css', import.meta.url), 'utf8');
+// Comments stripped so commented-out rules or braces in comments never count.
+const css = readFileSync(new URL('../src/styles/global.css', import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 
 // The palette from docs/redesign/design-system.md ("Themes and tokens").
 const SPEC = {
@@ -27,7 +29,7 @@ function themeBlock(theme: string): Record<string, string> {
 function blockFor(selector: string): Record<string, string> | undefined {
   const wanted = selector.replace(/\s+/g, '');
   for (const [, sel, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-    if (sel.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[\s\S]*;/, '').replace(/\s+/g, '') !== wanted) continue;
+    if (sel.replace(/^[\s\S]*;/, '').replace(/\s+/g, '') !== wanted) continue;
     return Object.fromEntries([...body.matchAll(/--([\w-]+):\s*([^;]+);/g)].map(([, name, value]) => [name, value.trim()]));
   }
   return undefined;
@@ -62,17 +64,35 @@ test('applyTheme sets data-theme and remembers it, even without storage', () => 
   const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
   try {
     Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { setItem: (key: string, value: string) => saved.set(key, value) } });
-    applyTheme('concrete', root);
+    assert.equal(applyTheme('concrete', root), true);
     assert.equal(root.dataset.theme, 'concrete');
     assert.equal(saved.get(THEME_STORAGE_KEY), 'concrete');
 
     Object.defineProperty(globalThis, 'localStorage', { configurable: true, get() { throw new Error('blocked'); } });
-    applyTheme('vellum', root);
+    assert.equal(applyTheme('vellum', root), false);
     assert.equal(root.dataset.theme, 'vellum');
   } finally {
     if (original) Object.defineProperty(globalThis, 'localStorage', original);
     else delete (globalThis as { localStorage?: unknown }).localStorage;
   }
+});
+
+// Runs the pre-paint script from ThemeHead.astro the way Astro emits it (define:vars as consts).
+function runThemeHead(getItem: () => string | null): string | undefined {
+  const source = readFileSync(new URL('../src/components/ThemeHead.astro', import.meta.url), 'utf8');
+  const body = source.match(/<script is:inline[^>]*>([\s\S]*?)<\/script>/)?.[1];
+  assert.ok(body, 'no inline script in ThemeHead.astro');
+  const documentElement = { dataset: {} as Record<string, string> };
+  runInNewContext(`const themes = ${JSON.stringify(THEMES)}, fallback = ${JSON.stringify(DEFAULT_THEME)}, key = ${JSON.stringify(THEME_STORAGE_KEY)};${body}`, {
+    document: { documentElement },
+    localStorage: { getItem: (key: string) => { assert.equal(key, THEME_STORAGE_KEY); return getItem(); } },
+  });
+  return documentElement.dataset.theme;
+}
+
+test('the pre-paint script agrees with resolveTheme', () => {
+  for (const saved of [null, '', 'neon', 'Cobalt', ...THEMES]) assert.equal(runThemeHead(() => saved), resolveTheme(saved), String(saved));
+  assert.equal(runThemeHead(() => { throw new Error('blocked'); }), DEFAULT_THEME);
 });
 
 test('every theme defines the spec palette', () => {
@@ -112,7 +132,9 @@ test('alpha steps resolve per theme root and map into Tailwind', () => {
   const tailwind = blockFor('@theme inline');
   assert.ok(tailwind, 'no `@theme inline` block');
   for (const token of ['paper', 'ink', 'accent', 'ink-hover', 'ink-60', 'ink-50', 'ink-30', 'ink-14', 'ink-07', 'ink-05']) assert.equal(tailwind[`color-${token}`], `var(--${token})`, `--color-${token}`);
-  assert.match(css, /body\s*\{\s*@apply bg-paper text-ink;/);
+  const body = css.match(/\bbody\s*\{([^}]*)\}/)?.[1] ?? '';
+  assert.match(body, /\bbg-paper\b/);
+  assert.match(body, /\btext-ink\b/);
 
   const fonts = blockFor('@theme');
   assert.ok(fonts, 'no `@theme` font block');
@@ -123,13 +145,15 @@ test('alpha steps resolve per theme root and map into Tailwind', () => {
 
 test('fonts are self-hosted, never loaded from a font CDN', () => {
   for (const pkg of ['@fontsource-variable/inter-tight', '@fontsource/ibm-plex-mono', '@fontsource/architects-daughter']) assert.match(css, new RegExp(`@import "${pkg}/`));
-  const files = (dir: string): string[] => readdirSync(dir).flatMap(name => {
+  const files = (dir: string): string[] => !existsSync(dir) ? [] : readdirSync(dir).flatMap(name => {
+    if (name === 'node_modules' || name.startsWith('.')) return [];
     const path = join(dir, name);
     return statSync(path).isDirectory() ? files(path) : [path];
   });
   const root = new URL('..', import.meta.url).pathname;
-  for (const file of ['src', 'public', 'internal/leetgrinder', 'extension'].flatMap(dir => files(join(root, dir)))) {
-    if (!/\.(astro|tsx?|css|html|templ|js|mjs)$/.test(file)) continue;
-    assert.doesNotMatch(readFileSync(file, 'utf8'), /fonts\.(googleapis|gstatic)\.com/, file);
+  const cdn = /fonts\.(googleapis|gstatic)\.com|fonts\.bunny\.net|use\.typekit\.net|p\.typekit\.net|cdn\.jsdelivr\.net\/npm\/@?fontsource/;
+  for (const file of ['src', 'public', 'internal', 'extension'].flatMap(dir => files(join(root, dir)))) {
+    if (!/\.(astro|[cm]?[jt]sx?|css|html|templ|go|svg|webmanifest|json)$/.test(file) || file.endsWith('_templ.go')) continue;
+    assert.doesNotMatch(readFileSync(file, 'utf8'), cdn, file);
   }
 });

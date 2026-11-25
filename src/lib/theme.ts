@@ -16,12 +16,14 @@ export function resolveTheme(value: unknown): Theme {
   return isTheme(value) ? value : DEFAULT_THEME;
 }
 
-// Applies a theme to the page and remembers it for the next load.
-export function applyTheme(theme: Theme, root: HTMLElement = document.documentElement): void {
+// Applies a theme to the page and remembers it for the next load. Returns false when it
+// could not be remembered (private mode, blocked site data), so a picker can say so.
+export function applyTheme(theme: Theme, root: HTMLElement = document.documentElement): boolean {
   root.dataset.theme = theme;
   try {
     localStorage.setItem(THEME_STORAGE_KEY, theme);
+    return true;
   } catch {
-    // Storage can be unavailable (private mode, blocked site data); the theme still applies for this page.
+    return false;
   }
 }

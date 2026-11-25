@@ -38,27 +38,46 @@ test('defaults to dark and re-themes every token when data-theme changes', async
   expect(await paint(page)).toMatchObject(PALETTE.dark);
 });
 
-test('the theme script runs inline before any stylesheet', async ({ page }) => {
-  const html = await (await page.request.get('/books')).text();
+for (const path of ['/books', '/login']) test(`the theme script runs inline before any stylesheet on ${path}`, async ({ page }) => {
+  const html = await (await page.request.get(path)).text();
   const head = html.slice(0, html.indexOf('</head>'));
   const script = head.indexOf('document.documentElement.dataset.theme');
-  const stylesheet = head.search(/<link[^>]+rel="?stylesheet/);
+  const stylesheet = head.search(/<link[^>]+rel="?stylesheet|<style/);
   expect(head).toMatch(/<html[^>]*data-theme="dark"/);
   expect(script).toBeGreaterThan(-1);
-  expect(stylesheet === -1 || script < stylesheet).toBe(true);
+  expect(stylesheet).toBeGreaterThan(script);
   const tag = head.slice(head.lastIndexOf('<script', script), script);
   expect(tag).not.toMatch(/\b(defer|async|src=|type="module")/);
 });
 
-test('a saved theme is painted from the first frame', async ({ page }) => {
+test('a saved theme is applied before <body> exists', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('career-theme', 'cobalt'));
-  // Record the theme at the first animation frame, i.e. the first paint.
+  // Record whether <body> had been parsed when data-theme first became cobalt. Set from <head>,
+  // nothing in the body has been parsed yet, so it cannot have painted in the default theme.
   await page.addInitScript(() => {
-    requestAnimationFrame(() => { (window as unknown as { firstTheme?: string }).firstTheme = document.documentElement.dataset.theme; });
+    const observer = new MutationObserver(() => {
+      if (document.documentElement?.dataset.theme !== 'cobalt') return;
+      (window as unknown as { bodyAtSwitch?: boolean }).bodyAtSwitch = !!document.body;
+      observer.disconnect();
+    });
+    observer.observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-theme'] });
   });
   await page.goto('/books');
-  expect(await page.evaluate(() => (window as unknown as { firstTheme?: string }).firstTheme)).toBe('cobalt');
+  expect(await page.evaluate(() => (window as unknown as { bodyAtSwitch?: boolean }).bodyAtSwitch)).toBe(false);
   expect((await paint(page)).paper).toBe(PALETTE.cobalt.paper);
+});
+
+test('a nested data-theme re-resolves the tokens', async ({ page }) => {
+  await page.goto('/books');
+  const nested = await page.evaluate(() => {
+    const box = document.createElement('div');
+    box.dataset.theme = 'cobalt';
+    box.style.cssText = 'background: var(--paper); color: var(--ink-60)';
+    document.body.append(box);
+    const style = getComputedStyle(box);
+    return { paper: style.backgroundColor, label: style.color };
+  });
+  expect(nested).toEqual({ paper: PALETTE.cobalt.paper, label: PALETTE.cobalt.label });
 });
 
 test('a saved theme is honored', async ({ page }) => {
