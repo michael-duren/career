@@ -54,7 +54,7 @@ test('dates', () => {
   assert.equal(formatNumericDate('2030-03-07'), '07.03.30');
   assert.equal(formatDate('2026-11-24T03:00:00Z', 'America/Chicago'), 'Nov 23');
   assert.equal(formatWeekdayDate(new Date('2026-11-24T12:00:00Z'), 'UTC'), 'Tue 24 Nov');
-  // An offset-less timestamp is read as runtime-local time, and formatted in the runtime zone by default.
+  // An offset-less timestamp is parsed and formatted in the same runtime zone, so it keeps its written date in any zone.
   assert.equal(formatDate('2026-11-24T23:30:00'), 'Nov 24');
   assert.equal(formatWeekdayDate('2026-11-24T00:15:00'), 'Tue 24 Nov');
   assert.throws(() => formatDate('2026-02-30'));
