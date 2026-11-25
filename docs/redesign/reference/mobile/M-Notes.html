@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mobile — Notes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;300;400;500&family=IBM+Plex+Mono:wght@400;500&family=Architects+Daughter&display=swap" rel="stylesheet">
+<style>body{margin:0}a{color:#ECEAE3}a:hover{color:#FFFFFF}
+.bx{position:relative}
+.bx::before{content:"";position:absolute;left:-3px;right:-3px;top:0;bottom:0;border-top:1px solid #ECEAE3;border-bottom:1px solid #ECEAE3;pointer-events:none}
+.bx::after{content:"";position:absolute;top:-3px;bottom:-3px;left:0;right:0;border-left:1px solid #ECEAE3;border-right:1px solid #ECEAE3;pointer-events:none}
+.dim{position:relative;height:0;border-top:1px solid rgba(236,234,227,0.6)}
+.dim::before,.dim::after{content:"";position:absolute;top:-5px;height:10px;border-left:1px solid #ECEAE3;transform:skewX(-45deg)}
+.dim::before{left:0}.dim::after{right:0}
+.lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:rgba(236,234,227,0.6)}
+.h2{margin:0;font-weight:500;font-size:11px;letter-spacing:0.24em}
+.btn{height:44px;padding:0 14px;background:transparent;border:1px solid rgba(236,234,227,0.5);color:#ECEAE3;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:0.14em;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}
+.btn.solid{background:#ECEAE3;color:#0C0C0B;border-color:#ECEAE3}
+.srch{display:flex;align-items:center;gap:10px;height:44px;padding:0 14px;border:1px solid rgba(236,234,227,0.5);box-sizing:border-box}
+.srch input{flex:1;min-width:0;border:0;background:transparent;color:#ECEAE3;font:300 14px 'Inter Tight',sans-serif;outline:none}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-decoration:none;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.12em;color:rgba(236,234,227,0.55)}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; background: #0C0C0B; color: #ECEAE3; font-family: 'Inter Tight', sans-serif; overflow: hidden">
+  <div style="position: absolute; inset: 0 0 78px 0; overflow-y: auto; padding: 22px 22px 28px; box-sizing: border-box; display: flex; flex-direction: column">
+    <div style="display: flex; justify-content: space-between; align-items: center; height: 24px"><span style="font-weight: 500; font-size: 12px; letter-spacing: 0.32em">CAREER</span><span style="display: flex; align-items: center; gap: 6px"><a href="M-Search.dc.html" aria-label="Search everything" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; margin: -10px 0"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 14 14" fill="none" stroke="#ECEAE3" stroke-width="1"><circle cx="6" cy="6" r="4.5"></circle><path d="M9.5 9.5 L13 13"></path></svg></a><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px">5:20 PM</span></span></div>
+    <div style="border-top: 1px solid rgba(236,234,227,0.3); margin-top: 12px"></div>
+    <header style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px">
+      <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl">21 notes · 10 topics</span><h1 style="margin: 0; font-weight: 200; font-size: 40px; line-height: 0.9">Notes</h1></div>
+      <button type="button" class="btn solid" aria-label="New note" style="width: 44px; padding: 0; font-size: 18px">+</button>
+    </header>
+    <label class="srch" style="margin-top: 16px"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#ECEAE3" stroke-width="1"><circle cx="6" cy="6" r="4.5"></circle><path d="M9.5 9.5 L13 13"></path></svg><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search notes</span><input type="search" placeholder="Search notes"></label>
+    <div style="display: flex; gap: 8px; overflow-x: auto; margin-top: 12px; padding-bottom: 4px">
+      <sc-for list="{{topics}}" as="t" hint-placeholder-count="6"><button type="button" style="{{t.style}}">{{t.name}} {{t.n}}</button></sc-for>
+    </div>
+    <div style="display: flex; flex-direction: column; margin-top: 8px">
+      <sc-for list="{{notes}}" as="n" hint-placeholder-count="8">
+        <a href="#" style="display: flex; flex-direction: column; gap: 5px; padding: 14px 0; border-bottom: 1px solid rgba(236,234,227,0.12); text-decoration: none">
+          <span style="display: flex; justify-content: space-between"><span class="lbl" style="font-size: 9px">{{n.topic}}</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; opacity: 0.6">{{n.date}}</span></span>
+          <span style="font-weight: 300; font-size: 17px; line-height: 1.2">{{n.title}}</span>
+          <span style="display: flex; justify-content: space-between; align-items: center"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; opacity: 0.55">{{n.words}}</span><sc-if value="{{n.hasTodo}}" hint-placeholder-val="{{false}}"><span style="display: flex; align-items: center; gap: 8px"><span style="position: relative; width: 70px; height: 7px"><span style="{{n.fill}}"></span><span class="dim" style="position: absolute; left: 0; right: 0; bottom: 0"></span></span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px">{{n.todo}}</span></span></sc-if></span>
+        </a>
+      </sc-for>
+    </div>
+  </div>
+  <nav aria-label="Main" style="position: absolute; left: 0; right: 0; bottom: 0; height: 78px; border-top: 1px solid rgba(236,234,227,0.3); background: #0C0C0B; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding-bottom: 16px; box-sizing: border-box">
+    <a href="M-Home.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 10 L11 3 L19 10 V19 H3 Z M9 19 V13 H13 V19"></path></svg>HOME</a>
+    <a href="M-Timeline.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M2 5 H12 M6 11 H18 M10 17 H20"></path><path d="M2 3 V7 M12 3 V7 M6 9 V13 M18 9 V13 M10 15 V19 M20 15 V19"></path></svg>TIMELINE</a>
+    <a href="M-Schedule.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="4" width="16" height="15"></rect><path d="M3 9 H19 M8.3 4 V19 M13.6 4 V19"></path></svg>SCHEDULE</a>
+    <a href="M-Leetgrinder.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M7 6 L2 11 L7 16 M15 6 L20 11 L15 16 M12.5 4 L9.5 18"></path></svg>LEET</a>
+    <a href="M-More.dc.html" class="tab" aria-current="page" style="color: #ECEAE3; box-shadow: inset 0 1px 0 #ECEAE3"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 7 H19 M3 11 H19 M3 15 H19"></path></svg>MORE</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const topics = [['All',21],['Coffee Chats',4],['General',4],['eBPF',3],['Career Strategy',2],['Databases',2]].map(([name, n], i) => ({ name, n, style: `flex:none;height:36px;padding:0 12px;border:1px solid ${i === 0 ? '#ECEAE3' : 'rgba(236,234,227,0.35)'};background:${i === 0 ? '#ECEAE3' : 'transparent'};color:${i === 0 ? '#0C0C0B' : '#ECEAE3'};font:500 10px 'IBM Plex Mono',monospace;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap` }));
+    const N = [['General','Nov 25','Flash Cards to create',45,0,0],['Interview Prep','Nov 18','AWS SysDE OA — Study Plan',1228,18,33],['Profile','Oct 23','Background & Resume Context (for LLMs)',487,0,0],['Operating systems','Oct 12','Add homework assignment for dimensional analysis',0,0,1],['Coffee Chats','Oct 9','Chat with Marino',71,0,0],['Coffee Chats','Sep 27','Talk with Devan',74,0,0],['General','Sep 26','AST',1485,0,0]];
+    const hatch = 'repeating-linear-gradient(-45deg,#ECEAE3 0 0.8px,transparent 0.8px 4px)';
+    const notes = N.map(([topic, date, title, words, done, total]) => ({ topic, date, title, words: words + ' words', hasTodo: total > 0, todo: `${done}/${total}`, fill: `position:absolute;left:0;bottom:0;height:5px;width:${total ? (done / total) * 100 : 0}%;background:${hatch}` }));
+    return { topics, notes };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mobile — Modules</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;300;400;500&family=IBM+Plex+Mono:wght@400;500&family=Architects+Daughter&display=swap" rel="stylesheet">
+<style>body{margin:0}a{color:#ECEAE3}a:hover{color:#FFFFFF}
+.bx{position:relative}
+.bx::before{content:"";position:absolute;left:-3px;right:-3px;top:0;bottom:0;border-top:1px solid #ECEAE3;border-bottom:1px solid #ECEAE3;pointer-events:none}
+.bx::after{content:"";position:absolute;top:-3px;bottom:-3px;left:0;right:0;border-left:1px solid #ECEAE3;border-right:1px solid #ECEAE3;pointer-events:none}
+.dim{position:relative;height:0;border-top:1px solid rgba(236,234,227,0.6)}
+.dim::before,.dim::after{content:"";position:absolute;top:-5px;height:10px;border-left:1px solid #ECEAE3;transform:skewX(-45deg)}
+.dim::before{left:0}.dim::after{right:0}
+.lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:rgba(236,234,227,0.6)}
+.h2{margin:0;font-weight:500;font-size:11px;letter-spacing:0.24em}
+.btn{height:44px;padding:0 14px;background:transparent;border:1px solid rgba(236,234,227,0.5);color:#ECEAE3;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:0.14em;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}
+.btn.solid{background:#ECEAE3;color:#0C0C0B;border-color:#ECEAE3}
+.srch{display:flex;align-items:center;gap:10px;height:44px;padding:0 14px;border:1px solid rgba(236,234,227,0.5);box-sizing:border-box}
+.srch input{flex:1;min-width:0;border:0;background:transparent;color:#ECEAE3;font:300 14px 'Inter Tight',sans-serif;outline:none}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-decoration:none;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.12em;color:rgba(236,234,227,0.55)}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; background: #0C0C0B; color: #ECEAE3; font-family: 'Inter Tight', sans-serif; overflow: hidden">
+  <div style="position: absolute; inset: 0 0 78px 0; overflow-y: auto; padding: 22px 22px 28px; box-sizing: border-box; display: flex; flex-direction: column">
+    <div style="display: flex; justify-content: space-between; align-items: center; height: 24px"><span style="font-weight: 500; font-size: 12px; letter-spacing: 0.32em">CAREER</span><span style="display: flex; align-items: center; gap: 6px"><a href="M-Search.dc.html" aria-label="Search everything" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; margin: -10px 0"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 14 14" fill="none" stroke="#ECEAE3" stroke-width="1"><circle cx="6" cy="6" r="4.5"></circle><path d="M9.5 9.5 L13 13"></path></svg></a><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px">5:20 PM</span></span></div>
+    <div style="border-top: 1px solid rgba(236,234,227,0.3); margin-top: 12px"></div>
+    <a href="M-More.dc.html" style="margin-top: 14px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-decoration: none; min-height: 44px; display: flex; align-items: center; opacity: 0.7">← MORE</a>
+    <header style="display: flex; flex-direction: column; gap: 6px"><span class="lbl">{{onCount}} of 10 on</span><h1 style="margin: 0; font-weight: 200; font-size: 40px; line-height: 0.9">Modules</h1></header>
+    <span style="font-size: 13px; font-weight: 300; opacity: 0.7; line-height: 1.45; margin-top: 12px">Off hides a module everywhere. Your data is kept.</span>
+    <div style="display: flex; flex-direction: column; margin-top: 10px">
+      <sc-for list="{{mods}}" as="m" hint-placeholder-count="10">
+        <div style="display: grid; grid-template-columns: minmax(0, 1fr) 52px; gap: 14px; align-items: center; min-height: 64px; border-bottom: 1px solid rgba(236,234,227,0.12)">
+          <span style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+            <span style="font-weight: 300; font-size: 16px">{{m.name}}</span>
+            <span style="font-size: 12px; font-weight: 300; opacity: 0.6; line-height: 1.35">{{m.desc}}</span>
+            <sc-if value="{{m.status}}" hint-placeholder-val="{{false}}"><span style="{{m.stStyle}}">{{m.status}}</span></sc-if>
+          </span>
+          <button type="button" role="switch" aria-checked="{{m.on}}" aria-label="{{m.name}}" disabled="{{m.locked}}" onClick="{{m.toggle}}" style="{{m.sw}}"><span style="{{m.knob}}"></span></button>
+        </div>
+      </sc-for>
+    </div>
+    <h2 class="h2" style="margin: 28px 0 10px">TAB BAR PREVIEW</h2>
+    <div style="border: 1px solid rgba(236,234,227,0.5); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); height: 58px">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="5"><span style="{{t.style}}"><span style="{{t.mark}}"></span>{{t.label}}</span></sc-for>
+    </div>
+    <span style="font-family: 'Architects Daughter', cursive; font-size: 14px; color: #E0533D; margin-top: 10px">{{tabNote}}</span>
+  </div>
+  <nav aria-label="Main" style="position: absolute; left: 0; right: 0; bottom: 0; height: 78px; border-top: 1px solid rgba(236,234,227,0.3); background: #0C0C0B; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding-bottom: 16px; box-sizing: border-box">
+    <a href="M-Home.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 10 L11 3 L19 10 V19 H3 Z M9 19 V13 H13 V19"></path></svg>HOME</a>
+    <a href="M-Timeline.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M2 5 H12 M6 11 H18 M10 17 H20"></path><path d="M2 3 V7 M12 3 V7 M6 9 V13 M18 9 V13 M10 15 V19 M20 15 V19"></path></svg>TIMELINE</a>
+    <a href="M-Schedule.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="4" width="16" height="15"></rect><path d="M3 9 H19 M8.3 4 V19 M13.6 4 V19"></path></svg>SCHEDULE</a>
+    <a href="M-Leetgrinder.dc.html" class="tab"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M7 6 L2 11 L7 16 M15 6 L20 11 L15 16 M12.5 4 L9.5 18"></path></svg>LEET</a>
+    <a href="M-More.dc.html" class="tab" aria-current="page" style="color: #ECEAE3; box-shadow: inset 0 1px 0 #ECEAE3"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 7 H19 M3 11 H19 M3 15 H19"></path></svg>MORE</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { on: { timeline: 1, schedule: 1, leet: 1, companies: 1, people: 1, books: 1, journal: 1, notes: 1, audio: 0, agents: 1 } }; }
+  renderVals() {
+    const M = [
+      ['timeline','Timeline','Goals, dates and steps',['Menu','Home','Search'],[], '16 goals'],
+      ['schedule','Schedule','Weekly plan, recurring rules and Google Calendar sync',['Menu','Home','Search'],['timeline'], ''],
+      ['leet','Leetgrinder','LeetCode practice, spaced reviews, reminders and the browser extension',['Menu','Home','Reminders'],[], '123 attempts'],
+      ['companies','Companies','Target companies, tiers and checklists',['Menu','Search'],[], '61 companies'],
+      ['people','People','LinkedIn connections and the catch-up queue',['Menu','Home','Search'],[], '819 people'],
+      ['books','Bookshelf','Books, courses, papers and reading log',['Menu','Search'],[], '32 items'],
+      ['journal','Journal','Weekly work journal, personal journal and logs',['Menu','Search'],[], '17 entries'],
+      ['notes','Notes','Ideas, questions and references by topic',['Menu','Search'],[], '21 notes'],
+      ['audio','Audio thoughts','Voice memos, transcribed on your homelab',['Menu','Search'],[], '7 recordings'],
+      ['agents','Agent context','Your goals as Markdown or JSON for AI assistants',['Menu'],['timeline'], '']
+    ];
+    const NAMES = Object.fromEntries(M.map((m) => [m[0], m[1]]));
+    const on = this.state.on;
+    const eff = {};
+    M.forEach(([id, , , , deps]) => { eff[id] = !!on[id] && deps.every((d) => on[d]); });
+    const hatch = 'repeating-linear-gradient(-45deg,#ECEAE3 0 0.8px,transparent 0.8px 4px)';
+    const mods = M.map(([id, name, desc, places, deps, data]) => {
+      const blocked = deps.find((d) => !on[d]);
+      const isOn = eff[id];
+      let status = '', st = 'font-family:\'IBM Plex Mono\',monospace;font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;';
+      if (blocked) { status = `needs ${NAMES[blocked]}`; st += 'color:#E0533D;'; }
+      else if (!isOn) { status = data ? `paused · ${data} kept` : 'paused'; st += 'opacity:0.6;'; }
+      else if (id === 'people' && !on.companies) { status = 'catch-up queue needs Companies'; st += 'color:#E0533D;'; }
+      else if (id === 'timeline' && (on.schedule || on.agents)) { status = 'Schedule and Agent context use this'; st += 'opacity:0.5;'; }
+      return {
+        name, desc, on: isOn, locked: !!blocked, status, stStyle: st,
+        toggle: () => this.setState({ on: { ...on, [id]: on[id] ? 0 : 1 } }),
+        places: places.map((p) => ({ label: p, style: `font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:0.1em;padding:3px 7px;border:1px solid rgba(236,234,227,${isOn ? 0.45 : 0.15});${isOn ? '' : 'text-decoration:line-through;opacity:0.45;'}` })),
+        rowStyle: `display:grid;grid-template-columns:52px minmax(0,1fr) 260px;gap:18px;align-items:center;min-height:50px;border-bottom:1px solid rgba(236,234,227,0.12);${isOn ? '' : 'opacity:0.75;'}`,
+        sw: `all:unset;position:relative;box-sizing:border-box;width:42px;height:22px;border:1px solid ${isOn ? '#ECEAE3' : 'rgba(236,234,227,0.45)'};cursor:${blocked ? 'not-allowed' : 'pointer'};${isOn ? `background:${hatch};` : ''}${blocked ? 'border-style:dashed;' : ''}`,
+        knob: `position:absolute;top:3px;${isOn ? 'right:3px;background:#ECEAE3;' : 'left:3px;background:#0C0C0B;'}width:14px;height:14px;border-radius:50%;box-sizing:border-box;border:1px solid #ECEAE3`
+      };
+    });
+    const PREF = ['timeline','schedule','leet','companies','people','books','journal','notes','audio','agents'];
+    const SHORT = { timeline: 'TIMELINE', schedule: 'SCHEDULE', leet: 'LEET', companies: 'COMPANIES', people: 'PEOPLE', books: 'BOOKS', journal: 'JOURNAL', notes: 'NOTES', audio: 'AUDIO', agents: 'AGENTS' };
+    const picks = PREF.filter((id) => eff[id]).slice(0, 3);
+    const tabs = ['HOME', ...picks.map((id) => SHORT[id]), 'MORE'].map((label, i) => ({ label,
+      style: `display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:0.08em;${i === 0 || i === 4 ? 'opacity:0.55;' : ''}${i > 0 ? 'border-left:1px solid rgba(236,234,227,0.2);' : ''}`,
+      mark: `width:14px;height:14px;box-sizing:border-box;border:1px solid #ECEAE3;${i === 0 || i === 4 ? '' : `background:${hatch};`}` }));
+    const order = PREF.slice(0, 6).map((id, i) => ({ n: String(i + 1).padStart(2, '0'), name: NAMES[id],
+      style: `display:flex;gap:12px;align-items:center;min-height:36px;border-bottom:1px solid rgba(236,234,227,0.12);font-size:14px;font-weight:300;${eff[id] ? '' : 'text-decoration:line-through;opacity:0.4;'}` }));
+    const tabNote = eff.leet ? 'turn off Leetgrinder and Companies slides in' : 'Companies took the Leet slot';
+    return { mods, tabs, order, tabNote, onCount: String(Object.values(eff).filter(Boolean).length) };
+  }
+}
+</script>
+</body>
+</html>

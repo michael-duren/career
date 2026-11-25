@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Career — Companies</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;300;400;500&family=IBM+Plex+Mono:wght@400;500&family=Architects+Daughter&display=swap" rel="stylesheet">
+<style>body{margin:0}a{color:#ECEAE3}a:hover{color:#FFFFFF}
+.bx{position:relative}
+.bx::before{content:"";position:absolute;left:-3px;right:-3px;top:0;bottom:0;border-top:1px solid #ECEAE3;border-bottom:1px solid #ECEAE3;pointer-events:none}
+.bx::after{content:"";position:absolute;top:-3px;bottom:-3px;left:0;right:0;border-left:1px solid #ECEAE3;border-right:1px solid #ECEAE3;pointer-events:none}
+.dim{position:relative;height:0;border-top:1px solid rgba(236,234,227,0.6)}
+.dim::before,.dim::after{content:"";position:absolute;top:-5px;height:10px;border-left:1px solid #ECEAE3;transform:skewX(-45deg)}
+.dim::before{left:0}.dim::after{right:0}
+.lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:rgba(236,234,227,0.6)}
+.h2{margin:0;font-weight:500;font-size:12px;letter-spacing:0.24em}
+.btn{height:44px;padding:0 16px;background:transparent;border:1px solid rgba(236,234,227,0.5);color:#ECEAE3;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:0.16em;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}
+.btn.solid{background:#ECEAE3;color:#0C0C0B;border-color:#ECEAE3}
+.nv{text-decoration:none;font-size:11.5px;letter-spacing:0.06em;opacity:0.6;padding:6px 0}
+.nv.on{opacity:1;border-bottom:1px solid #ECEAE3}
+.hov:hover{background:rgba(236,234,227,0.04)}
+</style>
+</helmet>
+<div style="position: relative; width: 1280px; height: 800px; box-sizing: border-box; background: #0C0C0B; color: #ECEAE3; font-family: 'Inter Tight', sans-serif; padding: 40px 56px; display: flex; flex-direction: column; overflow: hidden">
+  <nav aria-label="Main" style="display: flex; align-items: center; gap: 17px; height: 28px">
+    <span style="font-weight: 500; font-size: 13px; letter-spacing: 0.32em; margin-right: 18px">CAREER</span>
+    <a href="#" class="nv">HOME</a>
+    <a href="#" class="nv">TIMELINE</a>
+    <a href="#" class="nv">SCHEDULE</a>
+    <a href="#" class="nv">LEET</a>
+    <a href="#" class="nv on" aria-current="page">COMPANIES</a>
+    <a href="#" class="nv">PEOPLE</a>
+    <a href="#" class="nv">BOOKS</a>
+    <a href="#" class="nv">JOURNAL</a>
+    <a href="#" class="nv">NOTES</a>
+    <a href="#" class="nv">AUDIO</a>
+    <a href="#" class="nv">AGENTS</a>
+    <label style="margin-left: auto; display: flex; align-items: center; gap: 10px; height: 34px; width: 210px; padding: 0 12px; border: 1px solid rgba(236,234,227,0.35); box-sizing: border-box">
+      <svg aria-hidden="true" width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#ECEAE3" stroke-width="1"><circle cx="6" cy="6" r="4.5"></circle><path d="M9.5 9.5 L13 13"></path></svg>
+      <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search everything</span>
+      <input type="search" placeholder="Search everything" style="flex: 1; min-width: 0; border: 0; background: transparent; color: #ECEAE3; font: 300 13px 'Inter Tight', sans-serif; outline: none">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; opacity: 0.5">/</span>
+    </label>
+    <a href="#" aria-label="Settings" style="width: 34px; height: 34px; margin-left: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(236,234,227,0.35)"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#ECEAE3" stroke-width="1"><circle cx="8" cy="8" r="2.5"></circle><path d="M8 1 V3.5 M8 12.5 V15 M1 8 H3.5 M12.5 8 H15 M3 3 L4.8 4.8 M11.2 11.2 L13 13 M3 13 L4.8 11.2 M11.2 4.8 L13 3"></path></svg></a>
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; margin-left: 14px">5:20 PM</span>
+  </nav>
+  <div style="border-top: 1px solid rgba(236,234,227,0.3); margin-top: 12px"></div>
+  <header style="display: flex; align-items: flex-end; justify-content: space-between; margin-top: 22px">
+    <div style="display: flex; flex-direction: column; gap: 8px"><span class="lbl">61 tracked · 7 featured</span><h1 style="margin: 0; font-weight: 200; font-size: 52px; line-height: 0.9">Companies</h1></div>
+    <div style="display: flex; gap: 10px; align-items: center">
+      <div role="tablist" aria-label="Priority" style="display: flex; border: 1px solid rgba(236,234,227,0.5)">
+        <sc-for list="{{tabs}}" as="t" hint-placeholder-count="4"><button type="button" role="tab" aria-selected="{{t.sel}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button></sc-for>
+      </div>
+      <label style="display: flex; align-items: center; gap: 10px; height: 44px; width: 220px; padding: 0 14px; border: 1px solid rgba(236,234,227,0.5); box-sizing: border-box">
+        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#ECEAE3" stroke-width="1"><circle cx="6" cy="6" r="4.5"></circle><path d="M9.5 9.5 L13 13"></path></svg>
+        <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search companies</span>
+        <input type="search" placeholder="Search companies" style="flex: 1; min-width: 0; border: 0; background: transparent; color: #ECEAE3; font: 300 13px 'Inter Tight', sans-serif; outline: none">
+      </label>
+      <button type="button" class="btn solid">+ ADD COMPANY</button>
+    </div>
+  </header>
+  <div style="display: flex; gap: 26px; margin-top: 20px; align-items: center">
+    <span class="lbl">Legend</span>
+    <span style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 300"><span style="width: 9px; height: 9px; border-radius: 50%; background: #ECEAE3"></span>High</span>
+    <span style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 300"><span style="width: 9px; height: 9px; border-radius: 50%; border: 1px solid #ECEAE3; background: linear-gradient(90deg, #ECEAE3 50%, transparent 50%); box-sizing: border-box"></span>Medium</span>
+    <span style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 300"><span style="width: 9px; height: 9px; border-radius: 50%; border: 1px solid #ECEAE3; box-sizing: border-box"></span>Low</span>
+    <span style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 300"><span style="font-size: 10px">◆</span>Featured</span>
+    <span style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 300"><span style="display: inline-flex; gap: 2px"><span style="width: 1.5px; height: 10px; background: #ECEAE3"></span><span style="width: 1px; height: 10px; background: rgba(236,234,227,0.3)"></span><span style="width: 1px; height: 10px; background: rgba(236,234,227,0.3)"></span></span>Checklist steps</span>
+    <span class="lbl" style="margin-left: auto">{{count}} shown</span>
+  </div>
+  <div style="flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 158px; gap: 16px 24px; margin-top: 22px; padding: 3px">
+    <sc-for list="{{cards}}" as="c" hint-placeholder-count="12">
+      <div class="bx hov" style="padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+        <div style="display: flex; align-items: center; gap: 12px; min-width: 0">
+          <span style="flex: none; width: 36px; height: 36px; border: 1px solid rgba(236,234,227,0.5); display: flex; align-items: center; justify-content: center; font-weight: 400; font-size: 13px; letter-spacing: 0.04em" title="Company logo">{{c.mono}}</span>
+          <span style="display: flex; flex-direction: column; min-width: 0; flex: 1"><a href="#" style="font-weight: 300; font-size: 19px; line-height: 1.1; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.title}}</a><span class="lbl" style="font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.cat}}</span></span>
+          <span style="display: flex; gap: 8px; align-items: center; flex: none; align-self: flex-start; margin-top: 4px"><sc-if value="{{c.featured}}" hint-placeholder-val="{{false}}"><span style="font-size: 10px">◆</span></sc-if><span style="{{c.dot}}"></span></span>
+        </div>
+        <span style="font-size: 12px; font-weight: 300; line-height: 1.45; opacity: 0.7; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical">{{c.why}}</span>
+        <span style="margin-top: auto; display: flex; align-items: center; gap: 10px">
+          <span style="display: flex; gap: 3px; align-items: flex-end"><sc-for list="{{c.ticks}}" as="t" hint-placeholder-count="7"><span style="{{t}}"></span></sc-for></span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; opacity: 0.6">{{c.steps}}</span>
+          <button type="button" aria-label="Edit {{c.title}}" style="margin-left: auto; width: 34px; height: 34px; background: transparent; border: 1px solid rgba(236,234,227,0.3); color: #ECEAE3; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1"><path d="M2 12 L2.6 9 L9.6 2 L12 4.4 L5 11.4 Z M8.4 3.2 L10.8 5.6"></path></svg></button>
+          <button type="button" aria-label="Delete {{c.title}}" style="width: 34px; height: 34px; background: transparent; border: 1px solid rgba(236,234,227,0.3); color: #E0533D; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1"><path d="M2 4 H12 M5 4 V2.5 H9 V4 M3.5 4 L4.2 12.5 H9.8 L10.5 4 M6 6.5 V10.5 M8 6.5 V10.5"></path></svg></button>
+        </span>
+      </div>
+    </sc-for>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { pr: 'all' }; }
+  renderVals() {
+    const C = [
+      ['TigerBeetle','Databases','high',1,0,7,'A standout low-level database target. Lead with careful C systems work, crash recovery experiments, and tests of the Raft project.'],
+      ['CockroachDB','Databases','high',1,0,7,'Primary distributed database target for the C database and Raft project. Bring replication, recovery and consistency tradeoffs.'],
+      ['ScyllaDB','Databases','high',1,0,7,'Shard-per-core architecture connects OSTEP and the C database project to memory ownership, scheduling and I/O.'],
+      ['Yugabyte','Databases','high',1,0,7,'Raft-replicated storage makes the C/Raft project a concrete basis for leader election and recovery discussions.'],
+      ['Google','From connections','high',0,2,5,'Top target. L3–L4 loop is 3 DSA + 1 behavioral, no system design, so communicate while solving.'],
+      ['Isovalent','Cloud-native infra','medium',1,2,7,'Cilium/eBPF team; the course shows directly relevant kernel and networking work. Use a packet-sniffer demo as evidence.'],
+      ['Stripe','From connections','medium',0,2,5,'Strong engineering org. Contact: Anthony Gacek (SWE).'],
+      ['Netflix','Big tech infra / SRE','medium',0,1,7,'Stretch target for systems and infrastructure teams. Pair SRE experience with system-design prep.'],
+      ['ClickHouse','Databases','high',0,0,7,'Storage and query-engine work after OS fundamentals. Discuss memory layout, I/O and performance measurements.'],
+      ['Redpanda','Databases','high',0,0,7,'Consensus and reliability side of the portfolio. Explain replicated logs and failure recovery.'],
+      ['CrowdStrike','From connections','high',0,0,5,'Linux sensor work overlaps with eBPF. Contact: Priscille Gwet (SWE).'],
+      ['Cloudflare','Big tech infra / SRE','medium',0,0,7,'Network and OS side of the learning path. Focus on SRE and systems teams with the eBPF course as evidence.'],
+      ['Anthropic','AI infrastructure','low',0,0,7,'Longer-term target for infrastructure supporting AI workloads after more systems experience.']
+    ];
+    const pr = this.state.pr;
+    const dot = (p) => `width:9px;height:9px;border-radius:50%;box-sizing:border-box;border:1px solid #ECEAE3;${p === 'high' ? 'background:#ECEAE3;' : p === 'medium' ? 'background:linear-gradient(90deg,#ECEAE3 50%,transparent 50%);' : ''}`;
+    const list = C.filter((c) => pr === 'all' || c[2] === pr).slice(0, 12);
+    const cards = list.map(([title, cat, p, featured, done, total, why]) => ({
+      title, cat, why, featured: !!featured, dot: dot(p), steps: `${done}/${total}`, mono: (() => { const w = title.replace(/[^A-Za-z ]/g, '').split(' ').filter(Boolean); return w.length > 1 ? (w[0][0] + w[1][0]).toUpperCase() : w[0].slice(0, 2); })(),
+      ticks: Array.from({ length: total }, (_, i) => `width:${i < done ? 2 : 1}px;height:12px;background:${i < done ? '#ECEAE3' : 'rgba(236,234,227,0.3)'}`)
+    }));
+    const tabs = [['all','ALL 61'],['high','HIGH'],['medium','MEDIUM'],['low','LOW']].map(([k, label]) => ({ label, sel: k === pr, pick: () => this.setState({ pr: k }),
+      style: `height:42px;padding:0 14px;border:0;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:0.14em;cursor:pointer;${k === pr ? 'background:#ECEAE3;color:#0C0C0B;' : 'background:transparent;color:rgba(236,234,227,0.7);'}` }));
+    return { cards, tabs, count: cards.length };
+  }
+}
+</script>
+</body>
+</html>
