@@ -18,7 +18,9 @@ export function resolveTheme(value: unknown): Theme {
 
 // Applies a theme to the page and remembers it for the next load. Returns false when it
 // could not be remembered (private mode, blocked site data), so a picker can say so.
-export function applyTheme(theme: Theme, root: HTMLElement = document.documentElement): boolean {
+// Unknown values (e.g. an untyped <select> value) apply and store the default instead.
+export function applyTheme(value: Theme, root: HTMLElement = document.documentElement): boolean {
+  const theme = resolveTheme(value);
   root.dataset.theme = theme;
   try {
     localStorage.setItem(THEME_STORAGE_KEY, theme);

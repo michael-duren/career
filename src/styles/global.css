@@ -5,7 +5,8 @@
 @import "@fontsource-variable/inter-tight/wght-italic.css";
 @import "@fontsource/ibm-plex-mono/400.css";
 @import "@fontsource/ibm-plex-mono/500.css";
-/* The redesign uses 400/500; 700 keeps existing font-mono font-bold text from being faux-bolded. */
+/* The redesign uses 400/500; 600/700 keep existing font-mono semibold/bold text from being faux-bolded. */
+@import "@fontsource/ibm-plex-mono/600.css";
 @import "@fontsource/ibm-plex-mono/700.css";
 @import "@fontsource/architects-daughter/400.css";
 
@@ -256,6 +257,7 @@ main, article, section, form, fieldset { min-width: 0; }
 .prose table { display: block; max-width: 100%; overflow-x: auto; }
 img { max-width: 100%; }
 button, a, summary { touch-action: manipulation; }
+/* Token-based so it follows the theme; on legacy zinc surfaces only Dark is supported (see the theme header). */
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 .app-header { padding-top: max(12px, env(safe-area-inset-top)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
 .app-content { padding-bottom: max(32px, env(safe-area-inset-bottom)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }

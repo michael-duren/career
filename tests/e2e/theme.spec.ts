@@ -40,14 +40,14 @@ test('defaults to dark and re-themes every token when data-theme changes', async
 
 for (const path of ['/books', '/login']) test(`the theme script runs inline before any stylesheet on ${path}`, async ({ page }) => {
   const html = await (await page.request.get(path)).text();
-  const head = html.slice(0, html.indexOf('</head>'));
-  const script = head.indexOf('document.documentElement.dataset.theme');
-  const stylesheet = head.search(/<link[^>]+rel="?stylesheet|<style/);
+  const end = html.indexOf('</head>');
+  expect(end).toBeGreaterThan(-1);
+  const head = html.slice(0, end);
   expect(head).toMatch(/<html[^>]*data-theme="dark"/);
-  expect(script).toBeGreaterThan(-1);
-  expect(stylesheet).toBeGreaterThan(script);
-  const tag = head.slice(head.lastIndexOf('<script', script), script);
-  expect(tag).not.toMatch(/\b(defer|async|src=|type="module")/);
+  const start = head.indexOf('<script id="theme-init"');
+  expect(start).toBeGreaterThan(-1);
+  expect(head.search(/<link[^>]+rel="?stylesheet|<style/)).toBeGreaterThan(start);
+  expect(head.slice(start, head.indexOf('>', start))).not.toMatch(/\b(defer|async|src=|type="module")/);
 });
 
 test('a saved theme is applied before <body> exists', async ({ page }) => {
@@ -100,7 +100,10 @@ test('blocked storage keeps the dark default', async ({ page }) => {
   expect(await paint(page)).toMatchObject({ theme: 'dark', paper: PALETTE.dark.paper });
 });
 
-test('fonts are self-hosted', async ({ page, baseURL }) => {
+test.describe('without service worker', () => {
+  // A service-worker fetch would bypass page.on('request').
+  test.use({ serviceWorkers: 'block' });
+  test('fonts are self-hosted', async ({ page, baseURL }) => {
   const fontHosts = new Set<string>();
   page.on('request', request => { if (request.resourceType() === 'font') fontHosts.add(new URL(request.url()).origin); });
   await page.goto('/books');
@@ -110,4 +113,5 @@ test('fonts are self-hosted', async ({ page, baseURL }) => {
   for (const count of loaded) expect(count).toBeGreaterThan(0);
   expect(await page.evaluate(() => getComputedStyle(document.body).fontFamily)).toMatch(/^"Inter Tight Variable"/);
   expect([...fontHosts]).toEqual([new URL(baseURL!).origin]);
+});
 });

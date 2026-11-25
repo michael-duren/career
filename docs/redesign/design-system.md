@@ -41,9 +41,13 @@ At 0.6, labels fall below 4.5:1 on Vellum (4.39:1) and Cobalt (3.17:1). So `--in
 Use `text-ink-60` for labels, not `text-ink/60`, because the fixed 60% skips the per-theme alpha.
 `--ink-50` and lower are for borders, rules and tints only, never for text.
 
-Known gap for the design owner: `--accent` on Cobalt paper is 4.2:1, under 4.5:1 for small
-text. Accent text always comes with a non-color cue (LATE, strike-through, the ring), and on
-Cobalt it should stay at 16px or larger until the accent is adjusted.
+Known gaps for the design owner:
+
+- `--accent` on Cobalt paper is 4.2:1, under 4.5:1 for normal text (it passes only as WCAG large
+  text: 24px, or 18.66px bold). Small accent text on Cobalt fails until the accent is adjusted.
+  Accent text should always come with a non-color cue (LATE, strike-through, the ring).
+- `--ink-50` on Cobalt is 2.5:1, under the 3:1 non-text minimum for borders that identify
+  controls.
 
 Map these into Tailwind v4 with `@theme inline` in `src/styles/global.css` so classes like
 `bg-paper text-ink border-ink/30 text-ink-60` work. `inline` makes utilities reference the
