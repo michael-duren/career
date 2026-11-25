@@ -44,7 +44,7 @@ func (s *Server) mcpModuleFilter(next mcp.MethodHandler) mcp.MethodHandler {
 				return mcpToolError(errMCPStorage.Error()), nil
 			}
 			if m, off := mcpToolModuleOff(settings, call.Params.Name, call.Params.Arguments); off {
-				return mcpToolError(m.Label + " is turned off in Settings → Modules, so its tools and entries are unavailable."), nil
+				return mcpToolError(settings.OffReason(m.ID) + " in Settings → Modules, so its tools and entries are unavailable."), nil
 			}
 		}
 		return next(ctx, method, req)

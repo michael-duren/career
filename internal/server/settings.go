@@ -94,9 +94,9 @@ func requestModule(path string) (modules.Module, bool) {
 }
 
 // moduleOff answers a request for a disabled module with 404.
-func moduleOff(w http.ResponseWriter, r *http.Request, m modules.Module) {
+func moduleOff(w http.ResponseWriter, r *http.Request, settings modules.Settings, m modules.Module) {
 	if strings.HasPrefix(r.URL.Path, "/api/") {
-		respond(w, 404, map[string]string{"error": m.Label + " is turned off. Turn it on in Settings → Modules."})
+		respond(w, 404, map[string]string{"error": settings.OffReason(m.ID) + ". Turn it on in Settings → Modules."})
 		return
 	}
 	http.NotFound(w, r)
@@ -116,7 +116,10 @@ func (s *Server) moduleGuard(next http.Handler) http.Handler {
 		// Every /api/leetgrinder/ route is in the bearer-token group behind
 		// requireModule; a session route added there must not rely on this.
 		extension := strings.HasPrefix(path, "/api/leetgrinder/") && r.Header.Get("Authorization") != ""
-		if !ok || extension || (api && !s.authenticated(r)) {
+		// Journal and audio Markdown views of agent context are checked by the
+		// handler against their own modules, so they work with Agents off.
+		journalView := path == "/api/agent-context" && r.URL.Query().Get("journal") != ""
+		if !ok || extension || journalView || (api && !s.authenticated(r)) {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -125,7 +128,7 @@ func (s *Server) moduleGuard(next http.Handler) http.Handler {
 }
 
 // guardModule serves next when m is on, 404 when it is off, and 503 when the
-// settings cannot be loaded.
+// settings cannot be loaded (fail closed).
 func (s *Server) guardModule(w http.ResponseWriter, r *http.Request, next http.Handler, m modules.Module) {
 	settings, err := s.moduleSettings(r.Context())
 	if err != nil {
@@ -133,7 +136,7 @@ func (s *Server) guardModule(w http.ResponseWriter, r *http.Request, next http.H
 		return
 	}
 	if !settings.Enabled(m.ID) {
-		moduleOff(w, r, m)
+		moduleOff(w, r, settings, m)
 		return
 	}
 	next.ServeHTTP(w, r)

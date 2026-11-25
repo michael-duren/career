@@ -14,7 +14,7 @@ let scheduleOn: Promise<boolean> | undefined;
 /** Loads the week holding today in the scheduler's time zone, which can differ from the browser's, or 'off' while the schedule module is off. */
 async function loadToday(): Promise<Today | 'off'> {
   // If settings cannot load, try the schedule anyway; its own error explains a failure.
-  scheduleOn ??= loadSettings().then(settings => isEnabled(settings, 'schedule'), () => true);
+  scheduleOn ??= loadSettings().then(settings => isEnabled(settings, 'schedule'), () => { scheduleOn = undefined; return true; });
   if (!await scheduleOn) return 'off';
   let week = await loadWeek(mondayOf(localDate()));
   const today = zonedDate(new Date(), week.settings.timeZone);

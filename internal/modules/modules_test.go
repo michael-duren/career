@@ -70,6 +70,16 @@ func TestApplyValidates(t *testing.T) {
 	}
 }
 
+func TestOffReason(t *testing.T) {
+	s := Settings{Modules: map[string]bool{"timeline": false, "notes": false}}
+	if got := s.OffReason("schedule"); got != "Schedule needs Timeline, which is turned off" {
+		t.Fatal(got)
+	}
+	if got := s.OffReason("notes"); got != "Notes is turned off" {
+		t.Fatal(got)
+	}
+}
+
 func TestToolOff(t *testing.T) {
 	s := Settings{Modules: map[string]bool{"companies": false}}
 	if m, off := s.ToolOff("add_companies_to_queue"); !off || m.ID != "companies" {

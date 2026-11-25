@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { buildBoard, appendCompanyNote, filterCompanies, connectedCompanyCount, CONNECTED_COMPANY_GOAL, type RawCompany, type Company, type CompanyStatus } from "../lib/companies";
+import { isEnabled, loadSettings } from '../lib/modules';
 import { avatarStack, connectionsByCompany, relativeDays, type Connection } from '../lib/connections';
 import { ConnectionAvatar } from './ConnectionAvatar';
 
@@ -40,6 +41,8 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [connections, setConnections] = useState<Connection[]>();
   const [connectionsFailed, setConnectionsFailed] = useState(false);
+  // Connections belong to the People module; while it is off they are not shown here.
+  const [peopleOn, setPeopleOn] = useState(true);
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
   const [error, setError] = useState('');
@@ -56,10 +59,14 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
   useEffect(() => {
     const url = detailSlug ? `/api/connections?company=${encodeURIComponent(detailSlug)}` : '/api/connections?linked=1';
     setConnectionsFailed(false);
-    void fetch(url, { cache: 'no-store' }).then(response => {
+    void loadSettings().then(settings => isEnabled(settings, 'people'), () => true).then(on => {
+      setPeopleOn(on);
+      if (!on) return;
+      return fetch(url, { cache: 'no-store' }).then(response => {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return response.json();
-    }).then(result => setConnections(result.connections)).catch(() => setConnectionsFailed(true));
+      }).then(result => setConnections(result.connections)).catch(() => setConnectionsFailed(true));
+    });
   }, [detailSlug]);
   // One request loads every linked connection; group client-side instead of fetching per company.
   const connectionsBySlug = useMemo(() => connectionsByCompany(connections ?? []), [connections]);
@@ -124,12 +131,12 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
           {totalCompanies} companies · {data.totals.applied} applied ·{" "}
           {data.totals.interviewing} interviewing
         </span>
-        <div className="flex min-w-56 flex-1 items-center gap-3 sm:max-w-sm">
+        {peopleOn && <div className="flex min-w-56 flex-1 items-center gap-3 sm:max-w-sm">
           <label htmlFor="connected-companies" className="shrink-0 text-zinc-300">
             {connections ? connectedCompanies : connectionsFailed ? '?' : '…'}/{CONNECTED_COMPANY_GOAL} companies with connections
           </label>
           <progress id="connected-companies" className="block h-1.5 w-full min-w-16 overflow-hidden rounded accent-emerald-500" value={connections ? Math.min(connectedCompanies, CONNECTED_COMPANY_GOAL) : 0} max={CONNECTED_COMPANY_GOAL} />
-        </div>
+        </div>}
       </div>}
 
       {error && <div role="alert" className="rounded-lg border border-red-800 p-3 text-sm text-red-200">{error} <button type="button" disabled={busy} className="underline disabled:opacity-50" onClick={() => void reload()}>Reload latest (keep drafts)</button></div>}
@@ -164,7 +171,7 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
             </button>
           ))}
         </div>
-        <div className="flex flex-wrap items-center gap-2 sm:border-l sm:border-zinc-800 sm:pl-4">
+        {peopleOn && <div className="flex flex-wrap items-center gap-2 sm:border-l sm:border-zinc-800 sm:pl-4">
           <button
             type="button"
             aria-pressed={hasConnections}
@@ -180,7 +187,7 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
             Has connections
           </button>
           {connectionsFailed && <span className="text-xs text-red-300">Couldn't load connections.</span>}
-        </div>
+        </div>}
       </div>}
 
       {totalCompanies === 0 && <p className="text-zinc-400">{detailSlug ? 'This company is no longer available.' : 'No companies added yet.'}</p>}
@@ -201,7 +208,7 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
                   {company.featured && <span className="ml-auto text-amber-300" title="Standout fit">★<span className="sr-only"> Standout fit</span></span>}
                 </span>
               </div>
-              {!detailSlug && <ConnectionStack company={company} connections={connectionsBySlug.get(company.slug)} />}
+              {!detailSlug && peopleOn && <ConnectionStack company={company} connections={connectionsBySlug.get(company.slug)} />}
             </div>
             <div className="mt-3">
               <div className="flex justify-between gap-2 text-[10px] text-zinc-500">
@@ -215,7 +222,7 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
               <button type="button" disabled={busy} aria-label={`Delete ${company.title}`} onClick={() => void remove(company.slug)} className="text-red-400 hover:underline disabled:opacity-50">Delete</button>
             </div>
             <Details className={`mt-2 ${detailSlug ? 'text-sm' : 'text-xs'} text-zinc-400`}>
-              {!detailSlug && <summary className="cursor-pointer py-1 hover:text-zinc-100">Details, notes & connections</summary>}
+              {!detailSlug && <summary className="cursor-pointer py-1 hover:text-zinc-100">{peopleOn ? 'Details, notes & connections' : 'Details & notes'}</summary>}
               <div className="mt-2 space-y-3 border-t border-zinc-800 pt-3">
                 <div className="flex flex-wrap gap-3 text-blue-400">
                   {!detailSlug && <a href={`/companies/${company.slug.split('/').map(encodeURIComponent).join('/')}`} className="hover:underline">Open company →</a>}
@@ -230,7 +237,7 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
                   <label className="block text-zinc-200">Add a note for {company.title}<textarea aria-label={`Add a note for ${company.title}`} required maxLength={5000} disabled={busy} className="mt-1 min-h-20 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="A contact, an impression, or a reminder…" value={drafts[company.slug] ?? ''} onChange={event => setDrafts(previous => ({ ...previous, [company.slug]: event.target.value }))} /></label>
                   <button type="submit" disabled={busy || !drafts[company.slug]?.trim()} className="rounded-lg bg-blue-600 px-3 py-2 text-white hover:bg-blue-500 disabled:opacity-50">Add note</button>
                 </form>
-                <CompanyConnections company={company} connections={connectionsBySlug.get(company.slug)} failed={connectionsFailed} />
+                {peopleOn && <CompanyConnections company={company} connections={connectionsBySlug.get(company.slug)} failed={connectionsFailed} />}
               </div>
             </Details>
           </article>

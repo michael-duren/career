@@ -265,6 +265,27 @@ func (s Settings) ToolOff(name string) (Module, bool) {
 	return Module{}, false
 }
 
+// OffReason says why module id is unusable: "Schedule needs Timeline" when
+// a module it depends on is off, else "<Label> is turned off".
+func (s Settings) OffReason(id string) string {
+	m, _ := Lookup(id)
+	s = s.Normalize()
+	if s.Modules[id] {
+		effective := s.Effective()
+		var off []string
+		for _, dep := range m.DependsOn {
+			if !effective[dep] {
+				d, _ := Lookup(dep)
+				off = append(off, d.Label)
+			}
+		}
+		if len(off) > 0 {
+			return m.Label + " needs " + strings.Join(off, " and ") + ", which is turned off"
+		}
+	}
+	return m.Label + " is turned off"
+}
+
 // DisabledKinds returns the entry kinds of modules that are not usable.
 func (s Settings) DisabledKinds() []string {
 	effective := s.Effective()

@@ -158,8 +158,8 @@ exact configured `Origin` and a JSON content type.
 - `GET /api/agent-context`, `GET /api/search`, `GET /api/export`.
 - `GET /api/settings` returns `{ modules, moduleOrder, theme, setupCompletedAt, effective }`.
   `PATCH /api/settings` changes any of the first four. It returns 400 for unknown modules,
-  repeated ids in `moduleOrder`, unknown themes, or newly turning on a module whose dependency
-  is off. `effective` says which modules can be used once their dependencies are applied.
+  unknown or repeated ids in `moduleOrder`, unknown themes, a `setupCompletedAt` that is
+  neither an RFC 3339 time nor null, or newly turning on a module whose dependency is off. `effective` says which modules can be used once their dependencies are applied.
 
 ### Modules
 
@@ -167,11 +167,13 @@ Every feature is a module. The registry is `src/lib/modules.ts`, mirrored in
 `internal/modules/modules.go`; see [the redesign spec](redesign/modules.md). While a module is
 off:
 
-- Its pages and API routes return 404. API routes answer `{"error": "<Module> is turned off…"}`,
-  and so does the Leetgrinder extension.
+- Its pages and API routes return 404. API routes answer `{"error": "<Module> is turned off…"}`
+  (or "<Module> needs <Dependency>…"), and so does the Leetgrinder extension.
 - Its MCP tools are not listed and refuse calls. Entry tools, search, `get_career_overview` and
   `/api/agent-context` leave out its entries.
-- People's company queue tools also need Companies.
+- People's company queue tools also need Companies. Pages hide parts that need another
+  module: Companies hides connections without People, journal goal hours need Schedule.
+  The journal Markdown views of `/api/agent-context` need Journal (or Audio), not Agents.
 - Leetgrinder reminders and the scheduler's background work pause.
 
 Its data is kept, and `GET /api/export` still includes everything. A module missing from the

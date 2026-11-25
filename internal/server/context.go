@@ -135,7 +135,7 @@ func (s *Server) agentContext(w http.ResponseWriter, r *http.Request) {
 	journalModule := map[string]string{"work": "journal", "personal": "journal", "running": "audio"}[journal]
 	if journal != "" && !settings.Enabled(journalModule) {
 		m, _ := modules.Lookup(journalModule)
-		moduleOff(w, r, m)
+		moduleOff(w, r, settings, m)
 		return
 	}
 	var buf bytes.Buffer

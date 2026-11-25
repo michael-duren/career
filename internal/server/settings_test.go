@@ -70,7 +70,7 @@ func TestDisabledModulesReturn404(t *testing.T) {
 	db := testDB(t)
 	ctx := context.Background()
 	root := t.TempDir()
-	for _, page := range []string{"notes", "weekly-scheduler", "timeline", "books"} {
+	for _, page := range []string{"notes", "weekly-scheduler", "timeline", "books", "journal"} {
 		if err := os.MkdirAll(filepath.Join(root, page), 0755); err != nil {
 			t.Fatal(err)
 		}
@@ -119,7 +119,7 @@ func TestDisabledModulesReturn404(t *testing.T) {
 		}
 		return kinds
 	}
-	paths := []string{"/notes", "/notes/", "/api/entries/note", "/weekly-scheduler", "/api/scheduler/week?week=2026-11-23", "/timeline", "/api/goals", "/api/summaries/progress"}
+	paths := []string{"/journal", "/notes", "/notes/", "/api/entries/note", "/weekly-scheduler", "/api/scheduler/week?week=2026-11-23", "/timeline", "/api/goals", "/api/summaries/progress"}
 	for _, path := range paths {
 		if w := do("GET", path, "session"); w.Code != 200 {
 			t.Fatalf("%s while on: %d %s", path, w.Code, w.Body.String())
@@ -134,7 +134,7 @@ func TestDisabledModulesReturn404(t *testing.T) {
 
 	// Timeline off takes Schedule down with it; Notes off hides its entries.
 	set(map[string]bool{"notes": false, "timeline": false, "leetgrinder": false, "journal": false})
-	for _, path := range append(paths, "//notes", "/books/../notes", "/notes/systems/nested-note", "/leetgrinder", "/leetgrinder/problem/two-sum", "/api/agent-context", "/journal") {
+	for _, path := range append(paths, "//notes", "/books/../notes", "/notes/systems/nested-note", "/leetgrinder", "/leetgrinder/problem/two-sum", "/api/agent-context") {
 		if w := do("GET", path, "session"); w.Code != 404 {
 			t.Errorf("%s while off: %d", path, w.Code)
 		}
@@ -152,7 +152,7 @@ func TestDisabledModulesReturn404(t *testing.T) {
 	if w := do("GET", "/api/entries/note", "session"); !strings.Contains(w.Body.String(), "Notes is turned off") {
 		t.Error("API 404 should say the module is off:", w.Body.String())
 	}
-	if w := do("GET", "/api/scheduler/week?week=2026-11-23", "session"); !strings.Contains(w.Body.String(), "Schedule is turned off") {
+	if w := do("GET", "/api/scheduler/week?week=2026-11-23", "session"); !strings.Contains(w.Body.String(), "Schedule needs Timeline, which is turned off") {
 		t.Error(w.Body.String())
 	}
 	if w := do("GET", "/api/leetgrinder/today", "bearer"); w.Code != 404 || !strings.Contains(w.Body.String(), "Leetgrinder is turned off") {
@@ -273,7 +273,7 @@ func TestMCPHidesDisabledModules(t *testing.T) {
 	if out, isErr := call("get_leetgrinder_today", nil); !isErr || !strings.Contains(out, "Leetgrinder is turned off") {
 		t.Fatal("leetgrinder tool while off:", out)
 	}
-	if out, isErr := call("get_weekly_schedule", map[string]any{}); !isErr || !strings.Contains(out, "Schedule is turned off") {
+	if out, isErr := call("get_weekly_schedule", map[string]any{}); !isErr || !strings.Contains(out, "Schedule needs Timeline") {
 		t.Fatal("schedule tool while timeline is off:", out)
 	}
 	if out, isErr := call("read_career_entry", map[string]any{"kind": "note", "id": "systems/nested-note"}); !isErr || !strings.Contains(out, "Notes is turned off") {
@@ -359,6 +359,16 @@ func TestAgentContextLeavesOutDisabledModules(t *testing.T) {
 	}
 	if w := get("/api/agent-context?format=markdown"); w.Code != 200 || !strings.Contains(w.Body.String(), "# Work journal\n\nNo entries yet.") || !strings.Contains(w.Body.String(), "# Personal journal\n\nNo entries yet.") {
 		t.Fatal("markdown leaked journal entries", w.Body.String())
+	}
+	// The journal's Markdown view needs Journal, not Agents.
+	if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"journal": true, "agents": false}}); err != nil {
+		t.Fatal(err)
+	}
+	if w := get("/api/agent-context?format=markdown&journal=work"); w.Code != 200 {
+		t.Error("journal view with Agents off:", w.Code, w.Body.String())
+	}
+	if w := get("/api/agent-context"); w.Code != 404 {
+		t.Error("agent context with Agents off:", w.Code)
 	}
 }
 
