@@ -92,7 +92,7 @@ Icons are thin line drawings (1–1.2px stroke, `currentColor`), never emoji or 
 - Times: 12-hour, no leading zero, space before AM/PM: `7:15 AM`, `5:45 PM`, ranges `9 AM – 4 PM` (drop `:00` in tight places).
 - Dates: `Nov 24`, `Tue 24 Nov`, or `24.11.26` only for the large Home date.
 - Counts: `3 / 6`, `16 / 10.5 h`.
-- Add one shared formatter for the frontend and one for Go templ pages.
+- Shared formatters: `src/lib/format.ts` for the frontend (`formatTime`, `formatTimeRange`, `formatDate`, `formatWeekdayDate`, `formatNumericDate`; pass `{ compact: true }` to drop `:00`) and `internal/timefmt` for Go templ pages (`Time`, `CompactTime`, `Range`, `CompactRange`, `Date`, `WeekdayDate`, `NumericDate`). Use these instead of ad hoc `toLocaleTimeString` or `Format("15:04")` calls.
 
 ## Accessibility
 
