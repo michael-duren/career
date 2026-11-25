@@ -72,11 +72,12 @@ test('applyTheme sets data-theme and remembers it, even without storage', () => 
     assert.equal(applyTheme('vellum', root), false);
     assert.equal(root.dataset.theme, 'vellum');
 
-    saved.clear();
+    // An unknown value changes nothing, so a buggy caller cannot overwrite the saved choice.
+    saved.set(THEME_STORAGE_KEY, 'cobalt');
     Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { setItem: (key: string, value: string) => saved.set(key, value) } });
-    applyTheme('neon' as never, root);
-    assert.equal(root.dataset.theme, DEFAULT_THEME);
-    assert.equal(saved.get(THEME_STORAGE_KEY), DEFAULT_THEME);
+    assert.equal(applyTheme('neon' as never, root), false);
+    assert.equal(root.dataset.theme, 'vellum');
+    assert.equal(saved.get(THEME_STORAGE_KEY), 'cobalt');
   } finally {
     if (original) Object.defineProperty(globalThis, 'localStorage', original);
     else delete (globalThis as { localStorage?: unknown }).localStorage;
@@ -108,6 +109,9 @@ test('every theme defines the spec palette', () => {
     const block = themeBlock(theme);
     for (const [token, value] of Object.entries(SPEC[theme])) assert.equal(block[token]?.toUpperCase(), value, `${theme} --${token}`);
     assert.deepEqual(block['ink-rgb'].split(',').map(Number), rgb(block.ink), `${theme} --ink-rgb matches --ink`);
+    // Native controls and scrollbars follow the paper's lightness.
+    const scheme = css.match(new RegExp(`\\[data-theme="${theme}"\\]\\s*\\{[^}]*color-scheme:\\s*(\\w+)`))?.[1];
+    assert.equal(scheme, theme === 'vellum' || theme === 'cobalt' ? 'light' : 'dark', `${theme} color-scheme`);
   }
 });
 

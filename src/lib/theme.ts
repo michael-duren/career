@@ -16,16 +16,20 @@ export function resolveTheme(value: unknown): Theme {
   return isTheme(value) ? value : DEFAULT_THEME;
 }
 
-// Applies a theme to the page and remembers it for the next load. Returns false when it
-// could not be remembered (private mode, blocked site data), so a picker can say so.
-// Unknown values (e.g. an untyped <select> value) apply and store the default instead.
-export function applyTheme(value: Theme, root: HTMLElement = document.documentElement): boolean {
-  const theme = resolveTheme(value);
+// Applies the page theme and remembers it for the next load (the saved key is global, so do
+// not use this for a nested preview). Returns false when nothing was saved: an unknown value
+// (ignored, so a buggy caller never overwrites the saved choice) or unavailable storage.
+export function applyTheme(theme: Theme, root: HTMLElement = document.documentElement): boolean {
+  if (!isTheme(theme)) {
+    console.error(`applyTheme: unknown theme ${JSON.stringify(theme)}`);
+    return false;
+  }
   root.dataset.theme = theme;
   try {
     localStorage.setItem(THEME_STORAGE_KEY, theme);
     return true;
-  } catch {
+  } catch (error) {
+    console.warn('applyTheme: theme not saved', error);
     return false;
   }
 }

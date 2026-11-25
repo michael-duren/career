@@ -104,14 +104,14 @@ test.describe('without service worker', () => {
   // A service-worker fetch would bypass page.on('request').
   test.use({ serviceWorkers: 'block' });
   test('fonts are self-hosted', async ({ page, baseURL }) => {
-  const fontHosts = new Set<string>();
-  page.on('request', request => { if (request.resourceType() === 'font') fontHosts.add(new URL(request.url()).origin); });
-  await page.goto('/books');
-  const faces = ['300 16px "Inter Tight Variable"', '500 10px "IBM Plex Mono"', '16px "Architects Daughter"'];
-  // load() resolves to the matching faces, so an empty list means the @font-face is missing.
-  const loaded = await page.evaluate(fonts => Promise.all(fonts.map(async font => (await document.fonts.load(font)).filter(face => face.status === 'loaded').length)), faces);
-  for (const count of loaded) expect(count).toBeGreaterThan(0);
-  expect(await page.evaluate(() => getComputedStyle(document.body).fontFamily)).toMatch(/^"Inter Tight Variable"/);
-  expect([...fontHosts]).toEqual([new URL(baseURL!).origin]);
-});
+    const fontHosts = new Set<string>();
+    page.on('request', request => { if (request.resourceType() === 'font') fontHosts.add(new URL(request.url()).origin); });
+    await page.goto('/books');
+    const faces = ['300 16px "Inter Tight Variable"', '500 10px "IBM Plex Mono"', '16px "Architects Daughter"'];
+    // load() resolves to the matching faces, so an empty list means the @font-face is missing.
+    const loaded = await page.evaluate(fonts => Promise.all(fonts.map(async font => (await document.fonts.load(font)).filter(face => face.status === 'loaded').length)), faces);
+    for (const count of loaded) expect(count).toBeGreaterThan(0);
+    expect(await page.evaluate(() => getComputedStyle(document.body).fontFamily)).toMatch(/^"Inter Tight Variable"/);
+    expect([...fontHosts]).toEqual([new URL(baseURL!).origin]);
+  });
 });
