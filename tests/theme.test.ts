@@ -20,6 +20,16 @@ function themeBlock(theme: string): Record<string, string> {
   return Object.fromEntries([...match[1].matchAll(/--([\w-]+):\s*([^;]+);/g)].map(([, name, value]) => [name, value.trim()]));
 }
 
+// Declarations of the CSS block whose selector list is exactly `selector` (whitespace-insensitive).
+function blockFor(selector: string): Record<string, string> | undefined {
+  const wanted = selector.replace(/\s+/g, '');
+  for (const [, sel, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    if (sel.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[\s\S]*;/, '').replace(/\s+/g, '') !== wanted) continue;
+    return Object.fromEntries([...body.matchAll(/--([\w-]+):\s*([^;]+);/g)].map(([, name, value]) => [name, value.trim()]));
+  }
+  return undefined;
+}
+
 const rgb = (hex: string) => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
 function luminance([r, g, b]: number[]) {
   const [R, G, B] = [r, g, b].map(v => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; });
@@ -52,9 +62,10 @@ test('every theme defines the spec palette', () => {
 });
 
 test('dark is also the default without a data-theme attribute', () => {
-  assert.match(css, /:root,\s*\[data-theme="dark"\]\s*\{/);
+  assert.equal(blockFor(':root,[data-theme="dark"]')?.paper, SPEC.dark.paper);
 });
 
+// Only --ink-60 carries text; --ink-50 and below are borders, rules and tints.
 test('labels at --ink-60 meet 4.5:1 on --paper in every theme', () => {
   for (const theme of THEMES) {
     const block = themeBlock(theme);
@@ -67,9 +78,15 @@ test('labels at --ink-60 meet 4.5:1 on --paper in every theme', () => {
 });
 
 test('alpha steps resolve per theme root and map into Tailwind', () => {
-  assert.match(css, /:root,\s*\[data-theme\]\s*\{\s*(?:\/\*[^*]*\*\/\s*)?--ink-60: rgba\(var\(--ink-rgb\), var\(--ink-60-alpha\)\);/);
-  for (const step of ['60', '50', '30', '14', '07', '05']) assert.match(css, new RegExp(`--color-ink-${step}: var\\(--ink-${step}\\);`));
-  for (const token of ['paper', 'ink', 'accent', 'ink-hover']) assert.match(css, new RegExp(`--color-${token}: var\\(--${token}\\);`));
+  // On [data-theme] too, so a nested themed element (a theme preview) resolves its own alphas.
+  const steps = blockFor(':root,[data-theme]');
+  assert.ok(steps, 'no `:root, [data-theme]` block for the alpha steps');
+  assert.equal(steps['ink-60'], 'rgba(var(--ink-rgb), var(--ink-60-alpha))');
+  for (const [step, alpha] of [['50', '0.5'], ['30', '0.3'], ['14', '0.14'], ['07', '0.07'], ['05', '0.05']]) assert.equal(steps[`ink-${step}`], `rgba(var(--ink-rgb), ${alpha})`, `--ink-${step}`);
+
+  const tailwind = blockFor('@theme inline');
+  assert.ok(tailwind, 'no `@theme inline` block');
+  for (const token of ['paper', 'ink', 'accent', 'ink-hover', 'ink-60', 'ink-50', 'ink-30', 'ink-14', 'ink-07', 'ink-05']) assert.equal(tailwind[`color-${token}`], `var(--${token})`, `--color-${token}`);
   assert.match(css, /body\s*\{\s*@apply bg-paper text-ink;/);
 });
 

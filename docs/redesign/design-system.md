@@ -21,12 +21,25 @@ Alpha steps used throughout (as `rgba(var(--ink-rgb), a)`):
 
 | Name | Alpha | Use |
 | --- | --- | --- |
-| `--ink-60` | 0.6 | labels, secondary text |
+| `--ink-60` | 0.6 (see below) | labels, secondary text |
 | `--ink-50` | 0.5 | secondary button borders |
 | `--ink-30` | 0.3 | section rules, field borders |
 | `--ink-14` | 0.14 | row dividers |
 | `--ink-07` | 0.07 | faint grid and guide lines |
 | `--ink-05` | 0.05 | selected row tint |
+
+At 0.6, labels fall below 4.5:1 on Vellum (4.39:1) and Cobalt (3.17:1). So `--ink-60` is
+`rgba(var(--ink-rgb), var(--ink-60-alpha))`, and each theme sets its own `--ink-60-alpha`:
+
+| Theme | `--ink-60-alpha` | Label contrast on `--paper` |
+| --- | --- | --- |
+| Dark | 0.6 | 6.2:1 |
+| Vellum | 0.64 | 4.9:1 |
+| Cobalt | 0.78 | 4.6:1 |
+| Concrete | 0.6 | 5.3:1 |
+
+Use `text-ink-60` for labels, not `text-ink/60`, because the fixed 60% skips the per-theme alpha.
+`--ink-50` and lower are for borders, rules and tints only, never for text.
 
 Map these into Tailwind v4 with `@theme` in `src/styles/global.css` so classes like
 `bg-paper text-ink border-ink/30` work.
