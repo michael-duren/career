@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	pathpkg "path"
 	"strings"
 	"time"
 
@@ -108,9 +109,12 @@ func moduleOff(w http.ResponseWriter, r *http.Request, m modules.Module) {
 // the token check instead.
 func (s *Server) moduleGuard(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		path := r.URL.Path
+		// Match the cleaned path, so //notes or /x/../notes cannot slip past.
+		path := pathpkg.Clean("/" + r.URL.Path)
 		m, ok := requestModule(path)
 		api := strings.HasPrefix(path, "/api/")
+		// Every /api/leetgrinder/ route is in the bearer-token group behind
+		// requireModule; a session route added there must not rely on this.
 		extension := strings.HasPrefix(path, "/api/leetgrinder/") && r.Header.Get("Authorization") != ""
 		if !ok || extension || (api && !s.authenticated(r)) {
 			next.ServeHTTP(w, r)

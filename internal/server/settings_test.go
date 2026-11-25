@@ -134,7 +134,7 @@ func TestDisabledModulesReturn404(t *testing.T) {
 
 	// Timeline off takes Schedule down with it; Notes off hides its entries.
 	set(map[string]bool{"notes": false, "timeline": false, "leetgrinder": false, "journal": false})
-	for _, path := range append(paths, "/notes/systems/nested-note", "/leetgrinder", "/leetgrinder/problem/two-sum", "/api/agent-context", "/journal") {
+	for _, path := range append(paths, "//notes", "/books/../notes", "/notes/systems/nested-note", "/leetgrinder", "/leetgrinder/problem/two-sum", "/api/agent-context", "/journal") {
 		if w := do("GET", path, "session"); w.Code != 404 {
 			t.Errorf("%s while off: %d", path, w.Code)
 		}
