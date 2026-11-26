@@ -73,6 +73,8 @@ Self-host the three fonts (no runtime Google Fonts dependency).
 - Desktop page padding: 40px top/bottom, 56px left/right. Content max-width follows the window; reference frames are 1280×800.
 - Header row: 28px tall, then a `--ink-30` rule 12px below.
 - Mobile: 22px side padding, 390px reference width, scroll area above a 78px tab bar.
+- Astro pages: `<DocsLayout page>` gives a redesigned page the full width with side gutters that line up with the
+  desktop header (`.app-content--page` in `src/styles/global.css`) and the 22px phone gutter.
 - Rows: 40–64px tall with `--ink-14` bottom dividers. Touch targets at least 44px.
 - Gaps: 10/14/18/22/26/40/56px. Grids use `gap`, never margins between siblings.
 
@@ -97,7 +99,7 @@ Astro-only and Go templ pages) and use them everywhere.
 | **Section header** | Uppercase heading left, mono label right, `--ink` 1px rule under table headers. | |
 | **Now line** | 1px `--accent` horizontal line with handwritten "now 5:20 PM". Today markers use a dash-dot `--accent` vertical line. | Timeline, Schedule |
 | **Logo spot** | 36–40px square, `--ink-50` border, company logo in single-color ink (fallback: two-letter monogram). | Companies |
-| **Avatar** | 28–46px circle, 1px border, initials. | People |
+| **Avatar** | 28–46px circle, 1px border, initials; a photo (`src`, `.ui-avatar--photo`) fills the same circle and falls back to initials. | People |
 
 Icons are thin line drawings (1–1.2px stroke, `currentColor`), never emoji or filled icons.
 

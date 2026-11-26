@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { avatarStack, catchUpQueue, connectionsByCompany, markCaughtUp, nextDue, relativeDays, initials, matchesQuery, type Connection } from '../src/lib/connections.ts';
+import { avatarStack, catchUpQueue, companySlug, connectionsByCompany, employerKey, employers, trackedNames, markCaughtUp, newCompanyEntry, normalizeCompany, nextDue, relativeDays, initials, matchesQuery, type Connection } from '../src/lib/connections.ts';
 
 const base: Connection = { id: 'x', name: 'Ada Lovelace', role: 'SRE', companyName: 'Grafana Labs', email: '', queued: false, notes: '', tags: ['observability'] };
 const today = '2026-09-25';
@@ -69,4 +69,48 @@ test('avatar stacks cap circles and never show +1', () => {
   assert.deepEqual(avatarStack([1], 1), { shown: [1], overflow: 0 });
   // With room for one circle, it becomes the "+N" badge.
   assert.deepEqual(avatarStack([1, 2], 1), { shown: [], overflow: 2 });
+});
+
+test('company names normalize like the Go matcher', () => {
+  assert.equal(normalizeCompany('Maximus, Inc.'), 'maximus');
+  assert.equal(normalizeCompany('The Home Depot'), 'home depot');
+  assert.equal(normalizeCompany('AT&T'), 'at and t');
+  assert.equal(normalizeCompany('  '), '');
+  assert.equal(normalizeCompany('Acme Co LLC'), 'acme');
+  assert.equal(normalizeCompany('Siemens AG'), 'siemens');
+  assert.equal(normalizeCompany('Booking BV'), 'booking');
+  assert.equal(normalizeCompany('SAP SA GmbH'), 'sap');
+  assert.equal(normalizeCompany('Johnson & Co'), 'johnson and');
+});
+
+test('employers group linked people by company and the rest by normalized name, most first', () => {
+  const people = [
+    { ...base, id: 'a', companyName: 'Maximus Inc' },
+    { ...base, id: 'b', companyName: 'maximus' },
+    { ...base, id: 'c', companyName: 'Grafana', companySlug: 'grafana-labs' },
+    { ...base, id: 'd', companyName: 'Grafana Labs', companySlug: 'grafana-labs' },
+    // Unlinked, but the name is already on the board: counts toward the tracked company.
+    { ...base, id: 'e', companyName: 'Grafana Labs, Inc.' },
+    { ...base, id: 'f', companyName: 'Acme' },
+    { ...base, id: 'g', companyName: '' },
+  ];
+  const titles = new Map([['grafana-labs', 'Grafana Labs']]);
+  assert.deepEqual(employers(people, titles).map(e => [e.name, e.count, e.slug]), [['Grafana Labs', 3, 'grafana-labs'], ['Maximus Inc', 2, undefined], ['Acme', 1, undefined]]);
+  const tracked = trackedNames(titles);
+  assert.equal(employerKey(people[4], tracked), 'slug:grafana-labs');
+  assert.equal(employerKey(people[1], tracked), 'name:maximus');
+  assert.equal(employerKey(people[6], tracked), '');
+  // Companies off: no titles, so everyone groups by LinkedIn name, links ignored.
+  assert.deepEqual(employers(people).map(e => [e.name, e.count, e.slug]), [['Grafana Labs', 2, undefined], ['Maximus Inc', 2, undefined], ['Acme', 1, undefined], ['Grafana', 1, undefined]]);
+});
+
+test('new companies get a URL-safe slug and the outreach checklist', () => {
+  assert.equal(companySlug('Prime Digital Academy'), 'prime-digital-academy');
+  assert.equal(companySlug('Café & Co.'), 'cafe-co');
+  assert.equal(companySlug('!!!'), '');
+  const entry = newCompanyEntry('York Solutions', 'york-solutions');
+  assert.equal(entry.status, 'not_started');
+  assert.equal(entry.url, 'https://www.linkedin.com/search/results/companies/?keywords=York%20Solutions');
+  assert.match(entry.body, /^## Why\n\n## Steps\n\n- \[ \] Identify one person/);
+  assert.match(entry.body, /## Log\n$/);
 });

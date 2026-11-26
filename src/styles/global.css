@@ -232,6 +232,10 @@ button, a, summary { touch-action: manipulation; }
 @media (min-width: 640px) {
   .app-content { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); }
 }
+/* Redesigned pages (DocsLayout page): full width, side gutters lined up with the desktop header (public/ui/shell.css). */
+@media (min-width: 768px) {
+  .app-content--page { padding-top: 22px; padding-left: max(clamp(24px, 4.4vw, 56px), env(safe-area-inset-left)); padding-right: max(clamp(24px, 4.4vw, 56px), env(safe-area-inset-right)); }
+}
 /* Phone: page content lines up with the top bar's 22px gutter (public/ui/shell.css). */
 @media (max-width: 767px) {
   .app-content { padding-left: max(22px, env(safe-area-inset-left)); padding-right: max(22px, env(safe-area-inset-right)); }

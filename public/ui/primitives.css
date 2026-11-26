@@ -584,6 +584,10 @@
 .ui-avatar--muted {
   border-color: var(--ink-50);
 }
+/* A photo inside the same circle (an <img class="ui-avatar ui-avatar--photo">). */
+.ui-avatar--photo {
+  object-fit: cover;
+}
 
 /* Line icons: thin strokes in currentColor. */
 .ui-icon {
