@@ -12,8 +12,8 @@ import (
 	"github.com/michael-duren/career-strategy/internal/scheduler"
 )
 
-// ConnectionStages are the catch-up queue stages in order, as Validate's
-// allowed() list.
+// ConnectionStages are the catch-up queue stages in order, separated by "|"
+// for allowed() and split by NextStage.
 const ConnectionStages = "to_contact|messaged|follow_up|referral_ask"
 
 // DefaultCatchUpTarget is the weekly message target until the user sets one.
@@ -40,6 +40,9 @@ type ConnectionQueue struct {
 	Revisions   map[string]string `json:"revisions"`
 }
 
+// StageList is ConnectionStages for messages: "to_contact, messaged, …".
+func StageList() string { return strings.ReplaceAll(ConnectionStages, "|", ", ") }
+
 // ValidStage reports whether stage is a catch-up queue stage.
 func ValidStage(stage string) bool { return allowed(stage, ConnectionStages) }
 
@@ -56,6 +59,8 @@ func NextStage(stage string) string {
 
 // catchUpToday is the current date in the scheduler's time zone, which the
 // browser sets on first use, so "today" and "this week" match the user's.
+// Until then the scheduler's default zone, UTC, applies. A stored zone that
+// no longer loads is an error rather than a silently wrong date.
 func catchUpToday(ctx context.Context, q queryer, now time.Time) (string, error) {
 	d, err := schedulerLoad(ctx, q)
 	if err != nil {
@@ -63,7 +68,7 @@ func catchUpToday(ctx context.Context, q queryer, now time.Time) (string, error)
 	}
 	loc, err := time.LoadLocation(d.Settings.TimeZone)
 	if err != nil {
-		loc = time.UTC
+		return "", fmt.Errorf("load scheduler time zone %q: %w", d.Settings.TimeZone, err)
 	}
 	return now.In(loc).Format("2006-01-02"), nil
 }
@@ -122,13 +127,17 @@ func (s *Store) ConnectionQueue(ctx context.Context, now time.Time) (ConnectionQ
 // A missing connection is ErrNotFound and a stale revision ErrConflict.
 func updateQueued(ctx context.Context, tx *sql.Tx, id, revision, set string, args ...any) (Result, error) {
 	if !ValidID("connection", id) {
-		return Result{}, ErrInvalid
+		return Result{}, fmt.Errorf("%w: invalid connection id", ErrInvalid)
 	}
 	r, err := tx.ExecContext(ctx, "UPDATE connections SET "+set+",revision=gen_random_uuid()::text,updated_at=now() WHERE id=$1 AND revision=$2", append([]any{id, revision}, args...)...)
 	if err != nil {
 		return Result{}, err
 	}
-	if n, _ := r.RowsAffected(); n != 1 {
+	n, err := r.RowsAffected()
+	if err != nil {
+		return Result{}, err
+	}
+	if n != 1 {
 		if _, err = readOne(ctx, tx, "connection", id); err != nil {
 			return Result{}, err
 		}
@@ -140,17 +149,40 @@ func updateQueued(ctx context.Context, tx *sql.Tx, id, revision, set string, arg
 	return readOne(ctx, tx, "connection", id)
 }
 
+// requireQueued returns ErrNotFound for a missing connection and ErrInvalid
+// for one that is not in the queue.
+func requireQueued(ctx context.Context, tx *sql.Tx, id string) error {
+	if !ValidID("connection", id) {
+		return fmt.Errorf("%w: invalid connection id", ErrInvalid)
+	}
+	var queued bool
+	err := tx.QueryRowContext(ctx, "SELECT stage IS NOT NULL FROM connections WHERE id=$1", id).Scan(&queued)
+	if errors.Is(err, sql.ErrNoRows) {
+		return ErrNotFound
+	}
+	if err == nil && !queued {
+		err = fmt.Errorf("%w: this person is not in the catch-up queue", ErrInvalid)
+	}
+	return err
+}
+
 // SetConnectionStage adds a connection to the queue or moves it to stage, and
-// clears any snooze. An empty stage removes it from the queue.
+// clears any snooze. An empty stage removes a queued connection from the
+// queue; removing someone who is not queued is ErrInvalid.
 func (s *Store) SetConnectionStage(ctx context.Context, id, revision, stage string) (Result, error) {
 	if stage != "" && !ValidStage(stage) {
-		return Result{}, fmt.Errorf("%w: stage must be one of %s", ErrInvalid, strings.ReplaceAll(ConnectionStages, "|", ", "))
+		return Result{}, fmt.Errorf("%w: stage must be one of %s", ErrInvalid, StageList())
 	}
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return Result{}, err
 	}
 	defer tx.Rollback()
+	if stage == "" {
+		if err = requireQueued(ctx, tx, id); err != nil {
+			return Result{}, err
+		}
+	}
 	r, err := updateQueued(ctx, tx, id, revision, "stage=$3,snoozed_until=NULL", sql.NullString{String: stage, Valid: stage != ""})
 	if err != nil {
 		return r, err
@@ -169,7 +201,7 @@ func (s *Store) MarkConnectionSent(ctx context.Context, id, revision string, now
 	}
 	defer tx.Rollback()
 	if !ValidID("connection", id) {
-		return Result{}, CatchUpWeek{}, ErrInvalid
+		return Result{}, CatchUpWeek{}, fmt.Errorf("%w: invalid connection id", ErrInvalid)
 	}
 	var stage sql.NullString
 	err = tx.QueryRowContext(ctx, "SELECT stage FROM connections WHERE id=$1 AND revision=$2 FOR UPDATE", id, revision).Scan(&stage)
@@ -222,19 +254,8 @@ func (s *Store) SnoozeConnection(ctx context.Context, id, revision, until string
 	if until <= today || until > scheduler.DateAdd(today, MaxSnoozeDays) {
 		return Result{}, fmt.Errorf("%w: until must be after today and at most %d days ahead", ErrInvalid, MaxSnoozeDays)
 	}
-	if !ValidID("connection", id) {
-		return Result{}, ErrInvalid
-	}
-	var queued bool
-	err = tx.QueryRowContext(ctx, "SELECT stage IS NOT NULL FROM connections WHERE id=$1", id).Scan(&queued)
-	if errors.Is(err, sql.ErrNoRows) {
-		return Result{}, ErrNotFound
-	}
-	if err != nil {
+	if err = requireQueued(ctx, tx, id); err != nil {
 		return Result{}, err
-	}
-	if !queued {
-		return Result{}, fmt.Errorf("%w: this person is not in the catch-up queue", ErrInvalid)
 	}
 	r, err := updateQueued(ctx, tx, id, revision, "snoozed_until=$3", until)
 	if err != nil {

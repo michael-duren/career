@@ -191,23 +191,26 @@ any install that was already migrated. A new database still needs setup.
 A connection's `stage` (`to_contact`, `messaged`, `follow_up`, `referral_ask`, or absent when the
 person is not queued) and `snoozedUntil` are ordinary connection fields, so they come back from
 `GET /api/connections`, survive export/import and LinkedIn re-imports, and can be set through
-`POST /api/entries/connection` or MCP `update_career_entry`. The queue endpoints below need People
-and Companies. Every change takes the connection's `id` and the `revision` it was read at (409 when
-stale, 404 when the person is gone) and returns the saved `{entry, revision}`. "Today" and "this
-week" (Monday to Sunday) use the weekly scheduler's time zone, which the browser sets on first use.
+`POST /api/entries/connection` or MCP `update_career_entry`. A snooze needs a stage; saving without
+a stage drops it. The queue endpoints below need People and Companies. The connection changes take
+the connection's `id` and the `revision` it was read at (409 when stale, 404 when the person is
+gone). "Today" and "this week" (Monday to Sunday) use the weekly scheduler's time zone, which the
+browser sets the first time the scheduler is opened; until then it is UTC.
 
 - `GET /api/connections/queue`: `{today, week: {start, end, sent, target}, connections, revisions}`,
   everyone with a stage, snoozed people included (`snoozedUntil` after `today`), ordered by stage
-  then name. Candidates for the queue are people at board companies:
-  `GET /api/connections?linked=1` without a `stage`.
+  then name. The server does not limit who can be queued. The UI offers people at board companies:
+  `GET /api/connections?linked=1`, minus those that already have a `stage` (the client filters).
 - `POST /api/connections/queue` `{id, revision, stage}` adds someone or moves them to a stage and
-  clears any snooze. `DELETE /api/connections/queue` `{id, revision}` takes them out.
+  clears any snooze. Returns `{entry, revision}`.
+- `DELETE /api/connections/queue` `{id, revision}` takes a queued person out (400 if not queued).
+  Returns `{entry, revision}`.
 - `POST /api/connections/queue/sent` `{id, revision}` records a message: last contact becomes
   today (never earlier than it was), the person moves to the next stage (after `referral_ask` they
-  leave the queue), the snooze clears, and the send counts toward this week. Returns `week` too.
-  400 when the person is not queued.
+  leave the queue), the snooze clears, and the send counts toward this week. Returns
+  `{entry, revision, week}`. 400 when the person is not queued.
 - `POST /api/connections/queue/snooze` `{id, revision, until}` hides a queued person until `until`,
-  a date after today and at most 365 days ahead.
+  a date after today and at most 365 days ahead. Returns `{entry, revision}`.
 - `PATCH /api/connections/queue/settings` `{weeklyTarget}` sets the weekly target (1-50, default
   2) and returns `{week}`.
 

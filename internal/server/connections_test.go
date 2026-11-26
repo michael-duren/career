@@ -88,6 +88,7 @@ func TestConnectionQueueRoutes(t *testing.T) {
 	if code, out = call("DELETE", "/api/connections/queue", map[string]any{"id": id, "revision": rev}); code != 200 || out["entry"].(map[string]any)["stage"] != nil {
 		t.Fatal(code, out)
 	}
+	rev = out["revision"].(string)
 	if code, out = call("GET", "/api/connections/queue", nil); code != 200 || len(out["connections"].([]any)) != 0 {
 		t.Fatal(code, out)
 	}
@@ -96,22 +97,31 @@ func TestConnectionQueueRoutes(t *testing.T) {
 	if _, err = db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"companies": false}}); err != nil {
 		t.Fatal(err)
 	}
-	for _, path := range []string{"/api/connections/queue", "/api/connections/queue/sent"} {
-		method := "GET"
-		if path != "/api/connections/queue" {
-			method = "POST"
-		}
-		if code, out = call(method, path, map[string]any{"id": id, "revision": rev}); code != 404 {
-			t.Fatal("companies off", path, code, out)
+	routes := [][2]string{{"GET", "/api/connections/queue"}, {"POST", "/api/connections/queue"}, {"DELETE", "/api/connections/queue"}, {"POST", "/api/connections/queue/sent"}, {"POST", "/api/connections/queue/snooze"}, {"PATCH", "/api/connections/queue/settings"}}
+	allOff := func(why string) {
+		t.Helper()
+		for _, route := range routes {
+			// An empty body must still get the module 404, not a 400.
+			if w := h.do(route[0], route[1], "", headers, true); w.Code != 404 {
+				t.Fatal(why, route, w.Code, w.Body.String())
+			}
 		}
 	}
+	allOff("companies off")
 	if code, _ = call("GET", "/api/connections", nil); code != 200 {
 		t.Fatal("people with companies off", code)
 	}
 	if _, err = db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"companies": true, "people": false}}); err != nil {
 		t.Fatal(err)
 	}
-	if code, _ = call("GET", "/api/connections/queue", nil); code != 404 {
-		t.Fatal("people off", code)
+	allOff("people off")
+	if _, err = db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"people": true}}); err != nil {
+		t.Fatal(err)
+	}
+	if code, _ = call("GET", "/api/connections/queue", nil); code != 200 {
+		t.Fatal("back on", code)
+	}
+	if code, _ = call("DELETE", "/api/connections/queue", map[string]any{"id": id, "revision": rev}); code != 400 {
+		t.Fatal("remove someone not queued", code)
 	}
 }

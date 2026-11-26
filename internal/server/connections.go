@@ -203,7 +203,7 @@ func (s *Server) setConnectionStage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !database.ValidStage(input.Stage) {
-		respond(w, 400, map[string]string{"error": "stage must be one of to_contact, messaged, follow_up, referral_ask"})
+		respond(w, 400, map[string]string{"error": "stage must be one of " + database.StageList()})
 		return
 	}
 	saved, err := s.db.SetConnectionStage(r.Context(), input.ID, input.Revision, input.Stage)

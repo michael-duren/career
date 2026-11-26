@@ -58,6 +58,25 @@ func TestConnectionStageField(t *testing.T) {
 	if _, ok := cleared.Entry["snoozedUntil"]; ok {
 		t.Fatalf("empty snooze kept: %v", cleared.Entry)
 	}
+	// Clearing only the stage also ends the snooze, so a later re-queue is not hidden.
+	again := queuePerson(t, s, "Again", Entity{"stage": "messaged", "snoozedUntil": "2026-12-01"})
+	again.Entry["stage"] = ""
+	if again, err = s.Save(ctx, "connection", again.Entry, &again.Revision); err != nil || again.Entry["snoozedUntil"] != nil {
+		t.Fatalf("snooze outlived the stage: %v %v", again.Entry, err)
+	}
+	base := Entity{"id": uuid.NewString(), "name": "V", "role": "", "companyName": "", "email": "", "queued": false, "notes": "", "tags": []any{}}
+	for _, extra := range []Entity{{"stage": float64(5)}, {"stage": nil}, {"snoozedUntil": "2026-12-01"}} {
+		e := Entity{}
+		for k, v := range base {
+			e[k] = v
+		}
+		for k, v := range extra {
+			e[k] = v
+		}
+		if err := Validate("connection", e); err == nil {
+			t.Fatalf("Validate accepted %v", extra)
+		}
+	}
 }
 
 func TestConnectionQueueActions(t *testing.T) {
@@ -121,8 +140,14 @@ func TestConnectionQueueActions(t *testing.T) {
 			t.Fatal("snooze until", until, err)
 		}
 	}
-	if cy, err = s.SnoozeConnection(ctx, id(cy), cy.Revision, "2026-12-06", now); err != nil || cy.Entry["snoozedUntil"] != "2026-12-06" {
-		t.Fatal(cy, err)
+	for _, until := range []string{"2026-11-30", "2027-11-29", "2026-12-06"} {
+		if cy, err = s.SnoozeConnection(ctx, id(cy), cy.Revision, until, now); err != nil || cy.Entry["snoozedUntil"] != until {
+			t.Fatal(until, cy, err)
+		}
+	}
+	// Snoozed people stay in the listing; clients hide them by date.
+	if q, err = s.ConnectionQueue(ctx, now); err != nil || len(q.Connections) != 3 || q.Connections[1]["snoozedUntil"] != "2026-12-06" {
+		t.Fatalf("snoozed listing %+v %v", q, err)
 	}
 	// Moving clears the snooze.
 	if cy, err = s.SetConnectionStage(ctx, id(cy), cy.Revision, "messaged"); err != nil || cy.Entry["snoozedUntil"] != nil {
@@ -139,12 +164,17 @@ func TestConnectionQueueActions(t *testing.T) {
 	if _, _, err = s.MarkConnectionSent(ctx, uuid.NewString(), "x", now); !errors.Is(err, ErrNotFound) {
 		t.Fatal("missing sent", err)
 	}
+	firstRev := ada.Revision
 	ada, week, err := s.MarkConnectionSent(ctx, id(ada), ada.Revision, now)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if ada.Entry["stage"] != "messaged" || ada.Entry["lastContactedOn"] != "2026-11-29" || week.Sent != 1 || week.Start != "2026-11-23" {
 		t.Fatalf("after sent %v %+v", ada.Entry, week)
+	}
+	// A repeated click with the old revision is a conflict, not a second send.
+	if _, _, err = s.MarkConnectionSent(ctx, id(ada), firstRev, now); !errors.Is(err, ErrConflict) {
+		t.Fatal("double send", err)
 	}
 	// The last stage's send takes the person out of the queue.
 	bob, week, err = s.MarkConnectionSent(ctx, id(bob), bob.Revision, now)
@@ -171,6 +201,11 @@ func TestConnectionQueueActions(t *testing.T) {
 	if q.Week.Start != "2026-11-30" || q.Week.Sent != 0 {
 		t.Fatalf("next week %+v", q.Week)
 	}
+	// A send on the week's first day counts in that week, not the one before.
+	monday := now.Add(24 * time.Hour)
+	if ada, week, err = s.MarkConnectionSent(ctx, id(ada), ada.Revision, monday); err != nil || week.Start != "2026-11-30" || week.Sent != 1 {
+		t.Fatalf("monday send %+v %v", week, err)
+	}
 	if err = s.Delete(ctx, "connection", id(bob), &bob.Revision); err != nil {
 		t.Fatal(err)
 	}
@@ -181,6 +216,9 @@ func TestConnectionQueueActions(t *testing.T) {
 	// Remove.
 	if ada, err = s.SetConnectionStage(ctx, id(ada), ada.Revision, ""); err != nil || ada.Entry["stage"] != nil {
 		t.Fatal(ada, err)
+	}
+	if _, err = s.SetConnectionStage(ctx, id(ada), ada.Revision, ""); !errors.Is(err, ErrInvalid) {
+		t.Fatal("removed someone not queued", err)
 	}
 
 	// Weekly target.
@@ -217,7 +255,7 @@ func TestConnectionStageSurvivesReimportAndArchive(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err = s.SnoozeConnection(ctx, id, r.Revision, time.Now().UTC().AddDate(0, 0, 7).Format("2006-01-02"), time.Now()); err != nil {
+	if _, err = s.SnoozeConnection(ctx, id, r.Revision, "2026-12-03", time.Date(2026, 11, 26, 12, 0, 0, 0, time.UTC)); err != nil {
 		t.Fatal(err)
 	}
 	rows[0].Role, rows[0].Company = "Staff SRE", "Elsewhere"

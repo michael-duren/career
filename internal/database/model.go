@@ -271,7 +271,13 @@ func Validate(kind string, e Entity) error {
 			}
 		}
 		if stage, exists := e["stage"]; exists && !allowed(stage.(string), ConnectionStages) {
-			return fmt.Errorf("stage must be one of %s", strings.ReplaceAll(ConnectionStages, "|", ", "))
+			return fmt.Errorf("stage must be one of %s", StageList())
+		}
+		// A snooze only hides someone in the queue.
+		if _, snoozed := e["snoozedUntil"]; snoozed {
+			if _, staged := e["stage"]; !staged {
+				return fmt.Errorf("snoozedUntil needs a stage")
+			}
 		}
 	}
 	if kind == "week" {
@@ -482,6 +488,10 @@ func NormalizeForSave(kind string, input Entity) Entity {
 			if e[key] == "" {
 				delete(e, key)
 			}
+		}
+		// Leaving the queue ends any snooze, as the queue endpoints do.
+		if _, staged := e["stage"]; !staged {
+			delete(e, "snoozedUntil")
 		}
 		delete(e, "photo")
 	}

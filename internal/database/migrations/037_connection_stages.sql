@@ -4,7 +4,8 @@
 -- the old queued flag and cadences keep working unchanged.
 ALTER TABLE connections
     ADD COLUMN stage TEXT CHECK (stage IN ('to_contact', 'messaged', 'follow_up', 'referral_ask')),
-    ADD COLUMN snoozed_until DATE;
+    ADD COLUMN snoozed_until DATE,
+    ADD CONSTRAINT connections_snooze_needs_stage CHECK (snoozed_until IS NULL OR stage IS NOT NULL);
 CREATE INDEX connections_stage_idx ON connections(stage, name) WHERE stage IS NOT NULL;
 
 -- One row per "sent" action, for the weekly message counter. A deleted
