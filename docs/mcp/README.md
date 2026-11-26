@@ -63,7 +63,7 @@ login blocks the connector.
 - `read_career_entry`: one entry with all metadata and body as JSON, in chunks.
 - `list_connection_companies`: employers of your LinkedIn connections, grouped by
   normalized company name (case and suffixes like Inc ignored), with people count, most
-  recent conversation date, a few people with roles, and `trackedSlug` when the company is
+  recent conversation date, a few people with roles and catch-up `stage` (when queued), and `trackedSlug` when the company is
   already on the companies board. Filter by `query`, `role` (count only matching people),
   `minConnections` and `untracked`; sort by `connections`, `recent` or `name`; page with
   `offset`/`limit` (1-100).

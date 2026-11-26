@@ -103,6 +103,16 @@ func (s *Server) RegisterRoutes() http.Handler {
 		r.Get("/api/connections/photo", s.connectionPhoto)
 		r.Post("/api/connections/photo", s.uploadConnectionPhoto)
 		r.Delete("/api/connections/photo", s.deleteConnectionPhoto)
+		// The catch-up queue is part of the Companies outreach flow, so it
+		// also needs Companies; the rest of /api/connections only needs People.
+		r.With(s.requireModule("companies")).Route("/api/connections/queue", func(r chi.Router) {
+			r.Get("/", s.readConnectionQueue)
+			r.Post("/", s.setConnectionStage)
+			r.Delete("/", s.removeFromQueue)
+			r.Post("/sent", s.markConnectionSent)
+			r.Post("/snooze", s.snoozeConnection)
+			r.Patch("/settings", s.setCatchUpTarget)
+		})
 		r.Get("/api/goals", s.readGoals)
 		r.Post("/api/goals", s.saveGoal)
 		r.Delete("/api/goals", s.deleteGoal)

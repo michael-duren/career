@@ -27,6 +27,8 @@ type ConnectionSample struct {
 	Name            string `json:"name"`
 	Role            string `json:"role"`
 	LastContactedOn string `json:"lastContactedOn,omitempty"`
+	// Stage is the person's catch-up queue stage; empty when not queued.
+	Stage string `json:"stage,omitempty"`
 }
 
 type ConnectionCompanyFilter struct {
@@ -132,7 +134,7 @@ func (s *Store) ConnectionCompanies(ctx context.Context, f ConnectionCompanyFilt
 	if err != nil {
 		return page, err
 	}
-	rows, err := s.DB.QueryContext(ctx, "SELECT id::text,name,role,company_name,to_char(last_contacted_on,'YYYY-MM-DD') FROM connections WHERE company_name<>''")
+	rows, err := s.DB.QueryContext(ctx, "SELECT id::text,name,role,company_name,to_char(last_contacted_on,'YYYY-MM-DD'),COALESCE(stage,'') FROM connections WHERE company_name<>''")
 	if err != nil {
 		return page, err
 	}
@@ -143,7 +145,7 @@ func (s *Store) ConnectionCompanies(ctx context.Context, f ConnectionCompanyFilt
 		var p ConnectionSample
 		var company string
 		var last sql.NullString
-		if err = rows.Scan(&p.ID, &p.Name, &p.Role, &company, &last); err != nil {
+		if err = rows.Scan(&p.ID, &p.Name, &p.Role, &company, &last, &p.Stage); err != nil {
 			return page, err
 		}
 		if role != "" && !strings.Contains(strings.ToLower(p.Role), role) {

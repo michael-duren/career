@@ -10,12 +10,23 @@ export interface Connection {
   lastContactedOn?: string;
   cadenceDays?: number;
   queued: boolean;
+  /** Catch-up queue stage; absent when the person is not in the queue. */
+  stage?: ConnectionStage;
+  /** Hidden from the catch-up queue until this date (YYYY-MM-DD). */
+  snoozedUntil?: string;
   notes: string;
   tags: string[];
   /** Read-only photo revision; absent when no photo is stored. */
   photo?: string;
   updatedAt?: string;
 }
+/** Catch-up queue stages in order (internal/database/connection_queue.go). */
+export const CONNECTION_STAGES = ['to_contact', 'messaged', 'follow_up', 'referral_ask'] as const;
+export type ConnectionStage = typeof CONNECTION_STAGES[number];
+/** This week's "sent" count against the weekly target, Monday to Sunday. */
+export interface CatchUpWeek { start: string; end: string; sent: number; target: number }
+/** GET /api/connections/queue: everyone queued, snoozed included, by stage then name. */
+export interface ConnectionQueue { today: string; week: CatchUpWeek; connections: Connection[]; revisions: Record<string, string> }
 export interface ConnectionImport { parsed: number; created: number; updated: number; unchanged: number; skipped: number; linked: number; messagesMatched: number }
 export interface QueueItem { connection: Connection; due: string; overdueDays: number; reason: 'manual' | 'cadence' }
 

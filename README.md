@@ -58,7 +58,7 @@ and status. Companies can be edited or deleted from their cards, and managed at
 
 **Connections** (`/connections`) lists people in your network, linked to target companies, with
 a catch-up queue. Import contacts and messages from a LinkedIn data export; re-importing updates
-names, roles and companies but keeps your notes.
+names, roles and companies but keeps your notes and catch-up stages.
 
 ### Journal and notes
 

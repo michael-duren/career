@@ -53,7 +53,7 @@ func init() {
 	models["week"] = model{"journal_weeks", "slug", "weeks", fields("slug:id week:int year:int dates:range tags:array body:string updatedAt?:timestamp:updated_at")}
 	models["book"] = model{"books", "slug", "books", fields("slug:id " + cat + " edition?:string authors:array isbn?:string started?:date finished?:date rating?:number")}
 	models["company"] = model{"companies", "slug", "companies", fields("slug:id " + strings.Replace(cat, "url?:url", "url:url", 1))}
-	models["connection"] = model{"connections", "id", "connections", fields("id:uuid name:string role:string companyName:string:company_name companySlug?:id:company_slug email:string url?:url connectedOn?:date:connected_on lastContactedOn?:date:last_contacted_on cadenceDays?:int:cadence_days queued:bool notes:string tags:array updatedAt?:timestamp:updated_at")}
+	models["connection"] = model{"connections", "id", "connections", fields("id:uuid name:string role:string companyName:string:company_name companySlug?:id:company_slug email:string url?:url connectedOn?:date:connected_on lastContactedOn?:date:last_contacted_on cadenceDays?:int:cadence_days queued:bool stage?:string snoozedUntil?:date:snoozed_until notes:string tags:array updatedAt?:timestamp:updated_at")}
 	models["goal"] = model{"goals", "id", "goals", fields("id:uuid status:string title:string startDate:date:start_date endDate:date:end_date color:color dailyHours?:number:daily_hours selectedWeekdays?:weekdays:selected_weekdays createdAt:timestamp:created_at updatedAt:timestamp:updated_at")}
 }
 
@@ -270,6 +270,15 @@ func Validate(kind string, e Entity) error {
 				return fmt.Errorf("invalid connection email")
 			}
 		}
+		if stage, exists := e["stage"]; exists && !allowed(stage.(string), ConnectionStages) {
+			return fmt.Errorf("stage must be one of %s", StageList())
+		}
+		// A snooze only hides someone in the queue.
+		if _, snoozed := e["snoozedUntil"]; snoozed {
+			if _, staged := e["stage"]; !staged {
+				return fmt.Errorf("snoozedUntil needs a stage")
+			}
+		}
 	}
 	if kind == "week" {
 		for _, key := range []string{"hours", "targets"} {
@@ -475,10 +484,14 @@ func NormalizeForSave(kind string, input Entity) Entity {
 				e[key] = strings.TrimSpace(s)
 			}
 		}
-		for _, key := range []string{"url", "companySlug", "connectedOn", "lastContactedOn"} {
+		for _, key := range []string{"url", "companySlug", "connectedOn", "lastContactedOn", "stage", "snoozedUntil"} {
 			if e[key] == "" {
 				delete(e, key)
 			}
+		}
+		// Leaving the queue ends any snooze, as the queue endpoints do.
+		if _, staged := e["stage"]; !staged {
+			delete(e, "snoozedUntil")
 		}
 		delete(e, "photo")
 	}

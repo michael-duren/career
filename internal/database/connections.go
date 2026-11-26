@@ -40,11 +40,12 @@ type existingConnection struct {
 }
 
 // ImportConnections upserts LinkedIn connections by profile URL. LinkedIn owns
-// name, role, company, email and connection date; notes, tags, cadence and the
-// queue flag stay as the user left them. The company link is only recomputed
-// when the LinkedIn company name changes, so manual links and deliberate
-// unlinks survive re-imports. People imported before their company was
-// tracked are linked when that company is saved (see linkUnlinkedConnections).
+// name, role, company, email and connection date; notes, tags, cadence, the
+// queue flag, the catch-up stage and any snooze stay as the user left them.
+// The company link is only recomputed when the LinkedIn company name changes,
+// so manual links and deliberate unlinks survive re-imports. People imported
+// before their company was tracked are linked when that company is saved (see
+// linkUnlinkedConnections).
 func (s *Store) ImportConnections(ctx context.Context, rows []linkedin.Connection, lastMessages map[string]string) (ConnectionImport, error) {
 	summary := ConnectionImport{Parsed: len(rows)}
 	tx, err := s.DB.BeginTx(ctx, nil)
