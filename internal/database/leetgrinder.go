@@ -33,6 +33,13 @@ func (s *Store) DeleteLeetgrinderAttempt(ctx context.Context, slug, id string) e
 	return nil
 }
 
+// LeetgrinderAttemptCount returns how many attempts are saved, full solves and quick reviews alike.
+func (s *Store) LeetgrinderAttemptCount(ctx context.Context) (int, error) {
+	var n int
+	err := s.DB.QueryRowContext(ctx, "SELECT count(*) FROM leetgrinder_attempts").Scan(&n)
+	return n, err
+}
+
 func scanLeetgrinderAttempt(row interface{ Scan(...any) error }) (leetgrinder.Attempt, error) {
 	var a leetgrinder.Attempt
 	err := row.Scan(&a.ID, &a.ProblemSlug, &a.Outcome, &a.Minutes, &a.Assisted, &a.Notes, &a.CreatedAt, &a.Revision, &a.Source, &a.IsReview, &a.TimeComplexity, &a.SpaceComplexity, &a.Code, &a.CodeLanguage, &a.WantsReview, &a.Approach, &a.MarkedAt, &a.Claim, &a.Invariant, &a.Initially, &a.AfterStep, &a.Therefore, &a.Termination, &a.Mode, &a.Missed, &a.SpotCheck)

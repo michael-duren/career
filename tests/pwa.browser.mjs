@@ -105,12 +105,6 @@ try {
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   await navigate('Page.navigate', { url: base + '/' });
   await wait(`document.querySelector('[data-app-header][data-ready]') !== null`);
-  await evaluate(`document.querySelector('[data-app-more] > button').click()`);
-  assert.equal(await evaluate(`document.querySelector('#app-more-menu').hidden`), false);
-  assert.ok(await evaluate(`document.querySelector('#app-more-menu').getBoundingClientRect().right <= innerWidth`));
-  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
-  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
-  assert.equal(await evaluate(`document.querySelector('#app-more-menu').hidden`), true);
   await evaluate(`document.querySelector('#site-search').focus()`);
   const search = await evaluate(`document.querySelector('#search-panel').getBoundingClientRect().toJSON()`);
   assert.ok(search.x >= 0 && search.right <= 390);

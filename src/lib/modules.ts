@@ -124,6 +124,75 @@ export function partEnabled(settings: Pick<Settings, 'modules'>, id: ModuleId, p
   return isEnabled(settings, id) && (!need || isEnabled(settings, need.module));
 }
 
+/** One line on what each module is, for Settings → Modules. */
+export const MODULE_DESCRIPTIONS: Record<ModuleId, string> = {
+  timeline: 'Goals, dates and steps',
+  schedule: 'Weekly plan, recurring rules and Google Calendar sync',
+  leetgrinder: 'LeetCode practice, spaced reviews, reminders and the browser extension',
+  companies: 'Target companies, tiers and checklists',
+  people: 'LinkedIn connections and the catch-up queue',
+  bookshelf: 'Books, courses, papers and reading log',
+  journal: 'Weekly work journal, personal journal and logs',
+  notes: 'Ideas, questions and references by topic',
+  audio: 'Voice memos, transcribed on your homelab',
+  agents: 'Your goals as Markdown or JSON for AI assistants',
+};
+
+/** What GET /api/counts counts for a module, singular and plural ("paused · 7 recordings kept"). */
+const COUNT_NOUNS: Partial<Record<ModuleId, [string, string]>> = {
+  timeline: ['goal', 'goals'], leetgrinder: ['attempt', 'attempts'], companies: ['company', 'companies'],
+  people: ['person', 'people'], bookshelf: ['item', 'items'], journal: ['entry', 'entries'],
+  notes: ['note', 'notes'], audio: ['recording', 'recordings'],
+};
+
+/** Where a module shows up besides its page: the menu always, then Home, search and reminders. */
+export function appearsIn(m: ModuleDef): string[] {
+  return ['Menu', ...(m.homeSection ? ['Home'] : []), ...(m.search ? ['Search'] : []), ...(m.reminders ? ['Reminders'] : [])];
+}
+
+const joinNames = (names: string[]) => names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names[0] ?? '';
+
+export interface ModuleStatus {
+  text: string;
+  /** accent: something blocks it; muted: paused; quiet: other modules rely on it. */
+  tone: 'accent' | 'muted' | 'quiet';
+}
+
+/**
+ * The status next to a module in Settings → Modules: "needs Timeline" while a dependency is off,
+ * "paused · N kept" when off (N from GET /api/counts?all=1), a part another module blocks
+ * ("catch-up queue needs Companies"), or which on modules use it. Null when there is nothing to say.
+ */
+export function moduleStatus(settings: Pick<Settings, 'modules'>, id: ModuleId, counts: Partial<Record<string, number>> = {}): ModuleStatus | null {
+  const locked = lockedBy(settings, id);
+  if (locked.length) return { text: `needs ${joinNames(locked)}`, tone: 'accent' };
+  if (!isEnabled(settings, id)) {
+    const n = counts[id];
+    const noun = COUNT_NOUNS[id];
+    return { text: noun && n ? `paused · ${n} ${noun[n === 1 ? 0 : 1]} kept` : 'paused', tone: 'muted' };
+  }
+  const blocked = moduleById(id).partsNeed?.find(p => !isEnabled(settings, p.module));
+  if (blocked) return { text: `${blocked.part.toLowerCase()} needs ${moduleById(blocked.module).label}`, tone: 'accent' };
+  const users = MODULES.filter(m => m.dependsOn.includes(id) && isEnabled(settings, m.id)).map(m => m.label);
+  if (users.length) return { text: `${joinNames(users)} ${users.length === 1 ? 'uses' : 'use'} this`, tone: 'quiet' };
+  return null;
+}
+
+/** The hint under the tab bar preview: which module slides in when the last tab's module is turned off. */
+export function tabBarHint(settings: Pick<Settings, 'modules' | 'moduleOrder'>): string {
+  const enabled = enabledModules(settings);
+  if (enabled.length <= 3) return '';
+  return `turn off ${enabled[2].label} and ${enabled[3].label} slides in`;
+}
+
+/** order with the module at from moved to index to. */
+export function moveModule(order: ModuleId[], from: number, to: number): ModuleId[] {
+  const next = [...order];
+  const [moved] = next.splice(from, 1);
+  next.splice(Math.max(0, Math.min(to, next.length)), 0, moved);
+  return next;
+}
+
 /** Setup focus picks and the modules each turns on. */
 export const FOCUS_SUGGESTIONS: Record<string, ModuleId[]> = {
   'Interview prep': ['leetgrinder', 'timeline', 'schedule', 'companies'],

@@ -102,11 +102,6 @@
   text-decoration: underline;
   text-underline-offset: 4px;
 }
-.app-more-signout {
-  margin-top: 6px;
-  padding-top: 6px;
-  border-top: 1px solid var(--ink-14);
-}
 .app-settings {
   flex: none;
   display: flex;

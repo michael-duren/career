@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
-import { AuthService } from '../lib/auth';
-import { DEFAULT_SETTINGS, MODULE_IDS, SETTINGS_CHANNEL, SETTINGS_EVENT, enabledModules, loadSettings, moreModules, saveSettings, settingsSchema, type Settings } from '../lib/modules';
-import { THEMES, applyTheme, resolveTheme, type Theme } from '../lib/theme';
+import { signOut as endSession } from '../lib/auth';
+import { DEFAULT_SETTINGS, MODULE_IDS, SETTINGS_CHANNEL, SETTINGS_EVENT, enabledModules, loadSettings, moreModules, settingsSchema, type Settings } from '../lib/modules';
+import { ThemePicker } from './ThemePicker';
 
 // The phone More page (docs/redesign/shell.md, reference/mobile/M-More.html): every enabled
 // module the tab bar has no room for, with its count, then Settings, the theme picker and Sign out.
-
-const THEME_LABELS: Record<Theme, string> = { dark: 'DARK', vellum: 'VELLUM', cobalt: 'COBALT', concrete: 'CONCRETE' };
 
 const row = 'grid min-h-[60px] grid-cols-[34px_minmax(0,1fr)_auto_14px] items-center gap-3.5 border-b border-ink-14 text-ink no-underline hover:text-ink-hover';
 const mark = 'flex size-[26px] items-center justify-center border border-ink-50 font-mono text-[11px]';
@@ -16,8 +14,6 @@ export function MorePage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [error, setError] = useState('');
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const [theme, setTheme] = useState<Theme>(() => resolveTheme(document.documentElement.dataset.theme));
-  const [themeError, setThemeError] = useState('');
   const [signOutError, setSignOutError] = useState('');
   const [countsFailed, setCountsFailed] = useState(false);
 
@@ -42,34 +38,9 @@ export function MorePage() {
     return () => { window.removeEventListener(SETTINGS_EVENT, onEvent); channel?.close(); };
   }, []);
 
-  async function pickTheme(next: Theme) {
-    setTheme(next);
-    setThemeError('');
-    applyTheme(next);
-    try {
-      await saveSettings({ theme: next });
-    } catch (e) {
-      // The theme is applied to this page; only the saved setting failed.
-      setThemeError(e instanceof Error ? e.message : 'Theme could not be saved. Try again.');
-    }
-  }
-
-  // Same steps as the header's SIGN OUT (public/ui/shell.js), but stays put and says so if the
-  // logout request fails, since the session cookie would still be valid.
   async function signOut() {
     setSignOutError('');
-    try {
-      AuthService.clearAuth();
-      localStorage.removeItem('career-shell-settings');
-    } catch {
-      // Storage blocked: the session cookie is what the logout request clears.
-    }
-    const response = await fetch('/api/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).catch(() => null);
-    if (!response?.ok && response?.status !== 401) {
-      setSignOutError('Sign out failed. Check your connection and try again.');
-      return;
-    }
-    window.location.href = '/login';
+    if (!await endSession()) setSignOutError('Sign out failed. Check your connection and try again.');
   }
 
   const items = settings ? moreModules(settings) : [];
@@ -101,21 +72,7 @@ export function MorePage() {
         <span aria-hidden="true" className="text-sm text-ink-50">→</span>
       </a>
 
-      <fieldset className="m-0 mt-[26px] min-w-0 border-0 p-0">
-        <legend className={`${heading} mb-3 p-0`}>THEME</legend>
-        <div className="grid grid-cols-4 gap-2.5">
-          {THEMES.map(t => (
-            <label key={t} className="flex cursor-pointer flex-col items-center gap-1.5 p-1.5 outline-offset-2 outline-ink has-checked:outline has-focus-visible:outline-2">
-              <input type="radio" name="theme" value={t} checked={theme === t} onChange={() => void pickTheme(t)} className="ui-sr-only" />
-              <span data-theme={t} aria-hidden="true" className="relative block h-11 w-full border border-ink-30 bg-paper">
-                <span className="absolute top-[40%] left-[20%] h-px w-[60%] bg-ink" />
-              </span>
-              <span className="font-mono text-[9px] tracking-[0.1em]">{THEME_LABELS[t]}</span>
-            </label>
-          ))}
-        </div>
-        {themeError && <p role="alert" className="mt-3 text-sm text-accent">{themeError}</p>}
-      </fieldset>
+      <ThemePicker className="mt-[26px]" />
 
       {signOutError && <p role="alert" className="mt-4 text-sm text-accent">{signOutError}</p>}
       <button type="button" onClick={() => void signOut()} className="mt-[26px] flex min-h-11 cursor-pointer items-center self-start border-0 bg-transparent p-0 font-mono text-[11px] tracking-[0.14em] text-ink-60 hover:text-ink">SIGN OUT</button>

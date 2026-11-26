@@ -23,6 +23,9 @@ var staticPages = map[string]string{
 	"/manage/companies": "manage/companies/index.html",
 	"/weekly-scheduler": "weekly-scheduler/index.html",
 	"/more":             "more/index.html",
+	"/settings/modules": "settings/modules/index.html",
+	"/settings/theme":   "settings/theme/index.html",
+	"/settings/account": "settings/account/index.html",
 }
 
 // journalTabs maps pages folded into the journal page to their tab.
@@ -135,6 +138,12 @@ func (s *Server) registerStatic(r chi.Router) {
 		}
 		r.Get(route, redirect)
 		r.Get(route+"/", redirect)
+	}
+	// Settings opens on its Modules section.
+	for _, route := range []string{"/settings", "/settings/"} {
+		r.Get(route, func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, "/settings/modules", http.StatusFound)
+		})
 	}
 	// Audio thoughts lived at /running before the rename; keep old links and installed PWAs working.
 	for _, legacy := range []string{"/running", "/running/"} {

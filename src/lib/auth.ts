@@ -133,3 +133,22 @@ export async function checkAuth(
     return { authenticated: false };
   }
 }
+
+/**
+ * Signs out from Settings → Account and the phone More page: clears the saved username and the
+ * shell's cached module settings, ends the session, then goes to /login. Resolves false and stays
+ * put when the logout request fails (offline, 5xx), since the session cookie would still be valid;
+ * a 401 means the session had already ended.
+ */
+export async function signOut(): Promise<boolean> {
+  try {
+    AuthService.clearAuth();
+    localStorage.removeItem("career-shell-settings");
+  } catch {
+    // Storage blocked: the session cookie is what the logout request clears.
+  }
+  const response = await fetch("/api/auth/logout", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }).catch(() => null);
+  if (!response?.ok && response?.status !== 401) return false;
+  window.location.href = "/login";
+  return true;
+}

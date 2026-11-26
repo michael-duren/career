@@ -32,7 +32,7 @@ func TestHeaderListsHomeAndEveryModule(t *testing.T) {
 	if !slices.Equal(got, want) {
 		t.Fatalf("links %v, want %v", got, want)
 	}
-	for _, s := range []string{`href="/settings/modules" aria-label="Settings"`, `data-app-clock`, `id="site-search"`, `src="/ui/shell.js"`, `src="/ui/site-search.js"`, `data-routes="/journal /logs /personal-journal"`, `data-app-signout`} {
+	for _, s := range []string{`href="/settings/modules" aria-label="Settings"`, `data-app-clock`, `id="site-search"`, `src="/ui/shell.js"`, `src="/ui/site-search.js"`, `data-routes="/journal /logs /personal-journal"`, `data-app-more-menu`} {
 		if !strings.Contains(html, s) {
 			t.Errorf("header missing %s", s)
 		}

@@ -4,7 +4,7 @@ import { test, expect, type Page } from '@playwright/test';
 // order, the current page marked, overflow in MORE +, search, settings and a 12-hour clock.
 // The same markup is rendered by Astro (src/components/AppHeader.astro) and Go (internal/shell).
 
-// Wide enough for every link next to MORE + (which always shows: it holds Sign out).
+// Wide enough for every link, so MORE + (overflow only) stays hidden.
 test.use({ viewport: { width: 1920, height: 900 } });
 
 const menu = (page: Page) => page.getByRole('navigation', { name: 'Main' });
@@ -23,6 +23,7 @@ test('lists Home and every module with the current page marked', async ({ page }
   await expect(inlineLinks(page)).toHaveText(['HOME', 'TIMELINE', 'SCHEDULE', 'LEET', 'COMPANIES', 'PEOPLE', 'BOOKS', 'JOURNAL', 'NOTES', 'AUDIO', 'AGENTS']);
   await expect(menu(page).locator('[aria-current="page"]')).toHaveText(['BOOKS']);
   await expect(page.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/settings/modules');
+  await expect(page.getByRole('button', { name: 'MORE +' })).toBeHidden();
   await expect(page.locator('[data-app-clock]')).toHaveText(/^(1[0-2]|[1-9]):[0-5]\d (AM|PM)$/);
 });
 
@@ -83,7 +84,8 @@ test('links that do not fit move into MORE +, which opens, navigates and closes'
   await more.click();
   await expect(more).toHaveAttribute('aria-expanded', 'true');
   await expect(moreMenu).toBeVisible();
-  await expect(moreMenu.getByRole('button', { name: 'SIGN OUT' })).toBeVisible();
+  // Sign out lives in Settings → Account now; MORE + holds only overflow links.
+  await expect(moreMenu.getByRole('button', { name: 'SIGN OUT' })).toHaveCount(0);
   await page.keyboard.press('Escape');
   await expect(moreMenu).toBeHidden();
   await expect(more).toBeFocused();
@@ -92,9 +94,10 @@ test('links that do not fit move into MORE +, which opens, navigates and closes'
   await moreMenu.getByRole('link', { name: 'AGENTS' }).click();
   await expect(page).toHaveURL(/\/agents$/);
 
-  // Wider again: every link returns to the bar.
+  // Wider again: every link returns to the bar and MORE + hides.
   await page.setViewportSize({ width: 1920, height: 800 });
   await expect(inlineLinks(page)).toHaveCount(11);
+  await expect(more).toBeHidden();
 });
 
 test('"/" jumps to the search field, but not while typing', async ({ page }) => {
@@ -212,11 +215,16 @@ test.describe('phone (< 768px)', () => {
     await expect.poll(() => page.evaluate(() => localStorage.getItem('career-shell-settings'))).toContain('moduleOrder');
   });
 
-  test('More keeps the session and says so when sign out fails', async ({ page }) => {
-    await page.goto('/more');
-    await page.route('**/api/auth/logout', route => route.fulfill({ status: 500, body: '{}' }));
-    await page.getByRole('button', { name: 'SIGN OUT' }).tap();
-    await expect(page.getByRole('alert')).toContainText('Sign out failed');
-    await expect(page).toHaveURL(/\/more$/);
+  test.describe('sign out', () => {
+    // A service worker would send the logout itself, past page.route, and end the shared session.
+    test.use({ serviceWorkers: 'block' });
+
+    test('More keeps the session and says so when sign out fails', async ({ page }) => {
+      await page.goto('/more');
+      await page.route('**/api/auth/logout', route => route.fulfill({ status: 500, body: '{}' }));
+      await page.getByRole('button', { name: 'SIGN OUT' }).tap();
+      await expect(page.getByRole('alert')).toContainText('Sign out failed');
+      await expect(page).toHaveURL(/\/more$/);
+    });
   });
 });
