@@ -56,9 +56,11 @@ and status. Companies can be edited or deleted from their cards, and managed at
 
 ### Connections
 
-**Connections** (`/connections`) lists people in your network, linked to target companies, with
-a catch-up queue. Import contacts and messages from a LinkedIn data export; re-importing updates
-names, roles and companies but keeps your notes and catch-up stages.
+**People** (`/connections`) has three tabs: **People** (everyone, with a detail panel for notes,
+logging a catch-up and the LinkedIn profile), **Catch-up queue** (needs the Companies module) and
+**Employers** (people per employer, with the ones not on your companies board yet and a button to add
+them). Import contacts and messages from a LinkedIn data export; re-importing updates names, roles
+and companies but keeps your notes and catch-up stages. `?tab=queue|employers` opens a tab.
 
 ### Journal and notes
 
