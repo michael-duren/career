@@ -1,40 +1,58 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
-// Login page: a failed sign-in shows the accent error, Cancel clears it, and a good one
-// follows ?redirect=. Starts logged out; the failure is followed by a success, which
-// resets the server's per-IP attempt counter.
+// Login page, logged out. The failed attempt is followed by a good one, which resets the
+// server's per-IP attempt counter (10 per 15 minutes).
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
-test('a failed login shows the error, Cancel clears it, and a good login redirects', async ({ page }) => {
+const username = process.env.AUTH_USERNAME || 'pwa-test';
+const password = process.env.TEST_AUTH_PASSWORD || 'local-dev-password';
+
+const tokenColor = (page: Page, token: string) => page.evaluate(name => {
+  const probe = document.createElement('span');
+  probe.style.color = `var(${name})`;
+  document.body.append(probe);
+  const color = getComputedStyle(probe).color;
+  probe.remove();
+  return color;
+}, token);
+
+test('a failed login shows the server error, Cancel clears it, and a good login redirects', async ({ page }) => {
   await page.goto('/login?redirect=/books');
-  const username = page.getByLabel('Username');
-  const password = page.getByLabel('Password');
+  const user = page.getByLabel('Username');
+  const pass = page.getByLabel('Password');
   const error = page.getByRole('alert');
 
-  await expect(username).toHaveCSS('height', '44px');
-  await expect(error).toBeHidden();
+  await expect(user).toHaveCSS('height', '44px');
+  await expect(error).toHaveText('');
 
-  await username.fill(process.env.AUTH_USERNAME || 'pwa-test');
-  await password.fill('definitely-not-the-password');
+  // The server's 401 body, not the client fallback (which would be the same text with no body).
+  const response = page.waitForResponse('**/api/auth/login');
+  await user.fill('no-such-user');
+  await pass.fill('definitely-not-the-password');
   await page.getByRole('button', { name: 'Sign in' }).click();
+  expect((await response).status()).toBe(401);
   await expect(error).toHaveText('Invalid credentials');
-  const accent = await page.evaluate(() => {
-    const probe = document.createElement('span');
-    probe.style.color = 'var(--accent)';
-    document.body.append(probe);
-    const color = getComputedStyle(probe).color;
-    probe.remove();
-    return color;
-  });
-  await expect(error).toHaveCSS('color', accent);
+  await expect(error).toBeInViewport();
+  await expect(error).toHaveCSS('color', await tokenColor(page, '--accent'));
 
   await page.getByRole('button', { name: 'Cancel' }).click();
-  await expect(error).toBeHidden();
-  await expect(username).toHaveValue('');
+  await expect(error).toHaveText('');
+  await expect(user).toHaveValue('');
+  await expect(pass).toHaveValue('');
 
-  await username.fill(process.env.AUTH_USERNAME || 'pwa-test');
-  await password.fill(process.env.TEST_AUTH_PASSWORD || 'local-dev-password');
+  await user.fill(username);
+  await pass.fill(password);
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page).toHaveURL(/\/books$/);
+});
+
+test('the phone layout keeps the 40px title and 16px fields', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/login');
+  const title = page.getByRole('heading', { level: 1, name: 'Sign in' });
+  await expect(title).toHaveCSS('font-size', '40px');
+  await expect(title).toHaveCSS('line-height', '36px');
+  await expect(page.getByLabel('Username')).toHaveCSS('font-size', '16px');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });

@@ -93,7 +93,7 @@ Astro-only and Go templ pages) and use them everywhere.
 | **Segmented tabs** | Bordered group, active segment filled `--ink` with `--paper` text, mono 11px labels. | Companies, People, Journal |
 | **Button** | 44px tall, mono 11px uppercase, letter-spacing 0.16em. Primary: solid `--ink` / `--paper` text. Secondary: `--ink-50` border. Icon buttons 34–44px square. Delete uses `--accent`. | |
 | **Search field** | 44px (34px in header), `--ink-50` border, thin magnifier icon, Inter Tight 300 placeholder. | |
-| **Field** | Mono label over a 44px borderless input with a 1px `--ink` underline, Inter Tight 300 18px. Focus thickens the underline. | Setup step 5, Login |
+| **Field** | Mono label over a 44px borderless input with a 1px `--ink` underline, Inter Tight 300 18px (16px below 1024px). Focus thickens the underline. | Login (setup step 5 will reuse it) |
 | **Section header** | Uppercase heading left, mono label right, `--ink` 1px rule under table headers. | |
 | **Now line** | 1px `--accent` horizontal line with handwritten "now 5:20 PM". Today markers use a dash-dot `--accent` vertical line. | Timeline, Schedule |
 | **Logo spot** | 36–40px square, `--ink-50` border, company logo in single-color ink (fallback: two-letter monogram). | Companies |

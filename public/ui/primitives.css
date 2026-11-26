@@ -460,9 +460,9 @@
   color: var(--ink-60);
 }
 
-/* Field: label over a 44px borderless input with a 1px --ink underline (setup and login forms).
+/* Field: label over a 44px borderless input with a 1px --ink underline (login; setup will reuse it).
    Markup: <label class="ui-field"><span class="ui-label">Goal</span><input class="ui-field__input"></label>.
-   Focus thickens the underline; the global :focus-visible ring still draws as the keyboard cue.
+   Focus thickens the underline; keyboard focus also draws the ink ring (here too, for templ pages).
    Below 1024px the app-wide input rule in global.css forces 16px (keeps iOS from zooming). */
 .ui-field {
   display: flex;
@@ -482,10 +482,13 @@
   background: transparent;
   color: var(--ink);
   font: 300 18px var(--font-sans, "Inter Tight Variable", "Inter Tight", sans-serif);
-  outline: none;
 }
 .ui-field__input:focus {
   box-shadow: 0 1px 0 var(--ink);
+}
+.ui-field__input:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
 }
 .ui-field__input::placeholder {
   color: var(--ink-60);
