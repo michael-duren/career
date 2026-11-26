@@ -66,6 +66,14 @@ logging a catch-up and the LinkedIn profile), **Catch-up queue** (needs the Comp
 them). Import contacts and messages from a LinkedIn data export; re-importing updates names, roles
 and companies but keeps your notes and catch-up stages. `?tab=queue|employers` opens a tab.
 
+The catch-up queue moves people at your board companies through four stages (to contact, messaged,
+follow up, referral ask). **Mark sent** logs a message, sets the last contact to today and moves the
+person on; **Snooze 1 wk** hides them for a week. The strip on top counts this week's messages
+against a weekly target (default 2, change it with **Target**) and shows the steps of one linked
+timeline goal (**Link a goal** sets `catchUpQueue` in that goal's metadata). Message drafts stay in
+your browser only. People due by their cadence, or flagged in the edit form, are listed under the
+board.
+
 ### Journal and notes
 
 - **Journal** (`/journal`): the weekly work journal, the personal journal and the searchable,

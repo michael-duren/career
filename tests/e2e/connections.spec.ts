@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 // The People page (docs/redesign/pages/people.md) against mocked connections and companies.
 
-const person = (id: string, name: string, role: string, companyName: string, extra: Record<string, unknown> = {}) =>
+const person = (id: string, name: string, role: string, companyName: string, extra: Record<string, unknown> = {}): Record<string, unknown> & { id: string; name: string; stage?: string } =>
   ({ id: `00000000-0000-4000-8000-${id.padStart(12, '0')}`, name, role, companyName, email: '', queued: false, notes: '', tags: [], ...extra });
 
 const people = [
@@ -12,9 +12,61 @@ const people = [
   person('4', 'Alex Stone', 'Software Engineer', 'maximus'),
   person('5', 'Kayla Altepeter', 'Staff Engineer', 'Datasite', { queued: true }),
 ];
+// The catch-up queue's people: three on the board, one snoozed, one candidate (linked, no stage).
+const queuePeople = [
+  person('11', 'Hayden Kotelman', 'Senior SWE', 'Grafana Labs', { companySlug: 'grafana', stage: 'to_contact' }),
+  person('12', 'Paige North', 'Senior SWE', 'Microsoft', { companySlug: 'microsoft', stage: 'messaged', lastContactedOn: '2026-09-11' }),
+  person('13', 'Nicolas Perez', 'Senior SWE', 'Google', { companySlug: 'google', stage: 'follow_up', lastContactedOn: '2026-09-25' }),
+  person('14', 'Snoozy Sam', 'SWE', 'Stripe', { companySlug: 'stripe', stage: 'to_contact', snoozedUntil: '2026-12-01' }),
+  person('15', 'Joey Brown', 'Lead MTS', 'Heroku', { companySlug: 'heroku' }),
+  person('16', 'Dana Unlinked', 'Engineer', 'Nowhere Inc'),
+];
+const goal = (id: string, title: string, extra: Record<string, unknown> = {}) => ({
+  id, title, status: 'active', dependsOn: [], startDate: '2026-11-01', endDate: '2027-01-31', color: '#888888', createdAt: '2026-11-01T00:00:00Z', updatedAt: '2026-11-01T00:00:00Z',
+  notes: [], metadata: {}, steps: [], ...extra,
+});
+const goals = [
+  goal('g1', 'Warm up connections for Q1 referrals', { metadata: { catchUpQueue: 'linked' }, steps: [
+    { id: 's1', title: 'Pick 5–6 contacts', done: true }, { id: 's2', title: 'Send first messages', done: false },
+    { id: 's3', title: 'Follow up', done: false }, { id: 's4', title: 'Referral asks in Jan', done: false }] }),
+  goal('g2', 'System design prep'),
+];
+
+/** Mock the queue API on top of mockPeople; records every queue request. */
+async function mockQueue(page: Page) {
+  const calls: { method: string; path: string; body: Record<string, unknown> }[] = [];
+  const goalSaves: Record<string, unknown>[] = [];
+  const week = { start: '2026-11-23', end: '2026-11-29', sent: 0, target: 2 };
+  await mockPeople(page, { list: queuePeople });
+  await page.route('**/api/connections/queue**', route => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname.replace('/api/connections/queue', '') || '/';
+    if (request.method() === 'GET') return route.fulfill({ json: { today: '2026-11-26', week, connections: queuePeople.filter(p => p.stage), revisions: {} } });
+    const body = request.postDataJSON();
+    calls.push({ method: request.method(), path, body });
+    if (path === '/settings') { week.target = body.weeklyTarget; return route.fulfill({ json: { week } }); }
+    const current = queuePeople.find(p => p.id === body.id)!;
+    const stages = ['to_contact', 'messaged', 'follow_up', 'referral_ask'];
+    let entry: Record<string, unknown> = { ...current };
+    if (path === '/sent') { week.sent++; entry = { ...entry, stage: stages[stages.indexOf(String(current.stage)) + 1], lastContactedOn: '2026-11-26' }; }
+    else if (path === '/snooze') entry = { ...entry, snoozedUntil: body.until };
+    else if (request.method() === 'DELETE') { const { stage: _s, snoozedUntil: _u, ...rest } = entry; entry = rest; }
+    else { const { snoozedUntil: _u, ...rest } = entry; entry = { ...rest, stage: body.stage }; }
+    return route.fulfill({ json: { entry, revision: 'rev-queue', ...(path === '/sent' ? { week } : {}) } });
+  });
+  await page.route('**/api/goals', route => {
+    if (route.request().method() === 'POST') {
+      const { goal: saved } = route.request().postDataJSON();
+      goalSaves.push(saved);
+      return route.fulfill({ json: { goal: saved, revision: `rev-${saved.id}` } });
+    }
+    return route.fulfill({ json: { goals, revisions: { g1: 'rev-g1', g2: 'rev-g2' } } });
+  });
+  return { calls, goalSaves, week };
+}
 const companies = [{ slug: 'microsoft', title: 'Microsoft', category: 'Big tech', type: 'company', url: 'https://microsoft.com', status: 'not_started', featured: false, priority: 'medium', tags: [], body: '' }];
 
-async function mockPeople(page: Page, { companiesOn = true } = {}) {
+async function mockPeople(page: Page, { companiesOn = true, list = people } = {}) {
   const saves: Record<string, unknown>[] = [];
   const created: Record<string, unknown>[] = [];
   await page.route('**/api/settings', async route => {
@@ -25,7 +77,9 @@ async function mockPeople(page: Page, { companiesOn = true } = {}) {
     if (body.effective) body.effective = { ...body.effective, companies: false };
     return route.fulfill({ response, json: body });
   });
-  await page.route('**/api/connections', route => route.fulfill({ json: { connections: people, revisions: Object.fromEntries(people.map(p => [p.id, `rev-${p.id}`])) } }));
+  await page.route('**/api/connections', route => route.fulfill({ json: { connections: list, revisions: Object.fromEntries(list.map(p => [p.id, `rev-${p.id}`])) } }));
+  // Without staged people the queue is empty; mockQueue replaces this with a working queue.
+  await page.route('**/api/connections/queue', route => route.fulfill({ json: { today: '2026-11-26', week: { start: '2026-11-23', end: '2026-11-29', sent: 0, target: 2 }, connections: [], revisions: {} } }));
   await page.route('**/api/entries/connection', route => {
     const { entry } = route.request().postDataJSON();
     saves.push(entry);
@@ -48,7 +102,7 @@ test('people tab lists everyone and opens a person in the detail panel', async (
   const main = page.locator('main');
   await expect(main.getByText('5 people · 3 employers')).toBeVisible();
   await expect(main.getByRole('tab', { name: 'People' })).toHaveAttribute('aria-selected', 'true');
-  await expect(main.getByRole('tab', { name: 'Catch-up queue · 1' })).toBeVisible();
+  await expect(main.getByRole('tab', { name: 'Catch-up queue · 0' })).toBeVisible();
 
   const row = main.getByRole('button', { name: /Paige North/ });
   await expect(row).toContainText('Sep 11');
@@ -130,8 +184,9 @@ test('tabs follow the keyboard and the address keeps the open tab', async ({ pag
   await page.keyboard.press('ArrowRight');
   await expect(main.getByRole('tab', { name: /Catch-up queue/ })).toHaveAttribute('aria-selected', 'true');
   await expect(page).toHaveURL(/tab=queue/);
-  await expect(main.getByRole('heading', { name: 'Catch-up queue' })).toBeVisible();
-  await expect(main.getByRole('listitem').filter({ hasText: 'Kayla Altepeter' })).toBeVisible();
+  await expect(main.getByRole('heading', { name: 'To contact' })).toBeVisible();
+  // Kayla is flagged the old way, so she shows in the cadence list under the board.
+  await expect(main.getByRole('listitem').filter({ hasText: 'Kayla Altepeter' })).toContainText('Flagged');
   await page.reload();
   await expect(main.getByRole('tab', { name: /Catch-up queue/ })).toHaveAttribute('aria-selected', 'true');
 });
@@ -162,10 +217,117 @@ test('on a phone the detail replaces the list until you go back', async ({ page 
   await page.goto('/connections');
   const main = page.locator('main');
   await expect(main.getByRole('heading', { level: 1, name: 'People', exact: true })).toBeVisible();
-  await expect(main.getByRole('tab', { name: 'Catch-up · 1' })).toBeVisible();
+  await expect(main.getByRole('tab', { name: 'Catch-up · 0' })).toBeVisible();
   await main.getByRole('button', { name: /Paige North/ }).click();
   await expect(main.getByRole('complementary', { name: 'About Paige North' })).toBeVisible();
   await expect(main.getByRole('button', { name: /Brian Holt/ })).toBeHidden();
   await main.getByRole('button', { name: '← ALL PEOPLE' }).click();
   await expect(main.getByRole('button', { name: /Brian Holt/ })).toBeVisible();
+});
+
+test('catch-up board shows stages, hides snoozed people and drives the queue API', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  const { calls } = await mockQueue(page);
+  await page.goto('/connections?tab=queue');
+  const main = page.locator('main');
+  // Snoozed people do not count and sit in their own list.
+  await expect(main.getByRole('tab', { name: 'Catch-up queue · 3' })).toHaveAttribute('aria-selected', 'true');
+  await expect(main.getByText('Warm up connections for Q1 referrals')).toBeVisible();
+  await expect(main.getByText('step 2 of 4: Pick 5–6 contacts (done), Send first messages, Follow up, Referral asks in Jan')).toBeAttached();
+  await expect(main.getByText('Messages this week: 0 / 2')).toBeVisible();
+  const lane = (name: string) => main.getByRole('region', { name });
+  await expect(lane('To contact').getByRole('button', { name: /Hayden Kotelman/ })).toContainText('NO CONTACT LOGGED');
+  await expect(lane('Messaged').getByRole('button', { name: /Paige North/ })).toContainText('LAST · SEP 11');
+  await expect(lane('Referral ask')).toContainText('Nobody here yet');
+  await expect(lane('To contact')).not.toContainText('Snoozy Sam');
+  await expect(main.getByRole('region', { name: 'Snoozed' })).toContainText('Back Dec 1');
+
+  // The first card is picked on wide screens; pick Paige for the panel.
+  await expect(main.getByRole('complementary', { name: 'Catch up with Hayden Kotelman' })).toContainText('never contacted');
+  await lane('Messaged').getByRole('button', { name: /Paige North/ }).click();
+  await expect(lane('Messaged').getByRole('button', { name: /Paige North/ })).toHaveAttribute('aria-pressed', 'true');
+  const panel = main.getByRole('complementary', { name: 'Catch up with Paige North' });
+  await expect(panel).toContainText('Follow up on your last message.');
+  await expect(panel).toContainText('last contact Sep 11 · 76 days ago');
+  await panel.getByRole('textbox', { name: 'Message draft' }).fill('Hi Paige, any news?');
+
+  await panel.getByRole('button', { name: 'Mark sent' }).click();
+  await expect(main.getByRole('status')).toHaveText('Sent. Paige North moved to Follow up.');
+  expect(calls.at(-1)).toEqual({ method: 'POST', path: '/sent', body: { id: queuePeople[1].id, revision: 'rev-' + queuePeople[1].id } });
+  await expect(main.getByText('Messages this week: 1 / 2')).toBeVisible();
+  await expect(lane('Follow up').getByRole('button', { name: /Paige North/ })).toBeVisible();
+  // A sent message clears its draft.
+  await expect(main.getByRole('complementary', { name: 'Catch up with Paige North' }).getByRole('textbox', { name: 'Message draft' })).toHaveValue('');
+
+  await main.getByRole('complementary').getByRole('button', { name: 'Snooze 1 wk' }).click();
+  await expect(main.getByRole('status')).toHaveText('Paige North snoozed until Dec 3.');
+  expect(calls.at(-1)?.body).toMatchObject({ until: '2026-12-03' });
+  await expect(lane('Follow up')).not.toContainText('Paige North');
+
+  await lane('Follow up').getByRole('button', { name: /Nicolas Perez/ }).click();
+  await main.getByRole('group', { name: 'Move to' }).getByRole('button', { name: 'Referral ask' }).click();
+  await expect(main.getByRole('status')).toHaveText('Nicolas Perez moved to Referral ask.');
+  expect(calls.at(-1)).toMatchObject({ method: 'POST', path: '/', body: { stage: 'referral_ask' } });
+
+  // Candidates are linked people without a stage.
+  await main.getByRole('button', { name: '+ Add people' }).click();
+  const candidates = main.getByRole('region', { name: 'Add people at board companies' });
+  await expect(candidates.getByRole('button', { name: /^Add .* to the queue$/ })).toHaveCount(1);
+  await candidates.getByRole('button', { name: 'Add Joey Brown to the queue' }).click();
+  await expect(main.getByRole('status')).toHaveText('Joey Brown added to the queue.');
+  expect(calls.at(-1)).toMatchObject({ method: 'POST', path: '/', body: { stage: 'to_contact' } });
+
+  await main.getByRole('complementary').getByRole('button', { name: 'Remove from queue' }).click();
+  expect(calls.at(-1)?.method).toBe('DELETE');
+
+  await main.getByRole('button', { name: /Change the weekly target/ }).click();
+  await main.getByRole('spinbutton', { name: 'Per week' }).fill('4');
+  await main.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(main.getByText('Messages this week: 1 / 4')).toBeVisible();
+  expect(calls.at(-1)).toEqual({ method: 'PATCH', path: '/settings', body: { weeklyTarget: 4 } });
+
+  await main.getByRole('region', { name: 'Snoozed' }).getByRole('button', { name: 'Unsnooze Snoozy Sam' }).click();
+  expect(calls.at(-1)).toMatchObject({ method: 'POST', path: '/', body: { stage: 'to_contact' } });
+});
+
+test('linking another goal to the catch-up strip unlinks the old one', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  const { goalSaves } = await mockQueue(page);
+  await page.goto('/connections?tab=queue');
+  const main = page.locator('main');
+  await main.getByRole('button', { name: 'Change', exact: true }).click();
+  await main.getByRole('combobox', { name: 'Linked goal' }).selectOption({ label: 'System design prep' });
+  await expect(main.getByRole('status')).toHaveText('Linked System design prep to the catch-up queue.');
+  expect(goalSaves.map(g => [g.id, g.metadata])).toEqual([['g1', {}], ['g2', { catchUpQueue: 'linked' }]]);
+  await expect(main.getByText('This goal has no steps yet. Add them on the timeline.')).toBeVisible();
+});
+
+test('on a phone the catch-up queue groups people under stage headers', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockQueue(page);
+  await page.goto('/connections?tab=queue');
+  const main = page.locator('main');
+  await expect(main.getByText('Warm up connections for Q1 referrals · step 2 of 4')).toBeVisible();
+  await expect(main.getByText('0 / 2 this week')).toBeVisible();
+  await expect(main.getByRole('heading', { name: 'Messaged' })).toBeVisible();
+  // Nothing is picked until you tap someone; the panel then replaces the list.
+  await expect(main.getByRole('complementary')).toHaveCount(0);
+  await main.getByRole('button', { name: /Paige North/ }).click();
+  await expect(main.getByRole('complementary', { name: 'Catch up with Paige North' })).toBeVisible();
+  await expect(main.getByRole('heading', { name: 'Paige North' })).toBeFocused();
+  await expect(main.getByRole('heading', { name: 'Messaged' })).toHaveCount(0);
+  await main.getByRole('button', { name: '← CATCH-UP QUEUE' }).click();
+  await expect(main.getByRole('button', { name: /Paige North/ })).toBeFocused();
+});
+
+test('people tab queue button adds someone to the stage queue', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  const { calls } = await mockQueue(page);
+  await page.goto('/connections');
+  const main = page.locator('main');
+  await main.getByRole('button', { name: /Joey Brown/ }).click();
+  await main.getByRole('complementary', { name: 'About Joey Brown' }).getByRole('button', { name: 'Queue' }).click();
+  await expect(main.getByRole('status')).toHaveText('Joey Brown added to the queue.');
+  expect(calls.at(-1)).toMatchObject({ method: 'POST', path: '/', body: { id: queuePeople[4].id, stage: 'to_contact' } });
+  await expect(main.getByRole('complementary', { name: 'About Joey Brown' })).toContainText('In catch-up queue · To contact');
 });

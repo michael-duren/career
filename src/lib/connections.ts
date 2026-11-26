@@ -1,3 +1,5 @@
+import { formatDate } from './format.ts';
+import type { Goal } from './timeline.ts';
 export interface Connection {
   id: string;
   name: string;
@@ -27,6 +29,16 @@ export type ConnectionStage = typeof CONNECTION_STAGES[number];
 export interface CatchUpWeek { start: string; end: string; sent: number; target: number }
 /** GET /api/connections/queue: everyone queued, snoozed included, by stage then name. */
 export interface ConnectionQueue { today: string; week: CatchUpWeek; connections: Connection[]; revisions: Record<string, string> }
+/** Column and heading names per stage; short names fit the four "move to" buttons. */
+export const STAGE_LABELS: Record<ConnectionStage, string> = { to_contact: 'To contact', messaged: 'Messaged', follow_up: 'Follow up', referral_ask: 'Referral ask' };
+export const STAGE_SHORT: Record<ConnectionStage, string> = { to_contact: 'To contact', messaged: 'Messaged', follow_up: 'Follow up', referral_ask: 'Referral' };
+/** What to do next for someone at each stage. */
+export const NEXT_ACTIONS: Record<ConnectionStage, string> = {
+  to_contact: "Send a first message: mention what you're building and ask for a 20-minute chat.",
+  messaged: 'Follow up on your last message.',
+  follow_up: 'Send a thank-you and line up a referral ask.',
+  referral_ask: 'Ask for a referral.',
+};
 export interface ConnectionImport { parsed: number; created: number; updated: number; unchanged: number; skipped: number; linked: number; messagesMatched: number }
 export interface QueueItem { connection: Connection; due: string; overdueDays: number; reason: 'manual' | 'cadence' }
 
@@ -182,4 +194,71 @@ export function newCompanyEntry(title: string, slug: string) {
     url: `https://www.linkedin.com/search/results/companies/?keywords=${encodeURIComponent(title)}`,
     body: '## Why\n\n## Steps\n\n- [ ] Identify one person at the company to connect with\n- [ ] Reach out and start building a relationship\n- [ ] Research team & open roles\n- [ ] Tailor resume/cover letter\n- [ ] Apply\n\n## Log\n',
   };
+}
+
+/** Snoozed: hidden from the catch-up queue while snoozedUntil is after today. */
+export function isSnoozed(c: Connection, today: string): boolean { return !!c.snoozedUntil && c.snoozedUntil > today; }
+
+/** The catch-up board: everyone with a stage who is not snoozed, per stage in order, by name. */
+export function queueLanes(connections: Connection[], today: string): { stage: ConnectionStage; people: Connection[] }[] {
+  return CONNECTION_STAGES.map(stage => ({
+    stage,
+    people: connections.filter(c => c.stage === stage && !isSnoozed(c, today)).sort((a, b) => a.name.localeCompare(b.name)),
+  }));
+}
+
+/** Snoozed queue members, soonest back first. */
+export function snoozedPeople(connections: Connection[], today: string): Connection[] {
+  return connections.filter(c => !!c.stage && isSnoozed(c, today))
+    .sort((a, b) => (a.snoozedUntil ?? '').localeCompare(b.snoozedUntil ?? '') || a.name.localeCompare(b.name));
+}
+
+/**
+ * People who can join the queue: linked to a company on the board (what GET /api/connections?linked=1
+ * returns) and not queued yet, most recently in touch first.
+ */
+export function queueCandidates(connections: Connection[]): Connection[] {
+  return connections.filter(c => !!c.companySlug && !c.stage)
+    .sort((a, b) => (lastTouch(b) ?? '').localeCompare(lastTouch(a) ?? '') || a.name.localeCompare(b.name));
+}
+
+/** "LAST · SEP 11" on a queue card, or "NO CONTACT LOGGED". */
+export function lastContactTag(c: Connection): string {
+  return c.lastContactedOn ? `Last · ${formatDate(c.lastContactedOn)}`.toUpperCase() : 'NO CONTACT LOGGED';
+}
+
+/** "last contact Sep 11 · 75 days ago", or "never contacted". */
+export function lastContactNote(c: Connection, today: string): string {
+  if (!c.lastContactedOn) return 'never contacted';
+  const days = daysBetween(c.lastContactedOn, today);
+  const ago = days === 0 ? 'today' : days === 1 ? '1 day ago' : days < 0 ? 'in the future' : `${days} days ago`;
+  return `last contact ${formatDate(c.lastContactedOn)} · ${ago}`;
+}
+
+/** Goal metadata key that links a timeline goal to the catch-up queue's goal strip. */
+export const CATCH_UP_GOAL_KEY = 'catchUpQueue';
+
+/** Goals the strip can link: not done or dropped, earliest start first. */
+export function linkableGoals(goals: Goal[]): Goal[] {
+  return goals.filter(g => g.status === 'planned' || g.status === 'active')
+    .sort((a, b) => a.startDate.localeCompare(b.startDate) || a.title.localeCompare(b.title));
+}
+
+/** The goal linked to the queue (metadata key set), preferring an active one; dropped goals never count. */
+export function linkedGoal(goals: Goal[]): Goal | undefined {
+  const linked = goals.filter(g => CATCH_UP_GOAL_KEY in g.metadata && g.status !== 'dropped');
+  return linked.find(g => g.status === 'active') ?? linked.find(g => g.status === 'planned') ?? linked[0];
+}
+
+/** The goal with its link set or cleared. */
+export function withCatchUpLink(goal: Goal, linked: boolean): Goal {
+  const { [CATCH_UP_GOAL_KEY]: _old, ...metadata } = goal.metadata;
+  return { ...goal, metadata: linked ? { ...metadata, [CATCH_UP_GOAL_KEY]: 'linked' } : metadata };
+}
+
+/** The step you are on: the first one not done (1-based), or steps + 1 when all are done; 0 without steps. */
+export function currentStep(goal: Goal): number {
+  if (!goal.steps.length) return 0;
+  const open = goal.steps.findIndex(step => !step.done);
+  return open === -1 ? goal.steps.length + 1 : open + 1;
 }

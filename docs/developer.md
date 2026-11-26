@@ -221,6 +221,12 @@ browser sets the first time the scheduler is opened; until then it is UTC.
 Only "sent" counts toward the week; editing `stage` or `lastContactedOn` directly does not. Sends
 are not part of `GET /api/export`.
 
+The Catch-up tab (`src/components/CatchUpBoard.tsx`) links one timeline goal to its strip through goal
+metadata (`catchUpQueue`, saved with `POST /api/goals`); linking another goal removes the key from the
+old one. Message drafts live in `localStorage` (`career-catch-up-draft:<id>`) and are cleared by
+"sent". The older `queued` flag and cadence (`catchUpQueue` in `src/lib/connections.ts`) still drive
+the "Due for a catch-up" list under the board; the People tab's Queue button now uses the stage queue.
+
 Leetgrinder, weekly scheduler, connections and audio thought endpoints are described in their
 feature docs. The MCP endpoint is described in [MCP](mcp/README.md).
 

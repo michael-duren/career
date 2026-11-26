@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Avatar, Box, Button, Checkbox, HatchFill, Label, MeasurementLine, SearchField, SectionHeader, SegmentedTabs, buttonClassName, type SegmentedTab } from './ui';
 import { moduleEnabled } from '../lib/modules';
-import { CADENCES, catchUpQueue, companySlug, employerKey, employers, lastTouch, markCaughtUp, matchesQuery, newCompanyEntry, newConnection, nextDue, photoURL, relativeDays, trackedNames, type Connection, type ConnectionImport, type Employer } from '../lib/connections';
+import { CADENCES, CATCH_UP_GOAL_KEY, STAGE_LABELS, catchUpQueue, companySlug, employerKey, employers, isSnoozed, lastTouch, linkableGoals, linkedGoal, markCaughtUp, matchesQuery, newCompanyEntry, newConnection, nextDue, photoURL, relativeDays, trackedNames, withCatchUpLink, type CatchUpWeek, type Connection, type ConnectionImport, type ConnectionQueue, type ConnectionStage, type Employer } from '../lib/connections';
+import type { Goal } from '../lib/timeline';
+import { CatchUpBoard } from './CatchUpBoard';
 import { formatDate } from '../lib/format';
 import { localDate } from '../lib/workspace';
 import { cn } from '../lib/utils';
@@ -47,17 +49,16 @@ async function squarePhoto(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Could not process that image.')), 'image/jpeg', 0.85));
 }
 
-/** True below 768px, the phone layout (shorter tab labels). */
-function usePhone(): boolean {
-  const query = '(max-width: 767px)';
-  const [phone, setPhone] = useState(() => window.matchMedia(query).matches);
+function useMedia(query: string): boolean {
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
   useEffect(() => {
     const media = window.matchMedia(query);
-    const update = () => setPhone(media.matches);
+    const update = () => setMatches(media.matches);
+    update();
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
-  }, []);
-  return phone;
+  }, [query]);
+  return matches;
 }
 
 function initialTab(): Tab {
@@ -67,7 +68,9 @@ function initialTab(): Tab {
 
 export function ConnectionsBoard() {
   const today = localDate();
-  const phone = usePhone();
+  // Below 768px is the phone layout; from 1280px the catch-up board has room for its side panel.
+  const phone = useMedia('(max-width: 767px)');
+  const wide = useMedia('(min-width: 1280px)');
   const [connections, setConnections] = useState<Connection[]>();
   const [revisions, setRevisions] = useState<Record<string, string>>({});
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
@@ -92,6 +95,12 @@ export function ConnectionsBoard() {
   // Tracked companies and the catch-up queue need the Companies module; People works without it.
   const [companiesOn, setCompaniesOn] = useState(true);
   const [companiesFailed, setCompaniesFailed] = useState(false);
+  // The catch-up queue's "today" and week come from the server (the scheduler's time zone).
+  const [queueInfo, setQueueInfo] = useState<{ today: string; week: CatchUpWeek }>();
+  const [queueFailed, setQueueFailed] = useState(false);
+  // Timeline goals for the queue's goal strip; undefined when the Timeline module is off or they failed to load.
+  const [goals, setGoals] = useState<Goal[]>();
+  const [goalRevisions, setGoalRevisions] = useState<Record<string, string>>({});
 
   async function load() {
     let on = true;
@@ -108,10 +117,27 @@ export function ConnectionsBoard() {
           return { entries: [] as { entry: CompanyOption }[] };
         })
         : Promise.resolve({ entries: [] as { entry: CompanyOption }[] });
-      const [people, companyPage] = await Promise.all([
+      // The queue and goals are extras: when they fail the rest of the page still works.
+      const queueRequest = on
+        ? api<ConnectionQueue>('/api/connections/queue').then(queue => { setQueueFailed(false); return queue; }).catch(error => {
+          console.warn('The catch-up queue could not be loaded.', error);
+          setQueueFailed(true);
+          return undefined;
+        })
+        : Promise.resolve(undefined);
+      const goalRequest = on ? moduleEnabled('timeline').then(timeline => timeline
+        ? api<{ goals: Goal[]; revisions: Record<string, string> }>('/api/goals')
+        : undefined).catch(error => {
+        console.warn('Goals could not be loaded.', error);
+        return undefined;
+      }) : Promise.resolve(undefined);
+      const [people, companyPage, queue, goalPage] = await Promise.all([
         api<{ connections: Connection[]; revisions: Record<string, string> }>('/api/connections'),
-        companyList,
+        companyList, queueRequest, goalRequest,
       ]);
+      if (queue) setQueueInfo({ today: queue.today, week: queue.week });
+      setGoals(goalPage?.goals);
+      setGoalRevisions(goalPage?.revisions ?? {});
       const options = companyPage.entries.map(({ entry }) => ({ slug: entry.slug, title: entry.title })).sort((a, b) => a.title.localeCompare(b.title));
       setConnections(people.connections);
       setRevisions(people.revisions);
@@ -191,6 +217,72 @@ export function ConnectionsBoard() {
     if (closeDraft) { setDraft(undefined); setSelectedId(result.entry.id); }
     return message;
   }, closeDraft ? 'Change not saved. Your draft is kept.' : 'Change not saved.');
+
+  // Catch-up queue changes (docs/developer.md, Catch-up queue). Each returns the saved person.
+  async function queueCall(path: string, method: string, body: Record<string, unknown>) {
+    const result = await api<{ entry: Connection; revision: string; week?: CatchUpWeek }>(`/api/connections/queue${path}`, {
+      method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    const before = connections?.find(c => c.id === result.entry.id);
+    stored({ ...(before?.photo ? { photo: before.photo } : {}), ...result.entry }, result.revision);
+    if (result.week) setQueueInfo(current => current && { ...current, week: result.week! });
+    return result.entry;
+  }
+
+  const moveTo = (c: Connection, stage: ConnectionStage) => run('Saving', async () => {
+    await queueCall('', 'POST', { id: c.id, revision: revisions[c.id], stage });
+    return c.stage === stage ? `${c.name} is back in the queue.` : c.stage ? `${c.name} moved to ${STAGE_LABELS[stage]}.` : `${c.name} added to the queue.`;
+  });
+
+  const unqueue = (c: Connection) => run('Saving', async () => {
+    await queueCall('', 'DELETE', { id: c.id, revision: revisions[c.id] });
+    return `${c.name} removed from the queue.`;
+  });
+
+  // Resolves true once saved, so the panel can clear the message draft.
+  async function markSent(c: Connection): Promise<boolean> {
+    let ok = false;
+    await run('Saving', async () => {
+      const entry = await queueCall('/sent', 'POST', { id: c.id, revision: revisions[c.id] });
+      ok = true;
+      return entry.stage ? `Sent. ${c.name} moved to ${STAGE_LABELS[entry.stage]}.` : `Sent. ${c.name} finished the queue.`;
+    });
+    return ok;
+  }
+
+  const snooze = (c: Connection, until: string) => run('Saving', async () => {
+    await queueCall('/snooze', 'POST', { id: c.id, revision: revisions[c.id], until });
+    return `${c.name} snoozed until ${formatDate(until)}.`;
+  });
+
+  async function setTarget(weeklyTarget: number): Promise<boolean> {
+    let ok = false;
+    await run('Saving', async () => {
+      const { week } = await api<{ week: CatchUpWeek }>('/api/connections/queue/settings', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ weeklyTarget }),
+      });
+      setQueueInfo(current => current && { ...current, week });
+      ok = true;
+      return `Weekly target set to ${weeklyTarget}.`;
+    });
+    return ok;
+  }
+
+  // The strip shows one goal: linking another unlinks the old one first.
+  const linkGoal = (goalId: string) => run('Saving', async () => {
+    const all = goals ?? [];
+    const saveGoal = async (goal: Goal) => {
+      const result = await api<{ goal: Goal; revision: string }>('/api/goals', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goal, revision: goalRevisions[goal.id] ?? null }),
+      });
+      setGoals(current => (current ?? []).map(g => g.id === result.goal.id ? result.goal : g));
+      setGoalRevisions(current => ({ ...current, [result.goal.id]: result.revision }));
+    };
+    for (const goal of all.filter(g => g.id !== goalId && CATCH_UP_GOAL_KEY in g.metadata)) await saveGoal(withCatchUpLink(goal, false));
+    const target = all.find(g => g.id === goalId);
+    if (target) await saveGoal(withCatchUpLink(target, true));
+    return target ? `Linked ${target.title} to the catch-up queue.` : 'The catch-up queue has no linked goal.';
+  });
 
   const remove = (connection: Connection) => {
     if (!window.confirm(`Remove ${connection.name} from your connections? This also removes their photo and notes.`)) return;
@@ -281,10 +373,11 @@ export function ConnectionsBoard() {
   }
 
   const companyTitle = useMemo(() => new Map(companies.map(c => [c.slug, c.title])), [companies]);
-  const queue = useMemo(() => catchUpQueue(connections ?? [], today), [connections, today]);
+  const queueToday = queueInfo?.today ?? today;
+  const due = useMemo(() => catchUpQueue(connections ?? [], today), [connections, today]);
+  const queuedCount = useMemo(() => (connections ?? []).filter(c => !!c.stage && !isSnoozed(c, queueToday)).length, [connections, queueToday]);
   const board = useMemo(() => companiesOn ? trackedNames(companyTitle) : undefined, [companiesOn, companyTitle]);
   const network = useMemo(() => employers(connections ?? [], companiesOn ? companyTitle : undefined), [connections, companiesOn, companyTitle]);
-  const queued = useMemo(() => queue.filter(item => matchesQuery(item.connection, query)), [queue, query]);
   const visible = useMemo(() => {
     const list = (connections ?? []).filter(c => matchesQuery(c, query) && (!employer || employerKey(c, board) === employer.key) && (
       companyFilter === 'all' || (companyFilter === 'linked' ? !!c.companySlug : companyFilter === 'unlinked' ? !c.companySlug : c.companySlug === companyFilter)));
@@ -302,7 +395,7 @@ export function ConnectionsBoard() {
 
   const companyName = (c: Connection) => (c.companySlug && companiesOn ? companyTitle.get(c.companySlug) ?? c.companyName : c.companyName);
   const tracked = (c: Connection) => companiesOn && !!c.companySlug;
-  const queueTab = companiesOn ? [{ value: 'queue' as const, label: `${phone ? 'Catch-up' : 'Catch-up queue'} · ${queue.length}` }] : [];
+  const queueTab = companiesOn ? [{ value: 'queue' as const, label: `${phone ? 'Catch-up' : 'Catch-up queue'} · ${queuedCount}` }] : [];
   const tabs: SegmentedTab<Tab>[] = [{ value: 'people', label: 'People' }, ...queueTab, { value: 'employers', label: 'Employers' }];
   const showDetail = tab === 'people' && (!!draft || !!selected);
   const searchProps = tab === 'employers'
@@ -330,6 +423,7 @@ export function ConnectionsBoard() {
 
       {!companiesOn && <p className="mt-3 text-sm text-ink-60">The catch-up queue needs the Companies module, which is turned off in Settings → Modules.</p>}
       {error && <p role="alert" className="mt-4 border border-accent p-3 text-sm text-accent">{error}</p>}
+      {companiesOn && queueFailed && <p role="alert" className="mt-4 border border-accent p-3 text-sm text-accent">The catch-up queue could not be loaded. Reload to retry.</p>}
       {companiesFailed && <p role="alert" className="mt-4 border border-accent p-3 text-sm text-accent">Companies could not be loaded, so company names and filters are missing. Reload to retry.</p>}
       <p role="status" className="mt-3 text-sm text-ink-60 empty:mt-0">{status}</p>
 
@@ -396,17 +490,26 @@ export function ConnectionsBoard() {
                   note={noteText} noteDirty={noteDirty} onNote={text => setNote({ id: selected.id, text })}
                   onSaveNote={() => void save({ ...selected, notes: noteText }, `Notes saved for ${selected.name}.`)}
                   onLog={() => void save(markCaughtUp({ ...selected, notes: noteText }, today), `Logged a catch-up with ${selected.name}.`)}
-                  onQueue={() => void save({ ...selected, notes: noteText, queued: !selected.queued }, selected.queued ? `${selected.name} removed from the queue.` : `${selected.name} added to the queue.`)}
+                  onQueue={() => void (selected.stage ? unqueue(selected) : moveTo(selected, 'to_contact'))}
                   onEdit={() => edit(selected)} />
                   : <p className="m-0 text-sm font-light text-ink-60">Pick someone to see their details and notes.</p>}
             </Box>
           </div>
         </div>}
 
-        {tab === 'queue' && companiesOn && <CatchUpList queue={queued} today={today} busy={busy} drafting={!!draft} companyName={companyName}
-          onCaughtUp={c => void save(markCaughtUp(c, today), `Logged a conversation with ${c.name}.`)}
-          onUnqueue={c => void save({ ...c, queued: false }, `${c.name} removed from the queue.`)}
-          onEdit={edit} />}
+        {tab === 'queue' && companiesOn && <CatchUpBoard connections={connections} today={queueToday} week={queueInfo?.week} query={query} busy={busy} drafting={!!draft}
+          phone={phone} wide={wide} companyName={companyName} goal={goals && linkedGoal(goals)} goals={goals && linkableGoals(goals)} due={due}
+          actions={{
+            onMove: (c, stage) => void moveTo(c, stage),
+            onRemove: c => void unqueue(c),
+            onSent: markSent,
+            onSnooze: (c, until) => void snooze(c, until),
+            onTarget: setTarget,
+            onLink: goalId => void linkGoal(goalId),
+            onCaughtUp: c => void save(markCaughtUp(c, today), `Logged a conversation with ${c.name}.`),
+            onUnflag: c => void save({ ...c, queued: false }, `${c.name} is no longer flagged.`),
+            onEdit: edit,
+          }} />}
 
         {tab === 'employers' && <EmployersTab employers={network} query={employerQuery} limit={employerLimit} busy={busy} companiesOn={companiesOn}
           onMore={() => setEmployerLimit(employerLimit + EMPLOYER_PAGE)}
@@ -459,7 +562,7 @@ function PersonDetail({ person, today, busy, companiesOn, companyName, colleague
       {companyName && <Stat value={shortDate(person.connectedOn)} label="Connected" />}
       <Stat value={due ? <span className={due <= today ? 'text-accent' : undefined}>{relativeDays(due, today).replace('ago', 'overdue')}</span> : '—'} label="Next catch-up" />
     </div>
-    {companiesOn && person.queued && <Label className="text-ink">In catch-up queue</Label>}
+    {companiesOn && person.stage && <Label className="text-ink">In catch-up queue · {STAGE_LABELS[person.stage]}</Label>}
     <label className="mt-2 flex flex-col gap-1.5">
       <Label className="!text-[9px]">Notes</Label>
       <textarea rows={4} maxLength={5000} value={note} disabled={busy} onChange={event => onNote(event.target.value)} placeholder="What you talked about, what to follow up on…" className={textarea} />
@@ -471,7 +574,7 @@ function PersonDetail({ person, today, busy, companiesOn, companyName, colleague
     </div>
     <div className="flex gap-2">
       <Button size="sm" className="flex-1" disabled={busy} onClick={onEdit}>Edit</Button>
-      {companiesOn && <Button size="sm" className="flex-1" aria-pressed={person.queued} disabled={busy} onClick={onQueue}>{person.queued ? 'Unqueue' : 'Queue'}</Button>}
+      {companiesOn && <Button size="sm" className="flex-1" aria-pressed={!!person.stage} disabled={busy} onClick={onQueue}>{person.stage ? 'Unqueue' : 'Queue'}</Button>}
     </div>
   </>;
 }
@@ -491,37 +594,6 @@ function ImportPanel({ busy, onImport, onClose }: { busy: boolean; onImport: (fo
       </fieldset>
     </form>
   </Box>;
-}
-
-// The cadence-based queue: people past their catch-up cadence or queued by hand. The staged
-// catch-up board in docs/redesign/pages/people.md replaces this tab's content.
-function CatchUpList({ queue, today, busy, drafting, companyName, onCaughtUp, onUnqueue, onEdit }: {
-  queue: ReturnType<typeof catchUpQueue>; today: string; busy: boolean; drafting: boolean; companyName: (c: Connection) => string;
-  onCaughtUp: (c: Connection) => void; onUnqueue: (c: Connection) => void; onEdit: (c: Connection) => void;
-}) {
-  return <section aria-labelledby="queue-heading" className="flex flex-col gap-4">
-    <SectionHeader id="queue-heading" title="Catch-up queue" meta={`${queue.length} to catch up with`} rule />
-    {queue.length === 0 ? <p className="m-0 flex h-[70px] items-center justify-center border border-dashed border-ink-30 text-xs font-light text-ink-60">Nobody to catch up with. Set a cadence or queue someone.</p> :
-      <ul className="m-0 grid list-none gap-6 p-0 sm:grid-cols-2 xl:grid-cols-3">
-        {queue.map(({ connection: c, overdueDays, reason }) => <Box as="li" key={c.id} className="flex flex-col gap-2 p-3">
-          <span className="flex min-w-0 items-center gap-2.5">
-            <Avatar name={c.name} src={photoURL(c)} size={28} muted />
-            <span className="flex min-w-0 flex-col">
-              <span className="truncate text-[15px] font-light">{c.name}</span>
-              <span className="truncate text-[11px] text-ink-60">{[c.role, companyName(c)].filter(Boolean).join(' · ')}</span>
-            </span>
-          </span>
-          <span className={cn('font-mono text-[10px] tracking-[0.06em] uppercase', overdueDays > 0 ? 'text-accent' : 'text-ink-60')}>
-            {reason === 'manual' ? 'Queued' : overdueDays > 0 ? `${overdueDays}d overdue` : 'Due today'} · last talked {relativeDays(c.lastContactedOn, today).toLowerCase()}
-          </span>
-          <span className="flex flex-wrap gap-2 pt-1">
-            <Button size="sm" variant="primary" disabled={busy} onClick={() => onCaughtUp(c)}>Caught up today</Button>
-            {reason === 'manual' && <Button size="sm" disabled={busy} onClick={() => onUnqueue(c)}>Remove</Button>}
-            <Button size="sm" disabled={busy || drafting} onClick={() => onEdit(c)}>Edit</Button>
-          </span>
-        </Box>)}
-      </ul>}
-  </section>;
 }
 
 function EmployersTab({ employers: all, query, limit, busy, companiesOn, canAdd, onMore, onOpen, onAdd }: {
@@ -645,7 +717,7 @@ function ConnectionForm({ draft, isNew, busy, companies, companiesOn, today, onC
         <Field label="Tags (comma separated)">
           <input value={draft.tags.join(', ')} onChange={e => set('tags', e.target.value.split(',').map(t => t.trim()).filter(Boolean).slice(0, 30))} className={input} />
         </Field>
-        {companiesOn && <label className="flex min-h-11 cursor-pointer items-center gap-3"><Checkbox checked={draft.queued} onChange={e => set('queued', e.target.checked)} />In catch-up queue</label>}
+        {companiesOn && <label className="flex min-h-11 cursor-pointer items-center gap-3"><Checkbox checked={draft.queued} onChange={e => set('queued', e.target.checked)} />Flag for a catch-up</label>}
         <label className="flex flex-col gap-1.5"><Label>Notes</Label>
           <textarea rows={4} maxLength={5000} value={draft.notes} onChange={e => set('notes', e.target.value)} className={textarea} placeholder="How you met, what they work on, what to follow up on…" />
         </label>
