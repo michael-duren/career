@@ -281,8 +281,16 @@ func TestMCPHidesDisabledModules(t *testing.T) {
 	if out, isErr := call("get_weekly_schedule", map[string]any{}); !isErr || !strings.Contains(out, "Schedule needs Timeline") {
 		t.Fatal("schedule tool while timeline is off:", out)
 	}
-	if out, isErr := call("read_career_entry", map[string]any{"kind": "note", "id": "systems/nested-note"}); !isErr || !strings.Contains(out, "Notes is turned off") {
-		t.Fatal("note read while off:", out)
+	for tool, args := range map[string]map[string]any{
+		"read_career_entry":   {"kind": "note", "id": "systems/nested-note"},
+		"list_career_entries": {"kind": "note"},
+		"create_career_entry": {"kind": "note", "entry": map[string]any{"title": "Blocked"}},
+		"update_career_entry": {"kind": "note", "id": "systems/nested-note", "revision": "x", "fields": map[string]any{"title": "Blocked"}},
+		"delete_career_entry": {"kind": "note", "id": "systems/nested-note", "revision": "x"},
+	} {
+		if out, isErr := call(tool, args); !isErr || !strings.Contains(out, "Notes is turned off") {
+			t.Errorf("%s with notes off: %s", tool, out)
+		}
 	}
 	if out, isErr := call("search_career_context", map[string]any{"query": "café"}); isErr || strings.Contains(out, `"kind":"note"`) {
 		t.Fatal("search returned notes while off:", out)
@@ -411,7 +419,8 @@ func TestModuleGuardFailsClosed(t *testing.T) {
 func TestSchedulerCyclePausesWhileScheduleIsOff(t *testing.T) {
 	db := testDB(t)
 	ctx := context.Background()
-	s := &Server{db: db, config: config.Config{}}
+	ticks := 0
+	s := &Server{db: db, config: config.Config{}, schedulerTick: func(ctx context.Context, now time.Time) error { ticks++; return db.SchedulerTick(ctx, now) }}
 	now := time.Date(2030, 1, 7, 9, 0, 0, 0, time.UTC)
 	var last time.Time
 	for name, change := range map[string]map[string]bool{
@@ -424,21 +433,21 @@ func TestSchedulerCyclePausesWhileScheduleIsOff(t *testing.T) {
 		if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: change}); err != nil {
 			t.Fatal(err)
 		}
-		if s.schedulerCycle(ctx, now, &last) {
-			t.Errorf("%s: scheduler ran", name)
+		if s.schedulerCycle(ctx, now, &last) || ticks != 0 {
+			t.Errorf("%s: scheduler ran (%d ticks)", name, ticks)
 		}
 	}
 	if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"timeline": true, "schedule": true}}); err != nil {
 		t.Fatal(err)
 	}
-	if !s.schedulerCycle(ctx, now, &last) {
-		t.Fatal("scheduler did not run with Schedule on")
+	if !s.schedulerCycle(ctx, now, &last) || ticks != 1 {
+		t.Fatal("scheduler did not run with Schedule on", ticks)
 	}
 	if _, err := db.DB.Exec(`UPDATE app_settings SET modules='{"schedule":"yes"}'`); err != nil {
 		t.Fatal(err)
 	}
-	if s.schedulerCycle(ctx, now, &last) {
-		t.Fatal("scheduler ran with unreadable settings")
+	if s.schedulerCycle(ctx, now, &last) || ticks != 1 {
+		t.Fatal("scheduler ran with unreadable settings", ticks)
 	}
 }
 

@@ -199,14 +199,15 @@ const currentYear = currentPath.match(/\/(\d{4})\//)?.[1];
 </div>
 
 <script>
-  import { isEnabled, loadSettings, type ModuleId } from '../lib/modules';
+  import { MODULE_IDS, isEnabled, loadSettings, type ModuleId } from '../lib/modules';
 
   // Hide links to turned-off modules. Links stay visible if settings cannot load.
   loadSettings().then(settings => {
     for (const link of document.querySelectorAll<HTMLElement>('.sidebar-container [data-module]')) {
-      link.hidden = !isEnabled(settings, link.dataset.module as ModuleId);
+      const id = link.dataset.module;
+      if (MODULE_IDS.includes(id as ModuleId)) link.hidden = !isEnabled(settings, id as ModuleId);
     }
-  }).catch(() => {});
+  }).catch(error => console.warn('Module settings could not be loaded; showing every link.', error));
 
   // Initialize all sidebars when DOM ready
   function initSidebars() {

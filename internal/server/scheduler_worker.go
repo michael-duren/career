@@ -54,7 +54,11 @@ func (s *Server) schedulerCycle(ctx context.Context, now time.Time, lastReconcil
 	if !settings.Enabled("schedule") {
 		return false
 	}
-	if err := s.db.SchedulerTick(ctx, now); err != nil {
+	tick := s.db.SchedulerTick
+	if s.schedulerTick != nil {
+		tick = s.schedulerTick
+	}
+	if err := tick(ctx, now); err != nil {
 		log.Printf("scheduler catch-up: %v", err)
 		return true
 	}

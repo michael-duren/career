@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { buildBoard, appendCompanyNote, filterCompanies, connectedCompanyCount, CONNECTED_COMPANY_GOAL, type RawCompany, type Company, type CompanyStatus } from "../lib/companies";
-import { isEnabled, loadSettings } from '../lib/modules';
+import { moduleEnabled } from '../lib/modules';
 import { avatarStack, connectionsByCompany, relativeDays, type Connection } from '../lib/connections';
 import { ConnectionAvatar } from './ConnectionAvatar';
 
@@ -59,7 +59,7 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
   useEffect(() => {
     const url = detailSlug ? `/api/connections?company=${encodeURIComponent(detailSlug)}` : '/api/connections?linked=1';
     setConnectionsFailed(false);
-    void loadSettings().then(settings => isEnabled(settings, 'people'), () => true).then(on => {
+    void moduleEnabled('people').then(on => {
       setPeopleOn(on);
       if (!on) return;
       return fetch(url, { cache: 'no-store' }).then(response => {

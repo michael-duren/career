@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ConnectionAvatar } from './ConnectionAvatar';
-import { isEnabled, loadSettings } from '../lib/modules';
+import { moduleEnabled } from '../lib/modules';
 import { CADENCES, catchUpQueue, lastTouch, markCaughtUp, matchesQuery, newConnection, nextDue, relativeDays, type Connection, type ConnectionImport } from '../lib/connections';
 import { localDate } from '../lib/workspace';
 
@@ -53,12 +53,19 @@ export function ConnectionsBoard() {
 
   async function load() {
     try {
-      // If settings cannot load, assume Companies is on; a failed company fetch then reports itself.
-      const on = await loadSettings().then(settings => isEnabled(settings, 'companies'), () => true);
+      const on = await moduleEnabled('companies');
       setCompaniesOn(on);
+      // A failed company list only hides the company parts; connections still load.
+      const companyList = on
+        ? api<{ entries: { entry: CompanyOption }[] }>('/api/entries/company?limit=100').catch(error => {
+          console.warn('Companies could not be loaded.', error);
+          setCompaniesOn(false);
+          return { entries: [] as { entry: CompanyOption }[] };
+        })
+        : Promise.resolve({ entries: [] as { entry: CompanyOption }[] });
       const [people, companyPage] = await Promise.all([
         api<{ connections: Connection[]; revisions: Record<string, string> }>('/api/connections'),
-        on ? api<{ entries: { entry: CompanyOption }[] }>('/api/entries/company?limit=100') : Promise.resolve({ entries: [] }),
+        companyList,
       ]);
       const options = companyPage.entries.map(({ entry }) => ({ slug: entry.slug, title: entry.title })).sort((a, b) => a.title.localeCompare(b.title));
       setConnections(people.connections);

@@ -157,7 +157,9 @@ exact configured `Origin` and a JSON content type.
 - `POST /api/goals/steps/move` reorders or moves a goal step.
 - `GET /api/agent-context`, `GET /api/search`, `GET /api/export`.
 - `GET /api/settings` returns `{ modules, moduleOrder, theme, setupCompletedAt, effective }`.
-  `PATCH /api/settings` changes any of the first four. It returns 400 for unknown modules,
+  `PATCH /api/settings` changes any of `modules`, `moduleOrder`, `theme` and `setupCompletedAt`
+  (camelCase here; the spec's `module_order`/`setup_completed_at` are the column names), and is
+  the only way to change them until the Settings screen lands. It returns 400 for unknown modules,
   unknown or repeated ids in `moduleOrder` (an empty `moduleOrder` resets it to the default), unknown themes, a `setupCompletedAt` that is
   neither an RFC 3339 time nor null, or newly turning on a module whose dependency is off. `effective` says which modules can be used once their dependencies are applied.
 

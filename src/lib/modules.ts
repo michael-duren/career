@@ -151,6 +151,17 @@ export function loadSettings(): Promise<Settings> {
   return settingsRequest('Settings could not be loaded. Try again.');
 }
 
+/**
+ * Whether module id is usable, for pages that hide a part owned by another module.
+ * If settings cannot load it logs and answers true, so the part's own request reports the failure.
+ */
+export function moduleEnabled(id: ModuleId): Promise<boolean> {
+  return loadSettings().then(settings => isEnabled(settings, id), error => {
+    console.warn(`Module settings could not be loaded; assuming ${id} is on.`, error);
+    return true;
+  });
+}
+
 export function saveSettings(patch: SettingsPatch): Promise<Settings> {
   return settingsRequest('Settings could not be saved. Try again.', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
 }

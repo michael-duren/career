@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { formatHours, type GoalHours } from '../lib/goal-progress';
 import { TRACK_META } from '../lib/progress';
-import { isEnabled, loadSettings } from '../lib/modules';
+import { moduleEnabled } from '../lib/modules';
 import type { Goal } from '../lib/timeline';
 
 /**
@@ -15,8 +15,7 @@ export function JournalWeekHours({ weekStart, tracks }: { weekStart: string; tra
   const [scheduleOn, setScheduleOn] = useState(true);
   useEffect(() => {
     let live = true;
-    const settings = loadSettings().then(value => isEnabled(value, 'schedule'), () => true);
-    const load = () => settings.then(on => {
+    const load = () => moduleEnabled('schedule').then(on => {
       if (live) setScheduleOn(on);
       if (on) return loadHours();
     });

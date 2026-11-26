@@ -106,7 +106,7 @@ func requestModule(path string) (modules.Module, bool) {
 // moduleOff answers a request for a disabled module with 404.
 func moduleOff(w http.ResponseWriter, r *http.Request, settings modules.Settings, m modules.Module) {
 	if strings.HasPrefix(r.URL.Path, "/api/") {
-		respond(w, 404, map[string]string{"error": settings.OffReason(m.ID) + ". Turn it on in Settings → Modules."})
+		respond(w, 404, map[string]string{"error": settings.OffReason(m.ID) + ". Turn it on in Settings → Modules (or PATCH /api/settings)."})
 		return
 	}
 	http.NotFound(w, r)

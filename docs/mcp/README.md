@@ -120,7 +120,7 @@ Kinds: `goal`, `work_journal`, `personal_journal`, `note`, `page`, `book`, `comp
 `connection`, `audio_thought`. Audio thoughts are private and only returned when
 requested by kind. Prompt `career_conversation` offers a guided entry point.
 
-Modules that are turned off in Settings → Modules are hidden here too:
+Modules that are turned off in Settings → Modules (until that screen lands, with `PATCH /api/settings`) are hidden here too:
 
 - Their tools are not listed, and they return an error if called. These are the Leetgrinder
   tools, the weekly schedule tools (also hidden while Timeline is off, since Schedule depends on

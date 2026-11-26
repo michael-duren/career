@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"github.com/michael-duren/career-strategy/internal/config"
 	"github.com/michael-duren/career-strategy/internal/database"
 	"github.com/michael-duren/career-strategy/internal/scheduler"
@@ -25,6 +26,8 @@ type Server struct {
 	// ntfyClient sends Leetgrinder test notifications; nil uses the default.
 	ntfyClient            *http.Client
 	schedulerGoogleClient *scheduler.GoogleClient
+	// schedulerTick overrides the scheduler worker's tick in tests.
+	schedulerTick func(context.Context, time.Time) error
 }
 
 func NewServer(c config.Config, db *database.Store) *http.Server {

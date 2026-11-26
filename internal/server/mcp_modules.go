@@ -47,7 +47,7 @@ func (s *Server) mcpModuleFilter(next mcp.MethodHandler) mcp.MethodHandler {
 				return mcpToolError(errMCPStorage.Error()), nil
 			}
 			if m, off := mcpToolModuleOff(settings, call.Params.Name, call.Params.Arguments); off {
-				return mcpToolError(settings.OffReason(m.ID) + " in Settings → Modules, so its tools and entries are unavailable."), nil
+				return mcpToolError(call.Params.Name + " is unavailable: " + settings.OffReason(m.ID) + ". Turn it on in Settings → Modules (or PATCH /api/settings)."), nil
 			}
 		}
 		return next(ctx, method, req)

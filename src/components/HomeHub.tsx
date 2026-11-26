@@ -2,20 +2,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 import { mondayOf, schedulerRequest, SchedulerError, earlierUnchecked, todaysTodos, weekSchema, zonedDate, type SchedulerSession, type SchedulerWeek } from '../lib/scheduler';
 import { localDate } from '../lib/workspace';
-import { isEnabled, loadSettings } from '../lib/modules';
+import { moduleEnabled } from '../lib/modules';
 
 type Today = { week: SchedulerWeek; today: string };
 
 async function loadWeek(monday: string): Promise<SchedulerWeek> {
   return weekSchema.parse(await schedulerRequest(`week?week=${monday}`));
 }
-// Module settings are read once per page load (retried after a failed read); the schedule cannot be turned off from Home.
-let scheduleOn: Promise<boolean> | undefined;
 /** Loads the week holding today in the scheduler's time zone, which can differ from the browser's, or 'off' while the schedule module is off. */
 async function loadToday(): Promise<Today | 'off'> {
-  // If settings cannot load, try the schedule anyway; its own error explains a failure.
-  scheduleOn ??= loadSettings().then(settings => isEnabled(settings, 'schedule'), () => { scheduleOn = undefined; return true; });
-  if (!await scheduleOn) return 'off';
+  // Read on every reload, so a module changed in another tab shows when Home is visible again.
+  if (!await moduleEnabled('schedule')) return 'off';
   let week = await loadWeek(mondayOf(localDate()));
   const today = zonedDate(new Date(), week.settings.timeZone);
   if (mondayOf(today) !== week.week) week = await loadWeek(mondayOf(today));
