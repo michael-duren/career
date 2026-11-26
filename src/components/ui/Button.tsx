@@ -10,7 +10,7 @@ export function Button({ variant = 'secondary', size = 'md', type = 'button', cl
   return <button type={type} className={cn(buttonClassName({ variant, size }), className)} {...props} />;
 }
 
-// IconButton: a square Button (44px, or 34px with size="sm") holding a line icon.
+// IconButton: a square Button (44px, or 34px with size="sm" on desktop; 44px below 1024px) holding a line icon.
 // label is required: it is the button's accessible name and tooltip.
 export function IconButton({ label, variant = 'secondary', size = 'md', type = 'button', className, ...props }: Omit<Props, 'aria-label'> & { label: string }) {
   return <button type={type} aria-label={label} title={label} className={cn(buttonClassName({ variant, size, icon: true }), className)} {...props} />;

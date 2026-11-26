@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { monogram } from '../../lib/ui';
+import { cssUrl, monogram } from '../../lib/ui';
 import { cn } from '../../lib/utils';
 
 // LogoSpot: a 36-40px square with the company logo painted in single-color ink (a CSS mask
@@ -26,7 +26,7 @@ export function LogoSpot({ name, src, size = 36, labelled = false, className }: 
   return (
     <span className={cn('ui-logo', className)} style={{ '--ui-logo-size': `${size}px` } as CSSProperties} {...a11y}>
       {src && loaded === src
-        ? <span className="ui-logo__mark" style={{ '--ui-logo-src': `url(${JSON.stringify(src)})` } as CSSProperties} />
+        ? <span className="ui-logo__mark" style={{ '--ui-logo-src': cssUrl(src) } as CSSProperties} />
         : monogram(name)}
     </span>
   );

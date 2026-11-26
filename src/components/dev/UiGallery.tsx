@@ -226,7 +226,7 @@ export default function UiGallery() {
           <Specimen name="Monogram · logo (masked) · missing logo · 40px">
             <LogoSpot name="Jane Street" />
             <LogoSpot name="Ramp" />
-            <LogoSpot name="Delta" src={SAMPLE_LOGO} />
+            <LogoSpot name="Delta" src={SAMPLE_LOGO} labelled />
             <LogoSpot name="Broken Logo" src="data:image/png;base64,AAAA" />
             <LogoSpot name="Datadog" size={40} />
           </Specimen>

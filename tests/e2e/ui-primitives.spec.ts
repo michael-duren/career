@@ -95,11 +95,32 @@ test('the theme picker previews a theme without saving it', async ({ page }) => 
   await expect(page.locator('.ui-label').first()).toHaveCSS('color', 'rgba(0, 71, 171, 0.78)');
 });
 
+const INK = 'rgb(236, 234, 227)', PAPER = 'rgb(12, 12, 11)', ACCENT = 'rgb(224, 83, 61)';
+
+test('the danger button keeps its accent on hover', async ({ page }) => {
+  const remove = page.getByRole('button', { name: 'Delete', exact: true }).first();
+  await remove.hover();
+  await expect(remove).toHaveCSS('color', ACCENT);
+  await expect(remove).toHaveCSS('border-top-color', ACCENT);
+  const cancel = page.getByRole('button', { name: 'Cancel' });
+  await cancel.hover();
+  await expect(cancel).toHaveCSS('border-top-color', INK);
+});
+
+test('logo spot shows the masked logo once loaded, else a monogram', async ({ page }) => {
+  const logo = page.getByRole('img', { name: 'Delta logo' });
+  await expect(logo.locator('.ui-logo__mark')).toBeVisible();
+  await expect(logo).toHaveText('');
+  const spots = page.locator('.ui-logo[aria-hidden="true"]');
+  await expect(spots).toHaveText(['JS', 'RA', 'BL', 'DA']); // "Broken Logo" never loads: monogram stays
+  await expect(page.locator('.ui-logo .ui-logo__mark')).toHaveCount(1);
+});
+
 // The app-wide :focus-visible ring is unlayered; the primitives' own focus rules must still win.
 test('primitive focus rings replace the app-wide ring', async ({ page }) => {
   const outline = (locator: import('@playwright/test').Locator) => locator.evaluate(el => {
     const cs = getComputedStyle(el);
-    return { style: cs.outlineStyle, width: cs.outlineWidth, offset: cs.outlineOffset };
+    return { style: cs.outlineStyle, width: cs.outlineWidth, offset: cs.outlineOffset, color: cs.outlineColor };
   });
 
   await page.getByRole('switch', { name: 'Timeline' }).focus();
@@ -107,15 +128,16 @@ test('primitive focus rings replace the app-wide ring', async ({ page }) => {
   const leet = page.getByRole('switch', { name: 'Leetgrinder' });
   await expect(leet).toBeFocused();
   expect((await outline(leet)).style).toBe('none');
-  expect(await outline(leet.locator('.ui-switch__track'))).toEqual({ style: 'solid', width: '2px', offset: '3px' });
+  expect(await outline(leet.locator('.ui-switch__track'))).toEqual({ style: 'solid', width: '2px', offset: '3px', color: INK });
 
   const tabs = page.getByRole('tablist', { name: 'Priority' });
   await tabs.getByRole('tab', { name: 'All 61' }).focus();
   await page.keyboard.press('ArrowRight');
-  expect(await outline(tabs.getByRole('tab', { name: 'High' }))).toEqual({ style: 'solid', width: '2px', offset: '-5px' });
+  // The selected tab is solid ink, so its ring is drawn in paper.
+  expect(await outline(tabs.getByRole('tab', { name: 'High' }))).toEqual({ style: 'solid', width: '2px', offset: '-5px', color: PAPER });
 
   const search = page.getByRole('searchbox', { name: 'Search companies' });
   await search.click();
   expect((await outline(search)).style).toBe('none');
-  expect(await outline(page.locator('.ui-search').first())).toEqual({ style: 'solid', width: '2px', offset: '2px' });
+  expect(await outline(page.locator('.ui-search').first())).toEqual({ style: 'solid', width: '2px', offset: '2px', color: INK });
 });

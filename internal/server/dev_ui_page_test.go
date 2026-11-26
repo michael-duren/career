@@ -79,3 +79,23 @@ func TestDesignCSSIsPublic(t *testing.T) {
 		}
 	}
 }
+
+func TestDevAssetsHiddenInProduction(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "dev", "ui"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "dev", "ui", "x.js"), []byte("x"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	for production, want := range map[bool]int{true: http.StatusNotFound, false: http.StatusOK} {
+		s := &Server{config: config.Config{StaticDir: root, Username: "test", JWTSecret: "test-secret", Production: production}}
+		request := httptest.NewRequest(http.MethodGet, "/dev/ui/x.js", nil)
+		request.AddCookie(&http.Cookie{Name: "session", Value: s.token()})
+		response := httptest.NewRecorder()
+		s.RegisterRoutes().ServeHTTP(response, request)
+		if response.Code != want {
+			t.Fatalf("production=%v /dev/ui/x.js: %d, want %d", production, response.Code, want)
+		}
+	}
+}

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { buttonClassName, goalPattern, monogram, nextTabIndex, tickMarks } from '../src/lib/ui.ts';
+import { buttonClassName, cssUrl, goalPattern, monogram, nextTabIndex, tickMarks } from '../src/lib/ui.ts';
 
 test('goal patterns follow goal order and fall back to an outline', () => {
   assert.deepEqual([0, 1, 2, 3, 9].map(goalPattern), ['diagonal', 'crosshatch', 'dots', 'outline', 'outline']);
@@ -41,6 +41,11 @@ test('tab keys wrap with the arrows and jump with Home and End', () => {
   assert.equal(nextTabIndex('End', 0, 4), 3);
   assert.equal(nextTabIndex('Enter', 0, 4), null);
   assert.equal(nextTabIndex('ArrowRight', 0, 0), null);
+});
+
+test('cssUrl escapes for a CSS string', () => {
+  assert.equal(cssUrl('/logos/ramp.svg'), 'url("/logos/ramp.svg")');
+  assert.equal(cssUrl('a"b\\c\nd'), 'url("a\\22 b\\5c c\\a d")');
 });
 
 test('button classes', () => {

@@ -212,12 +212,14 @@
   border-color: var(--ink-hover);
   color: var(--paper);
 }
-.ui-btn--danger,
-.ui-btn--danger:hover {
+.ui-btn--danger {
   border-color: var(--accent);
   color: var(--accent);
 }
+/* Same specificity as .ui-btn:hover:not(...) and later, so danger keeps its accent on hover. */
 .ui-btn--danger:hover:not(:disabled, [aria-disabled="true"]) {
+  border-color: var(--accent);
+  color: var(--accent);
   background: var(--ink-05);
 }
 .ui-btn--icon {
@@ -553,6 +555,16 @@
   }
   .ui-search--sm {
     height: 44px;
+  }
+  .ui-tabs__tab {
+    height: 44px;
+  }
+}
+/* Forced colors drop the fill that marks the selected tab: underline it instead. */
+@media (forced-colors: active) {
+  .ui-tabs__tab[aria-selected="true"] {
+    text-decoration: underline;
+    text-underline-offset: 4px;
   }
 }
 @media (max-width: 767px) {

@@ -5,7 +5,7 @@ import { SearchIcon } from './icons';
 type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> & {
   // label is the accessible name (visually hidden); placeholder defaults to it.
   label: string;
-  // size "sm" is the 34px header field; default is 44px.
+  // size "sm" is the 34px header field (44px below 1024px); default is 44px.
   size?: 'md' | 'sm';
   // hint shows a keyboard shortcut at the right, e.g. "/".
   hint?: string;

@@ -4,7 +4,8 @@ import { cn } from '../../lib/utils';
 type Props = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onChange' | 'role' | 'aria-checked' | 'disabled'> & {
   checked: boolean;
   onCheckedChange?: (checked: boolean) => void;
-  // locked: the switch cannot change (a dependency is off); drawn with a dashed track.
+  // locked: the switch cannot change (a dependency is off); drawn with a dashed track. It sets
+  // the native disabled, so a locked switch is skipped by Tab: explain why in nearby text.
   locked?: boolean;
 };
 

@@ -45,6 +45,12 @@ export function nextTabIndex(key: string, current: number, count: number): numbe
   }
 }
 
+// cssUrl quotes a URL for CSS url(): backslashes, quotes and line breaks are escaped
+// (CSS string escapes, which JSON escaping is not).
+export function cssUrl(url: string): string {
+  return `url("${url.replace(/[\\"\n\r\f]/g, ch => `\\${ch.charCodeAt(0).toString(16)} `)}")`;
+}
+
 export type ButtonVariant = 'primary' | 'secondary' | 'danger';
 export type ButtonSize = 'md' | 'sm';
 
