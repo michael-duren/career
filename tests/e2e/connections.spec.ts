@@ -65,12 +65,16 @@ test('people tab lists everyone and opens a person in the detail panel', async (
   await expect(main.getByRole('status')).toHaveText('Notes saved for Paige North.');
   expect(saves.at(-1)).toMatchObject({ name: 'Paige North', notes: 'Ask about the platform team' });
 
+  // Notes typed but not saved go along with Log catch-up instead of being dropped.
+  await panel.getByRole('textbox', { name: 'Notes' }).fill('Follow up in January');
   const before = saves.length;
   await panel.getByRole('button', { name: 'Log catch-up' }).click();
   await expect(main.getByRole('status')).toHaveText('Logged a catch-up with Paige North.');
   expect(saves.length).toBe(before + 1);
   const today = await page.evaluate(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; });
   expect(saves.at(-1)?.lastContactedOn).toBe(today);
+  expect(saves.at(-1)?.notes).toBe('Follow up in January');
+  await expect(panel.getByRole('textbox', { name: 'Notes' })).toHaveValue('Follow up in January');
 
   await main.getByRole('searchbox', { name: 'Search people or roles' }).fill('maximus');
   await expect(main.getByRole('button', { name: /Adam Iverson/ })).toBeVisible();

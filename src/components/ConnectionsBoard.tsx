@@ -176,7 +176,7 @@ export function ConnectionsBoard() {
   function stored(entry: Connection, revision: string) {
     setConnections(current => [...(current ?? []).filter(c => c.id !== entry.id), entry]);
     setRevisions(current => ({ ...current, [entry.id]: revision }));
-    // The saved notes are now the panel's notes; drop any older unsaved text.
+    // The saved notes are now the panel's notes (panel actions save the typed text too).
     setNote(current => current?.id === entry.id ? undefined : current);
   }
 
@@ -392,11 +392,11 @@ export function ConnectionsBoard() {
                 onChange={setDraft} onCancel={() => setDraft(undefined)}
                 onSave={c => save(c, `${c.name} saved.`, true)} onRemove={remove} onPhoto={uploadPhoto} onRemovePhoto={removePhoto} />
                 : selected ? <PersonDetail person={selected} today={today} busy={busy} companiesOn={companiesOn} companyName={companyName(selected)}
-                  colleagues={connections.filter(c => employerKey(c, board) === employerKey(selected, board)).length}
+                  colleagues={connections.filter(c => !!employerKey(selected, board) && employerKey(c, board) === employerKey(selected, board)).length}
                   note={noteText} noteDirty={noteDirty} onNote={text => setNote({ id: selected.id, text })}
                   onSaveNote={() => void save({ ...selected, notes: noteText }, `Notes saved for ${selected.name}.`)}
-                  onLog={() => void save(markCaughtUp(selected, today), `Logged a catch-up with ${selected.name}.`)}
-                  onQueue={() => void save({ ...selected, queued: !selected.queued }, selected.queued ? `${selected.name} removed from the queue.` : `${selected.name} added to the queue.`)}
+                  onLog={() => void save(markCaughtUp({ ...selected, notes: noteText }, today), `Logged a catch-up with ${selected.name}.`)}
+                  onQueue={() => void save({ ...selected, notes: noteText, queued: !selected.queued }, selected.queued ? `${selected.name} removed from the queue.` : `${selected.name} added to the queue.`)}
                   onEdit={() => edit(selected)} />
                   : <p className="m-0 text-sm font-light text-ink-60">Pick someone to see their details and notes.</p>}
             </Box>
