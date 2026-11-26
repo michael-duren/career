@@ -120,6 +120,14 @@ Kinds: `goal`, `work_journal`, `personal_journal`, `note`, `page`, `book`, `comp
 `connection`, `audio_thought`. Audio thoughts are private and only returned when
 requested by kind. Prompt `career_conversation` offers a guided entry point.
 
+Modules that are turned off in Settings → Modules (until that screen lands, with `PATCH /api/settings`) are hidden here too:
+
+- Their tools are not listed, and they return an error if called. These are the Leetgrinder
+  tools, the weekly schedule tools (also hidden while Timeline is off, since Schedule depends on
+  it), and `list_connection_companies` and `add_companies_to_queue`, which also need Companies.
+- Entry tools reject their kinds.
+- Search and `get_career_overview` leave their entries out.
+
 Books, video courses, and papers (including short articles and blog posts) all use
 `kind: "book"`. The entry's `type` field is `book`, `course`, or `paper`. List, search,
 and read use `kind: "book"` for all three. To create a paper, pass

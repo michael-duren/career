@@ -3,6 +3,7 @@ package notify
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -50,8 +51,16 @@ func (w *Worker) Run(ctx context.Context) {
 // Step sends every enabled notification whose time has passed today and
 // that has not been sent, skipped, or retried to the cap yet. One that is
 // later than its kind's window, such as after the server was down, is logged
-// as skipped ("Too late to send") instead of sent.
+// as skipped ("Too late to send") instead of sent. Nothing is sent or logged
+// while the Leetgrinder module is turned off.
 func (w *Worker) Step(ctx context.Context) error {
+	app, err := w.Store.AppSettings(ctx)
+	if err != nil {
+		return fmt.Errorf("load module settings: %w", err)
+	}
+	if !app.Enabled("leetgrinder") {
+		return nil
+	}
 	settings, err := w.Store.LeetgrinderSettings(ctx)
 	if err != nil {
 		return err

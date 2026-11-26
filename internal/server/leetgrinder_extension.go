@@ -27,7 +27,7 @@ func (s *Server) registerLeetgrinderExtension(r chi.Router) {
 		r.Post("/leetgrinder/settings/tokens/{id}/revoke", s.leetgrinderRevokeToken)
 	})
 	r.Group(func(r chi.Router) {
-		r.Use(s.leetgrinderBearer)
+		r.Use(s.leetgrinderBearer, s.requireModule("leetgrinder"))
 		r.Post("/api/leetgrinder/attempts", s.leetgrinderAPIAttempt)
 		r.Get("/api/leetgrinder/problem/{slug}", s.leetgrinderAPIProblem)
 		r.Put("/api/leetgrinder/problem/{slug}", s.leetgrinderAPIProblemMetadata)

@@ -156,6 +156,34 @@ exact configured `Origin` and a JSON content type.
 - `POST /api/entries/{kind}/toggle` toggles a Markdown checklist item on a book or company.
 - `POST /api/goals/steps/move` reorders or moves a goal step.
 - `GET /api/agent-context`, `GET /api/search`, `GET /api/export`.
+- `GET /api/settings` returns `{ modules, moduleOrder, theme, setupCompletedAt, effective }`.
+  `PATCH /api/settings` changes any of `modules`, `moduleOrder`, `theme` and `setupCompletedAt`
+  (camelCase here; the spec's `module_order`/`setup_completed_at` are the column names), and is
+  the only way to change them until the Settings screen lands. It returns 400 for unknown modules,
+  unknown or repeated ids in `moduleOrder` (an empty `moduleOrder` resets it to the default), unknown themes, a `setupCompletedAt` that is
+  neither an RFC 3339 time nor null, or newly turning on a module whose dependency is off. `effective` says which modules can be used once their dependencies are applied.
+
+### Modules
+
+Every feature is a module, except Home, Search, Settings, Setup and pages, which are always on.
+Schedule and Agents depend on Timeline, so they are unusable while it is off. The registry is `src/lib/modules.ts`, mirrored in
+`internal/modules/modules.go`; see [the redesign spec](redesign/modules.md). While a module is
+off:
+
+- Its pages and API routes return 404. API routes answer `{"error": "<Module> is turned off…"}`
+  (or "<Module> needs <Dependency>…"), and so does the Leetgrinder extension.
+- Its MCP tools are not listed and refuse calls. Entry tools refuse its kinds. Search,
+  `get_career_overview` and `/api/agent-context` leave out its entries.
+- People's company tools (`list_connection_companies`, `add_companies_to_queue`) also need Companies. Pages hide parts that need another
+  module: Companies hides connections without People, journal goal hours need Schedule.
+  The journal Markdown views of `/api/agent-context` need Journal (or Audio), not Agents.
+- Leetgrinder reminders and the scheduler's background work pause.
+
+Pages (`/documents/*`, the `document` kind, `page` in MCP) belong to no module and are always
+on. A turned-off module keeps its data, and `GET /api/export` still includes everything. A module missing from the
+stored settings counts as on. If the settings cannot be read, guarded routes return 503
+instead of guessing. The settings migration keeps every module on and marks setup done for
+any install that was already migrated. A new database still needs setup.
 
 Leetgrinder, weekly scheduler, connections and audio thought endpoints are described in their
 feature docs. The MCP endpoint is described in [MCP](mcp/README.md).

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ConnectionAvatar } from './ConnectionAvatar';
+import { moduleEnabled } from '../lib/modules';
 import { CADENCES, catchUpQueue, lastTouch, markCaughtUp, matchesQuery, newConnection, nextDue, relativeDays, type Connection, type ConnectionImport } from '../lib/connections';
 import { localDate } from '../lib/workspace';
 
@@ -47,12 +48,27 @@ export function ConnectionsBoard() {
   const [sort, setSort] = useState<Sort>('name');
   const [limit, setLimit] = useState(PAGE);
   const [draft, setDraft] = useState<Connection>();
+  // Tracked companies and the catch-up queue need the Companies module; People works without it.
+  const [companiesOn, setCompaniesOn] = useState(true);
+  const [companiesFailed, setCompaniesFailed] = useState(false);
 
   async function load() {
     try {
+      const on = await moduleEnabled('companies');
+      setCompaniesOn(on);
+      setCompaniesFailed(false);
+      if (!on) setCompanyFilter('all');
+      // A failed company list is reported on its own; connections still load.
+      const companyList = on
+        ? api<{ entries: { entry: CompanyOption }[] }>('/api/entries/company?limit=100').catch(error => {
+          console.warn('Companies could not be loaded.', error);
+          setCompaniesFailed(true);
+          return { entries: [] as { entry: CompanyOption }[] };
+        })
+        : Promise.resolve({ entries: [] as { entry: CompanyOption }[] });
       const [people, companyPage] = await Promise.all([
         api<{ connections: Connection[]; revisions: Record<string, string> }>('/api/connections'),
-        api<{ entries: { entry: CompanyOption }[] }>('/api/entries/company?limit=100'),
+        companyList,
       ]);
       const options = companyPage.entries.map(({ entry }) => ({ slug: entry.slug, title: entry.title })).sort((a, b) => a.title.localeCompare(b.title));
       setConnections(people.connections);
@@ -171,13 +187,14 @@ export function ConnectionsBoard() {
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-center gap-4 text-sm text-zinc-400">
-        <span>{connections.length} connections · {linked} at tracked companies · {queue.length} to catch up with</span>
+        <span>{connections.length} connections{companiesOn && <> · {linked} at tracked companies · {queue.length} to catch up with</>}</span>
         <button type="button" disabled={busy || !!draft} className="rounded-lg bg-blue-600 px-3 py-1.5 text-white hover:bg-blue-500 disabled:opacity-50" onClick={() => setDraft(newConnection())}>+ Add connection</button>
       </div>
       {error && <div role="alert" className="rounded-lg border border-red-800 p-3 text-sm text-red-200">{error}</div>}
+      {companiesFailed && <div role="alert" className="rounded-lg border border-red-800 p-3 text-sm text-red-200">Companies could not be loaded, so company names and filters are missing. Reload to retry.</div>}
       <p role="status" className="text-sm text-zinc-400">{status}</p>
 
-      {draft && <ConnectionForm key={draft.id} draft={draft} isNew={!revisions[draft.id]} busy={busy} companies={companies} today={today}
+      {draft && <ConnectionForm key={draft.id} draft={draft} isNew={!revisions[draft.id]} busy={busy} companies={companies} companiesOn={companiesOn} today={today}
         onChange={setDraft} onCancel={() => setDraft(undefined)}
         onSave={c => save(c, `${c.name} saved.`, true)} onRemove={remove} onPhoto={uploadPhoto} onRemovePhoto={removePhoto} />}
 
@@ -197,7 +214,7 @@ export function ConnectionsBoard() {
 
       <section aria-labelledby="queue-heading" className="space-y-3">
         <h2 id="queue-heading" className="text-xl font-semibold">Catch-up queue</h2>
-        {queue.length === 0 ? <p className="text-sm text-zinc-400">Nobody to catch up with. Set a cadence or add someone to the queue.</p> :
+        {!companiesOn ? <p className="text-sm text-zinc-400">The catch-up queue needs the Companies module, which is turned off.</p> : queue.length === 0 ? <p className="text-sm text-zinc-400">Nobody to catch up with. Set a cadence or add someone to the queue.</p> :
           <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {queue.map(({ connection: c, overdueDays, reason }) => <li key={c.id} className="flex gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-3">
               <ConnectionAvatar connection={c} size={44} />
@@ -221,12 +238,12 @@ export function ConnectionsBoard() {
         <h2 id="all-heading" className="text-xl font-semibold">All connections</h2>
         <div className="flex flex-wrap gap-3 text-sm">
           <input type="search" aria-label="Search connections" placeholder="Search name, role, company, notes…" value={query} onChange={event => { setQuery(event.target.value); setLimit(PAGE); }} className={`${control} w-full max-w-sm`} />
-          <select aria-label="Filter by company" value={companyFilter} onChange={event => { setCompanyFilter(event.target.value); setLimit(PAGE); }} className={control}>
+          {companiesOn && <select aria-label="Filter by company" value={companyFilter} onChange={event => { setCompanyFilter(event.target.value); setLimit(PAGE); }} className={control}>
             <option value="all">All companies</option>
             <option value="linked">At tracked companies</option>
             <option value="unlinked">Not at tracked companies</option>
             {companies.map(c => <option key={c.slug} value={c.slug}>{c.title}</option>)}
-          </select>
+          </select>}
           <select aria-label="Sort connections" value={sort} onChange={event => setSort(event.target.value as Sort)} className={control}>
             <option value="name">Name</option>
             <option value="recent">Recently talked</option>
@@ -243,11 +260,11 @@ export function ConnectionsBoard() {
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-zinc-100">
                   {c.url && /^https?:\/\//i.test(c.url) ? <a href={c.url} target="_blank" rel="noreferrer" className="hover:underline">{c.name}</a> : c.name}
-                  {c.queued && <span className="ml-2 rounded bg-amber-500/20 px-1.5 py-0.5 text-xs text-amber-300">queued</span>}
+                  {companiesOn && c.queued && <span className="ml-2 rounded bg-amber-500/20 px-1.5 py-0.5 text-xs text-amber-300">queued</span>}
                 </p>
                 <p className="truncate text-zinc-400">
                   {c.role}{c.role && (c.companySlug || c.companyName) ? ' · ' : ''}
-                  {c.companySlug ? <a href={companyHref(c.companySlug)} className="text-blue-400 hover:underline">{companyTitle.get(c.companySlug) ?? c.companyName}</a> : c.companyName}
+                  {c.companySlug && companiesOn ? <a href={companyHref(c.companySlug)} className="text-blue-400 hover:underline">{companyTitle.get(c.companySlug) ?? c.companyName}</a> : c.companyName}
                 </p>
                 {c.notes && <p className="truncate text-zinc-500">{c.notes}</p>}
               </div>
@@ -257,7 +274,7 @@ export function ConnectionsBoard() {
                 <dt>Next catch-up</dt><dd className={due && due <= today ? 'text-amber-300' : 'text-zinc-200'}>{due ? relativeDays(due, today).replace('ago', 'overdue') : '—'}</dd>
               </dl>
               <div className="flex shrink-0 justify-end gap-3 sm:w-28">
-                <button type="button" disabled={busy || draft?.id === c.id} aria-pressed={c.queued} className="text-zinc-300 hover:underline disabled:opacity-50" onClick={() => void save({ ...c, queued: !c.queued }, c.queued ? `${c.name} removed from the queue.` : `${c.name} added to the queue.`)}>{c.queued ? 'Unqueue' : 'Queue'}</button>
+                {companiesOn && <button type="button" disabled={busy || draft?.id === c.id} aria-pressed={c.queued} className="text-zinc-300 hover:underline disabled:opacity-50" onClick={() => void save({ ...c, queued: !c.queued }, c.queued ? `${c.name} removed from the queue.` : `${c.name} added to the queue.`)}>{c.queued ? 'Unqueue' : 'Queue'}</button>}
                 <button type="button" disabled={busy || !!draft} className="text-blue-400 hover:underline disabled:opacity-50" onClick={() => setDraft({ ...c })}>Edit</button>
               </div>
             </li>;
@@ -271,12 +288,12 @@ export function ConnectionsBoard() {
 }
 
 interface FormProps {
-  draft: Connection; isNew: boolean; busy: boolean; companies: CompanyOption[]; today: string;
+  draft: Connection; isNew: boolean; busy: boolean; companies: CompanyOption[]; companiesOn: boolean; today: string;
   onChange: (c: Connection) => void; onCancel: () => void; onSave: (c: Connection) => void;
   onRemove: (c: Connection) => void; onPhoto: (c: Connection, file: File) => void; onRemovePhoto: (c: Connection) => void;
 }
 
-function ConnectionForm({ draft, isNew, busy, companies, today, onChange, onCancel, onSave, onRemove, onPhoto, onRemovePhoto }: FormProps) {
+function ConnectionForm({ draft, isNew, busy, companies, companiesOn, today, onChange, onCancel, onSave, onRemove, onPhoto, onRemovePhoto }: FormProps) {
   const set = <K extends keyof Connection>(key: K, value: Connection[K]) => onChange({ ...draft, [key]: value });
   const optional = (key: 'url' | 'connectedOn' | 'lastContactedOn', value: string) => {
     const { [key]: _old, ...rest } = draft;
@@ -300,7 +317,7 @@ function ConnectionForm({ draft, isNew, busy, companies, today, onChange, onCanc
           <label className="block text-zinc-200">Name<input required maxLength={200} value={draft.name} onChange={e => set('name', e.target.value)} className={input} /></label>
           <label className="block text-zinc-200">Role<input maxLength={200} value={draft.role} onChange={e => set('role', e.target.value)} className={input} /></label>
           <label className="block text-zinc-200">Company (as on LinkedIn)<input maxLength={200} value={draft.companyName} onChange={e => set('companyName', e.target.value)} className={input} /></label>
-          <label className="block text-zinc-200">Tracked company
+          {companiesOn && <label className="block text-zinc-200">Tracked company
             <select value={draft.companySlug ?? ''} className={input} onChange={e => {
               const company = companies.find(c => c.slug === e.target.value);
               const { companySlug: _old, ...rest } = draft;
@@ -309,7 +326,7 @@ function ConnectionForm({ draft, isNew, busy, companies, today, onChange, onCanc
               <option value="">Not linked</option>
               {companies.map(c => <option key={c.slug} value={c.slug}>{c.title}</option>)}
             </select>
-          </label>
+          </label>}
           <label className="block text-zinc-200">Email<input type="email" maxLength={254} value={draft.email} onChange={e => set('email', e.target.value)} className={input} /></label>
           <label className="block text-zinc-200">LinkedIn URL<input type="url" maxLength={2000} value={draft.url ?? ''} onChange={e => optional('url', e.target.value)} className={input} /></label>
           <label className="block text-zinc-200">Connected on<input type="date" value={draft.connectedOn ?? ''} onChange={e => optional('connectedOn', e.target.value)} className={input} /></label>
@@ -330,7 +347,7 @@ function ConnectionForm({ draft, isNew, busy, companies, today, onChange, onCanc
             <input value={draft.tags.join(', ')} onChange={e => set('tags', e.target.value.split(',').map(t => t.trim()).filter(Boolean).slice(0, 30))} className={input} />
           </label>
         </div>
-        <label className="flex items-center gap-2 text-zinc-200"><input type="checkbox" className="accent-blue-500" checked={draft.queued} onChange={e => set('queued', e.target.checked)} />In catch-up queue</label>
+        {companiesOn && <label className="flex items-center gap-2 text-zinc-200"><input type="checkbox" className="accent-blue-500" checked={draft.queued} onChange={e => set('queued', e.target.checked)} />In catch-up queue</label>}
         <label className="block text-zinc-200">Notes<textarea maxLength={5000} value={draft.notes} onChange={e => set('notes', e.target.value)} className={`${input} min-h-24`} placeholder="How you met, what they work on, what to follow up on…" /></label>
         <div className="flex flex-wrap gap-3">
           <button type="submit" className="rounded-lg bg-blue-600 px-3 py-2 text-white hover:bg-blue-500 disabled:opacity-50">Save connection</button>

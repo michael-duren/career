@@ -31,17 +31,7 @@ func RunScheduler(ctx context.Context, c config.Config, db *database.Store) {
 			}()
 			cycle, stop := context.WithTimeout(ctx, 55*time.Second)
 			defer stop()
-			now := time.Now()
-			if err := db.SchedulerTick(cycle, now); err != nil {
-				log.Printf("scheduler catch-up: %v", err)
-			} else if s.googleConfigured() {
-				periodic := now.Sub(lastReconcile) >= 5*time.Minute
-				if err := s.syncSchedulerGoogle(cycle, now, periodic); err != nil {
-					log.Printf("scheduler Google sync: %v", err)
-				} else if periodic {
-					lastReconcile = now
-				}
-			}
+			s.schedulerCycle(cycle, time.Now(), &lastReconcile)
 		}()
 		select {
 		case <-ctx.Done():
@@ -50,6 +40,39 @@ func RunScheduler(ctx context.Context, c config.Config, db *database.Store) {
 		}
 	}
 }
+
+// schedulerCycle runs one scheduler tick and Google sync and returns true
+// when it attempted the tick, even if the tick failed. It does nothing and
+// returns false while the Schedule module is unusable (off, or Timeline off)
+// or while module settings cannot be loaded.
+func (s *Server) schedulerCycle(ctx context.Context, now time.Time, lastReconcile *time.Time) bool {
+	settings, err := s.moduleSettings(ctx)
+	if err != nil {
+		log.Printf("scheduler paused: %v", err)
+		return false
+	}
+	if !settings.Enabled("schedule") {
+		return false
+	}
+	tick := s.db.SchedulerTick
+	if s.schedulerTick != nil {
+		tick = s.schedulerTick
+	}
+	if err := tick(ctx, now); err != nil {
+		log.Printf("scheduler catch-up: %v", err)
+		return true
+	}
+	if s.googleConfigured() {
+		periodic := now.Sub(*lastReconcile) >= 5*time.Minute
+		if err := s.syncSchedulerGoogle(ctx, now, periodic); err != nil {
+			log.Printf("scheduler Google sync: %v", err)
+		} else if periodic {
+			*lastReconcile = now
+		}
+	}
+	return true
+}
+
 func (s *Server) syncSchedulerGoogle(ctx context.Context, now time.Time, periodic bool) error {
 	// One worker owns remote writes across service replicas. Local writes stay available.
 	conn, err := s.db.DB.Conn(ctx)

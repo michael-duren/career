@@ -2,14 +2,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 import { mondayOf, schedulerRequest, SchedulerError, earlierUnchecked, todaysTodos, weekSchema, zonedDate, type SchedulerSession, type SchedulerWeek } from '../lib/scheduler';
 import { localDate } from '../lib/workspace';
+import { moduleEnabled } from '../lib/modules';
 
 type Today = { week: SchedulerWeek; today: string };
 
 async function loadWeek(monday: string): Promise<SchedulerWeek> {
   return weekSchema.parse(await schedulerRequest(`week?week=${monday}`));
 }
-/** Loads the week holding today in the scheduler's time zone, which can differ from the browser's. */
-async function loadToday(): Promise<Today> {
+/** Loads the week holding today in the scheduler's time zone, which can differ from the browser's, or 'off' while the schedule module is off. */
+async function loadToday(): Promise<Today | 'off'> {
+  // Read on every reload, so a module changed in another tab shows when Home is visible again.
+  if (!await moduleEnabled('schedule')) return 'off';
   let week = await loadWeek(mondayOf(localDate()));
   const today = zonedDate(new Date(), week.settings.timeZone);
   if (mondayOf(today) !== week.week) week = await loadWeek(mondayOf(today));
@@ -32,6 +35,7 @@ function redirectLegacyTab() {
 
 export function HomeHub() {
   const [data, setData] = useState<Today>();
+  const [scheduleOff, setScheduleOff] = useState(false);
   const [error, setError] = useState('');
   const [pending, setPending] = useState<string>();
   // Earlier sessions checked off here stay listed so a mistaken click can be undone.
@@ -39,7 +43,10 @@ export function HomeHub() {
   const latest = useRef(0);
   const reload = useCallback(() => {
     const request = ++latest.current;
-    loadToday().then(value => { if (request === latest.current) { setData(value); setError(''); } })
+    loadToday().then(value => {
+      if (request !== latest.current) return;
+      setScheduleOff(value === 'off'); setData(value === 'off' ? undefined : value); setError('');
+    })
       .catch(e => { if (request === latest.current) setError(e instanceof Error ? e.message : 'Could not load today.'); });
   }, []);
   useEffect(() => {
@@ -94,10 +101,11 @@ export function HomeHub() {
         <h1 className="text-3xl font-bold">{heading}</h1>
         {data && todos.length > 0 && <p className="text-zinc-400" aria-live="polite">{doneCount} of {todos.length} done</p>}
       </div>
-      <a className="text-sm text-blue-400 hover:underline" href="/weekly-scheduler">Plan in scheduler →</a>
+      {!scheduleOff && <a className="text-sm text-blue-400 hover:underline" href="/weekly-scheduler">Plan in scheduler →</a>}
     </header>
     {error && <p role="alert" className="text-red-300">{error}</p>}
-    {!data ? !error && <p role="status" className="text-zinc-400">Loading today…</p>
+    {scheduleOff ? <p className="text-zinc-400">The schedule is turned off, so there are no sessions to show.</p>
+      : !data ? !error && <p role="status" className="text-zinc-400">Loading today…</p>
       : todos.length === 0 ? <p className="text-zinc-400">Nothing scheduled today. <a className="text-blue-400 underline" href="/weekly-scheduler">Plan in the weekly scheduler.</a></p>
       : <ul className="divide-y divide-zinc-800 rounded-xl border border-zinc-800 bg-zinc-900" aria-label="Today's todos">{todos.map(session => row(session))}</ul>}
     {earlier.length > 0 && <section className="space-y-2" aria-labelledby="earlier-heading">
