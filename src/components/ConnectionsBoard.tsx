@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Avatar, Box, Button, Checkbox, HatchFill, Label, MeasurementLine, SearchField, SectionHeader, SegmentedTabs, buttonClassName, type SegmentedTab } from './ui';
 import { moduleEnabled } from '../lib/modules';
-import { CADENCES, catchUpQueue, companySlug, employers, lastTouch, markCaughtUp, matchesQuery, newCompanyEntry, newConnection, nextDue, normalizeCompany, photoURL, relativeDays, type Connection, type ConnectionImport, type Employer } from '../lib/connections';
+import { CADENCES, catchUpQueue, companySlug, employerKey, employers, lastTouch, markCaughtUp, matchesQuery, newCompanyEntry, newConnection, nextDue, photoURL, relativeDays, trackedNames, type Connection, type ConnectionImport, type Employer } from '../lib/connections';
 import { formatDate } from '../lib/format';
 import { localDate } from '../lib/workspace';
 import { cn } from '../lib/utils';
 
-// The People page (docs/redesign/pages/people.md, reference/desktop/ARC-Connections.html,
-// reference/mobile/M-Connections.html): every person, the catch-up queue and where the
+// The People page (docs/redesign/pages/people.md; docs/redesign/reference/desktop/ARC-Connections.html,
+// ARC-CatchUp.html and docs/redesign/reference/mobile/M-Connections.html): every person, the catch-up queue and where the
 // network works, as tabs.
 
 interface CompanyOption { slug: string; title: string }
@@ -79,6 +79,8 @@ export function ConnectionsBoard() {
   const [query, setQuery] = useState('');
   const [employerQuery, setEmployerQuery] = useState('');
   const [companyFilter, setCompanyFilter] = useState('all');
+  // Set from the Employers tab: only people who count toward that employer (see employerKey).
+  const [employer, setEmployer] = useState<{ key: string; name: string }>();
   const [sort, setSort] = useState<Sort>('name');
   const [limit, setLimit] = useState(PAGE);
   const [employerLimit, setEmployerLimit] = useState(EMPLOYER_PAGE);
@@ -92,8 +94,9 @@ export function ConnectionsBoard() {
   const [companiesFailed, setCompaniesFailed] = useState(false);
 
   async function load() {
+    let on = true;
     try {
-      const on = await moduleEnabled('companies');
+      on = await moduleEnabled('companies');
       setCompaniesOn(on);
       setCompaniesFailed(false);
       if (!on) setCompanyFilter('all');
@@ -113,15 +116,16 @@ export function ConnectionsBoard() {
       setConnections(people.connections);
       setRevisions(people.revisions);
       setCompanies(options);
-      return { people: people.connections, options, on };
+      return { ok: true, people: people.connections, options, on };
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load connections.');
-      return { people: [], options: [], on: false };
+      return { ok: false, people: [], options: [], on };
     }
   }
 
   useEffect(() => {
-    void load().then(({ people, options, on }) => {
+    void load().then(({ ok, people, options, on }) => {
+      if (!ok) return;
       if (!on) setTab(current => current === 'queue' ? 'people' : current);
       // Deep links from search and the companies page.
       const params = new URLSearchParams(location.search);
@@ -158,20 +162,22 @@ export function ConnectionsBoard() {
     return () => window.removeEventListener('beforeunload', warn);
   }, [draft, noteDirty]);
 
-  async function run(label: string, action: () => Promise<string>) {
+  async function run(label: string, action: () => Promise<string>, failure = 'Change not saved.') {
     if (lock.current) return;
     lock.current = true; setBusy(true); setError(''); setStatus(`${label}…`);
     try {
       setStatus(await action());
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Change not saved. Please retry.');
-      setStatus('Change not saved. Your draft is kept.');
+      setStatus(failure);
     } finally { lock.current = false; setBusy(false); }
   }
 
   function stored(entry: Connection, revision: string) {
     setConnections(current => [...(current ?? []).filter(c => c.id !== entry.id), entry]);
     setRevisions(current => ({ ...current, [entry.id]: revision }));
+    // The saved notes are now the panel's notes; drop any older unsaved text.
+    setNote(current => current?.id === entry.id ? undefined : current);
   }
 
   const save = (connection: Connection, message: string, closeDraft = false) => run('Saving', async () => {
@@ -184,7 +190,7 @@ export function ConnectionsBoard() {
     stored({ ...(connection.photo ? { photo: connection.photo } : {}), ...result.entry }, result.revision);
     if (closeDraft) { setDraft(undefined); setSelectedId(result.entry.id); }
     return message;
-  });
+  }, closeDraft ? 'Change not saved. Your draft is kept.' : 'Change not saved.');
 
   const remove = (connection: Connection) => {
     if (!window.confirm(`Remove ${connection.name} from your connections? This also removes their photo and notes.`)) return;
@@ -218,27 +224,36 @@ export function ConnectionsBoard() {
   const importFiles = (form: HTMLFormElement) => run('Importing', async () => {
     const summary = await api<ConnectionImport>('/api/connections/import', { method: 'POST', body: new FormData(form) });
     form.reset();
-    await load();
-    return `Imported ${summary.parsed} rows: ${summary.created} new, ${summary.updated} updated, ${summary.unchanged} unchanged, ${summary.skipped} skipped. ${summary.linked} linked to companies; ${summary.messagesMatched} with message history.`;
+    const { ok } = await load();
+    return `${ok ? '' : 'The list could not be refreshed; reload to see the changes. '}Imported ${summary.parsed} rows: ${summary.created} new, ${summary.updated} updated, ${summary.unchanged} unchanged, ${summary.skipped} skipped. ${summary.linked} linked to companies; ${summary.messagesMatched} with message history.`;
   });
 
   // New companies pick up the unlinked people who work there (the server links them on save).
   const addCompanies = (names: string[]) => run('Adding companies', async () => {
     const taken = new Set(companies.map(c => c.slug));
-    let added = 0;
-    for (const name of names) {
+    const planned = names.map(name => {
       const base = companySlug(name);
       if (!base) throw new Error(`"${name}" needs letters or digits to become a company.`);
       let slug = base;
       for (let n = 2; taken.has(slug); n++) slug = `${base}-${n}`;
-      await api('/api/entries/company', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entry: newCompanyEntry(name, slug), revision: null }),
-      });
       taken.add(slug);
-      added++;
+      return { name, slug };
+    });
+    let added = 0;
+    try {
+      for (const { name, slug } of planned) {
+        await api('/api/entries/company', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entry: newCompanyEntry(name, slug), revision: null }),
+        });
+        added++;
+      }
+    } catch (e) {
+      const reason = e instanceof Error ? e.message : 'Request failed.';
+      throw new Error(added ? `Added ${added} of ${planned.length} companies, then: ${reason}` : reason);
+    } finally {
+      if (added) await load();
     }
-    await load();
     return `Added ${added} ${added === 1 ? 'company' : 'companies'} to your board. People who work there are now linked.`;
   });
 
@@ -258,6 +273,8 @@ export function ConnectionsBoard() {
   }
 
   function edit(c: Connection) {
+    if (noteDirty && !window.confirm(`Discard your unsaved notes for ${selected?.name}?`)) return;
+    setNote(undefined);
     setTab('people');
     setSelectedId(c.id);
     setDraft({ ...c });
@@ -265,9 +282,11 @@ export function ConnectionsBoard() {
 
   const companyTitle = useMemo(() => new Map(companies.map(c => [c.slug, c.title])), [companies]);
   const queue = useMemo(() => catchUpQueue(connections ?? [], today), [connections, today]);
-  const network = useMemo(() => employers(connections ?? [], companyTitle), [connections, companyTitle]);
+  const board = useMemo(() => companiesOn ? trackedNames(companyTitle) : undefined, [companiesOn, companyTitle]);
+  const network = useMemo(() => employers(connections ?? [], companiesOn ? companyTitle : undefined), [connections, companiesOn, companyTitle]);
+  const queued = useMemo(() => queue.filter(item => matchesQuery(item.connection, query)), [queue, query]);
   const visible = useMemo(() => {
-    const list = (connections ?? []).filter(c => matchesQuery(c, query) && (
+    const list = (connections ?? []).filter(c => matchesQuery(c, query) && (!employer || employerKey(c, board) === employer.key) && (
       companyFilter === 'all' || (companyFilter === 'linked' ? !!c.companySlug : companyFilter === 'unlinked' ? !c.companySlug : c.companySlug === companyFilter)));
     const touched = (c: Connection) => lastTouch(c) ?? '';
     const compare: Record<Sort, (a: Connection, b: Connection) => number> = {
@@ -277,7 +296,7 @@ export function ConnectionsBoard() {
       connected: (a, b) => (b.connectedOn ?? '').localeCompare(a.connectedOn ?? '') || a.name.localeCompare(b.name),
     };
     return list.sort(compare[sort]);
-  }, [connections, query, companyFilter, sort]);
+  }, [connections, query, companyFilter, sort, employer, board]);
 
   if (!connections) return <p role={error ? 'alert' : 'status'} className={error ? 'text-accent' : 'text-ink-60'}>{error || 'Loading…'}</p>;
 
@@ -288,7 +307,7 @@ export function ConnectionsBoard() {
   const showDetail = tab === 'people' && (!!draft || !!selected);
   const searchProps = tab === 'employers'
     ? { label: 'Search employers', value: employerQuery, onChange: (value: string) => { setEmployerQuery(value); setEmployerLimit(EMPLOYER_PAGE); } }
-    : { label: 'Search people or roles', value: query, onChange: (value: string) => { setQuery(value); setLimit(PAGE); if (tab === 'queue') setTab('people'); } };
+    : { label: 'Search people or roles', value: query, onChange: (value: string) => { setQuery(value); setLimit(PAGE); } };
 
   return (
     <div className="flex flex-col">
@@ -329,6 +348,7 @@ export function ConnectionsBoard() {
               <select aria-label="Sort connections" value={sort} onChange={event => setSort(event.target.value as Sort)} className={cn(select, 'w-full md:w-auto')}>
                 {Object.entries(SORT_LABELS).map(([value, label]) => <option key={value} value={value}>{label === 'A–Z' ? 'Name' : label}</option>)}
               </select>
+              {employer && <Button size="sm" className="col-span-2" aria-label={`Clear employer filter: ${employer.name}`} onClick={() => { setEmployer(undefined); setLimit(PAGE); }}>{employer.name} ✕</Button>}
               <Button size="sm" className="ml-auto max-md:hidden" disabled={busy || !!draft} onClick={() => setDraft(newConnection())}>Add person</Button>
             </div>
             <div aria-hidden="true" className="hidden gap-4 border-b border-ink pb-1.5 md:grid md:grid-cols-[44px_minmax(0,1fr)_140px_110px] lg:grid-cols-[44px_minmax(0,1fr)_minmax(0,1fr)_140px_110px]">
@@ -372,7 +392,7 @@ export function ConnectionsBoard() {
                 onChange={setDraft} onCancel={() => setDraft(undefined)}
                 onSave={c => save(c, `${c.name} saved.`, true)} onRemove={remove} onPhoto={uploadPhoto} onRemovePhoto={removePhoto} />
                 : selected ? <PersonDetail person={selected} today={today} busy={busy} companiesOn={companiesOn} companyName={companyName(selected)}
-                  colleagues={connections.filter(c => selected.companySlug ? c.companySlug === selected.companySlug : !!selected.companyName.trim() && normalizeCompany(c.companyName) === normalizeCompany(selected.companyName)).length}
+                  colleagues={connections.filter(c => employerKey(c, board) === employerKey(selected, board)).length}
                   note={noteText} noteDirty={noteDirty} onNote={text => setNote({ id: selected.id, text })}
                   onSaveNote={() => void save({ ...selected, notes: noteText }, `Notes saved for ${selected.name}.`)}
                   onLog={() => void save(markCaughtUp(selected, today), `Logged a catch-up with ${selected.name}.`)}
@@ -383,19 +403,21 @@ export function ConnectionsBoard() {
           </div>
         </div>}
 
-        {tab === 'queue' && companiesOn && <CatchUpList queue={queue} today={today} busy={busy} companyName={companyName}
+        {tab === 'queue' && companiesOn && <CatchUpList queue={queued} today={today} busy={busy} drafting={!!draft} companyName={companyName}
           onCaughtUp={c => void save(markCaughtUp(c, today), `Logged a conversation with ${c.name}.`)}
           onUnqueue={c => void save({ ...c, queued: false }, `${c.name} removed from the queue.`)}
           onEdit={edit} />}
 
         {tab === 'employers' && <EmployersTab employers={network} query={employerQuery} limit={employerLimit} busy={busy} companiesOn={companiesOn}
           onMore={() => setEmployerLimit(employerLimit + EMPLOYER_PAGE)}
-          onOpen={employer => {
-            if (employer.slug) { setCompanyFilter(employer.slug); setQuery(''); } else { setCompanyFilter('all'); setQuery(employer.name); }
+          onOpen={e => {
+            setEmployer({ key: e.key, name: e.name });
+            setCompanyFilter('all');
+            setQuery('');
             setLimit(PAGE);
             setTab('people');
           }}
-          onAdd={addCompanies} />}
+          canAdd={!companiesFailed} onAdd={addCompanies} />}
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-2.5 md:hidden">
@@ -473,8 +495,8 @@ function ImportPanel({ busy, onImport, onClose }: { busy: boolean; onImport: (fo
 
 // The cadence-based queue: people past their catch-up cadence or queued by hand. The staged
 // catch-up board in docs/redesign/pages/people.md replaces this tab's content.
-function CatchUpList({ queue, today, busy, companyName, onCaughtUp, onUnqueue, onEdit }: {
-  queue: ReturnType<typeof catchUpQueue>; today: string; busy: boolean; companyName: (c: Connection) => string;
+function CatchUpList({ queue, today, busy, drafting, companyName, onCaughtUp, onUnqueue, onEdit }: {
+  queue: ReturnType<typeof catchUpQueue>; today: string; busy: boolean; drafting: boolean; companyName: (c: Connection) => string;
   onCaughtUp: (c: Connection) => void; onUnqueue: (c: Connection) => void; onEdit: (c: Connection) => void;
 }) {
   return <section aria-labelledby="queue-heading" className="flex flex-col gap-4">
@@ -495,15 +517,15 @@ function CatchUpList({ queue, today, busy, companyName, onCaughtUp, onUnqueue, o
           <span className="flex flex-wrap gap-2 pt-1">
             <Button size="sm" variant="primary" disabled={busy} onClick={() => onCaughtUp(c)}>Caught up today</Button>
             {reason === 'manual' && <Button size="sm" disabled={busy} onClick={() => onUnqueue(c)}>Remove</Button>}
-            <Button size="sm" disabled={busy} onClick={() => onEdit(c)}>Edit</Button>
+            <Button size="sm" disabled={busy || drafting} onClick={() => onEdit(c)}>Edit</Button>
           </span>
         </Box>)}
       </ul>}
   </section>;
 }
 
-function EmployersTab({ employers: all, query, limit, busy, companiesOn, onMore, onOpen, onAdd }: {
-  employers: Employer[]; query: string; limit: number; busy: boolean; companiesOn: boolean;
+function EmployersTab({ employers: all, query, limit, busy, companiesOn, canAdd, onMore, onOpen, onAdd }: {
+  employers: Employer[]; query: string; limit: number; busy: boolean; companiesOn: boolean; canAdd: boolean;
   onMore: () => void; onOpen: (employer: Employer) => void; onAdd: (names: string[]) => void;
 }) {
   const [picked, setPicked] = useState<string[]>([]);
@@ -511,23 +533,25 @@ function EmployersTab({ employers: all, query, limit, busy, companiesOn, onMore,
   const shown = q ? all.filter(e => e.name.toLowerCase().includes(q)) : all;
   const most = all[0]?.count ?? 1;
   const untracked = all.filter(e => !e.slug).slice(0, 5);
+  // Names leave the list once added (or when they stop being untracked), so a failed add keeps them ticked.
+  const chosen = picked.filter(name => untracked.some(e => e.name === name));
   const width = (n: number) => `${(n / most) * 100}%`;
   return <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_300px]">
     <section aria-labelledby="employers-heading" className="flex min-w-0 flex-col">
       <SectionHeader id="employers-heading" title="Where your network works" meta="People per employer" className="mb-2 max-md:hidden" />
       <ul className="m-0 list-none p-0">
         {shown.slice(0, limit).map(e => <li key={e.key}>
-          <button type="button" onClick={() => onOpen(e)} aria-label={`${e.name}: ${e.count} ${e.count === 1 ? 'person' : 'people'}${e.slug && companiesOn ? ', on your companies board' : ''}`}
+          <button type="button" onClick={() => onOpen(e)} aria-label={`${e.name}: ${e.count} ${e.count === 1 ? 'person' : 'people'}${e.slug ? ', on your companies board' : ''}`}
             className="flex w-full cursor-pointer flex-col gap-[7px] border-0 border-b border-solid border-ink-14 bg-transparent px-0 py-2.5 text-left text-ink hover:bg-ink-05 md:grid md:min-h-[38px] md:grid-cols-[180px_minmax(0,1fr)_36px] md:items-center md:gap-4 md:py-0">
             <span className="flex min-w-0 items-center justify-between gap-2 md:justify-start">
               <span className="flex min-w-0 items-center gap-2">
                 <span className="truncate text-[15px] font-light">{e.name}</span>
-                {e.slug && companiesOn && <span aria-hidden="true" className="text-[9px]">◆</span>}
+                {e.slug && <span aria-hidden="true" className="text-[9px]">◆</span>}
               </span>
               <span className="font-mono text-xs md:hidden">{e.count}</span>
             </span>
             <span className="relative block h-2 md:h-2.5">
-              {e.slug && companiesOn
+              {e.slug
                 ? <span className="absolute bottom-0 left-0 h-1.5 bg-ink md:h-[7px]" style={{ width: width(e.count) }} />
                 : <HatchFill className="absolute bottom-0 left-0 h-1.5 md:h-[7px]" style={{ width: width(e.count) }} />}
               <MeasurementLine className="!absolute bottom-0 left-0" style={{ width: width(e.count) }} />
@@ -547,12 +571,12 @@ function EmployersTab({ employers: all, query, limit, busy, companiesOn, onMore,
       <ul className="m-0 flex list-none flex-col p-0">
         {untracked.map(e => <li key={e.key}>
           <label className="flex min-h-11 cursor-pointer items-center gap-3">
-            <Checkbox checked={picked.includes(e.name)} disabled={busy} onChange={event => setPicked(current => event.target.checked ? [...current, e.name] : current.filter(name => name !== e.name))} />
+            <Checkbox checked={chosen.includes(e.name)} disabled={busy} onChange={event => setPicked(current => event.target.checked ? [...current, e.name] : current.filter(name => name !== e.name))} />
             <span>{e.name} · {e.count} {e.count === 1 ? 'person' : 'people'}</span>
           </label>
         </li>)}
       </ul>
-      <Button className="mt-2.5" disabled={busy || picked.length === 0} onClick={() => { onAdd(picked); setPicked([]); }}>Add to companies</Button>
+      <Button className="mt-2.5" disabled={busy || !canAdd || chosen.length === 0} onClick={() => onAdd(chosen)}>Add to companies</Button>
     </aside>}
   </div>;
 }

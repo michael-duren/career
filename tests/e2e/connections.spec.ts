@@ -65,9 +65,12 @@ test('people tab lists everyone and opens a person in the detail panel', async (
   await expect(main.getByRole('status')).toHaveText('Notes saved for Paige North.');
   expect(saves.at(-1)).toMatchObject({ name: 'Paige North', notes: 'Ask about the platform team' });
 
+  const before = saves.length;
   await panel.getByRole('button', { name: 'Log catch-up' }).click();
   await expect(main.getByRole('status')).toHaveText('Logged a catch-up with Paige North.');
-  expect(saves.at(-1)?.lastContactedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  expect(saves.length).toBe(before + 1);
+  const today = await page.evaluate(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; });
+  expect(saves.at(-1)?.lastContactedOn).toBe(today);
 
   await main.getByRole('searchbox', { name: 'Search people or roles' }).fill('maximus');
   await expect(main.getByRole('button', { name: /Adam Iverson/ })).toBeVisible();
@@ -92,6 +95,27 @@ test('employers tab groups people per employer and adds one to the companies boa
   await expect(main.getByRole('tab', { name: 'People' })).toHaveAttribute('aria-selected', 'true');
   await expect(main.getByRole('button', { name: /Brian Holt/ })).toBeVisible();
   await expect(main.getByRole('button', { name: /Adam Iverson/ })).toHaveCount(0);
+
+  // An employer known only by LinkedIn name shows every spelling that grouped into it.
+  await main.getByRole('button', { name: 'Clear employer filter: Microsoft' }).click();
+  await main.getByRole('tab', { name: 'Employers' }).click();
+  await main.getByRole('button', { name: 'Maximus Inc: 2 people' }).click();
+  await expect(main.getByRole('button', { name: /Adam Iverson/ })).toBeVisible();
+  await expect(main.getByRole('button', { name: /Alex Stone/ })).toBeVisible();
+  await expect(main.getByRole('button', { name: /Paige North/ })).toHaveCount(0);
+});
+
+test('an unlinked person at a company already on the board counts toward it, not as a new employer', async ({ page }) => {
+  people.push(person('6', 'Dana Unlinked', 'Engineer', 'Microsoft Corporation'));
+  try {
+    await mockPeople(page);
+    await page.goto('/connections?tab=employers');
+    const main = page.locator('main');
+    await expect(main.getByRole('button', { name: 'Microsoft: 3 people, on your companies board' })).toBeVisible();
+    await expect(main.getByRole('checkbox', { name: /Microsoft/ })).toHaveCount(0);
+  } finally {
+    people.pop();
+  }
 });
 
 test('tabs follow the keyboard and the address keeps the open tab', async ({ page }) => {
@@ -103,7 +127,7 @@ test('tabs follow the keyboard and the address keeps the open tab', async ({ pag
   await expect(main.getByRole('tab', { name: /Catch-up queue/ })).toHaveAttribute('aria-selected', 'true');
   await expect(page).toHaveURL(/tab=queue/);
   await expect(main.getByRole('heading', { name: 'Catch-up queue' })).toBeVisible();
-  await expect(main.getByText('Kayla Altepeter')).toBeVisible();
+  await expect(main.getByRole('listitem').filter({ hasText: 'Kayla Altepeter' })).toBeVisible();
   await page.reload();
   await expect(main.getByRole('tab', { name: /Catch-up queue/ })).toHaveAttribute('aria-selected', 'true');
 });
@@ -116,6 +140,16 @@ test('the catch-up tab is hidden with a note when Companies is off', async ({ pa
   await expect(main.getByRole('tab')).toHaveText(['People', 'Employers']);
   await expect(main.getByRole('tab', { name: 'People' })).toHaveAttribute('aria-selected', 'true');
   await expect(main.getByRole('button', { name: /Paige North/ })).not.toContainText('on your companies board');
+
+  // Employers group by LinkedIn name only, with no board marks or add list, and the filter clears.
+  await main.getByRole('tab', { name: 'Employers' }).click();
+  await expect(main.getByText('Not on your board yet')).toHaveCount(0);
+  await expect(main.getByRole('button', { name: 'Add to companies' })).toHaveCount(0);
+  await expect(main.getByText('On your companies board')).toHaveCount(0);
+  await main.getByRole('button', { name: 'Microsoft: 2 people' }).click();
+  await expect(main.getByRole('button', { name: /Adam Iverson/ })).toHaveCount(0);
+  await main.getByRole('button', { name: 'Clear employer filter: Microsoft' }).click();
+  await expect(main.getByRole('button', { name: /Adam Iverson/ })).toBeVisible();
 });
 
 test('on a phone the detail replaces the list until you go back', async ({ page }) => {

@@ -110,7 +110,7 @@ export function avatarStack<T>(people: T[], max: number): { shown: T[]; overflow
 
 const LEGAL_SUFFIXES = new Set(['inc', 'llc', 'ltd', 'limited', 'corp', 'corporation', 'co', 'company', 'gmbh', 'plc', 'sa', 'ag', 'bv', 'the']);
 
-/** Lowercase, drop punctuation and legal suffixes; mirrors linkedin.NormalizeCompany in Go. */
+/** Lowercase, drop punctuation and legal suffixes; mirrors NormalizeCompany in internal/linkedin/linkedin.go. */
 export function normalizeCompany(name: string): string {
   return name.toLowerCase().replaceAll('&', ' and ').replace(/[^a-z0-9]+/g, ' ').split(' ').filter(word => word && !LEGAL_SUFFIXES.has(word)).join(' ');
 }
@@ -119,18 +119,48 @@ export function normalizeCompany(name: string): string {
 export interface Employer { key: string; name: string; count: number; slug?: string }
 
 /**
- * People per employer, most first. Linked people count toward their tracked company; the rest
- * group by LinkedIn company name with case, punctuation and legal suffixes ignored.
+ * Normalized names of tracked companies (title and last slug segment) to their slug, like the
+ * server's matcher (internal/linkedin/linkedin.go NewMatcher), so an unlinked person whose
+ * LinkedIn company is already on the board counts toward it.
  */
-export function employers(connections: Connection[], titles: Map<string, string>): Employer[] {
+export function trackedNames(titles: Map<string, string>): Map<string, string> {
+  const names = new Map<string, string>();
+  for (const [slug, title] of titles) {
+    for (const key of [normalizeCompany(title), normalizeCompany(slug.slice(slug.lastIndexOf('/') + 1).replaceAll('-', ' '))]) {
+      if (key && !names.has(key)) names.set(key, slug);
+    }
+  }
+  return names;
+}
+
+/**
+ * Which employer a person counts toward: "slug:<slug>" for a tracked company, else
+ * "name:<normalized LinkedIn company>", or "" when there is no company. Without tracked
+ * (Companies off) everyone groups by name.
+ */
+export function employerKey(c: Connection, tracked?: Map<string, string>): string {
+  if (tracked && c.companySlug) return `slug:${c.companySlug}`;
+  const name = normalizeCompany(c.companyName);
+  if (!name) return '';
+  const slug = tracked?.get(name);
+  return slug ? `slug:${slug}` : `name:${name}`;
+}
+
+/**
+ * People per employer, most first (see employerKey). Pass titles (slug -> title) when Companies
+ * is on; leave it out to group everyone by LinkedIn company name.
+ */
+export function employers(connections: Connection[], titles?: Map<string, string>): Employer[] {
+  const tracked = titles && trackedNames(titles);
   const groups = new Map<string, Employer>();
   for (const c of connections) {
-    const key = c.companySlug ? `slug:${c.companySlug}` : `name:${normalizeCompany(c.companyName)}`;
-    if (key === 'name:') continue;
+    const key = employerKey(c, tracked);
+    if (!key) continue;
     const group = groups.get(key);
-    if (group) group.count++;
-    else groups.set(key, c.companySlug
-      ? { key, name: titles.get(c.companySlug) ?? (c.companyName.trim() || c.companySlug), count: 1, slug: c.companySlug }
+    if (group) { group.count++; continue; }
+    const slug = key.startsWith('slug:') ? key.slice(5) : undefined;
+    groups.set(key, slug
+      ? { key, name: titles?.get(slug) ?? (c.companyName.trim() || slug), count: 1, slug }
       : { key, name: c.companyName.trim(), count: 1 });
   }
   return [...groups.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
@@ -138,12 +168,13 @@ export function employers(connections: Connection[], titles: Map<string, string>
 
 /** A URL-safe company slug from its name ("Prime Digital Academy" -> "prime-digital-academy"). */
 export function companySlug(title: string): string {
-  return title.normalize('NFKD').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
+  return title.normalize('NFKD').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 80).replace(/^-+|-+$/g, '');
 }
 
 /**
- * A not-started company for the companies board, like add_companies_to_queue builds
- * (internal/server/mcp_connections.go): the website's outreach checklist and an empty Log.
+ * A not-started company for the companies board, mirroring what add_companies_to_queue builds
+ * (internal/server/mcp_connections.go queuedCompany): an empty Why, the website's outreach
+ * checklist and an empty Log. The LinkedIn search URL encodes spaces as %20 rather than +.
  */
 export function newCompanyEntry(title: string, slug: string) {
   return {
