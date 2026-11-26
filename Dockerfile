@@ -5,6 +5,8 @@ RUN npm ci
 COPY astro.config.mjs tsconfig.json tailwind.config.mjs ./
 COPY src ./src
 COPY public ./public
+# AppHeader.astro imports the tab icons shared with the Go shell.
+COPY internal/shell/tab-icons.json ./internal/shell/tab-icons.json
 RUN npm run build
 
 FROM golang:1.27.4-bookworm AS backend
