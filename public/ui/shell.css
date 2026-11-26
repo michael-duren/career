@@ -166,6 +166,10 @@
   font: 300 13px var(--font-sans, "Inter Tight Variable", "Inter Tight", ui-sans-serif, system-ui, sans-serif);
   outline: none;
 }
+/* The field's border shows focus; !important beats the unlayered global :focus-visible ring. */
+.site-search #site-search:focus-visible {
+  outline: none !important;
+}
 .site-search #site-search::placeholder {
   color: var(--ink-60);
 }
