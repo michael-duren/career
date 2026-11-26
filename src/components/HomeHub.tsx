@@ -57,7 +57,7 @@ async function loadModules(): Promise<Modules> {
   return { schedule: on('schedule'), timeline: on('timeline'), leetgrinder: on('leetgrinder') };
 }
 const message = (e: unknown, fallback: string) => e instanceof Error ? e.message : fallback;
-const settle = <T,>(promise: Promise<T>, fallback: string): Promise<Part<T>> => promise.then(value => ({ value }), e => ({ error: message(e, fallback) }));
+const settle = <T,>(promise: Promise<T>, fallback: string): Promise<NonNullable<Part<T>>> => promise.then(value => ({ value }), e => ({ error: message(e, fallback) }));
 
 // Old home tabs moved to the journal page.
 function redirectLegacyTab() {
