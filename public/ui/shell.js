@@ -102,7 +102,9 @@ function initHeader(header) {
     setOpen(false);
     if (inside) { event.preventDefault(); moreButton.focus(); }
   });
-  moreItem.addEventListener('focusout', event => { if (!moreItem.contains(event.relatedTarget)) setOpen(false); });
+  // Close when focus lands elsewhere (Tab out). Not on focusout: a tap blurs the button with no
+  // relatedTarget before the link's click, and closing then would swallow the click.
+  document.addEventListener('focusin', event => { if (!moreItem.contains(event.target)) setOpen(false); });
   document.addEventListener('pointerdown', event => { if (!moreItem.contains(event.target)) setOpen(false); });
 
   moreMenu.querySelector('[data-app-signout]').addEventListener('click', async () => {
