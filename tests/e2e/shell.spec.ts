@@ -44,14 +44,16 @@ test('the menu follows module changes without a reload, in this tab and others',
   await page.goto('/books');
   await expect(inlineLinks(page)).toHaveCount(11);
   await page.evaluate(() => { (window as unknown as { sameDocument: boolean }).sameDocument = true; });
+  const original = await page.evaluate(async () => (await fetch('/api/settings')).json());
   try {
-    // This tab: saveSettings() fires career:settings on the window.
+    // Simulates what saveSettings() announces (tests/shell.test.ts covers that it does):
+    // career:settings on this window...
     const saved = await patchSettings(page, { modules: { notes: false, timeline: false } });
     await page.evaluate(settings => window.dispatchEvent(new CustomEvent('career:settings', { detail: settings })), saved);
     // Turning Timeline off also hides Schedule and Agents (they depend on it).
     await expect(inlineLinks(page)).toHaveText(['HOME', 'LEET', 'COMPANIES', 'PEOPLE', 'BOOKS', 'JOURNAL', 'AUDIO']);
 
-    // Another tab: saveSettings() posts on the career-settings BroadcastChannel.
+    // ...and a career-settings BroadcastChannel message from another tab.
     const other = await context.newPage();
     await other.goto('/books');
     const reordered = await patchSettings(other, { modules: { notes: true, timeline: true }, moduleOrder: ['notes', 'bookshelf'] });
@@ -60,7 +62,7 @@ test('the menu follows module changes without a reload, in this tab and others',
     expect(await page.evaluate(() => (window as unknown as { sameDocument?: boolean }).sameDocument)).toBe(true);
     await other.close();
   } finally {
-    await patchSettings(page, { modules: { notes: true, timeline: true }, moduleOrder: ['timeline', 'schedule', 'leetgrinder', 'companies', 'people', 'bookshelf', 'journal', 'notes', 'audio', 'agents'] });
+    await patchSettings(page, { modules: original.modules, moduleOrder: original.moduleOrder });
   }
 });
 

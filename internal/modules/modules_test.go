@@ -178,7 +178,7 @@ func TestRegistryMatchesFrontend(t *testing.T) {
 		if label := regexp.MustCompile(`label: '([^']*)'`).FindStringSubmatch(block); label == nil || label[1] != m.Label {
 			t.Errorf("%s label: frontend %v, Go %q", m.ID, label, m.Label)
 		}
-		if short := regexp.MustCompile(`short: '([^']*)'`).FindStringSubmatch(block); short == nil || short[1] != m.Short {
+		if short := regexp.MustCompile(`\bshort: '([^']*)'`).FindStringSubmatch(block); short == nil || short[1] != m.Short {
 			t.Errorf("%s short: frontend %v, Go %q", m.ID, short, m.Short)
 		}
 		toolsNeed := map[string]string{}

@@ -51,3 +51,16 @@ func TestHeaderMarksOnlyTheCurrentLink(t *testing.T) {
 		t.Error("a page outside the menu marks a link current")
 	}
 }
+
+func TestRegistryHasHeaderLabels(t *testing.T) {
+	seen := map[string]bool{}
+	for _, m := range modules.Registry {
+		if m.Short == "" || m.Short != strings.ToUpper(m.Short) || seen[m.Short] {
+			t.Errorf("%s: short label %q must be non-empty, uppercase and unique", m.ID, m.Short)
+		}
+		seen[m.Short] = true
+		if len(m.Pages) == 0 {
+			t.Errorf("%s has no main route", m.ID)
+		}
+	}
+}

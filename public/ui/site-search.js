@@ -22,8 +22,9 @@ function initSearch(root) {
   const labels = { run: 'Audio thoughts', note: 'Notes', document: 'Documents', company: 'Companies', connection: 'Connections', book: 'Books', personal: 'Personal journal', week: 'Work journal' };
   function close() { panel.hidden = true; input.setAttribute('aria-expanded', 'false'); request?.abort(); clearTimeout(timer); }
   clear.addEventListener('click', () => { input.value = ''; clear.hidden = true; input.focus(); void render(); });
-  // "/" (outside text fields) and Cmd/Ctrl+K jump to the search field.
+  // "/" (outside inputs, selects and editable content) and Cmd/Ctrl+K jump to the search field.
   document.addEventListener('keydown', e => {
+    if (e.defaultPrevented || e.isComposing) return;
     const slash = e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey && !isEditable(e.target);
     if (slash || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k')) { e.preventDefault(); input.focus(); input.select(); if (panel.hidden) void render(); }
   });
@@ -65,8 +66,8 @@ function initSearch(root) {
       heading.append(title, badge);
       const snippet = document.createElement('p');
       snippet.className = 'search-result-snippet';
-      const start = Math.max(0, item.body.toLowerCase().indexOf(query.toLowerCase()) - 40);
-      snippet.textContent = (start ? '…' : '') + item.body.slice(start, start + 160).replace(/[#*`\n]/g, ' ') + (item.body.length > start + 160 ? '…' : '');
+      const start = Math.max(0, (item.body ?? '').toLowerCase().indexOf(query.toLowerCase()) - 40);
+      snippet.textContent = (start ? '…' : '') + (item.body ?? '').slice(start, start + 160).replace(/[#*`\n]/g, ' ') + ((item.body ?? '').length > start + 160 ? '…' : '');
       link.append(heading, snippet);
       li.append(link);
       results.append(li);

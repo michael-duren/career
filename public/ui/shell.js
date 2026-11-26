@@ -70,6 +70,7 @@ function initHeader(header) {
   }
 
   function applySettings(settings) {
+    if (!settings || typeof settings !== 'object') return;
     const order = menuOrder(settings, ids);
     shown = [home, ...order.map(id => modules[ids.indexOf(id)])];
     for (const li of modules) li.hidden = !order.includes(li.dataset.moduleId);
@@ -108,9 +109,14 @@ function initHeader(header) {
   document.addEventListener('pointerdown', event => { if (!moreItem.contains(event.target)) setOpen(false); });
 
   moreMenu.querySelector('[data-app-signout]').addEventListener('click', async () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_username');
-    await fetch('/api/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).catch(() => undefined);
+    try {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_username');
+    } catch {
+      // Storage blocked: the session cookie is what the logout request clears.
+    }
+    const response = await fetch('/api/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).catch(error => console.warn('Sign out request failed.', error));
+    if (response && !response.ok) console.warn(`Sign out request failed: HTTP ${response.status}`);
     window.location.href = '/login';
   });
 
@@ -119,8 +125,7 @@ function initHeader(header) {
 
   fetch('/api/settings', { cache: 'no-store' })
     .then(response => response.ok ? response.json() : Promise.reject(new Error(`HTTP ${response.status}`)))
-    .then(applySettings)
-    .catch(error => console.warn('Module settings could not be loaded; showing every link.', error));
+    .then(applySettings, error => console.warn('Module settings could not be loaded; showing every link.', error));
   window.addEventListener(SETTINGS_EVENT, event => applySettings(event.detail));
   if (typeof BroadcastChannel === 'function') new BroadcastChannel(SETTINGS_CHANNEL).addEventListener('message', event => applySettings(event.data));
 

@@ -7,8 +7,8 @@ import { THEMES, type Theme } from './theme.ts';
  * from it (the helpers below are for them); today the header and a few pages use it.
  * Home, Search, Settings and Setup are always on and are not modules.
  *
- * The server mirrors the ids, routes, API prefixes, entry kinds, MCP tools and
- * dependencies in internal/modules/modules.go; TestRegistryMatchesFrontend
+ * The server mirrors the ids, labels, short labels, routes, API prefixes, entry
+ * kinds, MCP tools and dependencies in internal/modules/modules.go; TestRegistryMatchesFrontend
  * checks the two agree.
  * See docs/redesign/modules.md.
  */
@@ -182,6 +182,11 @@ export function announceSettings(settings: Settings): void {
 
 export async function saveSettings(patch: SettingsPatch): Promise<Settings> {
   const saved = await settingsRequest('Settings could not be saved. Try again.', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
-  announceSettings(saved);
+  // The save succeeded; a failed announcement only leaves other menus stale until reload.
+  try {
+    announceSettings(saved);
+  } catch (error) {
+    console.warn('Saved settings could not be announced to open menus.', error);
+  }
   return saved;
 }

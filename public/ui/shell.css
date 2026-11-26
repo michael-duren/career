@@ -49,7 +49,7 @@
 .app-menu > li[hidden] {
   display: none;
 }
-/* Links that don't fit wait off-screen until shell.js moves them into MORE +; no-JS still clips. */
+/* Until shell.js has laid out the menu (or without JS), clip links that don't fit. */
 .app-header:not([data-ready]) .app-menu {
   overflow: hidden;
 }

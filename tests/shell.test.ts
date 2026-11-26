@@ -34,7 +34,7 @@ test('fitCount counts the leading links that fit, gaps included', () => {
 });
 
 test('formatClock is 12-hour like formatTime', () => {
-  for (const [h, m, text] of [[0, 5, '12:05 AM'], [12, 0, '12:00 PM'], [17, 20, '5:20 PM'], [9, 7, '9:07 AM']] as const) {
+  for (const [h, m, text] of [[0, 5, '12:05 AM'], [11, 59, '11:59 AM'], [12, 0, '12:00 PM'], [13, 0, '1:00 PM'], [17, 20, '5:20 PM'], [9, 7, '9:07 AM'], [23, 59, '11:59 PM']] as const) {
     const date = new Date(2026, 10, 24, h, m);
     assert.equal(formatClock(date), text);
     assert.equal(formatClock(date), formatTime(date));
