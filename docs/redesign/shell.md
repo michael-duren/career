@@ -48,6 +48,18 @@ Reference: any `reference/mobile/*.html`.
   Settings section (Modules), a Theme picker, and Sign out.
 - No fake status bar; respect `viewport-fit=cover` and safe areas.
 
+Implementation: the same `AppHeader.astro` / `internal/shell/header.templ` markup carries the phone
+search button and the tab bar (`<nav class="app-tabbar">`, every module rendered, the first three
+in registry order showing). Below 768px `shell.css` hides the menu, settings and search field, and
+pads `body` by the tab bar's height so pages don't sit under it. `shell.js` shows the first three
+enabled modules in the user's order (from `/api/settings`, cached in `localStorage` as
+`career-shell-settings` so the next page draws them before the request answers) and marks the
+current tab: Home or a module tab, else More for `/more`, `/settings` and modules not in the bar.
+The search button opens the header search field under the top bar until the full-screen search
+page exists. Tab icons live in `internal/shell/tab-icons.json`, read by both headers. The More page
+is `src/pages/more.astro` (`MorePage.tsx`); counts come from `GET /api/counts`, the theme picker
+applies the theme and saves it with `PATCH /api/settings`.
+
 ## Page header pattern
 
 Every page starts with: mono label (counts, e.g. "61 tracked · 7 featured"), Inter Tight 200

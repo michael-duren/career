@@ -1,6 +1,6 @@
 /*
- * App header behavior (docs/redesign/shell.md, "Desktop header"). Plain JS so the Astro
- * layout and the Go-rendered Leetgrinder pages load the same file (/ui/shell.js).
+ * App header behavior (docs/redesign/shell.md, "Desktop header" and "Mobile"). Plain JS so
+ * the Astro layout and the Go-rendered Leetgrinder pages load the same file (/ui/shell.js).
  *
  * The server renders Home plus a link for every module in registry order. This script:
  * - hides links to turned-off modules and puts the rest in the user's module order,
@@ -10,7 +10,9 @@
  *   for other tabs;
  * - moves links that don't fit into the MORE + menu;
  * - keeps the 12-hour clock current;
- * - signs out from the MORE + menu.
+ * - signs out from the MORE + menu;
+ * - below 768px: fills the tab bar (Home, the first TAB_BAR_SIZE enabled modules in the
+ *   user's order, More) and opens the search field from the top bar's search button.
  */
 
 /** Window event and BroadcastChannel name carrying the saved settings (keep in sync with src/lib/modules.ts). */
@@ -26,6 +28,22 @@ export function menuOrder(settings, ids) {
   const enabled = id => (settings.effective ?? settings.modules ?? {})[id] !== false;
   const order = [...new Set([...(settings.moduleOrder ?? []), ...ids])].filter(id => ids.includes(id));
   return order.filter(enabled);
+}
+
+/** Module tabs between Home and More in the phone tab bar (src/lib/modules.ts tabBarModules agrees). */
+export const TAB_BAR_SIZE = 3;
+
+/** Last settings seen, so the next page draws the tab bar right before /api/settings answers. */
+export const SETTINGS_CACHE_KEY = 'career-shell-settings';
+
+/**
+ * The tab marked current: Home or a module tab owning path; else More for /more, /settings
+ * and module pages not in the bar (More lists them). Undefined for pages outside every module.
+ */
+export function currentTab(tabs, path) {
+  const owner = currentLink(tabs.filter(tab => !tab.hidden), path);
+  if (owner || !currentLink(tabs, path)) return owner;
+  return tabs.find(tab => tab.dataset.moduleId === 'more');
 }
 
 /** How many leading links fit in `available` px, with `gap` px between neighbours. */
@@ -62,6 +80,9 @@ function initHeader(header) {
   const modules = items.filter(li => li !== home);
   const ids = modules.map(li => li.dataset.moduleId);
   let shown = items;
+  const tabBar = header.querySelector('[data-app-tabbar]');
+  const tabs = tabBar ? [...tabBar.querySelectorAll('[data-module-id]')] : [];
+  const moduleTabs = tabs.filter(tab => ids.includes(tab.dataset.moduleId));
 
   // Pages built from a shared shell (a note, a company) don't know their final path at build time.
   if (!menu.querySelector('[aria-current]')) {
@@ -75,6 +96,17 @@ function initHeader(header) {
     shown = [home, ...order.map(id => modules[ids.indexOf(id)])];
     for (const li of modules) li.hidden = !order.includes(li.dataset.moduleId);
     layout();
+    layoutTabs(order.slice(0, TAB_BAR_SIZE));
+  }
+
+  // Show the first module tabs in the user's order between Home and More, and mark the current one.
+  function layoutTabs(tabIds) {
+    if (!tabBar) return;
+    const more = tabs.find(tab => tab.dataset.moduleId === 'more');
+    for (const tab of moduleTabs) tab.hidden = !tabIds.includes(tab.dataset.moduleId);
+    for (const id of tabIds) tabBar.insertBefore(moduleTabs[ids.indexOf(id)], more);
+    for (const tab of tabs) tab.removeAttribute('aria-current');
+    currentTab(tabs, location.pathname)?.setAttribute('aria-current', 'page');
   }
 
   // Put every shown link back in the bar in order, then move the ones that don't fit into MORE +.
@@ -120,14 +152,46 @@ function initHeader(header) {
     window.location.href = '/login';
   });
 
+  // Phone top bar: the search button shows the search field under the bar and focuses it.
+  const searchToggle = header.querySelector('[data-app-search-toggle]');
+  const searchInput = header.querySelector('#site-search');
+  function setSearching(open) {
+    header.classList.toggle('is-searching', open);
+    searchToggle?.setAttribute('aria-expanded', String(open));
+    if (open) searchInput?.focus();
+  }
+  searchToggle?.addEventListener('click', () => setSearching(!header.classList.contains('is-searching')));
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || !header.classList.contains('is-searching')) return;
+    setSearching(false);
+    searchToggle.focus();
+  });
+
   new ResizeObserver(() => layout()).observe(header);
   document.fonts?.ready.then(layout);
 
+  function remember(settings) {
+    if (!settings || typeof settings !== 'object') return;
+    applySettings(settings);
+    try {
+      localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify({ modules: settings.modules, moduleOrder: settings.moduleOrder, effective: settings.effective }));
+    } catch {
+      // Storage blocked: the tab bar waits for /api/settings on every page.
+    }
+  }
+  try {
+    applySettings(JSON.parse(localStorage.getItem(SETTINGS_CACHE_KEY) ?? 'null'));
+  } catch {
+    // Missing, unreadable or blocked cache: keep the rendered tabs until settings load.
+  }
+  // Mark the current tab among the tabs showing now (rendered, or from the cache).
+  layoutTabs(moduleTabs.filter(tab => !tab.hidden).map(tab => tab.dataset.moduleId));
+
   fetch('/api/settings', { cache: 'no-store' })
     .then(response => response.ok ? response.json() : Promise.reject(new Error(`HTTP ${response.status}`)))
-    .then(applySettings, error => console.warn('Module settings could not be loaded; showing every link.', error));
-  window.addEventListener(SETTINGS_EVENT, event => applySettings(event.detail));
-  if (typeof BroadcastChannel === 'function') new BroadcastChannel(SETTINGS_CHANNEL).addEventListener('message', event => applySettings(event.data));
+    .then(remember, error => console.warn('Module settings could not be loaded; showing every link.', error));
+  window.addEventListener(SETTINGS_EVENT, event => remember(event.detail));
+  if (typeof BroadcastChannel === 'function') new BroadcastChannel(SETTINGS_CHANNEL).addEventListener('message', event => remember(event.data));
 
   const clock = header.querySelector('[data-app-clock]');
   function tick() {

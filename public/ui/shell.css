@@ -4,7 +4,8 @@
  * Astro layout and the Go-rendered Leetgrinder pages share it (they link /ui/tokens.css first).
  * Astro bundles it into @layer components; Go pages link /ui/shell.css. Behavior: /ui/shell.js,
  * /ui/site-search.js. Values come from the header of docs/redesign/reference/desktop/*.html.
- * Below 768px this is an interim layout until the phone top bar and tab bar replace it.
+ * Below 768px ("Mobile"): the phone top bar (wordmark, search button, clock) and the fixed tab bar,
+ * values from docs/redesign/reference/mobile/M-More.html.
  */
 
 .app-header {
@@ -324,28 +325,75 @@
   }
 }
 
-/* Interim phone layout: links collapse into MORE +, search gets its own row. */
+/* Phone-only parts, hidden on wider screens. */
+.app-search-toggle,
+.app-tabbar {
+  display: none;
+}
+
+/*
+ * Phone (< 768px): the top bar scrolls with the page; menu, settings and the search field give way
+ * to a search button (the field opens under the bar) and the fixed bottom tab bar. The page gets
+ * bottom padding for the bar so nothing hides behind it and pages don't shift between tabs.
+ */
 @media (max-width: 767px) {
+  :root:has(.app-tabbar) {
+    --app-tabbar-height: calc(62px + max(16px, env(safe-area-inset-bottom)));
+    scroll-padding-bottom: var(--app-tabbar-height);
+  }
+  body:has(.app-tabbar) {
+    padding-bottom: var(--app-tabbar-height);
+  }
   .app-header {
-    padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+    padding: max(22px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right)) 0 max(22px, env(safe-area-inset-left));
   }
   .app-header-row {
     position: relative;
     flex-wrap: wrap;
-    row-gap: 8px;
-    column-gap: 12px;
+    column-gap: 6px;
+    row-gap: 12px;
+    height: auto;
+    min-height: 24px;
     padding-bottom: 12px;
   }
-  .app-wordmark,
-  .app-settings,
+  .app-wordmark {
+    flex: 1 1 auto;
+    margin: 0;
+    font-size: 12px;
+  }
+  .app-nav,
+  .app-settings {
+    display: none;
+  }
+  .app-search-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    margin: -10px 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .app-search-toggle[aria-expanded="true"] {
+    box-shadow: inset 0 -1px 0 var(--ink);
+  }
   .app-clock {
     margin: 0;
   }
   .site-search {
+    display: none;
     order: 10;
     flex-basis: 100%;
     width: auto;
     position: static;
+  }
+  .app-header.is-searching .site-search {
+    display: block;
   }
   .search-shortcut {
     display: none;
@@ -358,5 +406,51 @@
   }
   #search-results {
     max-height: 50dvh;
+  }
+
+  .app-tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    height: var(--app-tabbar-height);
+    padding: 0 env(safe-area-inset-right) max(16px, env(safe-area-inset-bottom)) env(safe-area-inset-left);
+    box-sizing: border-box;
+    border-top: 1px solid var(--ink-30);
+    background: var(--paper);
+  }
+  .app-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 0;
+    min-height: 44px;
+    color: var(--ink-60);
+    font-family: var(--font-mono, "IBM Plex Mono", ui-monospace, monospace);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    line-height: 1;
+    white-space: nowrap;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .app-tab[hidden] {
+    display: none;
+  }
+  .app-tab:hover,
+  .app-tab[aria-current="page"] {
+    color: var(--ink);
+  }
+  .app-tab[aria-current="page"] {
+    box-shadow: inset 0 1px 0 var(--ink);
+  }
+  .app-tab svg {
+    flex: none;
   }
 }

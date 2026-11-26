@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SETTINGS_CHANNEL as SHELL_CHANNEL, SETTINGS_EVENT as SHELL_EVENT, currentLink, fitCount, formatClock, menuOrder } from '../public/ui/shell.js';
-import { DEFAULT_SETTINGS, MODULES, MODULE_IDS, SETTINGS_CHANNEL, SETTINGS_EVENT, enabledModules, moduleForPath, saveSettings, type Settings } from '../src/lib/modules.ts';
+import { SETTINGS_CHANNEL as SHELL_CHANNEL, SETTINGS_EVENT as SHELL_EVENT, TAB_BAR_SIZE, currentLink, currentTab, fitCount, formatClock, menuOrder } from '../public/ui/shell.js';
+import { DEFAULT_SETTINGS, MODULES, MODULE_IDS, SETTINGS_CHANNEL, SETTINGS_EVENT, enabledModules, moduleForPath, saveSettings, tabBarModules, type Settings } from '../src/lib/modules.ts';
 import { formatTime } from '../src/lib/format.ts';
 
 const ids = [...MODULE_IDS];
@@ -24,6 +24,24 @@ test('menuOrder matches enabledModules: user order, dependencies applied by effe
   }
   // Without `effective` the stored switches decide.
   assert.deepEqual(menuOrder({ modules: { notes: false }, moduleOrder: [] }, ['notes', 'audio']), ['audio']);
+});
+
+test('the tab bar takes the first menu modules, like tabBarModules', () => {
+  for (const settings of [DEFAULT_SETTINGS, { ...DEFAULT_SETTINGS, moduleOrder: ['notes', 'audio'], modules: { ...DEFAULT_SETTINGS.modules, timeline: false } }]) {
+    const effective = Object.fromEntries(ids.map(id => [id, enabledModules(settings).some(m => m.id === id)]));
+    assert.deepEqual(menuOrder({ ...settings, effective }, ids).slice(0, TAB_BAR_SIZE), tabBarModules(settings).map(m => m.id));
+  }
+});
+
+test('currentTab marks a showing tab, else More for pages it lists, else nothing', () => {
+  const tab = (id: string, routes: string, hidden = false) => ({ hidden, dataset: { moduleId: id, routes } });
+  const tabs = [tab('home', '/'), tab('notes', '/notes'), tab('companies', '/companies /manage/companies', true), tab('more', '/more /settings')];
+  assert.equal(currentTab(tabs, '/'), tabs[0]);
+  assert.equal(currentTab(tabs, '/notes/abc'), tabs[1]);
+  assert.equal(currentTab(tabs, '/manage/companies'), tabs[3]);
+  assert.equal(currentTab(tabs, '/more'), tabs[3]);
+  assert.equal(currentTab(tabs, '/settings/modules'), tabs[3]);
+  assert.equal(currentTab(tabs, '/2026/career-study-plan'), undefined);
 });
 
 test('fitCount counts the leading links that fit, gaps included', () => {

@@ -1,5 +1,5 @@
-// Package shell renders the app header for Go-rendered pages (docs/redesign/shell.md,
-// "Desktop header"). It mirrors src/components/AppHeader.astro and SiteSearch.astro: the
+// Package shell renders the app header for Go-rendered pages (docs/redesign/shell.md):
+// the desktop header and, below 768px, the phone top bar and tab bar. It mirrors src/components/AppHeader.astro and SiteSearch.astro: the
 // same markup, styled by /ui/shell.css and driven by /ui/shell.js and /ui/site-search.js.
 package shell
 
@@ -36,7 +36,7 @@ templ Head() {
 }
 
 // Header renders the header with current (a module id, or "home") marked as
-// the current page.
+// the current page, plus the phone search button and tab bar.
 templ Header(current string) {
 	<header class="app-header" data-app-header>
 		<div class="app-header-row">
@@ -60,7 +60,7 @@ templ Header(current string) {
 					</li>
 				</ul>
 			</nav>
-			<div class="site-search" role="search" aria-label="Site search">
+			<div id="site-search-box" class="site-search" role="search" aria-label="Site search">
 				<div class="search-field">
 					<svg class="search-icon" aria-hidden="true" width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1"><circle cx="6" cy="6" r="4.5"></circle><path d="M9.5 9.5 L13 13"></path></svg>
 					<label for="site-search" class="ui-sr-only">Search everything</label>
@@ -78,11 +78,35 @@ templ Header(current string) {
 					<div class="search-panel-footer"><span><kbd>↑</kbd><kbd>↓</kbd> navigate <kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></div>
 				</div>
 			</div>
+			<button type="button" class="app-search-toggle" aria-label="Search everything" aria-controls="site-search-box" aria-expanded="false" data-app-search-toggle>
+				<svg aria-hidden="true" width="17" height="17" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1"><circle cx="6" cy="6" r="4.5"></circle><path d="M9.5 9.5 L13 13"></path></svg>
+			</button>
 			<a class="app-settings" href="/settings/modules" aria-label="Settings">
 				<svg aria-hidden="true" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1"><circle cx="8" cy="8" r="2.5"></circle><path d="M8 1 V3.5 M8 12.5 V15 M1 8 H3.5 M12.5 8 H15 M3 3 L4.8 4.8 M11.2 11.2 L13 13 M3 13 L4.8 11.2 M11.2 4.8 L13 3"></path></svg>
 			</a>
 			<time class="app-clock" data-app-clock></time>
 		</div>
+		<nav class="app-tabbar" aria-label="Main" data-app-tabbar>
+			for _, tab := range Tabs() {
+				<a
+					class="app-tab"
+					href={ templ.SafeURL(tab.Href) }
+					data-module-id={ tab.ID }
+					data-routes={ tab.Routes }
+					hidden?={ tab.Hidden }
+					if tab.ID == currentTab(current) {
+						aria-current="page"
+					}
+				>
+					<svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2">
+						for _, d := range tab.Icon {
+							<path d={ d }></path>
+						}
+					</svg>
+					{ tab.Short }
+				</a>
+			}
+		</nav>
 	</header>
 	<script type="module" src="/ui/shell.js"></script>
 	<script type="module" src="/ui/site-search.js"></script>

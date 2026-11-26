@@ -22,6 +22,7 @@ var staticPages = map[string]string{
 	"/manage/books":     "manage/books/index.html",
 	"/manage/companies": "manage/companies/index.html",
 	"/weekly-scheduler": "weekly-scheduler/index.html",
+	"/more":             "more/index.html",
 }
 
 // journalTabs maps pages folded into the journal page to their tab.

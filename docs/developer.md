@@ -156,6 +156,9 @@ exact configured `Origin` and a JSON content type.
 - `POST /api/entries/{kind}/toggle` toggles a Markdown checklist item on a book or company.
 - `POST /api/goals/steps/move` reorders or moves a goal step.
 - `GET /api/agent-context`, `GET /api/search`, `GET /api/export`.
+- `GET /api/counts` returns `{ counts: { <moduleId>: n } }`: saved entries per usable module that
+  owns entry kinds (Journal sums work and personal entries). Turned-off modules are left out. The
+  phone More page shows them.
 - `GET /api/settings` returns `{ modules, moduleOrder, theme, setupCompletedAt, effective }`.
   `PATCH /api/settings` changes any of `modules`, `moduleOrder`, `theme` and `setupCompletedAt`
   (camelCase here; the spec's `module_order`/`setup_completed_at` are the column names), and is

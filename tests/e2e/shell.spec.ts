@@ -105,3 +105,74 @@ test('"/" jumps to the search field, but not while typing', async ({ page }) => 
   await search.fill('a/b');
   await expect(search).toHaveValue('a/b');
 });
+
+test.describe('phone (< 768px)', () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
+
+  const tabBar = (page: Page) => page.locator('[data-app-tabbar]');
+  const visibleTabs = (page: Page) => tabBar(page).locator('.app-tab:visible');
+
+  test('top bar and tab bar replace the menu; the current tab is marked', async ({ page }) => {
+    await page.goto('/weekly-scheduler');
+    await expect(page.locator('[data-app-menu]')).toBeHidden();
+    await expect(page.getByRole('link', { name: 'Settings' })).toBeHidden();
+    await expect(visibleTabs(page)).toHaveText(['HOME', 'TIMELINE', 'SCHEDULE', 'LEET', 'MORE']);
+    await expect(tabBar(page).locator('[aria-current="page"]')).toHaveText('SCHEDULE');
+    for (const tab of await visibleTabs(page).all()) expect((await tab.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    // A module not in the bar marks More, which lists it.
+    await page.goto('/companies');
+    await expect(tabBar(page).locator('[aria-current="page"]')).toHaveText('MORE');
+    // The Go-rendered Leetgrinder pages get the same bar.
+    await page.goto('/leetgrinder/problems');
+    await expect(tabBar(page).locator('[aria-current="page"]')).toHaveText('LEET');
+  });
+
+  test('the search button opens the search field and Escape closes it', async ({ page }) => {
+    await page.goto('/books');
+    const toggle = page.getByRole('button', { name: 'Search everything' });
+    const search = page.getByRole('searchbox', { name: 'Search everything' });
+    await expect(search).toBeHidden();
+    await toggle.tap();
+    await expect(search).toBeFocused();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await page.keyboard.press('Escape');
+    await expect(search).toBeHidden();
+    await expect(toggle).toBeFocused();
+  });
+
+  test('turning a tab module off fills its slot, and More lists the rest', async ({ page }) => {
+    await page.goto('/more');
+    const original = await page.evaluate(async () => (await fetch('/api/settings')).json());
+    const more = page.getByRole('navigation', { name: 'More pages' });
+    await expect(more.getByRole('link')).toHaveCount(7);
+    await expect(more.getByRole('link').first()).toContainText('Companies');
+    try {
+      const saved = await patchSettings(page, { modules: { leetgrinder: false } });
+      await page.evaluate(settings => window.dispatchEvent(new CustomEvent('career:settings', { detail: settings })), saved);
+      await expect(visibleTabs(page)).toHaveText(['HOME', 'TIMELINE', 'SCHEDULE', 'COMPANIES', 'MORE']);
+      await expect(more.getByRole('link').first()).toContainText('People');
+      await expect(page.getByRole('link', { name: /Modules/ })).toContainText('9 of 10 on');
+      // The next page draws the same tabs.
+      await page.goto('/books');
+      await expect(visibleTabs(page)).toHaveText(['HOME', 'TIMELINE', 'SCHEDULE', 'COMPANIES', 'MORE']);
+    } finally {
+      await patchSettings(page, { modules: original.modules, moduleOrder: original.moduleOrder });
+    }
+  });
+
+  test('the More page picks a theme', async ({ page }) => {
+    await page.goto('/more');
+    const original = await page.evaluate(async () => (await fetch('/api/settings')).json());
+    try {
+      await page.getByText('VELLUM', { exact: true }).tap();
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'vellum');
+      await expect(page.getByRole('radio', { name: 'VELLUM' })).toBeChecked();
+      await expect.poll(async () => (await page.evaluate(async () => (await fetch('/api/settings')).json())).theme).toBe('vellum');
+      await page.reload();
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'vellum');
+    } finally {
+      await patchSettings(page, { theme: original.theme });
+      await page.evaluate(() => localStorage.removeItem('career-theme'));
+    }
+  });
+});

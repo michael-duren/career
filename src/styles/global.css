@@ -232,3 +232,7 @@ button, a, summary { touch-action: manipulation; }
 @media (min-width: 640px) {
   .app-content { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); }
 }
+/* Phone: page content lines up with the top bar's 22px gutter (public/ui/shell.css). */
+@media (max-width: 767px) {
+  .app-content { padding-left: max(22px, env(safe-area-inset-left)); padding-right: max(22px, env(safe-area-inset-right)); }
+}
