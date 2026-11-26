@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	pathpkg "path"
+	"slices"
 	"strings"
 	"time"
 
@@ -119,9 +120,7 @@ func moduleOff(w http.ResponseWriter, r *http.Request, settings modules.Settings
 // the token check instead.
 func (s *Server) moduleGuard(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Match the cleaned path, so //notes or /x/../notes cannot slip past.
 		path := pathpkg.Clean("/" + r.URL.Path)
-		m, ok := requestModule(path)
 		api := strings.HasPrefix(path, "/api/")
 		// Every /api/leetgrinder/ route is in the bearer-token group behind
 		// requireModule; a session route added there must not rely on this.
@@ -129,11 +128,34 @@ func (s *Server) moduleGuard(next http.Handler) http.Handler {
 		// Journal and audio Markdown views of agent context are checked by the
 		// handler against their own modules, so they work with Agents off.
 		journalView := path == "/api/agent-context" && r.URL.Query().Get("journal") != ""
-		if !ok || extension || journalView || (api && !s.authenticated(r)) {
+		if extension || journalView || (api && !s.authenticated(r)) {
 			next.ServeHTTP(w, r)
 			return
 		}
-		s.guardModule(w, r, next, m)
+		// Check the module of the cleaned path (so //notes or /x/../notes
+		// cannot slip past) and of the raw path the router matches.
+		var owners []modules.Module
+		for _, p := range []string{path, r.URL.Path} {
+			if m, ok := requestModule(p); ok && !slices.ContainsFunc(owners, func(o modules.Module) bool { return o.ID == m.ID }) {
+				owners = append(owners, m)
+			}
+		}
+		if len(owners) == 0 {
+			next.ServeHTTP(w, r)
+			return
+		}
+		settings, err := s.moduleSettings(r.Context())
+		if err != nil {
+			failure(w, err)
+			return
+		}
+		for _, m := range owners {
+			if !settings.Enabled(m.ID) {
+				moduleOff(w, r, settings, m)
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
 	})
 }
 

@@ -72,7 +72,7 @@ func TestDisabledModulesReturn404(t *testing.T) {
 	db := testDB(t)
 	ctx := context.Background()
 	root := t.TempDir()
-	for _, page := range []string{"notes", "weekly-scheduler", "timeline", "books", "journal"} {
+	for _, page := range []string{"notes", "weekly-scheduler", "timeline", "books", "journal", "static-shells/note"} {
 		if err := os.MkdirAll(filepath.Join(root, page), 0755); err != nil {
 			t.Fatal(err)
 		}
@@ -121,7 +121,7 @@ func TestDisabledModulesReturn404(t *testing.T) {
 		}
 		return kinds
 	}
-	paths := []string{"/journal", "/notes", "/notes/", "/api/entries/note", "/weekly-scheduler", "/api/scheduler/week?week=2026-11-23", "/timeline", "/api/goals", "/api/summaries/progress"}
+	paths := []string{"/journal", "/notes", "/notes/", "/notes/systems/nested-note", "/api/entries/note", "/weekly-scheduler", "/api/scheduler/week?week=2026-11-23", "/timeline", "/api/goals", "/api/summaries/progress", "/leetgrinder", "/leetgrinder/problem/two-sum", "/api/agent-context"}
 	for _, path := range paths {
 		if w := do("GET", path, "session"); w.Code != 200 {
 			t.Fatalf("%s while on: %d %s", path, w.Code, w.Body.String())
@@ -134,19 +134,27 @@ func TestDisabledModulesReturn404(t *testing.T) {
 		t.Fatal("extension while on", w.Code, w.Body.String())
 	}
 
-	// Timeline off takes Schedule down with it; Notes off hides its entries.
+	// Writes reach their handlers while on (any answer but 404) and are
+	// refused before them while off.
+	writes := [][3]string{
+		{"POST", "/api/entries/note", "session"}, {"DELETE", "/api/entries/note", "session"}, {"POST", "/api/scheduler/mutate", "session"},
+		{"POST", "/leetgrinder/problem/two-sum/attempts", "session"}, {"POST", "/leetgrinder/settings/tokens", "session"},
+		{"POST", "/api/leetgrinder/attempts", "bearer"}, {"PUT", "/api/leetgrinder/problem/two-sum", "bearer"}, {"GET", "/api/leetgrinder/problem/two-sum", "bearer"},
+	}
+	for _, call := range writes {
+		if w := do(call[0], call[1], call[2]); w.Code == 404 {
+			t.Errorf("%s %s while on: 404 %s", call[0], call[1], w.Body.String())
+		}
+	}
+
+	// Timeline off takes Schedule and Agents down with it; Notes off hides its entries.
 	set(map[string]bool{"notes": false, "timeline": false, "leetgrinder": false, "journal": false})
-	for _, path := range append(paths, "//notes", "/books/../notes", "/notes/systems/nested-note", "/leetgrinder", "/leetgrinder/problem/two-sum", "/api/agent-context") {
+	for _, path := range append(paths, "//notes", "/books/../notes", "/notes/../books") {
 		if w := do("GET", path, "session"); w.Code != 404 {
 			t.Errorf("%s while off: %d", path, w.Code)
 		}
 	}
-	// Writes are refused too, before their handlers run.
-	for _, call := range [][3]string{
-		{"POST", "/api/entries/note", "session"}, {"DELETE", "/api/entries/note", "session"}, {"POST", "/api/scheduler/mutate", "session"},
-		{"POST", "/leetgrinder/problem/two-sum/attempts", "session"},
-		{"POST", "/api/leetgrinder/attempts", "bearer"}, {"PUT", "/api/leetgrinder/problem/two-sum", "bearer"}, {"GET", "/api/leetgrinder/problem/two-sum", "bearer"},
-	} {
+	for _, call := range writes {
 		if w := do(call[0], call[1], call[2]); w.Code != 404 {
 			t.Errorf("%s %s while off: %d %s", call[0], call[1], w.Code, w.Body.String())
 		}

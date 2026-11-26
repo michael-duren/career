@@ -50,16 +50,19 @@ export function ConnectionsBoard() {
   const [draft, setDraft] = useState<Connection>();
   // Tracked companies and the catch-up queue need the Companies module; People works without it.
   const [companiesOn, setCompaniesOn] = useState(true);
+  const [companiesFailed, setCompaniesFailed] = useState(false);
 
   async function load() {
     try {
       const on = await moduleEnabled('companies');
       setCompaniesOn(on);
-      // A failed company list only hides the company parts; connections still load.
+      setCompaniesFailed(false);
+      if (!on) setCompanyFilter('all');
+      // A failed company list is reported on its own; connections still load.
       const companyList = on
         ? api<{ entries: { entry: CompanyOption }[] }>('/api/entries/company?limit=100').catch(error => {
           console.warn('Companies could not be loaded.', error);
-          setCompaniesOn(false);
+          setCompaniesFailed(true);
           return { entries: [] as { entry: CompanyOption }[] };
         })
         : Promise.resolve({ entries: [] as { entry: CompanyOption }[] });
@@ -188,6 +191,7 @@ export function ConnectionsBoard() {
         <button type="button" disabled={busy || !!draft} className="rounded-lg bg-blue-600 px-3 py-1.5 text-white hover:bg-blue-500 disabled:opacity-50" onClick={() => setDraft(newConnection())}>+ Add connection</button>
       </div>
       {error && <div role="alert" className="rounded-lg border border-red-800 p-3 text-sm text-red-200">{error}</div>}
+      {companiesFailed && <div role="alert" className="rounded-lg border border-red-800 p-3 text-sm text-red-200">Companies could not be loaded, so company names and filters are missing. Reload to retry.</div>}
       <p role="status" className="text-sm text-zinc-400">{status}</p>
 
       {draft && <ConnectionForm key={draft.id} draft={draft} isNew={!revisions[draft.id]} busy={busy} companies={companies} companiesOn={companiesOn} today={today}
