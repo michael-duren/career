@@ -30,10 +30,9 @@ const icons: Record<string, string[]> = tabIcons;
             <a class="app-link" href={link.routes[0]} aria-current={link.id === current ? 'page' : undefined}>{link.short}</a>
           </li>
         ))}
-        <li class="app-more" data-app-more>
+        <li class="app-more" data-app-more hidden>
           <button type="button" class="app-link" aria-expanded="false" aria-controls="app-more-menu">MORE +</button>
           <ul id="app-more-menu" class="app-more-menu" data-app-more-menu hidden>
-            <li class="app-more-signout"><button type="button" class="app-link" data-app-signout>SIGN OUT</button></li>
           </ul>
         </li>
       </ul>

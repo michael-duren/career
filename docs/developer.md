@@ -157,12 +157,13 @@ exact configured `Origin` and a JSON content type.
 - `POST /api/goals/steps/move` reorders or moves a goal step.
 - `GET /api/agent-context`, `GET /api/search`, `GET /api/export`.
 - `GET /api/counts` returns `{ counts: { <moduleId>: n } }`: saved entries per usable module that
-  owns entry kinds (0 when none are saved; Journal sums weekly logs and personal entries).
-  Turned-off modules and modules that own no entry kinds are left out. The phone More page shows them.
+  owns entry kinds (0 when none are saved; Journal sums weekly logs and personal entries), and saved
+  attempts for Leetgrinder. Schedule and Agents are left out. Turned-off modules are left out unless
+  `?all=1` is passed. The phone More page shows them; Settings → Modules uses `?all=1` for "paused · N kept".
 - `GET /api/settings` returns `{ modules, moduleOrder, theme, setupCompletedAt, effective }`.
   `PATCH /api/settings` changes any of `modules`, `moduleOrder`, `theme` and `setupCompletedAt`
-  (camelCase here; the spec's `module_order`/`setup_completed_at` are the column names), and is
-  the only way to change them until the Settings screen lands. It returns 400 for unknown modules,
+  (camelCase here; the spec's `module_order`/`setup_completed_at` are the column names).
+  Settings → Modules (`/settings/modules`) sets `modules` and `moduleOrder`; Settings → Theme sets `theme`. It returns 400 for unknown modules,
   unknown or repeated ids in `moduleOrder` (an empty `moduleOrder` resets it to the default), unknown themes, a `setupCompletedAt` that is
   neither an RFC 3339 time nor null, or newly turning on a module whose dependency is off. `effective` says which modules can be used once their dependencies are applied.
 

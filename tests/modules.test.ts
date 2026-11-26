@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_SETTINGS, MODULES, MODULE_IDS, enabledModules, isEnabled, lockedBy, moduleForPath, modulesForFocus, moreModules, orderedModules, partEnabled, tabBarModules } from '../src/lib/modules.ts';
+import { DEFAULT_SETTINGS, MODULES, MODULE_DESCRIPTIONS, MODULE_IDS, appearsIn, enabledModules, isEnabled, lockedBy, moduleForPath, moduleStatus, modulesForFocus, moreModules, moveModule, orderedModules, partEnabled, tabBarHint, tabBarModules } from '../src/lib/modules.ts';
 
 const settings = (modules: Record<string, boolean>, moduleOrder: string[] = [...MODULE_IDS]) => ({ modules: { ...DEFAULT_SETTINGS.modules, ...modules }, moduleOrder });
 
@@ -62,4 +62,42 @@ test('maps page paths to modules on whole segments', () => {
 test('setup focus picks pre-select modules', () => {
   const picked = modulesForFocus(['Networking', 'Reflecting']);
   assert.deepEqual(MODULE_IDS.filter(id => picked[id]), ['people', 'companies', 'journal', 'audio'].sort((a, b) => MODULE_IDS.indexOf(a as never) - MODULE_IDS.indexOf(b as never)));
+});
+
+test('Settings → Modules status: locked, paused with real counts, blocked parts, and users', () => {
+  const all = settings({});
+  assert.deepEqual(moduleStatus(all, 'timeline'), { text: 'Schedule and Agent context use this', tone: 'quiet' });
+  assert.deepEqual(moduleStatus(settings({ agents: false }), 'timeline'), { text: 'Schedule uses this', tone: 'quiet' });
+  assert.equal(moduleStatus(all, 'notes'), null);
+  const noTimeline = settings({ timeline: false });
+  assert.deepEqual(moduleStatus(noTimeline, 'schedule'), { text: 'needs Timeline', tone: 'accent' });
+  assert.deepEqual(moduleStatus(noTimeline, 'timeline', { timeline: 16 }), { text: 'paused · 16 goals kept', tone: 'muted' });
+  assert.deepEqual(moduleStatus(settings({ audio: false }), 'audio', { audio: 1 }), { text: 'paused · 1 recording kept', tone: 'muted' });
+  // Nothing saved, an unknown count, or a module that saves nothing countable: just "paused".
+  assert.equal(moduleStatus(settings({ audio: false }), 'audio', { audio: 0 })?.text, 'paused');
+  assert.equal(moduleStatus(settings({ audio: false }), 'audio')?.text, 'paused');
+  assert.equal(moduleStatus(settings({ schedule: false }), 'schedule', { schedule: 3 })?.text, 'paused');
+  assert.deepEqual(moduleStatus(settings({ companies: false }), 'people'), { text: 'catch-up queue needs Companies', tone: 'accent' });
+});
+
+test('every module has a description and appears in the menu', () => {
+  for (const m of MODULES) {
+    assert.ok(MODULE_DESCRIPTIONS[m.id], `${m.id} has no description`);
+    assert.equal(appearsIn(m)[0], 'Menu');
+  }
+  assert.deepEqual(appearsIn(MODULES.find(m => m.id === 'leetgrinder')!), ['Menu', 'Home', 'Search', 'Reminders']);
+  assert.deepEqual(appearsIn(MODULES.find(m => m.id === 'agents')!), ['Menu']);
+});
+
+test('tab bar hint names the module that slides into the last tab', () => {
+  assert.equal(tabBarHint(settings({})), 'turn off Leetgrinder and Companies slides in');
+  assert.equal(tabBarHint(settings({ leetgrinder: false })), 'turn off Companies and People slides in');
+  const fewOn = Object.fromEntries(MODULE_IDS.map(id => [id, ['notes', 'journal'].includes(id)]));
+  assert.equal(tabBarHint(settings(fewOn)), '');
+});
+
+test('moveModule moves one id and clamps the target', () => {
+  assert.deepEqual(moveModule(['timeline', 'schedule', 'notes'], 0, 2), ['schedule', 'notes', 'timeline']);
+  assert.deepEqual(moveModule(['timeline', 'schedule', 'notes'], 2, 0), ['notes', 'timeline', 'schedule']);
+  assert.deepEqual(moveModule(['timeline', 'schedule', 'notes'], 1, 9), ['timeline', 'notes', 'schedule']);
 });

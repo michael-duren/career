@@ -25,7 +25,8 @@ one marked. `public/ui/shell.css` styles it; `public/ui/shell.js` hides turned-o
 the user's order, fills `MORE +` and runs the clock; `public/ui/site-search.js` runs the search field.
 `saveSettings()` in `src/lib/modules.ts` fires a `career:settings` window event and posts on the
 `career-settings` BroadcastChannel, so the menu updates without a reload in every open tab.
-Until Settings → Account exists, Sign out is the last item in `MORE +`, so `MORE +` always shows.
+`MORE +` shows only when links overflow. Sign out lives in Settings → Account (`/settings/account`)
+and on the phone More page.
 
 ## Global search
 

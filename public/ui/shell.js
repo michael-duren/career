@@ -8,9 +8,8 @@
  * - redoes that without a reload when settings change: saveSettings() in
  *   src/lib/modules.ts fires SETTINGS_EVENT on window and posts on SETTINGS_CHANNEL
  *   for other tabs;
- * - moves links that don't fit into the MORE + menu;
+ * - moves links that don't fit into the MORE + menu, which shows only when something overflows;
  * - keeps the 12-hour clock current;
- * - signs out from the MORE + menu;
  * - below 768px: fills the tab bar (Home, the first TAB_BAR_SIZE enabled modules in the
  *   user's order, More) and opens the search field from the top bar's search button.
  */
@@ -81,7 +80,6 @@ function initHeader(header) {
   const moreItem = header.querySelector('[data-app-more]');
   const moreButton = moreItem.querySelector('button');
   const moreMenu = moreItem.querySelector('[data-app-more-menu]');
-  const signOutItem = moreMenu.querySelector('[data-app-signout]').closest('li');
   const items = [...menu.querySelectorAll('li[data-module-id]')];
   const home = items.find(li => li.dataset.moduleId === 'home');
   const modules = items.filter(li => li !== home);
@@ -124,16 +122,20 @@ function initHeader(header) {
   }
 
   // Put every shown link back in the bar in order, then move the ones that don't fit into MORE +.
+  // MORE + shows only when something overflows; then the links share the room it leaves.
   function layout() {
     menu.insertBefore(home, menu.firstChild);
     for (const li of shown) menu.insertBefore(li, moreItem);
     for (const li of items) if (!shown.includes(li)) menu.insertBefore(li, moreItem);
+    moreItem.hidden = false;
     const gap = parseFloat(getComputedStyle(menu).columnGap) || 0;
     const widths = shown.map(li => li.getBoundingClientRect().width);
-    // MORE + always shows (it holds Sign out), so the links share what it leaves.
-    const fit = fitCount(widths, menu.clientWidth - moreItem.getBoundingClientRect().width - gap, gap);
+    let fit = fitCount(widths, menu.clientWidth, gap);
+    if (fit < shown.length) fit = fitCount(widths, menu.clientWidth - moreItem.getBoundingClientRect().width - gap, gap);
     const overflow = shown.slice(fit);
-    for (const li of overflow) moreMenu.insertBefore(li, signOutItem);
+    for (const li of overflow) moreMenu.append(li);
+    moreItem.hidden = !overflow.length;
+    if (moreItem.hidden) setOpen(false);
     moreItem.classList.toggle('is-current', overflow.some(li => li.querySelector('[aria-current]')));
     header.dataset.ready = '';
   }
@@ -153,19 +155,6 @@ function initHeader(header) {
   // relatedTarget before the link's click, and closing then would swallow the click.
   document.addEventListener('focusin', event => { if (!moreItem.contains(event.target)) setOpen(false); });
   document.addEventListener('pointerdown', event => { if (!moreItem.contains(event.target)) setOpen(false); });
-
-  moreMenu.querySelector('[data-app-signout]').addEventListener('click', async () => {
-    try {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_username');
-      localStorage.removeItem(SETTINGS_CACHE_KEY);
-    } catch {
-      // Storage blocked: the session cookie is what the logout request clears.
-    }
-    const response = await fetch('/api/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).catch(error => console.warn('Sign out request failed.', error));
-    if (response && !response.ok) console.warn(`Sign out request failed: HTTP ${response.status}`);
-    window.location.href = '/login';
-  });
 
   // Phone top bar: the search button shows the search field under the bar and focuses it.
   const searchToggle = header.querySelector('[data-app-search-toggle]');
