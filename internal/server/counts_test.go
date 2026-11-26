@@ -37,7 +37,8 @@ func TestCountsAPI(t *testing.T) {
 	if got := counts()["companies"]; got != before["companies"]+1 {
 		t.Fatalf("companies %d after one save, want %d", got, before["companies"]+1)
 	}
-	// Turned-off modules are left out, including ones off through a dependency.
+	// Turned-off modules are left out. (No module that owns entry kinds depends on another
+	// today, so a dependency case can't be shown here; readCounts uses Effective() regardless.)
 	if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"companies": false, "timeline": false}}); err != nil {
 		t.Fatal(err)
 	}
@@ -47,7 +48,7 @@ func TestCountsAPI(t *testing.T) {
 			t.Errorf("%s is off but counted: %v", id, after)
 		}
 	}
-	if _, ok := after["notes"]; !ok {
+	if n, ok := after["notes"]; !ok || n != before["notes"] {
 		t.Errorf("notes is on but missing: %v", after)
 	}
 }

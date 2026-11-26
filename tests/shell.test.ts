@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SETTINGS_CHANNEL as SHELL_CHANNEL, SETTINGS_EVENT as SHELL_EVENT, TAB_BAR_SIZE, currentLink, currentTab, fitCount, formatClock, menuOrder } from '../public/ui/shell.js';
+import { SETTINGS_CHANNEL as SHELL_CHANNEL, SETTINGS_EVENT as SHELL_EVENT, TAB_BAR_SIZE, currentLink, currentTab, fitCount, formatClock, menuOrder, validSettings } from '../public/ui/shell.js';
 import { DEFAULT_SETTINGS, MODULES, MODULE_IDS, SETTINGS_CHANNEL, SETTINGS_EVENT, enabledModules, moduleForPath, saveSettings, tabBarModules, type Settings } from '../src/lib/modules.ts';
 import { formatTime } from '../src/lib/format.ts';
 
@@ -42,6 +42,14 @@ test('currentTab marks a showing tab, else More for pages it lists, else nothing
   assert.equal(currentTab(tabs, '/more'), tabs[3]);
   assert.equal(currentTab(tabs, '/settings/modules'), tabs[3]);
   assert.equal(currentTab(tabs, '/2026/career-study-plan'), undefined);
+});
+
+test('validSettings accepts settings payloads and rejects anything else', () => {
+  assert.equal(validSettings(DEFAULT_SETTINGS), true);
+  assert.equal(validSettings({ ...DEFAULT_SETTINGS, effective: { notes: true } }), true);
+  for (const bad of [null, 'x', 42, {}, { modules: {} }, { moduleOrder: [] }, { modules: {}, moduleOrder: 'notes' }, { modules: {}, moduleOrder: [], effective: null }]) {
+    assert.equal(validSettings(bad), false, JSON.stringify(bad));
+  }
 });
 
 test('fitCount counts the leading links that fit, gaps included', () => {

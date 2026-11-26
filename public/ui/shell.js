@@ -46,6 +46,13 @@ export function currentTab(tabs, path) {
   return tabs.find(tab => tab.dataset.moduleId === 'more');
 }
 
+/** Whether a settings payload (API, cache, event or channel) has the shape the menus read. */
+export function validSettings(settings) {
+  return !!settings && typeof settings === 'object' && Array.isArray(settings.moduleOrder)
+    && !!settings.modules && typeof settings.modules === 'object'
+    && (settings.effective === undefined || (!!settings.effective && typeof settings.effective === 'object'));
+}
+
 /** How many leading links fit in `available` px, with `gap` px between neighbours. */
 export function fitCount(widths, available, gap) {
   let used = -gap;
@@ -91,7 +98,7 @@ function initHeader(header) {
   }
 
   function applySettings(settings) {
-    if (!settings || typeof settings !== 'object') return;
+    if (!validSettings(settings)) return;
     const order = menuOrder(settings, ids);
     shown = [home, ...order.map(id => modules[ids.indexOf(id)])];
     for (const li of modules) li.hidden = !order.includes(li.dataset.moduleId);
@@ -104,7 +111,14 @@ function initHeader(header) {
     if (!tabBar) return;
     const more = tabs.find(tab => tab.dataset.moduleId === 'more');
     for (const tab of moduleTabs) tab.hidden = !tabIds.includes(tab.dataset.moduleId);
-    for (const id of tabIds) tabBar.insertBefore(moduleTabs[ids.indexOf(id)], more);
+    for (const id of tabIds) {
+      const tab = moduleTabs.find(t => t.dataset.moduleId === id);
+      if (tab) tabBar.insertBefore(tab, more);
+    }
+    markCurrentTab();
+  }
+
+  function markCurrentTab() {
     for (const tab of tabs) tab.removeAttribute('aria-current');
     currentTab(tabs, location.pathname)?.setAttribute('aria-current', 'page');
   }
@@ -144,6 +158,7 @@ function initHeader(header) {
     try {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_username');
+      localStorage.removeItem(SETTINGS_CACHE_KEY);
     } catch {
       // Storage blocked: the session cookie is what the logout request clears.
     }
@@ -164,14 +179,17 @@ function initHeader(header) {
   document.addEventListener('keydown', event => {
     if (event.key !== 'Escape' || !header.classList.contains('is-searching')) return;
     setSearching(false);
-    searchToggle.focus();
+    searchToggle?.focus();
   });
 
   new ResizeObserver(() => layout()).observe(header);
   document.fonts?.ready.then(layout);
 
   function remember(settings) {
-    if (!settings || typeof settings !== 'object') return;
+    if (!validSettings(settings)) {
+      console.warn('Ignored module settings with an unexpected shape.', settings);
+      return;
+    }
     applySettings(settings);
     try {
       localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify({ modules: settings.modules, moduleOrder: settings.moduleOrder, effective: settings.effective }));
@@ -179,17 +197,24 @@ function initHeader(header) {
       // Storage blocked: the tab bar waits for /api/settings on every page.
     }
   }
+  let cached = null;
   try {
-    applySettings(JSON.parse(localStorage.getItem(SETTINGS_CACHE_KEY) ?? 'null'));
+    cached = JSON.parse(localStorage.getItem(SETTINGS_CACHE_KEY) ?? 'null');
   } catch {
-    // Missing, unreadable or blocked cache: keep the rendered tabs until settings load.
+    // Unreadable or blocked cache: keep the rendered tabs until settings load.
+  }
+  if (validSettings(cached)) {
+    applySettings(cached);
+  } else if (cached !== null) {
+    try { localStorage.removeItem(SETTINGS_CACHE_KEY); } catch { /* blocked: nothing to clear */ }
   }
   // Mark the current tab among the tabs showing now (rendered, or from the cache).
-  layoutTabs(moduleTabs.filter(tab => !tab.hidden).map(tab => tab.dataset.moduleId));
+  if (tabBar) markCurrentTab();
 
   fetch('/api/settings', { cache: 'no-store' })
     .then(response => response.ok ? response.json() : Promise.reject(new Error(`HTTP ${response.status}`)))
-    .then(remember, error => console.warn('Module settings could not be loaded; showing every link.', error));
+    .then(remember)
+    .catch(error => console.warn('Module settings could not be loaded; the menu and tab bar keep their current links.', error));
   window.addEventListener(SETTINGS_EVENT, event => remember(event.detail));
   if (typeof BroadcastChannel === 'function') new BroadcastChannel(SETTINGS_CHANNEL).addEventListener('message', event => remember(event.data));
 

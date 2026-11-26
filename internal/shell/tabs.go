@@ -31,7 +31,8 @@ type Tab struct {
 	Link
 	Icon []string
 	// Hidden is the server's first guess (the first TabBarSize modules in
-	// registry order show); shell.js applies the user's order and switches.
+	// registry order show); shell.js then shows the first enabled modules in
+	// the user's order instead.
 	Hidden bool
 }
 

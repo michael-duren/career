@@ -41,7 +41,7 @@ Until Settings → Account exists, Sign out is the last item in `MORE +`, so `MO
 Reference: any `reference/mobile/*.html`.
 
 - **Top bar** (in the scroll area): `CAREER`, a 44px search icon button, time. Then a `--ink-30` rule.
-- **Tab bar** fixed at the bottom, 78px tall (includes safe-area padding): five equal tabs with
+- **Tab bar** fixed at the bottom, 62px plus a bottom padding of the safe-area inset (at least 16px, so 78px without one): five equal tabs with
   22px line icons and mono 9px labels. Slots: Home, the first 3 enabled modules in the user's
   order, More. Active tab: full opacity + 1px line on top, `aria-current="page"`.
 - **More page** (`M-More.html`): every enabled module not in the tab bar with its count, then a

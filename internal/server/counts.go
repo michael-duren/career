@@ -7,8 +7,9 @@ import (
 )
 
 // readCounts answers GET /api/counts with the number of saved entries per
-// usable module that owns entry kinds (the phone More page shows them).
-// Turned-off modules and modules without entries are left out.
+// usable module that owns entry kinds (the phone More page shows them); a
+// module with none saved counts 0. Turned-off modules and modules that own
+// no entry kinds (Schedule, Leetgrinder, Agents) are left out.
 func (s *Server) readCounts(w http.ResponseWriter, r *http.Request) {
 	settings, err := s.moduleSettings(r.Context())
 	if err != nil {

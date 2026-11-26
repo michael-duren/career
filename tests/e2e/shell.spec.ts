@@ -118,13 +118,22 @@ test.describe('phone (< 768px)', () => {
     await expect(page.getByRole('link', { name: 'Settings' })).toBeHidden();
     await expect(visibleTabs(page)).toHaveText(['HOME', 'TIMELINE', 'SCHEDULE', 'LEET', 'MORE']);
     await expect(tabBar(page).locator('[aria-current="page"]')).toHaveText('SCHEDULE');
-    for (const tab of await visibleTabs(page).all()) expect((await tab.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    // 62px + 16px bottom padding (no safe-area inset in the test browser); the page is padded to match.
+    expect((await tabBar(page).boundingBox())!.height).toBe(78);
+    expect(await page.evaluate(() => getComputedStyle(document.body).paddingBottom)).toBe('78px');
+    for (const tab of await visibleTabs(page).all()) expect((await tab.boundingBox())!.width).toBeGreaterThanOrEqual(44);
+    const toggle = (await page.getByRole('button', { name: 'Search everything' }).boundingBox())!;
+    expect([toggle.width, toggle.height]).toEqual([44, 44]);
     // A module not in the bar marks More, which lists it.
     await page.goto('/companies');
     await expect(tabBar(page).locator('[aria-current="page"]')).toHaveText('MORE');
     // The Go-rendered Leetgrinder pages get the same bar.
     await page.goto('/leetgrinder/problems');
     await expect(tabBar(page).locator('[aria-current="page"]')).toHaveText('LEET');
+    // Safe areas need viewport-fit=cover on every layout (Astro and Go).
+    await expect(page.locator('meta[name="viewport"]')).toHaveAttribute('content', /viewport-fit=cover/);
+    await page.goto('/books');
+    await expect(page.locator('meta[name="viewport"]')).toHaveAttribute('content', /viewport-fit=cover/);
   });
 
   test('the search button opens the search field and Escape closes it', async ({ page }) => {
@@ -174,5 +183,40 @@ test.describe('phone (< 768px)', () => {
       await patchSettings(page, { theme: original.theme });
       await page.evaluate(() => localStorage.removeItem('career-theme'));
     }
+  });
+
+  test('the next page draws tabs from the cached settings before /api/settings answers', async ({ page }) => {
+    await page.goto('/books');
+    // Let this page's own settings request land (it rewrites the cache) before seeding it.
+    await expect.poll(() => page.evaluate(() => localStorage.getItem('career-shell-settings'))).toContain('moduleOrder');
+    const cached = { modules: { timeline: true }, moduleOrder: ['notes', 'audio', 'bookshelf'], effective: {} };
+    await page.evaluate(value => localStorage.setItem('career-shell-settings', JSON.stringify(value)), cached);
+    let release = () => {};
+    const held = new Promise<void>(resolve => { release = resolve; });
+    await page.route('**/api/settings', async route => { await held; await route.continue(); });
+    try {
+      await page.goto('/books');
+      await expect(visibleTabs(page)).toHaveText(['HOME', 'NOTES', 'AUDIO', 'BOOKS', 'MORE']);
+      await expect(tabBar(page).locator('[aria-current="page"]')).toHaveText('BOOKS');
+    } finally {
+      release();
+      await page.unrouteAll({ behavior: 'wait' });
+    }
+    // Once the request answers, the saved settings win and replace the cache.
+    await expect(visibleTabs(page)).toHaveText(['HOME', 'TIMELINE', 'SCHEDULE', 'LEET', 'MORE']);
+
+    // A corrupt cache is dropped and the rendered tabs stay until settings load.
+    await page.evaluate(() => localStorage.setItem('career-shell-settings', '{not json'));
+    await page.goto('/books');
+    await expect(visibleTabs(page)).toHaveText(['HOME', 'TIMELINE', 'SCHEDULE', 'LEET', 'MORE']);
+    await expect.poll(() => page.evaluate(() => localStorage.getItem('career-shell-settings'))).toContain('moduleOrder');
+  });
+
+  test('More keeps the session and says so when sign out fails', async ({ page }) => {
+    await page.goto('/more');
+    await page.route('**/api/auth/logout', route => route.fulfill({ status: 500, body: '{}' }));
+    await page.getByRole('button', { name: 'SIGN OUT' }).tap();
+    await expect(page.getByRole('alert')).toContainText('Sign out failed');
+    await expect(page).toHaveURL(/\/more$/);
   });
 });
