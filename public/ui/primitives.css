@@ -1,7 +1,7 @@
 /*
  * Architect drawing primitives (docs/redesign/design-system.md, "Drawing primitives").
  * Plain CSS on the theme tokens in /ui/tokens.css, so the same classes work in React
- * (src/components/ui/), Astro and Go templ pages. Astro bundles this file into
+ * (src/components/ui/), Astro and Go templ pages; link /ui/tokens.css before it. Astro bundles this file into
  * @layer components, so Tailwind utilities on the same element still win. The app-wide unlayered
  * :focus-visible rule in global.css would beat layered rules, so the few focus rules that must
  * replace it are !important (layered !important wins over unlayered normal declarations).

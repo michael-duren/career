@@ -7,7 +7,7 @@ const hatchClass = (pattern: GoalPatternName) => (pattern === 'outline' ? '' : `
 
 // HatchFill: a decorative area filled with the diagonal, crosshatch or dot pattern in ink.
 export function HatchFill({ pattern = 'diagonal', className, ...props }: HTMLAttributes<HTMLSpanElement> & { pattern?: HatchPattern }) {
-  return <span aria-hidden="true" className={cn(hatchClass(pattern), className)} {...props} />;
+  return <span {...props} aria-hidden="true" className={cn(hatchClass(pattern), className)} />;
 }
 
 // GoalPattern: the strip (6-8px, left edge of a schedule block) or legend swatch that tells

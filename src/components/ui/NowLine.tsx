@@ -8,9 +8,8 @@ export function NowLine({ time, timeZone, className, style }: { time: TimeValue;
   let label = '';
   try {
     label = formatTime(time, { timeZone });
-  } catch (error) {
+  } catch {
     // A bad time or zone must not take the page down: draw the line without the label.
-    console.warn('NowLine: cannot format time', time, timeZone, error);
   }
   return (
     <div className={cn('ui-now', className)} style={style}>

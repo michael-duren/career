@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { buttonClassName, cssUrl, goalPattern, monogram, nextTabIndex, tickMarks } from '../src/lib/ui.ts';
+import { buttonClassName, cssUrl, goalPattern, MAX_TICKS, monogram, nextTabIndex, resolveUrl, tickMarks } from '../src/lib/ui.ts';
 
 test('goal patterns follow goal order and fall back to an outline', () => {
   assert.deepEqual([0, 1, 2, 3, 9].map(goalPattern), ['diagonal', 'crosshatch', 'dots', 'outline', 'outline']);
@@ -20,6 +20,7 @@ test('tick marks fill from the left and make every 5th tick major', () => {
   assert.deepEqual(tickMarks(-2, 1), []);
   assert.deepEqual(tickMarks(Number.NaN, 1), []);
   assert.equal(tickMarks(3, Number.NaN).filter(t => t.on).length, 0);
+  assert.equal(tickMarks(1e9, 1).length, MAX_TICKS);
 });
 
 test('monogram uses the first two words, else the first two letters', () => {
@@ -41,6 +42,13 @@ test('tab keys wrap with the arrows and jump with Home and End', () => {
   assert.equal(nextTabIndex('End', 0, 4), 3);
   assert.equal(nextTabIndex('Enter', 0, 4), null);
   assert.equal(nextTabIndex('ArrowRight', 0, 0), null);
+});
+
+test('resolveUrl resolves against the base and rejects malformed URLs', () => {
+  assert.equal(resolveUrl('/logos/a.svg', 'http://x.test/companies'), 'http://x.test/logos/a.svg');
+  assert.equal(resolveUrl('https://cdn.test/a.png', 'http://x.test/'), 'https://cdn.test/a.png');
+  assert.equal(resolveUrl('http://', 'http://x.test/'), undefined);
+  assert.equal(resolveUrl('http://[', 'http://x.test/'), undefined);
 });
 
 test('cssUrl escapes for a CSS string', () => {

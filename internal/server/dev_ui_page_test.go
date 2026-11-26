@@ -78,6 +78,14 @@ func TestDesignCSSIsPublic(t *testing.T) {
 			t.Fatalf("%s content type %q", path, got)
 		}
 	}
+	// Only those two files are public: neighbours still need a login.
+	for _, path := range []string{"/ui/other.css", "/dev/ui/index.html"} {
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, path, nil))
+		if response.Code != http.StatusSeeOther {
+			t.Fatalf("anonymous %s: %d, want a login redirect", path, response.Code)
+		}
+	}
 }
 
 func TestDevAssetsHiddenInProduction(t *testing.T) {

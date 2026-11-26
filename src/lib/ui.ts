@@ -15,9 +15,11 @@ export function goalPattern(index: number): GoalPatternName {
 export type Tick = { on: boolean; major: boolean };
 
 // tickMarks lays out a tick scale of `count` ticks with the first `filled` filled.
-// Every 5th tick (0, 5, 10, ...) is a taller major tick. filled is clamped to 0..count.
+// Every 5th tick (0, 5, 10, ...) is a taller major tick. count is capped at MAX_TICKS and
+// filled is clamped to 0..count.
+export const MAX_TICKS = 500;
 export function tickMarks(count: number, filled: number): Tick[] {
-  const total = Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0;
+  const total = Number.isFinite(count) ? Math.min(MAX_TICKS, Math.max(0, Math.floor(count))) : 0;
   const on = Number.isFinite(filled) ? Math.min(total, Math.max(0, Math.floor(filled))) : 0;
   return Array.from({ length: total }, (_, i) => ({ on: i < on, major: i % 5 === 0 }));
 }
@@ -42,6 +44,15 @@ export function nextTabIndex(key: string, current: number, count: number): numbe
     case 'Home': return 0;
     case 'End': return count - 1;
     default: return null;
+  }
+}
+
+// resolveUrl makes src absolute against base; a malformed URL gives undefined.
+export function resolveUrl(src: string, base: string): string | undefined {
+  try {
+    return new URL(src, base).href;
+  } catch {
+    return undefined;
   }
 }
 

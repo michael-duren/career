@@ -103,7 +103,7 @@ Icons are thin line drawings (1–1.2px stroke, `currentColor`), never emoji or 
 ### Using the primitives
 
 - React: `import { Box, Switch, ... } from '../components/ui'` (`src/components/ui/index.ts`).
-  Pure helpers (goal pattern by order, tick layout, monogram, tab keys, `buttonClassName`) are in `src/lib/ui.ts`.
+  Pure helpers (goal pattern by order, tick layout, monogram, tab keys, `buttonClassName`, `resolveUrl`, `cssUrl`) are in `src/lib/ui.ts`.
 - CSS: `public/ui/primitives.css`, prefixed `ui-`. Main classes (most have modifiers, see the file): `.ui-box`, `.ui-box--sm`, `.ui-dim`, `.ui-dim--plan`,
   `.ui-dim--late`, `.ui-hatch--diagonal|crosshatch|dots`, `.ui-goal-strip`, `.ui-goal-swatch`, `.ui-progress`,
   `.ui-ticks`, `.ui-label`, `.ui-section-header`, `.ui-btn` + `--primary|--danger|--icon|--sm`, `.ui-switch`,
@@ -117,7 +117,7 @@ Icons are thin line drawings (1–1.2px stroke, `currentColor`), never emoji or 
   `:disabled` for a locked switch, a disabled checkbox and disabled buttons (set the `disabled` attribute).
 - Fonts are not in those two files: Astro pages get them from the bundle; a templ page must load the
   self-hosted fonts itself (the Leetgrinder restyle decides how) or it falls back to system fonts.
-- A review gallery of every primitive and its main states: `/dev/ui`, served only when `APP_ENV` is not `production`.
+- A review gallery of every primitive and its main states: `/dev/ui`, served only when `APP_ENV` is not `production` (login still required).
 
 ## Status language
 

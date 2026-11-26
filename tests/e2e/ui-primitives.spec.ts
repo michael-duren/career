@@ -109,12 +109,22 @@ test('the danger button keeps its accent on hover', async ({ page }) => {
   await expect(cancel).toHaveCSS('border-top-color', INK);
 });
 
-test('logo spot shows the masked logo once loaded, else a monogram', async ({ page }) => {
+test('logo spot shows the ink-masked logo once loaded, else a monogram', async ({ page }) => {
   const logo = page.getByRole('img', { name: 'Delta logo' });
-  await expect(logo.locator('.ui-logo__mark')).toBeVisible();
+  await expect(logo).toHaveAttribute('data-logo-state', 'logo');
   await expect(logo).toHaveText('');
+  const mark = await logo.locator('.ui-logo__mark').evaluate(el => {
+    const cs = getComputedStyle(el);
+    return { mask: cs.maskImage || cs.webkitMaskImage, color: cs.backgroundColor };
+  });
+  expect(mark.mask).toMatch(/^url\("data:image\/svg\+xml/);
+  expect(mark.color).toBe(INK); // the orange sample logo is painted in ink
   const spots = page.locator('.ui-logo[aria-hidden="true"]');
-  await expect(spots).toHaveText(['JS', 'RA', 'BL', 'DA']); // "Broken Logo" never loads: monogram stays
+  await expect(spots).toHaveText(['JS', 'RA', 'BL', 'MU', 'DA']);
+  // A logo that fails to load and a malformed URL both keep the monogram.
+  await expect(spots.nth(2)).toHaveAttribute('data-logo-state', 'failed');
+  await expect(spots.nth(3)).toHaveAttribute('data-logo-state', 'monogram');
+  await expect(spots.nth(0)).toHaveAttribute('data-logo-state', 'monogram');
   await expect(page.locator('.ui-logo .ui-logo__mark')).toHaveCount(1);
 });
 
@@ -145,16 +155,17 @@ test('primitive focus rings replace the app-wide ring', async ({ page }) => {
 });
 
 // Patterns and ticks carry meaning, so they survive forced-colors mode.
-test('hatches, ticks and the switch track keep their drawing in forced colors', async ({ page }) => {
+test('ticks, the switch track and the selected tab keep their state in forced colors', async ({ page }) => {
   await page.emulateMedia({ forcedColors: 'active' });
-  const bg = (selector: string) => page.locator(selector).first().evaluate(el => getComputedStyle(el).backgroundImage);
-  expect(await bg('.ui-goal-strip.ui-hatch--diagonal')).toContain('repeating-linear-gradient');
-  expect(await bg('.ui-hatch--dots')).toContain('radial-gradient');
-  expect(await bg('.ui-switch[aria-checked="true"] .ui-switch__track')).toContain('repeating-linear-gradient');
-  const tick = await page.locator('.ui-ticks__tick--on').first().evaluate(el => getComputedStyle(el).backgroundColor);
-  const empty = await page.locator('.ui-ticks__tick:not(.ui-ticks__tick--on)').first().evaluate(el => getComputedStyle(el).backgroundColor);
-  expect(tick).not.toBe(empty);
-  expect(tick).not.toBe('rgba(0, 0, 0, 0)');
+  const style = (selector: string, prop: 'backgroundColor' | 'backgroundImage' | 'textDecorationLine') =>
+    page.locator(selector).first().evaluate((el, p) => getComputedStyle(el)[p], prop);
+  const on = await style('.ui-ticks__tick--on', 'backgroundColor');
+  const off = await style('.ui-ticks__tick:not(.ui-ticks__tick--on)', 'backgroundColor');
+  expect(on).not.toBe(off);
+  expect(on).not.toBe('rgba(0, 0, 0, 0)');
+  expect(await style('.ui-switch[aria-checked="true"] .ui-switch__knob', 'backgroundColor'))
+    .not.toBe(await style('.ui-switch[aria-checked="false"] .ui-switch__knob', 'backgroundColor'));
+  expect(await style('.ui-tabs__tab[aria-selected="true"]', 'textDecorationLine')).toBe('underline');
   await expect(page.getByRole('progressbar', { name: 'Progress 40%' })).toHaveAttribute('aria-valuenow', '40');
 });
 

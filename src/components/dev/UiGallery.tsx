@@ -228,6 +228,7 @@ export default function UiGallery() {
             <LogoSpot name="Ramp" />
             <LogoSpot name="Delta" src={SAMPLE_LOGO} labelled />
             <LogoSpot name="Broken Logo" src="data:image/png;base64,AAAA" />
+            <LogoSpot name="Malformed Url" src="http://[" />
             <LogoSpot name="Datadog" size={40} />
           </Specimen>
           <Specimen name="28 · 34 · 46 · muted">

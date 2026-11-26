@@ -202,7 +202,7 @@ main, article, section, form, fieldset { min-width: 0; }
 .prose table { display: block; max-width: 100%; overflow-x: auto; }
 img { max-width: 100%; }
 button, a, summary { touch-action: manipulation; }
-/* Token-based so it follows the theme; on legacy zinc surfaces only Dark is supported (see the theme header). */
+/* Token-based so it follows the theme; on legacy zinc surfaces only Dark is supported (see the header of public/ui/tokens.css). */
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 .app-header { padding-top: max(12px, env(safe-area-inset-top)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
 .app-content { padding-bottom: max(32px, env(safe-area-inset-bottom)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
