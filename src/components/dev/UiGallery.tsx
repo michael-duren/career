@@ -203,6 +203,13 @@ export default function UiGallery() {
           <SearchField label="Search everything" size="sm" hint="/" className="w-[210px] max-w-full" />
         </Panel>
 
+        <Panel title="Field" meta="44px · ink underline">
+          <div className="grid min-w-0 gap-6 sm:grid-cols-[minmax(0,1fr)_200px]">
+            <label className="ui-field"><span className="ui-label">Goal</span><input className="ui-field__input" type="text" placeholder="e.g. Finish NeetCode 150" /></label>
+            <label className="ui-field"><span className="ui-label">Start</span><input className="ui-field__input" type="text" defaultValue="Nov 25" /></label>
+          </div>
+        </Panel>
+
         <Panel title="Section header · label" meta="type">
           <SectionHeader title="Goal sessions" />
           <SectionHeader title="Active goals" meta="4 goals" />

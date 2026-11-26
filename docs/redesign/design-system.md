@@ -93,6 +93,7 @@ Astro-only and Go templ pages) and use them everywhere.
 | **Segmented tabs** | Bordered group, active segment filled `--ink` with `--paper` text, mono 11px labels. | Companies, People, Journal |
 | **Button** | 44px tall, mono 11px uppercase, letter-spacing 0.16em. Primary: solid `--ink` / `--paper` text. Secondary: `--ink-50` border. Icon buttons 34–44px square. Delete uses `--accent`. | |
 | **Search field** | 44px (34px in header), `--ink-50` border, thin magnifier icon, Inter Tight 300 placeholder. | |
+| **Field** | Mono label over a 44px borderless input with a 1px `--ink` underline, Inter Tight 300 18px. Focus thickens the underline. | Setup step 5, Login |
 | **Section header** | Uppercase heading left, mono label right, `--ink` 1px rule under table headers. | |
 | **Now line** | 1px `--accent` horizontal line with handwritten "now 5:20 PM". Today markers use a dash-dot `--accent` vertical line. | Timeline, Schedule |
 | **Logo spot** | 36–40px square, `--ink-50` border, company logo in single-color ink (fallback: two-letter monogram). | Companies |
@@ -107,7 +108,7 @@ Icons are thin line drawings (1–1.2px stroke, `currentColor`), never emoji or 
 - CSS: `public/ui/primitives.css`, prefixed `ui-`. Main classes (most have modifiers, see the file): `.ui-box`, `.ui-box--sm`, `.ui-dim`, `.ui-dim--plan`,
   `.ui-dim--late`, `.ui-hatch--diagonal|crosshatch|dots`, `.ui-goal-strip`, `.ui-goal-swatch`, `.ui-progress`,
   `.ui-ticks`, `.ui-label`, `.ui-section-header`, `.ui-btn` + `--primary|--danger|--icon|--sm`, `.ui-switch`,
-  `.ui-check`, `.ui-tabs`, `.ui-search`, `.ui-now`, `.ui-today`, `.ui-note`, `.ui-logo`, `.ui-avatar`, `.ui-icon`,
+  `.ui-check`, `.ui-tabs`, `.ui-search`, `.ui-field`, `.ui-now`, `.ui-today`, `.ui-note`, `.ui-logo`, `.ui-avatar`, `.ui-icon`,
   `.ui-sr-only`. Astro bundles it into `@layer components` (Tailwind utilities still override it); Go templ
   pages should link `/ui/tokens.css` and `/ui/primitives.css` (public, no login needed) and copy the markup from
   the React components. Some primitives are compound: the checkbox is `.ui-check.ui-box.ui-box--sm` around

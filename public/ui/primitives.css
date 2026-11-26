@@ -460,6 +460,47 @@
   color: var(--ink-60);
 }
 
+/* Field: label over a 44px borderless input with a 1px --ink underline (setup and login forms).
+   Markup: <label class="ui-field"><span class="ui-label">Goal</span><input class="ui-field__input"></label>.
+   Focus thickens the underline; the global :focus-visible ring still draws as the keyboard cue.
+   Below 1024px the app-wide input rule in global.css forces 16px (keeps iOS from zooming). */
+.ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.ui-field__input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font: 300 18px var(--font-sans, "Inter Tight Variable", "Inter Tight", sans-serif);
+  outline: none;
+}
+.ui-field__input:focus {
+  box-shadow: 0 1px 0 var(--ink);
+}
+.ui-field__input::placeholder {
+  color: var(--ink-60);
+  opacity: 1;
+}
+/* Browser autofill paints its own fill; cover it with paper so saved logins stay ink on paper. */
+.ui-field__input:-webkit-autofill {
+  -webkit-text-fill-color: var(--ink);
+  caret-color: var(--ink);
+  box-shadow: inset 0 0 0 1000px var(--paper);
+}
+.ui-field__input:-webkit-autofill:focus {
+  box-shadow: inset 0 0 0 1000px var(--paper), 0 1px 0 var(--ink);
+}
+
 /* Now line: 1px accent line with a handwritten "now 5:20 PM". Position it from the parent. */
 .ui-now {
   position: relative;

@@ -5,88 +5,63 @@ import '../styles/global.css';
 ---
 
 <Layout title="Login - Career Strategy">
-  <!-- Animated gradient background -->
-  <div class="login-shell min-h-screen flex items-center justify-center bg-zinc-950 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-    <!-- Gradient orbs -->
-    <div class="absolute inset-0 overflow-hidden">
-      <div class="gradient-orb gradient-orb-1"></div>
-      <div class="gradient-orb gradient-orb-2"></div>
-      <div class="gradient-orb gradient-orb-3"></div>
-    </div>
-    <div class="max-w-md w-full space-y-8 relative z-10">
-      <!-- Logo/Brand Section -->
-      <div>
-        <h1 class="text-center text-4xl font-bold text-zinc-100 mb-2">
-          Career Strategy
-        </h1>
-        <p class="text-center text-sm text-zinc-400">
-          Sign in to access your development plan
-        </p>
-      </div>
+  <div class="flex min-h-dvh flex-col bg-paper px-[22px] py-[22px] text-ink md:px-14 md:py-10">
+    <header class="box-content flex h-7 items-center justify-between border-b border-ink-30 pb-3">
+      <span class="text-[13px] font-medium tracking-[0.32em]">CAREER</span>
+      <span class="ui-label">Sign in</span>
+    </header>
 
-      <!-- Login Form -->
-      <form id="login-form" class="mt-8 space-y-6 bg-zinc-900/80 backdrop-blur-sm p-5 sm:p-8 rounded-lg border border-zinc-800">
-        <div class="space-y-4">
-          <div>
-            <label for="username" class="block text-sm font-medium text-zinc-300 mb-2">
-              Username
-            </label>
+    <main class="flex flex-1 items-center justify-center py-8 md:py-10">
+      <div class="flex w-full max-w-[420px] flex-col gap-8">
+        <div class="flex flex-col gap-3">
+          <h1 class="m-0 text-[40px] font-extralight leading-[0.9] md:text-[52px]">Sign in</h1>
+          <p class="m-0 text-base font-light text-ink-60">Your career plan, goals and practice log.</p>
+        </div>
+
+        <form id="login-form" class="ui-box flex flex-col gap-7 p-6 md:p-8">
+          <label class="ui-field">
+            <span class="ui-label">Username</span>
             <input
               id="username"
               name="username"
               type="text"
               autocomplete="username" autocapitalize="none" spellcheck="false"
               required
-              class="appearance-none relative block w-full px-4 py-3 bg-zinc-800 border border-zinc-700 placeholder-zinc-500 text-zinc-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              class="ui-field__input"
               placeholder="Enter username"
             >
-          </div>
-          <div>
-            <label for="password" class="block text-sm font-medium text-zinc-300 mb-2">
-              Password
-            </label>
+          </label>
+          <label class="ui-field">
+            <span class="ui-label">Password</span>
             <input
               id="password"
               name="password"
               type="password"
               autocomplete="current-password"
               required
-              class="appearance-none relative block w-full px-4 py-3 bg-zinc-800 border border-zinc-700 placeholder-zinc-500 text-zinc-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              class="ui-field__input"
               placeholder="Enter password"
             >
+          </label>
+
+          <p id="error-message" role="alert" class="m-0 hidden text-sm text-accent"></p>
+
+          <div class="flex flex-col gap-3">
+            <button type="submit" class="ui-btn ui-btn--primary w-full">Sign in</button>
+            <button type="reset" class="ui-btn w-full">Cancel</button>
           </div>
-        </div>
+        </form>
 
-        <div id="error-message" class="hidden bg-red-900/50 text-red-300 text-sm text-center px-4 py-3 rounded-lg border border-red-800"></div>
-
-        <div>
-          <button
-            type="submit"
-            class="group relative w-full flex justify-center py-3 px-4 text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-zinc-900 transition-all"
-          >
-            <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-              <svg class="h-5 w-5 text-blue-400 group-hover:text-blue-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-              </svg>
-            </span>
-            Sign In
-          </button>
-        </div>
-        <button type="reset" class="w-full rounded-lg border border-zinc-700 px-4 py-3 text-sm text-zinc-300 hover:bg-zinc-800">Cancel</button>
-      </form>
-
-      <!-- Footer -->
-      <p class="text-center text-xs text-zinc-500">
-        Personal career development tracking system
-      </p>
-    </div>
+        <p class="ui-label m-0 text-center">Personal career development tracking system</p>
+      </div>
+    </main>
   </div>
 
   <script>
     import { AuthService } from '../lib/auth';
 
     const form = document.getElementById('login-form') as HTMLFormElement;
-    const errorMessage = document.getElementById('error-message') as HTMLDivElement;
+    const errorMessage = document.getElementById('error-message') as HTMLParagraphElement;
 
     form.addEventListener('reset', () => { errorMessage.classList.add('hidden'); errorMessage.textContent = ''; });
 
@@ -119,57 +94,4 @@ import '../styles/global.css';
       }
     });
   </script>
-
-  <style>
-    .gradient-orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(100px);
-      opacity: 0.3;
-      animation: float 20s infinite ease-in-out;
-    }
-
-    .gradient-orb-1 {
-      width: 600px;
-      height: 600px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      top: -200px;
-      left: -200px;
-      animation-delay: 0s;
-    }
-
-    .gradient-orb-2 {
-      width: 500px;
-      height: 500px;
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      bottom: -150px;
-      right: -150px;
-      animation-delay: 5s;
-    }
-
-    .gradient-orb-3 {
-      width: 400px;
-      height: 400px;
-      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      animation-delay: 10s;
-    }
-
-    @keyframes float {
-      0%, 100% {
-        transform: translate(0, 0) scale(1);
-      }
-      25% {
-        transform: translate(30px, -50px) scale(1.1);
-      }
-      50% {
-        transform: translate(-30px, 30px) scale(0.9);
-      }
-      75% {
-        transform: translate(50px, 20px) scale(1.05);
-      }
-    }
-  </style>
 </Layout>
