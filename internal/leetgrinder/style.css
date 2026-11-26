@@ -2176,6 +2176,7 @@ a.ui-label:hover {
   }
   .lg-today-topics {
     grid-column: 1 / -1;
+    max-width: 720px;
   }
   .lg-build .ui-btn {
     width: auto;
