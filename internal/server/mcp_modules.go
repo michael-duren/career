@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"slices"
 
 	"github.com/michael-duren/career-strategy/internal/modules"
@@ -26,6 +27,7 @@ func (s *Server) mcpModuleFilter(next mcp.MethodHandler) mcp.MethodHandler {
 			}
 			settings, err := s.moduleSettings(ctx)
 			if err != nil {
+				log.Printf("mcp: %v", err)
 				return nil, errMCPStorage
 			}
 			filtered := *list
@@ -41,6 +43,7 @@ func (s *Server) mcpModuleFilter(next mcp.MethodHandler) mcp.MethodHandler {
 			}
 			settings, err := s.moduleSettings(ctx)
 			if err != nil {
+				log.Printf("mcp: %v", err)
 				return mcpToolError(errMCPStorage.Error()), nil
 			}
 			if m, off := mcpToolModuleOff(settings, call.Params.Name, call.Params.Arguments); off {

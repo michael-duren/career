@@ -20,8 +20,8 @@ type Module struct {
 	Pages []string
 	// API are API path prefixes, matched on whole path segments.
 	API []string
-	// Kinds are the entry kinds it owns, for /api/entries/{kind}, search and
-	// the generic MCP entry tools.
+	// Kinds are the database entry kinds it owns (not MCP kind names, which
+	// mcpKinds maps), for /api/entries/{kind}, search and the MCP entry tools.
 	Kinds []string
 	// MCPTools are the MCP tools only this module uses.
 	MCPTools  []string

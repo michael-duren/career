@@ -122,8 +122,9 @@ requested by kind. Prompt `career_conversation` offers a guided entry point.
 
 Modules that are turned off in Settings → Modules are hidden here too:
 
-- Their tools are not listed, and they return an error if called. These are the Leetgrinder,
-  weekly schedule and connection queue tools. The queue tools also need Companies.
+- Their tools are not listed, and they return an error if called. These are the Leetgrinder
+  tools, the weekly schedule tools (also hidden while Timeline is off, since Schedule depends on
+  it), and `list_connection_companies` and `add_companies_to_queue`, which also need Companies.
 - Entry tools reject their kinds.
 - Search and `get_career_overview` leave their entries out.
 

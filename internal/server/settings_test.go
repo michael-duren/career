@@ -35,6 +35,7 @@ func TestSettingsAPI(t *testing.T) {
 		"bad order":      `{"moduleOrder":["notes","notes"]}`,
 		"bad setup time": `{"setupCompletedAt":"yesterday"}`,
 		"unknown field":  `{"colour":"red"}`,
+		"null module":    `{"modules":{"notes":null}}`,
 	} {
 		if w := h.do("PATCH", "/api/settings", body, json, true); w.Code != 400 {
 			t.Errorf("%s: %d %s", name, w.Code, w.Body.String())
@@ -173,7 +174,10 @@ func TestDisabledModulesReturn404(t *testing.T) {
 		t.Error("anonymous page:", w.Code)
 	}
 	// Other modules and module-less routes are unaffected.
-	for _, path := range []string{"/books", "/api/entries/book", "/api/entries/document", "/api/settings"} {
+	if w := do("GET", "/api/entries/week", "session"); w.Code != 404 {
+		t.Error("journal entries while Journal is off:", w.Code)
+	}
+	for _, path := range []string{"/books", "/api/entries/book", "/api/entries/document", "/api/entries/company", "/api/settings"} {
 		if w := do("GET", path, "session"); w.Code != 200 {
 			t.Errorf("%s: %d", path, w.Code)
 		}
@@ -361,6 +365,19 @@ func TestAgentContextLeavesOutDisabledModules(t *testing.T) {
 	if w := get("/api/agent-context?format=markdown"); w.Code != 200 || !strings.Contains(w.Body.String(), "# Work journal\n\nNo entries yet.") || !strings.Contains(w.Body.String(), "# Personal journal\n\nNo entries yet.") {
 		t.Fatal("markdown leaked journal entries", w.Body.String())
 	}
+	// The running view follows Audio, the work view follows Journal.
+	if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"audio": true}}); err != nil {
+		t.Fatal(err)
+	}
+	if w := get("/api/agent-context?journal=running"); w.Code != 200 {
+		t.Error("running view with Audio on and Journal off:", w.Code)
+	}
+	if w := get("/api/agent-context?journal=work"); w.Code != 404 {
+		t.Error("work view with Journal off:", w.Code)
+	}
+	if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"audio": false}}); err != nil {
+		t.Fatal(err)
+	}
 	// The journal's Markdown view needs Journal, not Agents.
 	if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"journal": true, "agents": false}}); err != nil {
 		t.Fatal(err)
@@ -423,4 +440,13 @@ func TestSchedulerCyclePausesWhileScheduleIsOff(t *testing.T) {
 	if s.schedulerCycle(ctx, now, &last) {
 		t.Fatal("scheduler ran with unreadable settings")
 	}
+}
+
+func TestRequireModuleRejectsUnknownIDs(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("a typo in a module id must fail at wiring time")
+		}
+	}()
+	(&Server{}).requireModule("leetgrindr")
 }

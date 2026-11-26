@@ -37,7 +37,7 @@ func (s *Server) patchSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var input struct {
-		Modules          map[string]bool `json:"modules"`
+		Modules          map[string]*bool `json:"modules"`
 		ModuleOrder      []string        `json:"moduleOrder"`
 		Theme            *string         `json:"theme"`
 		SetupCompletedAt json.RawMessage `json:"setupCompletedAt"`
@@ -45,7 +45,17 @@ func (s *Server) patchSettings(w http.ResponseWriter, r *http.Request) {
 	if !decode(w, r, 8000, &input) {
 		return
 	}
-	patch := modules.Patch{Modules: input.Modules, Order: input.ModuleOrder, Theme: input.Theme}
+	patch := modules.Patch{Order: input.ModuleOrder, Theme: input.Theme}
+	if input.Modules != nil {
+		patch.Modules = map[string]bool{}
+		for id, on := range input.Modules {
+			if on == nil {
+				respond(w, 400, map[string]string{"error": "modules values must be true or false"})
+				return
+			}
+			patch.Modules[id] = *on
+		}
+	}
 	switch raw := string(input.SetupCompletedAt); {
 	case raw == "":
 	case raw == "null":
@@ -145,7 +155,10 @@ func (s *Server) guardModule(w http.ResponseWriter, r *http.Request, next http.H
 // requireModule returns 404 for every request while module id is unusable
 // (off, or a dependency off) and 503 when settings cannot be loaded.
 func (s *Server) requireModule(id string) func(http.Handler) http.Handler {
-	m, _ := modules.Lookup(id)
+	m, ok := modules.Lookup(id)
+	if !ok {
+		panic("requireModule: unknown module " + id)
+	}
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			s.guardModule(w, r, next, m)

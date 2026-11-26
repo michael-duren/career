@@ -41,7 +41,8 @@ func RunScheduler(ctx context.Context, c config.Config, db *database.Store) {
 	}
 }
 
-// schedulerCycle runs one scheduler tick and Google sync. It does nothing and
+// schedulerCycle runs one scheduler tick and Google sync and returns true
+// when it attempted the tick, even if the tick failed. It does nothing and
 // returns false while the Schedule module is unusable (off, or Timeline off)
 // or while module settings cannot be loaded.
 func (s *Server) schedulerCycle(ctx context.Context, now time.Time, lastReconcile *time.Time) bool {

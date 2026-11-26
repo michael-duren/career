@@ -5,6 +5,7 @@ CREATE TABLE app_settings (
     id SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
     modules JSONB NOT NULL DEFAULT '{}' CHECK (jsonb_typeof(modules) = 'object'),
     module_order JSONB NOT NULL DEFAULT '[]' CHECK (jsonb_typeof(module_order) = 'array'),
+    -- Keep in sync with modules.Themes; a new theme needs a migration.
     theme TEXT NOT NULL DEFAULT 'dark' CHECK (theme IN ('dark', 'vellum', 'cobalt', 'concrete')),
     setup_completed_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
