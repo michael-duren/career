@@ -40,7 +40,9 @@ test('checkbox is native: Space and its label toggle it, the ring marks the next
   const hit = await ddia.boundingBox();
   expect([hit!.width, hit!.height]).toEqual([44, 44]);
   await expect(page.getByRole('checkbox', { name: 'Checked', exact: true }).locator('~ .ui-check__x')).toBeVisible();
-  await expect(page.getByRole('checkbox', { name: 'Unchecked', exact: true }).locator('~ .ui-check__x')).toBeHidden();
+  const unchecked = page.getByRole('checkbox', { name: 'Unchecked', exact: true }).locator('~ .ui-check__x');
+  await expect(unchecked).toHaveCount(1);
+  await expect(unchecked).toBeHidden();
 });
 
 test('segmented tabs follow the tablist keyboard pattern', async ({ page }) => {
@@ -74,7 +76,7 @@ test('search field is a labelled searchbox; icon buttons have names', async ({ p
   for (const [i, name] of ['Add', 'Settings', 'Edit', 'Delete'].entries()) await expect(icons.nth(i)).toHaveAccessibleName(name);
 });
 
-test('primitive values match the reference screens', async ({ page }) => {
+test('primitive values are pinned to the reference screens (.bx, .dim, .lbl, .btn)', async ({ page }) => {
   const style = (selector: string, pseudo?: string) => page.evaluate(([s, p]) => {
     const cs = getComputedStyle(document.querySelector(s!)!, p ?? null);
     return { left: cs.left, right: cs.right, top: cs.top, bottom: cs.bottom, height: cs.height, fontSize: cs.fontSize, fontWeight: cs.fontWeight, letterSpacing: cs.letterSpacing, textTransform: cs.textTransform, transform: cs.transform };
@@ -140,4 +142,25 @@ test('primitive focus rings replace the app-wide ring', async ({ page }) => {
   await search.click();
   expect((await outline(search)).style).toBe('none');
   expect(await outline(page.locator('.ui-search').first())).toEqual({ style: 'solid', width: '2px', offset: '2px', color: INK });
+});
+
+// Patterns and ticks carry meaning, so they survive forced-colors mode.
+test('hatches, ticks and the switch track keep their drawing in forced colors', async ({ page }) => {
+  await page.emulateMedia({ forcedColors: 'active' });
+  const bg = (selector: string) => page.locator(selector).first().evaluate(el => getComputedStyle(el).backgroundImage);
+  expect(await bg('.ui-goal-strip.ui-hatch--diagonal')).toContain('repeating-linear-gradient');
+  expect(await bg('.ui-hatch--dots')).toContain('radial-gradient');
+  expect(await bg('.ui-switch[aria-checked="true"] .ui-switch__track')).toContain('repeating-linear-gradient');
+  const tick = await page.locator('.ui-ticks__tick--on').first().evaluate(el => getComputedStyle(el).backgroundColor);
+  const empty = await page.locator('.ui-ticks__tick:not(.ui-ticks__tick--on)').first().evaluate(el => getComputedStyle(el).backgroundColor);
+  expect(tick).not.toBe(empty);
+  expect(tick).not.toBe('rgba(0, 0, 0, 0)');
+  await expect(page.getByRole('progressbar', { name: 'Progress 40%' })).toHaveAttribute('aria-valuenow', '40');
+});
+
+test('modified arrow keys are left to the browser', async ({ page }) => {
+  const tabs = page.getByRole('tablist', { name: 'Priority' });
+  await tabs.getByRole('tab', { name: 'All 61' }).focus();
+  await page.keyboard.press('Control+End');
+  await expect(tabs.getByRole('tab', { name: 'All 61' })).toHaveAttribute('aria-selected', 'true');
 });

@@ -7,7 +7,7 @@ const hatchClass = (pattern: GoalPatternName) => (pattern === 'outline' ? '' : `
 
 // HatchFill: a decorative area filled with the diagonal, crosshatch or dot pattern in ink.
 export function HatchFill({ pattern = 'diagonal', className, ...props }: HTMLAttributes<HTMLSpanElement> & { pattern?: HatchPattern }) {
-  return <span aria-hidden="true" className={cn('block', hatchClass(pattern), className)} {...props} />;
+  return <span aria-hidden="true" className={cn(hatchClass(pattern), className)} {...props} />;
 }
 
 // GoalPattern: the strip (6-8px, left edge of a schedule block) or legend swatch that tells
@@ -27,14 +27,14 @@ export function GoalPattern({ index, pattern, variant = 'strip', width, classNam
   );
 }
 
-// Progress: a hatch fill sitting on a measurement line. value/max are clamped to 0..1.
-// label is the accessible name; the visible value belongs in nearby text.
+// Progress: a hatch fill sitting on a measurement line. value/max are clamped to 0..1 and
+// exposed as a progressbar (0-100) named by label; the visible value belongs in nearby text.
 export function Progress({ value, max = 1, pattern = 'diagonal', label, late = false, className }: {
   value: number; max?: number; pattern?: HatchPattern; label: string; late?: boolean; className?: string;
 }) {
   const ratio = max > 0 && Number.isFinite(value) ? Math.min(1, Math.max(0, value / max)) : 0;
   return (
-    <span role="img" aria-label={label} className={cn('ui-progress', className)}>
+    <span role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(ratio * 100)} className={cn('ui-progress', className)}>
       <span className={cn('ui-progress__fill', hatchClass(pattern))} style={{ width: `${ratio * 100}%` }} />
       <MeasurementLine state={late ? 'late' : 'default'} />
     </span>

@@ -36,6 +36,7 @@
 /* Measurement line: --ink-60 line with 10px end ticks skewed -45deg. Planned is dashed, late is accent. */
 .ui-dim {
   position: relative;
+  display: block;
   height: 0;
   border-top: 1px solid var(--ink-60);
 }
@@ -67,6 +68,21 @@
 }
 
 /* Hatch fills. Goal patterns reuse them: 1st goal diagonal, 2nd crosshatch, 3rd dots. */
+.ui-hatch--diagonal,
+.ui-hatch--crosshatch,
+.ui-hatch--dots {
+  display: block;
+}
+.ui-goal-strip.ui-hatch--diagonal,
+.ui-goal-strip.ui-hatch--crosshatch,
+.ui-goal-strip.ui-hatch--dots {
+  display: inline-block;
+}
+.ui-goal-swatch.ui-hatch--diagonal,
+.ui-goal-swatch.ui-hatch--crosshatch,
+.ui-goal-swatch.ui-hatch--dots {
+  display: inline-block;
+}
 .ui-hatch--diagonal {
   background: repeating-linear-gradient(-45deg, var(--ink) 0 0.8px, transparent 0.8px 4px);
 }
@@ -166,7 +182,7 @@
 }
 .ui-section-header__title {
   margin: 0;
-  font-family: var(--font-sans, "Inter Tight", sans-serif);
+  font-family: var(--font-sans, "Inter Tight Variable", "Inter Tight", sans-serif);
   font-weight: 500;
   font-size: 12px;
   line-height: 1.3;
@@ -414,6 +430,8 @@
   outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
+/* Below 1024px the app-wide input rule in global.css forces 16px (keeps iOS from zooming);
+   that is intended and wins over the sizes here. */
 .ui-search__input {
   flex: 1;
   min-width: 0;
@@ -422,7 +440,7 @@
   border: 0;
   background: transparent;
   color: var(--ink);
-  font: 300 14px var(--font-sans, "Inter Tight", sans-serif);
+  font: 300 14px var(--font-sans, "Inter Tight Variable", "Inter Tight", sans-serif);
   outline: none;
 }
 .ui-search--sm .ui-search__input {
@@ -492,7 +510,7 @@
   border: 1px solid var(--ink-50);
   overflow: hidden;
   color: var(--ink);
-  font: 400 13px/1 var(--font-sans, "Inter Tight", sans-serif);
+  font: 400 13px/1 var(--font-sans, "Inter Tight Variable", "Inter Tight", sans-serif);
   letter-spacing: 0.04em;
 }
 .ui-logo__mark {
@@ -516,7 +534,7 @@
   border: 1px solid var(--ink);
   border-radius: 50%;
   color: var(--ink);
-  font: 400 calc(var(--ui-avatar-size) * 0.33) / 1 var(--font-sans, "Inter Tight", sans-serif);
+  font: 400 calc(var(--ui-avatar-size) * 0.33) / 1 var(--font-sans, "Inter Tight Variable", "Inter Tight", sans-serif);
   letter-spacing: 0.06em;
 }
 .ui-avatar--muted {
@@ -560,8 +578,20 @@
     height: 44px;
   }
 }
-/* Forced colors drop the fill that marks the selected tab: underline it instead. */
+/* Forced colors drop gradients and background colors. Patterns and ticks carry meaning
+   (goal identity, progress, streaks, switch state), so keep them, drawn in the system text
+   color; the selected tab gets an underline instead of its fill. */
 @media (forced-colors: active) {
+  .ui-hatch--diagonal,
+  .ui-hatch--crosshatch,
+  .ui-hatch--dots,
+  .ui-ticks,
+  .ui-switch__track {
+    --ink: CanvasText;
+    --ink-30: GrayText;
+    --paper: Canvas;
+    forced-color-adjust: none;
+  }
   .ui-tabs__tab[aria-selected="true"] {
     text-decoration: underline;
     text-underline-offset: 4px;

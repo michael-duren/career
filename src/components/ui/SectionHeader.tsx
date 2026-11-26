@@ -12,7 +12,7 @@ export function SectionHeader({ title, meta, level = 2, rule = false, id, classN
     <div className={cn('ui-section-header', rule && 'ui-section-header--rule', className)}>
       <Heading id={id} className="ui-section-header__title">{title}</Heading>
       {children}
-      {meta !== undefined && <Label className="ui-section-header__meta">{meta}</Label>}
+      {meta != null && <Label className="ui-section-header__meta">{meta}</Label>}
     </div>
   );
 }

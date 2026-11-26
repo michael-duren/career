@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes } from 'react';
 import { cn } from '../../lib/utils';
 
-type Props = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onChange' | 'role' | 'aria-checked' | 'disabled'> & {
+type Props = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type' | 'onChange' | 'role' | 'aria-checked' | 'disabled'> & {
   checked: boolean;
   onCheckedChange?: (checked: boolean) => void;
   // locked: the switch cannot change (a dependency is off); drawn with a dashed track. It sets

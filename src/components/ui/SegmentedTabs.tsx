@@ -16,6 +16,8 @@ export function SegmentedTabs<T extends string>({ tabs, value, onChange, label, 
   const tabbable = Math.max(0, selected);
 
   function onKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
+    // Leave modified keys (Alt+Arrow is browser back/forward) to the browser.
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
     const next = nextTabIndex(event.key, index, tabs.length);
     if (next === null) return;
     event.preventDefault();
