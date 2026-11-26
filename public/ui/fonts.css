@@ -3,7 +3,8 @@
  * Astro pages get the same fonts from @fontsource in src/styles/global.css; templ pages link this file.
  * The woff2 files in /ui/fonts/ are the Latin subsets copied byte for byte from those @fontsource
  * packages (tests/fonts.test.ts fails if they drift); licences (SIL OFL 1.1) sit beside them.
- * Characters outside Latin fall back to the system font.
+ * Only the faces the design uses are copied (no italics, no Plex Mono 600/700), so italic or bold
+ * text on templ pages is synthesized. Characters outside Latin fall back to the system font.
  */
 @font-face {
   font-family: "Inter Tight Variable";

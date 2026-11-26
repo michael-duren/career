@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -68,7 +69,8 @@ func (s *Server) leetgrinderTodoAddProblem(w http.ResponseWriter, r *http.Reques
 func (s *Server) leetgrinderTodoAddSet(w http.ResponseWriter, r *http.Request) {
 	// The Today page's "build todo set" button prefills the name and problems.
 	q := r.URL.Query()
-	renderLeetgrinder(w, r, 200, leetgrinder.TodoAddSet(leetgrinder.TodosPage{Title: q.Get("title"), Problems: q.Get("problems")}))
+	page := leetgrinder.TodosPage{Title: truncateRunes(q.Get("title"), 120), Problems: truncateRunes(q.Get("problems"), 8000)}
+	renderLeetgrinder(w, r, 200, leetgrinder.TodoAddSet(page))
 }
 
 func (s *Server) leetgrinderCreateTodoSet(w http.ResponseWriter, r *http.Request) {
@@ -152,6 +154,14 @@ func (s *Server) deleteTodo(w http.ResponseWriter, r *http.Request, set bool) {
 		back = todoListURL(r.PostForm.Get("setID"))
 	}
 	http.Redirect(w, r, back, http.StatusSeeOther)
+}
+
+// truncateRunes keeps at most n runes of s, for echoing query values into forms.
+func truncateRunes(s string, n int) string {
+	if utf8.RuneCountInString(s) <= n {
+		return s
+	}
+	return string([]rune(s)[:n])
 }
 
 // todoListURL is the set page for a set ID, or the todos page otherwise.

@@ -202,12 +202,18 @@ func (p OverviewPage) Dashboard() Dashboard {
 		weakest = append(weakest, t)
 	}
 	for _, t := range weakest[:min(DashboardTopics, len(weakest))] {
-		d.Topics = append(d.Topics, DashTopic{Key: t.Key, Label: t.Label, Problems: t.Problems, Recall: t.Recall(), Struggle: t.StruggleRate(),
-			WeakRecall: t.Recall() < weakRecall, WeakStruggle: t.StruggleRate() > weakStruggle})
+		row := DashTopic{Key: t.Key, Label: t.Label, Problems: t.Problems, Recall: t.Recall(), Struggle: t.StruggleRate()}
+		row.WeakRecall, row.WeakStruggle = weakFlags(row.Recall, row.Struggle)
+		d.Topics = append(d.Topics, row)
 	}
 	d.BuildProblems = weakTopicProblems(today, weakest[:min(BuildSetTopics, len(weakest))])
 	d.BuildTitle = "Weakest topics · " + timefmt.Date(today.Date)
 	return d
+}
+
+// weakFlags marks a topic's recall below 80% and struggle above 55%.
+func weakFlags(recall, struggle float64) (lowRecall, highStruggle bool) {
+	return recall < weakRecall, struggle > weakStruggle
 }
 
 // streakTicks lays out the streak scale from 0 to the record (at least a
@@ -217,6 +223,10 @@ func streakTicks(current, record int) (int, []Tick) {
 	n, filled := top+1, current
 	if n > 61 {
 		n, filled = 61, (current*60+top/2)/top
+		if current > 0 {
+			// A short streak against a long record still lights one tick.
+			filled = max(1, filled)
+		}
 	}
 	ticks := make([]Tick, n)
 	for i := range ticks {

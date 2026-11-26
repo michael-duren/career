@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"net/http"
+	"net/url"
 	"slices"
 	"strconv"
 	"strings"
@@ -91,6 +92,11 @@ func reviewIDs(ids map[string]string, today leetgrinder.Today) map[string]string
 	return ids
 }
 func (s *Server) leetgrinderOverview(w http.ResponseWriter, r *http.Request) {
+	// The log form lived on this page; old links with a problem go to the LOG tab.
+	if r.URL.Query().Has("problem") {
+		http.Redirect(w, r, "/leetgrinder/log?"+url.Values{"problem": {r.URL.Query().Get("problem")}}.Encode(), http.StatusSeeOther)
+		return
+	}
 	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
 	if err != nil {
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your saved progress is unavailable. Please retry."))

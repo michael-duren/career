@@ -180,6 +180,9 @@ templ weeklyChart(d Dashboard) {
 		<p class="small muted">Weekly columns appear after your first attempt.</p>
 	} else {
 		<div class="lg-weeks">
+			if d.Pace != "" {
+				<p class="ui-note lg-pace" title={ d.PaceTitle }>{ d.Pace }<span class="lg-pace-counts" aria-hidden="true"> · { d.PaceCounts }</span><span class="visually-hidden">: { d.PaceTitle }</span></p>
+			}
 			<div class="lg-weeks-plot" role="list" aria-label={ "Problems solved per week, last " + Count(len(d.Weeks)) + " weeks" }>
 				<div class="lg-guides" aria-hidden="true">
 					for _, g := range d.Guides {
@@ -197,9 +200,6 @@ templ weeklyChart(d Dashboard) {
 							}
 						</span>
 					</div>
-				}
-				if d.Pace != "" {
-					<p class="ui-note lg-pace" title={ d.PaceTitle }>{ d.Pace }<span class="lg-pace-counts" aria-hidden="true"> · { d.PaceCounts }</span><span class="visually-hidden">: { d.PaceTitle }</span></p>
 				}
 			</div>
 			<div class="lg-weeks-labels" aria-hidden="true">
@@ -279,7 +279,7 @@ templ weakestTopics(d Dashboard) {
 			<form class="lg-build" method="get" action="/leetgrinder/todos/sets/new">
 				<input type="hidden" name="title" value={ d.BuildTitle }/>
 				<input type="hidden" name="problems" value={ strings.Join(d.BuildProblems, "\n") }/>
-				<button class="ui-btn" type="submit">Build todo set from top { Count(min(BuildSetTopics, len(d.Topics))) }</button>
+				<button class="ui-btn" type="submit">Build todo set from top { Count(len(d.BuildProblems)) }</button>
 				<p class="small muted">Opens a new set with the lowest-recall problem from each topic, for you to check and save.</p>
 			</form>
 		}

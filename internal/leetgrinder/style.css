@@ -2,7 +2,7 @@
  * Leetgrinder pages in the Architect style (docs/redesign/pages/leetgrinder.md).
  * Linked after /ui/fonts.css, /ui/tokens.css, /ui/primitives.css and /ui/shell.css: colors come
  * only from the theme tokens, so every theme (data-theme on <html>) restyles the pages.
- * Ink on paper: hairline rules, no fills except hatching, no radius, no shadows.
+ * Ink on paper: hairline rules, hatching and the odd solid ink control; no gradients, shadows or rounded cards.
  */
 :root {
   --font-sans: "Inter Tight Variable", "Inter Tight", ui-sans-serif, system-ui, sans-serif;
@@ -848,6 +848,10 @@ abbr[title] {
 .estimate {
   display: block;
 }
+.problem-actions {
+  margin-top: 14px;
+  font-size: 13px;
+}
 .problem-site-links {
   display: flex;
   flex-wrap: wrap;
@@ -1296,6 +1300,9 @@ abbr[title] {
 .lg-today-goal .reviews {
   margin: 26px 0 0;
 }
+.lg-weeks {
+  position: relative;
+}
 .lg-weeks-plot {
   position: relative;
   display: flex;
@@ -1350,9 +1357,11 @@ abbr[title] {
   border-style: dashed;
   border-color: var(--ink-50);
 }
+/* Sits over the plot's top edge (the plot starts 30px down, 14px on phones). */
 .lg-pace {
   position: absolute;
-  top: -8px;
+  z-index: 1;
+  top: 22px;
   right: 40px;
   margin: 0;
   line-height: 1.2;
@@ -2275,7 +2284,7 @@ a.ui-label:hover {
   }
   .lg-pace {
     right: 0;
-    top: -6px;
+    top: 8px;
     font-size: 13px;
   }
   .lg-rates {
