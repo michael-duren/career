@@ -171,3 +171,16 @@ test('fonts are self-hosted, never loaded from a font CDN', () => {
     assert.doesNotMatch(readFileSync(file, 'utf8'), cdn, file);
   }
 });
+
+// Inactive segmented tabs use max(0.7, --ink-60-alpha) (public/ui/primitives.css): 0.7 as in the
+// reference, raised where a theme's label alpha is higher, so the text keeps 4.5:1 everywhere.
+test('inactive segmented tab text meets 4.5:1 on every theme', () => {
+  const primitives = readFileSync(new URL('../public/ui/primitives.css', import.meta.url), 'utf8');
+  assert.match(primitives, /\.ui-tabs__tab \{[^}]*color: rgba\(var\(--ink-rgb\), max\(0\.7, var\(--ink-60-alpha\)\)\);/);
+  for (const theme of THEMES) {
+    const block = themeBlock(theme);
+    const alpha = Math.max(0.7, Number(block['ink-60-alpha']));
+    const ratio = contrast(over(rgb(block.ink), rgb(block.paper), alpha), rgb(block.paper));
+    assert.ok(ratio >= 4.5, `${theme}: ${ratio.toFixed(2)}:1`);
+  }
+});

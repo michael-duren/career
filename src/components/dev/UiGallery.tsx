@@ -10,10 +10,12 @@ import { cn } from '../../lib/utils';
 // Dev-only gallery (/dev/ui) of every drawing primitive in every state, for visual review.
 // The theme picker previews a theme on this page without saving it.
 
+const slug = (text: string) => `ui-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+
 function Panel({ title, meta, children, className }: { title: string; meta?: string; children: ReactNode; className?: string }) {
   return (
-    <section aria-labelledby={`ui-${title}`} className={cn('flex min-w-0 flex-col gap-4', className)}>
-      <SectionHeader id={`ui-${title}`} title={title} meta={meta} />
+    <section aria-labelledby={slug(title)} className={cn('flex min-w-0 flex-col gap-4', className)}>
+      <SectionHeader id={slug(title)} title={title} meta={meta} />
       <div className="border-t border-ink-30" />
       {children}
     </section>

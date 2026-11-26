@@ -109,10 +109,12 @@ Icons are thin line drawings (1–1.2px stroke, `currentColor`), never emoji or 
   `.ui-ticks`, `.ui-label`, `.ui-section-header`, `.ui-btn` + `--primary|--danger|--icon|--sm`, `.ui-switch`,
   `.ui-check`, `.ui-tabs`, `.ui-search`, `.ui-now`, `.ui-today`, `.ui-note`, `.ui-logo`, `.ui-avatar`, `.ui-icon`,
   `.ui-sr-only`). Astro bundles it into `@layer components` (Tailwind utilities still override it); Go templ
-  pages link `/ui/tokens.css` and `/ui/primitives.css` and copy the markup from the React components.
+  pages link `/ui/tokens.css` and `/ui/primitives.css` (public, no login needed) and copy the markup from
+  the React components. Some primitives are compound: the checkbox is `.ui-check.ui-box.ui-box--sm` around
+  the input, the X svg and the ring; the switch is `.ui-switch > .ui-switch__track > .ui-switch__knob`.
 - Stateful markup is styled from ARIA, so a templ page gets the same look from the same attributes:
   `.ui-switch[aria-checked]`, `.ui-tabs__tab[aria-selected]`, `.ui-check__input:checked`.
-- Every primitive in every state: `/dev/ui` (served outside production only).
+- Every primitive in every state: `/dev/ui`, served only when `APP_ENV` is not `production`.
 
 ## Status language
 

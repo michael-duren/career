@@ -12,7 +12,11 @@ export function LogoSpot({ name, src, size = 36, labelled = false, className }: 
   useEffect(() => {
     if (!src) return;
     let live = true;
+    // Probe in CORS mode like the CSS mask does, so a logo the mask cannot use (cross-origin
+    // without CORS headers) never loads here either and the monogram stays. On error nothing
+    // changes: loaded never matches this src.
     const image = new Image();
+    image.crossOrigin = 'anonymous';
     image.onload = () => { if (live) setLoaded(src); };
     image.src = src;
     return () => { live = false; };

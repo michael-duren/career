@@ -2,7 +2,9 @@
  * Architect drawing primitives (docs/redesign/design-system.md, "Drawing primitives").
  * Plain CSS on the theme tokens in /ui/tokens.css, so the same classes work in React
  * (src/components/ui/), Astro and Go templ pages. Astro bundles this file into
- * @layer components, so Tailwind utilities on the same element still win.
+ * @layer components, so Tailwind utilities on the same element still win. The app-wide unlayered
+ * :focus-visible rule in global.css would beat layered rules, so the few focus rules that must
+ * replace it are !important (layered !important wins over unlayered normal declarations).
  * Values come from the reference screens (.bx, .dim, .lbl, .btn in docs/redesign/reference/).
  */
 
@@ -196,7 +198,7 @@
   white-space: nowrap;
   cursor: pointer;
 }
-.ui-btn:hover {
+.ui-btn:hover:not(:disabled, [aria-disabled="true"]) {
   border-color: var(--ink);
   color: var(--ink-hover);
 }
@@ -205,7 +207,7 @@
   border-color: var(--ink);
   color: var(--paper);
 }
-.ui-btn--primary:hover {
+.ui-btn--primary:hover:not(:disabled, [aria-disabled="true"]) {
   background: var(--ink-hover);
   border-color: var(--ink-hover);
   color: var(--paper);
@@ -215,7 +217,7 @@
   border-color: var(--accent);
   color: var(--accent);
 }
-.ui-btn--danger:hover {
+.ui-btn--danger:hover:not(:disabled, [aria-disabled="true"]) {
   background: var(--ink-05);
 }
 .ui-btn--icon {
@@ -281,7 +283,7 @@
   border-style: dashed;
 }
 .ui-switch:focus-visible {
-  outline: none;
+  outline: none !important;
 }
 .ui-switch:focus-visible .ui-switch__track {
   outline: 2px solid var(--ink);
@@ -360,11 +362,13 @@
 }
 .ui-tabs__tab {
   all: unset;
+  display: inline-flex;
+  align-items: center;
   flex: none;
   box-sizing: border-box;
   height: 42px;
   padding: 0 14px;
-  font: 500 11px/42px var(--font-mono, "IBM Plex Mono", monospace);
+  font: 500 11px/1 var(--font-mono, "IBM Plex Mono", monospace);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -372,7 +376,7 @@
   color: rgba(var(--ink-rgb), max(0.7, var(--ink-60-alpha)));
   cursor: pointer;
 }
-.ui-tabs__tab:hover {
+.ui-tabs__tab:hover:not([aria-selected="true"]) {
   color: var(--ink);
 }
 .ui-tabs__tab[aria-selected="true"] {
@@ -380,11 +384,12 @@
   color: var(--paper);
 }
 .ui-tabs__tab:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: -5px;
+  /* Inset: .ui-tabs scrolls (overflow-x), which would clip an outer ring. */
+  outline: 2px solid var(--ink) !important;
+  outline-offset: -5px !important;
 }
 .ui-tabs__tab[aria-selected="true"]:focus-visible {
-  outline-color: var(--paper);
+  outline-color: var(--paper) !important;
 }
 
 /* Search field: 44px (34px with --sm, the header size), --ink-50 border, thin magnifier. */
@@ -426,7 +431,8 @@
   opacity: 1;
 }
 .ui-search__input:focus-visible {
-  outline: none;
+  /* The whole field draws the ring (.ui-search:focus-within). */
+  outline: none !important;
 }
 .ui-search__hint {
   flex: none;

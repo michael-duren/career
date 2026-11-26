@@ -11,7 +11,9 @@ export function SegmentedTabs<T extends string>({ tabs, value, onChange, label, 
   tabs: readonly SegmentedTab<T>[]; value: T; onChange: (value: T) => void; label: string; controls?: string; className?: string;
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
-  const selected = Math.max(0, tabs.findIndex(tab => tab.value === value));
+  const selected = tabs.findIndex(tab => tab.value === value);
+  // With no matching value nothing is selected, but the first tab stays reachable by Tab.
+  const tabbable = Math.max(0, selected);
 
   function onKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
     const next = nextTabIndex(event.key, index, tabs.length);
@@ -31,7 +33,7 @@ export function SegmentedTabs<T extends string>({ tabs, value, onChange, label, 
           role="tab"
           aria-selected={index === selected}
           aria-controls={controls}
-          tabIndex={index === selected ? 0 : -1}
+          tabIndex={index === tabbable ? 0 : -1}
           className="ui-tabs__tab"
           onClick={() => onChange(tab.value)}
           onKeyDown={event => onKeyDown(event, index)}

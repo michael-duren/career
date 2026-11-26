@@ -94,3 +94,28 @@ test('the theme picker previews a theme without saving it', async ({ page }) => 
   // Labels keep the per-theme contrast alpha.
   await expect(page.locator('.ui-label').first()).toHaveCSS('color', 'rgba(0, 71, 171, 0.78)');
 });
+
+// The app-wide :focus-visible ring is unlayered; the primitives' own focus rules must still win.
+test('primitive focus rings replace the app-wide ring', async ({ page }) => {
+  const outline = (locator: import('@playwright/test').Locator) => locator.evaluate(el => {
+    const cs = getComputedStyle(el);
+    return { style: cs.outlineStyle, width: cs.outlineWidth, offset: cs.outlineOffset };
+  });
+
+  await page.getByRole('switch', { name: 'Timeline' }).focus();
+  await page.keyboard.press('Tab');
+  const leet = page.getByRole('switch', { name: 'Leetgrinder' });
+  await expect(leet).toBeFocused();
+  expect((await outline(leet)).style).toBe('none');
+  expect(await outline(leet.locator('.ui-switch__track'))).toEqual({ style: 'solid', width: '2px', offset: '3px' });
+
+  const tabs = page.getByRole('tablist', { name: 'Priority' });
+  await tabs.getByRole('tab', { name: 'All 61' }).focus();
+  await page.keyboard.press('ArrowRight');
+  expect(await outline(tabs.getByRole('tab', { name: 'High' }))).toEqual({ style: 'solid', width: '2px', offset: '-5px' });
+
+  const search = page.getByRole('searchbox', { name: 'Search companies' });
+  await search.click();
+  expect((await outline(search)).style).toBe('none');
+  expect(await outline(page.locator('.ui-search').first())).toEqual({ style: 'solid', width: '2px', offset: '2px' });
+});

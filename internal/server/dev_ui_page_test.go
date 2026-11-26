@@ -53,3 +53,29 @@ func TestDevUIPageOnlyOutsideProduction(t *testing.T) {
 		}
 	}
 }
+
+// The shared design CSS is public like /_astro/, so pages served before login (/login) and
+// the Go-rendered pages can link it.
+func TestDesignCSSIsPublic(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "ui"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"tokens.css", "primitives.css"} {
+		if err := os.WriteFile(filepath.Join(root, "ui", name), []byte(".ui{}"), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	s := &Server{config: config.Config{StaticDir: root, Username: "test", JWTSecret: "test-secret", Production: true}}
+	handler := s.RegisterRoutes()
+	for _, path := range []string{"/ui/tokens.css", "/ui/primitives.css"} {
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, path, nil))
+		if response.Code != http.StatusOK || response.Body.String() != ".ui{}" {
+			t.Fatalf("anonymous %s: %d %s", path, response.Code, response.Body.String())
+		}
+		if got := response.Header().Get("Content-Type"); got != "text/css; charset=utf-8" {
+			t.Fatalf("%s content type %q", path, got)
+		}
+	}
+}
