@@ -174,7 +174,8 @@ off:
   (or "<Module> needs <Dependency>…"), and so does the Leetgrinder extension.
 - Its MCP tools are not listed and refuse calls. Entry tools refuse its kinds. Search,
   `get_career_overview` and `/api/agent-context` leave out its entries.
-- People's company tools (`list_connection_companies`, `add_companies_to_queue`) also need Companies. Pages hide parts that need another
+- People's company tools (`list_connection_companies`, `add_companies_to_queue`) and the
+  catch-up queue API (`/api/connections/queue`) also need Companies. Pages hide parts that need another
   module: Companies hides connections without People, journal goal hours need Schedule.
   The journal Markdown views of `/api/agent-context` need Journal (or Audio), not Agents.
 - Leetgrinder reminders and the scheduler's background work pause.
@@ -184,6 +185,34 @@ on. A turned-off module keeps its data, and `GET /api/export` still includes eve
 stored settings counts as on. If the settings cannot be read, guarded routes return 503
 instead of guessing. The settings migration keeps every module on and marks setup done for
 any install that was already migrated. A new database still needs setup.
+
+### Catch-up queue
+
+A connection's `stage` (`to_contact`, `messaged`, `follow_up`, `referral_ask`, or absent when the
+person is not queued) and `snoozedUntil` are ordinary connection fields, so they come back from
+`GET /api/connections`, survive export/import and LinkedIn re-imports, and can be set through
+`POST /api/entries/connection` or MCP `update_career_entry`. The queue endpoints below need People
+and Companies. Every change takes the connection's `id` and the `revision` it was read at (409 when
+stale, 404 when the person is gone) and returns the saved `{entry, revision}`. "Today" and "this
+week" (Monday to Sunday) use the weekly scheduler's time zone, which the browser sets on first use.
+
+- `GET /api/connections/queue`: `{today, week: {start, end, sent, target}, connections, revisions}`,
+  everyone with a stage, snoozed people included (`snoozedUntil` after `today`), ordered by stage
+  then name. Candidates for the queue are people at board companies:
+  `GET /api/connections?linked=1` without a `stage`.
+- `POST /api/connections/queue` `{id, revision, stage}` adds someone or moves them to a stage and
+  clears any snooze. `DELETE /api/connections/queue` `{id, revision}` takes them out.
+- `POST /api/connections/queue/sent` `{id, revision}` records a message: last contact becomes
+  today (never earlier than it was), the person moves to the next stage (after `referral_ask` they
+  leave the queue), the snooze clears, and the send counts toward this week. Returns `week` too.
+  400 when the person is not queued.
+- `POST /api/connections/queue/snooze` `{id, revision, until}` hides a queued person until `until`,
+  a date after today and at most 365 days ahead.
+- `PATCH /api/connections/queue/settings` `{weeklyTarget}` sets the weekly target (1-50, default
+  2) and returns `{week}`.
+
+Only "sent" counts toward the week; editing `stage` or `lastContactedOn` directly does not. Sends
+are not part of `GET /api/export`.
 
 Leetgrinder, weekly scheduler, connections and audio thought endpoints are described in their
 feature docs. The MCP endpoint is described in [MCP](mcp/README.md).

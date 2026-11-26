@@ -163,3 +163,117 @@ func (s *Server) deleteConnectionPhoto(w http.ResponseWriter, r *http.Request) {
 	}
 	respond(w, 200, map[string]bool{"deleted": true})
 }
+
+// readConnectionQueue returns the catch-up queue and this week's counter.
+func (s *Server) readConnectionQueue(w http.ResponseWriter, r *http.Request) {
+	queue, err := s.db.ConnectionQueue(r.Context(), time.Now())
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	respond(w, 200, queue)
+}
+
+// queueRef names the connection a queue request changes and the revision it
+// was read at.
+type queueRef struct {
+	ID       string `json:"id"`
+	Revision string `json:"revision"`
+}
+
+// decodeQueue reads a queue request body into v, which embeds ref.
+func decodeQueue(w http.ResponseWriter, r *http.Request, ref *queueRef, v any) bool {
+	if !decode(w, r, 2000, v) {
+		return false
+	}
+	if ref.ID == "" || ref.Revision == "" {
+		respond(w, 400, map[string]string{"error": "id and revision are required"})
+		return false
+	}
+	return true
+}
+
+// setConnectionStage adds a connection to the queue or moves it to a stage.
+func (s *Server) setConnectionStage(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		queueRef
+		Stage string `json:"stage"`
+	}
+	if !s.mutation(w, r) || !decodeQueue(w, r, &input.queueRef, &input) {
+		return
+	}
+	if !database.ValidStage(input.Stage) {
+		respond(w, 400, map[string]string{"error": "stage must be one of to_contact, messaged, follow_up, referral_ask"})
+		return
+	}
+	saved, err := s.db.SetConnectionStage(r.Context(), input.ID, input.Revision, input.Stage)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	respond(w, 200, saved)
+}
+
+// removeFromQueue takes a connection out of the catch-up queue.
+func (s *Server) removeFromQueue(w http.ResponseWriter, r *http.Request) {
+	var input queueRef
+	if !s.mutation(w, r) || !decodeQueue(w, r, &input, &input) {
+		return
+	}
+	saved, err := s.db.SetConnectionStage(r.Context(), input.ID, input.Revision, "")
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	respond(w, 200, saved)
+}
+
+// markConnectionSent records a sent message and advances the stage.
+func (s *Server) markConnectionSent(w http.ResponseWriter, r *http.Request) {
+	var input queueRef
+	if !s.mutation(w, r) || !decodeQueue(w, r, &input, &input) {
+		return
+	}
+	saved, week, err := s.db.MarkConnectionSent(r.Context(), input.ID, input.Revision, time.Now())
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	respond(w, 200, map[string]any{"entry": saved.Entry, "revision": saved.Revision, "week": week})
+}
+
+// snoozeConnection hides a queued connection until a date.
+func (s *Server) snoozeConnection(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		queueRef
+		Until string `json:"until"`
+	}
+	if !s.mutation(w, r) || !decodeQueue(w, r, &input.queueRef, &input) {
+		return
+	}
+	saved, err := s.db.SnoozeConnection(r.Context(), input.ID, input.Revision, input.Until, time.Now())
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	respond(w, 200, saved)
+}
+
+// setCatchUpTarget changes the weekly message target.
+func (s *Server) setCatchUpTarget(w http.ResponseWriter, r *http.Request) {
+	if !s.mutation(w, r) {
+		return
+	}
+	var input struct {
+		WeeklyTarget int `json:"weeklyTarget"`
+	}
+	if !decode(w, r, 200, &input) {
+		return
+	}
+	week, err := s.db.SetCatchUpTarget(r.Context(), input.WeeklyTarget, time.Now())
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	respond(w, 200, map[string]any{"week": week})
+}
