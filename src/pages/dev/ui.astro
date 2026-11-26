@@ -1,6 +1,6 @@
 ---
-// Dev-only review page for the drawing primitives. The Go server only routes /dev/ui
-// outside production (internal/server/static.go).
+// Dev-only review page for the drawing primitives. The Go server routes /dev/ui only
+// outside production, and 404s every dev/* file in production (internal/server/static.go).
 import Layout from '../../layouts/Layout.astro';
 import UiGallery from '../../components/dev/UiGallery';
 import '../../styles/global.css';

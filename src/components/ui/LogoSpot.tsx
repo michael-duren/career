@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { cssUrl, monogram, resolveUrl } from '../../lib/ui';
 import { cn } from '../../lib/utils';
 
@@ -11,9 +11,11 @@ type LogoState = 'monogram' | 'loading' | 'logo' | 'failed';
 // "<name> logo" to screen readers.
 export function LogoSpot({ name, src, size = 36, labelled = false, className }: { name: string; src?: string; size?: 36 | 38 | 40; labelled?: boolean; className?: string }) {
   // Absolute, so the probe and the CSS mask (which resolves against the stylesheet) agree.
-  // A malformed src resolves to undefined and shows the monogram.
-  const url = useMemo(() => (src && typeof document !== 'undefined' ? resolveUrl(src, document.baseURI) : undefined), [src]);
+  // A malformed src resolves to undefined and shows the monogram. Resolved after mount, so
+  // the server render and the first client render match (both show the monogram).
+  const [url, setUrl] = useState<string>();
   const [result, setResult] = useState<{ url: string; ok: boolean }>();
+  useEffect(() => setUrl(src ? resolveUrl(src, document.baseURI) : undefined), [src]);
 
   useEffect(() => {
     if (!url) return;

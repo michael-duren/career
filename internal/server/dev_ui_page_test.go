@@ -34,7 +34,10 @@ func TestDevUIPageOnlyOutsideProduction(t *testing.T) {
 				continue
 			}
 			if path == "/dev/ui/index.html" {
-				continue // served like any other built file outside production
+				if response.Code != http.StatusOK || response.Body.String() != shell {
+					t.Fatalf("development %s: %d", path, response.Code)
+				}
+				continue // a plain built file outside production, with the asset cache headers
 			}
 			if response.Code != http.StatusOK || response.Body.String() != shell {
 				t.Fatalf("development %s: %d %s", path, response.Code, response.Body.String())

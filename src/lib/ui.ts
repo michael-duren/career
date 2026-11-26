@@ -15,8 +15,8 @@ export function goalPattern(index: number): GoalPatternName {
 export type Tick = { on: boolean; major: boolean };
 
 // tickMarks lays out a tick scale of `count` ticks with the first `filled` filled.
-// Every 5th tick (0, 5, 10, ...) is a taller major tick. count is capped at MAX_TICKS and
-// filled is clamped to 0..count.
+// Every 5th tick (0, 5, 10, ...) is a taller major tick. count is capped at MAX_TICKS (a guard
+// against runaway values; scale larger ranges down before calling) and filled is clamped to 0..count.
 export const MAX_TICKS = 500;
 export function tickMarks(count: number, filled: number): Tick[] {
   const total = Number.isFinite(count) ? Math.min(MAX_TICKS, Math.max(0, Math.floor(count))) : 0;

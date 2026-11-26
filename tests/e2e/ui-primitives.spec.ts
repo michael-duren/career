@@ -166,7 +166,14 @@ test('ticks, the switch track and the selected tab keep their state in forced co
   expect(await style('.ui-switch[aria-checked="true"] .ui-switch__knob', 'backgroundColor'))
     .not.toBe(await style('.ui-switch[aria-checked="false"] .ui-switch__knob', 'backgroundColor'));
   expect(await style('.ui-tabs__tab[aria-selected="true"]', 'textDecorationLine')).toBe('underline');
+  for (const selector of ['.ui-hatch--diagonal', '.ui-hatch--dots', '.ui-switch[aria-checked="true"] .ui-switch__track']) {
+    expect(await style(selector, 'backgroundImage'), selector).not.toBe('none');
+  }
+});
+
+test('progress is a progressbar with its value', async ({ page }) => {
   await expect(page.getByRole('progressbar', { name: 'Progress 40%' })).toHaveAttribute('aria-valuenow', '40');
+  await expect(page.getByRole('progressbar', { name: 'Progress Done' })).toHaveAttribute('aria-valuenow', '100');
 });
 
 test('modified arrow keys are left to the browser', async ({ page }) => {
