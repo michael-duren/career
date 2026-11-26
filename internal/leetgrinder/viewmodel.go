@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/michael-duren/career-strategy/internal/timefmt"
 )
 
 //go:embed style.css
@@ -66,9 +68,16 @@ type OverviewPage struct {
 	Today     Today
 	IDs       map[string]string
 	NextTodos []TodoItem
-	// LogRef and LogError keep a rejected "Log an attempt" entry.
-	LogRef, LogError string
 }
+
+// LogPage is the LOG tab. Ref and Error keep a rejected problem reference.
+type LogPage struct {
+	OverviewPage
+	Ref, Error string
+}
+
+// LogRecent is how many recent attempts the LOG tab lists.
+const LogRecent = 10
 
 type ReviewsPage struct {
 	Today Today
@@ -187,7 +196,14 @@ func DateLabel(t time.Time) string { return t.Format("Mon 2 Jan 2006") }
 
 // CompactDate drops the weekday, for dense tables.
 func CompactDate(t time.Time) string { return t.Format("2 Jan 2006") }
-func Percent(f float64) string       { return strconv.Itoa(int(f*100+0.5)) + "%" }
+
+// AttemptStamp is an attempt's local date, 12-hour time and zone, as
+// "10 Oct 2026 · 10:30 PM CDT".
+func AttemptStamp(t time.Time) string {
+	return t.Format("2 Jan 2006") + " · " + timefmt.Time(t) + " " + t.Format("MST")
+}
+
+func Percent(f float64) string { return strconv.Itoa(int(f*100+0.5)) + "%" }
 
 func ProblemURL(slug string) string { return "/leetgrinder/problem/" + slug }
 func Count(n int) string            { return strconv.Itoa(n) }

@@ -9,6 +9,7 @@ import (
 	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/formatters/html"
 	"github.com/alecthomas/chroma/v2/lexers"
+	"github.com/michael-duren/career-strategy/internal/timefmt"
 )
 
 // chromaLexers maps LeetCode language slugs to chroma lexer names where
@@ -177,7 +178,7 @@ func CompareURL(slug, from, to string) string {
 // CodeChoiceLabel names an attempt in the compare selects, by its local
 // time and outcome.
 func CodeChoiceLabel(a Attempt, review ProblemReview) string {
-	return review.AttemptTime(a).Format("02 Jan 2006 15:04") + " · " + AttemptLabel(a)
+	return review.AttemptTime(a).Format("2 Jan 2006") + " " + timefmt.Time(review.AttemptTime(a)) + " · " + AttemptLabel(a)
 }
 
 // DiffLabel reads a diff line's change for screen readers.

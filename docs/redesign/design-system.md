@@ -116,8 +116,9 @@ Icons are thin line drawings (1–1.2px stroke, `currentColor`), never emoji or 
 - Stateful markup is styled from ARIA and native state, so a templ page gets the same look from the same
   attributes: `.ui-switch[aria-checked]`, `.ui-tabs__tab[aria-selected]`, `.ui-check__input:checked`, and
   `:disabled` for a locked switch, a disabled checkbox and disabled buttons (set the `disabled` attribute).
-- Fonts are not in those two files: Astro pages get them from the bundle; a templ page must load the
-  self-hosted fonts itself (the Leetgrinder restyle decides how) or it falls back to system fonts.
+- Fonts are not in those two files: Astro pages get them from the bundle; a templ page links `/ui/fonts.css`
+  (Latin copies of the same @fontsource files in `public/ui/fonts/`, checked by `tests/fonts.test.ts`; unlike tokens.css and primitives.css it needs a session) and sets
+  `--font-sans`/`--font-mono`/`--font-hand` itself, as `internal/leetgrinder/style.css` does.
 - A review gallery of every primitive and its main states: `/dev/ui`, served only when `APP_ENV` is not `production` (login still required).
 
 ## Status language

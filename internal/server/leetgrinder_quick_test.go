@@ -100,7 +100,7 @@ func TestLeetgrinderQuickReviewFlow(t *testing.T) {
 	if today.Due(card) || card.Flagged() || today.QuickReviews != 1 || today.Progress.Reviews() != 0 {
 		t.Fatalf("recalled card due %v flagged %v quick %d", today.Due(card), card.Flagged(), today.QuickReviews)
 	}
-	if !strings.Contains(request("GET", "/leetgrinder", nil).Body.String(), "Quick reviews: <strong>1</strong>") {
+	if !strings.Contains(request("GET", "/leetgrinder", nil).Body.String(), `<th scope="row">Quick / bonus</th><td>1 / 0</td>`) {
 		t.Error("dashboard quick counter")
 	}
 	history := request("GET", "/leetgrinder/problem/two-sum", nil).Body.String()

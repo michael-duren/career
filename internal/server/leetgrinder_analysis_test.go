@@ -108,7 +108,7 @@ func TestLeetgrinderAnalysisDisplayAndReanalyse(t *testing.T) {
 	if err = db.PauseLeetgrinderAnalysis(ctx, now.Add(-time.Minute), ""); err != nil {
 		t.Fatal(err)
 	}
-	for _, path := range []string{"/leetgrinder/problems", "/leetgrinder"} {
+	for _, path := range []string{"/leetgrinder/problems", "/leetgrinder/log"} {
 		if b := request("GET", path, nil).Body.String(); !strings.Contains(b, "Check complexity") {
 			t.Errorf("%s lacks the complexity badge", path)
 		}

@@ -16,7 +16,7 @@ func TestProblemSiteLinks(t *testing.T) {
 		p := Problem{Slug: slug}
 		pages := map[string]templ.Component{
 			"history":   ProblemHistory(p, State{}, NewForm(uuid.NewString()), AnalysisAvailability{}, ProblemReview{}),
-			"review":    reviewCard(ReviewItem{Problem: p}, AttemptForm{}),
+			"review":    reviewCard(ReviewItem{Problem: p}, AttemptForm{}, time.Time{}),
 			"catalog":   Problems(ProblemsPage{Rows: []ProblemRow{{Problem: p}}, Total: 1, Location: time.UTC}),
 			"dashboard": nextTodos([]TodoItem{{Problem: p}}),
 			"todos":     Todos(TodosPage{Sets: []TodoSet{{ID: uuid.NewString(), Title: "Practice", Items: []TodoItem{{Problem: p}}}}, Location: time.UTC}),
@@ -170,7 +170,7 @@ func TestAttemptHistoryUsesSettingsZoneAndDayKind(t *testing.T) {
 		t.Fatal(err)
 	}
 	html := out.String()
-	for _, want := range []string{"10 Oct 2026 · 22:30 CDT", "· Practice", `datetime="2026-10-11T03:30:00Z"`} {
+	for _, want := range []string{"10 Oct 2026 · 10:30 PM CDT", "· Practice", `datetime="2026-10-11T03:30:00Z"`} {
 		if !strings.Contains(html, want) {
 			t.Errorf("history missing %q", want)
 		}
@@ -212,7 +212,7 @@ func TestGoalCardNewPicks(t *testing.T) {
 	render := func(state State) string {
 		t.Helper()
 		var out bytes.Buffer
-		if err := goalCard(NewToday(settings, state, now)).Render(context.Background(), &out); err != nil {
+		if err := newPicks(NewToday(settings, state, now)).Render(context.Background(), &out); err != nil {
 			t.Fatal(err)
 		}
 		return out.String()
@@ -262,7 +262,7 @@ func TestGoalCardNewPicks(t *testing.T) {
 	var out bytes.Buffer
 	failed := NewToday(settings, State{Goals: goals}, now)
 	failed.NewPicksFailed = true
-	if err := goalCard(failed).Render(context.Background(), &out); err != nil || !strings.Contains(out.String(), "could not be picked from your todos") || strings.Contains(out.String(), "Fewer todos") {
+	if err := newPicks(failed).Render(context.Background(), &out); err != nil || !strings.Contains(out.String(), "could not be picked from your todos") || strings.Contains(out.String(), "Fewer todos") {
 		t.Errorf("failed plan: %s %v", out.String(), err)
 	}
 	// Off: nothing is shown, whether or not the goal is met.

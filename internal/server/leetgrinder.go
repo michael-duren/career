@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"net/http"
+	"net/url"
 	"slices"
 	"strconv"
 	"strings"
@@ -91,12 +92,11 @@ func reviewIDs(ids map[string]string, today leetgrinder.Today) map[string]string
 	return ids
 }
 func (s *Server) leetgrinderOverview(w http.ResponseWriter, r *http.Request) {
-	s.renderOverview(w, r, 200, "", "")
-}
-
-// renderOverview renders the dashboard, keeping a rejected "Log an attempt"
-// entry and its message.
-func (s *Server) renderOverview(w http.ResponseWriter, r *http.Request, status int, ref, message string) {
+	// The log form lived on this page; old links with a problem go to the LOG tab.
+	if r.URL.Query().Has("problem") {
+		http.Redirect(w, r, "/leetgrinder/log?"+url.Values{"problem": {r.URL.Query().Get("problem")}}.Encode(), http.StatusSeeOther)
+		return
+	}
 	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
 	if err != nil {
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your saved progress is unavailable. Please retry."))
@@ -107,24 +107,40 @@ func (s *Server) renderOverview(w http.ResponseWriter, r *http.Request, status i
 		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your todos are unavailable. Please retry."))
 		return
 	}
-	page := leetgrinder.OverviewPage{Today: today, IDs: reviewIDs(map[string]string{}, today), NextTodos: nextTodos, LogRef: ref, LogError: message}
-	renderLeetgrinder(w, r, status, leetgrinder.Overview(page))
+	page := leetgrinder.OverviewPage{Today: today, IDs: reviewIDs(map[string]string{}, today), NextTodos: nextTodos}
+	renderLeetgrinder(w, r, 200, leetgrinder.Overview(page))
 }
 
-// leetgrinderLog opens the problem page for a LeetCode or NeetCode URL or a
-// LeetCode slug.
+// leetgrinderLog is the LOG tab. With a problem reference (a LeetCode or
+// NeetCode URL, or a LeetCode slug) it opens that problem's page; a rejected
+// reference is kept on the tab with a message.
 func (s *Server) leetgrinderLog(w http.ResponseWriter, r *http.Request) {
-	ref := r.URL.Query().Get("problem")
+	query := r.URL.Query()
+	if !query.Has("problem") {
+		s.renderLog(w, r, 200, "", "")
+		return
+	}
+	ref := query.Get("problem")
 	slug, err := leetgrinder.ResolveProblemRef(ref)
 	if err != nil {
 		if utf8.RuneCountInString(ref) > 300 {
 			ref = string([]rune(ref)[:300])
 		}
 		message := "Enter a LeetCode or NeetCode problem link, such as https://leetcode.com/problems/two-sum/, or a LeetCode slug such as two-sum."
-		s.renderOverview(w, r, 400, ref, message)
+		s.renderLog(w, r, 400, ref, message)
 		return
 	}
 	http.Redirect(w, r, leetgrinder.ProblemURL(slug), http.StatusSeeOther)
+}
+
+func (s *Server) renderLog(w http.ResponseWriter, r *http.Request, status int, ref, message string) {
+	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
+	if err != nil {
+		renderLeetgrinder(w, r, 503, leetgrinder.Unavailable("Your saved progress is unavailable. Please retry."))
+		return
+	}
+	page := leetgrinder.LogPage{OverviewPage: leetgrinder.OverviewPage{Today: today}, Ref: ref, Error: message}
+	renderLeetgrinder(w, r, status, leetgrinder.LogView(page))
 }
 
 func (s *Server) leetgrinderProblems(w http.ResponseWriter, r *http.Request) {

@@ -65,7 +65,7 @@ func TestLeetgrinderNewPicksFromTodos(t *testing.T) {
 	}
 	s.now = func() time.Time { return tomorrow.AddDate(0, 0, 1) }
 	body := request("GET", "/leetgrinder", nil).Body.String()
-	for _, want := range []string{"<strong>0/2</strong> new", `Next new problem: <a href="/leetgrinder/problem/two-sum">Two Sum</a> from Blind 75`, "Valid Anagram"} {
+	for _, want := range []string{`<th scope="row">New</th><td>0</td><td>2</td>`, `Next new problem: <a href="/leetgrinder/problem/two-sum">Two Sum</a> from Blind 75`, "Valid Anagram"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("dashboard missing %q", want)
 		}

@@ -228,6 +228,25 @@ func TestLeetgrinderLogForm(t *testing.T) {
 	if w.Code != 400 || !strings.Contains(w.Body.String(), "Enter a LeetCode or NeetCode problem link") || !strings.Contains(w.Body.String(), "https://example.com/&lt;b&gt;") {
 		t.Fatalf("bad reference: %d", w.Code)
 	}
+	// The bare LOG tab is the form; an empty reference is rejected on it.
+	if w = request("GET", "/leetgrinder/log", nil); w.Code != 200 || !strings.Contains(w.Body.String(), `action="/leetgrinder/log"`) || !strings.Contains(w.Body.String(), `<a href="/leetgrinder/log" aria-current="page">Log</a>`) || strings.Contains(w.Body.String(), `role="alert"`) {
+		t.Fatalf("log tab: %d", w.Code)
+	}
+	if w = request("GET", "/leetgrinder/log?problem=", nil); w.Code != 400 || !strings.Contains(w.Body.String(), "Enter a LeetCode or NeetCode problem link") {
+		t.Fatalf("empty reference: %d", w.Code)
+	}
+	// Old links to the dashboard's log form go to the LOG tab.
+	if w = request("GET", "/leetgrinder?problem=two-sum", nil); w.Code != 303 || w.Header().Get("Location") != "/leetgrinder/log?problem=two-sum" {
+		t.Fatalf("legacy log link: %d %q", w.Code, w.Header().Get("Location"))
+	}
+	// A prefilled set name is capped at the form's 120 characters.
+	if w = request("GET", "/leetgrinder/todos/sets/new?title="+strings.Repeat("x", 200), nil); w.Code != 200 || !strings.Contains(w.Body.String(), `value="`+strings.Repeat("x", 120)+`"`) {
+		t.Fatalf("long prefill: %d", w.Code)
+	}
+	// The Today page's "build todo set" button prefills the new set form.
+	if w = request("GET", "/leetgrinder/todos/sets/new?"+url.Values{"title": {"Weakest topics · Oct 20"}, "problems": {"two-sum\nlru-cache"}}.Encode(), nil); w.Code != 200 || !strings.Contains(w.Body.String(), `value="Weakest topics · Oct 20"`) || !strings.Contains(w.Body.String(), "two-sum\nlru-cache</textarea>") {
+		t.Fatalf("prefilled set: %d", w.Code)
+	}
 	w = request("GET", "/leetgrinder/log?"+url.Values{"problem": {"https://neetcode.io/problems/heap"}}.Encode(), nil)
 	if w.Code != 303 || w.Header().Get("Location") != "/leetgrinder/problem/neetcode-heap" {
 		t.Fatalf("NeetCode-only problem: %d %q", w.Code, w.Header().Get("Location"))

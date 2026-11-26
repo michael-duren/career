@@ -1,39 +1,55 @@
 package leetgrinder
 
-import "github.com/michael-duren/career-strategy/internal/shell"
+import (
+	"strings"
+	"time"
 
+	"github.com/michael-duren/career-strategy/internal/shell"
+	"github.com/michael-duren/career-strategy/internal/timefmt"
+)
+
+// layout is every Leetgrinder page: the app header, the sub-tabs and the page.
+// The theme-init script runs before first paint and before the stylesheets, like
+// ThemeHead.astro: it swaps the default for the saved theme (src/lib/theme.ts;
+// tests/fonts.test.ts keeps the two in sync).
 templ layout(title string, active string) {
 	<!DOCTYPE html>
-	<html lang="en">
+	<html lang="en" data-theme="dark">
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 			<meta name="description" content="Track LeetCode practice with a daily goal and spaced-repetition reviews."/>
 			<title>{ title } · Leetgrinder</title>
+			<script id="theme-init">
+				(function () {
+					var themes = ["dark", "vellum", "cobalt", "concrete"];
+					var saved = null;
+					try {
+						saved = localStorage.getItem("career-theme");
+					} catch (e) {}
+					document.documentElement.dataset.theme = themes.indexOf(saved) >= 0 ? saved : "dark";
+				})();
+			</script>
 			<link rel="icon" href="/favicon.svg"/>
+			<link rel="stylesheet" href="/ui/fonts.css"/>
 			@shell.Head()
 			<link rel="stylesheet" href="/leetgrinder/style.css"/>
 		</head>
 		<body>
 			<a class="skip" href="#main">Skip to content</a>
 			@shell.Header("leetgrinder")
-			<div class="shell">
-				<nav class="sidenav" aria-label="Leetgrinder">
-					<p class="sidenav-brand">
-						@icon("terminal")
-						Leetgrinder
-					</p>
-					<div class="sidenav-links">
-						@navLink("/leetgrinder", "Dashboard", "dashboard", active)
+			<div class="lg-page">
+				<nav class="lg-tabs" aria-label="Leetgrinder">
+					@navLink("/leetgrinder", "Today", "dashboard", active)
+					@navLink("/leetgrinder/reviews", "Reviews", "reviews", active)
+					@navLink("/leetgrinder/todos", "Sets", "todos", active)
+					@navLink("/leetgrinder/log", "Log", "log", active)
 					@navLink("/leetgrinder/problems", "Problems", "problems", active)
-					@navLink("/leetgrinder/todos", "Todos", "todos", active)
-						@navLink("/leetgrinder/reviews", "Reviews", "reviews", active)
-						@navLink("/leetgrinder/stats", "Stats", "stats", active)
-						@navLink("/leetgrinder/settings", "Settings", "settings", active)
-					</div>
-					<a class="sidenav-foot" href="/leetgrinder/export">
+					@navLink("/leetgrinder/stats", "Stats", "stats", active)
+					@navLink("/leetgrinder/settings", "Settings", "settings", active)
+					<a class="lg-tabs-export" href="/leetgrinder/export">
 						@icon("download")
-						Export history
+						<span>Export</span>
 					</a>
 				</nav>
 				<main id="main">
@@ -47,113 +63,245 @@ templ layout(title string, active string) {
 	</html>
 }
 
+// navLink is one Leetgrinder sub-tab; the current one carries aria-current.
 templ navLink(href string, label string, key string, active string) {
 	if key == active {
-		<a href={ templ.SafeURL(href) } aria-current="page">
-			@icon(key)
-			<span>{ label }</span>
-		</a>
+		<a href={ templ.SafeURL(href) } aria-current="page">{ label }</a>
 	} else {
-		<a href={ templ.SafeURL(href) }>
-			@icon(key)
-			<span>{ label }</span>
-		</a>
+		<a href={ templ.SafeURL(href) }>{ label }</a>
 	}
 }
 
-// icon draws Lucide outline icons inline so pages need no icon font.
+// icon draws thin line icons inline so pages need no icon font.
 templ icon(name string) {
-	<svg class="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+	<svg class="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
 		switch name {
-			case "dashboard":
-				<rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect>
-			case "problems":
-				<path d="M3 5h.01"></path><path d="M3 12h.01"></path><path d="M3 19h.01"></path><path d="M8 5h13"></path><path d="M8 12h13"></path><path d="M8 19h13"></path>
-			case "reviews":
-				<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path>
-			case "todos":
-				<path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"></path>
-			case "stats":
-				<path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path>
-			case "settings":
-				<path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle>
 			case "download":
 				<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path><path d="M12 15V3"></path>
 			case "warning":
 				<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path>
 			case "about":
 				<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path>
-			case "terminal":
-				<path d="m4 17 6-6-6-6"></path><path d="M12 19h8"></path>
 		}
 	</svg>
 }
 
+// Overview is the Today page (docs/redesign/pages/leetgrinder.md): streak and
+// today's goal with the review picks, weekly solves and rates, and the weakest
+// topics, then the practice queue and the optional due list.
 templ Overview(page OverviewPage) {
-	@layout("Dashboard", "dashboard") {
-		<header class="dash-head">
-			<div>
-				<p class="eyebrow">DASHBOARD</p>
-				<h1>
-					if page.Started() {
-						Welcome back
-					} else {
-						Ready when you are
-					}
-				</h1>
-				<p class="muted">{ DateLabel(page.Today.Date) }</p>
-			</div>
-		</header>
-		@goalCard(page.Today)
-		@logAttemptForm(page.LogRef, page.LogError)
-		<div class="dash-grid">
-			<div>
+	@layout("Today", "dashboard") {
+		{{ d := page.Dashboard() }}
+		<div class="lg-today">
+			<section class="lg-today-goal" aria-labelledby="streak-title">
+				@streakHead(page.Today, d)
+				@goalTable(page.Today)
+				@newPicks(page.Today)
 				@todaysReviews(page.Today, page.IDs, "overview")
-				@nextTodos(page.NextTodos)
-			</div>
-			<div>
-				@dueList(page.Today, 10)
-				@progressPanel(page)
-				<section class="panel side-list" aria-labelledby="recent-title">
-					<h2 id="recent-title">Recent attempts</h2>
-					if recent := page.Recent(5); len(recent) > 0 {
-						<ol>
-							for _, a := range recent {
-								<li>
-									<a href={ templ.SafeURL(ProblemURL(a.ProblemSlug)) }>{ page.Today.State.Problem(a.ProblemSlug).DisplayTitle() }</a>
-									<span class="small muted">{ AttemptLabel(a) } · { Count(a.Minutes) } min</span>
-									if kind := page.Today.KindOf(a); kind != KindNew && kind != "" {
-										<span class="small muted">· { KindLabel(kind) }</span>
-									}
-									if page.Today.State.StatedWrong(a.ID) {
-										@complexityBadge()
-									}
-								</li>
-							}
-						</ol>
-					} else {
-						<p class="muted small">Your logged attempts will show up here.</p>
+			</section>
+			<section class="lg-today-trends" aria-labelledby="weekly-title">
+				@weeklyChart(d)
+				@recentRates(d)
+				@difficultyMix(d)
+			</section>
+			<aside class="lg-today-topics" aria-labelledby="weak-title">
+				@weakestTopics(d)
+			</aside>
+		</div>
+		<div class="lg-today-more">
+			@nextTodos(page.NextTodos)
+			@dueList(page.Today, 10)
+		</div>
+	}
+}
+
+// streakHead is the big streak number over a tick scale from 0 to the record.
+templ streakHead(today Today, d Dashboard) {
+	<h1 class="lg-streak" id="streak-title">
+		<span class="lg-streak-num">{ StreakLabel(today.Streaks.Current) }</span>
+		<span class="lg-streak-text">
+			<span class="lg-streak-unit">Day streak</span>
+			<span class="ui-label">
+				Record { Count(today.Streaks.Longest) } ·
+				if today.Progress.Met() {
+					goal met ✓
+				} else {
+					{ Count(today.Progress.Remaining()) } to go
+				}
+			</span>
+		</span>
+	</h1>
+	<div class="ui-ticks lg-streak-ticks" aria-hidden="true">
+		for _, t := range d.Ticks {
+			<span class={ "ui-ticks__tick", templ.KV("ui-ticks__tick--major", t.Major), templ.KV("ui-ticks__tick--on", t.On) }></span>
+		}
+	</div>
+	<p class="lg-scale ui-label" aria-hidden="true"><span>0</span><span>Days</span><span>{ Count(d.TickMax) }</span></p>
+	<p class="visually-hidden">{ Count(today.Streaks.Current) } { DayUnit(today.Streaks.Current) } in a row, longest { Count(today.Streaks.Longest) }, { Count(today.Streaks.Active) } active { DayUnit(today.Streaks.Active) } in a row.</p>
+}
+
+// goalTable is today's goal: done against target for new problems and
+// reviews, the quick reviews and bonus, and what is still due. Phones show
+// the same numbers as a row of counts.
+templ goalTable(today Today) {
+	<table class="lg-goal">
+		<caption class="ui-label">
+			Today's goal · { GoalLabel(today.Progress.Target()) } ·
+			if today.Progress.Met() {
+				Goal met
+			} else {
+				{ Count(today.Progress.Remaining()) } to go
+			}
+		</caption>
+		<thead><tr><th scope="col">Type</th><th scope="col">Done</th><th scope="col">Goal</th></tr></thead>
+		<tbody>
+			<tr class={ templ.KV("done", today.Progress.NewLeft() == 0) }><th scope="row">New</th><td>{ Count(today.Progress.New()) }</td><td>{ Count(today.Goal.New) }</td></tr>
+			<tr class={ templ.KV("done", today.Progress.ReviewsLeft() == 0) }><th scope="row">Review</th><td>{ Count(today.Progress.Reviews()) }</td><td>{ Count(today.Progress.ReviewTarget()) }</td></tr>
+			<tr><th scope="row">Quick / bonus</th><td>{ Count(today.QuickReviews) } / { Count(today.Progress.Bonus()) }</td><td>—</td></tr>
+			<tr><th scope="row">Still due</th><td>{ Count(today.Backlog()) }</td><td>—</td></tr>
+		</tbody>
+	</table>
+	<dl class="lg-counts" aria-hidden="true">
+		<div><dt class="ui-label">New</dt><dd>{ Count(today.Progress.New()) }/{ Count(today.Goal.New) }</dd></div>
+		<div><dt class="ui-label">Review</dt><dd>{ Count(today.Progress.Reviews()) }/{ Count(today.Progress.ReviewTarget()) }</dd></div>
+		<div><dt class="ui-label">Quick/bonus</dt><dd>{ Count(today.QuickReviews) }/{ Count(today.Progress.Bonus()) }</dd></div>
+		<div><dt class="ui-label">Due</dt><dd>{ Count(today.Backlog()) }</dd></div>
+	</dl>
+	if !today.Progress.Met() && today.Progress.NewLeft() == 0 && today.Progress.ReviewsLeft() == 0 {
+		<p class="small muted">Log any attempt to meet today's goal.</p>
+	}
+}
+
+// weeklyChart draws solved problems per week as hatched columns, the
+// current (partial) week dashed, with guide lines and the pace note.
+templ weeklyChart(d Dashboard) {
+	<h2 class="ui-section-header__title" id="weekly-title">Solved per week</h2>
+	if len(d.Weeks) == 0 {
+		<p class="small muted">Weekly columns appear after your first attempt.</p>
+	} else {
+		<div class="lg-weeks">
+			if d.Pace != "" {
+				<p class="ui-note lg-pace" title={ d.PaceTitle }>{ d.Pace }<span class="lg-pace-counts" aria-hidden="true"> · { d.PaceCounts }</span><span class="visually-hidden">: { d.PaceTitle }</span></p>
+			}
+			<div class="lg-weeks-plot" role="list" aria-label={ "Problems solved per week, last " + Count(len(d.Weeks)) + " weeks" }>
+				<div class="lg-guides" aria-hidden="true">
+					for _, g := range d.Guides {
+						<span class="lg-guide" style={ "bottom: " + g.Bottom }><span class="ui-label">{ Count(g.Value) }</span></span>
 					}
-				</section>
+				</div>
+				for _, w := range d.Weeks {
+					<div class="lg-week" role="listitem" title={ w.Title }>
+						<span class="lg-week-n" aria-hidden="true">{ Count(w.Solved) }</span>
+						<span class={ "lg-week-bar", templ.KV("ui-hatch--diagonal", !w.Current), templ.KV("lg-week-bar--current", w.Current) } style={ "height: " + w.Height } aria-hidden="true"></span>
+						<span class="visually-hidden">
+							{ w.Title }
+							if w.Current {
+								(this week so far)
+							}
+						</span>
+					</div>
+				}
+			</div>
+			<div class="lg-weeks-labels" aria-hidden="true">
+				for _, w := range d.Weeks {
+					<span class="ui-label">{ w.Label }</span>
+				}
+			</div>
+			<div class="lg-dim-caption">
+				<span class="ui-dim"></span>
+				<span class="ui-label">{ Count(len(d.Weeks)) } { plural(len(d.Weeks), "week", "weeks") } · { Count(d.Solved) } solved</span>
+				<span class="ui-dim"></span>
 			</div>
 		</div>
 	}
 }
 
-// nextTodos shows the next five todo problems as cards beside today's
-// review, so the queue reads as part of the day's work.
+// recentRates are the shown weeks' independent-solve share, complexity
+// checks right, and average minutes on a medium problem.
+templ recentRates(d Dashboard) {
+	<dl class="lg-rates">
+		<div><dt class="ui-label">Independent</dt><dd>{ d.Independent }</dd></div>
+		<div><dt class="ui-label">Complexity ok</dt><dd>{ d.Complexity }</dd></div>
+		<div><dt class="ui-label">Avg medium</dt><dd>{ d.AvgMedium }</dd></div>
+	</dl>
+}
+
+// difficultyMix is each difficulty's solved share of attempted problems,
+// all time, as a hatch fill on a measurement line.
+templ difficultyMix(d Dashboard) {
+	if len(d.Difficulties) > 0 {
+		<h2 class="ui-section-header__title lg-difficulty-title" id="difficulty-title">Difficulty</h2>
+		<ul class="lg-difficulty" aria-labelledby="difficulty-title">
+			for _, x := range d.Difficulties {
+				<li>
+					<span class="lg-difficulty-name">{ x.Name }</span>
+					<span class="ui-progress" aria-hidden="true"><span class="ui-progress__fill ui-hatch--diagonal" style={ "width: " + x.Width }></span><span class="ui-dim"></span></span>
+					<span class="lg-difficulty-value">{ x.Label }<span class="visually-hidden"> solved</span></span>
+				</li>
+			}
+		</ul>
+	}
+}
+
+// weakestTopics lists the topics with the lowest average recall, marking
+// low recall and high struggle, and offers a todo set built from them.
+templ weakestTopics(d Dashboard) {
+	<h2 class="ui-section-header__title" id="weak-title">Weakest topics</h2>
+	if len(d.Topics) == 0 {
+		<p class="small muted">Topics with at least { Count(MinTopicProblems) } attempted problems show up here, weakest recall first.</p>
+	} else {
+		<table class="lg-topics">
+			<caption class="visually-hidden">Weakest topics by average recall</caption>
+			<thead><tr><th scope="col">Topic</th><th scope="col" class="lg-topics-qty"><abbr title="Problems attempted">Qty</abbr></th><th scope="col">Recall</th><th scope="col"><abbr title="Struggle rate">Strug.</abbr></th></tr></thead>
+			<tbody>
+				for _, t := range d.Topics {
+					<tr>
+						<th scope="row"><a href={ templ.SafeURL("/leetgrinder/problems?topic=" + t.Key) }>{ t.Label }</a></th>
+						<td class="lg-topics-qty">{ Count(t.Problems) }</td>
+						<td class={ templ.KV("lg-weak", t.WeakRecall) }>
+							{ Percent(t.Recall) }
+							if t.WeakRecall {
+								<span class="visually-hidden">, below 80%</span>
+							}
+						</td>
+						<td class={ templ.KV("lg-weak", t.WeakStruggle) }>
+							{ Percent(t.Struggle) }
+							if t.WeakStruggle {
+								<span class="visually-hidden">, above 55%</span>
+							}
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+		<p class="ui-label lg-topics-key">Sorted by recall · accent = below 80% or struggle above 55%</p>
+		if len(d.BuildProblems) > 0 {
+			<form class="lg-build" method="get" action="/leetgrinder/todos/sets/new">
+				<input type="hidden" name="title" value={ d.BuildTitle }/>
+				<input type="hidden" name="problems" value={ strings.Join(d.BuildProblems, "\n") }/>
+				<button class="ui-btn" type="submit">Build todo set from top { Count(len(d.BuildProblems)) }</button>
+				<p class="small muted">Opens a new set with the lowest-recall problem from each topic, for you to check and save.</p>
+			</form>
+		}
+	}
+}
+
+// nextTodos shows the next five todo problems below today's work, so the
+// queue reads as part of the day.
 templ nextTodos(items []TodoItem) {
 	<section class="next-todos" aria-labelledby="next-todos-title">
-		<p class="eyebrow">PRACTICE QUEUE</p>
-		<h2 id="next-todos-title">Next 5 todo problems</h2>
+		<div class="ui-section-header ui-section-header--rule">
+			<h2 class="ui-section-header__title" id="next-todos-title">Next 5 todo problems</h2>
+			<a class="ui-label ui-section-header__meta" href="/leetgrinder/todos">All sets</a>
+		</div>
 		if len(items) == 0 {
 			<p class="muted">No todo problems yet. <a href="/leetgrinder/todos/add">Add a problem</a> to start your queue.</p>
 		} else {
-			<p class="muted">The oldest problems still to do across your todos. <a href="/leetgrinder/todos">All todos</a></p>
+			<p class="small muted">The oldest problems still to do across your todos.</p>
 			<ol class="todo-cards">
 				for i, item := range items {
 					<li class={ "todo-card", templ.KV("todo-card-first", i == 0) }>
-						<span class="todo-card-rank" aria-hidden="true">{ Count(i + 1) }</span>
+						<span class="todo-card-rank" aria-hidden="true">{ StreakLabel(i + 1) }</span>
 						<div class="todo-card-body">
 							<p class="todo-card-meta">
 								if item.Problem.Number > 0 {
@@ -193,56 +341,64 @@ templ nextTodos(items []TodoItem) {
 	</section>
 }
 
+// LogView is the LOG tab: open any problem's page to record an attempt, the
+// latest attempts, and all-time totals.
+templ LogView(page LogPage) {
+	@layout("Log an attempt", "log") {
+		<header class="dash-head"><div><p class="eyebrow">Log</p><h1>Log an attempt</h1></div></header>
+		<div class="dash-grid">
+			<div>
+				@logAttemptForm(page.Ref, page.Error)
+				<section class="side-list" aria-labelledby="recent-title">
+					<div class="ui-section-header ui-section-header--rule">
+						<h2 class="ui-section-header__title" id="recent-title">Recent attempts</h2>
+						<a class="ui-label ui-section-header__meta" href="/leetgrinder/problems">All problems</a>
+					</div>
+					if recent := page.Recent(LogRecent); len(recent) > 0 {
+						<ol>
+							for _, a := range recent {
+								<li>
+									<a href={ templ.SafeURL(ProblemURL(a.ProblemSlug)) }>{ page.Today.State.Problem(a.ProblemSlug).DisplayTitle() }</a>
+									<span class="small muted">
+										{ AttemptLabel(a) } · { Count(a.Minutes) } min · { timefmt.Date(Date(a.CreatedAt, page.Today.Settings.Location())) }
+										if kind := page.Today.KindOf(a); kind != KindNew && kind != "" {
+											· { KindLabel(kind) }
+										}
+									</span>
+									if page.Today.State.StatedWrong(a.ID) {
+										@complexityBadge()
+									}
+								</li>
+							}
+						</ol>
+					} else {
+						<p class="muted small">Your logged attempts will show up here.</p>
+					}
+				</section>
+			</div>
+			<div>
+				@progressPanel(page.OverviewPage)
+			</div>
+		</div>
+	}
+}
+
 // logAttemptForm opens any LeetCode problem's page in the app from its URL
 // or slug; the problem page records the attempt.
 templ logAttemptForm(ref string, message string) {
 	<section class="panel log-problem" id="log-attempt" aria-labelledby="log-title">
-		<h2 id="log-title">Log an attempt</h2>
+		<h2 id="log-title">Open a problem</h2>
 		<p class="muted small">Paste a LeetCode or NeetCode problem link, or a LeetCode slug such as <code>two-sum</code>, to open its page and record an attempt.</p>
 		<form class="log-problem-form" method="get" action="/leetgrinder/log">
 			if message != "" {
 				<p class="error" role="alert">{ message }</p>
 			}
-			<label>
-				Problem
-				<input type="text" name="problem" required maxlength="300" value={ ref } placeholder="https://leetcode.com/problems/two-sum/" autocomplete="off" spellcheck="false"/>
+			<label class="ui-field">
+				<span class="ui-label">Problem</span>
+				<input class="ui-field__input" type="text" name="problem" required maxlength="300" value={ ref } placeholder="https://leetcode.com/problems/two-sum/" autocomplete="off" spellcheck="false"/>
 			</label>
 			<button class="button primary" type="submit">Open problem</button>
 		</form>
-	</section>
-}
-
-// goalCard shows today's goal, what is done, and the streak.
-templ goalCard(today Today) {
-	<section class="panel goal-card" aria-labelledby="goal-title">
-		<div>
-			<p class="eyebrow">TODAY'S GOAL · { GoalLabel(today.Progress.Target()) }</p>
-			<h2 id="goal-title">
-				if today.Progress.Met() {
-					Goal met
-				} else {
-					{ Count(today.Progress.Remaining()) } to go
-				}
-			</h2>
-			<ul class="goal-progress">
-				<li class={ templ.KV("done", today.Progress.NewLeft() == 0) }><strong>{ Count(today.Progress.New()) }/{ Count(today.Goal.New) }</strong> new</li>
-				<li class={ templ.KV("done", today.Progress.ReviewsLeft() == 0) }><strong>{ Count(today.Progress.Reviews()) }/{ Count(today.Progress.ReviewTarget()) }</strong> review</li>
-				<li><strong>{ Count(today.Progress.Bonus()) }</strong> bonus</li>
-				<li>Quick reviews: <strong>{ Count(today.QuickReviews) }</strong></li>
-			</ul>
-			if !today.Progress.Met() && today.Progress.NewLeft() == 0 && today.Progress.ReviewsLeft() == 0 {
-				<p class="small muted">Log any attempt to meet today's goal.</p>
-			}
-			@newPicks(today)
-		</div>
-		<dl class="streaks">
-			<dt>Streak</dt>
-			<dd><strong>{ Count(today.Streaks.Current) }</strong> { DayUnit(today.Streaks.Current) }</dd>
-			<dt>Longest</dt>
-			<dd>{ Count(today.Streaks.Longest) } { DayUnit(today.Streaks.Longest) }</dd>
-			<dt>Active days</dt>
-			<dd>{ Count(today.Streaks.Active) } in a row</dd>
-		</dl>
 	</section>
 }
 
@@ -291,8 +447,10 @@ templ newPicks(today Today) {
 
 // progressPanel is the all-time summary.
 templ progressPanel(page OverviewPage) {
-	<section class="panel side-list" aria-labelledby="progress-title">
-		<h2 id="progress-title">All time</h2>
+	<section class="side-list" aria-labelledby="progress-title">
+		<div class="ui-section-header ui-section-header--rule">
+			<h2 class="ui-section-header__title" id="progress-title">All time</h2>
+		</div>
 		<dl class="summary">
 			<dt>Problems attempted</dt>
 			<dd>{ Count(Summarize(page.Today.State).Attempted) }</dd>
@@ -300,6 +458,8 @@ templ progressPanel(page OverviewPage) {
 			<dd>{ Count(Summarize(page.Today.State).Solved) }</dd>
 			<dt>Solved independently</dt>
 			<dd>{ page.IndependentRate() }</dd>
+			<dt>Longest streak</dt>
+			<dd>{ Count(page.Today.Streaks.Longest) } { DayUnit(page.Today.Streaks.Longest) }</dd>
 		</dl>
 	</section>
 }
@@ -307,8 +467,11 @@ templ progressPanel(page OverviewPage) {
 // dueList is the optional list of due cards beyond today's plan.
 templ dueList(today Today, n int) {
 	{{ cards, total := DueSoon(today, n) }}
-	<section class="panel side-list" aria-labelledby="due-title">
-		<h2 id="due-title">Also due</h2>
+	<section class="side-list" aria-labelledby="due-title">
+		<div class="ui-section-header ui-section-header--rule">
+			<h2 class="ui-section-header__title" id="due-title">Also due</h2>
+			<a class="ui-label ui-section-header__meta" href="/leetgrinder/reviews">All reviews</a>
+		</div>
 		if total == 0 {
 			<p class="muted small">Nothing else is due today.</p>
 		} else {
@@ -325,7 +488,6 @@ templ dueList(today Today, n int) {
 					</li>
 				}
 			</ol>
-			<a class="small" href="/leetgrinder/reviews">All reviews</a>
 		}
 	</section>
 }
@@ -425,7 +587,7 @@ templ ProblemHistory(problem Problem, state State, form AttemptForm, avail Analy
 						</div>
 						<p class="small muted">
 							<time datetime={ a.CreatedAt.UTC().Format("2006-01-02T15:04:05Z07:00") }>
-								{ review.AttemptTime(a).Format("02 Jan 2006 · 15:04 MST") }
+								{ AttemptStamp(review.AttemptTime(a)) }
 							</time>
 							if a.Quick() {
 								if a.Outcome == QuickPartial {
@@ -561,52 +723,61 @@ templ Retired() {
 	}
 }
 
+// todaysReviews is today's review picks, one card each.
 templ todaysReviews(today Today, ids map[string]string, ret string) {
 	<section class="reviews" aria-labelledby="reviews-title">
-		<p class="eyebrow">SPACED REPETITION</p>
-		<h2 id="reviews-title">Today's review</h2>
+		<div class="ui-section-header">
+			<h2 class="ui-section-header__title" id="reviews-title">Today's review</h2>
+			if ret != "reviews" {
+				<a class="ui-label ui-section-header__meta" href="/leetgrinder/reviews">All reviews</a>
+			}
+		</div>
 		if len(today.Reviews) == 0 {
-			<p class="muted">Nothing is due for review today. <a href="/leetgrinder/reviews">See all reviews</a></p>
+			<p class="small muted">Nothing is due for review today.</p>
 		} else {
-			<p class="muted">Re-solve each problem from scratch before looking at your old solution. <a href="/leetgrinder/reviews">All reviews</a></p>
+			<p class="small muted">Re-solve each problem from scratch before looking at your old solution.</p>
 			for _, item := range today.Reviews {
-				@reviewCard(item, NewReviewForm(ids[ReviewKey(item.Problem.Slug)], ret))
+				@reviewCard(item, NewReviewForm(ids[ReviewKey(item.Problem.Slug)], ret), today.Now)
 			}
 		}
 	</section>
 }
 
-templ reviewCard(item ReviewItem, form AttemptForm) {
-	<article class="problem-card review-card" id={ ReviewKey(item.Problem.Slug) }>
-		<div class="problem-heading">
-			<div>
-				@problemMeta(item.Problem)
-				<h3>
-					<a
-						href={ templ.SafeURL(item.Problem.URL()) }
-						target="_blank"
-						rel="noopener noreferrer"
-					>{ item.Problem.DisplayTitle() } <span aria-hidden="true">↗</span><span class="visually-hidden">(opens in a new tab)</span></a>
-				</h3>
-			</div>
+// reviewCard is one review pick in a Box: kind and number, title, difficulty,
+// recall and topics, the reason as a margin note, then OPEN and LOG ATTEMPT.
+templ reviewCard(item ReviewItem, form AttemptForm, now time.Time) {
+	<article class="ui-box review-card" id={ ReviewKey(item.Problem.Slug) }>
+		<p class="ui-label">
 			if item.Done {
-				<span class="badge done">Reviewed today</span>
+				Reviewed today
 			} else if item.Card.SpotCheck() {
-				<span class="badge">Spot check</span>
+				Spot check
 			} else {
-				<span class="badge">Review</span>
+				Review
 			}
-		</div>
+			if NumberLabel(item.Problem.Number) != "" {
+				· { NumberLabel(item.Problem.Number) }
+			}
+		</p>
+		<h3 class="review-card-title">{ item.Problem.DisplayTitle() }</h3>
+		<p class="review-card-meta">
+			{ ReviewMeta(item, now) }
+		</p>
 		if item.Reason != "" {
-			<p class="reason">{ item.Reason }</p>
+			<p class="ui-note reason">{ item.Reason }</p>
 		}
-		<div class="problem-actions problem-site-links">
-			@neetcodeLink(item.Problem, "")
-			<a href={ templ.SafeURL(ProblemURL(item.Problem.Slug)) }>Log attempt</a>
-			if !item.Done && item.Card.Reviews > 0 && item.Card.RequiredMode() == "" {
-				<a href={ templ.SafeURL(QuickURL(item.Problem.Slug, "")) }>Quick review</a>
-			}
+		<div class="review-card-actions">
+			<a class="ui-btn" href={ templ.SafeURL(item.Problem.URL()) } target="_blank" rel="noopener noreferrer">Open<span class="visually-hidden"> { item.Problem.DisplayTitle() } on { item.Problem.Site() } (opens in a new tab)</span></a>
+			<a class="ui-btn ui-btn--primary" href={ templ.SafeURL(ProblemURL(item.Problem.Slug)) }>Log attempt<span class="visually-hidden">: { item.Problem.DisplayTitle() }</span></a>
 		</div>
+		if link := item.Problem.NeetCodeURL(); link != "" || (!item.Done && item.Card.Reviews > 0 && item.Card.RequiredMode() == "") {
+			<p class="review-card-links small">
+				@neetcodeLink(item.Problem, "")
+				if !item.Done && item.Card.Reviews > 0 && item.Card.RequiredMode() == "" {
+					<a href={ templ.SafeURL(QuickURL(item.Problem.Slug, "")) }>Quick review</a>
+				}
+			</p>
+		}
 		if !item.Done && form.ID != "" {
 			<details class="log-attempt">
 				<summary>Record your review</summary>@attemptFields(item.Problem, form)

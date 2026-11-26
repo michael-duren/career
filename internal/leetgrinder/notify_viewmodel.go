@@ -3,6 +3,8 @@ package leetgrinder
 import (
 	"strconv"
 	"time"
+
+	"github.com/michael-duren/career-strategy/internal/timefmt"
 )
 
 // NtfyForm is the ntfy server section. The token itself is write-only: it is
@@ -73,7 +75,7 @@ func NotificationTimeLabel(t time.Time, loc *time.Location) string {
 	if loc == nil {
 		loc = time.UTC
 	}
-	return t.In(loc).Format("Mon 2 Jan 15:04")
+	return timefmt.WeekdayDate(t.In(loc)) + " · " + timefmt.Time(t.In(loc))
 }
 
 func PriorityLabel(p string) string {
