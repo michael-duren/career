@@ -19,6 +19,14 @@ One 28px row, then a `--ink-30` rule:
 
 If the links don't fit (narrow desktop), collapse the overflow into a `MORE +` menu.
 
+Implementation: `src/components/AppHeader.astro` (Astro pages) and `internal/shell/header.templ`
+(Go-rendered pages) render the same markup, with every module in registry order and the current
+one marked. `public/ui/shell.css` styles it; `public/ui/shell.js` hides turned-off modules, applies
+the user's order, fills `MORE +` and runs the clock; `public/ui/site-search.js` runs the search field.
+`saveSettings()` in `src/lib/modules.ts` fires a `career:settings` window event and posts on the
+`career-settings` BroadcastChannel, so the menu updates without a reload in every open tab.
+Until Settings → Account exists, Sign out is the last item in `MORE +`, so `MORE +` always shows.
+
 ## Global search
 
 - Desktop: typing in the header field opens a results panel under it. Mobile: the search icon

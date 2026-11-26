@@ -10,10 +10,11 @@
 @import "@fontsource/ibm-plex-mono/700.css";
 @import "@fontsource/architects-daughter/400.css";
 
-/* Architect theme tokens and drawing primitives. Plain CSS in public/ui/ so the Go-rendered pages
-   can link the same files (/ui/tokens.css, /ui/primitives.css); here Tailwind bundles them. */
+/* Architect theme tokens, drawing primitives and the app header. Plain CSS in public/ui/ so the Go-rendered pages
+   can link the same files (/ui/tokens.css, /ui/primitives.css, /ui/shell.css); here Tailwind bundles them. */
 @import "../../public/ui/tokens.css";
 @import "../../public/ui/primitives.css" layer(components);
+@import "../../public/ui/shell.css" layer(components);
 
 /*
  * Tailwind utilities: bg-paper, text-ink, text-ink-60, border-ink-30, text-accent, font-mono, font-hand.
@@ -204,23 +205,13 @@ img { max-width: 100%; }
 button, a, summary { touch-action: manipulation; }
 /* Token-based so it follows the theme; on legacy zinc surfaces only Dark is supported (see the header of public/ui/tokens.css). */
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
-.app-header { padding-top: max(12px, env(safe-area-inset-top)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
 .app-content { padding-bottom: max(32px, env(safe-area-inset-bottom)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
-#mobile-sidebar { width: min(320px, calc(100vw - 48px)); padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); padding-left: env(safe-area-inset-left); overscroll-behavior: contain; }
-#mobile-sidebar .sidebar-container { height: calc(100% - 48px); }
-.mobile-menu-close { display: block; margin-left: auto; margin-right: 12px; width: 44px; height: 44px; font-size: 28px; }
-.skip-link { position: fixed; top: -100px; left: 16px; z-index: 100; padding: 12px; background: #2563eb; }
+.skip-link { position: fixed; top: -100px; left: 16px; z-index: 100; padding: 12px; background: var(--paper); color: var(--ink); border: 1px solid var(--ink); }
 .skip-link:focus { top: max(12px, env(safe-area-inset-top)); }
 @media (max-width: 1023px) {
   button, select, input:not([type=checkbox]):not([type=radio]), summary { min-height: 44px; }
   input:not([type=checkbox]):not([type=radio]), select, textarea { font-size: 16px !important; max-width: 100%; }
   input[type=date] { min-width: 0; }
-  .sidebar-container a { min-height: 44px; }
-  #mobile-menu-button { display: grid; place-items: center; width: 44px; }
-  .app-header { position: relative; gap: 8px; }
-  .site-search { position: static; }
-  #search-panel { left: 12px; right: 12px; width: auto; min-width: 0; }
-  #search-results { max-height: 50dvh; overscroll-behavior: contain; }
   .app-content { padding-top: 24px; }
 }
 @media (max-width: 639px) {
@@ -236,9 +227,8 @@ button, a, summary { touch-action: manipulation; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
-@media (display-mode: standalone) { .install-help { display: none; } }
 .book-modal { max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px); }
 .login-shell { min-height: 100dvh; padding-top: max(32px, env(safe-area-inset-top)); padding-bottom: max(32px, env(safe-area-inset-bottom)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
 @media (min-width: 640px) {
-  .app-header, .app-content { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); }
+  .app-content { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); }
 }

@@ -16,6 +16,8 @@ import (
 type Module struct {
 	ID    string
 	Label string
+	// Short is the uppercase label in the header menu and phone tab bar.
+	Short string
 	// Pages are page path prefixes, matched on whole path segments.
 	Pages []string
 	// API are API path prefixes, matched on whole path segments.
@@ -34,20 +36,20 @@ type Module struct {
 // Registry lists every module in default order. Keep the ids in sync with
 // src/lib/modules.ts (TestRegistryMatchesFrontend checks this).
 var Registry = []Module{
-	{ID: "timeline", Label: "Timeline", Pages: []string{"/timeline"}, API: []string{"/api/goals"}, Kinds: []string{"goal"}},
-	{ID: "schedule", Label: "Schedule", Pages: []string{"/weekly-scheduler"}, API: []string{"/api/scheduler"}, DependsOn: []string{"timeline"},
+	{ID: "timeline", Label: "Timeline", Short: "TIMELINE", Pages: []string{"/timeline"}, API: []string{"/api/goals"}, Kinds: []string{"goal"}},
+	{ID: "schedule", Label: "Schedule", Short: "SCHEDULE", Pages: []string{"/weekly-scheduler"}, API: []string{"/api/scheduler"}, DependsOn: []string{"timeline"},
 		MCPTools: []string{"get_weekly_schedule", "save_schedule_session", "remove_schedule_session", "save_schedule_rule", "end_schedule_rule", "record_schedule_actual", "update_schedule_settings"}},
-	{ID: "leetgrinder", Label: "Leetgrinder", Pages: []string{"/leetgrinder", "/bootcamp"}, API: []string{"/api/leetgrinder"},
+	{ID: "leetgrinder", Label: "Leetgrinder", Short: "LEET", Pages: []string{"/leetgrinder", "/bootcamp"}, API: []string{"/api/leetgrinder"},
 		MCPTools: []string{"get_leetgrinder_today", "list_leetgrinder_reviews", "get_leetgrinder_stats", "log_leetgrinder_attempt", "list_leetgrinder_todos", "create_leetgrinder_todo_set", "add_leetgrinder_todo_problem", "reorder_leetgrinder_set", "remove_leetgrinder_todo_problem", "remove_leetgrinder_todo_set"}},
-	{ID: "companies", Label: "Companies", Pages: []string{"/companies", "/manage/companies"}, Kinds: []string{"company"}},
-	{ID: "people", Label: "People", Pages: []string{"/connections"}, API: []string{"/api/connections"}, Kinds: []string{"connection"},
+	{ID: "companies", Label: "Companies", Short: "COMPANIES", Pages: []string{"/companies", "/manage/companies"}, Kinds: []string{"company"}},
+	{ID: "people", Label: "People", Short: "PEOPLE", Pages: []string{"/connections"}, API: []string{"/api/connections"}, Kinds: []string{"connection"},
 		MCPTools:  []string{"list_connection_companies", "add_companies_to_queue"},
 		ToolsNeed: map[string]string{"list_connection_companies": "companies", "add_companies_to_queue": "companies"}},
-	{ID: "bookshelf", Label: "Bookshelf", Pages: []string{"/books", "/manage/books"}, Kinds: []string{"book"}},
-	{ID: "journal", Label: "Journal", Pages: []string{"/journal", "/logs", "/personal-journal"}, API: []string{"/api/summaries/progress"}, Kinds: []string{"week", "personal"}},
-	{ID: "notes", Label: "Notes", Pages: []string{"/notes"}, Kinds: []string{"note"}},
-	{ID: "audio", Label: "Audio thoughts", Pages: []string{"/audio-thoughts", "/running"}, API: []string{"/api/running"}, Kinds: []string{"run"}},
-	{ID: "agents", Label: "Agent context", Pages: []string{"/agents"}, API: []string{"/api/agent-context"}, DependsOn: []string{"timeline"}},
+	{ID: "bookshelf", Label: "Bookshelf", Short: "BOOKS", Pages: []string{"/books", "/manage/books"}, Kinds: []string{"book"}},
+	{ID: "journal", Label: "Journal", Short: "JOURNAL", Pages: []string{"/journal", "/logs", "/personal-journal"}, API: []string{"/api/summaries/progress"}, Kinds: []string{"week", "personal"}},
+	{ID: "notes", Label: "Notes", Short: "NOTES", Pages: []string{"/notes"}, Kinds: []string{"note"}},
+	{ID: "audio", Label: "Audio thoughts", Short: "AUDIO", Pages: []string{"/audio-thoughts", "/running"}, API: []string{"/api/running"}, Kinds: []string{"run"}},
+	{ID: "agents", Label: "Agent context", Short: "AGENTS", Pages: []string{"/agents"}, API: []string{"/api/agent-context"}, DependsOn: []string{"timeline"}},
 }
 
 // Themes are the accepted theme names (src/lib/theme.ts); the first is the default.
