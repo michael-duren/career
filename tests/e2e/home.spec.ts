@@ -225,3 +225,16 @@ test('a skipped session is struck through and counts toward the total', async ({
   await expect(list.getByRole('listitem').first().getByRole('checkbox')).not.toBeChecked();
   await expect(page.getByText(/^0 of 2 done/)).toBeVisible();
 });
+
+test('a failed check-off shows the error after the list reloads', async ({ page }) => {
+  await mockWeek(page);
+  await mockSections(page);
+  await page.route('**/api/scheduler/mutate', route => route.fulfill({ status: 500, json: { error: 'Saving failed. Please retry.' } }));
+  await page.goto('/');
+  const list = page.getByRole('list', { name: "Today's todos" });
+  await list.getByText('Practice problems', { exact: true }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'Saving failed. Please retry.' })).toBeVisible();
+  await expect(list.getByRole('checkbox').nth(1)).not.toBeChecked();
+  await page.waitForTimeout(500);
+  await expect(page.getByRole('alert').filter({ hasText: 'Saving failed. Please retry.' })).toBeVisible();
+});

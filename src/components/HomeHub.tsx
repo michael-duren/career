@@ -89,6 +89,8 @@ export function HomeHub() {
   const latest = useRef(0);
   // Bumped by a check-off too, so a schedule load already in flight cannot overwrite its saved result.
   const latestSchedule = useRef(0);
+  // Set when a failed save triggers the recovery reload, so its success keeps the save error visible.
+  const keepError = useRef(false);
   const reload = useCallback(() => {
     const request = ++latest.current;
     const current = () => request === latest.current;
@@ -100,8 +102,9 @@ export function HomeHub() {
       if (on.schedule) void settle(loadToday(), 'Could not load today.').then(part => {
         if (scheduleRequest !== latestSchedule.current) return;
         setSchedule(part);
-        // A successful reload (after a failed save, too) shows the saved state, so the save error is stale.
-        if ('value' in part) setError('');
+        // A successful reload shows the saved state, so an older save error is stale (not the one that triggered it).
+        if ('value' in part && !keepError.current) setError('');
+        keepError.current = false;
       }); else setSchedule(undefined);
       if (on.timeline) void settle(loadGoals(), 'Could not load goals.').then(part => { if (current()) setGoals(part); }); else setGoals(undefined);
       if (on.leetgrinder) void settle(loadLeet(), 'Could not load Leetgrinder.').then(part => { if (current()) setLeet(part); }); else setLeet(undefined);
@@ -154,6 +157,7 @@ export function HomeHub() {
       if (request === latestSchedule.current) setSchedule({ value: { week, today: data.today } });
     } catch (e) {
       setError(message(e, 'Could not save. Please retry.'));
+      keepError.current = true;
       reload();
     } finally { setPending(undefined); }
   }
