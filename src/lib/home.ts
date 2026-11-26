@@ -8,7 +8,7 @@ export const isDone = (session: SchedulerSession) => Boolean(session.actual && s
 export const isSkipped = (session: SchedulerSession) => session.actual?.status === 'skipped';
 
 /**
- * The next session: the first one (in start order) neither done nor skipped that
+ * The next session: the first one (sessions must be sorted by start) neither done nor skipped that
  * has not ended yet, so a session in progress stays next until it ends.
  */
 export function nextSession(sessions: SchedulerSession[], now: number): SchedulerSession | undefined {
@@ -56,7 +56,7 @@ export function isoWeek(date: string): number {
 export const STREAK_TICKS = 60;
 
 /**
- * The streak tick scale runs from 0 to the record (or the streak, if longer, or 1).
+ * The streak tick scale runs from 0 to max(streak, record, 1).
  * Above STREAK_TICKS ticks it is scaled down so the row stays readable.
  */
 export function streakScale(streak: number, record: number): { count: number; filled: number; max: number } {

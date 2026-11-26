@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { durationLabel, isoWeek, nextSession, progressNote, streakScale, STREAK_TICKS, windowHours } from '../src/lib/home.ts';
+import { durationLabel, isoWeek, sessionMinutes, nextSession, progressNote, streakScale, STREAK_TICKS, windowHours } from '../src/lib/home.ts';
 import type { SchedulerSession } from '../src/lib/scheduler.ts';
 
 const session = (id: string, start: string, end: string, actual: SchedulerSession['actual'] = null): SchedulerSession => ({
@@ -28,6 +28,10 @@ test('the note counts done sessions and says when the next one starts', () => {
   assert.equal(progressNote(day, at('18:00'), 'UTC'), '1 of 3 done — now until 6:45 PM');
   assert.equal(progressNote(day, at('17:45'), 'America/Chicago'), '1 of 3 done — now until 12:45 PM');
   assert.equal(progressNote(day, at('21:00'), 'UTC'), '1 of 3 done');
+  assert.equal(progressNote(day, at('16:45'), 'UTC'), '1 of 3 done — next at 5:45 PM');
+  assert.equal(progressNote(day, at('16:46'), 'UTC'), '1 of 3 done — next in 59 min');
+  assert.equal(progressNote(day, Date.parse('2026-11-24T17:44:30Z'), 'UTC'), '1 of 3 done — next in 1 min');
+  assert.equal(progressNote([], at('12:00'), 'UTC'), '0 of 0 done');
 });
 
 test('durations read in minutes under an hour, else hours', () => {
@@ -35,6 +39,8 @@ test('durations read in minutes under an hour, else hours', () => {
   assert.equal(durationLabel(60), '1 H');
   assert.equal(durationLabel(90), '1.5 H');
   assert.equal(durationLabel(135), '2.25 H');
+  assert.equal(sessionMinutes(day[0]), 90);
+  assert.equal(sessionMinutes({ ...day[0], plan: null }), 0);
   assert.equal(windowHours('2026-11-24T05:00:00Z', '2026-11-24T20:30:00Z'), '15.5');
 });
 

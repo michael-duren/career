@@ -44,7 +44,10 @@ async function loadGoals(): Promise<Goal[]> {
 }
 async function loadLeet(): Promise<Leet> {
   const parsed = leetSchema.safeParse(await getJSON('/api/leetgrinder/today', 'Could not load Leetgrinder.'));
-  if (!parsed.success) throw new Error('Could not load Leetgrinder.');
+  if (!parsed.success) {
+    console.error('Unexpected /api/leetgrinder/today response.', parsed.error);
+    throw new Error('Could not load Leetgrinder.');
+  }
   return parsed.data;
 }
 /** Which Home sections are on. If settings cannot load, every section tries and reports its own failure. */
@@ -84,6 +87,8 @@ export function HomeHub() {
   // Earlier sessions checked off here stay listed so a mistaken click can be undone.
   const [touched, setTouched] = useState<Set<string>>(() => new Set());
   const latest = useRef(0);
+  // Bumped by a check-off too, so a schedule load already in flight cannot overwrite its saved result.
+  const latestSchedule = useRef(0);
   const reload = useCallback(() => {
     const request = ++latest.current;
     const current = () => request === latest.current;
@@ -91,7 +96,13 @@ export function HomeHub() {
     void loadModules().then(on => {
       if (!current()) return;
       setModules(on); setNow(Date.now());
-      if (on.schedule) void settle(loadToday(), 'Could not load today.').then(part => { if (current()) setSchedule(part); }); else setSchedule(undefined);
+      const scheduleRequest = ++latestSchedule.current;
+      if (on.schedule) void settle(loadToday(), 'Could not load today.').then(part => {
+        if (scheduleRequest !== latestSchedule.current) return;
+        setSchedule(part);
+        // A successful reload (after a failed save, too) shows the saved state, so the save error is stale.
+        if ('value' in part) setError('');
+      }); else setSchedule(undefined);
       if (on.timeline) void settle(loadGoals(), 'Could not load goals.').then(part => { if (current()) setGoals(part); }); else setGoals(undefined);
       if (on.leetgrinder) void settle(loadLeet(), 'Could not load Leetgrinder.').then(part => { if (current()) setLeet(part); }); else setLeet(undefined);
     });
@@ -125,8 +136,8 @@ export function HomeHub() {
     const body = (week: SchedulerWeek) => done
       ? { revision: week.revision, week: week.week, action: 'clearActual', id: session.id }
       : { revision: week.revision, week: week.week, action: 'actual', id: session.id, actual: { ...session.plan!, date: session.date, status: 'assumed' } };
-    // Cancel any in-flight reload so it cannot overwrite the saved result.
-    latest.current++;
+    // Cancel any in-flight schedule load so it cannot overwrite the saved result.
+    const request = ++latestSchedule.current;
     try {
       let week = data.week;
       for (let attempt = 0; ; attempt++) {
@@ -139,7 +150,8 @@ export function HomeHub() {
           throw e;
         }
       }
-      setSchedule({ value: { week, today: data.today } });
+      // A newer check-off or reload owns the schedule now.
+      if (request === latestSchedule.current) setSchedule({ value: { week, today: data.today } });
     } catch (e) {
       setError(message(e, 'Could not save. Please retry.'));
       reload();
@@ -260,7 +272,8 @@ function GoalsSection({ goals, today }: { goals: Part<Goal[]>; today: string }) 
       : <ul className="m-0 list-none p-0" aria-label="Active goals">{goals.value.map(goal => {
         const steps = goal.steps ?? [];
         const done = steps.filter(step => step.done).length;
-        const late = goal.endDate < today;
+        // Past its end date with steps still open; a goal whose steps are all done is not late.
+        const late = goal.endDate < today && (steps.length === 0 || done < steps.length);
         const label = late ? 'LATE' : steps.length ? `${done} / ${steps.length}` : 'NO STEPS';
         return <li key={goal.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-5 gap-y-[7px] py-2 md:min-h-8 md:grid-cols-[200px_minmax(0,1fr)_90px] md:items-center md:py-0.5">
           <a href={`/timeline?goal=${encodeURIComponent(goal.id)}`} className="truncate text-[15px] font-light text-ink no-underline hover:text-ink-hover">{goal.title}</a>
@@ -294,10 +307,10 @@ function LeetSection({ leet }: { leet: Part<Leet> }) {
         <span className="text-[64px] leading-[0.78] font-extralight tracking-[-0.03em] md:text-[84px]">{String(value.streak).padStart(2, '0')}</span>
         <span className="flex flex-col gap-[3px] pb-0.5 md:gap-1">
           <span className="text-[13px] font-light tracking-[0.12em] md:text-[15px]">DAY STREAK</span>
-          <Label className="text-[9px] md:text-[10px]">Record {value.record}</Label>
+          <Label className="text-[9px] md:text-[10px]">Record {Math.max(value.record, value.streak)}</Label>
         </span>
       </div>
-      <TickScale className="mt-1" count={scale.count} filled={scale.filled} label={`Streak ${value.streak} days, record ${value.record}`} />
+      <TickScale className="mt-1" count={scale.count} filled={scale.filled} label={`Streak ${value.streak} days, record ${Math.max(value.record, value.streak)}`} />
       <div className="flex justify-between"><Label>0</Label><Label>Days</Label><Label>{scale.max}</Label></div>
       <div className="mt-0.5 grid grid-cols-3 border-t border-ink-30 pt-2.5">
         {count(`${value.done.new}/${value.goal.new}`, 'New')}

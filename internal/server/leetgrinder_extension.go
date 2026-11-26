@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -19,7 +20,8 @@ const leetgrinderAPIBodyLimit = 128 << 10
 
 // registerLeetgrinderExtension adds token management (cookie session) and the
 // extension API (bearer token). /api/ bypasses pageAccess, so the API
-// handlers authenticate every request themselves and never accept cookies.
+// handlers authenticate every request themselves and never accept cookies,
+// except GET /api/leetgrinder/today, which Home also reads with the session.
 func (s *Server) registerLeetgrinderExtension(r chi.Router) {
 	r.Group(func(r chi.Router) {
 		r.Use(s.private)
@@ -32,7 +34,9 @@ func (s *Server) registerLeetgrinderExtension(r chi.Router) {
 		r.Get("/api/leetgrinder/problem/{slug}", s.leetgrinderAPIProblem)
 		r.Put("/api/leetgrinder/problem/{slug}", s.leetgrinderAPIProblemMetadata)
 	})
-	// Today is read-only, so Home reads it with the session too.
+	// Today only reads (besides freezing today's goal and picks, which any
+	// first access does, the dashboard page included), so Home reads it with
+	// the session too. Never add a write route to this group.
 	r.Group(func(r chi.Router) {
 		r.Use(s.leetgrinderBearerOrSession, s.requireModule("leetgrinder"))
 		r.Get("/api/leetgrinder/today", s.leetgrinderAPIToday)
@@ -121,12 +125,13 @@ func (s *Server) leetgrinderBearer(next http.Handler) http.Handler {
 
 // leetgrinderBearerOrSession accepts the session cookie when the request
 // carries no Authorization header, and otherwise requires a valid bearer
-// token, so a bad token is still refused even with a session. Only for
-// read-only routes: cookies are not checked for origin here.
+// token, so a bad token is still refused even with a session. The session
+// path is GET/HEAD only, because cookies are not checked for origin here.
 func (s *Server) leetgrinderBearerOrSession(next http.Handler) http.Handler {
 	bearer := s.leetgrinderBearer(next)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("Authorization") == "" && s.authenticated(r) {
+		safe := r.Method == http.MethodGet || r.Method == http.MethodHead
+		if safe && r.Header.Get("Authorization") == "" && s.authenticated(r) {
 			w.Header().Set("Cache-Control", "private, no-store")
 			next.ServeHTTP(w, r)
 			return
@@ -291,6 +296,7 @@ func (s *Server) leetgrinderAPIProblem(w http.ResponseWriter, r *http.Request) {
 	}
 	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
 	if err != nil {
+		log.Printf("leetgrinder: today API: %v", err)
 		respond(w, 503, map[string]string{"error": "Your progress is unavailable; please retry."})
 		return
 	}
@@ -422,6 +428,7 @@ type leetgrinderAPIToday struct {
 func (s *Server) leetgrinderAPIToday(w http.ResponseWriter, r *http.Request) {
 	today, err := s.db.LeetgrinderToday(r.Context(), s.clock())
 	if err != nil {
+		log.Printf("leetgrinder: today API: %v", err)
 		respond(w, 503, map[string]string{"error": "Your progress is unavailable; please retry."})
 		return
 	}

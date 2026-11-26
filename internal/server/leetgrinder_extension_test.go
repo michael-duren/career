@@ -359,6 +359,21 @@ func TestLeetgrinderTodayWithSession(t *testing.T) {
 	if _, err := db.DB.ExecContext(ctx, "UPDATE leetgrinder_attempts SET created_at=$1", now.AddDate(0, 0, -30)); err != nil {
 		t.Fatal(err)
 	}
+	// Three goal-met days (one new problem each, goal 1 + 0) a week ago make
+	// a record of 3 while the current streak is 0.
+	for i, slug := range []string{"contains-duplicate", "valid-anagram", "group-anagrams"} {
+		day := now.AddDate(0, 0, -9+i)
+		if _, err := db.DB.ExecContext(ctx, "INSERT INTO leetgrinder_daily_goal(local_date,goal_new,goal_review) VALUES($1,1,0)", day.Format(time.DateOnly)); err != nil {
+			t.Fatal(err)
+		}
+		id := uuid.NewString()
+		if _, err := db.SaveLeetgrinderAttempt(ctx, leetgrinder.Attempt{ID: id, ProblemSlug: slug, Outcome: "solved", Minutes: 20, TimeComplexity: "O(n)", SpaceComplexity: "O(n)"}, ""); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := db.DB.ExecContext(ctx, "UPDATE leetgrinder_attempts SET created_at=$1 WHERE id=$2", day, id); err != nil {
+			t.Fatal(err)
+		}
+	}
 	get := func(auth string) *httptest.ResponseRecorder {
 		r := httptest.NewRequest("GET", "/api/leetgrinder/today", nil)
 		r.AddCookie(&http.Cookie{Name: "session", Value: s.token()})
@@ -374,11 +389,29 @@ func TestLeetgrinderTodayWithSession(t *testing.T) {
 	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &out) != nil {
 		t.Fatalf("session: %d %s", w.Code, w.Body.String())
 	}
-	if len(out.Picks) != 1 || out.Picks[0].Number != 1 || out.Record != 0 || w.Header().Get("Cache-Control") != "private, no-store" {
+	if len(out.Picks) != 1 || out.Picks[0].Number != 1 || out.Record != 3 || out.Streak != 0 || w.Header().Get("Cache-Control") != "private, no-store" {
 		t.Fatalf("session today: %+v %q", out, w.Header().Get("Cache-Control"))
 	}
 	// A bad token is refused even alongside a valid session.
 	if w := get("Bearer not-a-token"); w.Code != 401 {
 		t.Fatalf("bad token with session: %d", w.Code)
+	}
+	// Without the session or a token it is refused.
+	w = httptest.NewRecorder()
+	handler.ServeHTTP(w, httptest.NewRequest("GET", "/api/leetgrinder/today", nil))
+	if w.Code != 401 {
+		t.Fatalf("anonymous: %d", w.Code)
+	}
+	// The session path is GET only, and the write routes never take the session.
+	for _, test := range [][2]string{{"POST", "/api/leetgrinder/today"}, {"POST", "/api/leetgrinder/attempts"}, {"PUT", "/api/leetgrinder/problem/two-sum"}} {
+		r := httptest.NewRequest(test[0], test[1], strings.NewReader("{}"))
+		r.Header.Set("Content-Type", "application/json")
+		r.Header.Set("Origin", "https://example.com")
+		r.AddCookie(&http.Cookie{Name: "session", Value: s.token()})
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, r)
+		if w.Code != 401 && w.Code != 405 {
+			t.Errorf("%s %s with a session: %d", test[0], test[1], w.Code)
+		}
 	}
 }

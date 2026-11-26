@@ -186,3 +186,42 @@ test('home shows the empty state with a link to the scheduler', async ({ page })
   await expect(page.getByText('Nothing scheduled today.')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Plan in the scheduler.' })).toHaveAttribute('href', '/weekly-scheduler');
 });
+
+test('checking a session off while other sections load does not leave them loading', async ({ page }) => {
+  await mockWeek(page);
+  await mockSections(page);
+  let releaseGoals!: () => void;
+  const goalsHeld = new Promise<void>(resolve => { releaseGoals = resolve; });
+  await page.route('**/api/goals', async route => { await goalsHeld; await route.fulfill({ json: { goals, revisions: {} } }); });
+  await page.goto('/');
+  await expect(page.getByText('Loading goals…')).toBeVisible();
+  const list = page.getByRole('list', { name: "Today's todos" });
+  await list.getByText('Practice problems', { exact: true }).click();
+  await expect(page.getByText('2 of 3 done')).toBeVisible();
+  releaseGoals();
+  await expect(page.getByRole('list', { name: 'Active goals' }).getByRole('listitem')).toHaveCount(2);
+});
+
+test('a section that fails to load does not hide the others', async ({ page }) => {
+  await mockWeek(page);
+  await mockSections(page);
+  await page.route('**/api/leetgrinder/today', route => route.fulfill({ status: 503, json: { error: 'Your progress is unavailable; please retry.' } }));
+  await page.goto('/');
+  await expect(page.getByRole('alert').filter({ hasText: 'Your progress is unavailable; please retry.' })).toBeVisible();
+  await expect(page.getByRole('list', { name: "Today's todos" }).getByRole('listitem')).toHaveCount(3);
+  await expect(page.getByRole('list', { name: 'Active goals' }).getByRole('listitem')).toHaveCount(2);
+});
+
+test('a skipped session is struck through and counts toward the total', async ({ page }) => {
+  await page.route('**/api/scheduler/week?*', route => route.fulfill({ json: {
+    revision: 'r1', week: mondayOf(today), days: [], goals: [], rules: [], busy: [], warnings: [], warningTargets: [], remainingCapacityHours: 0,
+    settings: { timeZone: 'UTC', defaultDay: { start: '06:00', end: '22:00', nextDay: false }, weekdays: {}, dates: {} },
+    sessions: [{ ...session('skip', 'Skipped review', 9), actual: { status: 'skipped', date: today, ...plan(9) } }, session('open', 'Open work', 22)],
+  } }));
+  await mockSections(page);
+  await page.goto('/');
+  const list = page.getByRole('list', { name: "Today's todos" });
+  await expect(list.getByRole('listitem').first()).toContainText('skipped');
+  await expect(list.getByRole('listitem').first().getByRole('checkbox')).not.toBeChecked();
+  await expect(page.getByText(/^0 of 2 done/)).toBeVisible();
+});
