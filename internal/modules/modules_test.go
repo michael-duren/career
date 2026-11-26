@@ -124,7 +124,7 @@ func TestOwnership(t *testing.T) {
 }
 
 // TestRegistryMatchesFrontend keeps src/lib/modules.ts and this registry in
-// sync: same ids in the same order, themes, labels, routes, dependencies,
+// sync: same ids in the same order, themes, labels, short labels, routes, dependencies,
 // entry kinds, MCP tools, tools needing other modules and API prefixes.
 func TestRegistryMatchesFrontend(t *testing.T) {
 	src, err := os.ReadFile("../../src/lib/modules.ts")
@@ -177,6 +177,9 @@ func TestRegistryMatchesFrontend(t *testing.T) {
 		}
 		if label := regexp.MustCompile(`label: '([^']*)'`).FindStringSubmatch(block); label == nil || label[1] != m.Label {
 			t.Errorf("%s label: frontend %v, Go %q", m.ID, label, m.Label)
+		}
+		if short := regexp.MustCompile(`\bshort: '([^']*)'`).FindStringSubmatch(block); short == nil || short[1] != m.Short {
+			t.Errorf("%s short: frontend %v, Go %q", m.ID, short, m.Short)
 		}
 		toolsNeed := map[string]string{}
 		if tn := regexp.MustCompile(`toolsNeed: \{([^}]*)\}`).FindStringSubmatch(block); tn != nil {

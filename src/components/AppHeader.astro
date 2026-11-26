@@ -1,0 +1,38 @@
+---
+import SiteSearch from './SiteSearch.astro';
+import { MODULES, moduleForPath } from '../lib/modules';
+
+// Desktop header (docs/redesign/shell.md). Renders Home and every module in registry order;
+// /ui/shell.js hides turned-off modules, applies the user's order and fills MORE +.
+// internal/shell/header.templ renders the same markup for the Go-rendered pages.
+const path = Astro.url.pathname;
+const current = path === '/' ? 'home' : moduleForPath(path)?.id;
+const links = [{ id: 'home', short: 'HOME', routes: ['/'] }, ...MODULES.map(m => ({ id: m.id, short: m.short, routes: m.routes }))];
+---
+
+<header class="app-header" data-app-header>
+  <div class="app-header-row">
+    <span class="app-wordmark">CAREER</span>
+    <nav aria-label="Main" class="app-nav">
+      <ul class="app-menu" data-app-menu>
+        {links.map(link => (
+          <li data-module-id={link.id} data-routes={link.routes.join(' ')}>
+            <a class="app-link" href={link.routes[0]} aria-current={link.id === current ? 'page' : undefined}>{link.short}</a>
+          </li>
+        ))}
+        <li class="app-more" data-app-more>
+          <button type="button" class="app-link" aria-expanded="false" aria-controls="app-more-menu">MORE +</button>
+          <ul id="app-more-menu" class="app-more-menu" data-app-more-menu hidden>
+            <li class="app-more-signout"><button type="button" class="app-link" data-app-signout>SIGN OUT</button></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+    <SiteSearch />
+    <a class="app-settings" href="/settings/modules" aria-label="Settings">
+      <svg aria-hidden="true" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1"><circle cx="8" cy="8" r="2.5"></circle><path d="M8 1 V3.5 M8 12.5 V15 M1 8 H3.5 M12.5 8 H15 M3 3 L4.8 4.8 M11.2 11.2 L13 13 M3 13 L4.8 11.2 M11.2 4.8 L13 3"></path></svg>
+    </a>
+    <time class="app-clock" data-app-clock></time>
+  </div>
+</header>
+<script is:inline type="module" src="/ui/shell.js"></script>

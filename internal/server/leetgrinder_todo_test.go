@@ -305,7 +305,9 @@ func TestTodoSetPageSummarizesAndSearches(t *testing.T) {
 		if w.Code != 200 {
 			t.Fatalf("search %s: %d", query, w.Code)
 		}
+		// Skip the app header, whose search field has its own status line.
 		body := w.Body.String()
+		body = body[strings.Index(body, `<main`)+1:]
 		start := strings.Index(body, `role="status"`)
 		if start < 0 {
 			t.Fatalf("search %s: no result count", query)

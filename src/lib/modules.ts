@@ -4,11 +4,11 @@ import { THEMES, type Theme } from './theme.ts';
 /**
  * The module registry. Every feature is a module the user can turn off. The new
  * shell, Home, search, Settings and Setup build their menus, tab bar and sections
- * from it (the helpers below are for them); today the sidebar and a few pages use it.
+ * from it (the helpers below are for them); today the header and a few pages use it.
  * Home, Search, Settings and Setup are always on and are not modules.
  *
- * The server mirrors the ids, routes, API prefixes, entry kinds, MCP tools and
- * dependencies in internal/modules/modules.go; TestRegistryMatchesFrontend
+ * The server mirrors the ids, labels, short labels, routes, API prefixes, entry
+ * kinds, MCP tools and dependencies in internal/modules/modules.go; TestRegistryMatchesFrontend
  * checks the two agree.
  * See docs/redesign/modules.md.
  */
@@ -162,6 +162,31 @@ export function moduleEnabled(id: ModuleId): Promise<boolean> {
   });
 }
 
-export function saveSettings(patch: SettingsPatch): Promise<Settings> {
-  return settingsRequest('Settings could not be saved. Try again.', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
+/**
+ * Saved settings are announced so the header (public/ui/shell.js, which mirrors these names)
+ * updates its menu without a reload: a SETTINGS_EVENT on this window, and a message on
+ * SETTINGS_CHANNEL for other tabs.
+ */
+export const SETTINGS_EVENT = 'career:settings';
+export const SETTINGS_CHANNEL = 'career-settings';
+
+export function announceSettings(settings: Settings): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent(SETTINGS_EVENT, { detail: settings }));
+  if (typeof BroadcastChannel === 'function') {
+    const channel = new BroadcastChannel(SETTINGS_CHANNEL);
+    channel.postMessage(settings);
+    channel.close();
+  }
+}
+
+export async function saveSettings(patch: SettingsPatch): Promise<Settings> {
+  const saved = await settingsRequest('Settings could not be saved. Try again.', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
+  // The save succeeded; a failed announcement only leaves other menus stale until reload.
+  try {
+    announceSettings(saved);
+  } catch (error) {
+    console.warn('Saved settings could not be announced to open menus.', error);
+  }
+  return saved;
 }

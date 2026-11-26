@@ -51,13 +51,17 @@ a:focus-visible,
 summary:focus-visible {
   outline: 2px solid var(--accent);
 }
+/* The app header (/ui/shell.css) sits above; the section nav sticks beside the page. */
 .shell {
+  display: grid;
+  grid-template-columns: 16rem minmax(0, 1fr);
   min-height: 100vh;
 }
 .sidenav {
-  position: fixed;
-  inset: 0 auto 0 0;
-  width: 16rem;
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -102,10 +106,6 @@ summary:focus-visible {
   flex-direction: column;
   gap: 4px;
 }
-.sidenav .sidenav-back {
-  color: var(--muted);
-  font-size: 0.8rem;
-}
 .sidenav-brand {
   display: flex;
   align-items: center;
@@ -129,7 +129,6 @@ summary:focus-visible {
   flex-shrink: 0;
 }
 main {
-  margin-left: 16rem;
   padding: 42px max(48px, calc((100vw - 16rem - 1200px) / 2)) 80px;
 }
 .skip {
@@ -1253,8 +1252,12 @@ dd {
   padding-left: 0;
 }
 @media (max-width: 1023px) {
+  .shell {
+    display: block;
+  }
   .sidenav {
     position: static;
+    height: auto;
     width: auto;
     flex-direction: row;
     flex-wrap: wrap;
@@ -1279,13 +1282,10 @@ dd {
   .sidenav a[aria-current]::before {
     display: none;
   }
-  .sidenav .sidenav-back {
-    order: 2;
-    margin-left: auto;
-  }
   .sidenav .sidenav-foot {
     order: 2;
     margin-top: 0;
+    margin-left: auto;
   }
   main {
     margin-left: 0;
