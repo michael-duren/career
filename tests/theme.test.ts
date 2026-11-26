@@ -5,8 +5,10 @@ import { runInNewContext } from 'node:vm';
 import { join } from 'node:path';
 import { DEFAULT_THEME, THEME_STORAGE_KEY, THEMES, applyTheme, isTheme, resolveTheme } from '../src/lib/theme.ts';
 
+// The palette lives in public/ui/tokens.css (also linked by Go pages) and global.css imports it.
 // Comments stripped so commented-out rules or braces in comments never count.
-const css = readFileSync(new URL('../src/styles/global.css', import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
+const css = (read('../public/ui/tokens.css') + read('../src/styles/global.css')).replace(/\/\*[\s\S]*?\*\//g, '');
 
 // The palette from docs/redesign/design-system.md ("Themes and tokens").
 const SPEC = {
@@ -21,7 +23,7 @@ const LABEL_ALPHA = { dark: 0.6, vellum: 0.64, cobalt: 0.78, concrete: 0.6 } as 
 
 function themeBlock(theme: string): Record<string, string> {
   const match = css.match(new RegExp(`\\[data-theme="${theme}"\\]\\s*\\{([^}]*)\\}`));
-  assert.ok(match, `no [data-theme="${theme}"] block in global.css`);
+  assert.ok(match, `no [data-theme="${theme}"] block in public/ui/tokens.css`);
   return Object.fromEntries([...match[1].matchAll(/--([\w-]+):\s*([^;]+);/g)].map(([, name, value]) => [name, value.trim()]));
 }
 
@@ -167,5 +169,18 @@ test('fonts are self-hosted, never loaded from a font CDN', () => {
   for (const file of ['src', 'public', 'internal', 'extension'].flatMap(dir => files(join(root, dir)))) {
     if (!/\.(astro|[cm]?[jt]sx?|css|html|templ|go|svg|webmanifest|json)$/.test(file) || file.endsWith('_templ.go')) continue;
     assert.doesNotMatch(readFileSync(file, 'utf8'), cdn, file);
+  }
+});
+
+// Inactive segmented tabs use max(0.7, --ink-60-alpha) (public/ui/primitives.css): 0.7 as in the
+// reference, raised where a theme's label alpha is higher, so the text keeps 4.5:1 everywhere.
+test('inactive segmented tab text meets 4.5:1 on every theme', () => {
+  const primitives = readFileSync(new URL('../public/ui/primitives.css', import.meta.url), 'utf8');
+  assert.match(primitives, /\.ui-tabs__tab \{[^}]*color: rgba\(var\(--ink-rgb\), max\(0\.7, var\(--ink-60-alpha\)\)\);/);
+  for (const theme of THEMES) {
+    const block = themeBlock(theme);
+    const alpha = Math.max(0.7, Number(block['ink-60-alpha']));
+    const ratio = contrast(over(rgb(block.ink), rgb(block.paper), alpha), rgb(block.paper));
+    assert.ok(ratio >= 4.5, `${theme}: ${ratio.toFixed(2)}:1`);
   }
 });

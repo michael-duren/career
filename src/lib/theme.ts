@@ -1,4 +1,4 @@
-// The four Architect themes. The palette itself lives in src/styles/global.css; this
+// The four Architect themes. The palette itself lives in public/ui/tokens.css; this
 // module owns the theme names, the default, and where the chosen theme is remembered.
 export const THEMES = ['dark', 'vellum', 'cobalt', 'concrete'] as const;
 export type Theme = (typeof THEMES)[number];
