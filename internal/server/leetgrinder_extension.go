@@ -31,6 +31,10 @@ func (s *Server) registerLeetgrinderExtension(r chi.Router) {
 		r.Post("/api/leetgrinder/attempts", s.leetgrinderAPIAttempt)
 		r.Get("/api/leetgrinder/problem/{slug}", s.leetgrinderAPIProblem)
 		r.Put("/api/leetgrinder/problem/{slug}", s.leetgrinderAPIProblemMetadata)
+	})
+	// Today is read-only, so Home reads it with the session too.
+	r.Group(func(r chi.Router) {
+		r.Use(s.leetgrinderBearerOrSession, s.requireModule("leetgrinder"))
 		r.Get("/api/leetgrinder/today", s.leetgrinderAPIToday)
 	})
 }
@@ -112,6 +116,22 @@ func (s *Server) leetgrinderBearer(next http.Handler) http.Handler {
 		default:
 			respond(w, 503, map[string]string{"error": "Authentication is temporarily unavailable; please retry."})
 		}
+	})
+}
+
+// leetgrinderBearerOrSession accepts the session cookie when the request
+// carries no Authorization header, and otherwise requires a valid bearer
+// token, so a bad token is still refused even with a session. Only for
+// read-only routes: cookies are not checked for origin here.
+func (s *Server) leetgrinderBearerOrSession(next http.Handler) http.Handler {
+	bearer := s.leetgrinderBearer(next)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") == "" && s.authenticated(r) {
+			w.Header().Set("Cache-Control", "private, no-store")
+			next.ServeHTTP(w, r)
+			return
+		}
+		bearer.ServeHTTP(w, r)
 	})
 }
 
@@ -362,6 +382,8 @@ type leetgrinderAPIReview struct {
 	Recall     float64 `json:"recall"`
 	Reason     string  `json:"reason"`
 	Done       bool    `json:"done"`
+	// Number is LeetCode's frontend id, left out until known.
+	Number int `json:"number,omitempty"`
 }
 
 // leetgrinderAPINewPick is one of today's new problems picked from todos.
@@ -381,11 +403,13 @@ type leetgrinderAPIToday struct {
 		Review int `json:"review"`
 		Bonus  int `json:"bonus"`
 	} `json:"done"`
-	Met       bool                    `json:"met"`
-	Remaining int                     `json:"remaining"`
-	Streak    int                     `json:"streak"`
-	Picks     []leetgrinderAPIReview  `json:"picks"`
-	NewPicks  []leetgrinderAPINewPick `json:"newPicks"`
+	Met       bool `json:"met"`
+	Remaining int  `json:"remaining"`
+	Streak    int  `json:"streak"`
+	// Record is the longest goal-met streak.
+	Record   int                     `json:"record"`
+	Picks    []leetgrinderAPIReview  `json:"picks"`
+	NewPicks []leetgrinderAPINewPick `json:"newPicks"`
 	// NewPicksFailed reports that today's new picks could not be planned.
 	NewPicksFailed bool                   `json:"newPicksFailed,omitempty"`
 	Due            []leetgrinderAPIReview `json:"due"`
@@ -403,12 +427,12 @@ func (s *Server) leetgrinderAPIToday(w http.ResponseWriter, r *http.Request) {
 	}
 	loc := today.Settings.Location()
 	// The review goal is capped at the reviews that can count today.
-	out := leetgrinderAPIToday{Date: today.Date.Format(time.DateOnly), Goal: today.Progress.Target(), Met: today.Progress.Met(), Remaining: today.Progress.Remaining(), Streak: today.Streaks.Current, Picks: []leetgrinderAPIReview{}, NewPicks: []leetgrinderAPINewPick{}, Due: []leetgrinderAPIReview{}}
+	out := leetgrinderAPIToday{Date: today.Date.Format(time.DateOnly), Goal: today.Progress.Target(), Met: today.Progress.Met(), Remaining: today.Progress.Remaining(), Streak: today.Streaks.Current, Record: today.Streaks.Longest, Picks: []leetgrinderAPIReview{}, NewPicks: []leetgrinderAPINewPick{}, Due: []leetgrinderAPIReview{}}
 	out.Done.New, out.Done.Review, out.Done.Bonus = today.Progress.New(), today.Progress.Reviews(), today.Progress.Bonus()
 	for _, item := range today.Reviews {
 		// Reason and recall both describe the card before today's review.
 		recall := item.Card.Retrievability(today.Now)
-		out.Picks = append(out.Picks, leetgrinderAPIReview{item.Problem.Slug, item.Problem.DisplayTitle(), item.Problem.Difficulty, recall, item.Reason, item.Done})
+		out.Picks = append(out.Picks, leetgrinderAPIReview{item.Problem.Slug, item.Problem.DisplayTitle(), item.Problem.Difficulty, recall, item.Reason, item.Done, item.Problem.Number})
 	}
 	out.NewPicksFailed = today.NewPicksFailed
 	for _, pick := range today.NewPicks {
@@ -417,7 +441,7 @@ func (s *Server) leetgrinderAPIToday(w http.ResponseWriter, r *http.Request) {
 	due := today.DueOptional()
 	out.DueCount = len(due)
 	for _, card := range due[:min(20, len(due))] {
-		out.Due = append(out.Due, leetgrinderAPIReview{card.Problem.Slug, card.Problem.DisplayTitle(), card.Problem.Difficulty, card.Retrievability(today.Now), leetgrinder.ReviewReason(card, today.Now, loc), false})
+		out.Due = append(out.Due, leetgrinderAPIReview{card.Problem.Slug, card.Problem.DisplayTitle(), card.Problem.Difficulty, card.Retrievability(today.Now), leetgrinder.ReviewReason(card, today.Now, loc), false, card.Problem.Number})
 	}
 	respond(w, 200, out)
 }

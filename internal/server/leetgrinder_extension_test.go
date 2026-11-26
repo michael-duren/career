@@ -344,3 +344,41 @@ func TestLeetgrinderAPIReviewStatus(t *testing.T) {
 		t.Fatalf("not-due status: %+v", info)
 	}
 }
+
+func TestLeetgrinderTodayWithSession(t *testing.T) {
+	s, db, _ := leetgrinderTestServer(t)
+	ctx := context.Background()
+	chicago, _ := time.LoadLocation("America/Chicago")
+	now := time.Date(2026, 10, 10, 20, 0, 0, 0, chicago)
+	s.now = func() time.Time { return now }
+	handler := s.RegisterRoutes()
+	// An unfinished attempt long ago makes two-sum (#1 in the seeded catalog) today's review pick.
+	if _, err := db.SaveLeetgrinderAttempt(ctx, leetgrinder.Attempt{ID: uuid.NewString(), ProblemSlug: "two-sum", Outcome: "unfinished", Minutes: 25}, ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.DB.ExecContext(ctx, "UPDATE leetgrinder_attempts SET created_at=$1", now.AddDate(0, 0, -30)); err != nil {
+		t.Fatal(err)
+	}
+	get := func(auth string) *httptest.ResponseRecorder {
+		r := httptest.NewRequest("GET", "/api/leetgrinder/today", nil)
+		r.AddCookie(&http.Cookie{Name: "session", Value: s.token()})
+		if auth != "" {
+			r.Header.Set("Authorization", auth)
+		}
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, r)
+		return w
+	}
+	w := get("")
+	var out leetgrinderAPIToday
+	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &out) != nil {
+		t.Fatalf("session: %d %s", w.Code, w.Body.String())
+	}
+	if len(out.Picks) != 1 || out.Picks[0].Number != 1 || out.Record != 0 || w.Header().Get("Cache-Control") != "private, no-store" {
+		t.Fatalf("session today: %+v %q", out, w.Header().Get("Cache-Control"))
+	}
+	// A bad token is refused even alongside a valid session.
+	if w := get("Bearer not-a-token"); w.Code != 401 {
+		t.Fatalf("bad token with session: %d", w.Code)
+	}
+}

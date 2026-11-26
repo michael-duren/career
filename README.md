@@ -21,7 +21,11 @@ Then open http://localhost:8080 and log in with `admin` / `password123`. See the
 The home page (`/`) is today's todo list: the goal sessions planned for today in the weekly
 scheduler. Nothing is completed automatically; checking an item records its planned time as
 done, and unchecking it clears that again. Sessions from earlier in the week that were never
-checked off are listed underneath so they can still be checked.
+checked off are listed underneath so they can still be checked. The next session (the first
+unchecked one that has not ended) is circled, and a note says how many are done and when the
+next starts. Home also shows active goals with their step progress (Timeline) and the
+Leetgrinder streak, today's counts and review pick. Each section is hidden while its module is
+off in Settings → Modules.
 
 ### Goals: timeline and agent context
 
