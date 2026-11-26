@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_SETTINGS, MODULES, MODULE_IDS, enabledModules, isEnabled, lockedBy, moduleForPath, modulesForFocus, orderedModules, partEnabled, tabBarModules } from '../src/lib/modules.ts';
+import { DEFAULT_SETTINGS, MODULES, MODULE_IDS, enabledModules, isEnabled, lockedBy, moduleForPath, modulesForFocus, moreModules, orderedModules, partEnabled, tabBarModules } from '../src/lib/modules.ts';
 
 const settings = (modules: Record<string, boolean>, moduleOrder: string[] = [...MODULE_IDS]) => ({ modules: { ...DEFAULT_SETTINGS.modules, ...modules }, moduleOrder });
 
@@ -39,6 +39,16 @@ test('tab bar takes the first 3 enabled modules in the user order', () => {
   // Unknown and repeated ids are dropped; missing ids follow in registry order.
   assert.deepEqual(orderedModules({ moduleOrder: ['audio', 'bogus', 'audio'] }).map(m => m.id), ['audio', ...MODULE_IDS.filter(id => id !== 'audio')]);
   assert.equal(enabledModules(settings({ timeline: false })).some(m => m.id === 'schedule'), false);
+});
+
+test('the More page lists every usable module the tab bar has no room for, in order', () => {
+  const order = ['notes', 'leetgrinder', 'journal', 'timeline'];
+  assert.deepEqual(moreModules(settings({}, order)).map(m => m.id), ['timeline', 'schedule', 'companies', 'people', 'bookshelf', 'audio', 'agents']);
+  // Turning a tab's module off pulls the next module into the bar and out of More.
+  assert.deepEqual(moreModules(settings({ leetgrinder: false, people: false }, order)).map(m => m.id), ['schedule', 'companies', 'bookshelf', 'audio', 'agents']);
+  for (const s of [settings({}), settings({ timeline: false }, order)]) {
+    assert.deepEqual([...tabBarModules(s), ...moreModules(s)], enabledModules(s));
+  }
 });
 
 test('maps page paths to modules on whole segments', () => {

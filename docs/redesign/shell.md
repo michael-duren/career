@@ -41,12 +41,24 @@ Until Settings → Account exists, Sign out is the last item in `MORE +`, so `MO
 Reference: any `reference/mobile/*.html`.
 
 - **Top bar** (in the scroll area): `CAREER`, a 44px search icon button, time. Then a `--ink-30` rule.
-- **Tab bar** fixed at the bottom, 78px tall (includes safe-area padding): five equal tabs with
+- **Tab bar** fixed at the bottom, 62px plus a bottom padding of the safe-area inset (at least 16px, so 78px without one): five equal tabs with
   22px line icons and mono 9px labels. Slots: Home, the first 3 enabled modules in the user's
   order, More. Active tab: full opacity + 1px line on top, `aria-current="page"`.
 - **More page** (`M-More.html`): every enabled module not in the tab bar with its count, then a
   Settings section (Modules), a Theme picker, and Sign out.
 - No fake status bar; respect `viewport-fit=cover` and safe areas.
+
+Implementation: the same `AppHeader.astro` / `internal/shell/header.templ` markup carries the phone
+search button and the tab bar (`<nav class="app-tabbar">`, every module rendered, the first three
+in registry order showing). Below 768px `shell.css` hides the menu, settings and search field, and
+pads `body` by the tab bar's height so pages don't sit under it. `shell.js` shows the first three
+enabled modules in the user's order (from `/api/settings`, cached in `localStorage` as
+`career-shell-settings` so the next page draws them before the request answers) and marks the
+current tab: Home or a module tab, else More for `/more`, `/settings` and modules not in the bar.
+The search button opens the header search field under the top bar until the full-screen search
+page exists. Tab icons live in `internal/shell/tab-icons.json`, read by both headers. The More page
+is `src/pages/more.astro` (`MorePage.tsx`); counts come from `GET /api/counts`, the theme picker
+applies the theme and saves it with `PATCH /api/settings`.
 
 ## Page header pattern
 

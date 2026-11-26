@@ -112,6 +112,12 @@ export function tabBarModules(settings: Pick<Settings, 'modules' | 'moduleOrder'
   return enabledModules(settings).slice(0, 3);
 }
 
+/** The phone More page's modules: usable ones the tab bar has no room for, in order. */
+export function moreModules(settings: Pick<Settings, 'modules' | 'moduleOrder'>): ModuleDef[] {
+  const tabs = new Set(tabBarModules(settings).map(m => m.id));
+  return enabledModules(settings).filter(m => !tabs.has(m.id));
+}
+
 /** Whether a part of a module that needs another module (People's catch-up queue) is shown. */
 export function partEnabled(settings: Pick<Settings, 'modules'>, id: ModuleId, part: string): boolean {
   const need = moduleById(id).partsNeed?.find(p => p.part === part);

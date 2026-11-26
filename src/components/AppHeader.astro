@@ -1,13 +1,23 @@
 ---
 import SiteSearch from './SiteSearch.astro';
 import { MODULES, moduleForPath } from '../lib/modules';
+import tabIcons from '../../internal/shell/tab-icons.json';
 
-// Desktop header (docs/redesign/shell.md). Renders Home and every module in registry order;
+// App header (docs/redesign/shell.md). Renders Home and every module in registry order;
 // /ui/shell.js hides turned-off modules, applies the user's order and fills MORE +.
+// Below 768px shell.css swaps it for the phone top bar and the fixed tab bar (Home, the
+// first 3 enabled modules, More), which shell.js fills the same way.
 // internal/shell/header.templ renders the same markup for the Go-rendered pages.
+const TAB_BAR_SIZE = 3;
 const path = Astro.url.pathname;
 const current = path === '/' ? 'home' : moduleForPath(path)?.id;
 const links = [{ id: 'home', short: 'HOME', routes: ['/'] }, ...MODULES.map(m => ({ id: m.id, short: m.short, routes: m.routes }))];
+const tabs = [...links.map((link, i) => ({ ...link, hidden: i > TAB_BAR_SIZE })), { id: 'more', short: 'MORE', routes: ['/more', '/settings'], hidden: false }];
+// Before shell.js runs: Home or a module in the first slots, else More (it lists the other modules and Settings).
+const firstTabs = tabs.filter(tab => !tab.hidden).map(tab => tab.id);
+const currentTab = current && firstTabs.includes(current) ? current
+  : current || /^\/(more|settings)(\/|$)/.test(path) ? 'more' : undefined;
+const icons: Record<string, string[]> = tabIcons;
 ---
 
 <header class="app-header" data-app-header>
@@ -29,10 +39,21 @@ const links = [{ id: 'home', short: 'HOME', routes: ['/'] }, ...MODULES.map(m =>
       </ul>
     </nav>
     <SiteSearch />
+    <button type="button" class="app-search-toggle" aria-label="Search everything" aria-controls="site-search-box" aria-expanded="false" data-app-search-toggle>
+      <svg aria-hidden="true" width="17" height="17" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1"><circle cx="6" cy="6" r="4.5"></circle><path d="M9.5 9.5 L13 13"></path></svg>
+    </button>
     <a class="app-settings" href="/settings/modules" aria-label="Settings">
       <svg aria-hidden="true" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1"><circle cx="8" cy="8" r="2.5"></circle><path d="M8 1 V3.5 M8 12.5 V15 M1 8 H3.5 M12.5 8 H15 M3 3 L4.8 4.8 M11.2 11.2 L13 13 M3 13 L4.8 11.2 M11.2 4.8 L13 3"></path></svg>
     </a>
     <time class="app-clock" data-app-clock></time>
   </div>
+  <nav class="app-tabbar" aria-label="Main" data-app-tabbar>
+    {tabs.map(tab => (
+      <a class="app-tab" href={tab.routes[0]} data-module-id={tab.id} data-routes={tab.routes.join(' ')} hidden={tab.hidden} aria-current={tab.id === currentTab ? 'page' : undefined}>
+        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.2">{icons[tab.id].map(d => <path d={d}></path>)}</svg>
+        {tab.short}
+      </a>
+    ))}
+  </nav>
 </header>
 <script is:inline type="module" src="/ui/shell.js"></script>

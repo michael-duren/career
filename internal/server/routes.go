@@ -118,6 +118,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 		r.Delete("/api/goals", s.deleteGoal)
 		r.Post("/api/goals/steps/move", s.moveGoalStep)
 		r.Get("/api/agent-context", s.agentContext)
+		r.Get("/api/counts", s.readCounts)
 		r.Get("/api/search", s.search)
 		r.Get("/api/settings", s.readSettings)
 		r.Patch("/api/settings", s.patchSettings)
