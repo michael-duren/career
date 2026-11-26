@@ -88,7 +88,7 @@ func TestLeetgrinderGoalDashboardAndReviews(t *testing.T) {
 	w := request("GET", "/leetgrinder", nil)
 	body := w.Body.String()
 	// Two review picks; the third due card is in the optional list.
-	for _, want := range []string{"TODAY'S GOAL · 1 new + 2 reviews", "3 to go", "<strong>0/1</strong> new", "<strong>0/2</strong> review", "Struggled 20 days ago", "Optional: 1 more due by the end of today.", `action="/leetgrinder/log"`} {
+	for _, want := range []string{"Today's goal · 1 new + 2 reviews", "3 to go", `<th scope="row">New</th><td>0</td><td>1</td>`, `<th scope="row">Review</th><td>0</td><td>2</td>`, "Struggled 20 days ago", "Optional: 1 more due by the end of today.", `<a href="/leetgrinder/log">Log</a>`} {
 		if !strings.Contains(body, want) {
 			t.Errorf("dashboard missing %q", want)
 		}
@@ -119,7 +119,7 @@ func TestLeetgrinderGoalDashboardAndReviews(t *testing.T) {
 		t.Fatal(err)
 	}
 	body = request("GET", "/leetgrinder", nil).Body.String()
-	for _, want := range []string{"Goal met", "<strong>1/1</strong> new", "<strong>3/2</strong> review", "<strong>1</strong> bonus", "<strong>1</strong> day"} {
+	for _, want := range []string{"Goal met", `<th scope="row">New</th><td>1</td><td>1</td>`, `<th scope="row">Review</th><td>3</td><td>2</td>`, `<th scope="row">Quick / bonus</th><td>0 / 1</td>`, `<span class="lg-streak-num">01</span>`} {
 		if !strings.Contains(body, want) {
 			t.Errorf("met dashboard missing %q", want)
 		}

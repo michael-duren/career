@@ -1,5 +1,7 @@
 package leetgrinder
 
+import "github.com/michael-duren/career-strategy/internal/timefmt"
+
 // analysisSettings shows whether LLM solution analysis runs and lets the
 // learner turn it off. The API key itself is never rendered.
 templ analysisSettings(p AnalysisPanel) {
@@ -155,7 +157,7 @@ templ reanalyseButton(slug string, a Attempt, avail AnalysisAvailability) {
 
 templ reanalyseForm(slug string, a Attempt) {
 	<form method="post" action={ templ.SafeURL(AnalysisReanalyseURL(slug, a.ID)) } class="analysis-actions">
-		<button class="button" type="submit">Re-analyse<span class="visually-hidden"> the attempt from { a.CreatedAt.UTC().Format("02 Jan 2006 15:04 UTC") }</span></button>
+		<button class="button" type="submit">Re-analyse<span class="visually-hidden"> the attempt from { a.CreatedAt.UTC().Format("2 Jan 2006") + " " + timefmt.Time(a.CreatedAt.UTC()) + " UTC" }</span></button>
 	</form>
 }
 

@@ -66,7 +66,9 @@ func (s *Server) leetgrinderTodoAddProblem(w http.ResponseWriter, r *http.Reques
 }
 
 func (s *Server) leetgrinderTodoAddSet(w http.ResponseWriter, r *http.Request) {
-	renderLeetgrinder(w, r, 200, leetgrinder.TodoAddSet(leetgrinder.TodosPage{}))
+	// The Today page's "build todo set" button prefills the name and problems.
+	q := r.URL.Query()
+	renderLeetgrinder(w, r, 200, leetgrinder.TodoAddSet(leetgrinder.TodosPage{Title: q.Get("title"), Problems: q.Get("problems")}))
 }
 
 func (s *Server) leetgrinderCreateTodoSet(w http.ResponseWriter, r *http.Request) {

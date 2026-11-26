@@ -9,6 +9,8 @@ import (
 	"time"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/michael-duren/career-strategy/internal/timefmt"
 )
 
 // APITokenPrefix marks personal API tokens used by the browser extension.
@@ -98,5 +100,5 @@ func TokenTimeLabel(t *time.Time, loc *time.Location) string {
 	if t == nil {
 		return "Never"
 	}
-	return t.In(loc).Format("Mon 2 Jan 2006 15:04")
+	return t.In(loc).Format("Mon 2 Jan 2006") + " · " + timefmt.Time(t.In(loc))
 }
