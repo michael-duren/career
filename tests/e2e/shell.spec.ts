@@ -205,7 +205,7 @@ test.describe('phone (< 768px)', () => {
     // Once the request answers, the saved settings win and replace the cache.
     await expect(visibleTabs(page)).toHaveText(['HOME', 'TIMELINE', 'SCHEDULE', 'LEET', 'MORE']);
 
-    // A corrupt cache is dropped and the rendered tabs stay until settings load.
+    // A corrupt cache is ignored (the rendered tabs show) and replaced once settings load.
     await page.evaluate(() => localStorage.setItem('career-shell-settings', '{not json'));
     await page.goto('/books');
     await expect(visibleTabs(page)).toHaveText(['HOME', 'TIMELINE', 'SCHEDULE', 'LEET', 'MORE']);
