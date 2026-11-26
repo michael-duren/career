@@ -74,6 +74,9 @@ function ModulesSection() {
   // are in flight, announced settings (our own saves echo back) don't overwrite newer local edits.
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const pending = useRef(0);
+  // The latest settings shown, so two changes in one tick build on each other.
+  const latest = useRef<Settings | null>(null);
+  latest.current = settings;
 
   useEffect(() => {
     loadSettings().then(setSettings, (e: unknown) => setLoadError(e instanceof Error ? e.message : 'Settings could not be loaded. Try again.'));
@@ -93,6 +96,7 @@ function ModulesSection() {
   }, []);
 
   function save(next: Settings, patch: SettingsPatch) {
+    latest.current = next;
     setSettings(next);
     setSaveError('');
     pending.current++;
@@ -105,19 +109,26 @@ function ModulesSection() {
       pending.current--;
       setSaveError(e instanceof Error ? e.message : 'Settings could not be saved. Try again.');
       // Show what is really saved again.
-      if (pending.current === 0) await loadSettings().then(setSettings, () => undefined);
+      if (pending.current === 0) {
+        await loadSettings().then(setSettings, (reload: unknown) => {
+          console.warn('Saved settings could not be reloaded after a failed save.', reload);
+          setSaveError(`${e instanceof Error ? e.message : 'Settings could not be saved.'} Reload the page to see what is saved.`);
+        });
+      }
     });
   }
 
   function toggle(id: ModuleId) {
-    if (!settings) return;
-    const on = settings.modules[id] === false;
-    save({ ...settings, modules: { ...settings.modules, [id]: on } }, { modules: { [id]: on } });
+    const base = latest.current;
+    if (!base) return;
+    const on = base.modules[id] === false;
+    save({ ...base, modules: { ...base.modules, [id]: on } }, { modules: { [id]: on } });
   }
 
   function reorder(order: ModuleId[]) {
-    if (!settings) return;
-    save({ ...settings, moduleOrder: order }, { moduleOrder: order });
+    const base = latest.current;
+    if (!base) return;
+    save({ ...base, moduleOrder: order }, { moduleOrder: order });
   }
 
   if (loadError) return <><SectionHeading heading="Modules" /><p role="alert" className="mt-4 text-sm text-accent">{loadError}</p></>;
@@ -281,6 +292,7 @@ function OrderList({ settings, onReorder }: { settings: Settings; onReorder: (or
                 onPointerMove={onPointerMove}
                 onPointerUp={onPointerUp}
                 onPointerCancel={() => setDrag(null)}
+                onLostPointerCapture={() => setDrag(null)}
                 className="ml-auto flex min-h-11 min-w-11 cursor-grab touch-none items-center justify-center border-0 bg-transparent p-0 font-mono text-[11px] text-ink-50 select-none hover:text-ink active:cursor-grabbing"
               >
                 <span aria-hidden="true">⋮⋮</span>

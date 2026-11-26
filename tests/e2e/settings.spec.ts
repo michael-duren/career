@@ -32,41 +32,82 @@ test('/settings opens Modules, and the settings nav marks the section', async ({
   await expect(main(page).getByRole('heading', { level: 1 })).toHaveText('Modules');
 });
 
-test('switching modules saves at once, enforces dependencies and updates the header', async ({ page }) => {
+test.describe('wide enough for every header link', () => {
+  test.use({ viewport: { width: 1920, height: 1000 } });
+
+  test('switching modules saves at once, enforces dependencies and updates the header', async ({ page }) => {
+    const countsRequest = page.waitForRequest(request => request.url().includes('/api/counts'));
+    await page.goto('/settings/modules');
+    // Turned-off modules need their counts too, for "paused · N kept".
+    expect(new URL((await countsRequest).url()).searchParams.get('all')).toBe('1');
+    const original = await readSettings(page);
+    const journalLink = page.locator('[data-app-menu] > li[data-module-id="journal"]');
+    try {
+      await expect(main(page).getByText('10 of 10 on')).toBeVisible();
+      await expect(journalLink).toBeVisible();
+      const row = (id: string) => main(page).locator(`li[data-module-id="${id}"]`).first();
+      await expect(row('timeline')).toContainText('Schedule and Agent context use this');
+
+      // Journal off: paused with the real entry count, gone from the header without a reload.
+      const journalCount = (await page.evaluate(async () => (await fetch('/api/counts')).json())).counts.journal as number;
+      await main(page).getByRole('switch', { name: 'Journal' }).click();
+      await expect(main(page).getByRole('switch', { name: 'Journal' })).toHaveAttribute('aria-checked', 'false');
+      await expect(row('journal')).toContainText(journalCount ? `paused · ${journalCount} ${journalCount === 1 ? 'entry' : 'entries'} kept` : 'paused');
+      await expect(main(page).getByText('9 of 10 on')).toBeVisible();
+      await expect(journalLink).toHaveAttribute('hidden', '');
+      await expect(page.locator('#app-more-menu li[data-module-id="journal"]')).toHaveCount(0);
+      await expect.poll(async () => (await readSettings(page)).modules.journal).toBe(false);
+
+      // Timeline off locks Schedule and Agent context; the tab bar preview fills from what's left.
+      await main(page).getByRole('switch', { name: 'Timeline' }).click();
+      await expect(main(page).getByRole('switch', { name: 'Schedule' })).toBeDisabled();
+      await expect(row('schedule')).toContainText('needs Timeline');
+      await expect(row('agents')).toContainText('needs Timeline');
+      await expect(main(page).getByText('6 of 10 on')).toBeVisible();
+      await expect(preview(page).locator('li')).toHaveText(['HOME', 'LEET', 'COMPANIES', 'PEOPLE', 'MORE']);
+      await expect.poll(async () => (await readSettings(page)).effective.schedule).toBe(false);
+
+      // Companies off keeps People but flags its catch-up queue.
+      await main(page).getByRole('switch', { name: 'Companies' }).click();
+      await expect(row('people')).toContainText('catch-up queue needs Companies');
+
+      // Turning Timeline back on restores Schedule, whose own switch stayed on.
+      await main(page).getByRole('switch', { name: 'Timeline' }).click();
+      await expect(main(page).getByRole('switch', { name: 'Schedule' })).toHaveAttribute('aria-checked', 'true');
+      await expect.poll(async () => (await readSettings(page)).effective.schedule).toBe(true);
+    } finally {
+      await restore(page, original);
+    }
+  });
+});
+
+test('quick changes save one at a time, in order', async ({ page }) => {
   await page.goto('/settings/modules');
   const original = await readSettings(page);
+  const bodies: unknown[] = [];
+  let release = () => {};
+  const held = new Promise<void>(resolve => { release = resolve; });
+  await page.route('**/api/settings', async route => {
+    if (route.request().method() !== 'PATCH') return route.continue();
+    bodies.push(route.request().postDataJSON());
+    if (bodies.length === 1) await held;
+    await route.continue();
+  });
   try {
     await expect(main(page).getByText('10 of 10 on')).toBeVisible();
-    const row = (id: string) => main(page).locator(`li[data-module-id="${id}"]`).first();
-    await expect(row('timeline')).toContainText('Schedule and Agent context use this');
-
-    // Journal off: paused with the real entry count, gone from the header without a reload.
-    const journalCount = (await page.evaluate(async () => (await fetch('/api/counts')).json())).counts.journal as number;
-    await main(page).getByRole('switch', { name: 'Journal' }).click();
-    await expect(main(page).getByRole('switch', { name: 'Journal' })).toHaveAttribute('aria-checked', 'false');
-    await expect(row('journal')).toContainText(journalCount ? `paused · ${journalCount} ${journalCount === 1 ? 'entry' : 'entries'} kept` : 'paused');
-    await expect(main(page).getByText('9 of 10 on')).toBeVisible();
-    await expect(page.locator('[data-app-menu] li[data-module-id="journal"]')).toBeHidden();
-    await expect.poll(async () => (await readSettings(page)).modules.journal).toBe(false);
-
-    // Timeline off locks Schedule and Agent context; the tab bar preview fills from what's left.
-    await main(page).getByRole('switch', { name: 'Timeline' }).click();
-    await expect(main(page).getByRole('switch', { name: 'Schedule' })).toBeDisabled();
-    await expect(row('schedule')).toContainText('needs Timeline');
-    await expect(row('agents')).toContainText('needs Timeline');
-    await expect(main(page).getByText('6 of 10 on')).toBeVisible();
-    await expect(preview(page).locator('li')).toHaveText(['HOME', 'LEET', 'COMPANIES', 'PEOPLE', 'MORE']);
-    await expect.poll(async () => (await readSettings(page)).effective.schedule).toBe(false);
-
-    // Companies off keeps People but flags its catch-up queue.
-    await main(page).getByRole('switch', { name: 'Companies' }).click();
-    await expect(row('people')).toContainText('catch-up queue needs Companies');
-
-    // Turning Timeline back on restores Schedule, whose own switch stayed on.
-    await main(page).getByRole('switch', { name: 'Timeline' }).click();
-    await expect(main(page).getByRole('switch', { name: 'Schedule' })).toHaveAttribute('aria-checked', 'true');
-    await expect.poll(async () => (await readSettings(page)).effective.schedule).toBe(true);
+    await main(page).getByRole('switch', { name: 'Notes' }).click();
+    await main(page).getByRole('switch', { name: 'Bookshelf' }).click();
+    await expect(main(page).getByText('8 of 10 on')).toBeVisible();
+    // The second change waits for the first to answer.
+    await page.waitForTimeout(300);
+    expect(bodies).toEqual([{ modules: { notes: false } }]);
+    release();
+    await expect.poll(() => bodies).toEqual([{ modules: { notes: false } }, { modules: { bookshelf: false } }]);
+    await expect.poll(async () => { const saved = await readSettings(page); return [saved.modules.notes, saved.modules.bookshelf]; }).toEqual([false, false]);
+    await expect(main(page).getByText('8 of 10 on')).toBeVisible();
   } finally {
+    release();
+    await page.unrouteAll({ behavior: 'wait' });
     await restore(page, original);
   }
 });

@@ -135,20 +135,25 @@ export async function checkAuth(
 }
 
 /**
- * Signs out from Settings → Account and the phone More page: clears the saved username and the
- * shell's cached module settings, ends the session, then goes to /login. Resolves false and stays
- * put when the logout request fails (offline, 5xx), since the session cookie would still be valid;
- * a 401 means the session had already ended.
+ * Signs out from Settings → Account and the phone More page: ends the session, then clears the
+ * saved username and token and the shell's cached module settings (SETTINGS_CACHE_KEY in
+ * public/ui/shell.js; keep in sync) and goes to /login. Resolves false and keeps everything when
+ * the logout request fails (offline, 5xx), since the session cookie would still be valid; a 401
+ * means the session had already ended.
  */
 export async function signOut(): Promise<boolean> {
+  const response = await fetch("/api/auth/logout", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })
+    .catch((error: unknown) => { console.warn("Sign out request failed.", error); return null; });
+  if (!response?.ok && response?.status !== 401) {
+    if (response) console.warn(`Sign out request failed: HTTP ${response.status}`);
+    return false;
+  }
   try {
     AuthService.clearAuth();
     localStorage.removeItem("career-shell-settings");
   } catch {
-    // Storage blocked: the session cookie is what the logout request clears.
+    // Storage blocked: the logout request already ended the session.
   }
-  const response = await fetch("/api/auth/logout", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }).catch(() => null);
-  if (!response?.ok && response?.status !== 401) return false;
   window.location.href = "/login";
   return true;
 }

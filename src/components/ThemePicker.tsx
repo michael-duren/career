@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { saveSettings } from '../lib/modules';
 import { THEMES, applyTheme, resolveTheme, type Theme } from '../lib/theme';
 
@@ -11,17 +11,19 @@ const LABELS: Record<Theme, string> = { dark: 'Dark', vellum: 'Vellum', cobalt: 
 export function ThemePicker({ size = 'small', className = '' }: { size?: 'small' | 'large'; className?: string }) {
   const [theme, setTheme] = useState<Theme>(() => resolveTheme(document.documentElement.dataset.theme));
   const [error, setError] = useState('');
+  // Saves run in order, so quick picks leave the last one saved.
+  const queue = useRef<Promise<unknown>>(Promise.resolve());
 
-  async function pick(next: Theme) {
+  function pick(next: Theme) {
     setTheme(next);
     setError('');
     applyTheme(next);
-    try {
-      await saveSettings({ theme: next });
-    } catch (e) {
+    const run = queue.current.then(() => saveSettings({ theme: next }));
+    queue.current = run.catch(() => undefined);
+    run.catch((e: unknown) => {
       // The theme is applied to this page; only the saved setting failed.
-      setError(e instanceof Error ? e.message : 'Theme could not be saved. Try again.');
-    }
+      setError(`Theme applied here but not saved: ${e instanceof Error ? e.message : 'try again.'}`);
+    });
   }
 
   const large = size === 'large';
@@ -31,7 +33,7 @@ export function ThemePicker({ size = 'small', className = '' }: { size?: 'small'
       <div className={large ? 'grid grid-cols-2 gap-x-4 gap-y-6 xl:grid-cols-4 xl:gap-[26px]' : 'grid grid-cols-4 gap-2.5'}>
         {THEMES.map(t => (
           <label key={t} className={`flex cursor-pointer flex-col outline-offset-2 outline-ink has-checked:outline has-focus-visible:outline-2 ${large ? 'gap-2.5 p-2' : 'items-center gap-1.5 p-1.5'}`}>
-            <input type="radio" name="theme" value={t} checked={theme === t} onChange={() => void pick(t)} className="ui-sr-only" />
+            <input type="radio" name="theme" value={t} checked={theme === t} onChange={() => pick(t)} className="ui-sr-only" />
             {large ? (
               <span data-theme={t} aria-hidden="true" className="relative block h-[140px] overflow-hidden border border-ink-30 bg-paper md:h-[200px]">
                 <span className="absolute top-[22%] right-[40%] left-[12%] border-t-2 border-ink" />

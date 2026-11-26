@@ -162,8 +162,8 @@ exact configured `Origin` and a JSON content type.
   `?all=1` is passed. The phone More page shows them; Settings → Modules uses `?all=1` for "paused · N kept".
 - `GET /api/settings` returns `{ modules, moduleOrder, theme, setupCompletedAt, effective }`.
   `PATCH /api/settings` changes any of `modules`, `moduleOrder`, `theme` and `setupCompletedAt`
-  (camelCase here; the spec's `module_order`/`setup_completed_at` are the column names), and is
-  changed from Settings → Modules and Theme (`/settings/modules`, `/settings/theme`). It returns 400 for unknown modules,
+  (camelCase here; the spec's `module_order`/`setup_completed_at` are the column names).
+  Settings → Modules (`/settings/modules`) sets `modules` and `moduleOrder`; Settings → Theme sets `theme`. It returns 400 for unknown modules,
   unknown or repeated ids in `moduleOrder` (an empty `moduleOrder` resets it to the default), unknown themes, a `setupCompletedAt` that is
   neither an RFC 3339 time nor null, or newly turning on a module whose dependency is off. `effective` says which modules can be used once their dependencies are applied.
 

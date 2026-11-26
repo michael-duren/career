@@ -62,8 +62,21 @@ func TestCountsAPI(t *testing.T) {
 		t.Errorf("notes is on but missing: %v", after)
 	}
 	// ?all=1 keeps them, for "paused · N kept" in Settings → Modules.
+	if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"leetgrinder": false}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := counts()["leetgrinder"]; ok {
+		t.Error("leetgrinder is off but counted")
+	}
 	all := countsAt("/api/counts?all=1")
-	if all["companies"] != before["companies"]+1 || all["timeline"] != before["timeline"] {
-		t.Errorf("?all=1 counts %v, want companies %d and timeline %d", all, before["companies"]+1, before["timeline"])
+	for id, want := range map[string]int{"companies": before["companies"] + 1, "timeline": before["timeline"], "leetgrinder": before["leetgrinder"] + 1} {
+		if n, ok := all[id]; !ok || n != want {
+			t.Errorf("?all=1 %s = %d (present %v), want %d", id, n, ok, want)
+		}
+	}
+	for _, id := range []string{"schedule", "agents"} {
+		if _, ok := all[id]; ok {
+			t.Errorf("?all=1 counts %s, which saves nothing countable", id)
+		}
 	}
 }
