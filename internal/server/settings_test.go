@@ -381,6 +381,9 @@ func TestAgentContextLeavesOutDisabledModules(t *testing.T) {
 	if w := get("/api/agent-context?format=markdown"); w.Code != 200 || !strings.Contains(w.Body.String(), "# Work journal\n\nNo entries yet.") || !strings.Contains(w.Body.String(), "# Personal journal\n\nNo entries yet.") {
 		t.Fatal("markdown leaked journal entries", w.Body.String())
 	}
+	if w := get("/api/agent-context?format=markdown"); !strings.HasPrefix(w.Body.String(), "# Agent context\n\n- "+contextRules[0]+"\n- ") {
+		t.Error("every rule should be a list item", w.Body.String())
+	}
 	// The running view follows Audio, the work view follows Journal.
 	if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"audio": true}}); err != nil {
 		t.Fatal(err)

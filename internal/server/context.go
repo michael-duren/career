@@ -191,7 +191,7 @@ func (s *Server) agentContext(w http.ResponseWriter, r *http.Request) {
 		}()))
 		return
 	}
-	_, _ = fmt.Fprintf(w, "# Agent context\n\n%s\n\n# Current timeline goals\n\n%s\n\n# Work journal\n\n%s\n\n# Personal journal\n\n%s", strings.Join(contextRules, "\n- "), markdownEntries(goals), markdownEntries(work), markdownEntries(personal))
+	_, _ = fmt.Fprintf(w, "# Agent context\n\n- %s\n\n# Current timeline goals\n\n%s\n\n# Work journal\n\n%s\n\n# Personal journal\n\n%s", strings.Join(contextRules, "\n- "), markdownEntries(goals), markdownEntries(work), markdownEntries(personal))
 }
 
 // searchModules maps the kinds global search returns to the module that owns
@@ -294,10 +294,14 @@ func markdownEntries(entries []any) string {
 		if title == "<nil>" {
 			title = fmt.Sprintf("Week %v · %v", entry["week"], entry["dates"])
 		}
-		body := fmt.Sprint(entry["body"])
+		// Goals have no body; leave the Markdown block out rather than print "<nil>".
+		body, hasBody := entry["body"].(string)
 		delete(entry, "body")
 		metadata, _ := json.MarshalIndent(entry, "", "  ")
-		fmt.Fprintf(&out, "## %s\n\n```json\n%s\n```\n\n````markdown\n%s\n````\n\n", strings.ReplaceAll(title, "\n", " "), metadata, body)
+		fmt.Fprintf(&out, "## %s\n\n```json\n%s\n```\n\n", strings.ReplaceAll(title, "\n", " "), metadata)
+		if hasBody {
+			fmt.Fprintf(&out, "````markdown\n%s\n````\n\n", body)
+		}
 	}
 	return out.String()
 }

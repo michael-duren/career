@@ -1,6 +1,6 @@
 # Agent context
 
-**Current code:** src/pages/agents.astro → AgentView
+**Current code:** src/pages/agents.astro → AgentContextView (helpers in src/lib/agent-view.ts)
 **Reference:** desktop `reference/desktop/ARC-Agents.html` · mobile `reference/mobile/M-Agents.html`
 
 ## Purpose
