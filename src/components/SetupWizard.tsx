@@ -13,14 +13,20 @@ import { ThemePicker } from './ThemePicker';
 // First-run setup (docs/redesign/pages/setup.md; reference/setup/ARC-Setup-1..5.html and
 // M-Setup-1..5.html): focus → modules → connect → theme → first goal. New users land here after
 // login; Settings → General runs it again. Nothing but the theme (step 4 applies and saves it at
-// once) is saved before Finish, which saves the modules and marks setup done. Skip saves every
-// module on, the dark theme, and marks setup done.
+// once) is saved before Finish, which saves the modules and marks setup done. Skip (new installs
+// only) saves every module on, the dark theme, and marks setup done; a re-run offers Exit instead,
+// which saves nothing.
 
 const LAST = SETUP_STEPS.length - 1;
+const skipClass = '-mr-2 inline-flex min-h-11 items-center border-0 bg-transparent px-2 font-mono text-[11px] tracking-[0.12em] text-ink-60 no-underline hover:text-ink disabled:opacity-50';
 // ! beats the unlayered phone h1 rule in global.css (max-width: 639px).
 const title = 'm-0 font-extralight !text-[32px] !leading-[1.05] md:!text-[50px] md:!leading-none';
 const intro = 'm-0 mt-2 text-sm font-light text-ink-60 md:mt-2.5 md:text-base';
 const errorText = (e: unknown, fallback: string) => (e instanceof Error && e.message ? e.message : fallback);
+// crypto.randomUUID needs a secure context; a plain-http LAN address has none.
+const newId = () => typeof crypto.randomUUID === 'function'
+  ? crypto.randomUUID()
+  : '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, c => (Number(c) ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (Number(c) / 4)))).toString(16));
 
 export function SetupWizard() {
   const [step, setStep] = useState(0);
@@ -31,17 +37,27 @@ export function SetupWizard() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [loadError, setLoadError] = useState('');
-  // One id per draft, so retrying Finish after a failed response saves the same goal again.
-  const goalId = useRef(crypto.randomUUID());
+  // Saved settings: null until loaded. Nothing that saves is enabled before then, so a re-run
+  // can't overwrite saved modules with suggestions it never compared against.
+  const [saved, setSaved] = useState<Settings | null>(null);
+  // One id per wizard. If a POST committed but its response was lost, the retry's 409 on this
+  // same id means the goal is already saved.
+  const [goalId] = useState(newId);
+  const goalPosted = useRef(false);
   const heading = useRef<HTMLHeadingElement>(null);
   const firstRender = useRef(true);
 
-  useEffect(() => {
+  function load() {
+    setLoadError('');
     // A re-run starts from what is saved; a new install from the focus picks.
-    loadSettings().then((saved: Settings) => {
-      if (saved.setupCompletedAt) setSwitches(current => current ?? switchesFrom(saved.modules));
-    }, (e: unknown) => setLoadError(errorText(e, 'Settings could not be loaded. Try again.')));
-  }, []);
+    loadSettings().then((settings: Settings) => {
+      setSaved(settings);
+      if (settings.setupCompletedAt) setSwitches(current => current ?? switchesFrom(settings.modules));
+    }, (e: unknown) => setLoadError(errorText(e, 'Settings could not be loaded.')));
+  }
+  useEffect(load, []);
+  const rerun = !!saved?.setupCompletedAt;
+  const locked = busy || !saved;
 
   // Each step moves focus to its heading, so keyboard and screen-reader users start at the top.
   useEffect(() => {
@@ -89,12 +105,17 @@ export function SetupWizard() {
     if (problem) throw new Error(problem);
     // Modules first: the goal API needs Timeline on.
     await saveSettings(finishPatch(on, new Date()));
-    const draft = effective.timeline ? goalFromDraft(goal, goalId.current, new Date()) : null;
+    const draft = effective.timeline ? goalFromDraft(goal, goalId, new Date()) : null;
     if (draft) {
+      const retry = goalPosted.current;
+      goalPosted.current = true;
       const response = await fetch('/api/goals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goal: draft, revision: null }) })
-        .catch(() => { throw new Error('Setup is saved, but the goal could not be added. Check your connection and finish again.'); });
+        .catch((e: unknown) => {
+          console.warn('POST /api/goals failed', e);
+          throw new Error('Setup is saved, but the goal could not be added. Check your connection and finish again.');
+        });
       const body: unknown = await response.json().catch(() => null);
-      if (!response.ok) {
+      if (!response.ok && !(retry && response.status === 409)) {
         const reason = body && typeof body === 'object' && 'error' in body && typeof body.error === 'string' ? body.error : `HTTP ${response.status}`;
         throw new Error(`Setup is saved, but the goal could not be added: ${reason}`);
       }
@@ -108,15 +129,19 @@ export function SetupWizard() {
         <header className="flex h-7 items-center justify-between gap-4">
           <span className="text-[13px] font-medium tracking-[0.32em]">CAREER</span>
           <span className="ui-label hidden md:inline">Setup · step {step + 1} of {SETUP_STEPS.length}</span>
-          <button type="button" disabled={busy} onClick={() => void skip()}
-            className="-mr-2 inline-flex min-h-11 items-center border-0 bg-transparent px-2 font-mono text-[11px] tracking-[0.12em] text-ink-60 hover:text-ink disabled:opacity-50">
-            SKIP SETUP
-          </button>
+          {rerun
+            ? <a href="/settings/general" className={skipClass}>EXIT SETUP</a>
+            : <button type="button" disabled={locked} onClick={() => void skip()} className={skipClass}>SKIP SETUP</button>}
         </header>
         <StepIndicator step={step} />
 
         <main className="mt-6 flex flex-1 flex-col pb-8 md:mt-[34px]">
-          {loadError && <p role="alert" className="m-0 mb-4 text-sm text-accent">{loadError}</p>}
+          {loadError && (
+            <div role="alert" className="mb-4 flex flex-wrap items-center gap-3 text-sm text-accent">
+              <span>{loadError} Setup can't save until it loads.</span>
+              <button type="button" className={buttonClassName({ size: 'sm' })} onClick={load}>TRY AGAIN</button>
+            </div>
+          )}
           {step === 0 && (
             <section aria-labelledby="setup-heading">
               <h1 id="setup-heading" ref={heading} tabIndex={-1} className={title}>What are you working on?</h1>
@@ -224,8 +249,8 @@ export function SetupWizard() {
           {step > 0 && <button type="button" className={buttonClassName()} disabled={busy} onClick={() => go(step - 1)}>← BACK</button>}
           <span className="ml-auto flex gap-2.5">
             {step < LAST
-              ? <button type="button" className={buttonClassName({ variant: 'primary' })} disabled={busy} onClick={() => go(step + 1)}>CONTINUE →</button>
-              : <button type="button" className={buttonClassName({ variant: 'primary' })} disabled={busy} onClick={() => void finish()}>FINISH<span className="hidden md:inline">&nbsp;· OPEN HOME</span> →</button>}
+              ? <button type="button" className={buttonClassName({ variant: 'primary' })} disabled={locked} onClick={() => go(step + 1)}>CONTINUE →</button>
+              : <button type="button" className={buttonClassName({ variant: 'primary' })} disabled={locked} onClick={() => void finish()}>FINISH<span className="hidden md:inline">&nbsp;· OPEN HOME</span> →</button>}
           </span>
         </footer>
       </div>
@@ -265,7 +290,9 @@ function ConnectList({ connections }: { connections: SetupConnection[] }) {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(url);
-    } catch {
+      window.setTimeout(() => setCopied(''), 2500);
+    } catch (e) {
+      console.warn('Clipboard write failed', e);
       setCopyError(`Copy failed. The MCP URL is ${url}`);
     }
   }

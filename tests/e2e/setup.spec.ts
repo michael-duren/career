@@ -33,13 +33,16 @@ const next = (page: Page) => page.getByRole('button', { name: 'CONTINUE →' });
 
 test.use({ serviceWorkers: 'block' });
 
-test('new users are sent to setup after login; existing users go where they asked', async ({ browser }) => {
-  for (const setupCompletedAt of [null, '2026-11-01T12:00:00Z']) {
+test('new users are sent to setup after login; existing users (or a failed check) go where they asked', async ({ browser }) => {
+  for (const setupCompletedAt of [null, '2026-11-01T12:00:00Z', 'unavailable']) {
     const context = await browser.newContext({ storageState: { cookies: [], origins: [] }, serviceWorkers: 'block' });
     const page = await context.newPage();
     // Answer the login and the settings check without touching the shared session or the real settings.
     await page.route('**/api/auth/login', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ authenticated: true, username: 'someone' }) }));
-    await page.route('**/api/settings', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ modules: {}, moduleOrder: [], theme: 'dark', setupCompletedAt }) }));
+    // 'unavailable': settings can't load, so login carries on to the page it was going to.
+    await page.route('**/api/settings', route => setupCompletedAt === 'unavailable'
+      ? route.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"down"}' })
+      : route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ modules: {}, moduleOrder: [], theme: 'dark', setupCompletedAt }) }));
     await page.goto('/login?redirect=/books');
     await page.getByLabel('Username').fill('someone');
     await page.getByLabel('Password').fill('anything');
@@ -163,6 +166,74 @@ test('Settings → General runs setup again, starting from the saved modules', a
     await expect(main(page).getByText('9 of 10 on')).toBeVisible();
     await expect(main(page).getByRole('switch', { name: 'Notes' })).toHaveAttribute('aria-checked', 'false');
     await expect(main(page).getByText('suggested')).toHaveCount(0);
+  } finally {
+    await restore(page, original);
+  }
+});
+
+test('a re-run offers Exit, which saves nothing, instead of Skip', async ({ page }) => {
+  await page.goto('/settings/general');
+  const original = await readSettings(page);
+  try {
+    await patch(page, { modules: { notes: false }, theme: 'vellum' });
+    const before = await readSettings(page);
+    await page.goto('/setup');
+    await expect(page.getByRole('button', { name: 'SKIP SETUP' })).toHaveCount(0);
+    await page.getByRole('link', { name: 'EXIT SETUP' }).click();
+    await expect(page).toHaveURL(/\/settings\/general$/);
+    const after = await readSettings(page);
+    expect(after).toEqual(before);
+  } finally {
+    await restore(page, original);
+  }
+});
+
+test('nothing saves until settings load, and a failed load can be retried', async ({ page }) => {
+  let fail = true;
+  await page.route('**/api/settings', route => fail && route.request().method() === 'GET' ? route.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"Settings are down."}' }) : route.fallback());
+  await page.goto('/setup');
+  await expect(main(page).getByRole('alert')).toContainText('Settings are down.');
+  await expect(next(page)).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'SKIP SETUP' })).toBeDisabled();
+  fail = false;
+  await main(page).getByRole('button', { name: 'TRY AGAIN' }).click();
+  await expect(main(page).getByRole('alert')).toHaveCount(0);
+  await expect(next(page)).toBeEnabled();
+});
+
+test('a failed save keeps setup open; a goal whose response was lost is saved once', async ({ page }) => {
+  const original = await openFreshSetup(page);
+  try {
+    // Skip with PATCH failing: the error shows and nothing moves.
+    await page.route('**/api/settings', route => route.request().method() === 'PATCH' ? route.fulfill({ status: 503, contentType: 'application/json', body: '{"error":"Storage is down."}' }) : route.fallback());
+    await page.getByRole('button', { name: 'SKIP SETUP' }).click();
+    await expect(main(page).getByRole('alert')).toHaveText('Storage is down.');
+    await expect(page).toHaveURL(/\/setup$/);
+    await expect(page.getByRole('button', { name: 'SKIP SETUP' })).toBeEnabled();
+    await page.unroute('**/api/settings');
+
+    for (let i = 0; i < 4; i++) await next(page).click();
+    await main(page).getByLabel('Goal', { exact: true }).fill('Playwright lost goal');
+    await main(page).getByLabel('End', { exact: true }).fill('2027-02-01');
+    // The first POST saves, but its response is lost.
+    let posts = 0;
+    await page.route('**/api/goals', async route => {
+      if (route.request().method() !== 'POST') return route.fallback();
+      posts++;
+      if (posts === 1) { await route.fetch(); return route.abort(); }
+      return route.fallback();
+    });
+    await page.getByRole('button', { name: /FINISH/ }).click();
+    await expect(main(page).getByRole('alert')).toContainText('the goal could not be added');
+    await page.getByRole('button', { name: /FINISH/ }).click();
+    await expect(page).toHaveURL(/\/$/);
+    expect(posts).toBe(2);
+    const goals = await page.evaluate(async () => (await fetch('/api/goals', { cache: 'no-store' })).json()) as { goals: { id: string; title: string }[]; revisions: Record<string, string> };
+    const matches = goals.goals.filter(g => g.title === 'Playwright lost goal');
+    expect(matches).toHaveLength(1);
+    await page.evaluate(async ({ id, revision }) => {
+      await fetch('/api/goals', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, revision }) });
+    }, { id: matches[0].id, revision: goals.revisions[matches[0].id] });
   } finally {
     await restore(page, original);
   }
