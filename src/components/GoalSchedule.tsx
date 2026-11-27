@@ -67,7 +67,7 @@ export function GoalSchedule({ draft, goals, onChange }: { draft: Goal; goals: G
         const from = Math.max(viewStart, dayNumber(goal.startDate)), to = Math.min(viewEnd, dayNumber(goal.endDate) + 1);
         return <div className="schedule-row" key={goal.id}>
           <div className="schedule-row-label"><strong>{goal.id === draft.id ? 'This goal' : goal.title}</strong><span>{goal.dailyHours === undefined ? 'Hours not set' : `${goal.dailyHours} h/selected day`} · {labelDate(goal.startDate)} – {labelDate(goal.endDate)}</span></div>
-          <div className="schedule-row-track"><div className="schedule-selection" style={{ left: position(start), width: width(start, end + 1) }} /><div className="schedule-bar" style={{ left: position(from), width: width(from, to), background: goal.color }} /></div>
+          <div className="schedule-row-track"><div className="schedule-selection" style={{ left: position(start), width: width(start, end + 1) }} /><div className={goal.id === draft.id ? 'schedule-bar schedule-bar--draft' : 'schedule-bar ui-hatch--diagonal'} style={{ left: position(from), width: width(from, to) }} /></div>
           {goal.id !== draft.id && <button type="button" disabled={goal.endDate >= '2200-12-31' || dayNumber(goal.endDate) + 1 + end - start > dayNumber('2200-12-31')} onClick={() => onChange(shiftGoal(draft, dayNumber(goal.endDate) + 1 - start, 'move'))}>Start after this goal</button>}
         </div>;
       })}

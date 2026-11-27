@@ -99,3 +99,56 @@ export function timelineHours(goals: Goal[], start: number, end: number) {
   }
   return { total, average: end > start ? total / (end - start) : 0, unknown };
 }
+
+/**
+ * What the timeline draws for a goal. Late = neither done nor dropped, the end date is before today,
+ * and steps are still open (a goal whose steps are all done is not late; same rule as Home).
+ */
+export type GoalState = 'active' | 'planned' | 'done' | 'dropped' | 'late';
+export function goalState(goal: Goal, today: string): GoalState {
+  if (goal.status === 'done' || goal.status === 'dropped') return goal.status;
+  const stepsDone = goal.steps.length > 0 && goal.steps.every(step => step.done);
+  return goal.endDate < today && !stepsDone ? 'late' : goal.status;
+}
+
+/** Share of the span to hatch: all of a done goal, otherwise steps done / steps. */
+export function goalProgress(goal: Goal): number {
+  if (goal.status === 'done') return 1;
+  return goal.steps.length ? goal.steps.filter(step => step.done).length / goal.steps.length : 0;
+}
+
+/** The tag drawn after a goal's span: late, done, dropped, steps done/total, or nothing. */
+export function goalTag(goal: Goal, today: string): string {
+  const state = goalState(goal, today);
+  if (state === 'late' || state === 'done' || state === 'dropped') return state;
+  return goal.steps.length ? `${goal.steps.filter(step => step.done).length}/${goal.steps.length}` : '';
+}
+
+/** Header counts. Late goals are also counted under their status (active or planned); dropped goals are not counted. */
+export function timelineCounts(goals: Goal[], today: string) {
+  const counts = { active: 0, planned: 0, done: 0, late: 0 };
+  for (const goal of goals) {
+    if (!(goal.status in counts)) continue;
+    counts[goal.status as keyof typeof counts]++;
+    if (goalState(goal, today) === 'late') counts.late++;
+  }
+  return counts;
+}
+
+/**
+ * The months that cover every goal: from the first goal's start month through the last goal's end
+ * month, at least `minimum` months long. With no goals it is `minimum` months from the first of `fallback`'s month.
+ */
+export function fitRange(goals: Goal[], fallback: string, minimum = 6): { anchor: string; months: number } {
+  if (!goals.length) return { anchor: fallback.slice(0, 7) + '-01', months: minimum };
+  const first = goals.reduce((min, goal) => goal.startDate < min ? goal.startDate : min, goals[0].startDate);
+  const last = goals.reduce((max, goal) => goal.endDate > max ? goal.endDate : max, goals[0].endDate);
+  const months = (Number(last.slice(0, 4)) - Number(first.slice(0, 4))) * 12 + Number(last.slice(5, 7)) - Number(first.slice(5, 7)) + 1;
+  return { anchor: first.slice(0, 7) + '-01', months: Math.max(minimum, months) };
+}
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/** "Aug 2026" for a YYYY-MM-DD date. */
+export const monthLabel = (date: string) => `${MONTH_NAMES[Number(date.slice(5, 7)) - 1]} ${date.slice(0, 4)}`;
+/** "Aug" for a YYYY-MM-DD date. */
+export const monthName = (date: string) => MONTH_NAMES[Number(date.slice(5, 7)) - 1];
