@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { buildBoard, appendCompanyNote, filterCompanies, connectedCompanyCount, CONNECTED_COMPANY_GOAL, type RawCompany, type Company, type CompanyStatus } from "../lib/companies";
+import { useEffect, useRef, useState } from "react";
+import { buildBoard, appendCompanyNote, type RawCompany, type Company, type CompanyStatus } from "../lib/companies";
 import { moduleEnabled } from '../lib/modules';
-import { avatarStack, connectionsByCompany, relativeDays, type Connection } from '../lib/connections';
+import { relativeDays, type Connection } from '../lib/connections';
 import { ConnectionAvatar } from './ConnectionAvatar';
 
 import { toggleTask } from '../lib/checklist';
@@ -27,17 +27,16 @@ const STATUS_DOT: Record<CompanyStatus, string> = {
 };
 
 interface Props {
-  initialCompanies: RawCompany[];
-  initialRevision: string | null;
-  initialRevisions?: Record<string, string>;
-  detailSlug?: string;
-  skipInitialReload?: boolean;
+  initialCompany: RawCompany;
+  initialRevision: string;
+  detailSlug: string;
 }
 
-export function CompanyBoard({ initialCompanies, initialRevision, initialRevisions = {}, detailSlug, skipInitialReload = false }: Props) {
-  const [companies, setCompanies] = useState(initialCompanies);
-  const [revision, setRevision] = useState(initialRevision);
-  const [revisions, setRevisions] = useState<Record<string, string>>(initialRevisions);
+// One company's page (/companies/<slug>): steps, notes, connections, edit and delete.
+// The list of companies is CompanyGrid.
+export function CompanyBoard({ initialCompany, initialRevision, detailSlug }: Props) {
+  const [companies, setCompanies] = useState([initialCompany]);
+  const [revisions, setRevisions] = useState<Record<string, string>>({ [detailSlug]: initialRevision });
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [connections, setConnections] = useState<Connection[]>();
   const [connectionsFailed, setConnectionsFailed] = useState(false);
@@ -47,17 +46,14 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
   const lock = useRef(false);
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
-  const data = buildBoard(detailSlug ? companies.filter(company => company.slug === detailSlug) : companies);
-  const Details = detailSlug ? 'section' : 'details';
-  const Heading = detailSlug ? 'h1' : 'h2';
+  const data = buildBoard(companies.filter(company => company.slug === detailSlug));
   useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => { if (lock.current || Object.values(drafts).some(note => note.trim())) event.preventDefault(); };
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
   }, [drafts]);
-  useEffect(() => { if (!skipInitialReload) void reload(); }, []);
   useEffect(() => {
-    const url = detailSlug ? `/api/connections?company=${encodeURIComponent(detailSlug)}` : '/api/connections?linked=1';
+    const url = `/api/connections?company=${encodeURIComponent(detailSlug)}`;
     setConnectionsFailed(false);
     void moduleEnabled('people').then(on => {
       setPeopleOn(on);
@@ -68,19 +64,17 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
       }).then(result => setConnections(result.connections)).catch(() => setConnectionsFailed(true));
     });
   }, [detailSlug]);
-  // One request loads every linked connection; group client-side instead of fetching per company.
-  const connectionsBySlug = useMemo(() => connectionsByCompany(connections ?? []), [connections]);
   async function persist(slug: string, change: (company: RawCompany) => RawCompany, action: 'step' | 'note' = 'step') {
     if (lock.current) return;
     lock.current = true; setBusy(true); setError(''); setStatus('Saving…');
     try {
       const company = companies.find(company => company.slug === slug);
       if (!company) throw new Error('Company not found. Reload the latest companies.');
-      const response = await fetch('/api/entries/company', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ revision: revisions[slug] ?? revision, entry: change(company) }) });
+      const response = await fetch('/api/entries/company', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ revision: revisions[slug], entry: change(company) }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Could not save. Please retry.');
       const savedCompany = result.entry as RawCompany;
-      setCompanies(current => current.map(item => item.slug === slug ? savedCompany : item)); setRevision(result.revision); setRevisions(current => ({ ...current, [slug]: result.revision }));
+      setCompanies(current => current.map(item => item.slug === slug ? savedCompany : item)); setRevisions(current => ({ ...current, [slug]: result.revision }));
       if (action === 'note') setDrafts(previous => ({ ...previous, [slug]: '' }));
       setStatus(`${company.title}: ${action === 'note' ? 'note added' : 'step saved'}.`);
       window.dispatchEvent(new Event('workspace-saved'));
@@ -92,15 +86,12 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
     if (lock.current || !company || !window.confirm(`Delete ${company.title}? This cannot be undone.`)) return;
     lock.current = true; setBusy(true); setError(''); setStatus('Deleting…');
     try {
-      const response = await fetch('/api/entries/company', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: slug, revision: revisions[slug] ?? revision }) });
+      const response = await fetch('/api/entries/company', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: slug, revision: revisions[slug] }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Could not delete. Please retry.');
       window.dispatchEvent(new Event('workspace-saved'));
       // Release the lock first so the beforeunload guard doesn't prompt on the way out.
-      if (detailSlug) { lock.current = false; window.location.assign('/companies'); return; }
-      setCompanies(current => current.filter(item => item.slug !== slug));
-      setDrafts(({ [slug]: _, ...rest }) => rest);
-      setStatus(`${company.title} deleted.`);
+      lock.current = false; window.location.assign('/companies');
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not delete. Please retry.'); setStatus('Company not deleted.'); }
     finally { lock.current = false; setBusy(false); }
   }
@@ -108,99 +99,29 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
     if (lock.current) return;
     lock.current = true; setBusy(true); setError('');
     try {
-      const path = detailSlug ? `/api/entries/company?id=${encodeURIComponent(detailSlug)}` : '/api/entries/company?limit=100&view=detail';
-      const response = await fetch(path, { cache: 'no-store' });
+      const response = await fetch(`/api/entries/company?id=${encodeURIComponent(detailSlug)}`, { cache: 'no-store' });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Could not load companies.');
-      if (detailSlug) { setCompanies([result.entry]); setRevision(result.revision); setRevisions({ [detailSlug]: result.revision }); }
-      else { setCompanies(result.entries.map((item: { entry: RawCompany }) => item.entry)); setRevisions(Object.fromEntries(result.entries.map((item: { entry: RawCompany; revision: string }) => [item.entry.slug, item.revision]))); }
+      setCompanies([result.entry]); setRevisions({ [detailSlug]: result.revision });
       setStatus('Latest companies loaded. Drafts kept.');
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not load companies.'); }
     finally { lock.current = false; setBusy(false); }
   }
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [hasConnections, setHasConnections] = useState(false);
-  const visibleCompanies = filterCompanies(data, { category: activeCategory, hasConnections }, slug => connectionsBySlug.get(slug)?.length ?? 0);
-  const totalCompanies = data.categories.reduce((sum, group) => sum + group.companies.length, 0);
-  const connectedCompanies = connectedCompanyCount(data, slug => connectionsBySlug.get(slug)?.length ?? 0);
+  const visibleCompanies = data.categories.flatMap(group => group.companies);
+  const totalCompanies = visibleCompanies.length;
 
   return (
     <div className="space-y-6">
-      {!detailSlug && <div className="flex flex-wrap items-center gap-4 text-sm text-zinc-400">
-        <span>
-          {totalCompanies} companies · {data.totals.applied} applied ·{" "}
-          {data.totals.interviewing} interviewing
-        </span>
-        {peopleOn && <div className="flex min-w-56 flex-1 items-center gap-3 sm:max-w-sm">
-          <label htmlFor="connected-companies" className="shrink-0 text-zinc-300">
-            {connections ? connectedCompanies : connectionsFailed ? '?' : '…'}/{CONNECTED_COMPANY_GOAL} companies with connections
-          </label>
-          <progress id="connected-companies" className="block h-1.5 w-full min-w-16 overflow-hidden rounded accent-emerald-500" value={connections ? Math.min(connectedCompanies, CONNECTED_COMPANY_GOAL) : 0} max={CONNECTED_COMPANY_GOAL} />
-        </div>}
-      </div>}
-
       {error && <div role="alert" className="rounded-lg border border-red-800 p-3 text-sm text-red-200">{error} <button type="button" disabled={busy} className="underline disabled:opacity-50" onClick={() => void reload()}>Reload latest (keep drafts)</button></div>}
       <p role="status" className="text-sm text-zinc-400">{status}</p>
-      {!detailSlug && <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            aria-pressed={activeCategory === "all"}
-            onClick={() => setActiveCategory("all")}
-            className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${
-              activeCategory === "all"
-                ? "bg-zinc-100 text-zinc-900 border-zinc-100"
-                : "bg-transparent text-zinc-300 border-zinc-700 hover:border-zinc-500"
-            }`}
-          >
-            All categories
-          </button>
-          {data.categories.map((t) => (
-            <button
-              key={t.label}
-              type="button"
-              aria-pressed={activeCategory === t.label}
-              onClick={() => setActiveCategory(t.label)}
-              className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${
-                activeCategory === t.label
-                  ? "bg-zinc-100 text-zinc-900 border-zinc-100"
-                  : "bg-transparent text-zinc-300 border-zinc-700 hover:border-zinc-500"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-        {peopleOn && <div className="flex flex-wrap items-center gap-2 sm:border-l sm:border-zinc-800 sm:pl-4">
-          <button
-            type="button"
-            aria-pressed={hasConnections}
-            disabled={!connections}
-            title={connections ? 'Only companies where you know someone' : connectionsFailed ? "Couldn't load connections" : 'Loading connections…'}
-            onClick={() => setHasConnections(value => !value)}
-            className={`px-3 py-1.5 rounded-md text-sm border transition-colors disabled:opacity-50 ${
-              hasConnections
-                ? "bg-zinc-100 text-zinc-900 border-zinc-100"
-                : "bg-transparent text-zinc-300 border-zinc-700 hover:border-zinc-500"
-            }`}
-          >
-            Has connections
-          </button>
-          {connectionsFailed && <span className="text-xs text-red-300">Couldn't load connections.</span>}
-        </div>}
-      </div>}
-
-      {totalCompanies === 0 && <p className="text-zinc-400">{detailSlug ? 'This company is no longer available.' : 'No companies added yet.'}</p>}
-      {totalCompanies > 0 && visibleCompanies.length === 0 && <p className="text-zinc-400">No companies match these filters.</p>}
-      <div className={detailSlug ? 'space-y-6' : 'grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'}>
+      {totalCompanies === 0 && <p className="text-zinc-400">This company is no longer available.</p>}
+      <div className="space-y-6">
         {visibleCompanies.map(company => (
-          <article key={company.slug} className={`min-w-0 rounded-lg border border-zinc-800 bg-zinc-900 ${detailSlug ? 'p-5 sm:p-8' : 'p-3 transition-colors hover:border-zinc-600'}`}>
+          <article key={company.slug} className="min-w-0 rounded-lg border border-zinc-800 bg-zinc-900 p-5 sm:p-8">
             <div className="flex items-center gap-3">
               <CompanyImage key={company.cover || company.slug} company={company} />
               <div className="min-w-0 flex-1">
-                <Heading className={`${detailSlug ? 'text-3xl' : 'text-sm'} font-semibold leading-tight text-zinc-100`}>
-                  {detailSlug ? company.title : <a href={`/companies/${company.slug.split('/').map(encodeURIComponent).join('/')}`} className="hover:text-blue-300 focus-visible:underline">{company.title}</a>}
-                </Heading>
+                <h1 className="text-3xl font-semibold leading-tight text-zinc-100">{company.title}</h1>
                 <p className="mt-1 truncate text-[11px] text-zinc-500" title={company.category}>{company.category}</p>
                 <span className="mt-1 flex items-center gap-1.5 text-[11px] text-zinc-400">
                   <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[company.status]}`} />
@@ -208,7 +129,6 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
                   {company.featured && <span className="ml-auto text-amber-300" title="Standout fit">★<span className="sr-only"> Standout fit</span></span>}
                 </span>
               </div>
-              {!detailSlug && peopleOn && <ConnectionStack company={company} connections={connectionsBySlug.get(company.slug)} />}
             </div>
             <div className="mt-3">
               <div className="flex justify-between gap-2 text-[10px] text-zinc-500">
@@ -221,11 +141,9 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
               <a href={`/manage/companies?id=${encodeURIComponent(company.slug)}`} aria-label={`Edit ${company.title}`} className="text-blue-400 hover:underline">Edit</a>
               <button type="button" disabled={busy} aria-label={`Delete ${company.title}`} onClick={() => void remove(company.slug)} className="text-red-400 hover:underline disabled:opacity-50">Delete</button>
             </div>
-            <Details className={`mt-2 ${detailSlug ? 'text-sm' : 'text-xs'} text-zinc-400`}>
-              {!detailSlug && <summary className="cursor-pointer py-1 hover:text-zinc-100">{peopleOn ? 'Details, notes & connections' : 'Details & notes'}</summary>}
+            <section className="mt-2 text-sm text-zinc-400">
               <div className="mt-2 space-y-3 border-t border-zinc-800 pt-3">
                 <div className="flex flex-wrap gap-3 text-blue-400">
-                  {!detailSlug && <a href={`/companies/${company.slug.split('/').map(encodeURIComponent).join('/')}`} className="hover:underline">Open company →</a>}
                   {company.url && <a href={company.url} target="_blank" rel="noreferrer" className="hover:underline">Careers ↗</a>}
                 </div>
                 {company.why && <p>{inlineLinks(company.why)}</p>}
@@ -237,28 +155,14 @@ export function CompanyBoard({ initialCompanies, initialRevision, initialRevisio
                   <label className="block text-zinc-200">Add a note for {company.title}<textarea aria-label={`Add a note for ${company.title}`} required maxLength={5000} disabled={busy} className="mt-1 min-h-20 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="A contact, an impression, or a reminder…" value={drafts[company.slug] ?? ''} onChange={event => setDrafts(previous => ({ ...previous, [company.slug]: event.target.value }))} /></label>
                   <button type="submit" disabled={busy || !drafts[company.slug]?.trim()} className="rounded-lg bg-blue-600 px-3 py-2 text-white hover:bg-blue-500 disabled:opacity-50">Add note</button>
                 </form>
-                {peopleOn && <CompanyConnections company={company} connections={connectionsBySlug.get(company.slug)} failed={connectionsFailed} />}
+                {peopleOn && <CompanyConnections company={company} connections={connections} failed={connectionsFailed} />}
               </div>
-            </Details>
+            </section>
           </article>
         ))}
       </div>
     </div>
   );
-}
-
-/** Overlapping avatars of the people you know at a company, most recently in touch first. */
-function ConnectionStack({ company, connections = [] }: { company: Company; connections?: Connection[] }) {
-  if (connections.length === 0) return null;
-  const { shown, overflow } = avatarStack(connections, 4);
-  const names = connections.map(person => person.name).join(', ');
-  const spoken = connections.slice(0, 5).map(person => person.name).join(', ') + (connections.length > 5 ? `, and ${connections.length - 5} more` : '');
-  const label = `${connections.length} connection${connections.length === 1 ? '' : 's'} at ${company.title}: ${spoken}`;
-  return <a href={`/connections?company=${encodeURIComponent(company.slug)}`} aria-label={label} title={names}
-    className="flex shrink-0 self-start -space-x-1.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
-    {shown.map(person => <ConnectionAvatar key={person.id} connection={person} size={22} ring="ring-2 ring-zinc-900" />)}
-    {overflow > 0 && <span aria-hidden="true" className="flex h-[22px] min-w-[22px] items-center justify-center rounded-full bg-zinc-700 px-1 text-[10px] font-semibold text-zinc-100 ring-2 ring-zinc-900">+{overflow}</span>}
-  </a>;
 }
 
 function CompanyConnections({ company, connections: people = [], failed }: { company: Company; connections?: Connection[]; failed: boolean }) {

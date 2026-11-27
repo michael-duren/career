@@ -78,13 +78,11 @@ export function BooksView() {
   return data ? <BookShelf data={buildShelf(data)} /> : <State error={error} />;
 }
 
-export function CompaniesView({ detail = false }: { detail?: boolean }) {
-  const slug = detail ? decodeURIComponent(location.pathname.slice('/companies/'.length)) : '';
-  const url = slug ? `/api/entries/company?id=${encodeURIComponent(slug)}` : '/api/entries/company?limit=100&view=detail';
-  const { data, error } = useJSON<Page<RawCompany> | Result<RawCompany>>(url);
+export function CompanyView() {
+  const slug = decodeURIComponent(location.pathname.slice('/companies/'.length));
+  const { data, error } = useJSON<Result<RawCompany>>(`/api/entries/company?id=${encodeURIComponent(slug)}`);
   if (!data) return <State error={error} />;
-  if ('entry' in data) return <CompanyBoard initialCompanies={[data.entry]} initialRevision={data.revision} initialRevisions={{ [slug]: data.revision }} detailSlug={slug} skipInitialReload />;
-  return <CompanyBoard initialCompanies={data.entries.map(item => item.entry)} initialRevision={null} initialRevisions={Object.fromEntries(data.entries.map(item => [item.entry.slug, item.revision]))} skipInitialReload />;
+  return <CompanyBoard initialCompany={data.entry} initialRevision={data.revision} detailSlug={slug} />;
 }
 
 function weeks(page: Page<WeekEntry>): WeekEntry[] { return page.entries.map(item => item.entry); }

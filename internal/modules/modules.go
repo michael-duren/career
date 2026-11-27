@@ -41,7 +41,7 @@ var Registry = []Module{
 		MCPTools: []string{"get_weekly_schedule", "save_schedule_session", "remove_schedule_session", "save_schedule_rule", "end_schedule_rule", "record_schedule_actual", "update_schedule_settings"}},
 	{ID: "leetgrinder", Label: "Leetgrinder", Short: "LEET", Pages: []string{"/leetgrinder", "/bootcamp"}, API: []string{"/api/leetgrinder"},
 		MCPTools: []string{"get_leetgrinder_today", "list_leetgrinder_reviews", "get_leetgrinder_stats", "log_leetgrinder_attempt", "list_leetgrinder_todos", "create_leetgrinder_todo_set", "add_leetgrinder_todo_problem", "reorder_leetgrinder_set", "remove_leetgrinder_todo_problem", "remove_leetgrinder_todo_set"}},
-	{ID: "companies", Label: "Companies", Short: "COMPANIES", Pages: []string{"/companies", "/manage/companies"}, Kinds: []string{"company"}},
+	{ID: "companies", Label: "Companies", Short: "COMPANIES", Pages: []string{"/companies", "/manage/companies"}, API: []string{"/api/companies"}, Kinds: []string{"company"}},
 	{ID: "people", Label: "People", Short: "PEOPLE", Pages: []string{"/connections"}, API: []string{"/api/connections"}, Kinds: []string{"connection"},
 		MCPTools:  []string{"list_connection_companies", "add_companies_to_queue"},
 		ToolsNeed: map[string]string{"list_connection_companies": "companies", "add_companies_to_queue": "companies"}},

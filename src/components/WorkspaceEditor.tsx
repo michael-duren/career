@@ -217,6 +217,20 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
     }
   }
 
+  // ?new=1 (the Companies page's "+ Add company") opens a blank entry once the list has loaded,
+  // unless a draft was recovered or ?id= asked for an entry.
+  const openedNew = useRef(false);
+  useEffect(() => {
+    if (!entries || openedNew.current) return;
+    openedNew.current = true;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('new') !== '1' || params.get('id') || initialId || recovered.current) return;
+    create();
+    const url = new URL(window.location.href);
+    url.searchParams.delete('new');
+    window.history.replaceState(window.history.state, '', url);
+  }, [entries]);
+
   async function save() {
     if (!entry) return;
     setBusy(true); setError('');

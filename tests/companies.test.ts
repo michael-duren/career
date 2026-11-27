@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { appendCompanyNote, buildBoard, connectedCompanyCount, filterCompanies, type RawCompany } from '../src/lib/companies.ts';
+import { appendCompanyNote, buildBoard, companyDomain, companyLogoUrl, matchesCompanySearch, sortCompanies, type RawCompany } from '../src/lib/companies.ts';
 import { toggleTask } from '../src/lib/checklist.ts';
 const company: RawCompany = {
   slug: 'test', title: 'Test', type: 'company', category: 'Infra', url: 'https://example.com', status: 'not_started', priority: 'high', featured: false, tags: [],
@@ -35,32 +35,28 @@ test('research follows relationship steps for saved companies and toggles retain
   assert.match(toggleTask(body, steps[2].index, false), /- \[ \] Research team & open roles/);
 });
 
-test('company filters combine category and has-connections', () => {
-  const board = buildBoard([
-    { ...company, slug: 'a', title: 'A', category: 'Infra' },
-    { ...company, slug: 'b', title: 'B', category: 'Infra' },
-    { ...company, slug: 'c', title: 'C', category: 'AI' },
-  ]);
-  const counts: Record<string, number> = { a: 2, c: 1 };
-  const slugs = (category: string, hasConnections: boolean) => filterCompanies(board, { category, hasConnections }, slug => counts[slug] ?? 0).map(c => c.slug);
-  assert.deepEqual(slugs('all', false), ['c', 'a', 'b']);
-  assert.deepEqual(slugs('all', true), ['c', 'a']);
-  assert.deepEqual(slugs('Infra', true), ['a']);
-  assert.deepEqual(slugs('AI', false), ['c']);
-  assert.deepEqual(slugs('Missing', false), []);
-  // Before connections load (or with none), the filter shows nothing rather than everything.
-  assert.deepEqual(filterCompanies(board, { category: 'all', hasConnections: true }, () => 0), []);
-  assert.deepEqual(filterCompanies(board, { category: 'all', hasConnections: false }, () => 0).length, 3);
+test('company logo domain comes from the URL host, without www', () => {
+  assert.equal(companyDomain('https://www.Grafana.com/careers?x=1'), 'grafana.com');
+  assert.equal(companyDomain('http://jobs.example.co.uk'), 'jobs.example.co.uk');
+  assert.equal(companyDomain('https://datadoghq.com.'), 'datadoghq.com');
+  for (const url of [undefined, '', 'not a url', 'mailto:hr@example.com', 'https://localhost:8080/', 'ftp://example.com']) assert.equal(companyDomain(url), undefined, String(url));
+  assert.equal(companyLogoUrl('https://www.fly.io/jobs'), '/api/companies/logo?domain=fly.io');
+  assert.equal(companyLogoUrl('nope'), undefined);
 });
 
-test('connected company count includes every category and ignores companies without connections', () => {
-  const board = buildBoard([
-    { ...company, slug: 'a', title: 'A', category: 'Infra' },
-    { ...company, slug: 'b', title: 'B', category: 'Infra' },
-    { ...company, slug: 'c', title: 'C', category: 'AI', status: 'rejected' },
-  ]);
-  const counts: Record<string, number> = { a: 3, c: 1 };
-  assert.equal(connectedCompanyCount(board, slug => counts[slug] ?? 0), 2);
-  assert.equal(connectedCompanyCount(board, () => 0), 0);
-  assert.equal(connectedCompanyCount(buildBoard([]), () => 1), 0);
+test('company search matches every word against name, category, tags and why', () => {
+  const [parsed] = buildBoard([{ ...company, title: 'Grafana Labs', category: 'Observability / Infra', tags: ['remote', 'go'], body: '## Why\nLoki and Tempo teams.\n' }]).categories[0].companies;
+  for (const query of ['', '  ', 'grafana', 'LABS', 'observability', 'remote', 'tempo', 'grafana remote', 'loki infra']) assert.equal(matchesCompanySearch(parsed, query), true, query);
+  for (const query of ['datadog', 'grafana datadog', 'onsite']) assert.equal(matchesCompanySearch(parsed, query), false, query);
+});
+
+test('companies sort by priority, then featured, then name', () => {
+  const sorted = sortCompanies([
+    { title: 'Low', priority: 'low', featured: true },
+    { title: 'Beta', priority: 'high', featured: false },
+    { title: 'Alpha', priority: 'high', featured: false },
+    { title: 'Zeta', priority: 'high', featured: true },
+    { title: 'Mid', priority: 'medium', featured: false },
+  ] as const);
+  assert.deepEqual(sorted.map(c => c.title), ['Zeta', 'Alpha', 'Beta', 'Mid', 'Low']);
 });
