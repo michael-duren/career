@@ -2,9 +2,10 @@ import { expect, test, type Page } from '@playwright/test';
 
 // The Journal page (docs/redesign/pages/journal.md): Work weeks, the private Personal journal and
 // the Logs explorer, against mocked entries, goals and goal hours.
-const recent = { slug: '2026/week-48', week: 48, year: 2026, dates: '2026-11-23 to 2026-11-29', hours: { LeetCode: 6, Kubernetes: 2 }, tags: [], targets: {},
+type Week = { slug: string; week: number; year: number; dates: string; hours: Record<string, number>; tags: string[]; targets: Record<string, number>; body: string };
+const recent: Week = { slug: '2026/week-48', week: 48, year: 2026, dates: '2026-11-23 to 2026-11-29', hours: { LeetCode: 6, Kubernetes: 2 }, tags: [], targets: {},
   body: '## What I did\n\n### Monday — Nov 23\n- Fixed the Alloy PR\n- Read DDIA chapter 5\n\n### Wednesday\n- CKA lab: networking\n\n## Blockers\n\n## Notes\n- Ask about on-call\n' };
-const older = { slug: '2026/week-26', week: 26, year: 2026, dates: '2026-10-12 to 2026-10-18', hours: {}, tags: [], targets: {},
+const older: Week = { slug: '2026/week-26', week: 26, year: 2026, dates: '2026-10-12 to 2026-10-18', hours: {}, tags: [], targets: {},
   body: '## What I did\n\n### Friday — Oct 16\n- Did some stuff on Alloy in the morning.\n' };
 const personal = [
   { id: '2026/2026-11-24', title: 'Good run, clear head', date: '2026-11-24', description: 'Morning run', tags: ['health'], body: 'Ran **8k** before work.' },
@@ -12,7 +13,8 @@ const personal = [
 ];
 const goals = [{ id: 'g1', title: 'Kubernetes cert', startDate: '2026-11-01', endDate: '2026-12-31', color: '#fff', steps: [], status: 'active', dependsOn: [] }];
 
-async function mockJournal(page: Page, { weeks: initialWeeks = [recent, older], scheduleOn = true } = {}) {
+async function mockJournal(page: Page, { weeks: initialWeeks = [recent, older], scheduleOn = true, hoursFail = false, conflicts = 0 } = {}) {
+  let conflictsLeft = conflicts;
   // Saves change what later loads return, as the API would (the page reloads after each save).
   let weeks = [...initialWeeks];
   const saves: unknown[] = [], personalSaves: unknown[] = [], deletes: unknown[] = [];
@@ -27,16 +29,25 @@ async function mockJournal(page: Page, { weeks: initialWeeks = [recent, older], 
     return route.fulfill({ response, json: body });
   });
   await page.route('**/api/goals', route => { calls.push('goals'); return route.fulfill({ json: { goals, revisions: { g1: 'rev-g1' } } }); });
-  await page.route('**/api/scheduler/goal-hours', route => { calls.push('goal-hours'); return route.fulfill({ json: { goals: { g1: { totalHours: 9, weekHours: { '2026-11-23': 4.5 } } } } }); });
+  await page.route('**/api/scheduler/goal-hours', route => { calls.push('goal-hours'); return hoursFail ? route.fulfill({ status: 500, json: { error: 'boom' } }) : route.fulfill({ json: { goals: { g1: { totalHours: 9, weekHours: { '2026-11-23': 4.5 } } } } }); });
   await page.route('**/api/entries/week**', route => {
     const request = route.request();
     if (request.method() === 'POST') {
       const input = request.postDataJSON();
       saves.push(input);
+      if (conflictsLeft-- > 0) return route.fulfill({ status: 409, json: { error: 'content changed; reload before saving; your draft is kept' } });
       weeks = weeks.map(week => week.slug === input.entry.slug ? input.entry : week);
       return route.fulfill({ json: { entry: input.entry, revision: 'rev-saved' } });
     }
-    return route.fulfill({ json: { entries: weeks.map(entry => ({ entry, revision: entry === recent || entry === older ? `rev-${entry.week}` : 'rev-saved' })), nextOffset: null } });
+    const revision = (entry: { week: number }) => entry === recent || entry === older ? `rev-${entry.week}` : 'rev-saved';
+    const id = new URL(request.url()).searchParams.get('id');
+    if (id) {
+      calls.push(`week:${id}`);
+      const entry = weeks.find(week => week.slug === id);
+      // After a conflict the saved week has moved on to a newer revision.
+      return entry ? route.fulfill({ json: { entry, revision: conflicts && conflictsLeft < conflicts ? 'rev-newer' : revision(entry) } }) : route.fulfill({ status: 404, json: { error: 'entry not found' } });
+    }
+    return route.fulfill({ json: { entries: weeks.map(entry => ({ entry, revision: revision(entry) })), nextOffset: null } });
   });
   await page.route('**/api/entries/personal**', route => {
     const request = route.request();
@@ -87,6 +98,7 @@ test('work tab: week list beside the selected week, with goal hours from Schedul
   await expect(article.getByText('4.5 h logged this week')).toBeVisible();
   await expect(article.getByText('Kubernetes cert 4.5 h')).toBeVisible();
   await expect(article.getByText('Earlier tracks: LeetCode 6 h · Kubernetes 2 h')).toBeVisible();
+  await expect(article.getByRole('link', { name: 'Log work →' })).toHaveAttribute('href', '/weekly-scheduler');
   const what = article.getByRole('region', { name: 'What I did' });
   await expect(what.getByText('Monday · Nov 23')).toBeVisible();
   await expect(what.getByText('Wednesday · Nov 25')).toBeVisible();
@@ -120,6 +132,7 @@ test('with Schedule off the week shows only its own hours and asks for no goal h
   await page.goto('/journal');
   const article = page.locator('main article');
   await expect(article.getByText('8 h in earlier tracks')).toBeVisible();
+  // Everything has loaded by now (the hours line renders after the settings check).
   await expect(article.getByRole('link', { name: 'Log work →' })).toHaveCount(0);
   await expect(article.getByText(/Kubernetes cert/)).toHaveCount(0);
   expect(calls.filter(call => call === 'goals' || call === 'goal-hours')).toEqual([]);
@@ -195,6 +208,83 @@ test('logs search underlines matches and filters by section', async ({ page }) =
   await expect(results.getByRole('link', { name: 'Open in journal →' })).toHaveAttribute('href', '/journal?id=2026%2Fweek-48');
   await results.getByRole('button', { name: 'Remove filter Section: Notes' }).click();
   await expect(results.getByRole('status')).toHaveText('4 matches');
+});
+
+test('list items render inline Markdown, and lists a ruled list would mangle render as Markdown', async ({ page }) => {
+  await mockJournal(page, { weeks: [{ ...recent, body: '## What I did\n### Monday — Nov 23\n- Read **DDIA** and [the docs](https://example.com)\n\n## Notes\n1. first\n2. second\n' }] });
+  await page.goto('/journal');
+  const article = page.locator('main article');
+  await expect(article.getByRole('region', { name: 'What I did' }).locator('strong')).toHaveText('DDIA');
+  await expect(article.getByRole('link', { name: 'the docs' })).toHaveAttribute('href', 'https://example.com');
+  await expect(article.getByRole('region', { name: 'Notes' }).locator('ol > li')).toHaveText(['first', 'second']);
+});
+
+test('when goal hours fail the line says so instead of claiming no hours', async ({ page }) => {
+  await mockJournal(page, { hoursFail: true });
+  await page.goto('/journal');
+  const article = page.locator('main article');
+  await expect(article.getByText('Hours unavailable')).toBeVisible();
+  await expect(article.getByText('Goal hours could not load.')).toBeVisible();
+  await expect(article.getByText('No hours logged this week')).toHaveCount(0);
+});
+
+test('a save that conflicts keeps the editor and the text, and can save over the newer revision', async ({ page }) => {
+  const { saves, calls } = await mockJournal(page, { conflicts: 1 });
+  await page.goto('/journal');
+  const article = page.locator('main article');
+  await article.getByRole('button', { name: 'Edit week 48' }).click();
+  // Edit starts from the entry's current saved revision.
+  await expect(article.getByRole('textbox', { name: 'Markdown' })).toBeVisible();
+  expect(calls).toContain('week:2026/week-48');
+  const text = '## What I did\n- Mine\n';
+  await article.getByRole('textbox', { name: 'Markdown' }).fill(text);
+  await article.getByRole('button', { name: 'Save' }).click();
+  await expect(article.getByRole('alert')).toContainText('content changed');
+  await expect(article.getByRole('textbox', { name: 'Markdown' })).toHaveValue(text);
+  await article.getByRole('button', { name: 'Keep my text and save over it' }).click();
+  await expect(article.getByRole('status')).toHaveText('Loaded the latest saved revision. Save replaces it with your text.');
+  await article.getByRole('button', { name: 'Save' }).click();
+  await expect(article.getByRole('region', { name: 'What I did' }).getByRole('listitem')).toHaveText(['—Mine']);
+  expect(saves.map(save => (save as { revision: string }).revision)).toEqual(['rev-48', 'rev-newer']);
+});
+
+test('an unsaved draft from an earlier visit reopens in the editor', async ({ page }) => {
+  await mockJournal(page);
+  await page.addInitScript(entry => {
+    const user = localStorage.getItem('auth_username') || 'user';
+    localStorage.setItem(`career-workspace:v1:${user}:week`, JSON.stringify({ entry, revision: 'rev-48' }));
+  }, { ...recent, body: 'Draft I never saved' });
+  await page.goto('/journal');
+  const article = page.locator('main article');
+  await expect(article.getByRole('textbox', { name: 'Markdown' })).toHaveValue('Draft I never saved');
+  await expect(article.getByRole('status')).toHaveText('Recovered your unsaved draft.');
+  await article.getByRole('button', { name: 'Cancel' }).click();
+  await expect(article.getByRole('heading', { name: 'Week 48' })).toBeVisible();
+  expect(await page.evaluate(() => Object.keys(localStorage).filter(key => key.startsWith('career-workspace:')))).toEqual([]);
+});
+
+test('a link to a personal entry opens it past the lock; a plain reload locks again', async ({ page }) => {
+  await mockJournal(page);
+  await page.goto('/journal?tab=personal&id=bio');
+  const main = page.locator('main');
+  await expect(main.locator('article').getByRole('heading', { name: 'About me' })).toBeVisible();
+  await page.goto('/journal?tab=personal');
+  await expect(main.getByRole('button', { name: /Private · open to read/ })).toBeVisible();
+  await expect(main.getByRole('navigation', { name: 'Personal entries' })).toHaveCount(0);
+});
+
+test('the catch-up note uses the local date: 7 days is fine, 8 is stale', async ({ page }) => {
+  // 8 PM in Chicago is already the next day in UTC.
+  await page.clock.setFixedTime(new Date('2026-11-27T20:00:00'));
+  const week = (day: 'Thursday — Nov 19' | 'Friday — Nov 20') => ({ ...older, slug: '2026/week-47', week: 47, dates: '2026-11-16 to 2026-11-22', body: `## What I did\n### ${day}\n- x\n` });
+  await mockJournal(page, { weeks: [week('Friday — Nov 20')] });
+  await page.goto('/journal');
+  await expect(page.locator('main article').getByRole('heading', { name: 'Week 47' })).toBeVisible();
+  await expect(page.locator('main').getByText(/catch up\?/)).toHaveCount(0);
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
+  await mockJournal(page, { weeks: [week('Thursday — Nov 19')] });
+  await page.reload();
+  await expect(page.locator('main').getByText('last entry Nov 19 — catch up?')).toBeVisible();
 });
 
 test.describe('phone', () => {

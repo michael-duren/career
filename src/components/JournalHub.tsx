@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import MarkdownPreview from './MarkdownPreview';
 import { LogExplorer } from './LogExplorer';
-import { JournalEditor, clearDraft, entryId, markdownTone, readDraft, signInAgain, type JournalEntry, type JournalItem } from './JournalEditor';
+import { JournalEditor, clearDraft, entryId, fetchEntry, markdownTone, readDraft, signInAgain, type JournalEntry, type JournalItem } from './JournalEditor';
 import { Button, Label, MeasurementLine, SearchField, SegmentedTabs, buttonClassName } from './ui';
 import { buildLogDocs, trackLabel, type WeekSummary } from '../lib/logs';
 import { hoursText, journalCounts, latestEntryDate, parseWeekBody, personalDate, personalMatches, sectionEmpty, staleNote, weekBounds, weekHoursLabel, weekMatches, weekRange, type JournalSection } from '../lib/journal';
@@ -40,11 +42,13 @@ async function loadHours(): Promise<Hours> {
   if (!await moduleEnabled('schedule')) return { on: false };
   try {
     const [goals, hours] = await Promise.all([fetch('/api/goals', { cache: 'no-store' }), fetch('/api/scheduler/goal-hours', { cache: 'no-store' })]);
-    // Schedule can be turned off between the settings check and these requests.
+    if (goals.status === 401 || hours.status === 401) signInAgain();
+    // A turned-off module's API is 404: Schedule (or Timeline) was turned off after the settings check.
     if (goals.status === 404 || hours.status === 404) return { on: false };
-    if (!goals.ok || !hours.ok) throw new Error();
+    if (!goals.ok || !hours.ok) throw new Error(`goals ${goals.status}, goal hours ${hours.status}`);
     return { on: true, goals: (await goals.json()).goals ?? [], byGoal: (await hours.json()).goals ?? {} };
-  } catch {
+  } catch (e) {
+    console.warn('Goal hours could not load.', e);
     return { on: true, goals: [], byGoal: {}, error: 'Goal hours could not load.' };
   }
 }
@@ -137,7 +141,7 @@ export function JournalHub() {
 
     {weeks && personal && hours && <div id={panelId} role="tabpanel" aria-label={TABS.find(item => item.value === tab)?.label} className="mt-5 md:mt-8">
       {visited.has('work') && <div hidden={tab !== 'work'}>
-        <WorkPanel weeks={sortedWeeks} query={query} hours={hours} desktop={desktop} stale={stale} initialId={params.get('tab') ? null : initialId}
+        <WorkPanel weeks={sortedWeeks} query={query} hours={hours} desktop={desktop} stale={stale} initialId={(params.get('tab') ?? 'work') === 'work' ? initialId : null}
           onSaved={saved => setWeeks(current => [...(current ?? []).filter(item => item.entry.slug !== saved.entry.slug), saved])}
           onDeleted={id => setWeeks(current => (current ?? []).filter(item => item.entry.slug !== id))} />
       </div>}
@@ -209,7 +213,14 @@ function WorkPanel({ weeks, query, hours, desktop, stale, initialId, onSaved, on
     if (!desktop) setOpenId(open === id ? null : id);
     setUrlParam('id', id);
   }
-  const edit = (item: Item<JournalWeek>) => setEditing({ item, isNew: false });
+  const [editError, setEditError] = useState('');
+  // Edit from the entry's current saved revision, not the one the list was loaded with.
+  const edit = (item: Item<JournalWeek>) => {
+    setEditError('');
+    fetchEntry<JournalWeek>('week', item.entry.slug)
+      .then(latest => latest ? setEditing({ item: latest, isNew: false }) : setEditError('This week was deleted elsewhere.'))
+      .catch(e => setEditError(e instanceof Error ? e.message : 'This week could not load.'));
+  };
   const editor = editing && <JournalEditor key={entryId(editing.item.entry)} kind="week" item={editing.item} isNew={editing.isNew} recovered={editing.recovered} onDirtyChange={guard.setDirty}
     onSaved={saved => { onSaved(saved as Item<JournalWeek>); setEditing(null); setSelectedId(entryId(saved.entry)); }}
     onCancel={() => setEditing(null)}
@@ -233,6 +244,7 @@ function WorkPanel({ weeks, query, hours, desktop, stale, initialId, onSaved, on
         </button>
         {!desktop && current && <div className="flex min-w-0 flex-col gap-1.5 pb-4 pl-[62px]">
           <WeekSections week={week} compact />
+          {editError && <p role="alert" className="m-0 text-sm">{editError}</p>}
           <Button size="sm" className="mt-2 self-start" onClick={() => edit(item)} aria-label={`Edit week ${week.week}`}>Edit</Button>
         </div>}
       </div>;
@@ -244,6 +256,7 @@ function WorkPanel({ weeks, query, hours, desktop, stale, initialId, onSaved, on
   return <div className="grid gap-8 md:grid-cols-[200px_minmax(0,1fr)] xl:grid-cols-[250px_minmax(0,1fr)] xl:gap-14">
     {list}
     <article className="relative flex min-h-[420px] min-w-0 flex-col border-l border-ink-14 pl-6 xl:pl-10">
+      {editError && !editor && <p role="alert" className="m-0 mb-3 text-sm">{editError}</p>}
       {editor || (selected ? <WeekArticle item={selected} hours={hours} onEdit={() => edit(selected)} /> : <p className="m-0 text-[15px] font-light text-ink-60">Choose a week to read it.</p>)}
       <StaleNote text={stale} className="mt-auto self-end pt-8" />
     </article>
@@ -271,7 +284,7 @@ function WeekArticle({ item, hours, onEdit }: { item: Item<JournalWeek>; hours: 
       <Button onClick={onEdit} aria-label={`Edit week ${week.week}`}>Edit</Button>
     </div>
     <div className="mt-4 flex items-center gap-3">
-      <MeasurementLine className="flex-1" /><Label className="!text-[9px]">{weekHoursLabel(goalTotal, legacyTotal)}</Label><MeasurementLine className="flex-1" />
+      <MeasurementLine className="flex-1" /><Label className="!text-[9px]">{hours.on && hours.error ? 'Hours unavailable' : weekHoursLabel(goalTotal, legacyTotal)}</Label><MeasurementLine className="flex-1" />
     </div>
     <div className="mt-2 flex flex-col gap-1">
       {hours.on && hours.error && <p role="alert" className="m-0 text-xs text-ink-60">{hours.error}</p>}
@@ -306,9 +319,16 @@ function SectionBody({ section, compact = false }: { section: JournalSection; co
   return <>{section.groups.filter(group => group.items.length || !compact).map((group, index) => <div key={index} className="flex min-w-0 flex-col">
     {group.label && <Label className={`!text-[9px] ${compact ? '!text-ink' : 'mb-2'} ${index > 0 ? 'mt-3' : ''}`}>{group.label}</Label>}
     {compact
-      ? group.items.map((text, i) => <span key={i} className="break-words text-[15px] font-light leading-normal">— {text}</span>)
-      : <ul className="m-0 flex list-none flex-col p-0">{group.items.map((text, i) => <li key={i} className="flex gap-3.5 border-b border-ink-14 py-1.5 text-[17px] font-light leading-normal"><span aria-hidden="true" className="opacity-40">—</span><span className="min-w-0 break-words">{text}</span></li>)}</ul>}
+      ? group.items.map((text, i) => <span key={i} className="break-words text-[15px] font-light leading-normal">— <InlineMarkdown text={text} /></span>)
+      : <ul className="m-0 flex list-none flex-col p-0">{group.items.map((text, i) => <li key={i} className="flex gap-3.5 border-b border-ink-14 py-1.5 text-[17px] font-light leading-normal"><span aria-hidden="true" className="opacity-40">—</span><span className="min-w-0 break-words"><InlineMarkdown text={text} /></span></li>)}</ul>}
   </div>)}</>;
+}
+
+const INLINE = ['strong', 'em', 'code', 'a', 'del'];
+/** One list item's inline Markdown (bold, italics, code, links); block wrappers are dropped and raw HTML is not rendered. */
+function InlineMarkdown({ text }: { text: string }) {
+  return <Markdown remarkPlugins={[remarkGfm]} allowedElements={INLINE} unwrapDisallowed
+    components={{ a: ({ node: _node, ...props }) => <a {...props} className="text-ink underline underline-offset-[3px] hover:text-ink-hover" />, code: ({ node: _node, ...props }) => <code {...props} className="bg-ink-07 px-1 font-mono text-[0.9em]" /> }}>{text}</Markdown>;
 }
 
 // ---------------------------------------------------------------------------
@@ -336,12 +356,14 @@ function PersonalPanel({ entries, query, desktop, initialId, newSignal, onSaved,
   const filtered = sorted.filter(item => personalMatches(item.entry, query));
   const selected = filtered.find(item => item.entry.id === selectedId) ?? (desktop ? filtered[0] : undefined);
   const missing = initialId && !entries.some(item => item.entry.id === initialId);
-  const handled = useRef(newSignal);
+  // Starts at 0 so a + New entry clicked while the journal was still loading still opens the editor.
+  const handled = useRef(0);
 
   useEffect(() => {
     if (newSignal === handled.current) return;
     handled.current = newSignal;
     if (editing && !guard.confirmLeave()) return;
+    clearDraft('personal');
     setUnlocked(true);
     setEditing({ item: { entry: { id: crypto.randomUUID(), title: '', date: localDate(), description: '', tags: [], body: '' }, revision: null }, isNew: true });
   }, [newSignal]);

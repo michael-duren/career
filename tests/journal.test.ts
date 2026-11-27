@@ -26,8 +26,11 @@ test('a week body splits into dated days, blockers and notes, always in that ord
 });
 
 test('a heading date wins over its weekday, and undated weeks keep plain day labels', () => {
-  // "Friday — Oct 16" written in the week of Oct 12: the weekday index would say Oct 16 too.
-  assert.equal(parseWeekBody('## What I did\n### Friday — Oct 16\n- x\n', '2026-10-12')[0].groups[0].date, '2026-10-16');
+  // Friday of the week of Oct 12 is Oct 16; the heading says Oct 17, and the heading wins.
+  assert.equal(parseWeekBody('## What I did\n### Friday — Oct 17\n- x\n', '2026-10-12')[0].groups[0].date, '2026-10-17');
+  assert.equal(parseWeekBody('## What I did\n### Thursday — January 1\n- x\n', '2026-12-28')[0].groups[0].date, '2027-01-01', 'across the new year');
+  // A word that only starts like a month is not a date.
+  assert.equal(parseWeekBody('## What I did\n### Monday — Marketing 2 pager\n- x\n', '2026-10-12')[0].groups[0].date, '2026-10-12');
   // A heading whose date sits outside its week keeps the written date.
   assert.equal(parseWeekBody('## What I did\n### Monday — Oct 19\n- x\n', '2026-10-12')[0].groups[0].date, '2026-10-19');
   assert.deepEqual(parseWeekBody('## What I did\n### Tuesday\n- x\n', null)[0].groups[0], { label: 'Tuesday', date: undefined, items: ['x'] });
@@ -41,6 +44,15 @@ test('code, tables and custom sections are kept as Markdown instead of mangled i
   assert.equal(sections.length, 5, 'standard three, then the preamble and Retro in body order');
   assert.deepEqual(sections.slice(3).map(section => [section.title, section.rich]), [['', false], ['Retro', true]]);
   assert.deepEqual(sections[3].groups, [{ label: '', items: ['Intro line'] }]);
+});
+
+test('nested, numbered and task lists are kept as Markdown; inline syntax stays in the items', () => {
+  const rich = (body: string) => parseWeekBody(`## Notes\n${body}\n`, '2026-11-23')[2].rich;
+  assert.equal(rich('- a\n  - nested'), true);
+  assert.equal(rich('1. first\n2. second'), true);
+  assert.equal(rich('- [ ] task'), true);
+  assert.equal(rich('- **bold** and `code` and [a](https://example.com)'), false);
+  assert.deepEqual(parseWeekBody('## Notes\n- **bold** item\n', null)[2].groups[0].items, ['**bold** item']);
 });
 
 test('the latest entry is the newest written day, falling back to the start of a week with undated writing', () => {

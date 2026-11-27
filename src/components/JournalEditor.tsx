@@ -32,12 +32,25 @@ export function signInAgain(): never {
   location.assign(`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`);
   throw new Error('Your session expired. Sign in again.');
 }
+/** An API error that keeps its HTTP status (409 means the entry changed since it was read). */
+export class RequestError extends Error {
+  constructor(message: string, readonly status: number) { super(message); }
+}
 export async function journalRequest<T>(kind: JournalKind, method: 'POST' | 'DELETE', input: unknown): Promise<T> {
   const response = await fetch(`/api/entries/${kind}`, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) });
   if (response.status === 401) signInAgain();
   const result = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(result.error || 'Request failed. Please retry.');
+  if (!response.ok) throw new RequestError(result.error || 'Request failed. Please retry.', response.status);
   return result as T;
+}
+/** One saved entry with its current revision, or null when it no longer exists. */
+export async function fetchEntry<T extends JournalEntry>(kind: JournalKind, id: string): Promise<JournalItem<T> | null> {
+  const response = await fetch(`/api/entries/${kind}?id=${encodeURIComponent(id)}`, { cache: 'no-store' });
+  if (response.status === 401) signInAgain();
+  if (response.status === 404) return null;
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new RequestError(result.error || 'This entry could not load.', response.status);
+  return result as JournalItem<T>;
 }
 
 export const entryId = (entry: JournalEntry) => 'slug' in entry ? entry.slug : entry.id;
@@ -60,8 +73,9 @@ export function JournalEditor({ kind, item, isNew, recovered, onSaved, onCancel,
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [status, setStatus] = useState(recovered ? 'Recovered your unsaved draft.' : '');
+  const [revision, setRevision] = useState(item.revision);
+  const [conflict, setConflict] = useState(false);
   const first = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
-  const revision = item.revision;
 
   useEffect(() => { first.current?.focus(); }, []);
   useEffect(() => { onDirtyChange?.(dirty); }, [dirty]);
@@ -87,7 +101,23 @@ export function JournalEditor({ kind, item, isNew, recovered, onSaved, onCancel,
       setDirty(false);
       window.dispatchEvent(new Event('workspace-saved'));
       onSaved(saved);
-    } catch (e) { setError((e as Error).message); setBusy(false); }
+    } catch (e) { fail(e); }
+  }
+  function fail(e: unknown) {
+    setError((e as Error).message);
+    setConflict(e instanceof RequestError && e.status === 409);
+    setBusy(false);
+  }
+  /** After a conflict: adopt the latest saved revision but keep what was typed, so Save replaces it. */
+  async function takeLatest() {
+    setBusy(true);
+    try {
+      const latest = isNew ? null : await fetchEntry(kind, entryId(entry));
+      setRevision(latest?.revision ?? null);
+      setConflict(false); setError('');
+      setStatus(latest ? 'Loaded the latest saved revision. Save replaces it with your text.' : 'The saved entry is gone. Save creates it again with your text.');
+    } catch (e) { setError((e as Error).message); }
+    finally { setBusy(false); }
   }
   async function remove() {
     if (!window.confirm(`Delete ${titleOf(entry)}? This cannot be undone.`)) return;
@@ -98,7 +128,7 @@ export function JournalEditor({ kind, item, isNew, recovered, onSaved, onCancel,
       setDirty(false);
       window.dispatchEvent(new Event('workspace-saved'));
       onDeleted(entryId(entry));
-    } catch (e) { setError((e as Error).message); setBusy(false); }
+    } catch (e) { fail(e); }
   }
   function cancel() {
     clearDraft(kind);
@@ -138,7 +168,10 @@ export function JournalEditor({ kind, item, isNew, recovered, onSaved, onCancel,
         {!isNew && <Button variant="danger" className="ml-auto" onClick={() => void remove()}>Delete</Button>}
       </div>
     </fieldset>
-    {error && <p role="alert" className="m-0 border border-accent p-3 text-sm text-ink">{error}{error.toLowerCase().includes('changed') && ' Copy your text before reopening the entry: the saved version is newer.'}</p>}
+    {error && <div role="alert" className="flex flex-col gap-3 border border-accent p-3 text-sm text-ink">
+      <p className="m-0">{error}{conflict && ' Someone saved this entry after you opened it. Your text is still here.'}</p>
+      {conflict && <Button size="sm" className="self-start" disabled={busy} onClick={() => void takeLatest()}>Keep my text and save over it</Button>}
+    </div>}
     <p role="status" className="m-0 font-mono text-xs text-ink-60">{status}</p>
   </form>;
 }
