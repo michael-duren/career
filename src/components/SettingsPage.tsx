@@ -5,7 +5,7 @@ import {
   lockedBy, moduleById, moduleStatus, moveModule, orderedModules, saveSettings, settingsSchema, tabBarHint, tabBarModules, type ModuleId, type Settings,
   type SettingsPatch,
 } from '../lib/modules';
-import { HatchFill, Label, Switch } from './ui';
+import { HatchFill, Label, Switch, buttonClassName } from './ui';
 import { ThemePicker } from './ThemePicker';
 
 // Settings (docs/redesign/pages/settings-modules.md; reference/desktop/ARC-Settings.html and
@@ -13,9 +13,10 @@ import { ThemePicker } from './ThemePicker';
 // a back link to More instead of the nav. Changes save at once with PATCH /api/settings, and
 // saveSettings() announces them so the header and tab bar update without a reload.
 
-export type SettingsSection = 'modules' | 'theme' | 'account';
+export type SettingsSection = 'general' | 'modules' | 'theme' | 'account';
 
 const SECTIONS: { id: SettingsSection; label: string }[] = [
+  { id: 'general', label: 'General' },
   { id: 'modules', label: 'Modules' },
   { id: 'theme', label: 'Theme' },
   { id: 'account', label: 'Account' },
@@ -42,6 +43,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
       </nav>
       <div className="min-w-0">
         <a href="/more" className="mb-1 -mt-2 flex min-h-11 items-center self-start font-mono text-[11px] tracking-[0.12em] text-ink-60 no-underline hover:text-ink md:hidden">← MORE</a>
+        {section === 'general' && <GeneralSection />}
         {section === 'modules' && <ModulesSection />}
         {section === 'theme' && <ThemeSection />}
         {section === 'account' && <AccountSection />}
@@ -304,6 +306,20 @@ function OrderList({ settings, onReorder }: { settings: Settings; onReorder: (or
       <p id="module-order-help" className="ui-sr-only">Drag, or use the up and down arrow keys, to move a module. The first three turned-on modules fill the phone tab bar.</p>
       <p aria-live="polite" className="ui-sr-only">{announcement}</p>
     </>
+  );
+}
+
+// General holds only "run setup again" for now (docs/redesign/pages/setup.md).
+function GeneralSection() {
+  return (
+    <section className="flex flex-col">
+      <SectionHeading heading="General" />
+      <div className="mt-[30px] flex flex-col items-start gap-3 border-t border-ink-14 pt-5">
+        <h2 className="m-0 text-xs font-medium tracking-[0.24em]">FIRST-RUN SETUP</h2>
+        <p className={intro}>Walk through focus, modules, connections, theme and a first goal again. Your data is kept; Finish saves the modules you pick.</p>
+        <a href="/setup" className={buttonClassName()}>RUN SETUP AGAIN</a>
+      </div>
+    </section>
   );
 }
 

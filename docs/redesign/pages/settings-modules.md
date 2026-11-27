@@ -1,7 +1,7 @@
 # Settings → Modules and Theme
 
-**Current code:** `src/pages/settings/{modules,theme,account}.astro` → `src/components/SettingsPage.tsx` (`/settings` redirects to `/settings/modules`).
-General, Integrations and Reminders are not built yet, so the nav lists only Modules, Theme and Account.
+**Current code:** `src/pages/settings/{general,modules,theme,account}.astro` → `src/components/SettingsPage.tsx` (`/settings` redirects to `/settings/modules`).
+General holds only "Run setup again" (see `setup.md`). Integrations and Reminders are not built yet, so the nav lists General, Modules, Theme and Account.
 **Reference:** desktop `reference/desktop/ARC-Settings.html` · mobile `reference/mobile/M-Modules.html` (from `reference/mobile/M-More.html`)
 
 ## Purpose

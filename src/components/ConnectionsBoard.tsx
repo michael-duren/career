@@ -166,6 +166,10 @@ export function ConnectionsBoard() {
       } else if (params.get('new') === '1') {
         setTab('people');
         setDraft(newConnection(company));
+      } else if (params.get('import') === '1') {
+        // From setup's "LinkedIn export" step.
+        setTab('people');
+        openImport();
       }
     });
   }, []);

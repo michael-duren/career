@@ -188,7 +188,8 @@ Pages (`/documents/*`, the `document` kind, `page` in MCP) belong to no module a
 on. A turned-off module keeps its data, and `GET /api/export` still includes everything. A module missing from the
 stored settings counts as on. If the settings cannot be read, guarded routes return 503
 instead of guessing. The settings migration keeps every module on and marks setup done for
-any install that was already migrated. A new database still needs setup.
+any install that was already migrated. A new database still needs setup: after login, a null
+`setupCompletedAt` sends the user to `/setup` (first-run setup), which Settings → General can run again.
 
 ### Catch-up queue
 

@@ -1,6 +1,6 @@
 # First-run setup
 
-**Current code:** new: src/pages/setup.astro
+**Current code:** `src/pages/setup.astro` → `src/components/SetupWizard.tsx`, helpers in `src/lib/setup.ts`. The login page sends users with no `setupCompletedAt` to `/setup`; Settings → General (`/settings/general`) runs it again.
 **Reference:** desktop `reference/setup/ARC-Setup-1..5.html` · mobile `reference/setup/M-Setup-1..5.html`
 
 ## Purpose
@@ -24,6 +24,15 @@ Walk new users through focus → modules → connect → theme → first goal.
 ## Mobile
 
 Same five steps in one column; focus cards stacked; theme previews in a 2×2 grid.
+
+## Notes
+
+- Nothing is saved before Finish except the theme (step 4 applies and saves it at once, like Settings → Theme). Finish saves the modules that are effectively on (a module whose dependency is off is saved off) and `setupCompletedAt`, then adds the goal if one was named.
+- No focus picked suggests every module on. A re-run starts from the saved modules until a focus is picked, and shows EXIT SETUP (saves nothing) instead of SKIP SETUP, so it can't reset a configured install.
+- Nothing that saves is enabled until the saved settings load; a failed load shows Try again.
+- The goal fields are optional; a blank name adds no goal. With Timeline off the step shows only the summary.
+- Connect buttons open the existing setup pages in a new tab (Schedule for Google, People's LinkedIn import via `/connections?import=1`, Leetgrinder settings for ntfy and the extension); Claude (MCP) copies `<origin>/api/mcp`.
+- Setup is not a module, so it is never hidden.
 
 ## Acceptance criteria
 
