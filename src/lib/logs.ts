@@ -20,6 +20,8 @@ export type LogSection = 'day' | 'blockers' | 'notes';
 
 export interface LogDoc {
   id: string;
+  /** The week's entry id, for links back to it in the journal. */
+  slug?: string;
   week: number;
   year: number;
   weekDates: string;
@@ -96,6 +98,8 @@ export function shortDate(dates: string): string {
 
 export function trackLabel(key: string): string {
   if (TRACK_META[key]) return TRACK_META[key].name;
+  // Keys typed as names ("LeetCode", "System design") are shown as written.
+  if (!/^[a-z]/.test(key)) return key;
   return key
     .replace(/([a-z])([A-Z])/g, '$1 $2')
     .replace(/^./, (c) => c.toUpperCase());
@@ -109,9 +113,15 @@ function toParts(lines: string[]): LogPart[] {
   for (const l of lines) {
     const t = l.trim();
     if (t === '' || t === '-' || t === '*') continue;
-    const m = /^([A-Z][A-Za-z]{0,11}):\s*(.*)$/.exec(t);
+    // A bullet starts a new part; its marker is not part of the text.
+    const bullet = /^[-*+]\s+(.*)$/.exec(t);
+    const item = bullet ? bullet[1] : t;
+    const m = /^([A-Z][A-Za-z]{0,11}):\s*(.*)$/.exec(item);
     if (m) {
       cur = { label: m[1], text: m[2] };
+      parts.push(cur);
+    } else if (bullet) {
+      cur = { label: '', text: item };
       parts.push(cur);
     } else if (cur) {
       cur.text += (cur.text ? ' ' : '') + t;
@@ -138,6 +148,7 @@ function makeDoc(
 ): LogDoc {
   return {
     id: `${w.year}-w${w.week}-${section}-${day || section}`,
+    slug: w.slug,
     week: w.week,
     year: w.year,
     weekDates: w.dates,

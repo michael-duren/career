@@ -12,7 +12,7 @@ import { AudioLines, Trash2 } from 'lucide-react';
 import { tagChipClass } from '../lib/tag-colors';
 import { filterNotes, noteCardDate, noteStats, topicCounts, withoutTitleHeading } from '../lib/note-card';
 import { NotesList } from './NotesList';
-import { Label, buttonClassName } from './ui';
+import { Button, Label, buttonClassName } from './ui';
 import type { BookType } from '../lib/books';
 import { pauseSync, queuedClips, removeClip, syncClips, takesForThought, type QueuedClip } from '../lib/running-queue';
 
@@ -511,14 +511,22 @@ export function QuickJournal({ returnTo }: { returnTo?: string } = {}) {
     } catch (e) { setError((e as Error).message); }
     finally { if (!leaving) setBusy(false); }
   }
-  return <section className="rounded-xl border border-blue-900/60 bg-zinc-900 p-5 space-y-4">
-    <div className="flex flex-wrap justify-between gap-2"><div>{!returnTo && <h2 className="text-xl font-semibold">A moment to reflect</h2>}<p className={`${returnTo ? '' : 'mt-1 '}text-sm text-zinc-400`}>What did you learn, finish, or get stuck on?</p></div>{returnTo ? <a className="text-sm text-blue-400 hover:underline" href={returnTo}>← Back to journal</a> : <a className="text-sm text-blue-400 hover:underline" href="/journal">Open journal →</a>}</div>
-    <form onSubmit={e => { e.preventDefault(); void save(); }} className="space-y-3"><fieldset disabled={busy || !ready} className="space-y-3">
-      <div className="flex flex-wrap gap-3 items-end"><label className="text-sm">Entry date<input type="date" required min="2026-04-20" max="2199-12-31" className={`${field} mt-1`} value={date} onChange={e => setDate(e.target.value)} /></label><button type="button" className={button} aria-pressed={preview} onClick={() => setPreview(!preview)}>{preview ? 'Write' : 'Markdown preview'}</button></div>
-      {preview ? <div className="min-h-32 rounded-lg bg-zinc-950 p-4"><Preview body={body} /></div> : <textarea aria-label="Journal entry in Markdown" className={`${field} min-h-32`} required maxLength={50000} placeholder="Today I learned…" value={body} onChange={e => { setBody(e.target.value); setStatus(''); }} />}
-      <button className={primary} type="submit" disabled={!body.trim()}>{busy ? 'Saving…' : 'Save entry'}</button> <button className={button} type="button" onClick={() => { if (returnTo && body.trim() && !window.confirm('Discard this unsaved entry?')) return; setBody(''); setDate(localDate()); setPreview(false); setError(''); setStatus('Cancelled.'); if (returnTo) { try { localStorage.removeItem(draftKey('quick')); } catch { /* Draft recovery is optional. */ } window.location.assign(returnTo); } }}>Cancel</button>
+  const discard = () => {
+    if (returnTo && body.trim() && !window.confirm('Discard this unsaved entry?')) return;
+    setBody(''); setDate(localDate()); setPreview(false); setError(''); setStatus('Cancelled.');
+    if (returnTo) { try { localStorage.removeItem(draftKey('quick')); } catch { /* Draft recovery is optional. */ } window.location.assign(returnTo); }
+  };
+  return <section className="mt-8 flex flex-col gap-5">
+    {!returnTo && <div className="flex flex-wrap items-end justify-between gap-2"><div><h2 className="ui-section-header__title">A moment to reflect</h2><p className="m-0 mt-1 text-sm font-light text-ink-60">What did you learn, finish, or get stuck on?</p></div><a className="ui-label py-2 hover:text-ink" href="/journal">Open journal →</a></div>}
+    <form onSubmit={e => { e.preventDefault(); void save(); }} className="flex flex-col gap-5"><fieldset disabled={busy || !ready} className="m-0 flex min-w-0 flex-col gap-5 border-0 p-0 disabled:opacity-60">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <label className="ui-field w-full sm:w-56"><span className="ui-label">Entry date</span><input type="date" required min="2026-04-20" max="2199-12-31" className="ui-field__input" value={date} onChange={e => setDate(e.target.value)} /></label>
+        <Button size="sm" aria-pressed={preview} onClick={() => setPreview(!preview)}>{preview ? 'Write' : 'Markdown preview'}</Button>
+      </div>
+      {preview ? <div className="min-h-48 border border-ink-30 p-4"><Preview body={body} /></div> : <textarea aria-label="Journal entry in Markdown" className="min-h-64 w-full resize-y border border-ink-30 bg-transparent p-3 text-[16px] font-light leading-relaxed text-ink placeholder:text-ink-60 focus:border-ink" required maxLength={50000} placeholder={'Today I learned…'} value={body} onChange={e => { setBody(e.target.value); setStatus(''); }} />}
+      <div className="flex flex-wrap gap-2"><Button variant="primary" type="submit" disabled={!body.trim()}>{busy ? 'Saving…' : 'Save entry'}</Button><Button onClick={discard}>Cancel</Button></div>
     </fieldset></form>
-    {error && <p role="alert" className="text-sm text-red-300">{error} {error.includes('session') && <a href="/login" className="underline">Sign in</a>}</p>}
-    <p role="status" className="text-sm text-zinc-400">{status}</p>
+    {error && <p role="alert" className="m-0 border border-accent p-3 text-sm">{error} {error.includes('session') && <a href="/login" className="underline">Sign in</a>}</p>}
+    <p role="status" className="m-0 font-mono text-xs text-ink-60">{status}</p>
   </section>;
 }
