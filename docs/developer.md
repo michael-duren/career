@@ -106,10 +106,49 @@ make test-postgres  # Go race tests against local PostgreSQL
 npm test            # TypeScript unit tests and extension tests
 npm run tc          # Astro sync and TypeScript check
 npm run test:e2e    # Playwright against an already running server
+npm run test:visual # screenshot tests, in Docker (see below)
 ```
 
 Playwright does not start the app. Point it at a disposable, migrated workspace with
 `TEST_BASE_URL` (default `http://127.0.0.1:4337`), `AUTH_USERNAME` and `TEST_AUTH_PASSWORD`.
+
+### Visual regression tests
+
+`tests/visual` screenshots every page at 1280×800 and 390×844 in all four themes and
+compares each against its PNG in `tests/visual/__screenshots__` pixel for pixel. It has its
+own config (`playwright.visual.config.ts`), so `npm run test:e2e` never runs it.
+
+Always run it through `npm run test:visual` (`scripts/visual-tests.sh`), which CI runs too.
+The script starts a throwaway `postgres:18` container, migrates it, seeds it from
+`tests/visual/workspace.json`, builds the frontend and the Go server from your checkout,
+and runs Playwright inside `mcr.microsoft.com/playwright:v<version>-noble` (the installed
+`@playwright/test` version). Text rendering depends on the OS, fonts and Chromium build,
+so baselines made by a Playwright on your own machine would not match CI. It needs Docker
+with host networking (Linux), Go and Node. Extra arguments go to Playwright.
+
+The pages are made deterministic rather than compared loosely: the browser clock is
+frozen at Wednesday 2026-11-18 10:30 in America/Chicago (the fixture's dates are relative
+to that day), requests that leave the app are blocked (company logos fall back to
+initials), and each shot waits for data, fonts and images with motion reduced. The server
+keeps its real clock, but the fixture's dates are all in the past, so it sees the same
+history whatever day the suite runs. A region that shows the server's own date would
+need a `mask`. Each shot is the full page: the viewport grows to the page's height, so the
+phone tab bar sits at the bottom.
+
+To update the baselines after an intended UI change, or after a Playwright upgrade:
+
+```sh
+npm run test:visual -- --update-snapshots           # every page
+npm run test:visual -- --update-snapshots -g books  # only matching tests
+```
+
+Look at the changed PNGs (`git diff --stat`, then open them) before committing. When a run
+fails, `playwright-report-visual/` holds the expected, actual and diff images; in CI they
+are in the `visual-report` artifact. Changing `workspace.json` changes most screenshots,
+so update the baselines in the same commit.
+
+`tests/e2e/modules-off.spec.ts` (part of `npm run test:e2e`) checks that turning a module off
+makes its pages and API answer 404, along with every module that depends on it.
 
 Feature-specific suites:
 

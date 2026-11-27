@@ -13,6 +13,7 @@
     "test": "node --test tests/format.test.ts tests/agent-view.test.ts tests/home.test.ts tests/modules.test.ts tests/setup.test.ts tests/shell.test.ts tests/site-search.test.ts tests/goal-dependencies.test.ts tests/goal-progress.test.ts tests/mini-goals.test.ts tests/workspace.test.ts tests/timeline.test.ts tests/scheduler.test.ts tests/schedule-view.test.ts tests/search.test.ts tests/journals.test.ts tests/journal.test.ts tests/companies.test.ts tests/books.test.ts tests/connections.test.ts tests/running.test.ts tests/tag-colors.test.ts tests/theme.test.ts tests/fonts.test.ts tests/ui.test.ts extension/leetgrinder/test/correctness.test.js extension/leetgrinder/test/lib.test.js extension/leetgrinder/test/ui.test.js extension/leetgrinder/test/outbox.test.js extension/leetgrinder/test/leetcode.test.js extension/leetgrinder/test/neetcode.test.js",
     "test:mcp:deferred": "node --test tests/mcp.test.ts tests/mcp-oauth.test.ts tests/mcp-bridge.test.mjs",
     "test:e2e": "playwright test",
+    "test:visual": "bash scripts/visual-tests.sh",
     "mcp": "node scripts/career-mcp.mjs",
     "check:mcp-oauth": "node scripts/check-mcp-oauth.mjs"
   },

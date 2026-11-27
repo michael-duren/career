@@ -23,6 +23,8 @@ pnpm-debug.log*
 # Playwright
 /test-results/
 /playwright-report/
+/test-results-visual/
+/playwright-report-visual/
 /playwright/.auth/
 
 # Binaries for programs and plugins
