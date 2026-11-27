@@ -136,8 +136,9 @@ export async function checkAuth(
 
 /**
  * Signs out from Settings → Account and the phone More page: ends the session, then clears the
- * saved username and token and the shell's cached module settings (SETTINGS_CACHE_KEY in
- * public/ui/shell.js; keep in sync) and goes to /login. Resolves false and keeps everything when
+ * saved username and token, the shell's cached module settings (SETTINGS_CACHE_KEY in
+ * public/ui/shell.js) and recent searches (RECENT_KEY in public/ui/site-search.js; keep both in sync)
+ * and goes to /login. Resolves false and keeps everything when
  * the logout request fails (offline, 5xx), since the session cookie would still be valid; a 401
  * means the session had already ended.
  */
@@ -151,6 +152,7 @@ export async function signOut(): Promise<boolean> {
   try {
     AuthService.clearAuth();
     localStorage.removeItem("career-shell-settings");
+    localStorage.removeItem("career-recent-searches");
   } catch {
     // Storage blocked: the logout request already ended the session.
   }

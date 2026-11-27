@@ -11,12 +11,14 @@
     <button id="search-clear" type="button" aria-label="Clear search" hidden>×</button>
     <kbd class="search-shortcut" aria-hidden="true">/</kbd>
   </div>
+  <button type="button" class="search-cancel" data-app-search-cancel>Cancel</button>
   <div id="search-panel" hidden>
-    <div class="search-panel-top"><span>Your workspace</span>
-      <select id="search-kind" aria-label="Search collection"><option value="">All collections</option><option value="note">Notes</option><option value="document">Documents</option><option value="book">Books</option><option value="company">Companies</option><option value="connection">Connections</option><option value="week">Work journal</option><option value="personal">Personal journal</option><option value="run">Audio thoughts</option></select>
-    </div>
     <p id="search-status" role="status"></p>
-    <ul id="search-results" aria-label="Search results"></ul>
+    <div id="search-results"></div>
+    <div id="search-recent" hidden>
+      <h2 id="search-recent-title">Recent</h2>
+      <div id="search-recent-list" role="group" aria-labelledby="search-recent-title"></div>
+    </div>
     <div class="search-panel-footer"><span><kbd>↑</kbd><kbd>↓</kbd> navigate <kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></div>
   </div>
 </div>
