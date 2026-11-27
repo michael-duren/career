@@ -43,7 +43,7 @@ test('groups follow the saved module order, documents last, with totals from eve
   ];
   const groups = groupResults(results, { document: 1, week: 7, personal: 2, goal: 1, note: 1 }, ['notes', 'journal']);
   assert.deepEqual(groups.map(g => g.label), ['Notes', 'Journal', 'Goals', 'Documents']);
-  assert.deepEqual(groups[1].results.map(r => r.id), ['w', 'p']);
+  assert.deepEqual(groups[1].results.map((r: { id: string }) => r.id), ['w', 'p']);
   assert.equal(groups[1].total, 9);
   // Without totals the shown results count.
   assert.equal(groupResults(results)[0].total, 1);
