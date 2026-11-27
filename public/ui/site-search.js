@@ -209,7 +209,7 @@ function initSearch(root) {
     let data;
     try {
       const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`, { cache: 'no-store', signal: request.signal });
-      if (response.status === 401) { status.textContent = 'Sign in again to search.'; return; }
+      if (response.status === 401) { if (current === version) status.textContent = 'Sign in again to search.'; return; }
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       data = await response.json();
     } catch (error) {
