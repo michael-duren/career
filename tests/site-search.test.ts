@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { GROUP_LABELS, RECENT_KEY, RECENT_LIMIT, REGISTRY_ORDER, addRecent, contextLine, groupResults, resultHref } from '../public/ui/site-search.js';
+import { GROUP_LABELS, RECENT_KEY, RECENT_LIMIT, REGISTRY_ORDER, addRecent, contextLine, groupResults, resultHref, resultIconPath } from '../public/ui/site-search.js';
+import { ITEM_TYPE_PATHS } from '../public/ui/item-type-icons.js';
 import { MODULES } from '../src/lib/modules.ts';
 
 test('search groups cover exactly the modules with search results, in registry order', () => {
@@ -53,4 +54,16 @@ test('recent searches put the latest first without repeats', () => {
   assert.deepEqual(addRecent(['raft', 'Grafana'], ' grafana '), ['grafana', 'raft']);
   assert.deepEqual(addRecent(['a'], '  '), ['a']);
   assert.equal(addRecent(['a', 'b', 'c', 'd', 'e'], 'f').length, RECENT_LIMIT);
+});
+
+test('book results draw their item type icon, the same marks as the Bookshelf', () => {
+  assert.equal(resultIconPath({ kind: 'book', type: 'paper' }), ITEM_TYPE_PATHS.paper);
+  assert.equal(resultIconPath({ kind: 'book', type: 'course' }), ITEM_TYPE_PATHS.course);
+  assert.equal(resultIconPath({ kind: 'book', type: 'book' }), ITEM_TYPE_PATHS.book);
+  // An unknown or missing type still reads as a book; other kinds have no icon.
+  assert.equal(resultIconPath({ kind: 'book' }), ITEM_TYPE_PATHS.book);
+  assert.equal(resultIconPath({ kind: 'note', type: 'paper' }), undefined);
+  // The React icons draw from the same paths.
+  const icons = readFileSync('src/components/ui/icons.tsx', 'utf8');
+  for (const type of ['book', 'paper', 'course']) assert.match(icons, new RegExp(`ITEM_TYPE_PATHS\\.${type}\\b`));
 });

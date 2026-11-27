@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from 'react';
-import { dayNumber, dayString, fitRange, goalProgress, goalState, goalTag, monthLabel, monthName, monthOffset, shiftGoal, timelineCounts, timelineHours, type Goal } from '../lib/timeline';
+import { DEFAULT_GOAL_COLOR, dayNumber, dayString, fitRange, goalProgress, goalState, goalTag, monthLabel, monthName, monthOffset, shiftGoal, timelineCounts, timelineHours, type Goal } from '../lib/timeline';
 import { localDate } from '../lib/workspace';
 import { formatHours, goalPace, type GoalHours } from '../lib/goal-progress';
 import { formatDate, formatTime } from '../lib/format';
@@ -15,8 +15,6 @@ const RANGE_TABS = [
   { value: 'fit', label: 'Fit' }, { value: '6', label: '6M' }, { value: '12', label: '1Y' },
   { value: '24', label: '2Y' }, { value: '60', label: '5Y' }, { value: '120', label: '10Y' },
 ] as const;
-// New goals still get a color: the Weekly Scheduler draws goals with it. The timeline itself is ink only.
-const colors = ['#67e8f9', '#c4b5fd', '#fda4af', '#86efac', '#fcd34d', '#93c5fd', '#fdba74'];
 const pad = (value: number) => String(value).padStart(2, '0');
 // "Nov 24, 2026" for a YYYY-MM-DD date.
 const longDate = (date: string) => `${formatDate(date)}, ${date.slice(0, 4)}`;
@@ -101,7 +99,7 @@ export function GoalTimeline() {
     if (!loaded || busy) return;
     const now = new Date().toISOString();
     open({ id: crypto.randomUUID(), title: `Goal ${goals.length + 1}`, startDate: date,
-      endDate: monthOffset(date, 3), dailyHours: 1, color: colors[Math.floor(Math.random() * colors.length)],
+      endDate: monthOffset(date, 3), dailyHours: 1, color: DEFAULT_GOAL_COLOR,
       status: 'planned', dependsOn: [], createdAt: now, updatedAt: now, notes: [], metadata: {}, steps: [] }, true);
   }
   async function save(goal: Goal) {

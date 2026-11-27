@@ -1,12 +1,12 @@
 export const PLAN_START = new Date('2026-04-20T00:00:00Z');
-export const TRACK_META: Record<string, { name: string; color: string }> = {
-  ostep: { name: 'OSTEP', color: '#a78bfa' },
-  ebpf: { name: 'eBPF', color: '#60a5fa' },
-  database: { name: 'Database project', color: '#fbbf24' },
-  systemDesign: { name: 'System Design', color: '#34d399' },
-  algorithms: { name: 'Algorithms (historical)', color: '#94a3b8' },
-  osOss: { name: 'OS & OSS (historical)', color: '#a1a1aa' },
-  languages: { name: 'Languages (historical)', color: '#d6d3d1' },
+export const TRACK_META: Record<string, { name: string }> = {
+  ostep: { name: 'OSTEP' },
+  ebpf: { name: 'eBPF' },
+  database: { name: 'Database project' },
+  systemDesign: { name: 'System Design' },
+  algorithms: { name: 'Algorithms (historical)' },
+  osOss: { name: 'OS & OSS (historical)' },
+  languages: { name: 'Languages (historical)' },
 };
 export interface WeekEntry {
   week: number;

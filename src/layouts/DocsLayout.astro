@@ -32,7 +32,7 @@ const { wide = false, page = false, title = 'Career Strategy', description = 'Pe
     <AppHeader />
     <main id="main-content" class="min-w-0">
       <div class:list={page ? "app-content app-content--page" : ["app-content mx-auto px-4 sm:px-6", wide ? "max-w-7xl py-6" : "max-w-4xl py-12"]}>
-        {(/^\/2026\/(os-oss|languages|system-design)(\/|$)/.test(Astro.url.pathname)) && <aside class="mb-6 rounded border border-zinc-700 p-4 text-sm text-zinc-400">Archived reference from the earlier curriculum. <a href="/2026/career-study-plan" class="text-blue-400 underline">View the current study plan.</a></aside>}
+        {(/^\/2026\/(os-oss|languages|system-design)(\/|$)/.test(Astro.url.pathname)) && <aside class="mb-6 border border-solid border-ink-30 p-4 text-sm text-ink-60">Archived reference from the earlier curriculum. <a href="/2026/career-study-plan" class="text-ink underline">View the current study plan.</a></aside>}
         <slot />
       </div>
     </main>

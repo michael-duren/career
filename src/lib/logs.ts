@@ -66,23 +66,6 @@ function dayIndexOf(name: string): number {
   return i === -1 ? 6 : i;
 }
 
-// Known track colors mirror the dashboard; unknown (future) tracks get a stable
-// generated color so newly added hour keys render consistently across reloads.
-const KNOWN_TRACK_COLORS: Record<string, string> = {
-  algorithms: '#60a5fa',
-  systemDesign: '#34d399',
-  osOss: '#a78bfa',
-  languages: '#fbbf24',
-};
-
-export function trackColor(key: string): string {
-  if (TRACK_META[key]) return TRACK_META[key].color;
-  if (KNOWN_TRACK_COLORS[key]) return KNOWN_TRACK_COLORS[key];
-  let h = 0;
-  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) % 360;
-  return `hsl(${h} 60% 62%)`;
-}
-
 const MONTHS = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',

@@ -6,9 +6,11 @@
  * Desktop: typing in the header field opens a results panel under it. Phone (< 768px): the top bar's
  * search button (public/ui/shell.js) turns the same markup into a full-screen search page. Results
  * from GET /api/search (turned-off modules are already left out) are grouped by module with a count
- * per group, each a title and one line of context. With an empty field the panel shows recent searches.
+ * per group, each a title and one line of context; books also show their item type's line icon (book,
+ * paper or course, the Bookshelf's marks). With an empty field the panel shows recent searches.
  */
 
+import { ITEM_TYPE_PATHS, ITEM_TYPE_VIEWBOX } from './item-type-icons.js';
 import { SETTINGS_CACHE_KEY } from './shell.js';
 
 /** localStorage key for recent searches (src/lib/auth.ts signOut clears it; keep in sync). */
@@ -38,6 +40,28 @@ export function resultHref(item) {
     case 'personal': return `/journal?tab=personal&id=${id}`;
     default: return `/journal?id=${id}`;
   }
+}
+
+/** The item-type icon path for a result: books carry their type (book, paper, course); others have none. */
+export function resultIconPath(item) {
+  return item.kind === 'book' ? ITEM_TYPE_PATHS[item.type] ?? ITEM_TYPE_PATHS.book : undefined;
+}
+
+const SVG = 'http://www.w3.org/2000/svg';
+
+/** A decorative 16px line icon drawn from item-type-icons.js. */
+function typeIcon(d) {
+  const svg = document.createElementNS(SVG, 'svg');
+  svg.setAttribute('class', 'search-result-icon');
+  svg.setAttribute('viewBox', `0 0 ${ITEM_TYPE_VIEWBOX} ${ITEM_TYPE_VIEWBOX}`);
+  svg.setAttribute('width', '16');
+  svg.setAttribute('height', '16');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  const path = document.createElementNS(SVG, 'path');
+  path.setAttribute('d', d);
+  svg.append(path);
+  return svg;
 }
 
 /** The excerpt as one plain line: Markdown marks, list bullets, checkboxes and line breaks go. */
@@ -154,6 +178,12 @@ function initSearch(root) {
     const link = document.createElement('a');
     link.href = resultHref(item);
     link.className = 'search-result';
+    const icon = resultIconPath(item);
+    if (icon) {
+      link.classList.add('search-result--typed');
+      link.dataset.type = item.type ?? 'book';
+      link.append(typeIcon(icon));
+    }
     const title = document.createElement('span');
     title.className = 'search-result-title';
     title.textContent = item.title;

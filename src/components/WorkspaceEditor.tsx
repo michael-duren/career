@@ -57,7 +57,7 @@ function draftKey(kind: string) {
   return `career-workspace:v1:${localStorage.getItem('auth_username') || 'user'}:${kind}`;
 }
 function Preview({ body }: { body: string }) {
-  return <MarkdownPreview body={body} ink />;
+  return <MarkdownPreview body={body} />;
 }
 function Transcribing({ label }: { label: string }) {
   return <span className="inline-flex items-center gap-2 text-sm text-ink-60"><span className="size-1.5 animate-pulse rounded-full bg-accent" />{label}</span>;
@@ -410,10 +410,10 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
     </div>}
     {(!run || entry) && <div className={listFirst ? "space-y-5" : "grid gap-5 md:grid-cols-[220px_minmax(0,1fr)]"}>
       {!notes && !run && <nav hidden={reading} aria-label={`${labels[kind]} entries`} className={listFirst ? "space-y-2" : "max-h-72 overflow-y-auto space-y-2 md:max-h-[700px]"}>
-        {entries && filtered.length === 0 && <p className="text-sm text-zinc-400">No matching entries.</p>}
-        {filtered.map(item => <button type="button" disabled={busy} key={entryId(item)} onClick={() => choose(item)} className={`w-full rounded-lg border p-3 text-left ${entry && entryId(entry) === entryId(item) ? 'border-blue-500 bg-blue-950/30' : 'border-zinc-800 hover:bg-zinc-900'}`}>
+        {entries && filtered.length === 0 && <p className="text-sm text-ink-60">No matching entries.</p>}
+        {filtered.map(item => <button type="button" disabled={busy} key={entryId(item)} onClick={() => choose(item)} aria-current={entry && entryId(entry) === entryId(item) ? 'true' : undefined} className={`w-full border border-solid p-3 text-left text-ink ${entry && entryId(entry) === entryId(item) ? 'border-ink bg-ink-07' : 'border-ink-14 hover:bg-ink-05'}`}>
           <span className="block text-sm font-medium">{entryTitle(item)}</span>
-          <span className="mt-1 block text-xs text-zinc-400">{'week' in item ? (item.hours ? `${Object.values(item.hours as Record<string, number>).reduce((a, b) => a + b, 0)}h logged` : 'Work journal') : 'status' in item ? item.status.replaceAll('_', ' ') : 'description' in item ? item.description : 'runDate' in item ? item.runDate : ''}</span>
+          <span className="mt-1 block text-xs text-ink-60">{'week' in item ? (item.hours ? `${Object.values(item.hours as Record<string, number>).reduce((a, b) => a + b, 0)}h logged` : 'Work journal') : 'status' in item ? item.status.replaceAll('_', ' ') : 'description' in item ? item.description : 'runDate' in item ? item.runDate : ''}</span>
         </button>)}
       </nav>}
       {entry && <div className={`order-first min-w-0 md:order-last ${notes || run ? 'max-w-[920px]' : 'border border-solid border-ink-14 p-4 sm:p-5'}`}>

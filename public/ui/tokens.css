@@ -3,8 +3,8 @@
  * Plain CSS so Go templ pages can link /ui/tokens.css; Astro pages get it through src/styles/global.css.
  * Themes only swap values: set data-theme="dark|vellum|cobalt|concrete" on <html>.
  * Dark is the default, so it also applies when the attribute is missing or unknown.
- * Legacy zinc/blue colors in global.css and the page components are not tokenized yet: pages
- * support every theme once their redesign issue migrates them (the Leetgrinder pages have).
+ * This is the only place raw color values live: everything else uses these tokens
+ * (tests/no-raw-colors.test.ts enforces it).
  */
 :root,
 [data-theme="dark"] {

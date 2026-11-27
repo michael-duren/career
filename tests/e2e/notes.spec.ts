@@ -98,8 +98,8 @@ test('a card opens the note in place; the reader keeps the editor and todos', as
   expect(new URL(page.url()).pathname).toBe('/notes');
   await expect(main.getByRole('heading', { level: 1, name: 'Raft consensus' })).toHaveCount(1);
   // The body's leading "# Raft consensus" is not repeated under the title.
-  await expect(main.locator('.prose-ink strong')).toHaveText('elections');
-  await expect(main.locator('.prose-ink h1')).toHaveCount(0);
+  await expect(main.locator('.prose strong')).toHaveText('elections');
+  await expect(main.locator('.prose h1')).toHaveCount(0);
 
   // Checking a todo while reading saves it straight away with the loaded revision.
   await main.getByRole('checkbox', { name: 'Mark Log replication done' }).click();
@@ -120,6 +120,27 @@ test('a card opens the note in place; the reader keeps the editor and todos', as
   await main.getByRole('button', { name: '← Back to notes' }).click();
   await expect(main.getByRole('heading', { level: 1, name: 'Notes' })).toBeVisible();
   await expect(main.getByRole('link', { name: /Raft consensus/ })).toBeFocused();
+});
+
+test('an unsaved edit guards Back and survives a reload', async ({ page }) => {
+  await mockNotes(page);
+  await page.goto('/notes?id=systems%2Fraft');
+  const main = page.locator('main');
+  await main.getByRole('button', { name: 'Edit' }).click();
+  await main.getByRole('textbox', { name: 'Markdown' }).fill('Protected draft');
+
+  // Declining the confirm keeps the editor and the draft.
+  page.once('dialog', dialog => dialog.dismiss());
+  await main.getByRole('button', { name: '← Back to notes' }).click();
+  await expect(main.getByRole('textbox', { name: 'Markdown' })).toHaveValue('Protected draft');
+
+  // A reload brings the draft back from browser storage.
+  page.once('dialog', dialog => dialog.accept());
+  await page.reload();
+  await expect(main.getByText('Recovered your unsaved draft.')).toBeVisible();
+  await expect(main.getByRole('textbox', { name: 'Markdown' })).toHaveValue('Protected draft');
+  await main.getByRole('button', { name: 'Cancel' }).click();
+  await expect(main.locator('.prose strong')).toHaveText('elections');
 });
 
 test('+ New note starts in the chosen topic and saves a new note', async ({ page }) => {

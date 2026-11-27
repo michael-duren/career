@@ -197,7 +197,8 @@ exact configured `Origin` and a JSON content type.
 - `POST /api/goals/steps/move` reorders or moves a goal step.
 - `GET /api/agent-context`, `GET /api/export`.
 - `GET /api/search?q=` (2–200 bytes after trimming, matched literally, optional `kind`) is the global
-  search: `{ results: [{ kind, id, title, module, context, excerpt, titleMatch }], totals: { <kind>: n } }`.
+  search: `{ results: [{ kind, id, title, module, context, excerpt, titleMatch, type? }], totals: { <kind>: n } }`
+  (`type` is a book's item type: `book`, `paper` or `course`).
   Up to 5 results per kind, title matches first; `totals` counts every match. Kinds are the entry
   kinds (`goal` included) plus `session` (the next planned, not yet ended session of each scheduled
   title) and `problem` (Leetgrinder). Turned-off modules are left out; an unknown `kind` is 400.

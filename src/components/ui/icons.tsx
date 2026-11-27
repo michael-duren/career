@@ -1,5 +1,6 @@
 import type { ReactNode, SVGProps } from 'react';
 import { cn } from '../../lib/utils';
+import { ITEM_TYPE_PATHS, ITEM_TYPE_VIEWBOX } from '../../../public/ui/item-type-icons.js';
 
 // Thin line icons (1px stroke, currentColor), never filled. Decorative (aria-hidden): the
 // control around an icon carries the accessible name (IconButton's label, for example).
@@ -46,8 +47,8 @@ export const LinkIcon = icon('Link', <path d="M6.5 9.5 L9.5 6.5 M7 4.5 L8.5 3 A2
 // Skipped: a circle with a slash (drawn in --accent by the caller).
 export const SkippedIcon = icon('Skipped', <><circle cx="8" cy="8" r="7" /><path d="M3 13 L13 3" /></>);
 
-// Bookshelf item types (book, paper, course). Used by the Bookshelf page and meant for search
-// results too (global search, #172), so the same item reads the same everywhere. Drawn on an 18-unit grid (16x18 marks, centred).
-export const BookIcon = icon('Book', <><rect x="2" y="1" width="14" height="16" /><path d="M5 1 V17" /></>, 18);
-export const PaperIcon = icon('Paper', <path d="M2 1 H11 L16 6 V17 H2 Z M11 1 V6 H16" />, 18);
-export const CourseIcon = icon('Course', <><rect x="2" y="3" width="14" height="12" /><path d="M7 6 L12 9 L7 12 Z" /></>, 18);
+// Bookshelf item types (book, paper, course). The drawings live in public/ui/item-type-icons.js so
+// global search results (public/ui/site-search.js) draw the same marks.
+export const BookIcon = icon('Book', <path d={ITEM_TYPE_PATHS.book} />, ITEM_TYPE_VIEWBOX);
+export const PaperIcon = icon('Paper', <path d={ITEM_TYPE_PATHS.paper} />, ITEM_TYPE_VIEWBOX);
+export const CourseIcon = icon('Course', <path d={ITEM_TYPE_PATHS.course} />, ITEM_TYPE_VIEWBOX);
