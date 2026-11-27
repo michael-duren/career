@@ -43,7 +43,8 @@ export function SetupWizard() {
   // One id per wizard. If a POST committed but its response was lost, the retry's 409 on this
   // same id means the goal is already saved.
   const [goalId] = useState(newId);
-  const goalPosted = useRef(false);
+  // The goal last sent, as JSON: a 409 only means "already saved" when the retry sends the same goal.
+  const goalSent = useRef('');
   const heading = useRef<HTMLHeadingElement>(null);
   const firstRender = useRef(true);
 
@@ -107,8 +108,9 @@ export function SetupWizard() {
     await saveSettings(finishPatch(on, new Date()));
     const draft = effective.timeline ? goalFromDraft(goal, goalId, new Date()) : null;
     if (draft) {
-      const retry = goalPosted.current;
-      goalPosted.current = true;
+      const sent = JSON.stringify({ ...draft, createdAt: '', updatedAt: '' });
+      const retry = goalSent.current === sent;
+      goalSent.current = sent;
       const response = await fetch('/api/goals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goal: draft, revision: null }) })
         .catch((e: unknown) => {
           console.warn('POST /api/goals failed', e);
@@ -283,6 +285,8 @@ function StepIndicator({ step }: { step: number }) {
 function ConnectList({ connections }: { connections: SetupConnection[] }) {
   const [copied, setCopied] = useState('');
   const [copyError, setCopyError] = useState('');
+  const resetTimer = useRef(0);
+  useEffect(() => () => window.clearTimeout(resetTimer.current), []);
 
   async function copy() {
     const url = mcpURL(window.location.origin);
@@ -290,7 +294,8 @@ function ConnectList({ connections }: { connections: SetupConnection[] }) {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(url);
-      window.setTimeout(() => setCopied(''), 2500);
+      window.clearTimeout(resetTimer.current);
+      resetTimer.current = window.setTimeout(() => setCopied(''), 2500);
     } catch (e) {
       console.warn('Clipboard write failed', e);
       setCopyError(`Copy failed. The MCP URL is ${url}`);
