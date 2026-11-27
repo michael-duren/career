@@ -1,4 +1,5 @@
 import { test, expect, type APIRequestContext, type Locator, type Page } from '@playwright/test';
+import { formatWeekdayDate } from '../../src/lib/format.ts';
 
 const ownedGoals = new Set<string>();
 
@@ -97,8 +98,10 @@ test('held assignment shows its snapped destination before the matching interval
   await page.mouse.move(target.x + target.width / 2, target.y + 60, { steps: 8 });
   const preview = day.locator('.scheduler-drop-preview');
   await expect(preview).toBeVisible();
-  await expect(preview).toContainText(date!);
-  await expect(preview).toContainText('06:00–07:00');
+  await expect(preview).toContainText(formatWeekdayDate(date!));
+  await expect(preview).toContainText('6:00 AM – 7:00 AM');
+  await expect(preview).toHaveAttribute('data-start', '06:00');
+  await expect(preview).toHaveAttribute('data-end', '07:00');
   await expect(preview).toHaveAttribute('data-duration-minutes', '60');
   expect((await preview.boundingBox())?.height).toBe(60);
   expect(Math.abs((await preview.boundingBox())!.y - (target.y + 60))).toBeLessThan(2);
@@ -120,13 +123,13 @@ test('dragging a goal or subgoal with many uncovered hours places a one-hour blo
   const day = page.locator(`[data-scheduler-date="${date}"]`);
   const preview = day.locator('.scheduler-drop-preview');
 
-  for (const [source, offset, start, end] of [[card.locator('.scheduler-goal-title'), 60, '06:00', '07:00'], [card.locator('.scheduler-step'), 180, '08:00', '09:00']] as const) {
+  for (const [source, offset, start, end] of [[card.locator('.scheduler-goal-title'), 60, '6:00 AM', '7:00 AM'], [card.locator('.scheduler-step'), 180, '8:00 AM', '9:00 AM']] as const) {
     const from = await visibleBox(source);
     const target = (await day.boundingBox())!;
     await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
     await page.mouse.down();
     await page.mouse.move(target.x + target.width / 2, target.y + offset, { steps: 8 });
-    await expect(preview).toContainText(`${start}–${end}`);
+    await expect(preview).toContainText(`${start} – ${end}`);
     await expect(preview).toHaveAttribute('data-duration-minutes', '60');
     await page.mouse.up();
     await expect(page.locator('.scheduler-status')).toContainText('Saved.');
@@ -730,7 +733,7 @@ test('viewport edge scrolling reaches a target below a 1280 by 900 screen', asyn
 });
 
 async function setDateOverride(page: Page, date: string, start: string, end: string) {
-  await page.getByRole('button', { name: 'Day settings' }).click();
+  await page.getByRole('button', { name: 'Rules', exact: true }).click();
   const settings = page.getByRole('region', { name: 'Scheduler settings' });
   await settings.getByText('Date overrides', { exact: true }).click();
   await settings.getByLabel('Date', { exact: true }).fill(date);
@@ -810,8 +813,8 @@ async function cancelGoalSessions(request: APIRequestContext, origin: string, we
 }
 // Double-clicks a day column at a local clock time, using the axis's first label as its origin.
 async function doubleClickerFor(page: Page, date: string) {
-  const label = (await page.locator('.scheduler-axis span').first().textContent())!.match(/^(\d+):(\d+) (AM|PM)$/)!;
-  const axisStart = (Number(label[1]) % 12 + (label[3] === 'PM' ? 12 : 0)) * 60 + Number(label[2]);
+  const label = (await page.locator('.scheduler-axis span').first().textContent())!.match(/^(\d+)(?::(\d+))? (AM|PM)$/)!;
+  const axisStart = (Number(label[1]) % 12 + (label[3] === 'PM' ? 12 : 0)) * 60 + Number(label[2] ?? 0);
   const day = page.locator(`[data-scheduler-date="${date}"]`);
   return async (clock: string) => {
     const box = await visibleBox(day);
@@ -984,9 +987,10 @@ test('mobile touch scrolls the requirement list and drags only from its handle',
   const initialScroll = await page.evaluate(() => scrollY + (document.querySelector('.scheduler-goals')?.scrollTop ?? 0));
   const x = source.x + source.width / 2, y = source.y + source.height / 2;
   await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y, id: 1 }] });
-  for (let step = 1; step <= 5; step++) await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y: y - step * 35, id: 1 }] });
+  // Goal hours sit below the day's timeline on a phone, so panning down scrolls back up toward it.
+  for (let step = 1; step <= 5; step++) await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y: y + step * 35, id: 1 }] });
   await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-  await expect.poll(() => page.evaluate(() => scrollY + (document.querySelector('.scheduler-goals')?.scrollTop ?? 0))).toBeGreaterThan(initialScroll + 50);
+  await expect.poll(() => page.evaluate(() => scrollY + (document.querySelector('.scheduler-goals')?.scrollTop ?? 0))).toBeLessThan(initialScroll - 50);
   await page.waitForTimeout(300);
   await page.evaluate(() => scrollTo(0, 0));
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
@@ -994,8 +998,9 @@ test('mobile touch scrolls the requirement list and drags only from its handle',
   const day = page.locator(`[data-scheduler-date="${date}"]`);
   const target = (await day.boundingBox())!;
   await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: handle.x + handle.width / 2, y: handle.y + handle.height / 2, id: 2 }] });
-  for (let step = 1; step <= 8; step++) await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: handle.x + handle.width / 2 + (target.x + target.width / 2 - handle.x - handle.width / 2) * step / 8, y: handle.y + handle.height / 2 + (830 - handle.y - handle.height / 2) * step / 8, id: 2 }] });
-  await expect.poll(async () => (await day.boundingBox())?.y).toBeLessThan(650);
+  for (let step = 1; step <= 8; step++) await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: handle.x + handle.width / 2 + (target.x + target.width / 2 - handle.x - handle.width / 2) * step / 8, y: handle.y + handle.height / 2 + (10 - handle.y - handle.height / 2) * step / 8, id: 2 }] });
+  // Holding near the top edge auto-scrolls up until the day's timeline is in view.
+  await expect.poll(async () => (await day.boundingBox())?.y).toBeGreaterThan(150);
   await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 220, y: 500, id: 2 }] });
   await page.waitForTimeout(80);
   const visibleDay = (await day.boundingBox())!;
@@ -1021,8 +1026,10 @@ test('mobile touch scrolls the requirement list and drags only from its handle',
   await page.evaluate(() => scrollTo(0, 0));
   const cancelHandle = await visibleBox(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-handle`));
   await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: cancelHandle.x + cancelHandle.width / 2, y: cancelHandle.y + cancelHandle.height / 2, id: 4 }] });
-  await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 220, y: 830, id: 4 }] });
-  await expect.poll(async () => (await day.boundingBox())?.y).toBeLessThan(650);
+  await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 220, y: 10, id: 4 }] });
+  await expect.poll(async () => (await day.boundingBox())?.y).toBeGreaterThan(150);
+  await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 220, y: 500, id: 4 }] });
+  await page.waitForTimeout(80);
   const cancelDay = (await day.boundingBox())!;
   await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: cancelDay.x + cancelDay.width / 2, y: cancelDay.y + 120, id: 4 }] });
   await expect(day.locator('.scheduler-drop-preview')).toBeVisible();
@@ -1047,8 +1054,13 @@ test('tablet touch can start a visible drag handle', async ({ page, request, bas
   await expect(handle).toBeVisible();
   const source = await visibleBox(handle);
   const day = page.locator(`[data-scheduler-date="${date}"]`);
-  const target = (await day.boundingBox())!;
   await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: source.x + source.width / 2, y: source.y + source.height / 2, id: 1 }] });
+  // Goal hours sit below the grid on a tablet: hold near the top edge until the day scrolls into view.
+  await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: source.x + source.width / 2, y: 10, id: 1 }] });
+  await expect.poll(async () => (await day.boundingBox())?.y).toBeGreaterThan(150);
+  await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 400, y: 700, id: 1 }] });
+  await page.waitForTimeout(80);
+  const target = (await day.boundingBox())!;
   await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: target.x + target.width / 2, y: target.y + 60, id: 1 }] });
   await expect(day.locator('.scheduler-drop-preview')).toHaveAttribute('data-start', '06:00');
   await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
@@ -1125,7 +1137,7 @@ test('request coordination keeps Jan 14 visible when a delayed Jan 7 save comple
   await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', '2030-01-14');
   finish();
   await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
-  await expect(page.locator('.scheduler-toolbar h2')).toContainText('Jan 14');
+  await expect(page.locator('.scheduler-toolbar h1')).toContainText('14 — 20 January');
   await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', '2030-01-14');
 });
 
@@ -1197,7 +1209,7 @@ test('visible local refresh updates worker actuals and reconnect health without 
   await expect(clockDialog.getByRole('button', { name: 'Undo check-off' })).toBeEnabled();
   await clockDialog.getByRole('button', { name: 'Discard draft' }).click();
   await expect(sessionFor(page, 'Clock commitment')).toContainText('assumed actual');
-  await expect(page.locator(`#scheduler-goal-${goal.id} dd`).nth(1)).toHaveText('0.01h');
+  await expect(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-done`)).toContainText('0.01h done');
   await expect(page.locator('.scheduler-google summary')).toContainText('Reconnect needed');
   await page.clock.fastForward(600000);
   expect(availability).toBe(0);
@@ -1213,7 +1225,7 @@ test('Google selection conflict retains choices and reloads current revision for
     else { submitted.push(route.request().postDataJSON()); await route.fulfill(submitted.length === 1 ? { status: 409, json: { error: 'Calendar selection changed', conflictIds: [] } } : { json: {} }); }
   });
   await page.reload();
-  await page.locator('.scheduler-google summary').click();
+  await page.getByRole('button', { name: 'Google sync' }).click();
   await page.getByRole('button', { name: 'Select busy calendars' }).click();
   await page.getByLabel('Busy calendar', { exact: true }).check();
   await page.getByRole('button', { name: 'Save calendar selection' }).click();
@@ -1304,7 +1316,7 @@ test('an open plan draft stays editable past its start boundary and offers actua
   await dialog.getByRole('button', { name: 'Record actual work', exact: true }).click();
   await expect(dialog.getByRole('heading', { name: 'Record actual work', exact: true })).toBeVisible();
   await expect(dialog).toContainText(`Actual work is assigned to ${goal.title}.`);
-  await expect(dialog).toContainText('Original plan: 05:00–05:30');
+  await expect(dialog).toContainText('Original plan: 5:00 AM – 5:30 AM');
   await expect(dialog.getByLabel('Start time', { exact: true })).toHaveValue('05:10');
   await expect(dialog.getByLabel('End time', { exact: true })).toHaveValue('05:40');
   await dialog.getByRole('button', { name: 'Save session', exact: true }).click();
@@ -1316,7 +1328,7 @@ test('an open plan draft stays editable past its start boundary and offers actua
   expect(writes).toEqual([expect.objectContaining({ week: state.week, revision: state.revision, action: 'actual', actual: expect.objectContaining({ start: '2030-01-07T11:10:00.000Z', end: '2030-01-07T11:40:00.000Z' }) })]);
   expect(writes[0].session.assignment).toEqual(session.assignment);
   await sessionFor(page, goal.title).locator('.scheduler-block-main').click();
-  await expect(dialog).toContainText('Original plan: 05:00–05:30');
+  await expect(dialog).toContainText('Original plan: 5:00 AM – 5:30 AM');
   await expect(dialog.getByLabel('Start time', { exact: true })).toHaveValue('05:10');
   await expect(dialog.getByLabel('End time', { exact: true })).toHaveValue('05:40');
 });
@@ -1496,7 +1508,8 @@ test('a compact non-goal item can be copied and pasted on mobile', async ({ page
   await expect(dialog).toBeHidden();
   await page.locator('.scheduler-short-details').getByRole('button', { name: `Copy ${title}`, exact: true }).click();
   const thursday = await page.locator('[data-scheduler-date]').nth(3).getAttribute('data-scheduler-date');
-  await page.getByLabel('Selected day').selectOption(thursday!);
+  await page.getByRole('group', { name: 'Selected day' }).getByRole('button').nth(3).click();
+  await expect(page.getByRole('group', { name: 'Selected day' }).getByRole('button').nth(3)).toHaveAttribute('aria-pressed', 'true');
   await page.locator('.scheduler-paste button').click();
   await expect(dialog.getByLabel('Title', { exact: true })).toHaveValue(title);
   await expect(dialog.getByLabel('Scheduling date')).toHaveValue(thursday!);
@@ -1527,4 +1540,50 @@ test('clicking outside the session editor closes it, clicking inside does not', 
 
   await page.mouse.click(5, 5);
   await expect(dialog).toBeHidden();
+});
+
+test('now line follows the schedule time zone, only in today\'s column and within the axis', async ({ page, request }) => {
+  // Browser runs in America/Chicago (playwright.config); the schedule says UTC, so 17:20Z reads 5:20 PM, not 11:20 AM.
+  await page.clock.install({ time: new Date('2030-01-09T17:20:00Z') });
+  await page.clock.pauseAt(new Date('2030-01-09T17:20:00Z'));
+  await page.route('**/api/scheduler/week?*', async route => {
+    const requested = new URL(route.request().url()).searchParams.get('week');
+    const state = await (await request.get(`/api/scheduler/week?week=${requested}`)).json();
+    await route.fulfill({ json: { ...state, settings: { ...state.settings, timeZone: 'UTC' } } });
+  });
+  await page.goto('/weekly-scheduler');
+  await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', '2030-01-07');
+  await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
+  const axis = page.locator('.scheduler-axis span');
+  await expect(axis.first()).toHaveText(/^\d+(:\d\d)? (AM|PM)$/);
+  const label = (await axis.first().textContent())!.match(/^(\d+)(?::(\d+))? (AM|PM)$/)!;
+  const axisStart = (Number(label[1]) % 12 + (label[3] === 'PM' ? 12 : 0)) * 60 + Number(label[2] ?? 0);
+  const now = page.locator('.scheduler-now');
+  await expect(now).toHaveCount(1);
+  await expect(now).toHaveText('now 5:20 PM');
+  await expect(page.locator('[data-scheduler-date="2030-01-09"] .scheduler-now')).toHaveCount(1);
+  expect(await now.evaluate(element => parseFloat((element as HTMLElement).style.top))).toBe(17 * 60 + 20 - axisStart);
+  await expect(page.getByRole('button', { name: 'Select 2030-01-09' }).locator('xpath=ancestor::section')).toHaveClass(/is-today/);
+  await page.getByRole('button', { name: 'Next week' }).click();
+  await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', '2030-01-14');
+  await expect(now).toHaveCount(0);
+  await page.getByRole('button', { name: 'Previous week' }).click();
+  await expect(now).toHaveCount(1);
+  // After the end of the visible day there is no line to draw.
+  await page.clock.setFixedTime(new Date('2030-01-09T23:50:00Z'));
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(now).toHaveCount(0);
+  await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
+});
+
+test('goal hours table shows required, planned and the shortfall for a goal', async ({ page, request, baseURL }) => {
+  const goal = await createGoal(request, baseURL!, { dailyHours: 1 });
+  await goToNextWeek(page);
+  const row = page.locator(`#scheduler-goal-${goal.id} tr`).first();
+  await expect(row.locator('td')).toHaveText(['7.0', '0.0', '−7.0']);
+  await expect(row.locator('td').nth(2)).toHaveClass(/scheduler-shortfall/);
+  await expect(row.locator('.ui-goal-swatch')).toHaveCount(1);
+  await expect(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-done`)).toHaveText('0h done · 0h scheduled');
+  await expect(page.locator('.scheduler-capacity')).toHaveText(/^Capacity remaining −?\d+\.\d h$/i);
 });
