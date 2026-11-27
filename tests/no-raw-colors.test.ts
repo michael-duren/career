@@ -25,16 +25,17 @@ const ALLOWED: { file: string; match: RegExp; reason: string }[] = [
 
 const PALETTE = 'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose';
 const UTILITY = String.raw`(?:bg|text|border(?:-[trblxyse])?|ring(?:-offset)?|outline|fill|stroke|from|via|to|divide|placeholder|accent|caret|decoration|shadow)`;
-const NAMED = 'white|black|red|green|blue|gray|grey|silver|orange|yellow|purple|navy|maroon|teal|aqua|fuchsia|lime|olive|pink';
+const NAMED = 'white|black|red|green|blue|gray|grey|silver|orange|yellow|purple|navy|maroon|teal|aqua|fuchsia|lime|olive|pink|gold|tomato|crimson|coral|indigo|cyan|magenta|brown|violet|salmon|khaki|beige|ivory|lavender|turquoise|tan';
 
 const PATTERNS: { name: string; re: RegExp }[] = [
   // A hex color: has a letter, or is 6/8 digits, or is a short all-digit one in a value position.
   // Issue references in comments ("#172", "(#181)") are all digits and not in a value position.
-  { name: 'hex color', re: /(?<=[:'"=\[\s(,])#(?=[0-9a-fA-F]*[a-fA-F])[0-9a-fA-F]{3,8}\b|#[0-9]{6}(?:[0-9]{2})?\b|(?<=(?::\s*|['"=\[]))#[0-9]{3,4}\b/g },
+  // In-page links and ids (href="#feed", id="#added") are not colors.
+  { name: 'hex color', re: /(?<!(?:href|id|for)=["'])(?<=[:'"=\[\s(,]|^)#(?=[0-9a-fA-F]*[a-fA-F])[0-9a-fA-F]{3,8}\b|#[0-9]{6}(?:[0-9]{2})?\b|(?<=(?::\s*|['"=\[]))#[0-9]{3,4}\b/g },
   // rgb()/hsl()/oklch()… with literal channels; rgba(var(--ink-rgb), …) builds on a token and is fine.
-  { name: 'color function', re: /\b(?:rgba?|hsla?|hwb|oklch|oklab|lab|lch)\((?!\s*var\()/g },
+  { name: 'color function', re: /\b(?:rgba?|hsla?|hwb|oklch|oklab|lab|lch)\((?!\s*var\()/gi },
   { name: 'Tailwind palette class', re: new RegExp(String.raw`\b${UTILITY}-(?:${PALETTE})-\d{2,3}\b|\b${UTILITY}-(?:white|black)\b`, 'g') },
-  { name: 'named color', re: new RegExp(String.raw`(?:(?:color|background(?:-color)?|border(?:-[a-z]+)?|outline|fill|stroke)\s*:\s*[^;"'}]*?\b(?:${NAMED})\b|\b(?:fill|stroke|color)=["'](?:${NAMED})["'])`, 'g') },
+  { name: 'named color', re: new RegExp(String.raw`(?:(?:color|background(?:-color)?|border(?:-[a-z]+)?|outline|fill|stroke|box-shadow|text-shadow)\s*:\s*[^;"'}]*?\b(?:${NAMED})\b|\b(?:fill|stroke|color)=["'](?:${NAMED})["'])`, 'gi') },
 ];
 
 function files(dir: string): string[] {
@@ -62,11 +63,11 @@ export function rawColors(file: string, text: string): string[] {
 test('the patterns catch raw colors and leave tokens and issue numbers alone', () => {
   const hits = (text: string) => rawColors('x.tsx', text).length;
   for (const bad of ['color: #fff;', "c = '#60a5fa'", 'bg-[#0C0C0B]', 'fill="#000"', 'background: #000000', 'hsl(${h} 60% 62%)', 'rgba(0, 0, 0, .5)',
-    'className="bg-zinc-900"', 'hover:text-blue-400', 'border-l-zinc-700', 'text-white', 'ring-white/10', 'color: white', 'fill="black"']) {
+    'className="bg-zinc-900"', 'hover:text-blue-400', 'border-l-zinc-700', 'text-white', 'ring-white/10', 'color: white', 'fill="black"', 'color: RED', 'RGB(0, 0, 0)', 'box-shadow: 0 0 2px gold', '#ABCDEF;']) {
     assert.ok(hits(bad) > 0, bad);
   }
   for (const good of ['// see #172 and (#181)', 'Week #12', 'rgba(var(--ink-rgb), 0.3)', 'color: var(--ink)', 'bg-paper text-ink-60 border-ink-30',
-    'stroke="currentColor"', 'text-accent', 'href="#main-content"', 'whitespace-pre', 'ui-avatar--muted']) {
+    'stroke="currentColor"', 'text-accent', 'href="#main-content"', 'href="#feed"', "id='#added'", 'whitespace-pre', 'ui-avatar--muted']) {
     assert.equal(hits(good), 0, good);
   }
 });

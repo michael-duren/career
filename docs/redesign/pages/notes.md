@@ -27,7 +27,7 @@ Title + `+`, search, scrolling topic chips with counts, note rows.
 - The list drops Export all data (still on Journal and the manage pages) and its Reload latest button; Reload latest shows on the list only when loading failed, and stays in the reader.
 - Cards are links to `/notes/<id>`; a plain click opens the note in place (same reader and editor, with its draft guard).
 - The reader shows topic, edited date and word count over the title, then the description, tags, todos and the body. A leading `# Title` heading in the body that repeats the title is not drawn twice.
-- The editor's shared controls (fields, buttons, tags, todos, Markdown preview via `prose-ink`) use the tokens, so other pages that open the workspace editor (journal, audio thoughts, manage pages) get the restyled controls too, and tags there are ink outlines instead of per-tag colors.
+- The editor's shared controls (fields, buttons, tags, todos, Markdown preview via the `.prose` rules in `src/styles/global.css`) use the tokens, so other pages that open the workspace editor (journal, audio thoughts, manage pages) get the restyled controls too, and tags there are ink outlines instead of per-tag colors.
 
 ## Acceptance criteria
 

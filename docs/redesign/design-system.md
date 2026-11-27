@@ -55,11 +55,14 @@ The token values live in `public/ui/tokens.css` (plain CSS, so Go templ pages ca
 `bg-paper text-ink border-ink/30 text-ink-60` work. `inline` makes utilities reference the
 variables directly, so an element with its own `data-theme` (a theme preview) re-resolves them.
 
-No raw colors anywhere else: no hex or `rgb()`/`hsl()` values, no Tailwind palette classes
-(`zinc-*`, `blue-*`, `white`…) and no named CSS colors in `src/`, `public/ui/` or the Go
-templates. `tests/no-raw-colors.test.ts` (part of `npm test`) fails on any it finds; its short
-allowlist covers literals that cannot be tokens (the `theme-color` meta, the stored default goal
-color).
+No raw colors anywhere else in the app's UI code: no hex or `rgb()`/`hsl()` values, no Tailwind
+palette classes (`zinc-*`, `blue-*`, `white`…) and no named CSS colors in `src/`, `public/ui/`
+or `internal/` (templ, CSS, JS and non-test Go). `tests/no-raw-colors.test.ts` (part of
+`npm test`) fails on any it finds. Its allowlist covers literals that cannot be tokens: the
+`theme-color` meta, the `/dev/ui` sample logo image and the stored default goal color (TS and
+MCP). Outside that scan, `public/offline.html` (served by the service worker with no network)
+and `public/manifest.webmanifest` carry copies of the Dark values, and the browser extension
+in `extension/` has its own styles.
 
 ## Typography
 

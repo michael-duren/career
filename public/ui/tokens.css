@@ -3,8 +3,8 @@
  * Plain CSS so Go templ pages can link /ui/tokens.css; Astro pages get it through src/styles/global.css.
  * Themes only swap values: set data-theme="dark|vellum|cobalt|concrete" on <html>.
  * Dark is the default, so it also applies when the attribute is missing or unknown.
- * This is the only place raw color values live: everything else uses these tokens
- * (tests/no-raw-colors.test.ts enforces it).
+ * The app's UI code (src/, public/ui/, internal/) uses these tokens, never raw colors;
+ * tests/no-raw-colors.test.ts enforces it and lists the few allowed literals.
  */
 :root,
 [data-theme="dark"] {

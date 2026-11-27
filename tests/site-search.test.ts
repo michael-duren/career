@@ -19,6 +19,7 @@ test('sign out clears recent searches', () => {
 test('results link to their pages', () => {
   assert.equal(resultHref({ kind: 'goal', id: 'a b' }), '/timeline?goal=a%20b');
   assert.equal(resultHref({ kind: 'session', id: 's1' }), '/weekly-scheduler');
+  assert.equal(resultHref({ kind: 'run', id: 'run-one' }), '/audio-thoughts?id=run-one');
   assert.equal(resultHref({ kind: 'problem', id: 'two-sum' }), '/leetgrinder/problem/two-sum');
   assert.equal(resultHref({ kind: 'note', id: 'systems/raft notes' }), '/notes/systems/raft%20notes');
   assert.equal(resultHref({ kind: 'connection', id: 'u/1' }), '/connections?id=u%2F1');
@@ -62,6 +63,9 @@ test('book results draw their item type icon, the same marks as the Bookshelf', 
   assert.equal(resultIconPath({ kind: 'book', type: 'book' }), ITEM_TYPE_PATHS.book);
   // An unknown or missing type still reads as a book; other kinds have no icon.
   assert.equal(resultIconPath({ kind: 'book' }), ITEM_TYPE_PATHS.book);
+  assert.equal(resultIconPath({ kind: 'book', type: 'constructor' }), ITEM_TYPE_PATHS.book);
+  // Every bookshelf type the database allows has a drawing.
+  assert.deepEqual(Object.keys(ITEM_TYPE_PATHS).sort(), ['book', 'course', 'paper']);
   assert.equal(resultIconPath({ kind: 'note', type: 'paper' }), undefined);
   // The React icons draw from the same paths.
   const icons = readFileSync('src/components/ui/icons.tsx', 'utf8');

@@ -44,7 +44,8 @@ export function resultHref(item) {
 
 /** The item-type icon path for a result: books carry their type (book, paper, course); others have none. */
 export function resultIconPath(item) {
-  return item.kind === 'book' ? ITEM_TYPE_PATHS[item.type] ?? ITEM_TYPE_PATHS.book : undefined;
+  if (item.kind !== 'book') return undefined;
+  return Object.hasOwn(ITEM_TYPE_PATHS, item.type) ? ITEM_TYPE_PATHS[item.type] : ITEM_TYPE_PATHS.book;
 }
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -181,7 +182,7 @@ function initSearch(root) {
     const icon = resultIconPath(item);
     if (icon) {
       link.classList.add('search-result--typed');
-      link.dataset.type = item.type ?? 'book';
+      link.dataset.type = Object.hasOwn(ITEM_TYPE_PATHS, item.type) ? item.type : 'book';
       link.append(typeIcon(icon));
     }
     const title = document.createElement('span');
