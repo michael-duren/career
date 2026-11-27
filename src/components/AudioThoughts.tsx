@@ -58,8 +58,8 @@ function PlayButton({ noteId, name }: { noteId: string; name: string }) {
   }
   const label = state === 'playing' ? `Stop ${name}` : state === 'loading' ? `Loading ${name}` : state === 'none' ? `No audio yet for ${name}` : state === 'error' ? `Couldn't play ${name}. Try again` : `Play ${name}`;
   // Loading can be cancelled by pressing again; "no audio" retries, since a take may upload later.
-  return <button type="button" aria-label={label} title={label} aria-pressed={state === 'playing' || state === 'loading'} onClick={() => void toggle()}
-    className="flex size-11 shrink-0 items-center justify-center border-0 bg-transparent p-0 text-ink disabled:cursor-not-allowed disabled:opacity-40">
+  return <button type="button" aria-label={label} title={label} aria-pressed={state === 'playing'} onClick={() => void toggle()}
+    className="flex size-11 shrink-0 items-center justify-center border-0 bg-transparent p-0 text-ink">
     <span aria-hidden="true" className={cn('flex size-[26px] items-center justify-center rounded-full border border-solid', state === 'error' ? 'border-accent text-accent' : 'border-ink-50')}>
       {state === 'playing'
         ? <svg width="8" height="10" viewBox="0 0 8 10"><path d="M1.5 1 V9 M6.5 1 V9" fill="none" stroke="currentColor" strokeWidth="1.2" /></svg>
