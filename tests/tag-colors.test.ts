@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { NEUTRAL_TONE, TAG_PALETTE, entryTone, tagChipClass, tagHash, tagTone } from '../src/lib/tag-colors.ts';
-import { countWords, noteDate, noteStats } from '../src/lib/note-card.ts';
+import { countWords, filterNotes, matchesNoteSearch, noteCardDate, noteDate, noteStats, topicCounts, withoutTitleHeading } from '../src/lib/note-card.ts';
 
 test('a tag always maps to the same palette color', () => {
   assert.equal(tagHash('systems'), tagHash('systems'));
@@ -63,4 +63,45 @@ test('note dates read relative for the last week', () => {
   assert.equal(noteDate(new Date(2026, 8, 25, 23).toISOString(), now), 'Yesterday');
   assert.equal(noteDate(new Date(2026, 8, 22, 12).toISOString(), now), '4 days ago');
   assert.equal(noteDate(new Date(2026, 7, 1, 12).toISOString(), now), new Date(2026, 7, 1, 12).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }));
+});
+
+test('note topics are counted and listed alphabetically', () => {
+  assert.deepEqual(topicCounts([{ topic: 'SRE' }, { topic: 'Go' }, { topic: 'SRE' }]), [{ name: 'Go', count: 1 }, { name: 'SRE', count: 2 }]);
+  assert.deepEqual(topicCounts([]), []);
+});
+
+test('notes filter by one topic and search, newest update first', () => {
+  const note = (title: string, topic: string, updatedAt?: string, extra: { description?: string; tags?: string[] } = {}) => ({ title, topic, description: extra.description ?? '', tags: extra.tags ?? [], updatedAt });
+  const notes = [
+    note('Raft', 'Systems', '2026-11-01T00:00:00Z', { tags: ['consensus'] }),
+    note('Indexes', 'Databases', '2026-11-20T00:00:00Z', { description: 'B-tree pages' }),
+    note('Paxos', 'Systems', '2026-11-10T00:00:00Z'),
+    note('Undated', 'Systems'),
+  ];
+  assert.deepEqual(filterNotes(notes, null, '').map(n => n.title), ['Indexes', 'Paxos', 'Raft', 'Undated']);
+  assert.deepEqual(filterNotes(notes, 'Systems', '').map(n => n.title), ['Paxos', 'Raft', 'Undated']);
+  // Search covers title, topic, summary and tags.
+  assert.deepEqual(filterNotes(notes, null, 'CONSENSUS').map(n => n.title), ['Raft']);
+  assert.deepEqual(filterNotes(notes, null, 'b-tree').map(n => n.title), ['Indexes']);
+  assert.deepEqual(filterNotes(notes, null, 'databases').map(n => n.title), ['Indexes']);
+  assert.deepEqual(filterNotes(notes, 'Databases', 'raft'), []);
+  assert.equal(matchesNoteSearch(notes[0], '   '), true);
+});
+
+test('note card dates are short, with the year only for past years', () => {
+  const now = new Date(2026, 10, 27, 12);
+  assert.equal(noteCardDate(new Date(2026, 10, 25, 12).toISOString(), now), 'Nov 25');
+  assert.equal(noteCardDate(new Date(2025, 0, 3, 12).toISOString(), now), 'Jan 3 2025');
+  assert.equal(noteCardDate(undefined, now), '');
+  assert.equal(noteCardDate('nope', now), '');
+});
+
+test('the reader drops a leading heading that repeats the note title', () => {
+  assert.equal(withoutTitleHeading('# Raft consensus\n\nLeader election.', 'Raft consensus'), 'Leader election.');
+  assert.equal(withoutTitleHeading('\n# Raft consensus #\r\nBody', ' Raft consensus'), 'Body');
+  assert.equal(withoutTitleHeading('# Raft consensus', 'Raft consensus'), '');
+  // Different heading, a lower-level heading, or a heading further down stay.
+  assert.equal(withoutTitleHeading('# Paxos\nBody', 'Raft consensus'), '# Paxos\nBody');
+  assert.equal(withoutTitleHeading('## Raft consensus\nBody', 'Raft consensus'), '## Raft consensus\nBody');
+  assert.equal(withoutTitleHeading('Intro\n# Raft consensus', 'Raft consensus'), 'Intro\n# Raft consensus');
 });

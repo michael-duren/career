@@ -1,4 +1,5 @@
 import type { Note } from './workspace';
+import { formatDate } from './format.ts';
 
 export const WORDS_PER_MINUTE = 200;
 
@@ -28,4 +29,41 @@ export function noteDate(iso: string | undefined, now = new Date()): string {
   if (days === 1) return 'Yesterday';
   if (days < 7) return `${days} days ago`;
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', ...(date.getFullYear() === now.getFullYear() ? {} : { year: 'numeric' }) });
+}
+
+export interface TopicCount { name: string; count: number }
+
+/** Topics in use with how many notes each holds, alphabetical. */
+export function topicCounts(notes: Pick<Note, 'topic'>[]): TopicCount[] {
+  const counts = new Map<string, number>();
+  for (const note of notes) counts.set(note.topic, (counts.get(note.topic) ?? 0) + 1);
+  return [...counts].map(([name, count]) => ({ name, count })).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** True when the note's title, topic, summary or tags contain the query (case-insensitive). */
+export function matchesNoteSearch(note: Pick<Note, 'title' | 'topic' | 'description' | 'tags'>, query: string): boolean {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return true;
+  return [note.title, note.topic, note.description ?? '', ...note.tags].join(' ').toLowerCase().includes(needle);
+}
+
+/** Notes in one topic (or all when topic is null) matching the search, most recently updated first. */
+export function filterNotes<T extends Pick<Note, 'title' | 'topic' | 'description' | 'tags' | 'updatedAt'>>(notes: T[], topic: string | null, query: string): T[] {
+  return notes.filter(note => (topic === null || note.topic === topic) && matchesNoteSearch(note, query))
+    .sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') || a.title.localeCompare(b.title));
+}
+
+/** "Nov 25" for this year, "Nov 25 2025" for earlier years; '' when missing or invalid. */
+export function noteCardDate(iso: string | undefined, now = new Date()): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const label = formatDate(date);
+  return date.getFullYear() === now.getFullYear() ? label : `${label} ${date.getFullYear()}`;
+}
+
+/** The body without a leading "# Title" heading that repeats the note's title (the reader already shows it). */
+export function withoutTitleHeading(body: string, title: string): string {
+  const match = /^\s*#[ \t]+(.+?)[ \t#]*(?:\r?\n|$)/.exec(body);
+  return match && match[1].trim() === title.trim() ? body.slice(match[0].length).replace(/^\s*\n/, '') : body;
 }

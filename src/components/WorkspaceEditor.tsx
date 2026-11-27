@@ -8,15 +8,21 @@ import { NoteTodos, TagInput } from './NoteInputs';
 import { appendDailyEntry, localDate, newWeek } from '../lib/workspace';
 import type { Note, RunningNote } from '../lib/workspace';
 import { THOUGHT_PLACEHOLDER, isAutoTitle, thoughtDate, thoughtExcerpt, thoughtTitle } from '../lib/audio-thoughts';
-import { AudioLines, CalendarPlus, Clock, ListChecks, PencilLine, Trash2 } from 'lucide-react';
-import { entryTone, tagChipClass } from '../lib/tag-colors';
-import { noteDate, noteStats } from '../lib/note-card';
+import { AudioLines, Trash2 } from 'lucide-react';
+import { tagChipClass } from '../lib/tag-colors';
+import { filterNotes, noteCardDate, noteStats, withoutTitleHeading } from '../lib/note-card';
+import { NotesList } from './NotesList';
+import { Label, buttonClassName } from './ui';
 import type { BookType } from '../lib/books';
 import { pauseSync, queuedClips, removeClip, syncClips, takesForThought, type QueuedClip } from '../lib/running-queue';
 
-const field = 'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
-const button = 'rounded-lg border border-zinc-700 px-3 py-2 text-sm hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed';
-const primary = `${button} bg-blue-600 border-blue-500 text-white hover:bg-blue-500`;
+// The editor's controls use the Architect tokens and button primitive (docs/redesign/design-system.md).
+const field = 'w-full border border-solid border-ink-30 bg-paper px-3 py-2 text-ink placeholder:text-ink-60 focus:border-ink';
+const button = buttonClassName();
+const primary = buttonClassName({ variant: 'primary' });
+const danger = buttonClassName({ variant: 'danger' });
+/** A secondary button that fills with ink while pressed (Write / Preview). */
+const toggle = `${button} aria-pressed:!bg-ink aria-pressed:!text-paper`;
 const labels = { run: 'audio thought', personal: 'personal journal entry', note: 'note', week: 'week', book: 'book, course, or paper', company: 'company', document: 'page' };
 
 type EntryResult = { entry: Entry; revision: string };
@@ -52,10 +58,10 @@ function draftKey(kind: string) {
   return `career-workspace:v1:${localStorage.getItem('auth_username') || 'user'}:${kind}`;
 }
 function Preview({ body }: { body: string }) {
-  return <MarkdownPreview body={body} />;
+  return <MarkdownPreview body={body} ink />;
 }
 function Transcribing({ label }: { label: string }) {
-  return <span className="inline-flex items-center gap-2 text-sm text-zinc-500"><span className="size-1.5 animate-pulse rounded-full bg-amber-400" />{label}</span>;
+  return <span className="inline-flex items-center gap-2 text-sm text-ink-60"><span className="size-1.5 animate-pulse rounded-full bg-accent" />{label}</span>;
 }
 function ThoughtCard({ thought, selected, disabled, onOpen, onDelete }: { thought: RunningNote; selected: boolean; disabled: boolean; onOpen: () => void; onDelete: () => void }) {
   const excerpt = thoughtExcerpt(thought), untitled = isAutoTitle(thought.title), name = untitled ? 'Untitled thought' : thought.title;
@@ -69,24 +75,6 @@ function ThoughtCard({ thought, selected, disabled, onOpen, onDelete }: { though
       <Trash2 className="size-4" aria-hidden />
     </button>
   </div>;
-}
-function NoteCard({ note, selected, disabled, onOpen }: { note: Note; selected: boolean; disabled: boolean; onOpen: () => void }) {
-  const tone = entryTone(note.tags), stats = noteStats(note);
-  const created = noteDate(note.createdAt), updated = noteDate(note.updatedAt);
-  return <button type="button" disabled={disabled} onClick={onOpen} data-tone={tone.name} className={`flex w-full flex-col gap-2 rounded-lg border border-l-4 p-3 text-left transition-colors sm:p-4 ${selected ? 'border-blue-500 bg-blue-950/30' : `border-zinc-800 ${tone.card}`}`}>
-    <span className="flex items-start justify-between gap-3">
-      <span className="min-w-0 font-medium text-zinc-100">{note.title}</span>
-      <span className="shrink-0 text-xs text-zinc-500">{note.topic}</span>
-    </span>
-    {note.description && <span className="line-clamp-2 text-sm leading-relaxed text-zinc-400">{note.description}</span>}
-    {note.tags.length > 0 && <span className="flex flex-wrap gap-1.5">{note.tags.map(tag => <span key={tag} className={`${tagChipClass(tag)} px-2 py-0.5 text-xs`}>{tag}</span>)}</span>}
-    <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500">
-      {created && <span className="inline-flex items-center gap-1" title={note.createdAt}><CalendarPlus className="size-3.5" aria-hidden />Created {created}</span>}
-      {updated && updated !== created && <span className="inline-flex items-center gap-1" title={note.updatedAt}><PencilLine className="size-3.5" aria-hidden />Edited {updated}</span>}
-      <span className="inline-flex items-center gap-1"><Clock className="size-3.5" aria-hidden />{stats.words ? `${stats.words.toLocaleString()} words · ${stats.minutes} min read` : 'Empty'}</span>
-      {stats.todos > 0 && <span className="inline-flex items-center gap-1"><ListChecks className="size-3.5" aria-hidden />{stats.todosDone}/{stats.todos} todos</span>}
-    </span>
-  </button>;
 }
 export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialId?: string }) {
   const listFirst = kind === 'note' || kind === 'week' || kind === 'personal' || kind === 'run';
@@ -103,7 +91,8 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
   const [entry, setEntry] = useState<Entry | null>(null);
   const [baseRevision, setBaseRevision] = useState<string | null>(null);
   const [query, setQuery] = useState('');
-  const [selectedTopics, setSelectedTopics] = useState<string[] | null>(null);
+  /** Notes only: the one topic shown, or null for all. */
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const initializedTopics = useRef(false);
   const [preview, setPreview] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -133,7 +122,7 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
       const requested = initialId || pathID || new URLSearchParams(window.location.search).get('id');
       if (kind === 'note' && requested && !initializedTopics.current) {
         const linkedNote = list.find(note => entryId(note) === requested);
-        if (linkedNote && 'topic' in linkedNote) setSelectedTopics([linkedNote.topic]);
+        if (linkedNote && 'topic' in linkedNote) setSelectedTopic(linkedNote.topic);
         initializedTopics.current = true;
       }
       if (requested && !openedInitialEntry.current && !recovered.current) {
@@ -207,7 +196,7 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
     const id = crypto.randomUUID();
     if (kind === 'run') choose({ id, title: THOUGHT_PLACEHOLDER, runDate: localDate(), startedAt: new Date().toISOString(), tags: [], body: '' }, true);
     else if (kind === 'personal') choose({ id, title: '', date: localDate(), description: '', tags: [], body: '' }, true);
-    else if (kind === 'note') choose({ id, title: '', topic: selectedTopics?.length === 1 ? selectedTopics[0] : 'General', description: '', tags: [], body: '' }, true);
+    else if (kind === 'note') choose({ id, title: '', topic: selectedTopic ?? 'General', description: '', tags: [], body: '' }, true);
     else if (kind === 'book') choose({ slug: id, title: '', authors: [], category: 'Computer Science', type: bookType, status: 'backlog', featured: false, priority: 'medium', tags: [], body: bookType === 'paper' ? '## Notes\n' : bookType === 'course' ? '## Modules\n\n- [ ] First module\n\n## Log\n' : '## Chapters\n\n- [ ] First chapter\n\n## Log\n' }, true);
     else if (kind === 'company') choose({ slug: id, title: '', category: 'Observability / Infra', type: 'company', url: '', status: 'not_started', featured: false, priority: 'medium', tags: [], body: '## Why\n\n## Steps\n\n- [ ] Identify one person at the company to connect with\n- [ ] Reach out and start building a relationship\n- [ ] Research team & open roles\n- [ ] Tailor resume/cover letter\n- [ ] Apply\n\n## Log\n' }, true);
     else if (kind === 'document') choose({ id, title: '', description: '', tags: [], body: '' }, true);
@@ -372,13 +361,16 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
     return takesForThought(queued, noteId, (result.clips ?? []).map((clip: { recordedAt: string }) => clip.recordedAt), result.groupWindowMs);
   }
   const loadedEntries = entries ?? [];
-  const topicCounts = loadedEntries.reduce((counts, note) => 'topic' in note ? counts.set(note.topic, (counts.get(note.topic) ?? 0) + 1) : counts, new Map<string, number>());
-  const topics = [...topicCounts.keys()].sort((a, b) => a.localeCompare(b));
+  const topics = [...new Set(loadedEntries.flatMap(note => 'topic' in note ? [note.topic] : []))].sort((a, b) => a.localeCompare(b));
   const tagOptions = [...new Set(loadedEntries.flatMap(item => item.tags))].sort((a, b) => a.localeCompare(b));
-  const filtered = [...loadedEntries].filter(e => kind !== 'note' || selectedTopics === null || ('topic' in e && selectedTopics.includes(e.topic))).filter(e => `${entryTitle(e)} ${e.tags.join(' ')} ${'topic' in e ? e.topic : ''}`.toLowerCase().includes(query.toLowerCase()))
+  const filtered = kind === 'note' ? filterNotes(loadedEntries as Note[], selectedTopic, query) : [...loadedEntries].filter(e => `${entryTitle(e)} ${e.tags.join(' ')}`.toLowerCase().includes(query.toLowerCase()))
     .sort((a, b) => kind === 'run' ? ('startedAt' in b ? b.startedAt : '').localeCompare('startedAt' in a ? a.startedAt : '') : kind === 'personal' ? (('date' in b ? b.date : '') || '').localeCompare(('date' in a ? a.date : '') || '') || (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') : kind === 'week' ? (b as JournalWeek).dates.localeCompare((a as JournalWeek).dates) : (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') || entryTitle(a).localeCompare(entryTitle(b)));
 
   const reading = listFirst && entry !== null;
+  // A deleted or renamed note can empty the chosen topic; fall back to all notes.
+  useEffect(() => {
+    if (kind === 'note' && entries && selectedTopic !== null && !topics.includes(selectedTopic)) setSelectedTopic(null);
+  }, [entries, selectedTopic]);
   useEffect(() => {
     if (reading) {
       backButton.current?.focus();
@@ -397,43 +389,37 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
     (target ? document.querySelector<HTMLElement>(`[data-thought-open="${CSS.escape(target)}"]`) : emptyThoughts.current)?.focus();
   }, [entries, busy]);
 
-  return <section className="space-y-5" data-thought-reading={kind === 'run' && reading ? '' : undefined}>
+  const notes = kind === 'note';
+  const autoTitled = !!entry && 'runDate' in entry && isAutoTitle(entry.title);
+  const Title = notes ? 'h1' : 'h2';
+  const tagChip = 'border border-solid border-ink-30 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-ink';
+  const statusText = status || (!entries ? (error ? 'Content is unavailable. Use Reload latest to retry.' : 'Loading your content…') : notes ? '' : `${loadedEntries.length} entries`);
+  return <section className={notes ? 'flex flex-col gap-5' : 'space-y-5'} data-thought-reading={kind === 'run' && reading ? '' : undefined}>
     {reading && <div className="flex flex-wrap gap-2">
-      <button ref={backButton} type="button" className={button} disabled={busy} onClick={backToList}>← Back to {kind === 'note' ? 'notes' : kind === 'run' ? 'audio thoughts' : 'journal'}</button>
+      <button ref={backButton} type="button" className={button} disabled={busy} onClick={backToList}>← Back to {notes ? 'notes' : kind === 'run' ? 'audio thoughts' : 'journal'}</button>
       <button type="button" className={button} disabled={busy} onClick={() => void load()}>Reload latest</button>
     </div>}
-    <div hidden={reading}>
+    {!notes && <div hidden={reading}>
       <div className="flex flex-wrap gap-2">
       {kind === 'book' ? (['book', 'course', 'paper'] as const).map(type => <button key={type} type="button" className={primary} disabled={!entries || busy} onClick={() => create(type)}>+ New {type === 'course' ? 'video course' : type}</button>) : <button type="button" className={primary} disabled={!entries || busy} onClick={() => create()}>{kind === 'week' ? '+ This week' : `+ New ${labels[kind]}`}</button>}
       <a className={button} href="/api/export" download={`career-workspace-${localDate()}.json`}>Export all data</a>
       <button type="button" className={button} disabled={busy} onClick={() => void load()}>Reload latest</button>
       </div>
-    </div>
-    {error && <div role="alert" className="rounded-lg border border-red-800 bg-red-950/30 p-4 text-red-200">{error} {error.includes('session') && <a className="underline" href="/login">Sign in</a>}
+    </div>}
+    {error && <div role="alert" className="border border-solid border-accent p-4 text-ink">{error} {error.includes('session') && <a className="underline" href="/login">Sign in</a>}
       {error.includes('changed') && <p className="mt-2 text-sm">Copy your draft before reopening an entry. Reloading refreshes the list without replacing your draft.</p>}
     </div>}
-    <p role="status" className="text-sm text-zinc-400">{status || (!entries ? (error ? 'Content is unavailable. Use Reload latest to retry.' : 'Loading your content…') : `${loadedEntries.length} entries`)}</p>
-    <div hidden={reading} className="space-y-5">
-    <label className="block text-sm text-zinc-400">Search {kind === 'week' ? 'journal' : `${labels[kind]} entries`}<input className={`${field} mt-1`} type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search titles, tags, and content" /></label>
-    {kind === 'note' && entries && <fieldset className="space-y-2">
-      <legend className="mb-2 text-sm text-zinc-400">Topics</legend>
-      <div className="flex flex-wrap gap-2">
-        <button type="button" className="rounded-full border border-zinc-600 px-4 py-2 text-sm hover:bg-zinc-800 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-blue-400" disabled={selectedTopics === null} onClick={() => setSelectedTopics(null)}>Select all</button>
-        <button type="button" className="rounded-full border border-zinc-600 px-4 py-2 text-sm hover:bg-zinc-800 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-blue-400" disabled={selectedTopics?.length === 0} onClick={() => setSelectedTopics([])}>Clear all</button>
-        <span aria-hidden="true" className="w-px self-stretch bg-zinc-700" />
-        {topics.map(name => {
-          const selected = selectedTopics === null || selectedTopics.includes(name);
-          return <button type="button" key={name} aria-pressed={selected} className={`rounded-full border px-4 py-2 text-sm focus-visible:outline-2 focus-visible:outline-blue-400 ${selected ? 'border-blue-500 bg-blue-600/25 text-blue-200 hover:bg-blue-600/40' : 'border-zinc-700 text-zinc-400 hover:bg-zinc-800'}`} onClick={() => setSelectedTopics(current => {
-            const active = current ?? topics;
-            return active.includes(name) ? active.filter(topic => topic !== name) : [...active, name];
-          })}>{name} <span className="text-xs opacity-70">{topicCounts.get(name)}</span></button>;
-        })}
-      </div>
-      <p className="text-xs text-zinc-400">{filtered.length} of {loadedEntries.length} notes shown · {selectedTopics?.length === 0 ? 'No topics selected. Pick topics or use Select all.' : 'Toggle topics to include or exclude them.'}</p>
-    </fieldset>}
-    </div>
+    {/* Notes: an empty status line takes no room; the negative margin cancels its flex gap. */}
+    <p role="status" className={`text-sm text-ink-60 ${notes ? 'empty:-mb-5' : ''}`}>{statusText}</p>
+    {notes && <div hidden={reading}>
+      <NotesList notes={entries as Note[] | null} shown={filtered as Note[]} topic={selectedTopic} onTopic={setSelectedTopic} query={query} onQuery={setQuery}
+        onOpen={choose} onCreate={() => create()} busy={busy} />
+    </div>}
+    {!notes && <div hidden={reading} className="space-y-5">
+    <label className="block text-sm text-ink-60">Search {kind === 'week' ? 'journal' : `${labels[kind]} entries`}<input className={`${field} mt-1`} type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search titles, tags, and content" /></label>
+    </div>}
     <div className={listFirst ? "space-y-5" : "grid gap-5 md:grid-cols-[220px_minmax(0,1fr)]"}>
-      <nav hidden={reading} aria-label={`${labels[kind]} entries`} className={kind === 'run' ? 'grid gap-3 sm:grid-cols-2' : listFirst ? "space-y-2" : "max-h-72 overflow-y-auto space-y-2 md:max-h-[700px]"}>
+      {!notes && <nav hidden={reading} aria-label={`${labels[kind]} entries`} className={kind === 'run' ? 'grid gap-3 sm:grid-cols-2' : listFirst ? "space-y-2" : "max-h-72 overflow-y-auto space-y-2 md:max-h-[700px]"}>
         {kind === 'run' && entries && filtered.length === 0 && <div ref={emptyThoughts} tabIndex={-1} className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-700 px-6 py-10 text-center sm:col-span-2">
           <AudioLines className="size-8 text-zinc-600" aria-hidden />
           <p className="font-medium text-zinc-300">{loadedEntries.length ? 'No thoughts match your search' : 'No audio thoughts yet'}</p>
@@ -441,34 +427,35 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
         </div>}
         {kind !== 'run' && entries && filtered.length === 0 && <p className="text-sm text-zinc-400">No matching entries.</p>}
         {kind === 'run' && filtered.map(item => <ThoughtCard key={entryId(item)} thought={item as RunningNote} selected={!!entry && entryId(entry) === entryId(item)} disabled={busy} onOpen={() => choose(item)} onDelete={() => void removeThought(item as RunningNote)} />)}
-        {kind === 'note' && filtered.map(item => <NoteCard key={entryId(item)} note={item as Note} selected={!!entry && entryId(entry) === entryId(item)} disabled={busy} onOpen={() => choose(item)} />)}
-        {kind !== 'run' && kind !== 'note' && filtered.map(item => <button type="button" disabled={busy} key={entryId(item)} onClick={() => choose(item)} className={`w-full rounded-lg border p-3 text-left ${entry && entryId(entry) === entryId(item) ? 'border-blue-500 bg-blue-950/30' : 'border-zinc-800 hover:bg-zinc-900'}`}>
+        {kind !== 'run' && filtered.map(item => <button type="button" disabled={busy} key={entryId(item)} onClick={() => choose(item)} className={`w-full rounded-lg border p-3 text-left ${entry && entryId(entry) === entryId(item) ? 'border-blue-500 bg-blue-950/30' : 'border-zinc-800 hover:bg-zinc-900'}`}>
           <span className="block text-sm font-medium">{entryTitle(item)}</span>
-          <span className="mt-1 block text-xs text-zinc-400">{'topic' in item ? item.topic : 'week' in item ? (item.hours ? `${Object.values(item.hours as Record<string, number>).reduce((a, b) => a + b, 0)}h logged` : 'Work journal') : 'status' in item ? item.status.replaceAll('_', ' ') : 'description' in item ? item.description : 'runDate' in item ? item.runDate : ''}</span>
+          <span className="mt-1 block text-xs text-zinc-400">{'week' in item ? (item.hours ? `${Object.values(item.hours as Record<string, number>).reduce((a, b) => a + b, 0)}h logged` : 'Work journal') : 'status' in item ? item.status.replaceAll('_', ' ') : 'description' in item ? item.description : 'runDate' in item ? item.runDate : ''}</span>
         </button>)}
-      </nav>
-      {entry && <div className="order-first min-w-0 rounded-xl md:order-last border border-zinc-800 bg-zinc-900/40 p-4 sm:p-5">
+      </nav>}
+      {entry && <div className={`order-first min-w-0 md:order-last ${notes ? 'max-w-[920px]' : 'border border-solid border-ink-14 p-4 sm:p-5'}`}>
         {editing ? <form onSubmit={e => { e.preventDefault(); void save(); }} className="space-y-4">
           <fieldset disabled={busy} className="space-y-4 disabled:opacity-60">
             <EntryFields entry={entry} change={change} topics={topics} />
             {(kind === 'book' || kind === 'company') && <EntryChecklist body={entry.body} onChange={body => change({ body })} />}
             <TagInput value={entry.tags} options={tagOptions} onChange={tags => change({ tags })} />
             {'topic' in entry && <NoteTodos todos={entry.todos ?? []} onChange={todos => change({ todos })} />}
-            <div className="flex gap-2"><button type="button" className={button} aria-pressed={!preview} onClick={() => setPreview(false)}>Write</button><button type="button" className={button} aria-pressed={preview} onClick={() => setPreview(true)}>Preview</button></div>
-            {preview ? <div className="min-h-72 rounded-lg bg-zinc-950 p-4"><Preview body={entry.body} /></div> : <label className="block text-sm">Markdown<textarea className={`${field} mt-1 min-h-80 font-mono text-sm`} maxLength={100000} value={entry.body} onChange={e => change({ body: e.target.value })} placeholder={kind === 'run' ? 'Transcripts land here as each take is processed. Add your own notes around them.' : 'Write your thoughts. Markdown, lists, links, and code blocks are welcome.'} /></label>}
-            <button className={primary} type="submit">{busy ? 'Saving…' : 'Save'}</button> <button className={button} type="button" onClick={cancel}>Cancel</button>
+            <div className="flex gap-2"><button type="button" className={toggle} aria-pressed={!preview} onClick={() => setPreview(false)}>Write</button><button type="button" className={toggle} aria-pressed={preview} onClick={() => setPreview(true)}>Preview</button></div>
+            {preview ? <div className="min-h-72 border border-solid border-ink-14 p-4"><Preview body={entry.body} /></div> : <label className="block text-sm">Markdown<textarea className={`${field} mt-1 min-h-80 font-mono text-sm`} maxLength={100000} value={entry.body} onChange={e => change({ body: e.target.value })} placeholder={kind === 'run' ? 'Transcripts land here as each take is processed. Add your own notes around them.' : 'Write your thoughts. Markdown, lists, links, and code blocks are welcome.'} /></label>}
+            <div className="flex flex-wrap gap-2"><button className={primary} type="submit">{busy ? 'Saving…' : 'Save'}</button><button className={button} type="button" onClick={cancel}>Cancel</button></div>
           </fieldset>
         </form> : <div className="space-y-4">
-          <div className="flex flex-wrap items-start justify-between gap-3"><h2 className={`text-xl font-semibold ${'runDate' in entry && isAutoTitle(entry.title) ? 'text-zinc-400 italic' : ''}`}>{'runDate' in entry && isAutoTitle(entry.title) ? 'Untitled thought' : entryTitle(entry)}</h2><div className="flex gap-2"><button type="button" className={button} disabled={busy} onClick={() => setEditing(true)}>Edit</button>{!(kind === 'document' && ['index', '2026/career-study-plan'].includes(entryId(entry))) && <button type="button" className={`${button} text-red-300`} disabled={busy} onClick={() => void remove()}>Delete</button>}</div></div>
-          {kind === 'document' && <a className="inline-block text-sm text-blue-400 hover:underline" href={`/documents/${entryId(entry).split('/').map(encodeURIComponent).join('/')}`}>Open page →</a>}
-          <div className="flex flex-wrap gap-2">{entry.tags.map(tag => <span key={tag} className={`${tagChipClass(tag)} px-2 py-1 text-xs`}>{tag}</span>)}</div>
+          {'topic' in entry && <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1"><Label>{entry.topic}</Label>{noteCardDate(entry.updatedAt) && <span className="font-mono text-[10px] text-ink-60">Edited {noteCardDate(entry.updatedAt)}</span>}<span className="font-mono text-[10px] text-ink-60">{noteStats(entry).words.toLocaleString()} words</span></div>}
+          <div className="flex flex-wrap items-start justify-between gap-3"><Title className={`m-0 font-extralight ${notes ? '!text-[40px] !leading-[1] md:!text-[52px] md:!leading-[0.95]' : 'text-[28px] leading-tight'} ${autoTitled ? 'text-ink-60 italic' : ''}`}>{autoTitled ? 'Untitled thought' : entryTitle(entry)}</Title><div className="flex gap-2"><button type="button" className={button} disabled={busy} onClick={() => setEditing(true)}>Edit</button>{!(kind === 'document' && ['index', '2026/career-study-plan'].includes(entryId(entry))) && <button type="button" className={danger} disabled={busy} onClick={() => void remove()}>Delete</button>}</div></div>
+          {'topic' in entry && entry.description && <p className="text-base font-light text-ink-60">{entry.description}</p>}
+          {kind === 'document' && <a className="inline-block text-sm text-ink underline" href={`/documents/${entryId(entry).split('/').map(encodeURIComponent).join('/')}`}>Open page →</a>}
+          {entry.tags.length > 0 && <div className="flex flex-wrap gap-2">{entry.tags.map(tag => <span key={tag} className={tagChip}>{tag}</span>)}</div>}
           {'topic' in entry && <NoteTodos todos={entry.todos ?? []} onChange={saveTodos} />}
-          {'status' in entry && <p className="text-sm text-zinc-400">{entry.status.replaceAll('_', ' ')} · {entry.priority} priority</p>}
-          {'date' in entry && <p className="text-sm text-zinc-400">{entry.date || 'Undated background'}</p>}
-          {'startedAt' in entry && <p className="text-sm text-zinc-500">{thoughtDate(entry.startedAt)}</p>}
+          {'status' in entry && <p className="text-sm text-ink-60">{entry.status.replaceAll('_', ' ')} · {entry.priority} priority</p>}
+          {'date' in entry && <p className="text-sm text-ink-60">{entry.date || 'Undated background'}</p>}
+          {'startedAt' in entry && <p className="text-sm text-ink-60">{thoughtDate(entry.startedAt)}</p>}
           {'runDate' in entry && !entry.body.trim()
-            ? <div className="rounded-xl border border-dashed border-zinc-700 px-6 py-8 text-center"><Transcribing label="The transcript appears here once your homelab finishes the take." /></div>
-            : <Preview body={entry.body} />}
+            ? <div className="border border-dashed border-ink-30 px-6 py-8 text-center"><Transcribing label="The transcript appears here once your homelab finishes the take." /></div>
+            : <Preview body={'topic' in entry ? withoutTitleHeading(entry.body, entry.title) : entry.body} />}
         </div>}
         {kind === 'run' && entry && baseRevision && <RunningClips noteId={entryId(entry)} />}
       </div>}
