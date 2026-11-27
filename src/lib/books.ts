@@ -1,4 +1,4 @@
-import { checklist } from './checklist';
+import { checklist } from './checklist.ts';
 // ---------------------------------------------------------------------------
 // Books & courses model
 //
@@ -72,6 +72,8 @@ export interface BookFrontmatter {
 export interface RawBook extends BookFrontmatter {
   slug: string;
   body: string;
+  /** Set by the API on saved entries (ISO timestamp); absent on imported seeds. */
+  updatedAt?: string;
 }
 
 export interface ChapterItem {
@@ -262,4 +264,67 @@ export function buildShelf(raws: RawBook[]): ShelfData {
   };
 
   return { featured, currentlyReading, groups, stats, all };
+}
+
+// ---------------------------------------------------------------------------
+// Bookshelf page helpers (docs/redesign/pages/bookshelf.md)
+// ---------------------------------------------------------------------------
+
+/** When the item last changed: the saved timestamp, else the newest log date. "" when unknown. */
+export function lastUpdated(book: Book): string {
+  return book.updatedAt || book.lastNote?.date || '';
+}
+
+function updatedKey(book: Book): number {
+  const value = lastUpdated(book);
+  const time = value ? Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00Z` : value) : NaN;
+  return Number.isNaN(time) ? -Infinity : time;
+}
+
+/** In progress = started (completed units > 0) and not finished, most recently updated first. */
+export function inProgress(books: Book[]): Book[] {
+  return books
+    .filter((b) => b.status !== 'completed' && b.completed > 0 && b.completed < b.total)
+    .sort((a, b) => updatedKey(b) - updatedKey(a) || a.title.localeCompare(b.title));
+}
+
+/** Catalog order: priority, then status (reading first, completed last), then title. */
+export function sortCatalog(books: Book[]): Book[] {
+  return [...books].sort((a, b) =>
+    PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]
+    || STATUS_RANK[a.status] - STATUS_RANK[b.status]
+    || a.title.localeCompare(b.title));
+}
+
+/** Case-insensitive match on the title or any author. An empty query matches everything. */
+export function matchesBookSearch(book: Pick<Book, 'title' | 'authors'>, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return book.title.toLowerCase().includes(q) || book.authors.some((a) => a.toLowerCase().includes(q));
+}
+
+/** Categories that hold at least one item, alphabetically, with their counts. */
+export function shelves(books: Pick<Book, 'category'>[]): { category: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const b of books) counts.set(b.category, (counts.get(b.category) ?? 0) + 1);
+  return [...counts].map(([category, count]) => ({ category, count })).sort((a, b) => a.category.localeCompare(b.category));
+}
+
+/**
+ * Progress drawn as `count` cells or ticks with `filled` of them done. Up to `max` units
+ * get one mark each; longer items (page counts) scale onto `max` marks.
+ */
+export function progressMarks(completed: number, total: number, max: number): { count: number; filled: number } {
+  if (total <= 0) return { count: 0, filled: 0 };
+  const done = Math.min(Math.max(completed, 0), total);
+  if (total <= max) return { count: total, filled: done };
+  // Never show a started item as empty or an unfinished one as full.
+  const scaled = Math.round((done / total) * max);
+  const filled = done > 0 && scaled === 0 ? 1 : done < total && scaled === max ? max - 1 : scaled;
+  return { count: max, filled };
+}
+
+/** "chapter" / "chapters" (and pages, modules, ...). */
+export function unitLabel(unit: ProgressUnit, count: number): string {
+  return count === 1 ? unit : `${unit}s`;
 }

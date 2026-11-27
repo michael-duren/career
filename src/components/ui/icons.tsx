@@ -3,7 +3,7 @@ import { cn } from '../../lib/utils';
 
 // Thin line icons (1px stroke, currentColor), never filled. Decorative (aria-hidden): the
 // control around an icon carries the accessible name (IconButton's label, for example).
-type IconProps = Omit<SVGProps<SVGSVGElement>, 'children'> & { size?: number };
+export type IconProps = Omit<SVGProps<SVGSVGElement>, 'children'> & { size?: number };
 
 function icon(name: string, paths: ReactNode, viewBox = 16) {
   function Icon({ size = 16, className, ...props }: IconProps) {
@@ -45,3 +45,9 @@ export const MicIcon = icon('Mic', <><rect x="6" y="2" width="4" height="7.5" rx
 export const LinkIcon = icon('Link', <path d="M6.5 9.5 L9.5 6.5 M7 4.5 L8.5 3 A2.5 2.5 0 0 1 13 6.5 L11.5 8 M9 11.5 L7.5 13 A2.5 2.5 0 0 1 3 9.5 L4.5 8" />);
 // Skipped: a circle with a slash (drawn in --accent by the caller).
 export const SkippedIcon = icon('Skipped', <><circle cx="8" cy="8" r="7" /><path d="M3 13 L13 3" /></>);
+
+// Bookshelf item types (book, paper, course). Shared by the Bookshelf page and search results,
+// so the same item reads the same everywhere. Drawn on an 18-unit grid (16x18 marks, centred).
+export const BookIcon = icon('Book', <><rect x="2" y="1" width="14" height="16" /><path d="M5 1 V17" /></>, 18);
+export const PaperIcon = icon('Paper', <path d="M2 1 H11 L16 6 V17 H2 Z M11 1 V6 H16" />, 18);
+export const CourseIcon = icon('Course', <><rect x="2" y="3" width="14" height="12" /><path d="M7 6 L12 9 L7 12 Z" /></>, 18);
