@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { RunningClips } from './RunningRecorder';
+import RunningRecorder, { RunningClips } from './RunningRecorder';
+import { AudioThoughts } from './AudioThoughts';
 import MarkdownPreview from './MarkdownPreview';
 import type { JournalWeek, WorkspaceEntry as Entry, EntryKind, NoteTodo } from '../lib/workspace';
 import { getEntryId as entryId, getEntryTitle as entryTitle } from '../lib/workspace';
@@ -7,9 +8,7 @@ import EntryFields, { EntryChecklist } from './EntryFields';
 import { NoteTodos, TagInput } from './NoteInputs';
 import { appendDailyEntry, localDate, newWeek } from '../lib/workspace';
 import type { Note, RunningNote } from '../lib/workspace';
-import { THOUGHT_PLACEHOLDER, isAutoTitle, thoughtDate, thoughtExcerpt, thoughtTitle } from '../lib/audio-thoughts';
-import { AudioLines, Trash2 } from 'lucide-react';
-import { tagChipClass } from '../lib/tag-colors';
+import { THOUGHT_PLACEHOLDER, isAutoTitle, matchesThought, thoughtDate, thoughtTitle } from '../lib/audio-thoughts';
 import { filterNotes, noteCardDate, noteStats, topicCounts, withoutTitleHeading } from '../lib/note-card';
 import { NotesList } from './NotesList';
 import { Button, Label, buttonClassName } from './ui';
@@ -62,19 +61,6 @@ function Preview({ body }: { body: string }) {
 }
 function Transcribing({ label }: { label: string }) {
   return <span className="inline-flex items-center gap-2 text-sm text-ink-60"><span className="size-1.5 animate-pulse rounded-full bg-accent" />{label}</span>;
-}
-function ThoughtCard({ thought, selected, disabled, onOpen, onDelete }: { thought: RunningNote; selected: boolean; disabled: boolean; onOpen: () => void; onDelete: () => void }) {
-  const excerpt = thoughtExcerpt(thought), untitled = isAutoTitle(thought.title), name = untitled ? 'Untitled thought' : thought.title;
-  return <div className="relative">
-    <button type="button" data-thought-open={thought.id} disabled={disabled} onClick={onOpen} className={`group flex h-full w-full flex-col gap-2 rounded-xl border p-4 text-left transition-colors ${selected ? 'border-sky-500 bg-sky-950/30' : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-600 hover:bg-zinc-900'}`}>
-      <span className={`block pr-10 font-medium ${untitled ? 'text-zinc-400 italic' : 'text-zinc-100'}`}>{name}</span>
-      {excerpt ? <span className="line-clamp-2 text-sm leading-relaxed text-zinc-400">{excerpt}</span> : <Transcribing label="Waiting for transcription…" />}
-      <span className="mt-auto flex flex-wrap items-center gap-2 pt-1 text-xs text-zinc-500">{thoughtDate(thought.startedAt)}{thought.tags.map(tag => <span key={tag} className={`${tagChipClass(tag)} px-2 py-0.5`}>{tag}</span>)}</span>
-    </button>
-    <button type="button" disabled={disabled} onClick={onDelete} aria-label={`Delete ${name}`} title="Delete thought" className="absolute right-1 top-1 flex min-h-11 min-w-11 items-center justify-center rounded-lg text-zinc-500 hover:bg-red-950/40 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 disabled:cursor-not-allowed disabled:opacity-50">
-      <Trash2 className="size-4" aria-hidden />
-    </button>
-  </div>;
 }
 export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialId?: string }) {
   const listFirst = kind === 'note' || kind === 'week' || kind === 'personal' || kind === 'run';
@@ -363,7 +349,7 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
   const loadedEntries = entries ?? [];
   const topics = kind === 'note' ? topicCounts(loadedEntries as Note[]).map(topic => topic.name) : [];
   const tagOptions = [...new Set(loadedEntries.flatMap(item => item.tags))].sort((a, b) => a.localeCompare(b));
-  const filtered = kind === 'note' ? filterNotes(loadedEntries as Note[], selectedTopic, query) : [...loadedEntries].filter(e => `${entryTitle(e)} ${e.tags.join(' ')}`.toLowerCase().includes(query.toLowerCase()))
+  const filtered = kind === 'note' ? filterNotes(loadedEntries as Note[], selectedTopic, query) : [...loadedEntries].filter(e => kind === 'run' ? matchesThought(e as RunningNote, query) : `${entryTitle(e)} ${e.tags.join(' ')}`.toLowerCase().includes(query.toLowerCase()))
     .sort((a, b) => kind === 'run' ? ('startedAt' in b ? b.startedAt : '').localeCompare('startedAt' in a ? a.startedAt : '') : kind === 'personal' ? (('date' in b ? b.date : '') || '').localeCompare(('date' in a ? a.date : '') || '') || (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') : kind === 'week' ? (b as JournalWeek).dates.localeCompare((a as JournalWeek).dates) : (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') || entryTitle(a).localeCompare(entryTitle(b)));
 
   const reading = listFirst && entry !== null;
@@ -390,16 +376,17 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
   }, [entries, busy]);
 
   const notes = kind === 'note';
+  const run = kind === 'run';
   const autoTitled = !!entry && 'runDate' in entry && isAutoTitle(entry.title);
   const Title = notes ? 'h1' : 'h2';
   const tagChip = 'border border-solid border-ink-30 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-ink';
-  const statusText = status || (!entries ? (error ? 'Content is unavailable. Use Reload latest to retry.' : 'Loading your content…') : notes ? '' : `${loadedEntries.length} entries`);
-  return <section className={notes ? 'flex flex-col gap-5' : 'space-y-5'} data-thought-reading={kind === 'run' && reading ? '' : undefined}>
+  const statusText = status || (!entries ? (error ? 'Content is unavailable. Use Reload latest to retry.' : 'Loading your content…') : notes || run ? '' : `${loadedEntries.length} entries`);
+  return <section className={notes || run ? 'flex flex-col gap-5' : 'space-y-5'} data-thought-reading={run && reading ? '' : undefined}>
     {reading && <div className="flex flex-wrap gap-2">
       <button ref={backButton} type="button" className={button} disabled={busy} onClick={backToList}>← Back to {notes ? 'notes' : kind === 'run' ? 'audio thoughts' : 'journal'}</button>
       <button type="button" className={button} disabled={busy} onClick={() => void load()}>Reload latest</button>
     </div>}
-    {!notes && <div hidden={reading}>
+    {!notes && !run && <div hidden={reading}>
       <div className="flex flex-wrap gap-2">
       {kind === 'book' ? (['book', 'course', 'paper'] as const).map(type => <button key={type} type="button" className={primary} disabled={!entries || busy} onClick={() => create(type)}>+ New {type === 'course' ? 'video course' : type}</button>) : <button type="button" className={primary} disabled={!entries || busy} onClick={() => create()}>{kind === 'week' ? '+ This week' : `+ New ${labels[kind]}`}</button>}
       <a className={button} href="/api/export" download={`career-workspace-${localDate()}.json`}>Export all data</a>
@@ -410,29 +397,26 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
       {error.includes('changed') && <p className="mt-2 text-sm">Copy your draft before reopening an entry. Reloading refreshes the list without replacing your draft.</p>}
     </div>}
     {/* Notes: an empty status line takes no room; the negative margin cancels its flex gap. */}
-    <p role="status" className={`text-sm text-ink-60 ${notes ? 'empty:-mb-5' : ''}`}>{statusText}</p>
+    <p role="status" className={`text-sm text-ink-60 ${notes || run ? 'empty:-mb-5' : ''}`}>{statusText}</p>
     {notes && <div hidden={reading}>
       <NotesList notes={entries as Note[] | null} shown={filtered as Note[]} topic={selectedTopic} onTopic={setSelectedTopic} query={query} onQuery={setQuery}
         onOpen={choose} onCreate={() => create()} busy={busy} failed={!!error} onReload={() => void load()} />
     </div>}
-    {!notes && <div hidden={reading} className="space-y-5">
+    {run && <AudioThoughts thoughts={entries as RunningNote[] | null} shown={filtered as RunningNote[]} query={query} onQuery={setQuery}
+      onOpen={choose} onDelete={thought => void removeThought(thought)} onCreate={() => create()} busy={busy} failed={!!error} onReload={() => void load()}
+      reading={reading} emptyRef={emptyThoughts} recorder={<RunningRecorder />} />}
+    {!notes && !run && <div hidden={reading} className="space-y-5">
     <label className="block text-sm text-ink-60">Search {kind === 'week' ? 'journal' : `${labels[kind]} entries`}<input className={`${field} mt-1`} type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search titles, tags, and content" /></label>
     </div>}
-    <div className={listFirst ? "space-y-5" : "grid gap-5 md:grid-cols-[220px_minmax(0,1fr)]"}>
-      {!notes && <nav hidden={reading} aria-label={`${labels[kind]} entries`} className={kind === 'run' ? 'grid gap-3 sm:grid-cols-2' : listFirst ? "space-y-2" : "max-h-72 overflow-y-auto space-y-2 md:max-h-[700px]"}>
-        {kind === 'run' && entries && filtered.length === 0 && <div ref={emptyThoughts} tabIndex={-1} className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-700 px-6 py-10 text-center sm:col-span-2">
-          <AudioLines className="size-8 text-zinc-600" aria-hidden />
-          <p className="font-medium text-zinc-300">{loadedEntries.length ? 'No thoughts match your search' : 'No audio thoughts yet'}</p>
-          <p className="max-w-sm text-sm text-zinc-500">{loadedEntries.length ? 'Try fewer words, or clear the search to see everything.' : 'Record a take above. It shows up here and is named after its first few words once it is transcribed.'}</p>
-        </div>}
-        {kind !== 'run' && entries && filtered.length === 0 && <p className="text-sm text-zinc-400">No matching entries.</p>}
-        {kind === 'run' && filtered.map(item => <ThoughtCard key={entryId(item)} thought={item as RunningNote} selected={!!entry && entryId(entry) === entryId(item)} disabled={busy} onOpen={() => choose(item)} onDelete={() => void removeThought(item as RunningNote)} />)}
-        {kind !== 'run' && filtered.map(item => <button type="button" disabled={busy} key={entryId(item)} onClick={() => choose(item)} className={`w-full rounded-lg border p-3 text-left ${entry && entryId(entry) === entryId(item) ? 'border-blue-500 bg-blue-950/30' : 'border-zinc-800 hover:bg-zinc-900'}`}>
+    {(!run || entry) && <div className={listFirst ? "space-y-5" : "grid gap-5 md:grid-cols-[220px_minmax(0,1fr)]"}>
+      {!notes && !run && <nav hidden={reading} aria-label={`${labels[kind]} entries`} className={listFirst ? "space-y-2" : "max-h-72 overflow-y-auto space-y-2 md:max-h-[700px]"}>
+        {entries && filtered.length === 0 && <p className="text-sm text-zinc-400">No matching entries.</p>}
+        {filtered.map(item => <button type="button" disabled={busy} key={entryId(item)} onClick={() => choose(item)} className={`w-full rounded-lg border p-3 text-left ${entry && entryId(entry) === entryId(item) ? 'border-blue-500 bg-blue-950/30' : 'border-zinc-800 hover:bg-zinc-900'}`}>
           <span className="block text-sm font-medium">{entryTitle(item)}</span>
           <span className="mt-1 block text-xs text-zinc-400">{'week' in item ? (item.hours ? `${Object.values(item.hours as Record<string, number>).reduce((a, b) => a + b, 0)}h logged` : 'Work journal') : 'status' in item ? item.status.replaceAll('_', ' ') : 'description' in item ? item.description : 'runDate' in item ? item.runDate : ''}</span>
         </button>)}
       </nav>}
-      {entry && <div className={`order-first min-w-0 md:order-last ${notes ? 'max-w-[920px]' : 'border border-solid border-ink-14 p-4 sm:p-5'}`}>
+      {entry && <div className={`order-first min-w-0 md:order-last ${notes || run ? 'max-w-[920px]' : 'border border-solid border-ink-14 p-4 sm:p-5'}`}>
         {editing ? <form onSubmit={e => { e.preventDefault(); void save(); }} className="space-y-4">
           <fieldset disabled={busy} className="space-y-4 disabled:opacity-60">
             <EntryFields entry={entry} change={change} topics={topics} />
@@ -459,7 +443,7 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
         </div>}
         {kind === 'run' && entry && baseRevision && <RunningClips noteId={entryId(entry)} />}
       </div>}
-    </div>
+    </div>}
   </section>;
 }
 
