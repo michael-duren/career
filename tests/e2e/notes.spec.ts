@@ -7,7 +7,7 @@ const notes = [
   note('systems/raft', 'Raft consensus', 'Systems', '2026-11-25T15:00:00Z', { description: 'Leader election and log replication.', summary: { wordCount: 1228, todoCount: 3, todoDone: 2 } }),
   note('sre/slo', 'SLOs and error budgets', 'SRE', '2026-11-26T15:00:00Z', { tags: ['burn-rate'] }),
   note('db/mvcc', 'Postgres MVCC', 'Databases', '2026-11-20T15:00:00Z', { description: 'Snapshots, vacuum and bloat.' }),
-  note('systems/ebpf', 'eBPF basics', 'Systems', '2026-11-10T15:00:00Z'),
+  note('systems/ebpf', 'eBPF basics', 'Systems', '2025-11-10T15:00:00Z'),
 ];
 const raftDetail = { ...notes[0], summary: undefined, body: '# Raft consensus\n\nTerms and **elections**.', todos: [
   { id: '11111111-1111-4111-8111-111111111111', title: 'Read the paper', done: true },
@@ -35,6 +35,9 @@ async function mockNotes(page: Page) {
   return saves;
 }
 
+// Card dates show the year for other years, so pin "today" to 2026.
+test.beforeEach(async ({ page }) => { await page.clock.setFixedTime(new Date('2026-11-27T12:00:00')); });
+
 const cardTitles = (page: Page) => page.locator('main a[href^="/notes/"]:visible > span:nth-child(2)');
 
 test('desktop: header counts, topics, card grid, single-topic filter and search', async ({ page }) => {
@@ -47,6 +50,7 @@ test('desktop: header counts, topics, card grid, single-topic filter and search'
   const topics = main.getByRole('navigation', { name: 'Topics' });
   await expect(topics.getByRole('button')).toHaveText([/^All\s*4$/, /^Databases\s*1$/, /^SRE\s*1$/, /^Systems\s*2$/]);
   await expect(topics.getByRole('button', { name: /^All/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(main.getByTestId('notes-topic').filter({ visible: true })).toHaveText('All topics');
 
   // Most recently updated first; each card links to its note page.
   await expect(cardTitles(page)).toHaveText(['SLOs and error budgets', 'Raft consensus', 'Postgres MVCC', 'eBPF basics']);
@@ -58,6 +62,7 @@ test('desktop: header counts, topics, card grid, single-topic filter and search'
   await expect(raft).toContainText('Leader election and log replication.');
   await expect(raft).toContainText('2/3');
   await expect(raft.getByRole('progressbar', { name: 'Raft consensus todos done' })).toHaveAttribute('aria-valuenow', '67');
+  await expect(main.getByRole('link', { name: /eBPF basics/ })).toContainText('Nov 10 2025');
   // No todos, no progress bar.
   await expect(main.getByRole('link', { name: /Postgres MVCC/ }).getByRole('progressbar')).toHaveCount(0);
 
@@ -66,12 +71,13 @@ test('desktop: header counts, topics, card grid, single-topic filter and search'
   await expect(topics.getByRole('button', { name: /^Systems/ })).toHaveAttribute('aria-pressed', 'true');
   await expect(topics.getByRole('button', { name: /^All/ })).toHaveAttribute('aria-pressed', 'false');
   await expect(cardTitles(page)).toHaveText(['Raft consensus', 'eBPF basics']);
-  await expect(main.getByRole('heading', { name: 'RECENTLY UPDATED' }).locator('..')).toContainText('Systems');
+  await expect(main.getByTestId('notes-topic').filter({ visible: true })).toHaveText('Systems');
   await topics.getByRole('button', { name: /^SRE/ }).click();
   await expect(cardTitles(page)).toHaveText(['SLOs and error budgets']);
 
   // Search covers titles, summaries, topics and tags within the chosen topic.
   await topics.getByRole('button', { name: /^All/ }).click();
+  await expect(main.getByTestId('notes-topic').filter({ visible: true })).toHaveText('All topics');
   const search = main.getByRole('searchbox', { name: 'Search notes' });
   await search.fill('vacuum');
   await expect(cardTitles(page)).toHaveText(['Postgres MVCC']);
@@ -97,17 +103,19 @@ test('a card opens the note in place; the reader keeps the editor and todos', as
 
   // Checking a todo while reading saves it straight away with the loaded revision.
   await main.getByRole('checkbox', { name: 'Mark Log replication done' }).click();
-  await expect(main.getByRole('status')).toHaveText('Saved.');
+  await expect(main.getByRole('status').filter({ hasText: 'Saved.' })).toHaveCount(1);
   expect(saves).toHaveLength(1);
   expect(saves[0].revision).toBe('r1');
   expect((saves[0].entry.todos as { done: boolean }[]).map(todo => todo.done)).toEqual([true, true, true]);
 
   // Edit and save the summary.
   await main.getByRole('button', { name: 'Edit' }).click();
+  // The editor keeps the body's heading; only the reader hides it.
+  await expect(main.getByRole('textbox', { name: 'Markdown' })).toHaveValue(/^# Raft consensus\n/);
   await main.getByRole('textbox', { name: 'Summary' }).fill('Terms, elections and logs.');
   await main.getByRole('button', { name: 'Save' }).click();
   await expect(main.getByRole('paragraph').filter({ hasText: 'Terms, elections and logs.' })).toBeVisible();
-  expect(saves[1]).toMatchObject({ revision: 'saved', entry: { id: 'systems/raft', topic: 'Systems', description: 'Terms, elections and logs.' } });
+  expect(saves[1]).toMatchObject({ revision: 'saved', entry: { id: 'systems/raft', topic: 'Systems', description: 'Terms, elections and logs.', body: raftDetail.body } });
 
   await main.getByRole('button', { name: '← Back to notes' }).click();
   await expect(main.getByRole('heading', { level: 1, name: 'Notes' })).toBeVisible();
@@ -144,6 +152,8 @@ test.describe('phone', () => {
     const chips = main.getByRole('group', { name: 'Topics' });
     await expect(chips.getByRole('button')).toHaveText([/^All 4$/, /^Databases 1$/, /^SRE 1$/, /^Systems 2$/]);
     await expect(cardTitles(page)).toHaveText(['SLOs and error budgets', 'Raft consensus', 'Postgres MVCC', 'eBPF basics']);
+    // The chip strip scrolls inside the page; the page itself never scrolls sideways.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
     await chips.getByRole('button', { name: /^Systems/ }).click();
     await expect(chips.getByRole('button', { name: /^Systems/ })).toHaveAttribute('aria-pressed', 'true');
@@ -153,8 +163,6 @@ test.describe('phone', () => {
 
     await main.getByRole('button', { name: 'New note' }).click();
     await expect(main.getByRole('combobox', { name: 'Topic' })).toHaveValue('Systems');
-    const width = await page.evaluate(() => document.documentElement.scrollWidth);
-    expect(width).toBeLessThanOrEqual(390);
   });
 });
 
@@ -177,4 +185,32 @@ test('a note page opens the reader and Back shows that note’s topic', async ({
   } finally {
     await page.request.delete('/api/entries/note', { headers: { Origin: baseURL! }, data: { id, revision } });
   }
+});
+
+test('a modified click opens the note page in a new tab', async ({ page, context }) => {
+  await mockNotes(page);
+  await page.goto('/notes');
+  const main = page.locator('main');
+  const [tab] = await Promise.all([context.waitForEvent('page'), main.getByRole('link', { name: /Postgres MVCC/ }).click({ modifiers: ['ControlOrMeta'] })]);
+  expect(new URL(tab.url()).pathname).toBe('/notes/db/mvcc');
+  await tab.close();
+  // The list itself stays put.
+  await expect(main.getByRole('heading', { level: 1, name: 'Notes' })).toBeVisible();
+});
+
+test('a failed list load says so and Reload latest retries', async ({ page }) => {
+  let fail = true;
+  await page.route('**/api/entries/note**', route => fail
+    ? route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: 'Database unavailable.' }) })
+    : route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ entries: notes.map(entry => ({ entry, revision: 'r1' })), nextOffset: null }) }));
+  await page.goto('/notes');
+  const main = page.locator('main');
+  await expect(main.getByRole('alert')).toContainText('Database unavailable.');
+  await expect(main.getByText('Notes unavailable').filter({ visible: true })).toHaveCount(1);
+  await expect(main.getByRole('button', { name: '+ New note' })).toBeDisabled();
+  fail = false;
+  await main.getByRole('button', { name: 'Reload latest' }).click();
+  await expect(main.getByText('4 notes · 3 topics').filter({ visible: true })).toHaveCount(1);
+  await expect(main.getByRole('alert')).toHaveCount(0);
+  await expect(main.getByRole('button', { name: 'Reload latest' })).toHaveCount(0);
 });

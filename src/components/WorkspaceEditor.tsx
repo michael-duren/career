@@ -10,7 +10,7 @@ import type { Note, RunningNote } from '../lib/workspace';
 import { THOUGHT_PLACEHOLDER, isAutoTitle, thoughtDate, thoughtExcerpt, thoughtTitle } from '../lib/audio-thoughts';
 import { AudioLines, Trash2 } from 'lucide-react';
 import { tagChipClass } from '../lib/tag-colors';
-import { filterNotes, noteCardDate, noteStats, withoutTitleHeading } from '../lib/note-card';
+import { filterNotes, noteCardDate, noteStats, topicCounts, withoutTitleHeading } from '../lib/note-card';
 import { NotesList } from './NotesList';
 import { Label, buttonClassName } from './ui';
 import type { BookType } from '../lib/books';
@@ -361,16 +361,16 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
     return takesForThought(queued, noteId, (result.clips ?? []).map((clip: { recordedAt: string }) => clip.recordedAt), result.groupWindowMs);
   }
   const loadedEntries = entries ?? [];
-  const topics = [...new Set(loadedEntries.flatMap(note => 'topic' in note ? [note.topic] : []))].sort((a, b) => a.localeCompare(b));
+  const topics = kind === 'note' ? topicCounts(loadedEntries as Note[]).map(topic => topic.name) : [];
   const tagOptions = [...new Set(loadedEntries.flatMap(item => item.tags))].sort((a, b) => a.localeCompare(b));
   const filtered = kind === 'note' ? filterNotes(loadedEntries as Note[], selectedTopic, query) : [...loadedEntries].filter(e => `${entryTitle(e)} ${e.tags.join(' ')}`.toLowerCase().includes(query.toLowerCase()))
     .sort((a, b) => kind === 'run' ? ('startedAt' in b ? b.startedAt : '').localeCompare('startedAt' in a ? a.startedAt : '') : kind === 'personal' ? (('date' in b ? b.date : '') || '').localeCompare(('date' in a ? a.date : '') || '') || (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') : kind === 'week' ? (b as JournalWeek).dates.localeCompare((a as JournalWeek).dates) : (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') || entryTitle(a).localeCompare(entryTitle(b)));
 
   const reading = listFirst && entry !== null;
-  // A deleted or renamed note can empty the chosen topic; fall back to all notes.
+  // A deleted or moved note can empty the chosen topic; back on the list, fall back to all notes.
   useEffect(() => {
-    if (kind === 'note' && entries && selectedTopic !== null && !topics.includes(selectedTopic)) setSelectedTopic(null);
-  }, [entries, selectedTopic]);
+    if (kind === 'note' && entries && !entry && selectedTopic !== null && !topics.includes(selectedTopic)) setSelectedTopic(null);
+  }, [entries, entry, selectedTopic, topics.join('\n')]);
   useEffect(() => {
     if (reading) {
       backButton.current?.focus();
@@ -413,7 +413,7 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
     <p role="status" className={`text-sm text-ink-60 ${notes ? 'empty:-mb-5' : ''}`}>{statusText}</p>
     {notes && <div hidden={reading}>
       <NotesList notes={entries as Note[] | null} shown={filtered as Note[]} topic={selectedTopic} onTopic={setSelectedTopic} query={query} onQuery={setQuery}
-        onOpen={choose} onCreate={() => create()} busy={busy} />
+        onOpen={choose} onCreate={() => create()} busy={busy} failed={!!error} onReload={() => void load()} />
     </div>}
     {!notes && <div hidden={reading} className="space-y-5">
     <label className="block text-sm text-ink-60">Search {kind === 'week' ? 'journal' : `${labels[kind]} entries`}<input className={`${field} mt-1`} type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search titles, tags, and content" /></label>

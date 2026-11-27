@@ -18,19 +18,6 @@ export function noteStats(note: Pick<Note, 'body' | 'todos' | 'summary'>): NoteS
   return { words, minutes: words ? Math.max(1, Math.round(words / WORDS_PER_MINUTE)) : 0, todos, todosDone };
 }
 
-/** "Today", "Yesterday", "3 days ago", then a short calendar date. */
-export function noteDate(iso: string | undefined, now = new Date()): string {
-  if (!iso) return '';
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return '';
-  const day = (d: Date) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
-  const days = Math.round((day(now) - day(date)) / 86_400_000);
-  if (days <= 0) return 'Today';
-  if (days === 1) return 'Yesterday';
-  if (days < 7) return `${days} days ago`;
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', ...(date.getFullYear() === now.getFullYear() ? {} : { year: 'numeric' }) });
-}
-
 export interface TopicCount { name: string; count: number }
 
 /** Topics in use with how many notes each holds, alphabetical. */
@@ -53,7 +40,7 @@ export function filterNotes<T extends Pick<Note, 'title' | 'topic' | 'descriptio
     .sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') || a.title.localeCompare(b.title));
 }
 
-/** "Nov 25" for this year, "Nov 25 2025" for earlier years; '' when missing or invalid. */
+/** "Nov 25" for this year, "Nov 25 2025" for other years; '' when missing or invalid. */
 export function noteCardDate(iso: string | undefined, now = new Date()): string {
   if (!iso) return '';
   const date = new Date(iso);
@@ -64,6 +51,7 @@ export function noteCardDate(iso: string | undefined, now = new Date()): string 
 
 /** The body without a leading "# Title" heading that repeats the note's title (the reader already shows it). */
 export function withoutTitleHeading(body: string, title: string): string {
-  const match = /^\s*#[ \t]+(.+?)[ \t#]*(?:\r?\n|$)/.exec(body);
+  // An optional closing run of #s counts only after whitespace (CommonMark), so "# C#" keeps its #.
+  const match = /^\s*#[ \t]+(.+?)(?:[ \t]+#+)?[ \t]*(?:\r?\n|$)/.exec(body);
   return match && match[1].trim() === title.trim() ? body.slice(match[0].length).replace(/^\s*\n/, '') : body;
 }

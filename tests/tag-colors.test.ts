@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { NEUTRAL_TONE, TAG_PALETTE, entryTone, tagChipClass, tagHash, tagTone } from '../src/lib/tag-colors.ts';
-import { countWords, filterNotes, matchesNoteSearch, noteCardDate, noteDate, noteStats, topicCounts, withoutTitleHeading } from '../src/lib/note-card.ts';
+import { countWords, filterNotes, matchesNoteSearch, noteCardDate, noteStats, topicCounts, withoutTitleHeading } from '../src/lib/note-card.ts';
 
 test('a tag always maps to the same palette color', () => {
   assert.equal(tagHash('systems'), tagHash('systems'));
@@ -55,16 +55,6 @@ test('note stats prefer the list summary and fall back to the body', () => {
   assert.deepEqual(noteStats({ body: '' }), { words: 0, minutes: 0, todos: 0, todosDone: 0 });
 });
 
-test('note dates read relative for the last week', () => {
-  const now = new Date(2026, 8, 26, 15);
-  assert.equal(noteDate(undefined, now), '');
-  assert.equal(noteDate('nope', now), '');
-  assert.equal(noteDate(new Date(2026, 8, 26, 1).toISOString(), now), 'Today');
-  assert.equal(noteDate(new Date(2026, 8, 25, 23).toISOString(), now), 'Yesterday');
-  assert.equal(noteDate(new Date(2026, 8, 22, 12).toISOString(), now), '4 days ago');
-  assert.equal(noteDate(new Date(2026, 7, 1, 12).toISOString(), now), new Date(2026, 7, 1, 12).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }));
-});
-
 test('note topics are counted and listed alphabetically', () => {
   assert.deepEqual(topicCounts([{ topic: 'SRE' }, { topic: 'Go' }, { topic: 'SRE' }]), [{ name: 'Go', count: 1 }, { name: 'SRE', count: 2 }]);
   assert.deepEqual(topicCounts([]), []);
@@ -85,6 +75,8 @@ test('notes filter by one topic and search, newest update first', () => {
   assert.deepEqual(filterNotes(notes, null, 'b-tree').map(n => n.title), ['Indexes']);
   assert.deepEqual(filterNotes(notes, null, 'databases').map(n => n.title), ['Indexes']);
   assert.deepEqual(filterNotes(notes, 'Databases', 'raft'), []);
+  // Same update time: by title.
+  assert.deepEqual(filterNotes([note('b', 'X', 'same'), note('a', 'X', 'same')], null, '').map(n => n.title), ['a', 'b']);
   assert.equal(matchesNoteSearch(notes[0], '   '), true);
 });
 
@@ -104,4 +96,7 @@ test('the reader drops a leading heading that repeats the note title', () => {
   assert.equal(withoutTitleHeading('# Paxos\nBody', 'Raft consensus'), '# Paxos\nBody');
   assert.equal(withoutTitleHeading('## Raft consensus\nBody', 'Raft consensus'), '## Raft consensus\nBody');
   assert.equal(withoutTitleHeading('Intro\n# Raft consensus', 'Raft consensus'), 'Intro\n# Raft consensus');
+  // A # that is part of the title is not a closing sequence.
+  assert.equal(withoutTitleHeading('# C#\nBody', 'C#'), 'Body');
+  assert.equal(withoutTitleHeading('# C# ##\nBody', 'C#'), 'Body');
 });
