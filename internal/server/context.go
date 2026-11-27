@@ -254,7 +254,15 @@ func (s *Server) search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for _, item := range found {
-		results = append(results, result{SiteResult: item, Module: searchModules[item.Kind], Excerpt: excerpt(item.Body, query, 160)})
+		text := excerpt(item.Body, query, 160)
+		// Cut mid-text: drop the partial first word and mark the cut.
+		if !strings.HasPrefix(item.Body, text) {
+			if i := strings.IndexAny(text, " \n"); i >= 0 && i < 24 {
+				text = text[i+1:]
+			}
+			text = "…" + strings.TrimLeft(text, " \n")
+		}
+		results = append(results, result{SiteResult: item, Module: searchModules[item.Kind], Excerpt: text})
 	}
 	respond(w, 200, map[string]any{"results": results, "totals": totals})
 }
