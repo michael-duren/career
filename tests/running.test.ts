@@ -191,3 +191,29 @@ test('audio thought titles match the server: first six words, "..." when cut, ge
   assert.equal(thoughtExcerpt({ excerpt: 'from list' }), 'from list');
   assert.equal(thoughtExcerpt({ body: 'full\n\nbody  text' }), 'full body text');
 });
+
+test('recordings list: 12-hour stamps, transcript search, waveform from live levels', async () => {
+  const { recordingStamp, matchesThought, thoughtDate, waveformPoints } = await import('../src/lib/audio-thoughts.ts');
+  const local = (y: number, m: number, d: number, h: number, min: number) => new Date(y, m - 1, d, h, min).toISOString();
+  const now = new Date(2026, 10, 27, 12);
+  assert.deepEqual(recordingStamp(local(2026, 11, 1, 10, 11), now), { date: 'NOV 1', time: '10:11 AM' });
+  assert.deepEqual(recordingStamp(local(2026, 9, 27, 0, 5), now), { date: 'SEP 27', time: '12:05 AM' });
+  assert.deepEqual(recordingStamp(local(2025, 12, 30, 18, 0), now), { date: 'DEC 30 2025', time: '6:00 PM' });
+  assert.deepEqual(recordingStamp('not a date', now), { date: '', time: '' });
+  assert.equal(thoughtDate(local(2026, 11, 24, 7, 15)), 'Tue 24 Nov · 7:15 AM');
+  assert.equal(thoughtDate('nope'), '');
+
+  const thought = { title: 'Graph plan', tags: ['study'], excerpt: 'Breadth first search on grids, then union find.' };
+  assert.equal(matchesThought(thought, ''), true);
+  assert.equal(matchesThought(thought, '  UNION find '), true, 'transcript text is searched, case-insensitively');
+  assert.equal(matchesThought(thought, 'study'), true);
+  assert.equal(matchesThought(thought, 'graph'), true);
+  assert.equal(matchesThought(thought, 'kafka'), false);
+  assert.equal(matchesThought({ title: 'x', tags: [], body: 'full body words' }, 'body'), true);
+
+  const flat = waveformPoints([], { width: 20, height: 44, step: 5 });
+  assert.equal(flat, '0,22 5,22 10,22 15,22 20,22');
+  // Newest levels sit at the right edge and swing above and below the middle; levels clamp to 0..1.
+  assert.equal(waveformPoints([1, 0.5, 2], { width: 20, height: 44, step: 5 }), '0,22 5,22 10,2 15,32 20,2');
+  assert.equal(waveformPoints(Array(100).fill(0), { width: 20, step: 5 }).split(' ').length, 5);
+});
