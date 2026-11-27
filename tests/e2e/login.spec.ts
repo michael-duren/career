@@ -3,7 +3,8 @@ import { test, expect, type Page } from '@playwright/test';
 // Login page, logged out. The failed attempt is followed by a good one, which resets the
 // server's per-IP attempt counter (10 per 15 minutes).
 
-test.use({ storageState: { cookies: [], origins: [] } });
+// Service workers are blocked so page.route sees the settings check.
+test.use({ storageState: { cookies: [], origins: [] }, serviceWorkers: 'block' });
 
 const username = process.env.AUTH_USERNAME || 'pwa-test';
 const password = process.env.TEST_AUTH_PASSWORD || 'local-dev-password';
@@ -41,6 +42,9 @@ test('a failed login shows the server error, Cancel clears it, and a good login 
   await expect(user).toHaveValue('');
   await expect(pass).toHaveValue('');
 
+  // A fresh database has not finished setup, which would send the login to /setup
+  // (tests/e2e/setup.spec.ts covers that): answer the settings check as an existing install.
+  await page.route('**/api/settings', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ modules: {}, moduleOrder: [], theme: 'dark', setupCompletedAt: '2026-11-01T12:00:00Z' }) }));
   await user.fill(username);
   await pass.fill(password);
   await page.getByRole('button', { name: 'Sign in' }).click();

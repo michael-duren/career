@@ -23,6 +23,8 @@ var staticPages = map[string]string{
 	"/manage/companies": "manage/companies/index.html",
 	"/weekly-scheduler": "weekly-scheduler/index.html",
 	"/more":             "more/index.html",
+	"/setup":            "setup/index.html",
+	"/settings/general": "settings/general/index.html",
 	"/settings/modules": "settings/modules/index.html",
 	"/settings/theme":   "settings/theme/index.html",
 	"/settings/account": "settings/account/index.html",

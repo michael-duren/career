@@ -27,7 +27,7 @@ test('/settings opens Modules, and the settings nav marks the section', async ({
   await page.goto('/settings');
   await expect(page).toHaveURL(/\/settings\/modules$/);
   const nav = page.getByRole('navigation', { name: 'Settings' });
-  await expect(nav.getByRole('link')).toHaveText(['Modules', 'Theme', 'Account']);
+  await expect(nav.getByRole('link')).toHaveText(['General', 'Modules', 'Theme', 'Account']);
   await expect(nav.locator('[aria-current="page"]')).toHaveText('Modules');
   await expect(main(page).getByRole('heading', { level: 1 })).toHaveText('Modules');
 });
