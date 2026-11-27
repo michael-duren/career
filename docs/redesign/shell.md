@@ -34,8 +34,18 @@ and on the phone More page.
   opens a full-screen search page (`reference/mobile/M-Search.html`).
 - Results are grouped by module (Goals, Notes, Journal, Schedule, Companies, People, Books…)
   with a count per group, title + one-line context per result. Only enabled modules appear.
-- Uses the existing `GET /api/search`; extend it to return module/group and context if needed.
+- Uses `GET /api/search`, which returns each result's module, a context line and totals per kind.
 - Recent searches as chips when the query is empty.
+
+Implementation: `public/ui/site-search.js` runs the same `.site-search` markup on Astro pages
+(`src/components/SiteSearch.astro`) and Go pages (`internal/shell/header.templ`). `GET /api/search`
+returns up to 5 matches of each kind (title matches first, sessions soonest first) with the owning `module`, a `context`
+line, an `excerpt` around the match and `totals` per kind. Besides entries it finds goals (title,
+steps, notes), the next planned session of each scheduled title that has not ended (saved sessions, in the scheduler's time zone) and Leetgrinder problems;
+turned-off modules are left out. Groups follow the user's module order, documents last; a group
+shows "2 of 7" when it has more matches than shown. ↑/↓ move through results (or the recent chips),
+Enter opens the first result, Escape closes. Recent searches (5) are saved in `localStorage` as
+`career-recent-searches` when a result is opened, and cleared on sign out.
 
 ## Mobile (< 768px)
 
@@ -56,8 +66,9 @@ pads `body` by the tab bar's height so pages don't sit under it. `shell.js` show
 enabled modules in the user's order (from `/api/settings`, cached in `localStorage` as
 `career-shell-settings` so the next page draws them before the request answers) and marks the
 current tab: Home or a module tab, else More for `/more`, `/settings` and modules not in the bar.
-The search button opens the header search field under the top bar until the full-screen search
-page exists. Tab icons live in `internal/shell/tab-icons.json`, read by both headers. The More page
+The search button opens the full-screen search page: `shell.js` scrolls to the top, marks the header
+`is-searching`, and `shell.css` draws the search markup fixed between the top bar and the tab bar,
+with a Cancel button; Cancel, the button again or Escape closes it. Tab icons live in `internal/shell/tab-icons.json`, read by both headers. The More page
 is `src/pages/more.astro` (`MorePage.tsx`); counts come from `GET /api/counts`, the theme picker
 applies the theme and saves it with `PATCH /api/settings`.
 

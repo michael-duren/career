@@ -83,8 +83,11 @@ func TestTabBarHasHomeEveryModuleAndMore(t *testing.T) {
 			t.Errorf("tab %s has no icon in tab-icons.json", tab.ID)
 		}
 	}
-	if !strings.Contains(html, `data-app-search-toggle`) || !strings.Contains(html, `id="site-search-box"`) {
-		t.Error("phone search button missing")
+	if !strings.Contains(html, `data-app-search-toggle`) || !strings.Contains(html, `id="site-search-box"`) || !strings.Contains(html, `data-app-search-cancel`) {
+		t.Error("phone search button or full-screen search Cancel missing")
+	}
+	if !strings.Contains(html, `id="search-recent-list"`) || strings.Contains(html, `id="search-kind"`) {
+		t.Error("search panel should have recent searches and no collection picker")
 	}
 }
 

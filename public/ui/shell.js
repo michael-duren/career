@@ -11,7 +11,7 @@
  * - moves links that don't fit into the MORE + menu, which shows only when something overflows;
  * - keeps the 12-hour clock current;
  * - below 768px: fills the tab bar (Home, the first TAB_BAR_SIZE enabled modules in the
- *   user's order, More) and opens the search field from the top bar's search button.
+ *   user's order, More) and opens the full-screen search from the top bar's search button.
  */
 
 /** Window event and BroadcastChannel name carrying the saved settings (keep in sync with src/lib/modules.ts). */
@@ -156,20 +156,44 @@ function initHeader(header) {
   document.addEventListener('focusin', event => { if (!moreItem.contains(event.target)) setOpen(false); });
   document.addEventListener('pointerdown', event => { if (!moreItem.contains(event.target)) setOpen(false); });
 
-  // Phone top bar: the search button shows the search field under the bar and focuses it.
+  // Phone top bar: the search button opens the full-screen search page (shell.css draws the
+  // header's search markup over the page, under the top bar; site-search.js runs it). Cancel, the
+  // button again or Escape closes it.
   const searchToggle = header.querySelector('[data-app-search-toggle]');
   const searchInput = header.querySelector('#site-search');
-  function setSearching(open) {
-    header.classList.toggle('is-searching', open);
-    searchToggle?.setAttribute('aria-expanded', String(open));
-    if (open) searchInput?.focus();
+  const searchPanel = header.querySelector('#search-panel');
+  const phone = matchMedia('(max-width: 767px)');
+  // The page starts under the top bar; re-measured when the bar reflows (rotation, font load).
+  function placeSearch() {
+    const top = header.querySelector('.app-header-row')?.getBoundingClientRect().bottom ?? 0;
+    header.style.setProperty('--app-search-top', `${Math.max(0, Math.round(top))}px`);
   }
-  searchToggle?.addEventListener('click', () => setSearching(!header.classList.contains('is-searching')));
+  function setSearching(open) {
+    if (open) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      placeSearch();
+    }
+    header.classList.toggle('is-searching', open);
+    document.documentElement.classList.toggle('app-search-open', open);
+    searchToggle?.setAttribute('aria-expanded', String(open));
+    if (open) {
+      searchInput?.focus();
+    } else if (searchPanel) {
+      searchPanel.hidden = true;
+      searchInput?.setAttribute('aria-expanded', 'false');
+    }
+  }
+  const searching = () => header.classList.contains('is-searching');
+  searchToggle?.addEventListener('click', () => setSearching(!searching()));
+  header.querySelector('[data-app-search-cancel]')?.addEventListener('click', () => { setSearching(false); searchToggle?.focus(); });
   document.addEventListener('keydown', event => {
-    if (event.key !== 'Escape' || !header.classList.contains('is-searching')) return;
+    if (event.key !== 'Escape' || !searching()) return;
     setSearching(false);
     searchToggle?.focus();
   });
+  // Wider than a phone the header field is back; drop the full-screen page.
+  phone.addEventListener('change', () => { if (!phone.matches && searching()) setSearching(false); });
+  window.addEventListener('resize', () => { if (searching()) placeSearch(); });
 
   new ResizeObserver(() => layout()).observe(header);
   document.fonts?.ready.then(layout);

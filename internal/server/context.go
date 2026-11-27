@@ -194,6 +194,26 @@ func (s *Server) agentContext(w http.ResponseWriter, r *http.Request) {
 	_, _ = fmt.Fprintf(w, "# Agent context\n\n%s\n\n# Current timeline goals\n\n%s\n\n# Work journal\n\n%s\n\n# Personal journal\n\n%s", strings.Join(contextRules, "\n- "), markdownEntries(goals), markdownEntries(work), markdownEntries(personal))
 }
 
+// searchModules maps the kinds global search returns to the module that owns
+// them: the registry's entry kinds plus the two non-entry kinds. Documents
+// belong to no module and are always searched.
+var searchModules = func() map[string]string {
+	out := map[string]string{"session": "schedule", "problem": "leetgrinder"}
+	for _, m := range modules.Registry {
+		for _, kind := range m.Kinds {
+			out[kind] = m.ID
+		}
+	}
+	return out
+}()
+
+// searchPerKind caps the matches of each kind; totals still count them all.
+const searchPerKind = 5
+
+// search serves the global search (docs/redesign/shell.md, "Global search"):
+// up to searchPerKind matches of each kind of turned-on module, with the
+// owning module, a context line and a short excerpt around the match, plus
+// the total matches per kind.
 func (s *Server) search(w http.ResponseWriter, r *http.Request) {
 	query := strings.TrimSpace(r.URL.Query().Get("q"))
 	if len(query) < 2 || len(query) > 200 {
@@ -201,22 +221,66 @@ func (s *Server) search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	kind := r.URL.Query().Get("kind")
+	if _, ok := searchModules[kind]; kind != "" && kind != "document" && !ok {
+		respond(w, 400, map[string]string{"error": "Unknown search kind."})
+		return
+	}
 	settings, err := s.moduleSettings(r.Context())
 	if err != nil {
 		failure(w, err)
 		return
 	}
-	disabled := settings.DisabledKinds()
+	effective := settings.Effective()
+	disabled := []string{}
+	for k, module := range searchModules {
+		if !effective[module] {
+			disabled = append(disabled, k)
+		}
+	}
+	sort.Strings(disabled)
+	type result struct {
+		database.SiteResult
+		Module  string `json:"module"`
+		Excerpt string `json:"excerpt"`
+	}
+	results := []result{}
 	if slices.Contains(disabled, kind) {
-		respond(w, 200, map[string]any{"results": []database.SearchResult{}})
+		respond(w, 200, map[string]any{"results": results, "totals": map[string]int{}})
 		return
 	}
-	results, err := s.db.SearchExcluding(r.Context(), query, 50, kind, disabled...)
+	found, totals, err := s.db.SiteSearch(r.Context(), query, searchPerKind, kind, s.clock(), disabled...)
 	if err != nil {
+		if r.Context().Err() != nil {
+			return // The client moved on (a newer keystroke aborted this request).
+		}
 		failure(w, err)
 		return
 	}
-	respond(w, 200, map[string]any{"results": results})
+	for _, item := range found {
+		results = append(results, result{SiteResult: item, Module: searchModules[item.Kind], Excerpt: searchExcerpt(item.Body, query)})
+	}
+	respond(w, 200, map[string]any{"results": results, "totals": totals})
+}
+
+// searchExcerpt is about 160 characters of body around the first match. When
+// it starts mid-text it begins with "…" and without the cut first word; when
+// it stops before the end it ends with "…".
+func searchExcerpt(body, query string) string {
+	text := excerpt(body, query, 160)
+	at := strings.Index(body, text)
+	cutEnd := at+len(text) < len(body)
+	if at > 0 {
+		if !strings.ContainsRune(" \n\t", rune(body[at-1])) {
+			if i := strings.IndexAny(text, " \n\t"); i >= 0 && i < 24 {
+				text = text[i:]
+			}
+		}
+		text = "…" + strings.TrimLeft(text, " \n\t")
+	}
+	if cutEnd {
+		text = strings.TrimRight(text, " \n\t") + "…"
+	}
+	return text
 }
 
 func markdownEntries(entries []any) string {

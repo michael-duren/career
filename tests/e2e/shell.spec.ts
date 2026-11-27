@@ -109,6 +109,88 @@ test('"/" jumps to the search field, but not while typing', async ({ page }) => 
   await expect(search).toHaveValue('a/b');
 });
 
+// A fixed /api/search answer: one result each from Timeline, Schedule and Leetgrinder, two of
+// seven journal matches and a document, as the API returns them (kinds in any order).
+const SEARCH_ANSWER = {
+  results: [
+    { kind: 'document', id: 'home', title: 'Home', module: '', context: '', excerpt: '# Focus\n\nAlloy work this week', titleMatch: false },
+    { kind: 'goal', id: 'g1', title: 'Contribute to Alloy', module: 'timeline', context: 'Active · Sep 14 → Dec 31', excerpt: '', titleMatch: true },
+    { kind: 'week', id: '2026/week-26', title: 'Week 26 · Oct 16', module: 'journal', context: '', excerpt: 'Did some stuff on **Alloy** in the morning.', titleMatch: false },
+    { kind: 'personal', id: 'p1', title: 'Alloy day', module: 'journal', context: 'Oct 17, 2026', excerpt: 'More Alloy', titleMatch: true },
+    { kind: 'session', id: 's1', title: 'Contribute to Alloy', module: 'schedule', context: 'Today · 7:00 PM – 8:00 PM', excerpt: '', titleMatch: true },
+    { kind: 'problem', id: 'alloy-tower', title: 'Alloy Tower', module: 'leetgrinder', context: '#9999 · Hard', excerpt: '', titleMatch: true },
+  ],
+  totals: { document: 1, goal: 1, week: 6, personal: 1, session: 1, problem: 1 },
+};
+
+async function mockSearch(page: Page) {
+  const queries: string[] = [];
+  await page.route('**/api/search?*', route => {
+    queries.push(new URL(route.request().url()).search);
+    return route.fulfill({ json: SEARCH_ANSWER });
+  });
+  return queries;
+}
+
+test('the header search groups results by module with counts, context and recent searches', async ({ page }) => {
+  const queries = await mockSearch(page);
+  // A saved module order (as shell.js caches it) puts Journal before Timeline's goals.
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem('seeded')) return;
+    sessionStorage.setItem('seeded', '1');
+    localStorage.removeItem('career-recent-searches');
+    localStorage.setItem('career-shell-settings', JSON.stringify({ modules: {}, moduleOrder: ['journal', 'timeline', 'schedule', 'leetgrinder'] }));
+  });
+  await page.route('**/api/settings', route => route.request().method() === 'GET'
+    ? route.fulfill({ json: { modules: {}, moduleOrder: ['journal', 'timeline', 'schedule', 'leetgrinder'], theme: 'dark', setupCompletedAt: '2026-01-01T00:00:00Z' } })
+    : route.fallback());
+  await page.goto('/books');
+  const search = page.getByRole('searchbox', { name: 'Search everything' });
+  await search.fill('alloy');
+  const panel = page.locator('#search-panel');
+  await expect(panel.locator('#search-status')).toHaveText('11 results for “alloy”');
+  expect(queries.at(-1)).toBe('?q=alloy');
+  // The saved module order, documents last.
+  await expect(panel.locator('.search-group h2')).toHaveText(['Journal', 'Goals', 'Schedule', 'Problems', 'Documents']);
+  const journal = panel.getByRole('list', { name: 'Journal' });
+  await expect(panel.locator('.search-group-count')).toHaveText(['2 of 7', '1', '1', '1', '1']);
+  // Title matches show their metadata; body matches show the text around the match.
+  await expect(journal.getByRole('link')).toHaveText(['Week 26 · Oct 16Did some stuff on Alloy in the morning.', 'Alloy dayOct 17, 2026']);
+  await expect(panel.getByRole('link', { name: /Contribute to Alloy\s*Active/ })).toHaveAttribute('href', '/timeline?goal=g1');
+  await expect(panel.getByRole('list', { name: 'Problems' }).getByRole('link')).toHaveAttribute('href', '/leetgrinder/problem/alloy-tower');
+
+  // Arrow keys walk the results in order and back to the field.
+  await search.press('ArrowDown');
+  await expect(journal.getByRole('link').first()).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(journal.getByRole('link').nth(1)).toBeFocused();
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.press('ArrowUp');
+  await expect(search).toBeFocused();
+
+  // Enter opens the first result and remembers the query.
+  await Promise.all([page.waitForURL(url => url.pathname === '/journal' && url.searchParams.get('id') === '2026/week-26', { waitUntil: 'commit' }), search.press('Enter')]);
+  await page.goto('/books');
+  await page.locator('body').press('/');
+  const chips = page.getByRole('group', { name: 'Recent' }).getByRole('button');
+  await expect(chips).toHaveText(['alloy']);
+  await search.press('ArrowDown');
+  await expect(chips.first()).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(search).toHaveValue('alloy');
+  await expect(panel.locator('.search-group')).toHaveCount(5);
+  await page.keyboard.press('Escape');
+  await expect(panel).toBeHidden();
+});
+
+test('the header search works on the Go-rendered Leetgrinder pages', async ({ page }) => {
+  await mockSearch(page);
+  await page.goto('/leetgrinder/problems');
+  await page.locator('body').press('/');
+  await page.keyboard.type('alloy');
+  await expect(page.locator('#search-panel .search-group h2')).toHaveText(['Goals', 'Schedule', 'Problems', 'Journal', 'Documents']);
+});
+
 test.describe('phone (< 768px)', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
@@ -139,17 +221,44 @@ test.describe('phone (< 768px)', () => {
     await expect(page.locator('meta[name="viewport"]')).toHaveAttribute('content', /viewport-fit=cover/);
   });
 
-  test('the search button opens the search field and Escape closes it', async ({ page }) => {
+  test('the search button opens the full-screen search; Cancel and Escape close it', async ({ page }) => {
+    await mockSearch(page);
     await page.goto('/books');
+    await page.evaluate(() => localStorage.setItem('career-recent-searches', JSON.stringify(['kth largest', 'raft'])));
+    await page.evaluate(() => window.scrollTo(0, 300));
     const toggle = page.getByRole('button', { name: 'Search everything' });
     const search = page.getByRole('searchbox', { name: 'Search everything' });
     await expect(search).toBeHidden();
     await toggle.tap();
     await expect(search).toBeFocused();
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    // It covers the page from under the top bar (scrolled back into view) to the tab bar.
+    const box = (await page.locator('.site-search').boundingBox())!;
+    const bar = (await page.locator('.app-header-row').boundingBox())!;
+    const tabBar = (await page.locator('[data-app-tabbar]').boundingBox())!;
+    expect(Math.abs(box.y - (bar.y + bar.height))).toBeLessThanOrEqual(1);
+    expect(Math.abs(box.y + box.height - tabBar.y)).toBeLessThanOrEqual(1);
+    expect([box.x, box.width]).toEqual([0, page.viewportSize()!.width]);
+    await expect(page.getByRole('group', { name: 'Recent' }).getByRole('button')).toHaveText(['kth largest', 'raft']);
+    await search.fill('alloy');
+    await expect(page.locator('.search-group h2')).toHaveText(['Goals', 'Schedule', 'Problems', 'Journal', 'Documents']);
+    await expect(page.getByRole('group', { name: 'Recent' })).toBeHidden();
+    // Tapping inside the page keeps it open.
+    await page.locator('#search-status').tap();
+    await expect(page.locator('.search-group')).toHaveCount(5);
+    await page.getByRole('button', { name: 'Cancel' }).tap();
+    await expect(search).toBeHidden();
+    await expect(toggle).toBeFocused();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await toggle.tap();
+    await expect(search).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(search).toBeHidden();
     await expect(toggle).toBeFocused();
+    // Opening a result goes to its page.
+    await toggle.tap();
+    await page.getByRole('list', { name: 'Problems' }).getByRole('link').tap();
+    await expect(page).toHaveURL('/leetgrinder/problem/alloy-tower');
   });
 
   test('turning a tab module off fills its slot, and More lists the rest', async ({ page }) => {
