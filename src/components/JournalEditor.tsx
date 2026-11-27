@@ -159,7 +159,7 @@ export function JournalEditor({ kind, item, isNew, recovered, onSaved, onCancel,
           </div>
         </div>
         {preview
-          ? <div className={`min-h-72 border border-ink-30 p-4 ${markdownTone}`}><MarkdownPreview body={entry.body} /></div>
+          ? <div className="min-h-72 border border-ink-30 p-4"><MarkdownPreview ink body={entry.body} /></div>
           : <textarea ref={'slug' in entry ? first : undefined} aria-labelledby={`${kind}-body-label`} className="min-h-80 w-full resize-y border border-ink-30 bg-transparent p-3 font-mono text-sm leading-relaxed text-ink placeholder:text-ink-60 focus:border-ink"
             maxLength={100000} value={entry.body} placeholder="Write your thoughts. Markdown, lists, links, and code blocks are welcome." onChange={event => change({ body: event.target.value })} />}
       </div>
@@ -183,14 +183,3 @@ function withTags(entry: JournalEntry, tags: string): JournalEntry {
 function titleOf(entry: JournalEntry) {
   return 'slug' in entry ? `Week ${entry.week}` : entry.title || 'this entry';
 }
-
-/** Markdown rendered in ink on paper (MarkdownPreview's prose styles are the old zinc look). */
-export const markdownTone = [
-  '[&_.prose]:text-ink [&_p]:text-ink [&_li]:text-ink [&_ul]:text-ink [&_ol]:text-ink [&_strong]:text-ink [&_em]:text-ink [&_td]:text-ink [&_th]:text-ink',
-  '[&_p]:font-light [&_li]:font-light [&_p]:text-[16px] [&_li]:text-[16px]',
-  '[&_h1]:text-ink [&_h2]:text-ink [&_h3]:text-ink [&_h4]:text-ink [&_h5]:text-ink [&_h6]:text-ink [&_h1]:font-light [&_h2]:font-light [&_h3]:font-normal',
-  '[&_h1]:!text-[28px] [&_h2]:!text-[22px] [&_h3]:!text-[17px] [&_h4]:!text-[15px]',
-  '[&_a]:text-ink [&_a]:underline [&_a]:underline-offset-[3px] [&_a:hover]:text-ink-hover',
-  '[&_code]:rounded-none [&_code]:bg-ink-07 [&_code]:text-ink [&_pre]:rounded-none [&_pre]:border-ink-30 [&_pre]:bg-transparent',
-  '[&_blockquote]:border-ink-30 [&_blockquote]:text-ink-60 [&_hr]:border-ink-30 [&_th]:border-ink-30 [&_td]:border-ink-30',
-].join(' ');

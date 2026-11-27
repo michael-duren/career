@@ -3,7 +3,7 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import MarkdownPreview from './MarkdownPreview';
 import { LogExplorer } from './LogExplorer';
-import { JournalEditor, clearDraft, entryId, fetchEntry, markdownTone, readDraft, signInAgain, type JournalEntry, type JournalItem } from './JournalEditor';
+import { JournalEditor, clearDraft, entryId, fetchEntry, readDraft, signInAgain, type JournalEntry, type JournalItem } from './JournalEditor';
 import { Button, Label, MeasurementLine, SearchField, SegmentedTabs, buttonClassName } from './ui';
 import { buildLogDocs, trackLabel, type WeekSummary } from '../lib/logs';
 import { hoursText, journalCounts, latestEntryDate, parseWeekBody, personalDate, personalMatches, sectionEmpty, staleNote, weekBounds, weekHoursLabel, weekMatches, weekRange, type JournalSection } from '../lib/journal';
@@ -315,7 +315,7 @@ function WeekSections({ week, compact = false }: { week: JournalWeek; compact?: 
 }
 
 function SectionBody({ section, compact = false }: { section: JournalSection; compact?: boolean }) {
-  if (section.rich) return <div className={markdownTone}><MarkdownPreview body={section.markdown} /></div>;
+  if (section.rich) return <MarkdownPreview ink body={section.markdown} />;
   return <>{section.groups.filter(group => group.items.length || !compact).map((group, index) => <div key={index} className="flex min-w-0 flex-col">
     {group.label && <Label className={`!text-[9px] ${compact ? '!text-ink' : 'mb-2'} ${index > 0 ? 'mt-3' : ''}`}>{group.label}</Label>}
     {compact
@@ -422,7 +422,7 @@ function PersonalPanel({ entries, query, desktop, initialId, newSignal, onSaved,
       </div>}
       {entry.description && <p className={`m-0 font-light text-ink-60 ${compact ? 'text-sm' : 'mt-3 text-[15px]'}`}>{entry.description}</p>}
       {entry.tags.length > 0 && <Label as="p" className="m-0 mt-2">{entry.tags.join(' · ')}</Label>}
-      <div className={`min-w-0 ${compact ? 'mt-1' : 'mt-6'} ${markdownTone}`}><MarkdownPreview body={entry.body} /></div>
+      <div className={`min-w-0 ${compact ? 'mt-1' : 'mt-6'}`}><MarkdownPreview ink body={entry.body} /></div>
       {compact && editButton}
     </>;
   };

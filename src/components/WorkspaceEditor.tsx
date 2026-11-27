@@ -12,10 +12,8 @@ import { AudioLines, Trash2 } from 'lucide-react';
 import { tagChipClass } from '../lib/tag-colors';
 import { filterNotes, noteCardDate, noteStats, topicCounts, withoutTitleHeading } from '../lib/note-card';
 import { NotesList } from './NotesList';
-import { Label, buttonClassName } from './ui';
+import { Button, Label, buttonClassName } from './ui';
 import type { BookType } from '../lib/books';
-import { Button } from './ui';
-import { markdownTone } from './JournalEditor';
 import { pauseSync, queuedClips, removeClip, syncClips, takesForThought, type QueuedClip } from '../lib/running-queue';
 
 // The editor's controls use the Architect tokens and button primitive (docs/redesign/design-system.md).
@@ -525,7 +523,7 @@ export function QuickJournal({ returnTo }: { returnTo?: string } = {}) {
         <label className="ui-field w-full sm:w-56"><span className="ui-label">Entry date</span><input type="date" required min="2026-04-20" max="2199-12-31" className="ui-field__input" value={date} onChange={e => setDate(e.target.value)} /></label>
         <Button size="sm" aria-pressed={preview} onClick={() => setPreview(!preview)}>{preview ? 'Write' : 'Markdown preview'}</Button>
       </div>
-      {preview ? <div className={`min-h-48 border border-ink-30 p-4 ${markdownTone}`}><Preview body={body} /></div> : <textarea aria-label="Journal entry in Markdown" className="min-h-64 w-full resize-y border border-ink-30 bg-transparent p-3 text-[16px] font-light leading-relaxed text-ink placeholder:text-ink-60 focus:border-ink" required maxLength={50000} placeholder={'Today I learned…'} value={body} onChange={e => { setBody(e.target.value); setStatus(''); }} />}
+      {preview ? <div className="min-h-48 border border-ink-30 p-4"><Preview body={body} /></div> : <textarea aria-label="Journal entry in Markdown" className="min-h-64 w-full resize-y border border-ink-30 bg-transparent p-3 text-[16px] font-light leading-relaxed text-ink placeholder:text-ink-60 focus:border-ink" required maxLength={50000} placeholder={'Today I learned…'} value={body} onChange={e => { setBody(e.target.value); setStatus(''); }} />}
       <div className="flex flex-wrap gap-2"><Button variant="primary" type="submit" disabled={!body.trim()}>{busy ? 'Saving…' : 'Save entry'}</Button><Button onClick={discard}>Cancel</Button></div>
     </fieldset></form>
     {error && <p role="alert" className="m-0 border border-accent p-3 text-sm">{error} {error.includes('session') && <a href="/login" className="underline">Sign in</a>}</p>}
