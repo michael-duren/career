@@ -1508,8 +1508,8 @@ test('a compact non-goal item can be copied and pasted on mobile', async ({ page
   await expect(dialog).toBeHidden();
   await page.locator('.scheduler-short-details').getByRole('button', { name: `Copy ${title}`, exact: true }).click();
   const thursday = await page.locator('[data-scheduler-date]').nth(3).getAttribute('data-scheduler-date');
-  await page.getByRole('tablist', { name: 'Selected day' }).getByRole('tab').nth(3).click();
-  await expect(page.getByRole('tablist', { name: 'Selected day' }).getByRole('tab').nth(3)).toHaveAttribute('aria-selected', 'true');
+  await page.getByRole('group', { name: 'Selected day' }).getByRole('button').nth(3).click();
+  await expect(page.getByRole('group', { name: 'Selected day' }).getByRole('button').nth(3)).toHaveAttribute('aria-pressed', 'true');
   await page.locator('.scheduler-paste button').click();
   await expect(dialog.getByLabel('Title', { exact: true })).toHaveValue(title);
   await expect(dialog.getByLabel('Scheduling date')).toHaveValue(thursday!);
@@ -1540,4 +1540,50 @@ test('clicking outside the session editor closes it, clicking inside does not', 
 
   await page.mouse.click(5, 5);
   await expect(dialog).toBeHidden();
+});
+
+test('now line follows the schedule time zone, only in today\'s column and within the axis', async ({ page, request }) => {
+  // Browser runs in America/Chicago (playwright.config); the schedule says UTC, so 17:20Z reads 5:20 PM, not 11:20 AM.
+  await page.clock.install({ time: new Date('2030-01-09T17:20:00Z') });
+  await page.clock.pauseAt(new Date('2030-01-09T17:20:00Z'));
+  await page.route('**/api/scheduler/week?*', async route => {
+    const requested = new URL(route.request().url()).searchParams.get('week');
+    const state = await (await request.get(`/api/scheduler/week?week=${requested}`)).json();
+    await route.fulfill({ json: { ...state, settings: { ...state.settings, timeZone: 'UTC' } } });
+  });
+  await page.goto('/weekly-scheduler');
+  await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', '2030-01-07');
+  await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
+  const axis = page.locator('.scheduler-axis span');
+  await expect(axis.first()).toHaveText(/^\d+(:\d\d)? (AM|PM)$/);
+  const label = (await axis.first().textContent())!.match(/^(\d+)(?::(\d+))? (AM|PM)$/)!;
+  const axisStart = (Number(label[1]) % 12 + (label[3] === 'PM' ? 12 : 0)) * 60 + Number(label[2] ?? 0);
+  const now = page.locator('.scheduler-now');
+  await expect(now).toHaveCount(1);
+  await expect(now).toHaveText('now 5:20 PM');
+  await expect(page.locator('[data-scheduler-date="2030-01-09"] .scheduler-now')).toHaveCount(1);
+  expect(await now.evaluate(element => parseFloat((element as HTMLElement).style.top))).toBe(17 * 60 + 20 - axisStart);
+  await expect(page.getByRole('button', { name: 'Select 2030-01-09' }).locator('xpath=ancestor::section')).toHaveClass(/is-today/);
+  await page.getByRole('button', { name: 'Next week' }).click();
+  await expect(page.locator('[data-scheduler-date]').first()).toHaveAttribute('data-scheduler-date', '2030-01-14');
+  await expect(now).toHaveCount(0);
+  await page.getByRole('button', { name: 'Previous week' }).click();
+  await expect(now).toHaveCount(1);
+  // After the end of the visible day there is no line to draw.
+  await page.clock.setFixedTime(new Date('2030-01-09T23:50:00Z'));
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(now).toHaveCount(0);
+  await expect(page.locator('.weekly-scheduler')).toHaveAttribute('aria-busy', 'false');
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
+});
+
+test('goal hours table shows required, planned and the shortfall for a goal', async ({ page, request, baseURL }) => {
+  const goal = await createGoal(request, baseURL!, { dailyHours: 1 });
+  await goToNextWeek(page);
+  const row = page.locator(`#scheduler-goal-${goal.id} tr`).first();
+  await expect(row.locator('td')).toHaveText(['7.0', '0.0', '−7.0']);
+  await expect(row.locator('td').nth(2)).toHaveClass(/scheduler-shortfall/);
+  await expect(row.locator('.ui-goal-swatch')).toHaveCount(1);
+  await expect(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-done`)).toHaveText('0h done · 0h scheduled');
+  await expect(page.locator('.scheduler-capacity')).toHaveText(/^Capacity remaining \d+\.\d h$/i);
 });

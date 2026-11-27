@@ -25,14 +25,15 @@ Day strip (7 buttons, today underlined in accent, selected filled) above a singl
 
 ## Notes
 
-- Plans are accepted the moment they are saved (there is no pending proposal to accept), so the primary header button is ADD SESSION: a draft for the first goal in the first free slot of the selected day.
+- Plans are accepted the moment they are saved (there is no pending proposal to accept), so the primary header button is ADD SESSION: a draft for the first goal in the first free slot of the selected day (on a day with no free future time it explains why instead).
 - RULES opens the day-window settings (default day, weekday and date overrides). Weekly repeating sessions are still made from the session editor ("Repeat weekly").
 - GOOGLE SYNC opens the Google Calendar panel; its connection state also shows in the line under the title.
 - The grid stays at 1px per minute (5 AM to 8:30 PM by default), so it is taller than the 800px reference frame; drag and resize snap to 15 minutes.
-- Goal patterns follow the order of the week's goals, which the API sorts by title, so a goal keeps its pattern while the set of goals stays the same. Goals after the third, and historical goals, get an outline.
+- Goal patterns follow each goal's position in the week's goal list, which the API sorts by title and which includes goals that appear only through past sessions. A goal keeps its pattern while that list stays the same; the fourth and later goals get an outline.
 - Plan is recorded plus still-scheduled hours; Δ is Plan − Req. The row also shows hours done and still scheduled; subgoals, a missing estimate and dependencies sit under the row.
 - Canceled sessions are not drawn (unchanged behavior), so the dashed "canceled" style is not used.
-- Below 1024px goal hours and warnings move under the grid; below 768px the day strip picks the one day shown.
+- Below 1024px goal hours and warnings move under the grid; below 768px the day strip (toggle buttons, today marked `aria-current="date"`) picks the one day shown.
+- Google errors and a needed reconnect open the Google panel by themselves, so its alerts are never hidden.
 
 ## Acceptance criteria
 

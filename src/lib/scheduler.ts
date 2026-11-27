@@ -19,6 +19,8 @@ export function clockLabel(minutes: number): string {
 // plus "+1d" past midnight); clockLabel stays 24-hour since its output is
 // parsed back via .slice(0, 5) to build actual time values.
 export function displayClock(minutes: number, compact = false): string {
+  // A bad geometry value must not throw mid-render or mid-drag; show nothing instead.
+  if (!Number.isFinite(minutes)) return '';
   const day = Math.floor(minutes / 1440);
   return `${formatTime(minutes, { compact })}${day ? ` +${day}d` : ''}`;
 }

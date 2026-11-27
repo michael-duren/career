@@ -43,9 +43,11 @@ test('hoursCell shows one decimal, signs deltas and dashes missing values', () =
   assert.equal(hoursCell(-1.5, true), '−1.5');
   assert.equal(hoursCell(0.01, true), '0.0');
   assert.equal(hoursCell(null), '—');
+  assert.equal(hoursCell(-2), '−2.0');
 });
 test('displayClock compact drops :00 on the hour for axis labels', () => {
   assert.equal(displayClock(6 * 60, true), '6 AM');
   assert.equal(displayClock(5 * 60 + 30, true), '5:30 AM');
   assert.equal(displayClock(1440 + 60, true), '1 AM +1d');
+  assert.equal(displayClock(Number.NaN), '');
 });

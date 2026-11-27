@@ -165,9 +165,9 @@ export const WeeklySchedulerGrid = forwardRef<SchedulerGridHandle, Props>(functi
   const nowMinute = week.days.some(day => day.date === today) ? minuteOf(new Date(now).toISOString(), today, zone) : null;
   const showNow = nowMinute !== null && nowMinute >= axisStart && nowMinute <= axisEnd;
   return <div className="scheduler-calendar">
-    <div className="scheduler-day-picker" role="tablist" aria-label="Selected day">{week.days.map(day => {
+    <div className="scheduler-day-picker" role="group" aria-label="Selected day">{week.days.map(day => {
       const { dow, num } = dayParts(day.date);
-      return <button key={day.date} type="button" role="tab" aria-selected={day.date === selectedDay} aria-label={dayName(day.date)} className={day.date === today ? 'is-today' : undefined} onClick={() => selectDay(day.date)}><span>{dow}</span><span>{num}</span></button>;
+      return <button key={day.date} type="button" aria-pressed={day.date === selectedDay} aria-current={day.date === today ? 'date' : undefined} aria-label={dayName(day.date)} onClick={() => selectDay(day.date)}><span>{dow}</span><span>{num}</span></button>;
     })}</div>
     {pasteSession && <div className="scheduler-actions scheduler-paste"><Button size="sm" disabled={busy} onClick={() => pasteSession(selectedDay)}>Paste onto {dayName(selectedDay)}</Button><span>Choose a day, then set the copy’s time in the editor.</span></div>}
     <div className="scheduler-grid"><div className="scheduler-axis"><div className="scheduler-day-heading" aria-hidden="true" /><div style={{ height }}>{Array.from({ length: Math.ceil(height / 60) }, (_, index) => <span style={{ top: index * 60 }} key={index}>{displayClock(axisStart + index * 60, true)}</span>)}</div></div>

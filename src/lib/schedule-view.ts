@@ -35,9 +35,10 @@ export function dayParts(date: string): { dow: string; num: number } {
   return { dow: DAYS[day.getUTCDay()], num: day.getUTCDate() };
 }
 
-// goalPatterns gives each goal of the week its pattern by position in week.goals (which the API
-// sorts by title, so a goal keeps its pattern from week to week while the set of goals is the same).
-// Goals after the third, and goals not in this week's list, fall back to an outline.
+// goalPatterns gives each goal of the week its pattern by position in week.goals, which the API
+// sorts by title and which includes goals that appear only through past sessions. A goal keeps its
+// pattern while that list stays the same. Goals after the third map to an outline; goals not in the
+// list are absent from the map, so callers fall back to an outline themselves.
 export function goalPatterns(week: Pick<SchedulerWeek, 'goals'>): Map<string, GoalPatternName> {
   return new Map(week.goals.map((summary, index) => [summary.goal.id, goalPattern(index)]));
 }
@@ -58,11 +59,12 @@ export function goalHours(summary: Pick<SchedulerWeek['goals'][number], 'require
   return { required, planned, delta: required === null ? null : planned - required, short: summary.uncoveredHours > 0 };
 }
 
-// hoursCell renders a table number with one decimal ("10.5", "4.0"); deltas get a sign ("+5.5", "−1.5").
+// hoursCell renders a table number with one decimal ("10.5", "4.0", "−2.0"); signed also marks
+// positive values ("+5.5") for deltas.
 export function hoursCell(value: number | null, signed = false): string {
   if (value === null) return '—';
   const rounded = Math.round(value * 10) / 10;
   const text = Math.abs(rounded).toFixed(1);
-  if (!signed || rounded === 0) return text;
-  return `${rounded > 0 ? '+' : '−'}${text}`;
+  if (rounded < 0) return `−${text}`;
+  return signed && rounded > 0 ? `+${text}` : text;
 }
