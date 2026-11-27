@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { avatarStack, catchUpQueue, companySlug, connectionsByCompany, employerKey, employers, trackedNames, markCaughtUp, newCompanyEntry, normalizeCompany, nextDue, relativeDays, initials, matchesQuery, type Connection } from '../src/lib/connections.ts';
+import { CATCH_UP_GOAL_KEY, avatarStack, catchUpQueue, currentStep, isSnoozed, lastContactNote, lastContactTag, linkableGoals, linkedGoal, queueCandidates, queueLanes, snoozedPeople, withCatchUpLink, companySlug, connectionsByCompany, employerKey, employers, trackedNames, markCaughtUp, newCompanyEntry, normalizeCompany, nextDue, relativeDays, initials, matchesQuery, type Connection } from '../src/lib/connections.ts';
+import type { Goal } from '../src/lib/timeline.ts';
 
 const base: Connection = { id: 'x', name: 'Ada Lovelace', role: 'SRE', companyName: 'Grafana Labs', email: '', queued: false, notes: '', tags: ['observability'] };
 const today = '2026-09-25';
@@ -113,4 +114,54 @@ test('new companies get a URL-safe slug and the outreach checklist', () => {
   assert.equal(entry.url, 'https://www.linkedin.com/search/results/companies/?keywords=York%20Solutions');
   assert.match(entry.body, /^## Why\n\n## Steps\n\n- \[ \] Identify one person/);
   assert.match(entry.body, /## Log\n$/);
+});
+
+test('queue lanes hold staged people by name and leave snoozed ones out until their date', () => {
+  const people: Connection[] = [
+    { ...base, id: 'b', name: 'Bea', stage: 'messaged' },
+    { ...base, id: 'a', name: 'Al', stage: 'messaged' },
+    { ...base, id: 's', name: 'Sleepy', stage: 'to_contact', snoozedUntil: '2026-09-26' },
+    { ...base, id: 'w', name: 'Woken', stage: 'to_contact', snoozedUntil: today },
+    { ...base, id: 'n', name: 'Not queued' },
+  ];
+  assert.deepEqual(queueLanes(people, today).map(lane => [lane.stage, lane.people.map(c => c.id)]),
+    [['to_contact', ['w']], ['messaged', ['a', 'b']], ['follow_up', []], ['referral_ask', []]]);
+  assert.equal(isSnoozed(people[2], today), true);
+  assert.equal(isSnoozed(people[3], today), false);
+  assert.deepEqual(snoozedPeople(people, today).map(c => c.id), ['s']);
+});
+
+test('queue candidates are linked people without a stage, most recently in touch first', () => {
+  const people: Connection[] = [
+    { ...base, id: 'old', name: 'Old', companySlug: 'x', lastContactedOn: '2025-01-01' },
+    { ...base, id: 'new', name: 'New', companySlug: 'x', lastContactedOn: '2026-09-01' },
+    { ...base, id: 'staged', name: 'Staged', companySlug: 'x', stage: 'to_contact' },
+    { ...base, id: 'unlinked', name: 'Unlinked' },
+  ];
+  assert.deepEqual(queueCandidates(people).map(c => c.id), ['new', 'old']);
+});
+
+test('last contact wording on cards and in the panel', () => {
+  assert.equal(lastContactTag(base), 'NO CONTACT LOGGED');
+  assert.equal(lastContactTag({ ...base, lastContactedOn: '2026-09-11' }), 'LAST · SEP 11');
+  assert.equal(lastContactNote(base, today), 'never contacted');
+  assert.equal(lastContactNote({ ...base, lastContactedOn: '2026-09-11' }, today), 'last contact Sep 11 · 14 days ago');
+  assert.equal(lastContactNote({ ...base, lastContactedOn: '2026-09-24' }, today), 'last contact Sep 24 · 1 day ago');
+  assert.equal(lastContactNote({ ...base, lastContactedOn: today }, today), 'last contact Sep 25 · today');
+});
+
+test('the linked goal comes from goal metadata, preferring an active goal', () => {
+  const goal = (id: string, status: Goal['status'], linked: boolean, steps: Goal['steps'] = []): Goal => ({
+    id, status, title: id, dependsOn: [], startDate: '2026-01-01', endDate: '2026-12-31', color: '#000000', createdAt: '', updatedAt: '', notes: [],
+    metadata: linked ? { [CATCH_UP_GOAL_KEY]: 'linked' } : {}, steps,
+  });
+  assert.equal(linkedGoal([goal('a', 'planned', true), goal('b', 'active', true)])?.id, 'b');
+  assert.equal(linkedGoal([goal('a', 'dropped', true), goal('b', 'active', false)]), undefined);
+  assert.deepEqual(linkableGoals([goal('d', 'done', false), goal('p', 'planned', false), goal('x', 'dropped', false)]).map(g => g.id), ['p']);
+  assert.deepEqual(withCatchUpLink(goal('a', 'active', false), true).metadata, { [CATCH_UP_GOAL_KEY]: 'linked' });
+  assert.deepEqual(withCatchUpLink({ ...goal('a', 'active', true), metadata: { [CATCH_UP_GOAL_KEY]: 'linked', purpose: 'career' } }, false).metadata, { purpose: 'career' });
+  const steps = [{ id: '1', title: 'one', done: true }, { id: '2', title: 'two', done: false }];
+  assert.equal(currentStep(goal('a', 'active', true)), 0);
+  assert.equal(currentStep(goal('a', 'active', true, steps)), 2);
+  assert.equal(currentStep(goal('a', 'active', true, steps.map(s => ({ ...s, done: true })))), 3);
 });
