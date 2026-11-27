@@ -159,7 +159,7 @@ export function JournalEditor({ kind, item, isNew, recovered, onSaved, onCancel,
           </div>
         </div>
         {preview
-          ? <div className="min-h-72 border border-ink-30 p-4"><MarkdownPreview ink body={entry.body} /></div>
+          ? <div className="min-h-72 border border-ink-30 p-4"><MarkdownPreview body={entry.body} /></div>
           : <textarea ref={'slug' in entry ? first : undefined} aria-labelledby={`${kind}-body-label`} className="min-h-80 w-full resize-y border border-ink-30 bg-transparent p-3 font-mono text-sm leading-relaxed text-ink placeholder:text-ink-60 focus:border-ink"
             maxLength={100000} value={entry.body} placeholder="Write your thoughts. Markdown, lists, links, and code blocks are welcome." onChange={event => change({ body: event.target.value })} />}
       </div>

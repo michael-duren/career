@@ -4,7 +4,6 @@ import { indexedDB } from 'fake-indexeddb';
 import { enqueueClip, queuedClips, removeClip, pauseSync, syncClips, takesForThought, type QueuedClip } from '../src/lib/running-queue.ts';
 import { agentContext, journalMarkdown } from '../src/lib/agent-context.ts';
 import { careerEntries } from '../src/lib/mcp-server.ts';
-import { searchEntries } from '../src/lib/search.ts';
 import type { Workspace } from '../src/lib/workspace.ts';
 
 test('three offline clips survive failed and lost-response uploads, replay once by UUID', async () => {
@@ -117,9 +116,8 @@ test('pausing sync waits only for the take in flight, holds the rest until resum
   } finally { globalThis.fetch = original; }
 });
 
-test('running notes are searchable and explicitly opt in to agent and MCP context', () => {
+test('running notes explicitly opt in to agent and MCP context', () => {
   const data: Workspace = { version: 2, notes: [], weeks: [], books: [], companies: [], documents: [], runningNotes: [{ id: 'run-one', title: 'Morning run', runDate: '2026-09-19', startedAt: '2026-09-19T10:00:00Z', tags: [], body: 'Private running thoughts' }] };
-  assert.equal(searchEntries(data).find(e => e.kind === 'Audio thought')?.href, '/audio-thoughts?id=run-one');
   assert.equal(data.notes.length, 0);
   assert.equal(JSON.stringify(agentContext({ data, revision: null })).includes('Private running'), false);
   assert.equal(careerEntries({ data, revision: null }).some(e => e.kind === 'running'), false);

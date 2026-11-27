@@ -86,6 +86,8 @@ type SiteResult struct {
 	Context string `json:"context"`
 	// TitleMatch says the query is in the title, so Context describes the match better than an excerpt.
 	TitleMatch bool `json:"titleMatch"`
+	// Type is a book's item type (book, paper, course) so search can draw its icon; empty for other kinds.
+	Type string `json:"type,omitempty"`
 }
 
 // SiteSearchKinds are the kinds SiteSearch can return besides the entry
@@ -118,25 +120,25 @@ func (s *Store) SiteSearch(ctx context.Context, query string, perKind int, kind 
 	if kind != "session" {
 		rows, err := s.DB.QueryContext(ctx, `
 			WITH entries AS (
-				SELECT 'note' kind,id,title,body,topic || ' · ' || to_char(cardinality(regexp_split_to_array(btrim(body), '\s+')) - (btrim(body) = '')::int, 'FM999,999,990') || ' words' context,updated_at sort_at FROM notes
-				UNION ALL SELECT 'run',id,title,body,to_char(run_date,'Mon FMDD, YYYY'),updated_at FROM running_notes
-				UNION ALL SELECT 'document',id,title,body,'',updated_at FROM documents
-				UNION ALL SELECT 'personal',id,title,body,COALESCE(to_char(entry_date,'Mon FMDD, YYYY'),''),updated_at FROM personal_journal_entries
-				UNION ALL SELECT 'week',slug,'Week ' || week || ' · ' || to_char(start_date,'Mon FMDD'),body,'',updated_at FROM journal_weeks
-				UNION ALL SELECT 'book',slug,title,body,concat_ws(' · ',upper(left(status,1)) || substr(status,2),NULLIF(array_to_string(authors,', '),'')),updated_at FROM books
-				UNION ALL SELECT 'company',slug,title,body,upper(left(replace(status,'_',' '),1)) || substr(replace(status,'_',' '),2),updated_at FROM companies
-				UNION ALL SELECT 'connection',id::text,name,concat_ws(E'\n',role,company_name,notes),concat_ws(' · ',NULLIF(role,''),NULLIF(company_name,'')),updated_at FROM connections
+				SELECT 'note' kind,id,title,body,topic || ' · ' || to_char(cardinality(regexp_split_to_array(btrim(body), '\s+')) - (btrim(body) = '')::int, 'FM999,999,990') || ' words' context,updated_at sort_at,'' item_type FROM notes
+				UNION ALL SELECT 'run',id,title,body,to_char(run_date,'Mon FMDD, YYYY'),updated_at,'' FROM running_notes
+				UNION ALL SELECT 'document',id,title,body,'',updated_at,'' FROM documents
+				UNION ALL SELECT 'personal',id,title,body,COALESCE(to_char(entry_date,'Mon FMDD, YYYY'),''),updated_at,'' FROM personal_journal_entries
+				UNION ALL SELECT 'week',slug,'Week ' || week || ' · ' || to_char(start_date,'Mon FMDD'),body,'',updated_at,'' FROM journal_weeks
+				UNION ALL SELECT 'book',slug,title,body,concat_ws(' · ',upper(left(status,1)) || substr(status,2),NULLIF(array_to_string(authors,', '),'')),updated_at,type FROM books
+				UNION ALL SELECT 'company',slug,title,body,upper(left(replace(status,'_',' '),1)) || substr(replace(status,'_',' '),2),updated_at,'' FROM companies
+				UNION ALL SELECT 'connection',id::text,name,concat_ws(E'\n',role,company_name,notes),concat_ws(' · ',NULLIF(role,''),NULLIF(company_name,'')),updated_at,'' FROM connections
 				UNION ALL SELECT 'goal',g.id::text,g.title,
 					concat_ws(E'\n',(SELECT string_agg(title,E'\n' ORDER BY position) FROM goal_steps WHERE goal_id=g.id),(SELECT string_agg(body,E'\n' ORDER BY position) FROM goal_notes WHERE goal_id=g.id)),
-					upper(left(g.status,1)) || substr(g.status,2) || ' · ' || to_char(g.start_date,'Mon FMDD') || ' → ' || to_char(g.end_date,'Mon FMDD'),g.updated_at FROM goals g
-				UNION ALL SELECT 'problem',slug,title,'',concat_ws(' · ','#' || number,NULLIF(difficulty,'')),created_at FROM leetgrinder_problems WHERE title <> ''
+					upper(left(g.status,1)) || substr(g.status,2) || ' · ' || to_char(g.start_date,'Mon FMDD') || ' → ' || to_char(g.end_date,'Mon FMDD'),g.updated_at,'' FROM goals g
+				UNION ALL SELECT 'problem',slug,title,'',concat_ws(' · ','#' || number,NULLIF(difficulty,'')),created_at,'' FROM leetgrinder_problems WHERE title <> ''
 			), matches AS (
 				SELECT *, title ILIKE '%' || $1 || '%' ESCAPE '\' title_match FROM entries
 				WHERE ($3='' OR kind=$3) AND NOT (kind = ANY($4::text[])) AND (title ILIKE '%' || $1 || '%' ESCAPE '\' OR body ILIKE '%' || $1 || '%' ESCAPE '\')
 			), ranked AS (
 				SELECT *, row_number() OVER (PARTITION BY kind ORDER BY title_match DESC, sort_at DESC NULLS LAST, id) n, count(*) OVER (PARTITION BY kind) total FROM matches
 			)
-			SELECT kind,id,title,body,COALESCE(context,''),title_match,total FROM ranked WHERE n <= $2 ORDER BY kind,n`, likeEscaper.Replace(query), perKind, kind, excluded)
+			SELECT kind,id,title,body,COALESCE(context,''),title_match,item_type,total FROM ranked WHERE n <= $2 ORDER BY kind,n`, likeEscaper.Replace(query), perKind, kind, excluded)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -144,7 +146,7 @@ func (s *Store) SiteSearch(ctx context.Context, query string, perKind int, kind 
 		for rows.Next() {
 			var item SiteResult
 			var total int
-			if err := rows.Scan(&item.Kind, &item.ID, &item.Title, &item.Body, &item.Context, &item.TitleMatch, &total); err != nil {
+			if err := rows.Scan(&item.Kind, &item.ID, &item.Title, &item.Body, &item.Context, &item.TitleMatch, &item.Type, &total); err != nil {
 				return nil, nil, err
 			}
 			totals[item.Kind] = total

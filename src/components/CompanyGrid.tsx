@@ -194,8 +194,8 @@ function Marks({ company, className }: { company: Company; className?: string })
   );
 }
 
-// Filled (high), half-filled (medium) or empty (low) circle in ink.
-function PriorityDot({ priority, label = false }: { priority: Priority; label?: boolean }) {
+// Filled (high), half-filled (medium) or empty (low) circle in ink. Also on the company page (CompanyBoard).
+export function PriorityDot({ priority, label = false }: { priority: Priority; label?: boolean }) {
   return (
     <span title={label ? `${PRIORITY_LABEL[priority]} priority` : undefined} className={cn('inline-block size-[9px] flex-none rounded-full border border-solid border-ink',
       priority === 'high' && 'bg-ink', priority === 'medium' && 'bg-[linear-gradient(90deg,var(--ink)_50%,transparent_50%)]')}>

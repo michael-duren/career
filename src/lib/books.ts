@@ -33,24 +33,6 @@ export type BookStatus = 'backlog' | 'reading' | 'paused' | 'completed' | 'refer
 export type BookType = 'book' | 'course' | 'paper';
 export type ProgressUnit = 'chapter' | 'page' | 'module' | 'section' | 'lecture';
 
-export const CATEGORY_COLORS: Record<string, string> = {
-  'Computer Science': '#60a5fa',
-  Networking: '#2dd4bf',
-  OS: '#a78bfa',
-  Systems: '#f472b6',
-  'Distributed Systems': '#34d399',
-  Languages: '#fbbf24',
-  Career: '#fb923c',
-  'Online Course': '#22d3ee',
-};
-
-export function categoryColor(cat: string): string {
-  if (CATEGORY_COLORS[cat]) return CATEGORY_COLORS[cat];
-  let h = 0;
-  for (let i = 0; i < cat.length; i++) h = (h * 31 + cat.charCodeAt(i)) % 360;
-  return `hsl(${h} 65% 62%)`;
-}
-
 // Raw shape coming out of the content collection (frontmatter + body).
 export interface BookFrontmatter {
   title: string;
@@ -104,7 +86,6 @@ export interface Book extends RawBook {
 
 export interface CategoryGroup {
   category: string;
-  color: string;
   books: Book[];
 }
 
@@ -119,7 +100,7 @@ export interface ShelfStats {
   unitsTotal: number;
   /** Average completion across non-backlog items, 0–100. */
   avgCompletion: number;
-  byCategory: { category: string; color: string; count: number; done: number }[];
+  byCategory: { category: string; count: number; done: number }[];
 }
 
 export interface ShelfData {
@@ -233,7 +214,6 @@ export function buildShelf(raws: RawBook[]): ShelfData {
   // Group by category, in the canonical category order.
   const groups: CategoryGroup[] = BOOK_CATEGORIES.map((category) => ({
     category,
-    color: categoryColor(category),
     books: all.filter((b) => b.category === category),
   })).filter((g) => g.books.length > 0);
 
@@ -248,7 +228,6 @@ export function buildShelf(raws: RawBook[]): ShelfData {
 
   const byCategory = groups.map((g) => ({
     category: g.category,
-    color: g.color,
     count: g.books.length,
     done: g.books.filter((b) => b.status === 'completed').length,
   }));

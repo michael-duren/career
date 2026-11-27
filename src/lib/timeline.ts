@@ -1,3 +1,9 @@
+/**
+ * Saved on new goals. The API requires a hex color on every goal, but nothing draws it any more:
+ * goals are told apart by patterns (src/lib/ui.ts goalPattern). Same default as the MCP server.
+ */
+export const DEFAULT_GOAL_COLOR = '#67e8f9';
+
 export interface Goal {
   id: string;
   status: 'planned' | 'active' | 'done' | 'dropped';

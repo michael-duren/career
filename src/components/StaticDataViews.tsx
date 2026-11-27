@@ -89,5 +89,5 @@ export function DocumentView({ id }: { id?: string }) {
   const { data, error } = useJSON<Result<Document>>(`/api/entries/document?id=${encodeURIComponent(documentID)}`);
   if (!data) return <State error={error} />;
   const page = data.entry;
-  return <>{!/^# /m.test(page.body) ? <h1 className="mb-6 text-3xl font-bold">{page.title}</h1> : null}<MarkdownPreview body={page.body} /></>;
+  return <>{!/^# /m.test(page.body) ? <h1 className="mb-6 mt-0 text-4xl font-extralight">{page.title}</h1> : null}<MarkdownPreview body={page.body} /></>;
 }

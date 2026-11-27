@@ -1,5 +1,5 @@
 import { FOCUS_SUGGESTIONS, MODULE_IDS, isEnabled, type ModuleId, type SettingsPatch } from './modules.ts';
-import type { Goal } from './timeline.ts';
+import { DEFAULT_GOAL_COLOR, type Goal } from './timeline.ts';
 
 // First-run setup (docs/redesign/pages/setup.md): focus → modules → connect → theme → first goal.
 // Pure helpers behind src/components/SetupWizard.tsx, kept free of React so node --test covers them.
@@ -107,7 +107,7 @@ export function goalFromDraft(draft: GoalDraft, id: string, now: Date): Goal | n
   return {
     id, title, startDate: draft.start, endDate: draft.end, status: 'planned', dependsOn: [],
     // Goals are drawn by pattern in the Architect UI; the stored color is only a legacy field.
-    color: '#67e8f9', dailyHours: 1, createdAt: at, updatedAt: at, notes: [], metadata: {}, steps: [],
+    color: DEFAULT_GOAL_COLOR, dailyHours: 1, createdAt: at, updatedAt: at, notes: [], metadata: {}, steps: [],
   };
 }
 

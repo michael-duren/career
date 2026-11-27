@@ -268,6 +268,22 @@
   color: var(--ink);
   text-decoration: none;
 }
+/* Books: the item-type line icon (public/ui/item-type-icons.js) beside the title and context. */
+.search-result--typed {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  column-gap: 10px;
+}
+.search-result--typed > :not(.search-result-icon) {
+  grid-column: 2;
+}
+.search-result-icon {
+  grid-row: 1 / span 2;
+  margin-top: 1px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+}
 .search-result:hover,
 .search-result:focus-visible {
   background: var(--ink-05);

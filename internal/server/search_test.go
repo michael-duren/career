@@ -23,6 +23,7 @@ type searchResult struct {
 	Context    string `json:"context"`
 	Excerpt    string `json:"excerpt"`
 	TitleMatch bool   `json:"titleMatch"`
+	Type       string `json:"type"`
 }
 
 type searchView struct {
@@ -75,6 +76,7 @@ func TestGlobalSearch(t *testing.T) {
 			fmt.Sprintf("zephyr-doc-%d", i), fmt.Sprintf("Page %d", i), "# Heading\n\nSome words before the zephyr notes.", 1000+i)
 	}
 	exec(`INSERT INTO documents (id,title,description,tags,body,revision,position,updated_at,is_core) VALUES ('zephyr-title','Zephyr overview','','{}','Body','r1',2000,now() - interval '30 days',false)`)
+	exec(`INSERT INTO books (slug,title,category,type,status,featured,priority,tags,body,revision,position,authors) VALUES ('zephyr-paper','Zephyr consensus','Systems','paper','reading',false,'medium','{}','','r1',3000,'{}')`)
 
 	s := &Server{db: db, now: func() time.Time { return now }, config: config.Config{StaticDir: t.TempDir(), Username: "admin", JWTSecret: "test-secret", PublicOrigin: testOrigin}, attempts: map[string]attempt{}}
 	handler := s.RegisterRoutes()
@@ -125,6 +127,15 @@ func TestGlobalSearch(t *testing.T) {
 	p := got.Results[byKind["problem"][0]]
 	if p.ID != "zephyr-tower" || p.Module != "leetgrinder" || p.Context != "#9999 · Hard" {
 		t.Errorf("problem: %+v", p)
+	}
+	// Books carry their item type so search can draw the type icon; other kinds have none.
+	if b := byKind["book"]; len(b) != 1 || got.Results[b[0]].Type != "paper" || got.Results[b[0]].Module != "bookshelf" {
+		t.Errorf("book: %+v", got.Results)
+	}
+	for _, r := range got.Results {
+		if r.Kind != "book" && r.Type != "" {
+			t.Errorf("type on a %s: %+v", r.Kind, r)
+		}
 	}
 	// Documents: at most five, the title match first, all eight counted; excerpts are short.
 	docs := byKind["document"]

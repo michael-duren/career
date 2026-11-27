@@ -424,12 +424,14 @@ type consentView struct {
 var consentTemplate = template.Must(template.New("consent").Parse(`<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Connect to Career Strategy</title>
+<link rel="stylesheet" href="/ui/tokens.css">
 <style>
-body{font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;display:grid;place-items:center;min-height:100vh;margin:0;padding:16px;box-sizing:border-box}
-main{max-width:28rem;background:#1e293b;border-radius:12px;padding:24px}
-h1{font-size:1.25rem;margin-top:0}code{background:#0f172a;padding:2px 6px;border-radius:4px}
-.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}button{flex:1;padding:10px;border-radius:8px;border:0;font-size:1rem;cursor:pointer}
-.approve{background:#38bdf8;color:#0f172a;font-weight:600}.deny{background:#334155;color:#e2e8f0}
+body{font-family:system-ui,sans-serif;font-weight:300;background:var(--paper);color:var(--ink);display:grid;place-items:center;min-height:100vh;margin:0;padding:16px;box-sizing:border-box}
+main{max-width:28rem;border:1px solid var(--ink-30);padding:24px}
+h1{font-size:1.25rem;font-weight:400;margin-top:0}strong{font-weight:500}code{background:var(--ink-07);padding:2px 6px}
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}button{flex:1;min-height:44px;padding:10px;border:1px solid var(--ink);background:transparent;color:var(--ink);font:inherit;font-size:1rem;cursor:pointer}
+button:hover{background:var(--ink-07)}.approve{background:var(--ink);color:var(--paper);font-weight:500}.approve:hover{background:var(--ink-hover)}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 </style></head><body><main>
 {{if .Error}}<h1>Cannot connect</h1><p>{{.Error}}</p>{{else}}
 <h1>Connect this application to your career workspace?</h1>
@@ -446,7 +448,7 @@ func authorizePage(w http.ResponseWriter, status int, view consentView) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("X-Frame-Options", "DENY")
-	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'")
 	w.WriteHeader(status)
 	_ = consentTemplate.Execute(w, view)
 }
