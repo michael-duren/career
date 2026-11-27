@@ -6,6 +6,7 @@ export { Button, IconButton } from './Button';
 export { Checkbox } from './Checkbox';
 export { GoalPattern, HatchFill, Progress } from './HatchFill';
 export * from './icons';
+export { ItemTypeIcon, type ItemType } from './ItemTypeIcon';
 export { Label } from './Label';
 export { LogoSpot } from './LogoSpot';
 export { MeasurementLine, type MeasurementState } from './MeasurementLine';

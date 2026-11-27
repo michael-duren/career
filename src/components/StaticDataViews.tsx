@@ -70,7 +70,7 @@ function usePagedEntries<T>(url: string) {
 }
 
 function State({ error }: { error: string }) {
-  return <p role={error ? 'alert' : 'status'} className={error ? 'text-red-300' : 'text-zinc-400'}>{error || 'Loading…'}</p>;
+  return <p role={error ? 'alert' : 'status'} className={error ? 'text-accent' : 'text-ink-60'}>{error || 'Loading…'}</p>;
 }
 
 export function BooksView() {
