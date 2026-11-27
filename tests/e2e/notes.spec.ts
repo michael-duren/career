@@ -192,7 +192,7 @@ test('a modified click opens the note page in a new tab', async ({ page, context
   await page.goto('/notes');
   const main = page.locator('main');
   const [tab] = await Promise.all([context.waitForEvent('page'), main.getByRole('link', { name: /Postgres MVCC/ }).click({ modifiers: ['ControlOrMeta'] })]);
-  expect(new URL(tab.url()).pathname).toBe('/notes/db/mvcc');
+  await expect(tab).toHaveURL(/\/notes\/db\/mvcc$/);
   await tab.close();
   // The list itself stays put.
   await expect(main.getByRole('heading', { level: 1, name: 'Notes' })).toBeVisible();
