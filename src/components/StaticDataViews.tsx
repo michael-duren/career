@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react';
 import { BookShelf } from './BookShelf';
 import { CompanyBoard } from './CompanyBoard';
-import { LogExplorer } from './LogExplorer';
 import MarkdownPreview from './MarkdownPreview';
 import { buildShelf, type RawBook } from '../lib/books';
-import { buildLogDocs, type WeekSummary } from '../lib/logs';
-import type { WeekEntry } from '../lib/progress';
 import type { RawCompany } from '../lib/companies';
 import type { Document } from '../lib/workspace';
 import type { Goal } from '../lib/timeline';
@@ -85,15 +82,6 @@ export function CompanyView() {
   return <CompanyBoard initialCompany={data.entry} initialRevision={data.revision} detailSlug={slug} />;
 }
 
-function weeks(page: Page<WeekEntry>): WeekEntry[] { return page.entries.map(item => item.entry); }
-
-export function LogsView() {
-  const { data, error } = useJSON<Page<WeekEntry>>('/api/entries/week?limit=100&view=detail');
-  if (!data) return <State error={error} />;
-  const entries = weeks(data);
-  const summaries: WeekSummary[] = entries.map(({ week, year, dates, hours, tags }) => ({ week, year, dates, hours, tags }));
-  return <LogExplorer docs={buildLogDocs(entries)} weeks={summaries} />;
-}
 
 export function DocumentView({ id }: { id?: string }) {
   const rawPath = location.pathname.replace(/^\//, '').replace(/\/$/, '');

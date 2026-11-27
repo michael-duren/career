@@ -2,7 +2,14 @@
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import { QuickJournal } from '../../components/WorkspaceEditor';
 ---
-<DocsLayout title="New journal entry" description="Add a dated reflection to your work journal">
-  <header class="mb-6 space-y-2"><h1 class="text-3xl font-bold">New journal entry</h1><p class="text-zinc-400">Write it down while it is fresh. Saving adds it to that week's journal.</p></header>
-  <QuickJournal returnTo="/journal" client:load />
+<DocsLayout page title="New journal entry" description="Add a dated reflection to your work journal">
+  <div class="mx-auto flex w-full max-w-3xl flex-col pb-12">
+    <a class="ui-label self-start py-2 hover:text-ink" href="/journal">← Journal</a>
+    <header class="mt-4 flex flex-col gap-2">
+      <span class="ui-label">Work journal</span>
+      <h1 class="m-0 font-extralight !text-[40px] !leading-[0.9] md:!text-[52px]">New entry</h1>
+      <p class="m-0 mt-2 text-[15px] font-light text-ink-60">Write it down while it is fresh. Saving adds it to that week's journal.</p>
+    </header>
+    <QuickJournal returnTo="/journal" client:load />
+  </div>
 </DocsLayout>

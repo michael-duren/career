@@ -71,7 +71,10 @@ test('journal page combines the work journal, personal journal and logs', async 
   await expect(page.getByRole('tab', { name: 'Work' })).toHaveAttribute('aria-selected', 'true');
   await page.getByRole('tab', { name: 'Personal' }).click();
   await expect(page).toHaveURL(/\/journal\?tab=personal$/);
-  await expect(page.getByRole('tabpanel', { name: 'Personal' })).toContainText('Read personal journal as Markdown');
+  const panel = page.getByRole('tabpanel', { name: 'Personal' });
+  // Personal entries stay behind the lock until opened.
+  await panel.getByRole('button', { name: /Private · open to read/ }).click();
+  await expect(panel.getByRole('link', { name: 'Read as Markdown →' })).toHaveAttribute('href', '/api/agent-context?format=markdown&journal=personal');
 });
 
 test('old journal, logs and personal journal URLs open their journal tabs', async ({ page }) => {

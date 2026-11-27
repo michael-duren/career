@@ -1,7 +1,6 @@
 import { checklist, toggleTask } from '../lib/checklist';
 import type { WorkspaceEntry } from '../lib/workspace';
 import { BOOK_CATEGORIES } from '../lib/books';
-import { JournalWeekHours } from './JournalWeekHours';
 import { Combobox } from './NoteInputs';
 import { isAutoTitle } from '../lib/audio-thoughts';
 
@@ -13,10 +12,7 @@ function Select({ label, value, options, onChange }: { label: string; value: str
   return <label className="block text-sm">{label}<select className={field} value={value} onChange={e => onChange(e.target.value)}>{options.map(option => <option key={option} value={option}>{option.replaceAll('_', ' ')}</option>)}</select></label>;
 }
 export default function EntryFields({ entry, change, topics = [] }: { entry: WorkspaceEntry; change: (patch: Partial<WorkspaceEntry>) => void; topics?: string[] }) {
-  if ('week' in entry) return <>
-    <h2 className="text-lg font-semibold">Week {entry.week} · {entry.dates}</h2>
-    <JournalWeekHours weekStart={entry.dates.slice(0, 10)} tracks={entry.hours} />
-  </>;
+  if ('week' in entry) return <h2 className="text-lg font-semibold">Week {entry.week} · {entry.dates}</h2>;
   return <>
     {'runDate' in entry
       ? <label className="block text-sm">Title<input className={field} value={isAutoTitle(entry.title) ? '' : entry.title} autoFocus maxLength={200} placeholder="Leave blank to name it after the first few words" onChange={e => change({ title: e.target.value })} /></label>
