@@ -4,10 +4,12 @@ import { type PlacementResult } from '../lib/scheduler-placement';
 import { WeeklySchedulerGrid, type SchedulerGridHandle } from './WeeklySchedulerGrid';
 import { WeeklySchedulerSettings } from './WeeklySchedulerSettings';
 import { WeeklySchedulerGoogle } from './WeeklySchedulerGoogle';
+import { Button, GoalPattern, IconButton, Label, SectionHeader, buttonClassName } from './ui';
+import { formatTimeRange } from '../lib/format';
+import { goalHours, goalPatterns, hoursCell, isoWeek, weekRangeLabel } from '../lib/schedule-view';
 import '../styles/weekly-scheduler.css';
 const hours = (value: number) => `${Number(value.toFixed(2))}h`;
 const browserZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
-const dayName = (date: string) => new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }).format(new Date(`${date}T12:00Z`));
 // Dragging a goal or subgoal onto the grid places a one-hour block; resize it afterward.
 const DRAG_MINUTES = 60;
 // Subgoal select value that reveals the new-subgoal title input.
@@ -33,6 +35,8 @@ export function WeeklyScheduler() {
     if (!value) { setDraftWeek(null); setConflicts([]); }
   }
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [googleOpen, setGoogleOpen] = useState(false);
+  const [googleStatus, setGoogleStatus] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [conflicts, setConflicts] = useState<string[]>([]);
@@ -188,29 +192,182 @@ export function WeeklyScheduler() {
     try { void mutate(draftMutation(proposal, week)).then(ok => { if (!ok) { setDraftState(proposal); setDraftWeek(current => current?.week === owner.week ? current : owner); } }); }
     catch (e) { setError(e instanceof Error ? e.message : 'Check the session times.'); setDraft(proposal); }
   }
+  // A new draft for the first goal (or a non-goal entry when there are none) on a day; with a
+  // minute it fills that slot, otherwise the first free slot. Shared by the ADD SESSION button,
+  // each day's ＋ and double-clicking a gap.
+  function addSession(date: string, minute?: number, durationMinutes?: number, at?: number) {
+    if (!week) return;
+    const next = create(week.goals[0] ? { goalId: week.goals[0].goal.id, title: week.goals[0].goal.title, color: week.goals[0].goal.color } : { title: '' }, date, minute, undefined, durationMinutes, at);
+    // Past gaps open as actual work, which needs a goal; with none, there is nothing to record.
+    if (next.mode === 'actual' && !next.assignment.goalId) { setNotice('Add a goal to record past work.'); return; }
+    if (minute !== undefined) setNotice('');
+    setSelectedDay(date);
+    setDraft(next);
+  }
+  function goToToday() {
+    const today = zonedDate(new Date(), week?.settings.timeZone ?? browserZone());
+    if (mondayOf(today) !== viewedWeek.current) navigate(mondayOf(today));
+    setSelectedDay(today);
+  }
+  function openWarning(warning: string, index: number) {
+    if (!week) return;
+    const occurrence = week.warnings.slice(0, index).filter(message => message === warning).length;
+    const target = week.warningTargets.filter(target => target.message === warning)[occurrence];
+    if (!target) return null;
+    return () => {
+      if (target.date) setSelectedDay(target.date);
+      const session = week.sessions.find(session => session.id === target.sessionId);
+      if (session) edit(session);
+      else if (target.goalId) document.getElementById(`scheduler-goal-${target.goalId}`)?.scrollIntoView({ block: 'nearest' });
+      else setSettingsOpen(true);
+    };
+  }
   const editorWeek = draftWeek;
   const busy = loading || saving;
   const activeSession = editorWeek?.sessions.find(s => s.id === draft?.id);
   // A started plan stays editable for this date; recurrence changes only reach forward from today.
   const planStarted = draft?.mode === 'plan' && Boolean(activeSession?.plan && Date.parse(activeSession.plan.start) <= now);
   const editorToday = editorWeek ? zonedDate(new Date(now), editorWeek.settings.timeZone) : '';
+  const patterns = week ? goalPatterns(week) : new Map();
+  const editorZone = editorWeek?.settings.timeZone;
   return <div className="weekly-scheduler" aria-busy={loading || saving}>
-    <div className="scheduler-toolbar"><div className="scheduler-actions"><button aria-label="Previous week" onClick={() => navigate(addDays(weekDate, -7))}>←</button><button onClick={() => { const today = zonedDate(new Date(), week?.settings.timeZone ?? browserZone()); if (mondayOf(today) !== viewedWeek.current) navigate(mondayOf(today)); setSelectedDay(today); }}>Today</button><button aria-label="Next week" onClick={() => navigate(addDays(weekDate, 7))}>→</button></div><h2>{dayName(weekDate)} – {dayName(addDays(weekDate, 6))}</h2><button onClick={() => void load()}>Refresh schedule</button><button disabled={busy} onClick={() => setSettingsOpen(v => !v)}>Day settings</button></div>
-    {week && <p className="scheduler-muted">{week.settings.timeZone} · {hours(week.remainingCapacityHours)} remaining free time · Drag blocks in 15-minute steps, or use their editor.</p>}
+    <div className="scheduler-toolbar">
+      <header className="scheduler-header">
+        <div className="scheduler-title">
+          <Label>Week {isoWeek(weekDate)}</Label>
+          <h1 className="m-0 font-extralight !text-[40px] !leading-[0.9] md:!text-[52px]">
+            <span className="scheduler-range-long">{weekRangeLabel(weekDate)}</span>
+            <span className="scheduler-range-short">{weekRangeLabel(weekDate, true)}</span>
+          </h1>
+        </div>
+        <div className="scheduler-nav">
+          <IconButton label="Previous week" onClick={() => navigate(addDays(weekDate, -7))}>←</IconButton>
+          <IconButton label="Next week" onClick={() => navigate(addDays(weekDate, 7))}>→</IconButton>
+        </div>
+        <div className="scheduler-header-actions">
+          <Button onClick={goToToday}>Today</Button>
+          <Button disabled={busy} aria-expanded={settingsOpen} onClick={() => setSettingsOpen(v => !v)}>Rules</Button>
+          <Button aria-expanded={googleOpen} onClick={() => setGoogleOpen(v => !v)}>Google sync</Button>
+          <Button variant="primary" disabled={busy || !week} onClick={() => addSession(selectedDay || weekDate)}>Add session</Button>
+        </div>
+      </header>
+      <div className="scheduler-meta">
+        <Label as="p">{week ? `${week.settings.timeZone} · ` : ''}Drag blocks in 15-minute steps, or open one to edit{googleStatus ? ` · Google ${googleStatus}` : ''}</Label>
+        <Button size="sm" onClick={() => void load()}>Refresh schedule</Button>
+      </div>
+    </div>
     <div aria-live="polite" className="scheduler-status">{notice}{loading && ' Loading schedule…'}</div>
     {/* When the dialog is open, its own copy below is what's actually visible -
         the native <dialog>'s ::backdrop sits above ordinary page content, so
         this one would otherwise be silently hidden behind it (e.g. a failed
         drag/resize save reopening the dialog via attemptPlace). */}
-    {!draft && error && <div role="alert" className="scheduler-error">{error}<button onClick={() => void load()}>Refresh schedule</button></div>}
-    <WeeklySchedulerGoogle refreshGeneration={healthRefresh} week={weekDate} refreshWeek={refreshWeek} />
+    {!draft && error && <div role="alert" className="scheduler-error">{error}<Button size="sm" onClick={() => void load()}>Refresh schedule</Button></div>}
+    <WeeklySchedulerGoogle open={googleOpen} setOpen={setGoogleOpen} onStatus={setGoogleStatus} refreshGeneration={healthRefresh} week={weekDate} refreshWeek={refreshWeek} />
     {week && settingsOpen && <WeeklySchedulerSettings settings={week.settings} saving={busy} close={() => setSettingsOpen(false)} save={settings => { void mutate({ action: 'settings', settings, revision: week.revision, week: weekDate }, false).then(ok => { if (ok) setSettingsOpen(false); }); }} />}
-    {week && <>
-      {week.warnings.length > 0 && <details className="scheduler-warnings" open><summary>Schedule needs attention ({week.warnings.length})</summary><ul>{week.warnings.map((warning, index) => <li key={index}>{(() => { const occurrence=week.warnings.slice(0,index).filter(message=>message===warning).length; const target=week.warningTargets.filter(target => target.message===warning)[occurrence]; return target ? <button onClick={() => { if (target.date) setSelectedDay(target.date); const session=week.sessions.find(session=>session.id===target.sessionId); if (session) edit(session); else if (target.goalId) document.getElementById(`scheduler-goal-${target.goalId}`)?.scrollIntoView({block:'nearest'}); else setSettingsOpen(true); }}>{warning}</button> : warning; })()}</li>)}</ul></details>}
-      <div className="scheduler-workspace"><aside className="scheduler-goals" aria-label="Weekly requirements"><h2>Weekly requirements</h2><div className="scheduler-actions"><button disabled={busy} onClick={() => setDraft(create({ title: '' }))}>Add non-goal entry</button><button disabled={busy} onClick={() => setDraft(create(week.goals[0] ? { goalId: week.goals[0].goal.id, title: week.goals[0].goal.title, color: week.goals[0].goal.color } : { title: '' }, selectedDay, 540, 'actual'))}>Log unplanned work</button></div>{week.goals.length === 0 && <p>No goals apply this week. <a href="/timeline">Add or date a goal on the timeline.</a></p>}{week.goals.map(summary => { const goal = summary.goal; const assignment = { goalId: goal.id, title: goal.title, color: goal.color }; return <article className="scheduler-goal" id={`scheduler-goal-${goal.id}`} key={goal.id} style={{ borderLeftColor: goal.color }}><button disabled={busy} className="scheduler-goal-title" onPointerDown={e => grid.current?.beginAssignment(e, assignment, DRAG_MINUTES)} onClick={() => { if (!grid.current?.consumeClick()) setDraft(create(assignment)); }}>{goal.title}<span aria-hidden="true">＋</span></button><button disabled={busy} className="scheduler-touch-handle scheduler-goal-handle" aria-label={`Drag ${goal.title}`} onPointerDown={e => grid.current?.beginAssignment(e, assignment, DRAG_MINUTES)}>⋮⋮</button><dl><div><dt>Required</dt><dd>{summary.requiredHours === null ? 'Hours not set' : hours(summary.requiredHours)}</dd></div><div><dt>Actual</dt><dd>{hours(summary.actualHours)}</dd></div><div><dt>Still scheduled</dt><dd>{hours(summary.remainingScheduledHours)}</dd></div><div className={summary.uncoveredHours > 0 ? 'scheduler-shortfall' : ''}><dt>Uncovered</dt><dd>{hours(summary.uncoveredHours)}</dd></div></dl>{summary.requiredHours === null && <a href="/timeline">Set a daily estimate</a>}{summary.excessHours > 0 && <p>{hours(summary.excessHours)} extra coverage</p>}{goal.dependsOn.length > 0 && <p className="scheduler-muted">This goal has dependencies. Check their readiness on the timeline.</p>}{goal.steps.some(step => !step.completed) && <details><summary>Subgoals</summary>{goal.steps.filter(step => !step.completed).map(step => { const sub = { ...assignment, stepId: step.id, title: step.title, goalTitle: goal.title }; return <div key={step.id} className="scheduler-step-row"><button disabled={busy} className="scheduler-step" onPointerDown={e => grid.current?.beginAssignment(e, sub, DRAG_MINUTES)} onClick={() => { if (!grid.current?.consumeClick()) setDraft(create(sub)); }}>{step.title}{summary.unscheduledStepIds.includes(step.id) && <small>Unscheduled</small>}</button><button disabled={busy} className="scheduler-touch-handle scheduler-step-handle" aria-label={`Drag ${step.title}`} onPointerDown={e => grid.current?.beginAssignment(e, sub, DRAG_MINUTES)}>⋮⋮</button></div>; })}</details>}</article>; })}</aside>
-      <WeeklySchedulerGrid key={weekDate} ref={grid} busy={busy} now={now} week={week} selectedDay={selectedDay} conflicts={conflicts} selectDay={setSelectedDay} addSession={(date, minute, durationMinutes, at) => { const next = create(week.goals[0] ? { goalId: week.goals[0].goal.id, title: week.goals[0].goal.title, color: week.goals[0].goal.color } : { title: '' }, date, minute, undefined, durationMinutes, at); /* Past gaps open as actual work, which needs a goal; with none, there is nothing to record. */ if (next.mode === 'actual' && !next.assignment.goalId) { setNotice('Add a goal to record past work.'); return; } if (minute !== undefined) setNotice(''); setSelectedDay(date); setDraft(next); }} edit={edit} copySession={copySession} pasteSession={copiedItem ? pasteSession : undefined} deleteSession={deleteSession} place={attemptPlace} />
-      </div>
-    </>}
-    <dialog ref={dialog} className="scheduler-editor-dialog" aria-label="Session editor" onCancel={event => { event.preventDefault(); if (!saving) setDraft(null); }} onMouseDown={event => { backdropPress.current = onBackdrop(event); }} onClick={event => { if (backdropPress.current && onBackdrop(event) && !saving) setDraft(null); backdropPress.current = false; }}>{draft && editorWeek && <form onSubmit={e => { e.preventDefault(); saveDraft(draft); }}><h2>{draft.mode === 'actual' ? 'Record actual work' : draft.id ? 'Edit planned session' : 'New session'}</h2><p>Draft for week of {editorWeek.week}.</p>{draft.explanation && <p role="status">{draft.explanation}</p>}{error && <div role="alert" className="scheduler-error">{error}<button type="button" onClick={() => void load()}>Refresh schedule</button></div>}{activeSession?.plan && draft.mode === 'actual' && <p>Original plan: {localFields(activeSession.plan.start, editorWeek.settings.timeZone).time}–{localFields(activeSession.plan.end, editorWeek.settings.timeZone).time} ({localFields(activeSession.plan.start, editorWeek.settings.timeZone).offset} → {localFields(activeSession.plan.end, editorWeek.settings.timeZone).offset}). Actuals replace the assumption and preserve this plan.</p>}<label>Assignment<select disabled={busy || Boolean(draft.id)} value={draft.assignment.goalId ?? ''} onChange={e => { const goal = editorWeek.goals.find(s => s.goal.id === e.target.value)?.goal; setDraft({ ...draft, newStepTitle: undefined, assignment: goal ? { goalId: goal.id, title: goal.title, color: goal.color } : { title: '' } }); }}><option value="">Not a goal (e.g. lunch)</option>{editorWeek.goals.map(summary => <option key={summary.goal.id} value={summary.goal.id}>{summary.goal.title}</option>)}{draft.assignment.goalId && !editorWeek.goals.some(s => s.goal.id === draft.assignment.goalId) && <option value={draft.assignment.goalId}>{draft.assignment.goalTitle || draft.assignment.title} (historical)</option>}</select><small className="scheduler-muted">Use for meals, breaks, appointments. Doesn't count toward goal hours.</small></label>{!draft.assignment.goalId && <label>Title<input disabled={busy} required value={draft.assignment.title} onChange={e => setDraft({ ...draft, assignment: { ...draft.assignment, title: e.target.value } })} /></label>}{draft.assignment.goalId && (draft.mode === 'plan' || !draft.id) && <label>Subgoal<select disabled={busy} value={draft.newStepTitle !== undefined ? NEW_STEP : draft.assignment.stepId ?? ''} onChange={e => { const goal = editorWeek.goals.find(s => s.goal.id === draft.assignment.goalId)?.goal; const step = goal?.steps.find(s => s.id === e.target.value); if (goal) setDraft({ ...draft, newStepTitle: e.target.value === NEW_STEP ? draft.newStepTitle ?? '' : undefined, assignment: { goalId: goal.id, stepId: step?.id, title: step?.title || goal.title, goalTitle: step ? goal.title : undefined, color: goal.color } }); }}><option value="">Goal itself</option>{editorWeek.goals.find(s => s.goal.id === draft.assignment.goalId)?.goal.steps.filter(s => !s.completed || s.id === draft.assignment.stepId).map(s => <option value={s.id} key={s.id}>{s.title}</option>)}{(draft.newStepTitle !== undefined || editorWeek.goals.some(s => s.goal.id === draft.assignment.goalId && s.goal.status !== 'done' && s.goal.status !== 'dropped')) && !(draft.mode === 'actual' && draft.id) && <option value={NEW_STEP}>+ New subgoal…</option>}</select></label>}{draft.newStepTitle !== undefined && draft.assignment.goalId && <label>New subgoal title<input disabled={busy} required maxLength={500} value={draft.newStepTitle} onChange={e => setDraft({ ...draft, newStepTitle: e.target.value })} /><small className="scheduler-muted">Added to the goal's subgoals when you save.</small></label>}<div className="scheduler-editor-fields"><label>Scheduling date<input disabled={busy} required type="date" value={draft.date} onChange={e => setDraft({ ...draft, date: e.target.value, startDate: e.target.value, endDate: e.target.value })} /></label><label>Start date<input disabled={busy} required type="date" value={draft.startDate ?? draft.date} onChange={e => setDraft({ ...draft, startDate: e.target.value })} /></label><label>Start time<input disabled={busy} required type="time" step="60" value={draft.start} onChange={e => setDraft({ ...draft, start: e.target.value })} /></label><label>End date<input disabled={busy} required type="date" value={draft.endDate} onChange={e => setDraft({ ...draft, endDate: e.target.value })} /></label><label>End time<input disabled={busy} required type="time" step="60" value={draft.end} onChange={e => setDraft({ ...draft, end: e.target.value })} /></label></div><p className="scheduler-muted">Times use {editorWeek.settings.timeZone}. Overnight work belongs to its scheduling date. Repeated clock times use the earlier occurrence.{(() => { try { return ` Start offset: ${localFields(draft.originalStart && localFields(draft.originalStart, editorWeek.settings.timeZone).date === (draft.startDate ?? draft.date) && localFields(draft.originalStart, editorWeek.settings.timeZone).time === draft.start ? draft.originalStart : localInstant(draft.startDate ?? draft.date, draft.start, editorWeek.settings.timeZone), editorWeek.settings.timeZone).offset}.`; } catch { return ''; } })()}</p>{draft.mode === 'plan' && (draft.ruleId ? !planStarted && <label>Apply change to<select disabled={busy} value={draft.scope} onChange={e => setDraft({ ...draft, scope: e.target.value === 'future' ? 'future' : 'date' })}><option value="date">This date</option><option value="future">This and future occurrences</option></select></label> : !draft.id && <label className="scheduler-check"><input disabled={busy} type="checkbox" checked={draft.repeat} onChange={e => setDraft({ ...draft, repeat: e.target.checked })} />Repeat weekly from this date</label>)}{draft.mode === 'actual' && draft.id && <p>Actual work is assigned to {draft.assignment.goalTitle ? `${draft.assignment.goalTitle} / ${draft.assignment.title}` : draft.assignment.title}.</p>}{draft.mode === 'actual' && !draft.assignment.goalId && <p role="alert">Actual work must be assigned to a goal.</p>}<div className="scheduler-actions"><button type="submit" disabled={busy || draft.mode === 'actual' && !draft.assignment.goalId}>{saving ? 'Saving…' : 'Save session'}</button><button type="button" disabled={busy} onClick={() => { setDraft(null); setConflicts([]); }}>Discard draft</button>{planStarted && activeSession?.assignment.goalId && <button type="button" disabled={busy} onClick={() => setDraft({ ...draft, assignment: activeSession.assignment, newStepTitle: undefined, mode: 'actual', repeat: false })}>Record actual work</button>}{draft.id && draft.mode === 'plan' && activeSession?.plan && activeSession.assignment.goalId && (activeSession.actual ? <button type="button" disabled={busy} onClick={() => { if (draft.id) void mutate({ revision: editorWeek.revision, week: editorWeek.week, action: 'clearActual', id: draft.id }); }}>{activeSession.actual.status === 'skipped' ? 'Undo skip' : 'Undo check-off'}</button> : <><button type="button" disabled={busy || activeSession.date > editorToday} title={activeSession.date > editorToday ? 'Available from the scheduled date' : undefined} onClick={() => { if (draft.id && activeSession.plan) void mutate({ revision: editorWeek.revision, week: editorWeek.week, action: 'actual', id: draft.id, actual: { ...activeSession.plan, date: activeSession.date, status: 'assumed' } }); }}>Mark done</button><button type="button" disabled={busy} onClick={() => { if (draft.id && activeSession.plan) void mutate({ revision: editorWeek.revision, week: editorWeek.week, action: 'actual', id: draft.id, actual: { ...activeSession.plan, date: activeSession.date, status: 'skipped' } }); }}>Mark skipped</button></>)}{draft.id && (draft.mode === 'plan' || draft.mode === 'actual' && !activeSession?.plan) && <button type="button" disabled={busy} onClick={() => { if (draft.id) void mutate({ revision: editorWeek.revision, week: editorWeek.week, action: 'cancel', id: draft.id, scope: draft.ruleId ? draft.scope : undefined }); }}>Remove this session</button>}{draft.id && draft.mode === 'actual' && activeSession?.plan && <><button type="button" disabled={busy} onClick={() => { if (draft.id && activeSession.plan) void mutate({ revision: editorWeek.revision, week: editorWeek.week, action: 'actual', id: draft.id, actual: { ...activeSession.plan, date: activeSession.date, status: 'skipped' } }); }}>Mark skipped</button><button type="button" disabled={busy || activeSession.date > editorToday} title={activeSession.date > editorToday ? 'Available from the scheduled date' : undefined} onClick={() => { if (draft.id && activeSession.plan) void mutate({ revision: editorWeek.revision, week: editorWeek.week, action: 'actual', id: draft.id, actual: { ...activeSession.plan, date: activeSession.date, status: 'assumed' } }); }}>Restore as planned</button></>}</div></form>}</dialog>
+    {week && <div className="scheduler-workspace">
+      <WeeklySchedulerGrid key={weekDate} ref={grid} busy={busy} now={now} week={week} patterns={patterns} selectedDay={selectedDay} conflicts={conflicts} selectDay={setSelectedDay} addSession={addSession} edit={edit} copySession={copySession} pasteSession={copiedItem ? pasteSession : undefined} deleteSession={deleteSession} place={attemptPlace} />
+      <aside className="scheduler-goals" aria-label="Goal hours">
+        <section className="scheduler-hours">
+          <SectionHeader title="Goal hours" />
+          {week.goals.length === 0 ? <p className="scheduler-empty">No goals apply this week. <a href="/timeline">Add or date a goal on the timeline.</a></p> : <table className="scheduler-hours-table">
+            <thead><tr><th scope="col"><Label>Goal</Label></th><th scope="col"><Label>Req</Label></th><th scope="col"><Label>Plan</Label></th><th scope="col"><Label>Δ</Label></th></tr></thead>
+            {week.goals.map(summary => {
+              const goal = summary.goal;
+              const assignment = { goalId: goal.id, title: goal.title, color: goal.color };
+              const row = goalHours(summary);
+              const openSteps = goal.steps.filter(step => !step.completed);
+              const details = summary.requiredHours === null || summary.excessHours > 0 || goal.dependsOn.length > 0 || openSteps.length > 0;
+              return <tbody className="scheduler-goal" id={`scheduler-goal-${goal.id}`} key={goal.id}>
+                <tr>
+                  <th scope="row">
+                    <div className="scheduler-goal-name">
+                      <GoalPattern variant="swatch" pattern={patterns.get(goal.id)} />
+                      <button disabled={busy} className="scheduler-goal-title" title={`Add or drag ${goal.title}`} onPointerDown={e => grid.current?.beginAssignment(e, assignment, DRAG_MINUTES)} onClick={() => { if (!grid.current?.consumeClick()) setDraft(create(assignment)); }}>{goal.title}<span aria-hidden="true">＋</span></button>
+                      <button disabled={busy} className="scheduler-touch-handle scheduler-goal-handle" aria-label={`Drag ${goal.title}`} onPointerDown={e => grid.current?.beginAssignment(e, assignment, DRAG_MINUTES)}>⋮⋮</button>
+                    </div>
+                    <span className="ui-label scheduler-goal-done">{hours(summary.actualHours)} done · {hours(summary.remainingScheduledHours)} scheduled</span>
+                  </th>
+                  <td title={summary.requiredHours === null ? 'Hours not set' : `Required ${hours(summary.requiredHours)}`}>{hoursCell(row.required)}</td>
+                  <td title={`Planned ${hours(row.planned)}`}>{hoursCell(row.planned)}</td>
+                  <td className={row.short ? 'scheduler-shortfall' : undefined} title={row.short ? `${hours(summary.uncoveredHours)} uncovered` : undefined}>{hoursCell(row.delta, true)}</td>
+                </tr>
+                {details && <tr className="scheduler-goal-extra"><td colSpan={4}>
+                  {summary.requiredHours === null && <p>Hours not set. <a href="/timeline">Set a daily estimate</a></p>}
+                  {summary.excessHours > 0 && <p>{hours(summary.excessHours)} extra coverage</p>}
+                  {goal.dependsOn.length > 0 && <p>This goal has dependencies. Check their readiness on the timeline.</p>}
+                  {openSteps.length > 0 && <details><summary>Subgoals</summary>{openSteps.map(step => {
+                    const sub = { ...assignment, stepId: step.id, title: step.title, goalTitle: goal.title };
+                    return <div key={step.id} className="scheduler-step-row">
+                      <button disabled={busy} className="scheduler-step" onPointerDown={e => grid.current?.beginAssignment(e, sub, DRAG_MINUTES)} onClick={() => { if (!grid.current?.consumeClick()) setDraft(create(sub)); }}>{step.title}{summary.unscheduledStepIds.includes(step.id) && <small>Unscheduled</small>}</button>
+                      <button disabled={busy} className="scheduler-touch-handle scheduler-step-handle" aria-label={`Drag ${step.title}`} onPointerDown={e => grid.current?.beginAssignment(e, sub, DRAG_MINUTES)}>⋮⋮</button>
+                    </div>;
+                  })}</details>}
+                </td></tr>}
+              </tbody>;
+            })}
+          </table>}
+          <Label as="p" className="scheduler-capacity">Capacity remaining {hoursCell(week.remainingCapacityHours)} h</Label>
+          <div className="scheduler-goal-actions">
+            <Button size="sm" disabled={busy} onClick={() => setDraft(create({ title: '' }))}>Add non-goal entry</Button>
+            <Button size="sm" disabled={busy} onClick={() => setDraft(create(week.goals[0] ? { goalId: week.goals[0].goal.id, title: week.goals[0].goal.title, color: week.goals[0].goal.color } : { title: '' }, selectedDay, 540, 'actual'))}>Log unplanned work</Button>
+          </div>
+        </section>
+        {week.warnings.length > 0 && <section className="scheduler-warnings">
+          <SectionHeader title="Warnings" meta={week.warnings.length} />
+          <ol>{week.warnings.map((warning, index) => {
+            const open = openWarning(warning, index);
+            return <li key={index}><span className="scheduler-warning-index">{index + 1} —</span> {open ? <button onClick={open}>{warning}</button> : warning}</li>;
+          })}</ol>
+        </section>}
+      </aside>
+    </div>}
+    <dialog ref={dialog} className="scheduler-editor-dialog" aria-label="Session editor" onCancel={event => { event.preventDefault(); if (!saving) setDraft(null); }} onMouseDown={event => { backdropPress.current = onBackdrop(event); }} onClick={event => { if (backdropPress.current && onBackdrop(event) && !saving) setDraft(null); backdropPress.current = false; }}>
+      {draft && editorWeek && <form onSubmit={e => { e.preventDefault(); saveDraft(draft); }}>
+        <h2>{draft.mode === 'actual' ? 'Record actual work' : draft.id ? 'Edit planned session' : 'New session'}</h2>
+        <Label as="p">Draft for week of {weekRangeLabel(editorWeek.week)}</Label>
+        {draft.explanation && <p role="status">{draft.explanation}</p>}
+        {error && <div role="alert" className="scheduler-error">{error}<Button size="sm" onClick={() => void load()}>Refresh schedule</Button></div>}
+        {activeSession?.plan && draft.mode === 'actual' && <p>Original plan: {formatTimeRange(activeSession.plan.start, activeSession.plan.end, { timeZone: editorZone })} ({localFields(activeSession.plan.start, editorWeek.settings.timeZone).offset} → {localFields(activeSession.plan.end, editorWeek.settings.timeZone).offset}). Actuals replace the assumption and preserve this plan.</p>}
+        <label>Assignment<select disabled={busy || Boolean(draft.id)} value={draft.assignment.goalId ?? ''} onChange={e => { const goal = editorWeek.goals.find(s => s.goal.id === e.target.value)?.goal; setDraft({ ...draft, newStepTitle: undefined, assignment: goal ? { goalId: goal.id, title: goal.title, color: goal.color } : { title: '' } }); }}>
+          <option value="">Not a goal (e.g. lunch)</option>
+          {editorWeek.goals.map(summary => <option key={summary.goal.id} value={summary.goal.id}>{summary.goal.title}</option>)}
+          {draft.assignment.goalId && !editorWeek.goals.some(s => s.goal.id === draft.assignment.goalId) && <option value={draft.assignment.goalId}>{draft.assignment.goalTitle || draft.assignment.title} (historical)</option>}
+        </select><small className="scheduler-muted">Use for meals, breaks, appointments. Doesn't count toward goal hours.</small></label>
+        {!draft.assignment.goalId && <label>Title<input disabled={busy} required value={draft.assignment.title} onChange={e => setDraft({ ...draft, assignment: { ...draft.assignment, title: e.target.value } })} /></label>}
+        {draft.assignment.goalId && (draft.mode === 'plan' || !draft.id) && <label>Subgoal<select disabled={busy} value={draft.newStepTitle !== undefined ? NEW_STEP : draft.assignment.stepId ?? ''} onChange={e => { const goal = editorWeek.goals.find(s => s.goal.id === draft.assignment.goalId)?.goal; const step = goal?.steps.find(s => s.id === e.target.value); if (goal) setDraft({ ...draft, newStepTitle: e.target.value === NEW_STEP ? draft.newStepTitle ?? '' : undefined, assignment: { goalId: goal.id, stepId: step?.id, title: step?.title || goal.title, goalTitle: step ? goal.title : undefined, color: goal.color } }); }}>
+          <option value="">Goal itself</option>
+          {editorWeek.goals.find(s => s.goal.id === draft.assignment.goalId)?.goal.steps.filter(s => !s.completed || s.id === draft.assignment.stepId).map(s => <option value={s.id} key={s.id}>{s.title}</option>)}
+          {(draft.newStepTitle !== undefined || editorWeek.goals.some(s => s.goal.id === draft.assignment.goalId && s.goal.status !== 'done' && s.goal.status !== 'dropped')) && !(draft.mode === 'actual' && draft.id) && <option value={NEW_STEP}>+ New subgoal…</option>}
+        </select></label>}
+        {draft.newStepTitle !== undefined && draft.assignment.goalId && <label>New subgoal title<input disabled={busy} required maxLength={500} value={draft.newStepTitle} onChange={e => setDraft({ ...draft, newStepTitle: e.target.value })} /><small className="scheduler-muted">Added to the goal's subgoals when you save.</small></label>}
+        <div className="scheduler-editor-fields">
+          <label>Scheduling date<input disabled={busy} required type="date" value={draft.date} onChange={e => setDraft({ ...draft, date: e.target.value, startDate: e.target.value, endDate: e.target.value })} /></label>
+          <label>Start date<input disabled={busy} required type="date" value={draft.startDate ?? draft.date} onChange={e => setDraft({ ...draft, startDate: e.target.value })} /></label>
+          <label>Start time<input disabled={busy} required type="time" step="60" value={draft.start} onChange={e => setDraft({ ...draft, start: e.target.value })} /></label>
+          <label>End date<input disabled={busy} required type="date" value={draft.endDate} onChange={e => setDraft({ ...draft, endDate: e.target.value })} /></label>
+          <label>End time<input disabled={busy} required type="time" step="60" value={draft.end} onChange={e => setDraft({ ...draft, end: e.target.value })} /></label>
+        </div>
+        <p className="scheduler-muted">Times use {editorWeek.settings.timeZone}. Overnight work belongs to its scheduling date. Repeated clock times use the earlier occurrence.{(() => { try { return ` Start offset: ${localFields(draft.originalStart && localFields(draft.originalStart, editorWeek.settings.timeZone).date === (draft.startDate ?? draft.date) && localFields(draft.originalStart, editorWeek.settings.timeZone).time === draft.start ? draft.originalStart : localInstant(draft.startDate ?? draft.date, draft.start, editorWeek.settings.timeZone), editorWeek.settings.timeZone).offset}.`; } catch { return ''; } })()}</p>
+        {draft.mode === 'plan' && (draft.ruleId ? !planStarted && <label>Apply change to<select disabled={busy} value={draft.scope} onChange={e => setDraft({ ...draft, scope: e.target.value === 'future' ? 'future' : 'date' })}><option value="date">This date</option><option value="future">This and future occurrences</option></select></label> : !draft.id && <label className="scheduler-check"><input disabled={busy} type="checkbox" checked={draft.repeat} onChange={e => setDraft({ ...draft, repeat: e.target.checked })} />Repeat weekly from this date</label>)}
+        {draft.mode === 'actual' && draft.id && <p>Actual work is assigned to {draft.assignment.goalTitle ? `${draft.assignment.goalTitle} / ${draft.assignment.title}` : draft.assignment.title}.</p>}
+        {draft.mode === 'actual' && !draft.assignment.goalId && <p role="alert">Actual work must be assigned to a goal.</p>}
+        <div className="scheduler-actions">
+          <button type="submit" className={buttonClassName({ variant: 'primary' })} disabled={busy || draft.mode === 'actual' && !draft.assignment.goalId}>{saving ? 'Saving…' : 'Save session'}</button>
+          <Button disabled={busy} onClick={() => { setDraft(null); setConflicts([]); }}>Discard draft</Button>
+          {planStarted && activeSession?.assignment.goalId && <Button disabled={busy} onClick={() => setDraft({ ...draft, assignment: activeSession.assignment, newStepTitle: undefined, mode: 'actual', repeat: false })}>Record actual work</Button>}
+          {draft.id && draft.mode === 'plan' && activeSession?.plan && activeSession.assignment.goalId && (activeSession.actual
+            ? <Button disabled={busy} onClick={() => { if (draft.id) void mutate({ revision: editorWeek.revision, week: editorWeek.week, action: 'clearActual', id: draft.id }); }}>{activeSession.actual.status === 'skipped' ? 'Undo skip' : 'Undo check-off'}</Button>
+            : <>
+              <Button disabled={busy || activeSession.date > editorToday} title={activeSession.date > editorToday ? 'Available from the scheduled date' : undefined} onClick={() => { if (draft.id && activeSession.plan) void mutate({ revision: editorWeek.revision, week: editorWeek.week, action: 'actual', id: draft.id, actual: { ...activeSession.plan, date: activeSession.date, status: 'assumed' } }); }}>Mark done</Button>
+              <Button disabled={busy} onClick={() => { if (draft.id && activeSession.plan) void mutate({ revision: editorWeek.revision, week: editorWeek.week, action: 'actual', id: draft.id, actual: { ...activeSession.plan, date: activeSession.date, status: 'skipped' } }); }}>Mark skipped</Button>
+            </>)}
+          {draft.id && (draft.mode === 'plan' || draft.mode === 'actual' && !activeSession?.plan) && <Button variant="danger" disabled={busy} onClick={() => { if (draft.id) void mutate({ revision: editorWeek.revision, week: editorWeek.week, action: 'cancel', id: draft.id, scope: draft.ruleId ? draft.scope : undefined }); }}>Remove this session</Button>}
+          {draft.id && draft.mode === 'actual' && activeSession?.plan && <>
+            <Button disabled={busy} onClick={() => { if (draft.id && activeSession.plan) void mutate({ revision: editorWeek.revision, week: editorWeek.week, action: 'actual', id: draft.id, actual: { ...activeSession.plan, date: activeSession.date, status: 'skipped' } }); }}>Mark skipped</Button>
+            <Button disabled={busy || activeSession.date > editorToday} title={activeSession.date > editorToday ? 'Available from the scheduled date' : undefined} onClick={() => { if (draft.id && activeSession.plan) void mutate({ revision: editorWeek.revision, week: editorWeek.week, action: 'actual', id: draft.id, actual: { ...activeSession.plan, date: activeSession.date, status: 'assumed' } }); }}>Restore as planned</Button>
+          </>}
+        </div>
+      </form>}
+    </dialog>
   </div>;
 }

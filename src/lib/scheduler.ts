@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { formatTime } from './format.ts';
 
 export function addDays(date: string, count: number): string {
   const value = new Date(`${date}T12:00:00Z`);
@@ -14,15 +15,12 @@ export function clockLabel(minutes: number): string {
   const within = ((minutes % 1440) + 1440) % 1440;
   return `${String(Math.floor(within / 60)).padStart(2, '0')}:${String(within % 60).padStart(2, '0')}${day ? ` +${day}d` : ''}`;
 }
-// displayClock is for on-screen labels only (12-hour, no leading zero on the
-// hour); clockLabel stays 24-hour since its output is parsed back via
-// .slice(0, 5) to build actual time values.
-export function displayClock(minutes: number): string {
+// displayClock is for on-screen labels only (12-hour via the shared formatter,
+// plus "+1d" past midnight); clockLabel stays 24-hour since its output is
+// parsed back via .slice(0, 5) to build actual time values.
+export function displayClock(minutes: number, compact = false): string {
   const day = Math.floor(minutes / 1440);
-  const within = ((minutes % 1440) + 1440) % 1440;
-  const hour24 = Math.floor(within / 60), minute = within % 60;
-  const hour12 = hour24 % 12 || 12;
-  return `${hour12}:${String(minute).padStart(2, '0')} ${hour24 < 12 ? 'AM' : 'PM'}${day ? ` +${day}d` : ''}`;
+  return `${formatTime(minutes, { compact })}${day ? ` +${day}d` : ''}`;
 }
 export function localFields(instant: string, timezone: string) {
   const parts = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZoneName: 'shortOffset' }).formatToParts(new Date(instant));
