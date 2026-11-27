@@ -1,8 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
 
 // First-run setup (docs/redesign/pages/setup.md): focus → modules → connect → theme → first goal,
-// Skip with defaults, and re-running it from Settings → General. Each test clears the real
-// setupCompletedAt and restores every setting afterwards.
+// Skip with defaults, and re-running it from Settings → General. Each test sets the real
+// setupCompletedAt it needs (CI's fresh database starts with none) and restores every setting afterwards.
 
 type Saved = { modules: Record<string, boolean>; moduleOrder: string[]; theme: string; setupCompletedAt: string | null; effective: Record<string, boolean> };
 
@@ -157,7 +157,7 @@ test('Settings → General runs setup again, starting from the saved modules', a
   await page.goto('/settings/general');
   const original = await readSettings(page);
   try {
-    await patch(page, { modules: { notes: false } });
+    await patch(page, { modules: { notes: false }, setupCompletedAt: '2026-11-01T12:00:00Z' });
     const nav = page.getByRole('navigation', { name: 'Settings' });
     await expect(nav.locator('[aria-current="page"]')).toHaveText('General');
     await main(page).getByRole('link', { name: 'RUN SETUP AGAIN' }).click();
@@ -175,7 +175,7 @@ test('a re-run offers Exit, which saves nothing, instead of Skip', async ({ page
   await page.goto('/settings/general');
   const original = await readSettings(page);
   try {
-    await patch(page, { modules: { notes: false }, theme: 'vellum' });
+    await patch(page, { modules: { notes: false }, theme: 'vellum', setupCompletedAt: '2026-11-01T12:00:00Z' });
     const before = await readSettings(page);
     await page.goto('/setup');
     await expect(page.getByRole('button', { name: 'SKIP SETUP' })).toHaveCount(0);
