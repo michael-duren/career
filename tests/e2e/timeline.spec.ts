@@ -26,7 +26,8 @@ async function mockGoals(page: Page, list = goals) {
   });
   return saved;
 }
-const overflow = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+// Compared with a fixed width: under mobile emulation innerWidth can follow overflowing content.
+const overflow = (page: Page, width: number) => page.evaluate(w => document.documentElement.scrollWidth - w, width);
 
 test.describe('desktop', () => {
   test('header counts, late tag and the selected goal panel', async ({ page }) => {
@@ -53,7 +54,8 @@ test.describe('desktop', () => {
     await panel.getByRole('button', { name: 'Edit goal' }).click();
     const dialog = page.getByRole('dialog', { name: 'Goal details' });
     await expect(dialog.getByLabel('Name')).toHaveValue('Apply to companies');
-    await expect(dialog).toContainText(/Last updated Jan 2, 2026 · \d{1,2}:\d{2} (AM|PM)/);
+    // 15:30 UTC is 9:30 AM in America/Chicago (the configured test zone).
+    await expect(dialog).toContainText('Last updated Jan 2, 2026 · 9:30 AM');
   });
 
   test('range tabs change the axis and dragging a span saves new dates', async ({ page }) => {
@@ -63,6 +65,12 @@ test.describe('desktop', () => {
     await main.getByRole('tab', { name: '2Y' }).click();
     await expect(main.getByRole('tab', { name: '2Y' })).toHaveAttribute('aria-selected', 'true');
     await main.getByRole('tab', { name: 'Fit' }).click();
+    const label = main.locator('.tl-header .ui-label').first();
+    const fit = await label.textContent();
+    await main.getByRole('tab', { name: '2Y' }).click();
+    await expect(label).not.toHaveText(fit!);
+    await main.getByRole('tab', { name: 'Fit' }).click();
+    await expect(label).toHaveText(fit!);
 
     const span = main.getByRole('button', { name: /^Apply to companies: / });
     const box = (await span.boundingBox())!;
@@ -72,8 +80,21 @@ test.describe('desktop', () => {
     await page.mouse.up();
     await expect.poll(() => saved.length).toBe(1);
     const moved = (saved[0] as { goal: { startDate: string; endDate: string } }).goal;
+    const length = (g: { startDate: string; endDate: string }) => Date.parse(g.endDate) - Date.parse(g.startDate);
     expect(moved.startDate > day(20)).toBe(true);
-    expect(moved.endDate > day(120)).toBe(true);
+    expect(length(moved)).toBe(length({ startDate: day(20), endDate: day(120) }));
+    expect((saved[0] as { revision: string }).revision).toBe('r1');
+    await page.waitForTimeout(300);
+    expect(saved.length).toBe(1);
+  });
+
+  test('a goal spanning the whole axis keeps its tag inside the timeline', async ({ page }) => {
+    await mockGoals(page, [goal('all', 'Whole year', 'active', day(-150), day(150), [{ id: 'x', title: 'X', done: false }])]);
+    await page.goto('/timeline');
+    const track = (await page.locator('main .tl-desktop .tl-track').first().boundingBox())!;
+    const tag = (await page.locator('main .tl-desktop .tl-tag').boundingBox())!;
+    expect(tag.x).toBeGreaterThanOrEqual(track.x);
+    expect(tag.x + tag.width).toBeLessThanOrEqual(track.x + track.width);
   });
 
   test('a ?goal= link opens that goal', async ({ page }) => {
@@ -97,7 +118,7 @@ test.describe('phone', () => {
     await expect(detail).toContainText('Caching');
     await expect(detail).toContainText('Queues');
     await expect(main.locator('.tl-mrow.tl-row--late .tl-tag')).toHaveText('late');
-    expect(await overflow(page)).toBeLessThanOrEqual(0);
+    expect(await overflow(page, 360)).toBeLessThanOrEqual(0);
     await detail.getByRole('button', { name: 'Edit goal' }).tap();
     await expect(page.getByRole('dialog', { name: 'Goal details' })).toBeVisible();
   });
@@ -110,6 +131,6 @@ test.describe('phone', () => {
     const box = (await empty.boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(360);
-    expect(await overflow(page)).toBeLessThanOrEqual(0);
+    expect(await overflow(page, 360)).toBeLessThanOrEqual(0);
   });
 });

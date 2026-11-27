@@ -5,7 +5,7 @@
 
 ## Purpose
 
-All goals on a 12-month axis with their dates, status and step progress; click a goal to see its steps.
+All goals on a month axis with their dates, status and step progress; click a goal to see its steps. The axis fits the goals' date range by default (Fit), with 6M / 1Y / 2Y / 5Y / 10Y tabs and previous / Today / next.
 
 ## Data
 
@@ -18,10 +18,11 @@ All goals on a 12-month axis with their dates, status and step progress; click a
 - Planned = dashed line, late = accent line, done = 45% opacity.
 - Today = dash-dot accent vertical line with handwritten "today".
 - Selected goal panel at the bottom: name, dates, numbered steps in two columns (done ones struck/dimmed).
+- Click selects a goal; double-click (or Edit goal in the panel) opens the editor. Drag a span to move it, drag its ends to resize. Dropped goals draw dashed at 45% and are never late. An "All goals" list below reaches goals outside the visible range.
 
 ## Mobile
 
-List of goals; each row shows name + status tag above a span on a compressed Aug–Jul axis (single-letter months). Today line runs through the list. Tapping a goal expands its steps inline.
+List of goals; each row shows name + status tag above a span on the same compressed axis (single-letter months). Today line runs through the list. Tapping a goal expands its steps inline.
 
 ## Acceptance criteria
 

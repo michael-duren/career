@@ -30,7 +30,7 @@ off in Settings → Modules.
 ### Goals: timeline and agent context
 
 **Timeline** (`/timeline`) is the source of truth for goals, their dates and their steps (mini
-goals), which can be reordered or moved between goals. It draws every goal on a month axis (fit to the goals'
+goals; the API can also reorder steps or move them between goals). It draws every goal on a month axis (fit to the goals'
 dates by default, or 6 months to 10 years) with its status and step progress; select a goal to see its steps, drag
 a span on desktop to move or resize it, and open the goal editor for everything else. **Agent context** (`/agents`) renders the
 saved goals as Markdown or JSON (`/api/agent-context`) to hand to an AI assistant.

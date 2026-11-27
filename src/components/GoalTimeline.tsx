@@ -77,7 +77,7 @@ export function GoalTimeline() {
     try {
       const [response, hoursResponse] = await Promise.all([fetch('/api/goals', { cache: 'no-store' }), fetch('/api/scheduler/goal-hours', { cache: 'no-store' })]);
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
+      if (!response.ok) throw new Error(result?.error || `Request failed (${response.status})`);
       // Logged hours are supplementary; the timeline stays editable without them.
       if (hoursResponse.ok) setLogged((await hoursResponse.json()).goals ?? {});
       setGoals(result.goals); setRevisions(result.revisions); setLoaded(true); setStatus('All changes saved');
@@ -111,7 +111,7 @@ export function GoalTimeline() {
     try {
       const response = await fetch('/api/goals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goal, revision: revisions[goal.id] ?? null }) });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
+      if (!response.ok) throw new Error(result?.error || `Request failed (${response.status})`);
       setGoals(current => [...current.filter(item => item.id !== result.goal.id), result.goal]);
       setRevisions(current => ({ ...current, [result.goal.id]: result.revision })); setDraft(null); setStatus('All changes saved');
       setSelectedId(result.goal.id);
@@ -125,7 +125,7 @@ export function GoalTimeline() {
     try {
       const response = await fetch('/api/goals', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: goal.id, revision: revisions[goal.id] }) });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
+      if (!response.ok) throw new Error(result?.error || `Request failed (${response.status})`);
       setGoals(current => current.filter(item => item.id !== goal.id)); setRevisions(current => { const next = { ...current }; delete next[goal.id]; return next; }); setDraft(null); setStatus('Goal deleted'); await load();
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not delete goal.'); }
     finally { saving.current = false; setBusy(false); }
@@ -157,7 +157,7 @@ export function GoalTimeline() {
   const pick = (goal: Goal) => { if (!suppressClick.current) setSelectedId(goal.id); suppressClick.current = false; };
   function createAt(event: MouseEvent<HTMLElement>) {
     const target = event.target as HTMLElement;
-    if (target.closest('[data-goal], .tl-name') || !axis.current) return;
+    if (target.closest('[data-goal], .tl-name, .tl-empty, .tl-tag') || !axis.current) return;
     const rect = axis.current.getBoundingClientRect();
     if (event.clientX < rect.left) return;
     create(dayString(start + Math.min(days - 1, Math.max(0, Math.floor((event.clientX - rect.left) / rect.width * days)))));
@@ -179,7 +179,12 @@ export function GoalTimeline() {
     return { left: (left - start) / days * 100, width: Math.max(0, right - left) / days * 100 };
   }
   // The tag sits after the span, or before it when the span ends near the right edge.
-  const tagStyle = (left: number, width: number): CSSProperties => left + width > 86 ? { right: `calc(${100 - left}% + 10px)` } : { left: `calc(${left + width}% + 10px)` };
+  // A span that fills the axis has room on neither side, so its tag goes inside, at its right end.
+  function tagPlace(left: number, width: number): { style: CSSProperties; inside: boolean } {
+    if (left + width <= 86) return { style: { left: `calc(${left + width}% + 10px)` }, inside: false };
+    if (left >= 14) return { style: { right: `calc(${100 - left}% + 10px)` }, inside: false };
+    return { style: { right: `calc(${100 - left - width}% + 4px)` }, inside: true };
+  }
 
   return <div className="goal-timeline">
     <header className="tl-header">
@@ -239,7 +244,7 @@ export function GoalTimeline() {
                 <button type="button" className="tl-handle tl-handle--start" aria-label={`Resize start of ${goal.title}`} {...handlers} onPointerDown={e => pointerDown(e, goal, 'start')} onClick={() => pick(goal)} />
                 <button type="button" className="tl-handle tl-handle--end" aria-label={`Resize end of ${goal.title}`} {...handlers} onPointerDown={e => pointerDown(e, goal, 'end')} onClick={() => pick(goal)} />
               </div>
-              {tag && <span className={cn('tl-tag', state === 'late' && 'text-accent')} style={tagStyle(left, width)} aria-hidden="true">{tag}</span>}
+              {tag && (() => { const place = tagPlace(left, width); return <span className={cn('tl-tag', place.inside && 'tl-tag--inside', state === 'late' && 'text-accent')} style={place.style} aria-hidden="true">{tag}</span>; })()}
             </div>
           </div>;
         })}

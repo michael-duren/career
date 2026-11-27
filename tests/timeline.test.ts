@@ -119,7 +119,7 @@ test('timeline calculations reject invalid and duplicate ISO weekdays', () => {
   }
 });
 
-test('late means not done or dropped and ending before today', () => {
+test('late means neither done nor dropped, ending before today, with steps still open', () => {
   const today = '2028-05-01';
   assert.equal(goalState({ ...goal, status: 'active' }, today), 'late');
   assert.equal(goalState({ ...goal, status: 'planned' }, today), 'late');
@@ -128,6 +128,11 @@ test('late means not done or dropped and ending before today', () => {
   // Ending today is not late yet.
   assert.equal(goalState({ ...goal, status: 'active' }, goal.endDate), 'active');
   assert.equal(goalState(goal, '2028-03-01'), 'planned');
+  // All steps done: not late, matching Home. No steps: late.
+  assert.equal(goalState({ ...goal, status: 'active', steps: [{ id: 's', title: 'S', done: true }] }, today), 'active');
+  assert.equal(goalState({ ...goal, status: 'active', steps: [] }, today), 'late');
+  assert.equal(goalTag({ ...goal, status: 'dropped' }, today), 'dropped');
+  assert.equal(goalTag({ ...goal, status: 'done', steps: [] }, today), 'done');
 });
 test('tags and progress come from status and steps', () => {
   const steps = [{ id: 'a', title: 'A', done: true }, { id: 'b', title: 'B', done: false }, { id: 'c', title: 'C', done: false }];
@@ -154,4 +159,8 @@ test('fit range covers every goal month, at least six months, across years', () 
   const { anchor, months } = fitRange(goals, '2026-11-26');
   assert.ok(monthOffset(anchor, months) > '2027-05-04');
   assert.equal(monthLabel(anchor), 'Sep 2026');
+  // Unsorted, with a middle goal ending last on the 31st, and a long single goal.
+  const unsorted: Goal[] = [{ ...goal, id: 'b', startDate: '2027-02-01', endDate: '2027-03-01' }, { ...goal, id: 'c', startDate: '2026-12-10', endDate: '2027-08-31' }, { ...goal, id: 'a', startDate: '2026-11-05', endDate: '2026-12-01' }];
+  assert.deepEqual(fitRange(unsorted, '2026-11-26'), { anchor: '2026-11-01', months: 10 });
+  assert.deepEqual(fitRange([{ ...goal, startDate: '2026-01-15', endDate: '2027-03-02' }], '2026-11-26'), { anchor: '2026-01-01', months: 15 });
 });

@@ -100,11 +100,15 @@ export function timelineHours(goals: Goal[], start: number, end: number) {
   return { total, average: end > start ? total / (end - start) : 0, unknown };
 }
 
-/** What the timeline draws for a goal. Late = not done (or dropped) and the end date is before today. */
+/**
+ * What the timeline draws for a goal. Late = neither done nor dropped, the end date is before today,
+ * and steps are still open (a goal whose steps are all done is not late; same rule as Home).
+ */
 export type GoalState = 'active' | 'planned' | 'done' | 'dropped' | 'late';
 export function goalState(goal: Goal, today: string): GoalState {
   if (goal.status === 'done' || goal.status === 'dropped') return goal.status;
-  return goal.endDate < today ? 'late' : goal.status;
+  const stepsDone = goal.steps.length > 0 && goal.steps.every(step => step.done);
+  return goal.endDate < today && !stepsDone ? 'late' : goal.status;
 }
 
 /** Share of the span to hatch: all of a done goal, otherwise steps done / steps. */
@@ -124,8 +128,8 @@ export function goalTag(goal: Goal, today: string): string {
 export function timelineCounts(goals: Goal[], today: string) {
   const counts = { active: 0, planned: 0, done: 0, late: 0 };
   for (const goal of goals) {
-    if (goal.status === 'dropped') continue;
-    counts[goal.status]++;
+    if (!(goal.status in counts)) continue;
+    counts[goal.status as keyof typeof counts]++;
     if (goalState(goal, today) === 'late') counts.late++;
   }
   return counts;
@@ -133,7 +137,7 @@ export function timelineCounts(goals: Goal[], today: string) {
 
 /**
  * The months that cover every goal: from the first goal's start month through the last goal's end
- * month, at least `minimum` months long. With no goals it is `minimum` months from `fallback`.
+ * month, at least `minimum` months long. With no goals it is `minimum` months from the first of `fallback`'s month.
  */
 export function fitRange(goals: Goal[], fallback: string, minimum = 6): { anchor: string; months: number } {
   if (!goals.length) return { anchor: fallback.slice(0, 7) + '-01', months: minimum };
