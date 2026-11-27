@@ -101,11 +101,12 @@ export function JournalEditor({ kind, item, isNew, recovered, onSaved, onCancel,
       setDirty(false);
       window.dispatchEvent(new Event('workspace-saved'));
       onSaved(saved);
-    } catch (e) { fail(e); }
+    } catch (e) { fail(e, true); }
   }
-  function fail(e: unknown) {
+  /** Only a save of an existing entry can recover from a conflict by saving over the newer revision. */
+  function fail(e: unknown, saving = false) {
     setError((e as Error).message);
-    setConflict(e instanceof RequestError && e.status === 409);
+    setConflict(saving && !isNew && e instanceof RequestError && e.status === 409);
     setBusy(false);
   }
   /** After a conflict: adopt the latest saved revision but keep what was typed, so Save replaces it. */

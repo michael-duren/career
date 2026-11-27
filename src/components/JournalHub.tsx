@@ -209,7 +209,7 @@ function WorkPanel({ weeks, query, hours, desktop, stale, initialId, onSaved, on
   function pick(id: string) {
     if (editing && !guard.confirmLeave()) return;
     if (editing) { clearDraft('week'); setEditing(null); }
-    setSelectedId(id);
+    setSelectedId(id); setEditError('');
     if (!desktop) setOpenId(open === id ? null : id);
     setUrlParam('id', id);
   }

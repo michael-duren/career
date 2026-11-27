@@ -7,7 +7,7 @@ const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Satur
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 const DAY_MS = 86400000;
 // "Nov 23", "November 23", "Sept. 4": real month names only, so "Marketing 2 pager" is not March 2.
-const MONTH_DAY = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)(?:uary|ruary|ch|il|e|y|ust|t|tember|ober|ember)?\.?\s+(\d{1,2})\b/i;
+const MONTH_DAY = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)(?:uary|ruary|ch|il|ust|t|tember|ober|ember|(?<=jun)e|(?<=jul)y)?\.?\s+(\d{1,2})\b/i;
 
 /** The ISO dates in a week's "2026-11-23 to 2026-11-29" range, or null when it doesn't parse. */
 export function weekBounds(dates: string): { start: string; end: string } | null {

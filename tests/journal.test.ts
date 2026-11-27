@@ -31,6 +31,8 @@ test('a heading date wins over its weekday, and undated weeks keep plain day lab
   assert.equal(parseWeekBody('## What I did\n### Thursday — January 1\n- x\n', '2026-12-28')[0].groups[0].date, '2027-01-01', 'across the new year');
   // A word that only starts like a month is not a date.
   assert.equal(parseWeekBody('## What I did\n### Monday — Marketing 2 pager\n- x\n', '2026-10-12')[0].groups[0].date, '2026-10-12');
+  assert.equal(parseWeekBody('## What I did\n### Monday — Mary 5 call\n- x\n', '2026-10-12')[0].groups[0].date, '2026-10-12');
+  assert.equal(parseWeekBody('## What I did\n### Tuesday — June 30\n- x\n', '2026-06-29')[0].groups[0].date, '2026-06-30');
   // A heading whose date sits outside its week keeps the written date.
   assert.equal(parseWeekBody('## What I did\n### Monday — Oct 19\n- x\n', '2026-10-12')[0].groups[0].date, '2026-10-19');
   assert.deepEqual(parseWeekBody('## What I did\n### Tuesday\n- x\n', null)[0].groups[0], { label: 'Tuesday', date: undefined, items: ['x'] });
