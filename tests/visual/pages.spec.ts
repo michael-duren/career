@@ -5,12 +5,16 @@ import { THEMES } from '../../src/lib/theme.ts';
 // Run with scripts/visual-tests.sh (see playwright.visual.config.ts and docs/developer.md).
 //
 // Determinism: the browser clock is frozen at NOW (the fixture's dates are relative to
-// it), the time zone is the scheduler's, outside requests are blocked (company logos
-// come from a favicon service), and each page waits for its data, fonts and images
-// before the shot. The server keeps its real clock (Leetgrinder's day, the scheduler's
-// capacity and missed sessions), but every fixture date is before the day the baselines
-// were made, so it sees the same past whenever the suite runs and nothing needs masking.
-// If a page ever shows the server's own date, mask it with toHaveScreenshot's `mask`.
+// it), the time zone is the scheduler's, outside requests are blocked, company logos
+// answer 404 (initials), and each page waits for its data, fonts and images before the
+// shot. The server keeps its real clock (Leetgrinder's day, the scheduler's capacity and
+// missed sessions). That is stable because the fixture's schedule week ends 2026-11-22,
+// before the baselines were made, and it has no Leetgrinder attempts (the server dates
+// those itself). Keep it that way: add nothing the server dates by today, or mask it
+// with toHaveScreenshot's `mask`. Goal dates may be in the future; the browser renders
+// them against NOW.
+//
+// "phone" is a 390px Desktop Chrome viewport (no touch emulation), like ui-check.
 
 // Wednesday of the fixture's week (tests/visual/workspace.json).
 const NOW = new Date('2026-11-18T10:30:00-06:00');
@@ -48,11 +52,13 @@ const PAGES: Shot[] = [
 async function growToContent(page: Page, size: { width: number; height: number }) {
   let height = size.height;
   for (let i = 0; i < 3; i++) {
-    const content = Math.min(await page.evaluate(() => document.documentElement.scrollHeight), 6000);
+    const content = await page.evaluate(() => document.documentElement.scrollHeight);
     if (content <= height) return;
+    expect(content, 'page taller than 6000px: shots would crop it').toBeLessThanOrEqual(6000);
     height = content;
     await page.setViewportSize({ width: size.width, height });
   }
+  expect(await page.evaluate(() => document.documentElement.scrollHeight), 'page height did not settle').toBeLessThanOrEqual(height);
 }
 
 async function settle(page: Page) {
@@ -60,6 +66,8 @@ async function settle(page: Page) {
   await expect(page.locator('body')).not.toContainText(/Loading[\w ]*…/);
   await page.evaluate(async () => {
     await document.fonts.ready;
+    // Lazy images below the first screen would never start loading.
+    for (const img of document.images) img.loading = 'eager';
     await Promise.all([...document.images].map(img => img.complete ? null : new Promise(done => { img.onload = img.onerror = done; })));
   });
 }
@@ -72,7 +80,7 @@ for (const theme of THEMES) {
       for (const shot of PAGES) {
         test(shot.name, async ({ page, baseURL, context }) => {
           if (shot.signedOut) await context.clearCookies();
-          await context.route(url => !url.href.startsWith(baseURL!), route => route.abort());
+          await context.route(url => url.origin !== new URL(baseURL!).origin, route => route.abort());
           // No logos: they come from an outside favicon service; every company shows its initials.
           await context.route('**/api/companies/logo?**', route => route.fulfill({ status: 404, body: '' }));
           await page.clock.setFixedTime(NOW);

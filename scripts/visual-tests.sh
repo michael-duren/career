@@ -39,6 +39,11 @@ cleanup() {
 }
 trap cleanup EXIT
 
+if curl -fsS "http://127.0.0.1:$port/healthz" >/dev/null 2>&1; then
+  echo "port $port is already serving; set VISUAL_PORT to a free port" >&2
+  exit 1
+fi
+
 docker run -d --rm --name "$pg_name" -p "127.0.0.1:$pg_port:5432" \
   -e POSTGRES_USER=career -e POSTGRES_PASSWORD=career -e POSTGRES_DB=career postgres:18 >/dev/null
 
@@ -57,13 +62,15 @@ export OTEL_EXPORTER_OTLP_ENDPOINT=
 unset ANTHROPIC_API_KEY WHISPER_URL SCHEDULER_GOOGLE_CLIENT_ID
 
 if [[ ${VISUAL_SKIP_BUILD:-} != 1 ]]; then
-  npm run build >/dev/null
+  npm run build
 fi
 go tool templ generate >/dev/null
 go build -o "$work/career" ./cmd/api
 
-for _ in $(seq 1 30); do
-  docker exec "$pg_name" pg_isready -U career -d career >/dev/null 2>&1 && break
+# Over TCP: during init the image runs a socket-only server that a socket check would accept.
+for i in $(seq 1 30); do
+  docker exec "$pg_name" pg_isready -h 127.0.0.1 -U career -d career >/dev/null 2>&1 && break
+  [[ $i == 30 ]] && { echo "postgres did not start" >&2; exit 1; }
   sleep 1
 done
 # The seed command keeps a private copy of the archive under ./.migration-private,
@@ -73,6 +80,7 @@ done
 (cd "$work" && exec ./career serve >"$work/server.log" 2>&1) &
 server_pid=$!
 for i in $(seq 1 30); do
+  kill -0 "$server_pid" 2>/dev/null || { echo "server exited" >&2; exit 1; }
   curl -fsS "$PUBLIC_ORIGIN/healthz" >/dev/null 2>&1 && break
   [[ $i == 30 ]] && { echo "server did not start" >&2; exit 1; }
   sleep 1

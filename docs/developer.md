@@ -128,11 +128,12 @@ with host networking (Linux), Go and Node. Extra arguments go to Playwright.
 
 The pages are made deterministic rather than compared loosely: the browser clock is
 frozen at Wednesday 2026-11-18 10:30 in America/Chicago (the fixture's dates are relative
-to that day), requests that leave the app are blocked (company logos fall back to
-initials), and each shot waits for data, fonts and images with motion reduced. The server
-keeps its real clock, but the fixture's dates are all in the past, so it sees the same
-history whatever day the suite runs. A region that shows the server's own date would
-need a `mask`. Each shot is the full page: the viewport grows to the page's height, so the
+to that day), requests that leave the app are blocked, company logos answer 404 (so they
+show initials), and each shot waits for data, fonts and images with motion reduced. The
+server keeps its real clock: the fixture's schedule week and history are in the past and
+it has no Leetgrinder attempts (the server dates those itself), so the server sees the same
+state whatever day the suite runs. Don't add data the server dates by today; a region that
+shows the server's own date would need a `mask`. Each shot is the full page: the viewport grows to the page's height, so the
 phone tab bar sits at the bottom.
 
 To update the baselines after an intended UI change, or after a Playwright upgrade:
@@ -143,8 +144,8 @@ npm run test:visual -- --update-snapshots -g books  # only matching tests
 ```
 
 Look at the changed PNGs (`git diff --stat`, then open them) before committing. When a run
-fails, `playwright-report-visual/` holds the expected, actual and diff images; in CI they
-are in the `visual-report` artifact. Changing `workspace.json` changes most screenshots,
+fails, `test-results-visual/` holds the expected, actual and diff images; in CI they and the
+HTML report (`playwright-report-visual/`) are in the `visual-report` artifact. Changing `workspace.json` changes most screenshots,
 so update the baselines in the same commit.
 
 `tests/e2e/modules-off.spec.ts` (part of `npm run test:e2e`) checks that turning a module off
