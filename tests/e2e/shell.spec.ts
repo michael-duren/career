@@ -134,17 +134,26 @@ async function mockSearch(page: Page) {
 
 test('the header search groups results by module with counts, context and recent searches', async ({ page }) => {
   const queries = await mockSearch(page);
+  // A saved module order (as shell.js caches it) puts Journal before Timeline's goals.
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem('seeded')) return;
+    sessionStorage.setItem('seeded', '1');
+    localStorage.removeItem('career-recent-searches');
+    localStorage.setItem('career-shell-settings', JSON.stringify({ modules: {}, moduleOrder: ['journal', 'timeline', 'schedule', 'leetgrinder'] }));
+  });
+  await page.route('**/api/settings', route => route.request().method() === 'GET'
+    ? route.fulfill({ json: { modules: {}, moduleOrder: ['journal', 'timeline', 'schedule', 'leetgrinder'], theme: 'dark', setupCompletedAt: '2026-01-01T00:00:00Z' } })
+    : route.fallback());
   await page.goto('/books');
-  await page.evaluate(() => localStorage.removeItem('career-recent-searches'));
   const search = page.getByRole('searchbox', { name: 'Search everything' });
   await search.fill('alloy');
   const panel = page.locator('#search-panel');
   await expect(panel.locator('#search-status')).toHaveText('11 results for “alloy”');
   expect(queries.at(-1)).toBe('?q=alloy');
-  // Registry order (no saved order in the cache yet), documents last.
-  await expect(panel.locator('.search-group h2')).toHaveText(['Goals', 'Schedule', 'Problems', 'Journal', 'Documents']);
+  // The saved module order, documents last.
+  await expect(panel.locator('.search-group h2')).toHaveText(['Journal', 'Goals', 'Schedule', 'Problems', 'Documents']);
   const journal = panel.getByRole('list', { name: 'Journal' });
-  await expect(panel.locator('.search-group-count')).toHaveText(['1', '1', '1', '2 of 7', '1']);
+  await expect(panel.locator('.search-group-count')).toHaveText(['2 of 7', '1', '1', '1', '1']);
   // Title matches show their metadata; body matches show the text around the match.
   await expect(journal.getByRole('link')).toHaveText(['Week 26 · Oct 16Did some stuff on Alloy in the morning.', 'Alloy dayOct 17, 2026']);
   await expect(panel.getByRole('link', { name: /Contribute to Alloy\s*Active/ })).toHaveAttribute('href', '/timeline?goal=g1');
@@ -152,16 +161,15 @@ test('the header search groups results by module with counts, context and recent
 
   // Arrow keys walk the results in order and back to the field.
   await search.press('ArrowDown');
-  await expect(panel.locator('.search-result').first()).toBeFocused();
+  await expect(journal.getByRole('link').first()).toBeFocused();
   await page.keyboard.press('ArrowDown');
-  await expect(panel.getByRole('list', { name: 'Schedule' }).getByRole('link')).toBeFocused();
+  await expect(journal.getByRole('link').nth(1)).toBeFocused();
   await page.keyboard.press('ArrowUp');
   await page.keyboard.press('ArrowUp');
   await expect(search).toBeFocused();
 
   // Enter opens the first result and remembers the query.
-  await search.press('Enter');
-  await expect(page).toHaveURL(/\/timeline\?goal=g1$|\/timeline$/);
+  await Promise.all([page.waitForURL(url => url.pathname === '/journal' && url.searchParams.get('id') === '2026/week-26', { waitUntil: 'commit' }), search.press('Enter')]);
   await page.goto('/books');
   await page.locator('body').press('/');
   const chips = page.getByRole('group', { name: 'Recent' }).getByRole('button');
@@ -227,8 +235,10 @@ test.describe('phone (< 768px)', () => {
     // It covers the page from under the top bar (scrolled back into view) to the tab bar.
     const box = (await page.locator('.site-search').boundingBox())!;
     const bar = (await page.locator('.app-header-row').boundingBox())!;
-    expect(box.y).toBe(Math.round(bar.y + bar.height));
-    expect([box.x, box.width, box.y + box.height]).toEqual([0, 390, 844 - 78]);
+    const tabBar = (await page.locator('[data-app-tabbar]').boundingBox())!;
+    expect(Math.abs(box.y - (bar.y + bar.height))).toBeLessThanOrEqual(1);
+    expect(Math.abs(box.y + box.height - tabBar.y)).toBeLessThanOrEqual(1);
+    expect([box.x, box.width]).toEqual([0, page.viewportSize()!.width]);
     await expect(page.getByRole('group', { name: 'Recent' }).getByRole('button')).toHaveText(['kth largest', 'raft']);
     await search.fill('alloy');
     await expect(page.locator('.search-group h2')).toHaveText(['Goals', 'Schedule', 'Problems', 'Journal', 'Documents']);
@@ -248,7 +258,7 @@ test.describe('phone (< 768px)', () => {
     // Opening a result goes to its page.
     await toggle.tap();
     await page.getByRole('list', { name: 'Problems' }).getByRole('link').tap();
-    await expect(page).toHaveURL(/\/leetgrinder\/problem\/alloy-tower$/);
+    await expect(page).toHaveURL('/leetgrinder/problem/alloy-tower');
   });
 
   test('turning a tab module off fills its slot, and More lists the rest', async ({ page }) => {

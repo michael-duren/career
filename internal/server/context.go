@@ -248,23 +248,39 @@ func (s *Server) search(w http.ResponseWriter, r *http.Request) {
 		respond(w, 200, map[string]any{"results": results, "totals": map[string]int{}})
 		return
 	}
-	found, totals, err := s.db.SiteSearch(r.Context(), query, searchPerKind, kind, disabled...)
+	found, totals, err := s.db.SiteSearch(r.Context(), query, searchPerKind, kind, s.clock(), disabled...)
 	if err != nil {
+		if r.Context().Err() != nil {
+			return // The client moved on (a newer keystroke aborted this request).
+		}
 		failure(w, err)
 		return
 	}
 	for _, item := range found {
-		text := excerpt(item.Body, query, 160)
-		// Cut mid-text: drop the partial first word and mark the cut.
-		if !strings.HasPrefix(item.Body, text) {
-			if i := strings.IndexAny(text, " \n"); i >= 0 && i < 24 {
-				text = text[i+1:]
-			}
-			text = "…" + strings.TrimLeft(text, " \n")
-		}
-		results = append(results, result{SiteResult: item, Module: searchModules[item.Kind], Excerpt: text})
+		results = append(results, result{SiteResult: item, Module: searchModules[item.Kind], Excerpt: searchExcerpt(item.Body, query)})
 	}
 	respond(w, 200, map[string]any{"results": results, "totals": totals})
+}
+
+// searchExcerpt is about 160 characters of body around the first match. When
+// it starts mid-text it begins with "…" and without the cut first word; when
+// it stops before the end it ends with "…".
+func searchExcerpt(body, query string) string {
+	text := excerpt(body, query, 160)
+	at := strings.Index(body, text)
+	cutEnd := at+len(text) < len(body)
+	if at > 0 {
+		if !strings.ContainsRune(" \n\t", rune(body[at-1])) {
+			if i := strings.IndexAny(text, " \n\t"); i >= 0 && i < 24 {
+				text = text[i:]
+			}
+		}
+		text = "…" + strings.TrimLeft(text, " \n\t")
+	}
+	if cutEnd {
+		text = strings.TrimRight(text, " \n\t") + "…"
+	}
+	return text
 }
 
 func markdownEntries(entries []any) string {

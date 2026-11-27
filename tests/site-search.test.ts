@@ -7,6 +7,7 @@ import { MODULES } from '../src/lib/modules.ts';
 test('search groups cover exactly the modules with search results, in registry order', () => {
   const searchable = MODULES.filter(m => m.search).map(m => m.id);
   assert.deepEqual(REGISTRY_ORDER, searchable);
+  assert.deepEqual(GROUP_LABELS, { timeline: 'Goals', schedule: 'Schedule', leetgrinder: 'Problems', companies: 'Companies', people: 'People', bookshelf: 'Books', journal: 'Journal', notes: 'Notes', audio: 'Audio thoughts', '': 'Documents' });
   assert.deepEqual(Object.keys(GROUP_LABELS).sort(), [...searchable, ''].sort());
 });
 
@@ -28,6 +29,7 @@ test('the context line is the metadata for title matches, else the text around t
   assert.equal(contextLine({ titleMatch: true, context: 'Active · Sep 14 → Dec 31', excerpt: '- [x] Step' }), 'Active · Sep 14 → Dec 31');
   assert.equal(contextLine({ titleMatch: false, context: 'Systems · 23 words', excerpt: '## Raft\n\n- [ ] **Leader** election `code` two-sum' }), 'Raft Leader election code two-sum');
   assert.equal(contextLine({ titleMatch: true, context: '', excerpt: 'Body text' }), 'Body text');
+  assert.equal(contextLine({ titleMatch: false, context: '', excerpt: '…- Read DDIA\n- CKA lab…' }), '…Read DDIA CKA lab…');
   assert.equal(contextLine({ titleMatch: false, context: '#1 · Easy', excerpt: '' }), '#1 · Easy');
 });
 

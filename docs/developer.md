@@ -156,11 +156,11 @@ exact configured `Origin` and a JSON content type.
 - `POST /api/entries/{kind}/toggle` toggles a Markdown checklist item on a book or company.
 - `POST /api/goals/steps/move` reorders or moves a goal step.
 - `GET /api/agent-context`, `GET /api/export`.
-- `GET /api/search?q=` (2–200 characters, optional `kind`) is the global search: `{ results: [{ kind,
-  id, title, module, context, excerpt, titleMatch }], totals: { <kind>: n } }`. Up to 5 results per
-  kind, title matches first; `totals` counts every match. Kinds are the entry kinds plus `goal`,
-  `session` (next upcoming session per scheduled title) and `problem` (Leetgrinder). Turned-off
-  modules are left out; an unknown `kind` is 400.
+- `GET /api/search?q=` (2–200 bytes after trimming, matched literally, optional `kind`) is the global
+  search: `{ results: [{ kind, id, title, module, context, excerpt, titleMatch }], totals: { <kind>: n } }`.
+  Up to 5 results per kind, title matches first; `totals` counts every match. Kinds are the entry
+  kinds (`goal` included) plus `session` (the next planned, not yet ended session of each scheduled
+  title) and `problem` (Leetgrinder). Turned-off modules are left out; an unknown `kind` is 400.
 - `GET /api/companies/logo?domain=<host>` returns a company's favicon as a PNG mask (black pixels,
   alpha = the logo shape) that the Companies page paints in `--ink`. The server fetches the icon from
   Google's favicon service (only the host name is sent), removes its background, and caches the result

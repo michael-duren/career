@@ -163,11 +163,15 @@ function initHeader(header) {
   const searchInput = header.querySelector('#site-search');
   const searchPanel = header.querySelector('#search-panel');
   const phone = matchMedia('(max-width: 767px)');
+  // The page starts under the top bar; re-measured when the bar reflows (rotation, font load).
+  function placeSearch() {
+    const top = header.querySelector('.app-header-row')?.getBoundingClientRect().bottom ?? 0;
+    header.style.setProperty('--app-search-top', `${Math.max(0, Math.round(top))}px`);
+  }
   function setSearching(open) {
     if (open) {
       window.scrollTo({ top: 0, behavior: 'instant' });
-      const top = header.querySelector('.app-header-row')?.getBoundingClientRect().bottom ?? 0;
-      header.style.setProperty('--app-search-top', `${Math.max(0, Math.round(top))}px`);
+      placeSearch();
     }
     header.classList.toggle('is-searching', open);
     document.documentElement.classList.toggle('app-search-open', open);
@@ -189,6 +193,7 @@ function initHeader(header) {
   });
   // Wider than a phone the header field is back; drop the full-screen page.
   phone.addEventListener('change', () => { if (!phone.matches && searching()) setSearching(false); });
+  window.addEventListener('resize', () => { if (searching()) placeSearch(); });
 
   new ResizeObserver(() => layout()).observe(header);
   document.fonts?.ready.then(layout);

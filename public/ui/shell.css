@@ -369,7 +369,7 @@
 
 /*
  * Phone (< 768px): the top bar scrolls with the page; menu, settings and the search field give way
- * to a search button (the field opens under the bar) and the fixed bottom tab bar. The page gets
+ * to a search button (it opens the full-screen search page) and the fixed bottom tab bar. The page gets
  * bottom padding for the bar so nothing hides behind it and pages don't shift between tabs.
  */
 @media (max-width: 767px) {

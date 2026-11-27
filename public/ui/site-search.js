@@ -9,6 +9,8 @@
  * per group, each a title and one line of context. With an empty field the panel shows recent searches.
  */
 
+import { SETTINGS_CACHE_KEY } from './shell.js';
+
 /** localStorage key for recent searches (src/lib/auth.ts signOut clears it; keep in sync). */
 export const RECENT_KEY = 'career-recent-searches';
 /** Recent searches kept and shown as chips. */
@@ -40,7 +42,7 @@ export function resultHref(item) {
 
 /** The excerpt as one plain line: Markdown marks, list bullets, checkboxes and line breaks go. */
 function plain(text) {
-  return (text ?? '').replace(/\[[ xX]\]/g, ' ').replace(/[#*`>_]+/g, ' ').replace(/(^|\s)[-+](?=\s)/g, ' ').replace(/\s+/g, ' ').trim();
+  return (text ?? '').replace(/\[[ xX]\]/g, ' ').replace(/[#*`>_]+/g, ' ').replace(/(^|[\s…])[-+](?=\s)/g, '$1 ').replace(/\s+/g, ' ').trim().replace(/^… /, '…');
 }
 
 /**
@@ -92,10 +94,10 @@ function saveRecent(query) {
   try { localStorage.setItem(RECENT_KEY, JSON.stringify(addRecent(readRecent(), query))); } catch { /* blocked: not remembered */ }
 }
 
-/** The user's module order from the shell's settings cache (SETTINGS_CACHE_KEY in public/ui/shell.js). */
+/** The user's module order from the shell's settings cache. */
 function savedModuleOrder() {
   try {
-    const order = JSON.parse(localStorage.getItem('career-shell-settings') ?? 'null')?.moduleOrder;
+    const order = JSON.parse(localStorage.getItem(SETTINGS_CACHE_KEY) ?? 'null')?.moduleOrder;
     return Array.isArray(order) ? order : [];
   } catch {
     return [];
@@ -124,10 +126,10 @@ function initSearch(root) {
 
   function close() {
     if (fullScreen()) return;
-    panel.hidden = true; input.setAttribute('aria-expanded', 'false'); request?.abort(); clearTimeout(timer);
+    panel.hidden = true; input.setAttribute('aria-expanded', 'false'); request?.abort(); clearTimeout(timer); ++version;
   }
   function open() { panel.hidden = false; input.setAttribute('aria-expanded', 'true'); }
-  clear.addEventListener('click', () => { input.value = ''; clear.hidden = true; input.focus(); void render(); });
+  clear.addEventListener('click', () => { clearTimeout(timer); input.value = ''; clear.hidden = true; input.focus(); void render(); });
   // "/" (outside inputs, selects and editable content) and Cmd/Ctrl+K jump to the search field.
   document.addEventListener('keydown', e => {
     if (e.defaultPrevented || e.isComposing) return;
@@ -142,7 +144,7 @@ function initSearch(root) {
       chip.type = 'button';
       chip.className = 'search-recent-chip';
       chip.textContent = term;
-      chip.addEventListener('click', () => { input.value = term; input.focus(); void render(); });
+      chip.addEventListener('click', () => { clearTimeout(timer); input.value = term; input.focus(); void render(); });
       return chip;
     }));
     recentBox.hidden = recent.length === 0;
@@ -163,7 +165,9 @@ function initSearch(root) {
       sub.textContent = line;
       link.append(sub);
     }
+    // Any click that opens the result (plain, middle or with a modifier) remembers the query.
     link.addEventListener('click', () => saveRecent(query));
+    link.addEventListener('auxclick', e => { if (e.button === 1) saveRecent(query); });
     return link;
   }
 
@@ -205,9 +209,15 @@ function initSearch(root) {
     let data;
     try {
       const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`, { cache: 'no-store', signal: request.signal });
-      if (!response.ok) throw new Error(response.status === 401 ? 'Sign in again to search.' : 'Search could not load. Type again to retry.');
+      if (response.status === 401) { status.textContent = 'Sign in again to search.'; return; }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       data = await response.json();
-    } catch (error) { if (current !== version || request?.signal.aborted) return; status.textContent = error instanceof Error ? error.message : 'Search could not load. Try again.'; return; }
+    } catch (error) {
+      if (current !== version || request?.signal.aborted) return;
+      console.warn('Search failed.', error);
+      status.textContent = navigator.onLine === false ? 'You are offline. Search needs a connection.' : 'Search could not load. Type again to retry.';
+      return;
+    }
     if (current !== version || query !== input.value.trim() || panel.hidden) return;
     const groups = groupResults(data.results ?? [], data.totals ?? {}, savedModuleOrder());
     const total = groups.reduce((sum, item) => sum + item.total, 0);

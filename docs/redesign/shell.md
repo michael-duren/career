@@ -34,14 +34,14 @@ and on the phone More page.
   opens a full-screen search page (`reference/mobile/M-Search.html`).
 - Results are grouped by module (Goals, Notes, Journal, Schedule, Companies, People, Books…)
   with a count per group, title + one-line context per result. Only enabled modules appear.
-- Uses the existing `GET /api/search`; extend it to return module/group and context if needed.
+- Uses `GET /api/search`, which returns each result's module, a context line and totals per kind.
 - Recent searches as chips when the query is empty.
 
 Implementation: `public/ui/site-search.js` runs the same `.site-search` markup on Astro pages
 (`src/components/SiteSearch.astro`) and Go pages (`internal/shell/header.templ`). `GET /api/search`
-returns up to 5 matches of each kind (title matches first) with the owning `module`, a `context`
+returns up to 5 matches of each kind (title matches first, sessions soonest first) with the owning `module`, a `context`
 line, an `excerpt` around the match and `totals` per kind. Besides entries it finds goals (title,
-steps, notes), the next upcoming session of each scheduled title and Leetgrinder problems;
+steps, notes), the next planned session of each scheduled title that has not ended (saved sessions, in the scheduler's time zone) and Leetgrinder problems;
 turned-off modules are left out. Groups follow the user's module order, documents last; a group
 shows "2 of 7" when it has more matches than shown. ↑/↓ move through results (or the recent chips),
 Enter opens the first result, Escape closes. Recent searches (5) are saved in `localStorage` as
