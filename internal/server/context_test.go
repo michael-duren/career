@@ -20,3 +20,10 @@ func TestMarkdownEntriesSkipsMissingBody(t *testing.T) {
 		t.Fatalf("goal metadata missing:\n%s", out)
 	}
 }
+
+func TestMarkdownEntriesKeepsNonStringBody(t *testing.T) {
+	out := markdownEntries([]any{map[string]any{"title": "Odd", "body": 42}})
+	if !strings.Contains(out, "````markdown\n42\n````") {
+		t.Fatalf("a non-string body should still be shown:\n%s", out)
+	}
+}

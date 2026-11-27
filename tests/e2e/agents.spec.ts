@@ -87,6 +87,14 @@ test('a failed load shows the error and retries', async ({ page }) => {
   await expect(main.getByRole('button', { name: 'Copy' })).toBeEnabled();
 });
 
+test('an expired session goes to login', async ({ page }) => {
+  await page.route('**/api/agent-context**', route => route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ error: 'unauthorized' }) }));
+  // Keep the login page from loading so the redirect URL can be read.
+  await page.route('**/login?**', route => route.fulfill({ status: 200, contentType: 'text/html', body: '<p>login</p>' }));
+  await page.goto('/agents');
+  await expect(page).toHaveURL(/\/login\?redirect=%2Fagents$/);
+});
+
 test.describe('phone', () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 

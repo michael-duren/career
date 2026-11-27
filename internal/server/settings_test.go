@@ -72,7 +72,7 @@ func TestDisabledModulesReturn404(t *testing.T) {
 	db := testDB(t)
 	ctx := context.Background()
 	root := t.TempDir()
-	for _, page := range []string{"notes", "weekly-scheduler", "timeline", "books", "journal", "static-shells/note"} {
+	for _, page := range []string{"notes", "weekly-scheduler", "timeline", "books", "journal", "agents", "static-shells/note"} {
 		if err := os.MkdirAll(filepath.Join(root, page), 0755); err != nil {
 			t.Fatal(err)
 		}
@@ -121,7 +121,7 @@ func TestDisabledModulesReturn404(t *testing.T) {
 		}
 		return kinds
 	}
-	paths := []string{"/journal", "/notes", "/notes/", "/notes/systems/nested-note", "/api/entries/note", "/weekly-scheduler", "/api/scheduler/week?week=2026-11-23", "/timeline", "/api/goals", "/api/summaries/progress", "/leetgrinder", "/leetgrinder/problem/two-sum", "/api/agent-context"}
+	paths := []string{"/journal", "/notes", "/notes/", "/notes/systems/nested-note", "/api/entries/note", "/weekly-scheduler", "/api/scheduler/week?week=2026-11-23", "/timeline", "/api/goals", "/api/summaries/progress", "/leetgrinder", "/leetgrinder/problem/two-sum", "/api/agent-context", "/agents"}
 	for _, path := range paths {
 		if w := do("GET", path, "session"); w.Code != 200 {
 			t.Fatalf("%s while on: %d %s", path, w.Code, w.Body.String())

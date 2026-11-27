@@ -25,7 +25,7 @@ async function fetchText(url: string, signal: AbortSignal): Promise<string> {
   const text = await response.text();
   if (!response.ok) {
     let message = FAILED;
-    try { message = JSON.parse(text).error || message; } catch { /* not JSON */ }
+    try { const body = JSON.parse(text); if (typeof body?.error === 'string' && body.error) message = body.error; } catch { /* not JSON */ }
     throw new Error(message);
   }
   return text;
@@ -33,8 +33,16 @@ async function fetchText(url: string, signal: AbortSignal): Promise<string> {
 
 async function loadOutput(signal: AbortSignal): Promise<Output> {
   const [markdown, raw] = await Promise.all([fetchText(agentEndpoint('markdown'), signal), fetchText(agentEndpoint('json'), signal)]);
-  const value = JSON.parse(raw) as { goals?: Goal[] };
-  return { markdown, json: JSON.stringify(value, null, 2), goals: value.goals ?? [] };
+  let value: { goals?: unknown };
+  try {
+    value = JSON.parse(raw);
+  } catch (e) {
+    console.warn('Agent context JSON did not parse', e);
+    throw new Error(FAILED);
+  }
+  const goals = Array.isArray(value?.goals) ? value.goals as Goal[] : [];
+  // Shown and copied pretty-printed; the data is the API's.
+  return { markdown, json: JSON.stringify(value, null, 2), goals };
 }
 
 /** Clipboard API first; the hidden-textarea fallback covers browsers that refuse it. */
@@ -50,10 +58,17 @@ async function copyText(text: string): Promise<void> {
   area.setAttribute('readonly', '');
   area.style.position = 'fixed';
   area.style.opacity = '0';
+  const focused = document.activeElement as HTMLElement | null;
   document.body.append(area);
-  area.select();
-  const ok = document.execCommand('copy');
-  area.remove();
+  let ok = false;
+  try {
+    area.select();
+    area.setSelectionRange(0, text.length); // iOS Safari ignores select()
+    ok = document.execCommand('copy');
+  } finally {
+    area.remove();
+    focused?.focus();
+  }
   if (!ok) throw new Error('Copy failed.');
 }
 
@@ -94,7 +109,9 @@ export function AgentContextView() {
   }, [load]);
 
   const text = output ? output[format] : '';
-  const preview = previewText(text, 40, 3000);
+  const textRef = useRef(text);
+  textRef.current = text;
+  const preview = previewText(text);
   const stats = output ? agentStats(output.goals, localDate()) : undefined;
 
   function pick(next: AgentFormat) {
@@ -105,9 +122,12 @@ export function AgentContextView() {
 
   async function copy() {
     if (!output) return;
+    const copying = text;
     setCopyError('');
     try {
-      await copyText(text);
+      await copyText(copying);
+      // The format or the output may have changed while the clipboard prompt was open.
+      if (copying !== textRef.current) return;
       setCopied(true);
       window.clearTimeout(resetTimer.current);
       resetTimer.current = window.setTimeout(() => setCopied(false), 2500);
@@ -157,7 +177,7 @@ export function AgentContextView() {
           <div className="flex flex-col gap-2 border-t border-ink-30 pt-4">
             <Label>Endpoint</Label>
             <a href={endpoint} className="border border-ink-30 px-3 py-2.5 font-mono text-[13px] text-ink no-underline hover:border-ink-50"><code>GET {endpoint.replace(/\?.*/, '')}{endpoint.includes('?') && <><wbr />{endpoint.slice(endpoint.indexOf('?'))}</>}</code></a>
-            <span className="text-[13px] font-light leading-normal text-ink-60">Opens the full output. Your MCP server's get_career_overview starts from the same rules and goals.</span>
+            <span className="text-[13px] font-light leading-normal text-ink-60">Opens the full output (the page shows JSON pretty-printed). Your MCP server's get_career_overview starts from the same rules and goals.</span>
           </div>
           <div className="border-t border-ink-30 pt-4"><a href="/timeline" className="ui-label hover:text-ink">Edit timeline →</a></div>
         </aside>

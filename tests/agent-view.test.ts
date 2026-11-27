@@ -30,13 +30,15 @@ test('endpoint and file name follow the format', () => {
 });
 
 test('the preview keeps short output whole and cuts long output on a line', () => {
+  // The page's defaults: 40 lines.
+  assert.equal(previewText(Array.from({ length: 50 }, () => 'l').join('\n')).text.split('\n').length, 40);
   assert.deepEqual(previewText('a\nb'), { text: 'a\nb', truncated: false, hiddenChars: 0 });
   const lines = Array.from({ length: 100 }, (_, i) => `line ${i}`).join('\n');
   const byLines = previewText(lines, 3);
   assert.equal(byLines.text, 'line 0\nline 1\nline 2');
   assert.equal(byLines.truncated, true);
   assert.equal(byLines.hiddenChars, lines.length - byLines.text.length);
-  const byChars = previewText('aaaa\nbbbb\ncccc', 60, 7);
+  const byChars = previewText('aaaa\nbbbb\ncccc', 40, 7);
   assert.equal(byChars.text, 'aaaa');
-  assert.equal(previewText('x'.repeat(20), 60, 5).text, 'xxxxx');
+  assert.equal(previewText('x'.repeat(20), 40, 5).text, 'xxxxx');
 });

@@ -36,7 +36,7 @@ export function padCount(value: number): string {
  * The visible preview: the first maxLines lines, cut to maxChars. The page copies the full
  * text; the preview only says how much it left out.
  */
-export function previewText(text: string, maxLines = 60, maxChars = 4000): { text: string; truncated: boolean; hiddenChars: number } {
+export function previewText(text: string, maxLines = 40, maxChars = 3000): { text: string; truncated: boolean; hiddenChars: number } {
   let shown = text.split('\n').slice(0, maxLines).join('\n');
   if (shown.length > maxChars) {
     // End on a whole line when there is one inside the limit.

@@ -295,7 +295,12 @@ func markdownEntries(entries []any) string {
 			title = fmt.Sprintf("Week %v · %v", entry["week"], entry["dates"])
 		}
 		// Goals have no body; leave the Markdown block out rather than print "<nil>".
-		body, hasBody := entry["body"].(string)
+		bodyValue, hasBody := entry["body"]
+		hasBody = hasBody && bodyValue != nil
+		body, ok := bodyValue.(string)
+		if !ok {
+			body = fmt.Sprint(bodyValue)
+		}
 		delete(entry, "body")
 		metadata, _ := json.MarshalIndent(entry, "", "  ")
 		fmt.Fprintf(&out, "## %s\n\n```json\n%s\n```\n\n", strings.ReplaceAll(title, "\n", " "), metadata)
