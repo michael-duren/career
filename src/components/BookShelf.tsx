@@ -10,7 +10,8 @@ import { Box, CloseIcon, ExternalIcon, IconButton, ItemTypeIcon, Label, SearchFi
 // The Bookshelf page (docs/redesign/pages/bookshelf.md). Desktop: SHELVES and TYPE filters on
 // the left, the CATALOG table in the middle, the IN PROGRESS card on the right. Phone: title,
 // search, the in-progress card, shelf and type chips, then list rows. Any row opens the item's
-// details (chapters, log, dates); /books?id=<slug> (search results link there) opens it directly.
+// details (chapters, log, dates); /books?id=<slug> opens it directly (the header search,
+// public/ui/site-search.js, links book results there).
 
 const TYPES: BookType[] = ['book', 'paper', 'course'];
 const TYPE_LABEL: Record<BookType, string> = { book: 'Book', paper: 'Paper', course: 'Course' };
@@ -97,7 +98,10 @@ export function BookShelf({ data }: { data: ShelfData }) {
   const props = { all, rows, current, shelfList, typeCounts, shelf, setShelf, type, setType, query, setQuery, openBook, empty };
   return (
     <>
-      {openSlug && !open && <p role="alert" className="mb-4 border border-accent p-3 text-sm text-accent">That item is no longer on the shelf.</p>}
+      {openSlug && !open && <p role="alert" className="mb-4 flex items-center justify-between gap-3 border border-accent p-3 text-sm text-accent">
+        That item is no longer on the shelf.
+        <button type="button" onClick={closeBook} className="border-0 bg-transparent p-0 font-mono text-[11px] uppercase tracking-[0.16em] text-ink underline">Dismiss</button>
+      </p>}
       {phone ? <PhoneShelf {...props} /> : <DesktopShelf {...props} />}
       {open && <BookDetails book={open} onClose={closeBook} />}
     </>
@@ -125,7 +129,7 @@ function DesktopShelf({ all, rows, current, shelfList, typeCounts, shelf, setShe
     <div className="flex flex-col">
       <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex flex-col gap-2">
-          <Label>{all.length} books, courses &amp; papers</Label>
+          <Label>{all.length} {all.length === 1 ? 'item' : 'books, courses & papers'}</Label>
           <h1 className="m-0 font-extralight !text-[52px] !leading-[0.9]">Bookshelf</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
@@ -335,14 +339,17 @@ function InProgressCard({ book, onOpen, compact = false }: { book: Book | null; 
 function BookDetails({ book, onClose }: { book: Book; onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
+    // Return focus to whatever opened the dialog (a row, the card) when it closes.
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     dialog.current?.showModal();
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = previous; };
+    return () => { document.body.style.overflow = previous; opener?.focus(); };
   }, []);
   const updated = updatedLabel(book);
   const done = book.chapters.filter(chapter => chapter.done).length;
-  // The checklist counts chapters (modules, sections) even when progress is tracked in pages.
+  // Progress may be tracked in pages while the checklist lists chapters: name the checklist by the
+  // item type's default unit in that case.
   const checklistUnit = book.progress ? (book.type === 'course' ? 'module' : book.type === 'paper' ? 'section' : 'chapter') : book.unit;
   return (
     <dialog ref={dialog} aria-labelledby="book-details-title" onCancel={onClose} onClick={event => { if (event.target === event.currentTarget) onClose(); }}

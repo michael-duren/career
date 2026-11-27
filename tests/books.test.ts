@@ -22,8 +22,9 @@ test('in progress means started and unfinished, most recently updated first', ()
 });
 
 test('last updated prefers the saved timestamp, then the newest log date', () => {
-  const { all } = buildShelf([raw('a', { body: '## Log\n### 2026-09-24\n- Notes\n### 2026-09-01\n- Older\n' }), raw('b', { updatedAt: '2026-11-02T00:00:00Z' }), raw('c')]);
-  assert.deepEqual(all.map(b => [b.slug, lastUpdated(b)]), [['a', '2026-09-24'], ['b', '2026-11-02T00:00:00Z'], ['c', '']]);
+  const log = '## Log\n### 2026-09-24\n- Notes\n### 2026-09-01\n- Older\n';
+  const { all } = buildShelf([raw('a', { body: log }), raw('b', { updatedAt: '2026-11-02T00:00:00Z' }), raw('c'), raw('d', { body: log, updatedAt: '2026-08-01T00:00:00Z' })]);
+  assert.deepEqual(all.map(b => [b.slug, lastUpdated(b)]), [['a', '2026-09-24'], ['b', '2026-11-02T00:00:00Z'], ['c', ''], ['d', '2026-08-01T00:00:00Z']]);
 });
 
 test('catalog sorts by priority, then status, then title', () => {
@@ -59,6 +60,10 @@ test('progress marks draw one per unit, and scale long items without hiding prog
   assert.deepEqual(progressMarks(299, 300, 10), { count: 10, filled: 9 });
   assert.deepEqual(progressMarks(300, 300, 10), { count: 10, filled: 10 });
   assert.deepEqual(progressMarks(12, 10, 10), { count: 10, filled: 10 });
+  assert.deepEqual(progressMarks(0, 6, 10), { count: 6, filled: 0 });
+  assert.deepEqual(progressMarks(0, 300, 12), { count: 12, filled: 0 });
+  assert.deepEqual(progressMarks(11, 12, 12), { count: 12, filled: 11 });
+  assert.deepEqual(progressMarks(100, 300, 12), { count: 12, filled: 4 });
 });
 
 test('unit labels pluralize', () => {

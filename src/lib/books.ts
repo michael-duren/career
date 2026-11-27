@@ -10,9 +10,11 @@ import { checklist } from './checklist.ts';
 //                        progress signal — no need to also touch frontmatter.
 //   ## Log             — dated "### YYYY-MM-DD" sub-sections of reading notes.
 //
-// buildShelf() turns the raw entries into a dashboard model: a featured hero,
-// the currently-reading row, per-category groups, and roll-up stats. Adding a
-// new book is handled through the workspace editor.
+// buildShelf() parses the raw entries (progress, chapters, log) into `all`; it
+// also derives a featured item, groups and stats that the Bookshelf page no
+// longer shows. The page itself uses the helpers at the bottom of this file
+// (inProgress, sortCatalog, ...). Adding a new book is handled through the
+// workspace editor.
 // ---------------------------------------------------------------------------
 
 export const BOOK_CATEGORIES = [
