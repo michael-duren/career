@@ -113,6 +113,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 			r.Post("/snooze", s.snoozeConnection)
 			r.Patch("/settings", s.setCatchUpTarget)
 		})
+		r.Get("/api/companies/logo", s.companyLogo)
 		r.Get("/api/goals", s.readGoals)
 		r.Post("/api/goals", s.saveGoal)
 		r.Delete("/api/goals", s.deleteGoal)

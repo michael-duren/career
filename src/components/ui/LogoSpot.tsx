@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { cssUrl, monogram, resolveUrl } from '../../lib/ui';
 import { cn } from '../../lib/utils';
 
@@ -8,14 +8,27 @@ type LogoState = 'monogram' | 'loading' | 'logo' | 'failed';
 // over --ink), or a two-letter monogram while it loads, without a usable src, or when it
 // fails. The mask needs a same-origin or CORS-enabled src. data-logo-state tells which one
 // is shown. Decorative by default (the name is usually next to it); pass labelled to expose
-// "<name> logo" to screen readers.
-export function LogoSpot({ name, src, size = 36, labelled = false, className }: { name: string; src?: string; size?: 36 | 38 | 40; labelled?: boolean; className?: string }) {
+// "<name> logo" to screen readers. lazy waits until the spot is near the viewport before
+// fetching, for long lists.
+export function LogoSpot({ name, src, size = 36, labelled = false, lazy = false, className }: { name: string; src?: string; size?: 36 | 38 | 40; labelled?: boolean; lazy?: boolean; className?: string }) {
   // Absolute, so the probe and the CSS mask (which resolves against the stylesheet) agree.
   // A malformed src resolves to undefined and shows the monogram. Resolved after mount, so
   // the server render and the first client render match (both show the monogram).
   const [url, setUrl] = useState<string>();
   const [result, setResult] = useState<{ url: string; ok: boolean }>();
-  useEffect(() => setUrl(src ? resolveUrl(src, document.baseURI) : undefined), [src]);
+  const spot = useRef<HTMLSpanElement>(null);
+  const [near, setNear] = useState(!lazy);
+  useEffect(() => {
+    if (near || !src) return;
+    const element = spot.current;
+    if (!element || typeof IntersectionObserver === 'undefined') { setNear(true); return; }
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) { setNear(true); observer.disconnect(); }
+    }, { rootMargin: '200px' });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [near, src]);
+  useEffect(() => setUrl(src && near ? resolveUrl(src, document.baseURI) : undefined), [src, near]);
 
   useEffect(() => {
     if (!url) return;
@@ -30,10 +43,11 @@ export function LogoSpot({ name, src, size = 36, labelled = false, className }: 
     return () => { live = false; };
   }, [url]);
 
+  // A lazy spot that has not been scrolled near yet shows the monogram (state "monogram").
   const state: LogoState = !url ? 'monogram' : result?.url !== url ? 'loading' : result.ok ? 'logo' : 'failed';
   const a11y = labelled ? { role: 'img', 'aria-label': `${name} logo` } : { 'aria-hidden': true as const };
   return (
-    <span className={cn('ui-logo', className)} data-logo-state={state} style={{ '--ui-logo-size': `${size}px` } as CSSProperties} {...a11y}>
+    <span ref={spot} className={cn('ui-logo', className)} data-logo-state={state} style={{ '--ui-logo-size': `${size}px` } as CSSProperties} {...a11y}>
       {state === 'logo' && url
         ? <span className="ui-logo__mark" style={{ '--ui-logo-src': cssUrl(url) } as CSSProperties} />
         : monogram(name)}

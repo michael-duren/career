@@ -28,6 +28,11 @@ type Server struct {
 	schedulerGoogleClient *scheduler.GoogleClient
 	// schedulerTick overrides the scheduler worker's tick in tests.
 	schedulerTick func(context.Context, time.Time) error
+	// logos caches company logo masks; logoUpstream and logoClient override
+	// the favicon service in tests.
+	logos        logoCache
+	logoUpstream string
+	logoClient   *http.Client
 }
 
 func NewServer(c config.Config, db *database.Store) *http.Server {

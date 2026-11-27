@@ -43,24 +43,6 @@ export function buildBoard(raws: RawCompany[]): CompanyBoardData {
   return { categories: Array.from(groups, ([label, companies]) => ({ label, companies: companies.sort((a, b) => priority[a.priority] - priority[b.priority] || a.title.localeCompare(b.title)) })).sort((a, b) => (categories.includes(a.label) ? categories.indexOf(a.label) : categories.length) - (categories.includes(b.label) ? categories.indexOf(b.label) : categories.length) || a.label.localeCompare(b.label)), totals };
 }
 
-/** Target number of companies where you know at least one person. */
-export const CONNECTED_COMPANY_GOAL = 60;
-
-/** Companies on the board with at least one linked connection. */
-export function connectedCompanyCount(board: CompanyBoardData, connectionCount: (slug: string) => number): number {
-  return board.categories.reduce((sum, group) => sum + group.companies.filter(company => connectionCount(company.slug) > 0).length, 0);
-}
-
-export interface CompanyFilter { category: string; hasConnections: boolean }
-
-/** Companies matching every active filter, in board order. */
-export function filterCompanies(board: CompanyBoardData, filter: CompanyFilter, connectionCount: (slug: string) => number): Company[] {
-  return board.categories
-    .filter(group => filter.category === 'all' || group.label === filter.category)
-    .flatMap(group => group.companies)
-    .filter(company => !filter.hasConnections || connectionCount(company.slug) > 0);
-}
-
 /** Add a dated note to the Log section without changing company steps or other sections. */
 export function appendCompanyNote(body: string, note: string, date: string): string {
   if (!note.trim()) return body;
@@ -69,4 +51,37 @@ export function appendCompanyNote(body: string, note: string, date: string): str
   if (!heading) return `${body.trimEnd()}\n\n## Log\n\n${item}\n`;
   const at = heading.index + heading[0].length;
   return `${body.slice(0, at)}\n${item}\n${body.slice(at)}`;
+}
+
+/** The host a company's logo is fetched for ("https://www.grafana.com/jobs" → "grafana.com"), if its URL has one. */
+export function companyDomain(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    const { protocol, hostname } = new URL(url);
+    // Host names only, like the server: no IP literals (all-digit last label, or [v6]).
+    if (protocol !== 'http:' && protocol !== 'https:' || !hostname.includes('.') || /^\d+$/.test(hostname.split('.').pop()!) || hostname.startsWith('[')) return undefined;
+    return hostname.toLowerCase().replace(/^www\./, '').replace(/\.$/, '');
+  } catch { return undefined; }
+}
+
+/** Same-origin URL of a company's single-color logo (GET /api/companies/logo), or undefined for the monogram. */
+export function companyLogoUrl(url: string | undefined): string | undefined {
+  const domain = companyDomain(url);
+  return domain ? `/api/companies/logo?domain=${encodeURIComponent(domain)}` : undefined;
+}
+
+export type Priority = Company['priority'];
+export const PRIORITIES: readonly Priority[] = ['high', 'medium', 'low'];
+
+/** Whether a company matches a search: every word appears in its name, category, tags or why text. */
+export function matchesCompanySearch(company: Pick<Company, 'title' | 'category' | 'tags' | 'why'>, query: string): boolean {
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return true;
+  const text = [company.title, company.category, ...company.tags, company.why].join('\n').toLowerCase();
+  return words.every(word => text.includes(word));
+}
+
+/** Companies in grid order: high priority first, featured first within a priority, then by name. */
+export function sortCompanies<T extends Pick<Company, 'priority' | 'featured' | 'title'>>(companies: T[]): T[] {
+  return [...companies].sort((a, b) => priority[a.priority] - priority[b.priority] || Number(b.featured) - Number(a.featured) || a.title.localeCompare(b.title));
 }
