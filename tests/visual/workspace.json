@@ -1,0 +1,1346 @@
+{
+ "version": 2,
+ "catalogVersion": 1,
+ "journalsVersion": 2,
+ "notes": [
+  {
+   "id": "systems/raft",
+   "title": "Raft consensus",
+   "topic": "Systems",
+   "description": "Leader election and log replication.",
+   "tags": [
+    "distributed"
+   ],
+   "body": "# Raft consensus\n\nLeader election and log replication.\n\n- Key point one\n- Key point two\n\n```sh\nkubectl get pods -A\n```\n",
+   "updatedAt": "2026-11-18T15:00:00.000Z"
+  },
+  {
+   "id": "systems/slo",
+   "title": "SLOs and error budgets",
+   "topic": "SRE",
+   "description": "How to pick SLIs and burn-rate alerts.",
+   "tags": [
+    "sre"
+   ],
+   "body": "# SLOs and error budgets\n\nHow to pick SLIs and burn-rate alerts.\n\n- Key point one\n- Key point two\n\n```sh\nkubectl get pods -A\n```\n",
+   "updatedAt": "2026-11-17T15:00:00.000Z"
+  },
+  {
+   "id": "systems/pg-mvcc",
+   "title": "Postgres MVCC",
+   "topic": "Databases",
+   "description": "Snapshots, vacuum and bloat.",
+   "tags": [
+    "postgres"
+   ],
+   "body": "# Postgres MVCC\n\nSnapshots, vacuum and bloat.\n\n- Key point one\n- Key point two\n\n```sh\nkubectl get pods -A\n```\n",
+   "updatedAt": "2026-11-16T15:00:00.000Z"
+  },
+  {
+   "id": "systems/go-ctx",
+   "title": "Go context patterns",
+   "topic": "Go",
+   "description": "Cancellation and deadlines.",
+   "tags": [
+    "go"
+   ],
+   "body": "# Go context patterns\n\nCancellation and deadlines.\n\n- Key point one\n- Key point two\n\n```sh\nkubectl get pods -A\n```\n",
+   "updatedAt": "2026-11-15T15:00:00.000Z"
+  },
+  {
+   "id": "systems/ebpf",
+   "title": "eBPF basics",
+   "topic": "Systems",
+   "description": "Tracing without recompiling.",
+   "tags": [
+    "linux"
+   ],
+   "body": "# eBPF basics\n\nTracing without recompiling.\n\n- Key point one\n- Key point two\n\n```sh\nkubectl get pods -A\n```\n",
+   "updatedAt": "2026-11-14T15:00:00.000Z"
+  }
+ ],
+ "weeks": [
+  {
+   "slug": "2026/week-47",
+   "week": 47,
+   "year": 2026,
+   "dates": "2026-11-16 to 2026-11-22",
+   "hours": {
+    "LeetCode": 6,
+    "System design": 3,
+    "Kubernetes": 2
+   },
+   "targets": {},
+   "tags": [],
+   "body": "## What I did\n\n### Monday — Nov 16\n- Solved 3 graph problems\n- Read DDIA chapter 5\n\n### Wednesday\n- CKA lab: networking\n"
+  },
+  {
+   "slug": "2026/week-46",
+   "week": 46,
+   "year": 2026,
+   "dates": "2026-11-09 to 2026-11-15",
+   "hours": {
+    "LeetCode": 5,
+    "System design": 4,
+    "Kubernetes": 2
+   },
+   "targets": {},
+   "tags": [],
+   "body": "## What I did\n\n### Monday — Nov 09\n- Solved 3 graph problems\n- Read DDIA chapter 6\n\n### Wednesday\n- CKA lab: networking\n"
+  },
+  {
+   "slug": "2026/week-45",
+   "week": 45,
+   "year": 2026,
+   "dates": "2026-11-02 to 2026-11-08",
+   "hours": {
+    "LeetCode": 4,
+    "System design": 3,
+    "Kubernetes": 2
+   },
+   "targets": {},
+   "tags": [],
+   "body": "## What I did\n\n### Monday — Nov 02\n- Solved 3 graph problems\n- Read DDIA chapter 7\n\n### Wednesday\n- CKA lab: networking\n"
+  },
+  {
+   "slug": "2026/week-44",
+   "week": 44,
+   "year": 2026,
+   "dates": "2026-10-26 to 2026-11-01",
+   "hours": {
+    "LeetCode": 3,
+    "System design": 4,
+    "Kubernetes": 2
+   },
+   "targets": {},
+   "tags": [],
+   "body": "## What I did\n\n### Monday — Oct 26\n- Solved 3 graph problems\n- Read DDIA chapter 8\n\n### Wednesday\n- CKA lab: networking\n"
+  }
+ ],
+ "books": [
+  {
+   "slug": "books/sre-book",
+   "title": "Site Reliability Engineering",
+   "authors": [
+    "Betsy Beyer",
+    "Chris Jones"
+   ],
+   "category": "Career",
+   "type": "book",
+   "status": "reading",
+   "featured": true,
+   "priority": "high",
+   "tags": [],
+   "edition": "",
+   "isbn": "",
+   "body": "## Chapters\n- [x] Introduction\n- [x] Part one\n- [ ] Part two\n## Log\n### 2026-11-15\n- Read 20 pages\n",
+   "progress": {
+    "unit": "page",
+    "total": 550,
+    "completed": 310
+   },
+   "started": "2026-09-19",
+   "rating": 0
+  },
+  {
+   "slug": "books/ddia",
+   "title": "Designing Data-Intensive Applications",
+   "authors": [
+    "Martin Kleppmann"
+   ],
+   "category": "Systems",
+   "type": "book",
+   "status": "reading",
+   "featured": true,
+   "priority": "high",
+   "tags": [],
+   "edition": "",
+   "isbn": "",
+   "body": "## Chapters\n- [x] Introduction\n- [x] Part one\n- [ ] Part two\n## Log\n### 2026-11-15\n- Read 20 pages\n",
+   "progress": {
+    "unit": "page",
+    "total": 600,
+    "completed": 420
+   },
+   "started": "2026-09-19",
+   "rating": 0
+  },
+  {
+   "slug": "books/observability-eng",
+   "title": "Observability Engineering",
+   "authors": [
+    "Charity Majors",
+    "Liz Fong-Jones"
+   ],
+   "category": "Distributed Systems",
+   "type": "book",
+   "status": "completed",
+   "featured": false,
+   "priority": "medium",
+   "tags": [],
+   "edition": "",
+   "isbn": "",
+   "body": "## Chapters\n- [x] Introduction\n- [x] Part one\n- [ ] Part two\n## Log\n### 2026-11-15\n- Read 20 pages\n",
+   "progress": {
+    "unit": "page",
+    "total": 320,
+    "completed": 320
+   },
+   "started": "2026-09-19",
+   "rating": 5
+  },
+  {
+   "slug": "books/database-internals",
+   "title": "Database Internals",
+   "authors": [
+    "Alex Petrov"
+   ],
+   "category": "Systems",
+   "type": "book",
+   "status": "paused",
+   "featured": false,
+   "priority": "medium",
+   "tags": [],
+   "edition": "",
+   "isbn": "",
+   "body": "## Chapters\n- [x] Introduction\n- [x] Part one\n- [ ] Part two\n## Log\n### 2026-11-15\n- Read 20 pages\n",
+   "progress": {
+    "unit": "page",
+    "total": 370,
+    "completed": 90
+   },
+   "started": "2026-09-19",
+   "rating": 0
+  },
+  {
+   "slug": "books/go-prog-lang",
+   "title": "The Go Programming Language",
+   "authors": [
+    "Alan Donovan",
+    "Brian Kernighan"
+   ],
+   "category": "Languages",
+   "type": "book",
+   "status": "completed",
+   "featured": false,
+   "priority": "medium",
+   "tags": [],
+   "edition": "",
+   "isbn": "",
+   "body": "## Chapters\n- [x] Introduction\n- [x] Part one\n- [ ] Part two\n## Log\n### 2026-11-15\n- Read 20 pages\n",
+   "progress": {
+    "unit": "page",
+    "total": 380,
+    "completed": 380
+   },
+   "started": "2026-09-19",
+   "rating": 5
+  },
+  {
+   "slug": "books/k8s-up",
+   "title": "Kubernetes Up & Running",
+   "authors": [
+    "Brendan Burns"
+   ],
+   "category": "OS",
+   "type": "book",
+   "status": "backlog",
+   "featured": false,
+   "priority": "medium",
+   "tags": [],
+   "edition": "",
+   "isbn": "",
+   "body": "## Chapters\n- [x] Introduction\n- [x] Part one\n- [ ] Part two\n## Log\n### 2026-11-15\n- Read 20 pages\n",
+   "progress": {
+    "unit": "page",
+    "total": 320,
+    "completed": 0
+   },
+   "rating": 0
+  },
+  {
+   "slug": "books/sys-perf",
+   "title": "Systems Performance",
+   "authors": [
+    "Brendan Gregg"
+   ],
+   "category": "Systems",
+   "type": "book",
+   "status": "backlog",
+   "featured": false,
+   "priority": "medium",
+   "tags": [],
+   "edition": "",
+   "isbn": "",
+   "body": "## Chapters\n- [x] Introduction\n- [x] Part one\n- [ ] Part two\n## Log\n### 2026-11-15\n- Read 20 pages\n",
+   "progress": {
+    "unit": "page",
+    "total": 800,
+    "completed": 0
+   },
+   "rating": 0
+  },
+  {
+   "slug": "books/tpl-ref",
+   "title": "The Linux Programming Interface",
+   "authors": [
+    "Michael Kerrisk"
+   ],
+   "category": "OS",
+   "type": "book",
+   "status": "reference",
+   "featured": false,
+   "priority": "medium",
+   "tags": [],
+   "edition": "",
+   "isbn": "",
+   "body": "## Chapters\n- [x] Introduction\n- [x] Part one\n- [ ] Part two\n## Log\n### 2026-11-15\n- Read 20 pages\n",
+   "progress": {
+    "unit": "page",
+    "total": 1500,
+    "completed": 0
+   },
+   "started": "2026-09-19",
+   "rating": 0
+  },
+  {
+   "slug": "books/k8s-course",
+   "title": "Kubernetes for SREs",
+   "authors": [
+    "Online"
+   ],
+   "category": "Online Course",
+   "type": "course",
+   "status": "reading",
+   "featured": false,
+   "priority": "medium",
+   "tags": [],
+   "body": "## Modules\n- [x] Pods\n- [x] Services\n- [ ] Operators\n- [ ] Observability\n",
+   "progress": {
+    "unit": "module",
+    "total": 4,
+    "completed": 2
+   },
+   "started": "2026-10-29",
+   "rating": 0
+  }
+ ],
+ "companies": [
+  {
+   "slug": "company/grafana",
+   "title": "Grafana Labs",
+   "category": "Observability / Infra",
+   "type": "company",
+   "url": "https://grafana.com",
+   "status": "applied",
+   "featured": true,
+   "priority": "high",
+   "tags": [
+    "sre"
+   ],
+   "body": "## Why\n\nGrafana Labs builds infrastructure I use daily; strong on-call culture.\n\n## Steps\n- [x] Research the role\n- [x] Reach out and start building a relationship\n- [ ] Tailor resume\n\n## Log\n\n- 2026-10-29: Read engineering blog\n- 2026-11-13: Updated notes\n"
+  },
+  {
+   "slug": "company/datadog",
+   "title": "Datadog",
+   "category": "Observability / Infra",
+   "type": "company",
+   "url": "https://datadoghq.com",
+   "status": "interviewing",
+   "featured": true,
+   "priority": "high",
+   "tags": [],
+   "body": "## Why\n\nDatadog builds infrastructure I use daily; strong on-call culture.\n\n## Steps\n- [x] Research the role\n- [x] Reach out and start building a relationship\n- [ ] Tailor resume\n\n## Log\n\n- 2026-10-30: Read engineering blog\n- 2026-11-14: Updated notes\n"
+  },
+  {
+   "slug": "company/honeycomb",
+   "title": "Honeycomb",
+   "category": "Observability / Infra",
+   "type": "company",
+   "url": "https://honeycomb.io",
+   "status": "not_started",
+   "featured": false,
+   "priority": "medium",
+   "tags": [],
+   "body": "## Why\n\nHoneycomb builds infrastructure I use daily; strong on-call culture.\n\n## Steps\n- [x] Research the role\n- [ ] Reach out and start building a relationship\n- [ ] Tailor resume\n\n## Log\n\n- 2026-10-31: Read engineering blog\n- 2026-11-15: Updated notes\n"
+  },
+  {
+   "slug": "company/chronosphere",
+   "title": "Chronosphere",
+   "category": "Observability / Infra",
+   "type": "company",
+   "url": "https://chronosphere.io",
+   "status": "not_started",
+   "featured": false,
+   "priority": "medium",
+   "tags": [
+    "sre"
+   ],
+   "body": "## Why\n\nChronosphere builds infrastructure I use daily; strong on-call culture.\n\n## Steps\n- [x] Research the role\n- [ ] Reach out and start building a relationship\n- [ ] Tailor resume\n\n## Log\n\n- 2026-11-01: Read engineering blog\n- 2026-11-16: Updated notes\n"
+  },
+  {
+   "slug": "company/cockroach",
+   "title": "Cockroach Labs",
+   "category": "Database project",
+   "type": "company",
+   "url": "https://cockroachlabs.com",
+   "status": "applied",
+   "featured": true,
+   "priority": "high",
+   "tags": [],
+   "body": "## Why\n\nCockroach Labs builds infrastructure I use daily; strong on-call culture.\n\n## Steps\n- [x] Research the role\n- [x] Reach out and start building a relationship\n- [ ] Tailor resume\n\n## Log\n\n- 2026-11-02: Read engineering blog\n- 2026-11-13: Updated notes\n"
+  },
+  {
+   "slug": "company/planetscale",
+   "title": "PlanetScale",
+   "category": "Database project",
+   "type": "company",
+   "url": "https://planetscale.com",
+   "status": "rejected",
+   "featured": false,
+   "priority": "medium",
+   "tags": [],
+   "body": "## Why\n\nPlanetScale builds infrastructure I use daily; strong on-call culture.\n\n## Steps\n- [x] Research the role\n- [x] Reach out and start building a relationship\n- [ ] Tailor resume\n\n## Log\n\n- 2026-11-03: Read engineering blog\n- 2026-11-14: Updated notes\n"
+  },
+  {
+   "slug": "company/timescale",
+   "title": "Timescale",
+   "category": "Database project",
+   "type": "company",
+   "url": "https://timescale.com",
+   "status": "not_started",
+   "featured": false,
+   "priority": "low",
+   "tags": [
+    "sre"
+   ],
+   "body": "## Why\n\nTimescale builds infrastructure I use daily; strong on-call culture.\n\n## Steps\n- [x] Research the role\n- [ ] Reach out and start building a relationship\n- [ ] Tailor resume\n\n## Log\n\n- 2026-11-04: Read engineering blog\n- 2026-11-15: Updated notes\n"
+  },
+  {
+   "slug": "company/hashicorp",
+   "title": "HashiCorp",
+   "category": "Cloud-Native Infra",
+   "type": "company",
+   "url": "https://hashicorp.com",
+   "status": "not_started",
+   "featured": false,
+   "priority": "medium",
+   "tags": [],
+   "body": "## Why\n\nHashiCorp builds infrastructure I use daily; strong on-call culture.\n\n## Steps\n- [x] Research the role\n- [ ] Reach out and start building a relationship\n- [ ] Tailor resume\n\n## Log\n\n- 2026-11-05: Read engineering blog\n- 2026-11-16: Updated notes\n"
+  },
+  {
+   "slug": "company/fly",
+   "title": "Fly.io",
+   "category": "Cloud-Native Infra",
+   "type": "company",
+   "url": "https://fly.io",
+   "status": "offer",
+   "featured": true,
+   "priority": "high",
+   "tags": [],
+   "body": "## Why\n\nFly.io builds infrastructure I use daily; strong on-call culture.\n\n## Steps\n- [x] Research the role\n- [x] Reach out and start building a relationship\n- [ ] Tailor resume\n\n## Log\n\n- 2026-11-06: Read engineering blog\n- 2026-11-13: Updated notes\n"
+  },
+  {
+   "slug": "company/tailscale",
+   "title": "Tailscale",
+   "category": "Cloud-Native Infra",
+   "type": "company",
+   "url": "https://tailscale.com",
+   "status": "not_started",
+   "featured": false,
+   "priority": "medium",
+   "tags": [
+    "sre"
+   ],
+   "body": "## Why\n\nTailscale builds infrastructure I use daily; strong on-call culture.\n\n## Steps\n- [x] Research the role\n- [ ] Reach out and start building a relationship\n- [ ] Tailor resume\n\n## Log\n\n- 2026-11-07: Read engineering blog\n- 2026-11-14: Updated notes\n"
+  },
+  {
+   "slug": "company/google",
+   "title": "Google",
+   "category": "Big Tech Infra / SRE",
+   "type": "company",
+   "url": "https://google.com",
+   "status": "not_started",
+   "featured": false,
+   "priority": "low",
+   "tags": [],
+   "body": "## Why\n\nGoogle builds infrastructure I use daily; strong on-call culture.\n\n## Steps\n- [x] Research the role\n- [ ] Reach out and start building a relationship\n- [ ] Tailor resume\n\n## Log\n\n- 2026-11-08: Read engineering blog\n- 2026-11-15: Updated notes\n"
+  },
+  {
+   "slug": "company/cloudflare",
+   "title": "Cloudflare",
+   "category": "Big Tech Infra / SRE",
+   "type": "company",
+   "url": "https://cloudflare.com",
+   "status": "passed",
+   "featured": false,
+   "priority": "low",
+   "tags": [],
+   "body": "## Why\n\nCloudflare builds infrastructure I use daily; strong on-call culture.\n\n## Steps\n- [x] Research the role\n- [x] Reach out and start building a relationship\n- [ ] Tailor resume\n\n## Log\n\n- 2026-11-09: Read engineering blog\n- 2026-11-16: Updated notes\n"
+  },
+  {
+   "slug": "company/modal",
+   "title": "Modal",
+   "category": "AI Infrastructure",
+   "type": "company",
+   "url": "https://modal.com",
+   "status": "not_started",
+   "featured": false,
+   "priority": "medium",
+   "tags": [
+    "sre"
+   ],
+   "body": "## Why\n\nModal builds infrastructure I use daily; strong on-call culture.\n\n## Steps\n- [x] Research the role\n- [ ] Reach out and start building a relationship\n- [ ] Tailor resume\n\n## Log\n\n- 2026-11-10: Read engineering blog\n- 2026-11-13: Updated notes\n"
+  },
+  {
+   "slug": "company/anyscale",
+   "title": "Anyscale",
+   "category": "AI Infrastructure",
+   "type": "company",
+   "url": "https://anyscale.com",
+   "status": "not_started",
+   "featured": false,
+   "priority": "low",
+   "tags": [],
+   "body": "## Why\n\nAnyscale builds infrastructure I use daily; strong on-call culture.\n\n## Steps\n- [x] Research the role\n- [ ] Reach out and start building a relationship\n- [ ] Tailor resume\n\n## Log\n\n- 2026-11-11: Read engineering blog\n- 2026-11-14: Updated notes\n"
+  }
+ ],
+ "documents": [
+  {
+   "id": "index",
+   "title": "Home",
+   "description": "",
+   "tags": [],
+   "body": "# Focus\n\nLand an SRE / infrastructure role by spring 2027.\n"
+  },
+  {
+   "id": "2026/strategy",
+   "title": "2026 strategy",
+   "description": "Plan for the year",
+   "tags": [],
+   "body": "# Strategy\n\n1. Interview prep\n2. Network\n3. Ship visible work\n"
+  }
+ ],
+ "personalJournal": [
+  {
+   "id": "bio",
+   "title": "About me",
+   "date": "",
+   "description": "",
+   "tags": [],
+   "body": "Infrastructure engineer who likes reliable boring systems.\n"
+  },
+  {
+   "id": "2026/2026-11-17",
+   "title": "Good run, clear head",
+   "date": "2026-11-17",
+   "description": "",
+   "tags": [],
+   "body": "Morning run then two hours of focused prep.\n"
+  },
+  {
+   "id": "2026/2026-11-15",
+   "title": "Mock interview",
+   "date": "2026-11-15",
+   "description": "",
+   "tags": [],
+   "body": "Struggled with the rate limiter design; review token buckets.\n"
+  },
+  {
+   "id": "2026/2026-11-10",
+   "title": "Weekend reset",
+   "date": "2026-11-10",
+   "description": "",
+   "tags": [],
+   "body": "Planned next week and cleaned up notes.\n"
+  }
+ ],
+ "goals": [
+  {
+   "id": "0417402e-5fe7-57f6-bd03-5925c4d7baf1",
+   "title": "LeetCode: 150 problems",
+   "startDate": "2026-09-19",
+   "endDate": "2027-01-02",
+   "color": "#E0533D",
+   "dailyHours": 1.5,
+   "createdAt": "2026-08-20T15:00:00.000Z",
+   "updatedAt": "2026-11-17T15:00:00.000Z",
+   "notes": [
+    {
+     "id": "ba652704-e063-5c59-83d4-9d73a41329f1",
+     "body": "Progress note for LeetCode: 150 problems.",
+     "createdAt": "2026-11-14T15:00:00.000Z"
+    }
+   ],
+   "steps": [
+    {
+     "id": "df6b5f05-83fd-500e-85b9-e4013a18b97d",
+     "title": "Arrays & hashing",
+     "done": true
+    },
+    {
+     "id": "04c830dc-6628-5b2f-9284-fe224fae449e",
+     "title": "Two pointers",
+     "done": true
+    },
+    {
+     "id": "b5c78539-1d63-5bc9-a973-3795ad14e588",
+     "title": "Graphs",
+     "done": false
+    },
+    {
+     "id": "d0103bf4-1442-5e4a-b541-ef03861d5994",
+     "title": "DP",
+     "done": false
+    }
+   ],
+   "metadata": {
+    "purpose": "career"
+   },
+   "status": "active",
+   "dependsOn": []
+  },
+  {
+   "id": "b9ebed63-c3d4-5968-aa85-6e608aa337d3",
+   "title": "System design prep",
+   "startDate": "2026-10-19",
+   "endDate": "2027-01-17",
+   "color": "#3E4B9E",
+   "dailyHours": 1,
+   "createdAt": "2026-08-20T15:00:00.000Z",
+   "updatedAt": "2026-11-17T15:00:00.000Z",
+   "notes": [
+    {
+     "id": "6f24a106-93dc-5383-90c9-c3a505ba27fc",
+     "body": "Progress note for System design prep.",
+     "createdAt": "2026-11-14T15:00:00.000Z"
+    }
+   ],
+   "steps": [
+    {
+     "id": "b158276b-9288-57d0-8906-a97a6e35236e",
+     "title": "Read DDIA part 1",
+     "done": true
+    },
+    {
+     "id": "117f33d9-945f-546f-b69f-3f2b828cb77d",
+     "title": "Mock interview x3",
+     "done": false
+    }
+   ],
+   "metadata": {
+    "purpose": "career"
+   },
+   "status": "active",
+   "dependsOn": []
+  },
+  {
+   "id": "036b1885-8d0c-512d-a311-2a9368b9e262",
+   "title": "CKA certification",
+   "startDate": "2026-11-08",
+   "endDate": "2027-02-01",
+   "color": "#2E8B57",
+   "dailyHours": 1,
+   "createdAt": "2026-08-20T15:00:00.000Z",
+   "updatedAt": "2026-11-17T15:00:00.000Z",
+   "notes": [
+    {
+     "id": "6dcdc141-19c9-5549-ad78-ef1397cc9a19",
+     "body": "Progress note for CKA certification.",
+     "createdAt": "2026-11-14T15:00:00.000Z"
+    }
+   ],
+   "steps": [
+    {
+     "id": "dc41146b-bae9-5787-bc78-a4d891106515",
+     "title": "Course",
+     "done": false
+    },
+    {
+     "id": "ea7ce94c-b521-520c-82d4-8f96a302a389",
+     "title": "Practice exams",
+     "done": false
+    }
+   ],
+   "metadata": {
+    "purpose": "career"
+   },
+   "status": "active",
+   "dependsOn": []
+  },
+  {
+   "id": "0fede8fa-5cf0-5325-9e3b-d370ed8f8672",
+   "title": "Resume + portfolio refresh",
+   "startDate": "2026-10-04",
+   "endDate": "2026-11-13",
+   "color": "#B8860B",
+   "dailyHours": 0,
+   "createdAt": "2026-08-20T15:00:00.000Z",
+   "updatedAt": "2026-11-17T15:00:00.000Z",
+   "notes": [
+    {
+     "id": "ded3de97-6c85-5287-af5f-83ae2e3ad437",
+     "body": "Progress note for Resume + portfolio refresh.",
+     "createdAt": "2026-11-14T15:00:00.000Z"
+    }
+   ],
+   "steps": [
+    {
+     "id": "5870e05a-185f-5c49-ac1a-2bcdfb1dd46f",
+     "title": "Rewrite resume",
+     "done": true
+    },
+    {
+     "id": "23a99ae8-fbef-564a-b2c2-4cd0646b0125",
+     "title": "Publish project write-up",
+     "done": true
+    }
+   ],
+   "metadata": {
+    "purpose": "career"
+   },
+   "status": "done",
+   "dependsOn": []
+  },
+  {
+   "id": "a1e7f0e5-f294-5b30-bce3-4da4cdbabf6d",
+   "title": "Apply to target companies",
+   "startDate": "2026-12-08",
+   "endDate": "2027-02-16",
+   "color": "#8A2BE2",
+   "dailyHours": 0,
+   "createdAt": "2026-08-20T15:00:00.000Z",
+   "updatedAt": "2026-11-17T15:00:00.000Z",
+   "notes": [
+    {
+     "id": "8720d674-1171-53de-8ef2-cba77573432c",
+     "body": "Progress note for Apply to target companies.",
+     "createdAt": "2026-11-14T15:00:00.000Z"
+    }
+   ],
+   "steps": [
+    {
+     "id": "591fdafe-3c9f-595a-b82f-44d898d19459",
+     "title": "Tier 1 applications",
+     "done": false
+    },
+    {
+     "id": "a36189d2-2ae5-5768-be1f-968bc02a9bbe",
+     "title": "Tier 2 applications",
+     "done": false
+    }
+   ],
+   "metadata": {
+    "purpose": "career"
+   },
+   "status": "planned",
+   "dependsOn": [
+    "0fede8fa-5cf0-5325-9e3b-d370ed8f8672",
+    "b9ebed63-c3d4-5968-aa85-6e608aa337d3"
+   ]
+  },
+  {
+   "id": "8b5aa762-1aa4-57dc-a36a-94204b6e80d1",
+   "title": "Contribute to an OSS observability project",
+   "startDate": "2026-12-28",
+   "endDate": "2027-04-27",
+   "color": "#1D76DB",
+   "dailyHours": 0,
+   "createdAt": "2026-08-20T15:00:00.000Z",
+   "updatedAt": "2026-11-17T15:00:00.000Z",
+   "notes": [
+    {
+     "id": "db09574c-569f-52ea-a1dc-e015a8cb0771",
+     "body": "Progress note for Contribute to an OSS observability project.",
+     "createdAt": "2026-11-14T15:00:00.000Z"
+    }
+   ],
+   "steps": [
+    {
+     "id": "28f3b17d-8dff-5d9d-a2ff-2dc47638597f",
+     "title": "Pick issue",
+     "done": false
+    }
+   ],
+   "metadata": {
+    "purpose": "career"
+   },
+   "status": "planned",
+   "dependsOn": []
+  },
+  {
+   "id": "2f444fa8-5d07-5aa7-828f-edb44c1b3f30",
+   "title": "Give a meetup talk",
+   "startDate": "2026-08-30",
+   "endDate": "2026-10-19",
+   "color": "#999999",
+   "dailyHours": 0,
+   "createdAt": "2026-08-20T15:00:00.000Z",
+   "updatedAt": "2026-11-17T15:00:00.000Z",
+   "notes": [
+    {
+     "id": "8b11c8df-5382-59e9-bae3-80ebaf168522",
+     "body": "Progress note for Give a meetup talk.",
+     "createdAt": "2026-11-14T15:00:00.000Z"
+    }
+   ],
+   "steps": [
+    {
+     "id": "7f89c6df-8927-5806-92e2-56d4b8a4aba8",
+     "title": "Submit CFP",
+     "done": true
+    }
+   ],
+   "metadata": {
+    "purpose": "career"
+   },
+   "status": "dropped",
+   "dependsOn": []
+  }
+ ],
+ "connections": [
+  {
+   "id": "b6a19e3a-edd2-506e-97ef-1ff44d159f79",
+   "name": "Ava Thompson",
+   "role": "Staff SRE",
+   "companyName": "Grafana Labs",
+   "companySlug": "company/grafana",
+   "email": "",
+   "queued": true,
+   "notes": "Met at a meetup in March. Interested in **on-call tooling**.",
+   "tags": []
+  },
+  {
+   "id": "04494eca-03cf-50b7-89bb-8c6526e2f7bc",
+   "name": "Ben Okafor",
+   "role": "Engineering Manager",
+   "companyName": "Datadog",
+   "companySlug": "company/datadog",
+   "email": "",
+   "queued": false,
+   "notes": "Met at a meetup in June. Interested in **on-call tooling**.",
+   "tags": []
+  },
+  {
+   "id": "7f9bda14-8b66-5453-80a9-0bdf73f8d20c",
+   "name": "Chloe Martin",
+   "role": "Recruiter",
+   "companyName": "Datadog",
+   "companySlug": "company/datadog",
+   "email": "",
+   "queued": false,
+   "notes": "Met at a meetup in September. Interested in **on-call tooling**.",
+   "tags": []
+  },
+  {
+   "id": "1ec34462-24b6-5466-ac4b-abc78f4c7e36",
+   "name": "Diego Alvarez",
+   "role": "Senior Engineer",
+   "companyName": "Cockroach Labs",
+   "companySlug": "company/cockroach",
+   "email": "",
+   "queued": true,
+   "notes": "Met at a meetup in March. Interested in **on-call tooling**.",
+   "tags": []
+  },
+  {
+   "id": "d7fa779f-e16c-501d-ad9d-f9414caf609c",
+   "name": "Erin Walsh",
+   "role": "Platform Lead",
+   "companyName": "Fly.io",
+   "companySlug": "company/fly",
+   "email": "",
+   "queued": false,
+   "notes": "Met at a meetup in June. Interested in **on-call tooling**.",
+   "tags": []
+  },
+  {
+   "id": "c61fbd8c-84a4-543f-bab8-1f23a8126054",
+   "name": "Farah Khan",
+   "role": "SRE",
+   "companyName": "Honeycomb",
+   "companySlug": "company/honeycomb",
+   "email": "",
+   "queued": false,
+   "notes": "Met at a meetup in September. Interested in **on-call tooling**.",
+   "tags": []
+  },
+  {
+   "id": "34333c10-bb38-58c9-b2ca-3adbf844417e",
+   "name": "Gus Lindqvist",
+   "role": "Principal Engineer",
+   "companyName": "HashiCorp",
+   "companySlug": "company/hashicorp",
+   "email": "",
+   "queued": true,
+   "notes": "Met at a meetup in March. Interested in **on-call tooling**.",
+   "tags": []
+  },
+  {
+   "id": "b72f199f-ead6-51c3-8d3b-086efb0f77f5",
+   "name": "Hana Sato",
+   "role": "Database Engineer",
+   "companyName": "PlanetScale",
+   "companySlug": "company/planetscale",
+   "email": "",
+   "queued": false,
+   "notes": "Met at a meetup in June. Interested in **on-call tooling**.",
+   "tags": []
+  },
+  {
+   "id": "ebf6c91b-4c25-5ae5-b317-7aa314a1b790",
+   "name": "Isaac Brown",
+   "role": "Former teammate",
+   "companyName": "Cloudflare",
+   "companySlug": "company/cloudflare",
+   "email": "",
+   "queued": false,
+   "notes": "Met at a meetup in September. Interested in **on-call tooling**.",
+   "tags": []
+  },
+  {
+   "id": "af6f40fa-6520-5be1-b68a-8373c9de3c79",
+   "name": "Jules Moreau",
+   "role": "Developer Advocate",
+   "companyName": "Tailscale",
+   "companySlug": "company/tailscale",
+   "email": "",
+   "queued": true,
+   "notes": "Met at a meetup in March. Interested in **on-call tooling**.",
+   "tags": []
+  },
+  {
+   "id": "64621382-4d47-5f43-8105-3e9c8d5af563",
+   "name": "Kai Nakamura",
+   "role": "SRE Manager",
+   "companyName": "Google",
+   "companySlug": "company/google",
+   "email": "",
+   "queued": false,
+   "notes": "Met at a meetup in June. Interested in **on-call tooling**.",
+   "tags": []
+  },
+  {
+   "id": "5d7908f8-0f6b-5b3d-a674-de92a3123c88",
+   "name": "Lena Fischer",
+   "role": "ML Platform Engineer",
+   "companyName": "Modal",
+   "companySlug": "company/modal",
+   "email": "",
+   "queued": false,
+   "notes": "Met at a meetup in September. Interested in **on-call tooling**.",
+   "tags": []
+  }
+ ],
+ "scheduler": {
+  "revision": "",
+  "settings": {
+   "timeZone": "America/Chicago",
+   "defaultDay": {
+    "start": "06:00",
+    "end": "21:00",
+    "nextDay": false
+   },
+   "weekdays": {},
+   "dates": {}
+  },
+  "goals": {
+   "036b1885-8d0c-512d-a311-2a9368b9e262": {
+    "id": "036b1885-8d0c-512d-a311-2a9368b9e262",
+    "title": "CKA certification",
+    "color": "#2E8B57",
+    "startDate": "2026-11-08",
+    "endDate": "2027-02-01",
+    "status": "active",
+    "dailyHours": 1,
+    "selectedWeekdays": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "steps": [
+     {
+      "id": "dc41146b-bae9-5787-bc78-a4d891106515",
+      "title": "Course",
+      "completed": false
+     },
+     {
+      "id": "ea7ce94c-b521-520c-82d4-8f96a302a389",
+      "title": "Practice exams",
+      "completed": false
+     }
+    ],
+    "dependsOn": []
+   },
+   "0417402e-5fe7-57f6-bd03-5925c4d7baf1": {
+    "id": "0417402e-5fe7-57f6-bd03-5925c4d7baf1",
+    "title": "LeetCode: 150 problems",
+    "color": "#E0533D",
+    "startDate": "2026-09-19",
+    "endDate": "2027-01-02",
+    "status": "active",
+    "dailyHours": 1.5,
+    "selectedWeekdays": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "steps": [
+     {
+      "id": "df6b5f05-83fd-500e-85b9-e4013a18b97d",
+      "title": "Arrays & hashing",
+      "completed": true
+     },
+     {
+      "id": "04c830dc-6628-5b2f-9284-fe224fae449e",
+      "title": "Two pointers",
+      "completed": true
+     },
+     {
+      "id": "b5c78539-1d63-5bc9-a973-3795ad14e588",
+      "title": "Graphs",
+      "completed": false
+     },
+     {
+      "id": "d0103bf4-1442-5e4a-b541-ef03861d5994",
+      "title": "DP",
+      "completed": false
+     }
+    ],
+    "dependsOn": []
+   },
+   "0fede8fa-5cf0-5325-9e3b-d370ed8f8672": {
+    "id": "0fede8fa-5cf0-5325-9e3b-d370ed8f8672",
+    "title": "Resume + portfolio refresh",
+    "color": "#B8860B",
+    "startDate": "2026-10-04",
+    "endDate": "2026-11-13",
+    "status": "done",
+    "dailyHours": 0,
+    "selectedWeekdays": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "steps": [
+     {
+      "id": "5870e05a-185f-5c49-ac1a-2bcdfb1dd46f",
+      "title": "Rewrite resume",
+      "completed": true
+     },
+     {
+      "id": "23a99ae8-fbef-564a-b2c2-4cd0646b0125",
+      "title": "Publish project write-up",
+      "completed": true
+     }
+    ],
+    "dependsOn": [],
+    "stoppedDate": "2026-11-13"
+   },
+   "2f444fa8-5d07-5aa7-828f-edb44c1b3f30": {
+    "id": "2f444fa8-5d07-5aa7-828f-edb44c1b3f30",
+    "title": "Give a meetup talk",
+    "color": "#999999",
+    "startDate": "2026-08-30",
+    "endDate": "2026-10-19",
+    "status": "dropped",
+    "dailyHours": 0,
+    "selectedWeekdays": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "steps": [
+     {
+      "id": "7f89c6df-8927-5806-92e2-56d4b8a4aba8",
+      "title": "Submit CFP",
+      "completed": true
+     }
+    ],
+    "dependsOn": [],
+    "stoppedDate": "2026-10-19"
+   },
+   "8b5aa762-1aa4-57dc-a36a-94204b6e80d1": {
+    "id": "8b5aa762-1aa4-57dc-a36a-94204b6e80d1",
+    "title": "Contribute to an OSS observability project",
+    "color": "#1D76DB",
+    "startDate": "2026-12-28",
+    "endDate": "2027-04-27",
+    "status": "planned",
+    "dailyHours": 0,
+    "selectedWeekdays": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "steps": [
+     {
+      "id": "28f3b17d-8dff-5d9d-a2ff-2dc47638597f",
+      "title": "Pick issue",
+      "completed": false
+     }
+    ],
+    "dependsOn": []
+   },
+   "a1e7f0e5-f294-5b30-bce3-4da4cdbabf6d": {
+    "id": "a1e7f0e5-f294-5b30-bce3-4da4cdbabf6d",
+    "title": "Apply to target companies",
+    "color": "#8A2BE2",
+    "startDate": "2026-12-08",
+    "endDate": "2027-02-16",
+    "status": "planned",
+    "dailyHours": 0,
+    "selectedWeekdays": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "steps": [
+     {
+      "id": "591fdafe-3c9f-595a-b82f-44d898d19459",
+      "title": "Tier 1 applications",
+      "completed": false
+     },
+     {
+      "id": "a36189d2-2ae5-5768-be1f-968bc02a9bbe",
+      "title": "Tier 2 applications",
+      "completed": false
+     }
+    ],
+    "dependsOn": [
+     "0fede8fa-5cf0-5325-9e3b-d370ed8f8672",
+     "b9ebed63-c3d4-5968-aa85-6e608aa337d3"
+    ]
+   },
+   "b9ebed63-c3d4-5968-aa85-6e608aa337d3": {
+    "id": "b9ebed63-c3d4-5968-aa85-6e608aa337d3",
+    "title": "System design prep",
+    "color": "#3E4B9E",
+    "startDate": "2026-10-19",
+    "endDate": "2027-01-17",
+    "status": "active",
+    "dailyHours": 1,
+    "selectedWeekdays": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "steps": [
+     {
+      "id": "b158276b-9288-57d0-8906-a97a6e35236e",
+      "title": "Read DDIA part 1",
+      "completed": true
+     },
+     {
+      "id": "117f33d9-945f-546f-b69f-3f2b828cb77d",
+      "title": "Mock interview x3",
+      "completed": false
+     }
+    ],
+    "dependsOn": []
+   }
+  },
+  "sessions": {
+   "05677bfb-7576-5b72-93a7-7fc5db8e2545": {
+    "id": "05677bfb-7576-5b72-93a7-7fc5db8e2545",
+    "date": "2026-11-16",
+    "assignment": {
+     "goalId": "0417402e-5fe7-57f6-bd03-5925c4d7baf1",
+     "title": "LeetCode: 150 problems",
+     "goalTitle": "LeetCode: 150 problems",
+     "color": "#E0533D"
+    },
+    "plan": {
+     "start": "2026-11-16T07:00:00-06:00",
+     "end": "2026-11-16T08:30:00-06:00"
+    },
+    "actual": null,
+    "state": "accepted",
+    "exception": false
+   },
+   "bcd09877-87b5-5c50-943c-2e1e62add252": {
+    "id": "bcd09877-87b5-5c50-943c-2e1e62add252",
+    "date": "2026-11-16",
+    "assignment": {
+     "goalId": "b9ebed63-c3d4-5968-aa85-6e608aa337d3",
+     "title": "System design prep",
+     "goalTitle": "System design prep",
+     "color": "#3E4B9E"
+    },
+    "plan": {
+     "start": "2026-11-16T19:00:00-06:00",
+     "end": "2026-11-16T20:00:00-06:00"
+    },
+    "actual": null,
+    "state": "accepted",
+    "exception": false
+   },
+   "1d08c94b-3c16-5a24-9b31-dbe120816158": {
+    "id": "1d08c94b-3c16-5a24-9b31-dbe120816158",
+    "date": "2026-11-17",
+    "assignment": {
+     "goalId": "036b1885-8d0c-512d-a311-2a9368b9e262",
+     "title": "CKA certification",
+     "goalTitle": "CKA certification",
+     "color": "#2E8B57"
+    },
+    "plan": {
+     "start": "2026-11-17T07:00:00-06:00",
+     "end": "2026-11-17T08:00:00-06:00"
+    },
+    "actual": null,
+    "state": "accepted",
+    "exception": false
+   },
+   "e342f4af-e64f-5398-b5e2-b0f064b6c411": {
+    "id": "e342f4af-e64f-5398-b5e2-b0f064b6c411",
+    "date": "2026-11-18",
+    "assignment": {
+     "goalId": "0417402e-5fe7-57f6-bd03-5925c4d7baf1",
+     "title": "LeetCode: 150 problems",
+     "goalTitle": "LeetCode: 150 problems",
+     "color": "#E0533D"
+    },
+    "plan": {
+     "start": "2026-11-18T07:00:00-06:00",
+     "end": "2026-11-18T08:30:00-06:00"
+    },
+    "actual": null,
+    "state": "accepted",
+    "exception": false
+   },
+   "62bf7ea8-410a-5ab4-9800-f8374b176b3e": {
+    "id": "62bf7ea8-410a-5ab4-9800-f8374b176b3e",
+    "date": "2026-11-18",
+    "assignment": {
+     "goalId": "b9ebed63-c3d4-5968-aa85-6e608aa337d3",
+     "title": "System design prep",
+     "goalTitle": "System design prep",
+     "color": "#3E4B9E"
+    },
+    "plan": {
+     "start": "2026-11-18T12:00:00-06:00",
+     "end": "2026-11-18T13:00:00-06:00"
+    },
+    "actual": null,
+    "state": "accepted",
+    "exception": false
+   },
+   "0c4f8a59-5f0f-5f4f-9748-571dcd9aac8e": {
+    "id": "0c4f8a59-5f0f-5f4f-9748-571dcd9aac8e",
+    "date": "2026-11-19",
+    "assignment": {
+     "goalId": "036b1885-8d0c-512d-a311-2a9368b9e262",
+     "title": "CKA certification",
+     "goalTitle": "CKA certification",
+     "color": "#2E8B57"
+    },
+    "plan": {
+     "start": "2026-11-19T18:00:00-06:00",
+     "end": "2026-11-19T19:30:00-06:00"
+    },
+    "actual": null,
+    "state": "accepted",
+    "exception": false
+   },
+   "6ab592be-5bbe-5473-bc98-702f0f1cdac4": {
+    "id": "6ab592be-5bbe-5473-bc98-702f0f1cdac4",
+    "date": "2026-11-20",
+    "assignment": {
+     "goalId": "0417402e-5fe7-57f6-bd03-5925c4d7baf1",
+     "title": "LeetCode: 150 problems",
+     "goalTitle": "LeetCode: 150 problems",
+     "color": "#E0533D"
+    },
+    "plan": {
+     "start": "2026-11-20T07:00:00-06:00",
+     "end": "2026-11-20T08:00:00-06:00"
+    },
+    "actual": null,
+    "state": "accepted",
+    "exception": false
+   },
+   "bbf73274-32e7-5250-b7f2-b3012c726577": {
+    "id": "bbf73274-32e7-5250-b7f2-b3012c726577",
+    "date": "2026-11-21",
+    "assignment": {
+     "goalId": "b9ebed63-c3d4-5968-aa85-6e608aa337d3",
+     "title": "System design prep",
+     "goalTitle": "System design prep",
+     "color": "#3E4B9E"
+    },
+    "plan": {
+     "start": "2026-11-21T09:00:00-06:00",
+     "end": "2026-11-21T11:00:00-06:00"
+    },
+    "actual": null,
+    "state": "accepted",
+    "exception": false
+   }
+  },
+  "rules": {},
+  "closedWeeks": {},
+  "lastDate": "2026-11-18"
+ },
+ "runningNotes": [
+  {
+   "id": "2026/2026-11-17-0712",
+   "title": "Practice plan for graphs",
+   "runDate": "2026-11-17",
+   "startedAt": "2026-11-17T13:12:00Z",
+   "distanceKm": 5.2,
+   "durationMin": 31,
+   "tags": [
+    "study"
+   ],
+   "body": "Spend the next two weeks on graph problems, then union find. Do one timed problem a day and write down the pattern after each one."
+  },
+  {
+   "id": "2026/2026-11-16-1805",
+   "title": "Load test follow-up",
+   "runDate": "2026-11-16",
+   "startedAt": "2026-11-17T00:05:00Z",
+   "tags": [],
+   "body": "Note to self about the load test: throughput holds at the plateau but p99 climbs after twenty minutes. Check connection pool sizing."
+  },
+  {
+   "id": "2026/2026-11-14-0640",
+   "title": "Mock interview debrief",
+   "runDate": "2026-11-14",
+   "startedAt": "2026-11-14T12:40:00Z",
+   "durationMin": 12,
+   "tags": [
+    "interview"
+   ],
+   "body": "Rate limiter design went fine until sharding. Review token buckets versus sliding windows and practice the capacity math out loud."
+  }
+ ]
+}
