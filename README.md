@@ -33,7 +33,8 @@ off in Settings → Modules.
 goals; the API can also reorder steps or move them between goals). It draws every goal on a month axis (fit to the goals'
 dates by default, or 6 months to 10 years) with its status and step progress; select a goal to see its steps, drag
 a span on desktop to move or resize it, and open the goal editor for everything else. **Agent context** (`/agents`) renders the
-saved goals as Markdown or JSON (`/api/agent-context`) to hand to an AI assistant.
+saved goals as Markdown or JSON (`/api/agent-context`) with goal and step counts, a preview, and a button that copies the
+full output to hand to an AI assistant.
 
 ### Weekly scheduler
 

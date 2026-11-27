@@ -72,7 +72,7 @@ func TestDisabledModulesReturn404(t *testing.T) {
 	db := testDB(t)
 	ctx := context.Background()
 	root := t.TempDir()
-	for _, page := range []string{"notes", "weekly-scheduler", "timeline", "books", "journal", "static-shells/note"} {
+	for _, page := range []string{"notes", "weekly-scheduler", "timeline", "books", "journal", "agents", "static-shells/note"} {
 		if err := os.MkdirAll(filepath.Join(root, page), 0755); err != nil {
 			t.Fatal(err)
 		}
@@ -121,7 +121,7 @@ func TestDisabledModulesReturn404(t *testing.T) {
 		}
 		return kinds
 	}
-	paths := []string{"/journal", "/notes", "/notes/", "/notes/systems/nested-note", "/api/entries/note", "/weekly-scheduler", "/api/scheduler/week?week=2026-11-23", "/timeline", "/api/goals", "/api/summaries/progress", "/leetgrinder", "/leetgrinder/problem/two-sum", "/api/agent-context"}
+	paths := []string{"/journal", "/notes", "/notes/", "/notes/systems/nested-note", "/api/entries/note", "/weekly-scheduler", "/api/scheduler/week?week=2026-11-23", "/timeline", "/api/goals", "/api/summaries/progress", "/leetgrinder", "/leetgrinder/problem/two-sum", "/api/agent-context", "/agents"}
 	for _, path := range paths {
 		if w := do("GET", path, "session"); w.Code != 200 {
 			t.Fatalf("%s while on: %d %s", path, w.Code, w.Body.String())
@@ -380,6 +380,9 @@ func TestAgentContextLeavesOutDisabledModules(t *testing.T) {
 	}
 	if w := get("/api/agent-context?format=markdown"); w.Code != 200 || !strings.Contains(w.Body.String(), "# Work journal\n\nNo entries yet.") || !strings.Contains(w.Body.String(), "# Personal journal\n\nNo entries yet.") {
 		t.Fatal("markdown leaked journal entries", w.Body.String())
+	}
+	if w := get("/api/agent-context?format=markdown"); !strings.HasPrefix(w.Body.String(), "# Agent context\n\n- "+contextRules[0]+"\n- ") {
+		t.Error("every rule should be a list item", w.Body.String())
 	}
 	// The running view follows Audio, the work view follows Journal.
 	if _, err := db.UpdateAppSettings(ctx, modules.Patch{Modules: map[string]bool{"audio": true}}); err != nil {
