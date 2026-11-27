@@ -2,8 +2,6 @@
 import DocsLayout from '../layouts/DocsLayout.astro';
 import { GoalTimeline } from '../components/GoalTimeline';
 ---
-<DocsLayout title="Goal timeline" description="A flexible timeline for your learning and career goals">
-  <h1 class="text-3xl font-bold mb-2">Goal timeline</h1>
-  <p class="text-zinc-400 mb-6">Make room for focused learning alongside full-time work. Plan a few months at a time, and adjust as life changes.</p>
+<DocsLayout title="Goal timeline" description="A flexible timeline for your learning and career goals" page>
   <GoalTimeline client:only="react" />
 </DocsLayout>

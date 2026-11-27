@@ -218,10 +218,6 @@ button, a, summary { touch-action: manipulation; }
   h1, .prose h1 { font-size: 1.875rem; line-height: 1.2; overflow-wrap: anywhere; }
   .prose h2 { font-size: 1.5rem; }
   .prose h3 { font-size: 1.25rem; }
-  .goal-timeline dialog { max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px); }
-  .goal-timeline .calendar-days button { min-height: 44px; }
-  .goal-timeline .timeline-goal button { min-height: 0; }
-  .timeline-scroll { overscroll-behavior-x: contain; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

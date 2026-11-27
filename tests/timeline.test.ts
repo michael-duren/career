@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { dayNumber, monthOffset, shiftGoal, timelineHours, type Goal } from '../src/lib/timeline.ts';
+import { dayNumber, fitRange, goalProgress, goalState, goalTag, monthLabel, monthOffset, shiftGoal, timelineCounts, timelineHours, type Goal } from '../src/lib/timeline.ts';
 import { updateWorkspaceEntry, type Workspace } from '../src/lib/workspace.ts';
 const goal: Goal = { status: 'planned', dependsOn: [],
   id: '123', title: 'Systems', startDate: '2028-02-01', endDate: '2028-04-30', color: '#67e8f9',
@@ -117,4 +117,41 @@ test('timeline calculations reject invalid and duplicate ISO weekdays', () => {
     assert.throws(() => timelineHours([{ ...goal, startDate: '2026-09-07', endDate: '2026-09-13', dailyHours: 1, selectedWeekdays }], start, end),
       /selectedWeekdays/);
   }
+});
+
+test('late means not done or dropped and ending before today', () => {
+  const today = '2028-05-01';
+  assert.equal(goalState({ ...goal, status: 'active' }, today), 'late');
+  assert.equal(goalState({ ...goal, status: 'planned' }, today), 'late');
+  assert.equal(goalState({ ...goal, status: 'done' }, today), 'done');
+  assert.equal(goalState({ ...goal, status: 'dropped' }, today), 'dropped');
+  // Ending today is not late yet.
+  assert.equal(goalState({ ...goal, status: 'active' }, goal.endDate), 'active');
+  assert.equal(goalState(goal, '2028-03-01'), 'planned');
+});
+test('tags and progress come from status and steps', () => {
+  const steps = [{ id: 'a', title: 'A', done: true }, { id: 'b', title: 'B', done: false }, { id: 'c', title: 'C', done: false }];
+  assert.equal(goalTag({ ...goal, steps }, '2028-03-01'), '1/3');
+  assert.equal(goalTag({ ...goal, steps: [] }, '2028-03-01'), '');
+  assert.equal(goalTag({ ...goal, steps }, '2028-06-01'), 'late');
+  assert.equal(goalTag({ ...goal, status: 'done', steps }, '2028-06-01'), 'done');
+  assert.equal(goalProgress({ ...goal, steps }), 1 / 3);
+  assert.equal(goalProgress({ ...goal, steps: [] }), 0);
+  assert.equal(goalProgress({ ...goal, status: 'done', steps }), 1);
+});
+test('header counts count late goals under their status too and skip dropped ones', () => {
+  const goals: Goal[] = [
+    { ...goal, id: 'a', status: 'active' }, { ...goal, id: 'b', status: 'active', endDate: '2028-12-31' },
+    { ...goal, id: 'c', status: 'planned', endDate: '2028-12-31' }, { ...goal, id: 'd', status: 'done' }, { ...goal, id: 'e', status: 'dropped' },
+  ];
+  assert.deepEqual(timelineCounts(goals, '2028-06-01'), { active: 2, planned: 1, done: 1, late: 1 });
+});
+test('fit range covers every goal month, at least six months, across years', () => {
+  const goals: Goal[] = [{ ...goal, startDate: '2026-09-26', endDate: '2027-01-09' }, { ...goal, id: 'x', startDate: '2027-01-04', endDate: '2027-05-04' }];
+  assert.deepEqual(fitRange(goals, '2026-11-26'), { anchor: '2026-09-01', months: 9 });
+  assert.deepEqual(fitRange([goal], '2026-11-26'), { anchor: '2028-02-01', months: 6 });
+  assert.deepEqual(fitRange([], '2026-11-26'), { anchor: '2026-11-01', months: 6 });
+  const { anchor, months } = fitRange(goals, '2026-11-26');
+  assert.ok(monthOffset(anchor, months) > '2027-05-04');
+  assert.equal(monthLabel(anchor), 'Sep 2026');
 });
