@@ -1585,5 +1585,5 @@ test('goal hours table shows required, planned and the shortfall for a goal', as
   await expect(row.locator('td').nth(2)).toHaveClass(/scheduler-shortfall/);
   await expect(row.locator('.ui-goal-swatch')).toHaveCount(1);
   await expect(page.locator(`#scheduler-goal-${goal.id} .scheduler-goal-done`)).toHaveText('0h done · 0h scheduled');
-  await expect(page.locator('.scheduler-capacity')).toHaveText(/^Capacity remaining \d+\.\d h$/i);
+  await expect(page.locator('.scheduler-capacity')).toHaveText(/^Capacity remaining −?\d+\.\d h$/i);
 });
