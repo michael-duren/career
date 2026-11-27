@@ -29,12 +29,26 @@ async function mockThoughts(page: Page) {
       { clipId: '11111111-1111-4111-8111-111111111111', status: 'done', transcript: 'Spend the next two weeks on graph problems.', error: '', recordedAt: '2026-11-25T11:36:00Z' },
       { clipId: '22222222-2222-4222-8222-222222222222', status: 'failed', transcript: '', error: 'whisper: connection refused', recordedAt: '2026-11-25T11:40:00Z' },
     ] }) });
-    return route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: 'not found' }) });
+    if (id === 't-load') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ groupWindowMs: 5400000, clips: [
+      { clipId: '33333333-3333-4333-8333-333333333333', status: 'done', transcript: 'Note to self.', error: '', recordedAt: '2026-11-26T16:24:00Z' },
+    ] }) });
+    if (id === 't-old-0') return route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: 'database unavailable' }) });
+    // A thought typed in the editor: the server answers 200 with no clips.
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ groupWindowMs: 5400000, clips: [] }) });
   });
   return statusRequests;
 }
 
 test.beforeEach(async ({ page }) => { await page.clock.setFixedTime(new Date('2026-11-27T12:00:00')); });
+
+/** 0.1 s of 8 kHz mono 16-bit silence. */
+function silentWav() {
+  const samples = 800, data = samples * 2, wav = Buffer.alloc(44 + data);
+  wav.write('RIFF', 0); wav.writeUInt32LE(36 + data, 4); wav.write('WAVEfmt ', 8); wav.writeUInt32LE(16, 16);
+  wav.writeUInt16LE(1, 20); wav.writeUInt16LE(1, 22); wav.writeUInt32LE(8000, 24); wav.writeUInt32LE(16000, 28);
+  wav.writeUInt16LE(2, 32); wav.writeUInt16LE(16, 34); wav.write('data', 36); wav.writeUInt32LE(data, 40);
+  return wav;
+}
 
 const rows = (page: Page) => page.locator('main [data-thought-open]');
 
@@ -58,7 +72,15 @@ test('desktop: header, recorder target, recordings newest first with 12-hour sta
   await expect(first).toContainText('Note to self about the load test');
   // A pending thought says so; a chosen title is shown before the transcript.
   await expect(rows(page).nth(1)).toContainText('Waiting for transcription…');
-  await expect(rows(page).nth(2)).toContainText('Practice plan for graphs — Spend the next two weeks');
+  await expect(rows(page).nth(2).locator('span.line-clamp-2')).toHaveText('Practice plan for graphs — Spend the next two weeks on graph problems, then union find.');
+  // Searching shows matches past the first eight rows without expanding.
+  const search = main.getByRole('searchbox', { name: 'Search transcripts' }).filter({ visible: true });
+  await search.fill('number 8 about');
+  await expect(rows(page)).toHaveCount(1);
+  await expect(rows(page)).toContainText('NOV 13');
+  await expect(main.getByRole('button', { name: /OLDER/ })).toHaveCount(0);
+  await search.fill('');
+  await expect(rows(page)).toHaveCount(8);
   await main.getByRole('button', { name: '+ 4 OLDER' }).click();
   await expect(rows(page)).toHaveCount(12);
   await expect(rows(page).last()).toContainText('DEC 30 2025');
@@ -66,7 +88,6 @@ test('desktop: header, recorder target, recordings newest first with 12-hour sta
   await expect(main.getByRole('button', { name: /OLDER/ })).toHaveCount(0);
 
   // Search reaches the transcript, not just the title.
-  const search = main.getByRole('searchbox', { name: 'Search transcripts' }).filter({ visible: true });
   await search.fill('union find');
   await expect(rows(page)).toHaveCount(1);
   await expect(rows(page)).toContainText('Practice plan for graphs');
@@ -75,15 +96,10 @@ test('desktop: header, recorder target, recordings newest first with 12-hour sta
   await expect(main.getByText('No recordings match.')).toBeVisible();
 });
 
-test('desktop: opening a thought shows its takes with 12-hour times and retranscribe; play asks for its takes', async ({ page }) => {
-  const statusRequests = await mockThoughts(page);
+test('desktop: opening a thought shows its takes with 12-hour times and retranscribe', async ({ page }) => {
+  await mockThoughts(page);
   await page.goto('/audio-thoughts');
   const main = page.locator('main');
-  // A thought with no takes can't play.
-  await main.getByRole('button', { name: 'Play thought from NOV 26 at 10:24 AM' }).click();
-  await expect(main.getByRole('button', { name: 'No audio for thought from NOV 26 at 10:24 AM' })).toBeDisabled();
-  expect(statusRequests).toContain('t-load');
-
   await main.getByRole('button', { name: 'Open Practice plan for graphs' }).click();
   await expect(main.getByRole('heading', { name: 'Practice plan for graphs' })).toBeVisible();
   await expect(main.getByText('Wed 25 Nov · 5:36 AM')).toBeVisible();
@@ -133,4 +149,53 @@ test('a failed list load says so and offers a retry', async ({ page }) => {
   await main.getByRole('button', { name: 'Reload latest' }).click();
   await expect(main.getByText('0 recordings · transcribed on your homelab')).toBeVisible();
   await expect(main.getByText(/No audio thoughts yet/)).toBeVisible();
+});
+
+test('play: takes play in order, pressing again stops, one row at a time, no-audio and error states', async ({ page }) => {
+  // Stub playback so the test controls when each take ends.
+  await page.addInitScript(() => {
+    const w = window as unknown as { played: string[]; paused: string[]; media: HTMLMediaElement[] };
+    w.played = []; w.paused = []; w.media = [];
+    HTMLMediaElement.prototype.play = function () { w.media.push(this); w.played.push(this.src); return Promise.resolve(); };
+    HTMLMediaElement.prototype.pause = function () { if (this.src) w.paused.push(this.src); };
+  });
+  await mockThoughts(page);
+  // Setting src still loads the file, so serve a valid (silent) WAV instead of the real clip.
+  await page.route('**/api/running/clips/*/*/audio', route => route.fulfill({ status: 200, contentType: 'audio/wav', body: silentWav() }));
+  await page.goto('/audio-thoughts');
+  const main = page.locator('main');
+  const played = () => page.evaluate(() => (window as unknown as { played: string[] }).played.map(src => new URL(src).pathname));
+  const endCurrent = () => page.evaluate(() => { const media = (window as unknown as { media: HTMLMediaElement[] }).media; media[media.length - 1].dispatchEvent(new Event('ended')); });
+  const clip = (note: string, id: string) => `/api/running/clips/${note}/${id}/audio`;
+
+  // Two takes play in order, then the button returns to Play.
+  await main.getByRole('button', { name: 'Play Practice plan for graphs' }).click();
+  const stopGraphs = main.getByRole('button', { name: 'Stop Practice plan for graphs' });
+  await expect(stopGraphs).toHaveAttribute('aria-pressed', 'true');
+  await expect.poll(played).toEqual([clip('t-graphs', '11111111-1111-4111-8111-111111111111')]);
+  await endCurrent();
+  await expect.poll(played).toEqual([clip('t-graphs', '11111111-1111-4111-8111-111111111111'), clip('t-graphs', '22222222-2222-4222-8222-222222222222')]);
+  await expect(stopGraphs).toBeVisible();
+  await endCurrent();
+  await expect(main.getByRole('button', { name: 'Play Practice plan for graphs' })).toHaveAttribute('aria-pressed', 'false');
+
+  // Pressing again stops.
+  await main.getByRole('button', { name: 'Play Practice plan for graphs' }).click();
+  await stopGraphs.click();
+  await expect(main.getByRole('button', { name: 'Play Practice plan for graphs' })).toHaveAttribute('aria-pressed', 'false');
+
+  // Starting another row stops the first.
+  await main.getByRole('button', { name: 'Play Practice plan for graphs' }).click();
+  await expect(stopGraphs).toBeVisible();
+  await main.getByRole('button', { name: 'Play thought from NOV 26 at 10:24 AM' }).click();
+  await expect(main.getByRole('button', { name: 'Stop thought from NOV 26 at 10:24 AM' })).toBeVisible();
+  await expect(main.getByRole('button', { name: 'Play Practice plan for graphs' })).toBeVisible();
+  await expect.poll(played).toContain(clip('t-load', '33333333-3333-4333-8333-333333333333'));
+
+  // A thought with no takes says so (and can be retried); a failed status request shows the error label.
+  await main.getByRole('button', { name: 'Play thought from NOV 26 at 3:12 AM' }).click();
+  await expect(main.getByRole('button', { name: 'No audio yet for thought from NOV 26 at 3:12 AM' })).toBeEnabled();
+  await expect(main.getByRole('button', { name: 'Play thought from NOV 26 at 10:24 AM' })).toBeVisible();
+  await main.getByRole('button', { name: 'Play thought from NOV 20 at 9:00 AM' }).click();
+  await expect(main.getByRole('button', { name: "Couldn't play thought from NOV 20 at 9:00 AM. Try again" })).toBeVisible();
 });

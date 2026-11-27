@@ -18,42 +18,47 @@ type PlayState = 'idle' | 'loading' | 'playing' | 'none' | 'error';
 /** Plays a thought's takes in order; pressing it again stops. */
 function PlayButton({ noteId, name }: { noteId: string; name: string }) {
   const [state, setState] = useState<PlayState>('idle');
-  const stopRef = useRef<(() => void) | null>(null);
-  useEffect(() => () => stopRef.current?.(), []);
+  const stopRef = useRef<((next?: PlayState) => void) | null>(null);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; stopRef.current?.(); }; }, []);
   async function toggle() {
     if (stopRef.current) { stopRef.current(); return; }
+    // Claim the player before any await, so a second row (or an unmount) can stop this one while it loads.
     nowPlaying?.();
+    // Created inside the click, so browsers that tie playback to a user gesture accept it.
+    const audio = new Audio();
+    let clips: { clipId: string }[] = [], index = 0, stopped = false;
+    const stop = (next: PlayState = 'idle') => {
+      if (stopped) return;
+      stopped = true; audio.pause(); audio.removeAttribute('src');
+      if (nowPlaying === stop) nowPlaying = null;
+      if (stopRef.current === stop) stopRef.current = null;
+      if (mounted.current) setState(next);
+    };
+    const playNext = () => {
+      if (stopped) return;
+      if (index >= clips.length) { stop(); return; }
+      audio.src = clipAudio(noteId, clips[index++].clipId);
+      audio.play().catch(() => stop('error'));
+    };
+    audio.onended = playNext;
+    audio.onerror = () => stop('error');
+    nowPlaying = stop; stopRef.current = stop;
     setState('loading');
     try {
       const response = await fetch(`/api/running/${encodeURIComponent(noteId)}/status`, { cache: 'no-store' });
-      // Thoughts typed in the editor have no takes.
-      if (response.status === 404) { setState('none'); return; }
+      if (stopped) return;
       if (!response.ok) throw new Error('status');
-      const clips: { clipId: string }[] = (await response.json()).clips ?? [];
-      if (!clips.length) { setState('none'); return; }
-      const audio = new Audio();
-      let index = 0, stopped = false;
-      const stop = (next: PlayState = 'idle') => {
-        if (stopped) return;
-        stopped = true; audio.pause(); audio.removeAttribute('src');
-        if (nowPlaying === stop) nowPlaying = null;
-        if (stopRef.current === stop) stopRef.current = null;
-        setState(next);
-      };
-      const playNext = () => {
-        if (stopped) return;
-        if (index >= clips.length) { stop(); return; }
-        audio.src = clipAudio(noteId, clips[index++].clipId);
-        audio.play().catch(() => stop('error'));
-      };
-      audio.onended = playNext;
-      audio.onerror = () => stop('error');
-      nowPlaying = stop; stopRef.current = stop;
+      clips = (await response.json()).clips ?? [];
+      if (stopped) return;
+      // Thoughts typed in the editor (or not uploaded yet) have no takes.
+      if (!clips.length) { stop('none'); return; }
       setState('playing'); playNext();
-    } catch { setState('error'); }
+    } catch { stop('error'); }
   }
-  const label = state === 'playing' ? `Stop ${name}` : state === 'none' ? `No audio for ${name}` : state === 'error' ? `Audio unavailable for ${name}. Try again` : `Play ${name}`;
-  return <button type="button" aria-label={label} title={label} aria-pressed={state === 'playing'} disabled={state === 'none' || state === 'loading'} onClick={() => void toggle()}
+  const label = state === 'playing' ? `Stop ${name}` : state === 'loading' ? `Loading ${name}` : state === 'none' ? `No audio yet for ${name}` : state === 'error' ? `Couldn't play ${name}. Try again` : `Play ${name}`;
+  // Loading can be cancelled by pressing again; "no audio" retries, since a take may upload later.
+  return <button type="button" aria-label={label} title={label} aria-pressed={state === 'playing' || state === 'loading'} onClick={() => void toggle()}
     className="flex size-11 shrink-0 items-center justify-center border-0 bg-transparent p-0 text-ink disabled:cursor-not-allowed disabled:opacity-40">
     <span aria-hidden="true" className={cn('flex size-[26px] items-center justify-center rounded-full border border-solid', state === 'error' ? 'border-accent text-accent' : 'border-ink-50')}>
       {state === 'playing'
@@ -68,7 +73,7 @@ function RecordingRow({ thought, busy, onOpen, onDelete }: { thought: RunningNot
   const excerpt = thoughtExcerpt(thought);
   // Transcribed thoughts are named after their first words; only a title the user chose is worth repeating.
   const titled = !isAutoTitle(thought.title) && thought.title !== thoughtTitle(excerpt);
-  const name = titled ? thought.title : `thought from ${date} at ${time}`;
+  const name = titled ? thought.title : date ? `thought from ${date} at ${time}` : 'untitled thought';
   return <li className="flex items-start gap-1 border-0 border-b border-solid border-ink-14 hover:bg-ink-05">
     <button type="button" data-thought-open={thought.id} disabled={busy} onClick={onOpen} aria-label={`Open ${name}`}
       className="flex min-w-0 flex-1 flex-col gap-[5px] border-0 bg-transparent px-0 py-3.5 text-left text-ink disabled:cursor-not-allowed md:grid md:grid-cols-[130px_minmax(0,1fr)] md:gap-5 md:py-4">

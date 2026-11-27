@@ -25,7 +25,7 @@ export default function RunningRecorder() {
   const recorder = useRef<MediaRecorder | null>(null), wake = useRef<WakeLockSentinel | null>(null);
   const audioContext = useRef<AudioContext | null>(null), timer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const pending = useRef<QueuedClip | null>(null), started = useRef(0);
-  // Level history lives in a ref; the elapsed tick re-renders the lane without copying the array.
+  // Level history lives in a ref; the elapsed tick re-renders the waveform without copying the array.
   const history = useRef<number[]>([]);
   const count = () => void queuedClips().then(c => setWaiting(c.length)).catch(() => setError('Local audio storage unavailable. Keep this tab open and download your recording.'));
   const sync = () => { count(); setSyncing(true); void syncClips(count).catch(e => setMessage(e.message)).finally(() => setSyncing(false)); };
@@ -50,6 +50,8 @@ export default function RunningRecorder() {
       next.onerror = () => { setError('Recording was interrupted. Check the saved audio; import a native voice memo if needed.'); if (next.state !== 'inactive') next.stop(); };
       next.onstop = () => {
         stream?.getTracks().forEach(track => track.stop()); release(); setRecording(false);
+        // Idle draws a flat line again; the next take starts a fresh trace.
+        history.current = [];
         const audio = new Blob(chunks, { type: next.mimeType || mimeType || 'audio/webm' });
         if (audio.size) void save({ clientId, recordedAt, durationMs: Math.min(MAX_MS, Date.now() - started.current), audio });
         else setError('No audio was captured. Try importing a native voice memo.');
@@ -102,7 +104,8 @@ export default function RunningRecorder() {
     if (el && !el.offsetParent && (el.contains(active) || active === document.body)) document.querySelector<HTMLButtonElement>('[data-thought-reading] button')?.focus();
   }, [busy, starting, error]);
   const prompt = starting ? 'OPENING MIC…' : recording ? 'TAP TO STOP' : 'TAP TO RECORD';
-  // Stay visible over a thought being read while anything needs attention: a live take, an unsaved rescue, or an error.
+  // Stay visible over a thought being read while anything needs attention: opening the mic, a live take, an unsaved rescue,
+  // or an error (data-recorder-active; the hide rule is in src/pages/audio-thoughts.astro).
   return <div ref={root} data-recorder data-recorder-active={busy || starting || !!error || undefined}>
     <section aria-label="Audio thoughts recorder" className="flex flex-col items-center gap-3.5 md:gap-[22px] md:pt-2.5">
       {/* The drawn target: outer circle, dashed inner circle and a crosshair around the record button. */}

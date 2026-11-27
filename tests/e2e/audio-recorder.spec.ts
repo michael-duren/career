@@ -25,7 +25,12 @@ test('the waveform follows the live input, and the take is queued and uploaded',
   await expect(main.getByRole('timer', { name: 'Elapsed recording time' })).toHaveText(/^00:0[1-9]\.\d/);
   await record.click();
   await expect(main.getByText('Take saved on this device.')).toBeVisible();
-  await expect.poll(() => uploads.length).toBe(1);
-  expect(uploads[0]).toMatch(/^[0-9a-f-]{36}$/);
   await expect(main.getByText('TAP TO RECORD')).toBeVisible();
+  // Back to idle: the waveform is flat again.
+  expect(await heights()).toBe(1);
+  // Once the queue drains the take was sent exactly once, under its client UUID.
+  await expect(main.getByRole('status').filter({ hasText: 'All clips uploaded' })).toHaveCount(1);
+  await page.waitForTimeout(1000);
+  expect(uploads).toHaveLength(1);
+  expect(uploads[0]).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
 });
