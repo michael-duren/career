@@ -62,6 +62,25 @@ func coverage(m *image.NRGBA) (share float64, centre, corner bool) {
 	return float64(on) / float64(b.Dx()*b.Dy()), m.NRGBAAt(b.Dx()/2, b.Dy()/2).A >= 128, m.NRGBAAt(0, 0).A >= 128
 }
 
+// tile is a 64×64 purple square inset by `inset` transparent pixels on each side.
+func tile(inset int) *image.NRGBA {
+	img := image.NewNRGBA(image.Rect(0, 0, 64, 64))
+	for y := inset; y < 64-inset; y++ {
+		for x := inset; x < 64-inset; x++ {
+			img.SetNRGBA(x, y, purple)
+		}
+	}
+	return img
+}
+
+func TestRamp(t *testing.T) {
+	for d, want := range map[int]int{0: 0, 24: 0, 25: 3, 60: 127, 95: 251, 96: 255, 255: 255} {
+		if got := ramp(d); got != want {
+			t.Errorf("ramp(%d) = %d, want %d", d, got, want)
+		}
+	}
+}
+
 func TestInkMask(t *testing.T) {
 	// A white glyph knocked out of a purple tile with transparent corners.
 	badge := icon(64, clear, white)
@@ -92,6 +111,8 @@ func TestInkMask(t *testing.T) {
 		{"badge keeps the knocked-out mark", badge, true, true},
 		{"two-color mark keeps its silhouette", twoTone, true, true},
 		{"solid square", icon(64, black, black), false, false},
+		{"nearly solid silhouette (94%) is refused", tile(1), false, false},
+		{"silhouette just under 90% is kept", tile(2), true, true},
 		{"blank", icon(64, clear, clear), false, false},
 		{"too small", icon(4, white, black), false, false},
 	} {
@@ -146,11 +167,22 @@ func TestNormalizeLogoHost(t *testing.T) {
 	}
 }
 
-// logoServer is a fake favicon service: good.example has an icon, gone.example
-// answers 404 like the real service, broken.example answers 500.
+// logoServer is a fake favicon service keyed by the domain parameter.
 func logoServer(t *testing.T, hits *atomic.Int32) *httptest.Server {
 	t.Helper()
 	good := encodePNG(t, icon(64, white, purple))
+	// A usable logo, small as a file but 1.1M pixels: refused only by maxLogoPixels.
+	hugeImg := image.NewNRGBA(image.Rect(0, 0, 1100, 1000))
+	for y := range 1000 {
+		for x := range 1100 {
+			c := white
+			if x > 300 && x < 800 && y > 300 && y < 700 {
+				c = purple
+			}
+			hugeImg.SetNRGBA(x, y, c)
+		}
+	}
+	huge := encodePNG(t, hugeImg)
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		hits.Add(1)
 		switch r.URL.Query().Get("domain") {
@@ -159,6 +191,14 @@ func logoServer(t *testing.T, hits *atomic.Int32) *httptest.Server {
 			_, _ = w.Write(good)
 		case "broken.example":
 			w.WriteHeader(500)
+		case "limited.example":
+			w.WriteHeader(429)
+		case "big.example":
+			_, _ = w.Write(append(append([]byte{}, good...), make([]byte, maxLogoBytes)...))
+		case "huge.example":
+			_, _ = w.Write(huge)
+		case "html.example":
+			_, _ = w.Write([]byte("<!doctype html><title>not an image</title>"))
 		default:
 			w.WriteHeader(404)
 			_, _ = w.Write(good) // the real service sends a globe with its 404
@@ -180,7 +220,7 @@ func TestCompanyLogo(t *testing.T) {
 	}
 
 	w := get("www.good.example")
-	if w.Code != 200 || w.Header().Get("Content-Type") != "image/png" || !strings.Contains(w.Header().Get("Cache-Control"), "max-age") {
+	if w.Code != 200 || w.Header().Get("Content-Type") != "image/png" || w.Header().Get("Cache-Control") != "private, max-age=604800" {
 		t.Fatal(w.Code, w.Header(), w.Body.String())
 	}
 	if w.Header().Get("Content-Security-Policy") != "default-src 'none'" || w.Header().Get("X-Content-Type-Options") != "nosniff" {
@@ -196,37 +236,59 @@ func TestCompanyLogo(t *testing.T) {
 	if c := color.NRGBAModel.Convert(img.At(0, 0)).(color.NRGBA); c.A != 0 {
 		t.Fatalf("corner pixel %v, want transparent", c)
 	}
-
-	// Cached: www. and case are normalised, so this is the same host.
+	// www. and case are normalised, so this is the same host and comes from the cache.
 	if w := get("Good.Example"); w.Code != 200 || hits.Load() != 1 {
 		t.Fatalf("second request: %d, upstream hits %d", w.Code, hits.Load())
-	}
-
-	// No icon: 404, cached for hours, not refetched on every page load.
-	if w := get("gone.example"); w.Code != 404 || w.Header().Get("Cache-Control") != "private, max-age=3600" {
-		t.Fatal("missing logo", w.Code, w.Header())
-	}
-	get("gone.example")
-	if hits.Load() != 2 {
-		t.Fatalf("missing logo refetched: %d hits", hits.Load())
-	}
-	now = now.Add(logoMissingTTL + time.Minute)
-	get("gone.example")
-	if hits.Load() != 3 {
-		t.Fatalf("missing logo not retried after its TTL: %d hits", hits.Load())
-	}
-
-	// A service error is retried after minutes, not hours.
-	get("broken.example")
-	now = now.Add(logoErrorTTL + time.Second)
-	if w := get("broken.example"); w.Code != 404 || hits.Load() != 5 {
-		t.Fatalf("service error: %d, %d hits", w.Code, hits.Load())
 	}
 
 	for _, bad := range []string{"", "localhost", "10.0.0.1", "good.example%2Fpath"} {
 		if w := get(bad); w.Code != 400 {
 			t.Errorf("domain %q: %d, want 400", bad, w.Code)
 		}
+	}
+}
+
+// Each outcome is answered from the cache until just before its TTL and
+// fetched again just after it.
+func TestCompanyLogoOutcomesAndTTLs(t *testing.T) {
+	for _, tc := range []struct {
+		domain       string
+		code         int
+		cacheControl string
+		ttl          time.Duration
+	}{
+		{"good.example", 200, "private, max-age=604800", logoTTL},
+		{"gone.example", 404, "private, max-age=3600", logoMissingTTL},
+		{"big.example", 404, "private, max-age=3600", logoMissingTTL},  // over maxLogoBytes
+		{"huge.example", 404, "private, max-age=3600", logoMissingTTL}, // over maxLogoPixels
+		{"html.example", 404, "private, max-age=3600", logoMissingTTL}, // 200 that is not an image
+		{"broken.example", 502, "private, no-store", logoErrorTTL},
+		{"limited.example", 502, "private, no-store", logoErrorTTL}, // rate limited: transient
+	} {
+		t.Run(tc.domain, func(t *testing.T) {
+			var hits atomic.Int32
+			upstream := logoServer(t, &hits)
+			now := time.Date(2026, 11, 26, 12, 0, 0, 0, time.UTC)
+			s := &Server{logoUpstream: upstream.URL + "/?domain=", now: func() time.Time { return now }}
+			get := func() *httptest.ResponseRecorder {
+				w := httptest.NewRecorder()
+				s.companyLogo(w, httptest.NewRequest("GET", "/api/companies/logo?domain="+tc.domain, nil))
+				return w
+			}
+			w := get()
+			if w.Code != tc.code || w.Header().Get("Cache-Control") != tc.cacheControl {
+				t.Fatalf("got %d %q, want %d %q", w.Code, w.Header().Get("Cache-Control"), tc.code, tc.cacheControl)
+			}
+			start := now
+			now = start.Add(tc.ttl - time.Second)
+			if w := get(); w.Code != tc.code || hits.Load() != 1 {
+				t.Fatalf("just under the TTL: %d, %d upstream hits (want cached)", w.Code, hits.Load())
+			}
+			now = start.Add(tc.ttl + time.Second)
+			if w := get(); w.Code != tc.code || hits.Load() != 2 {
+				t.Fatalf("just over the TTL: %d, %d upstream hits (want a refetch)", w.Code, hits.Load())
+			}
+		})
 	}
 }
 

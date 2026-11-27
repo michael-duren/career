@@ -88,8 +88,10 @@ export function CompanyGrid() {
     if (lock.current || !window.confirm(`Delete ${company.title}? This cannot be undone.`)) return;
     lock.current = true; setBusy(true); setError(''); setStatus('Deleting…');
     try {
-      const response = await fetch('/api/entries/company', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: company.slug, revision: revisions[company.slug] ?? null }) });
-      const result = await response.json();
+      const revision = revisions[company.slug];
+      if (!revision) throw new Error('This company changed elsewhere. Reload the page and try again.');
+      const response = await fetch('/api/entries/company', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: company.slug, revision }) });
+      const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || 'Could not delete. Please retry.');
       setCompanies(current => current?.filter(item => item.slug !== company.slug));
       setStatus(`${company.title} deleted.`);
@@ -127,6 +129,7 @@ export function CompanyGrid() {
       </div>
 
       {error && <p role="alert" className="mt-4 border border-accent p-3 text-sm text-accent">{error}</p>}
+      {loadError && <p role="alert" className="mt-4 border border-accent p-3 text-sm text-accent">Couldn't refresh the list: {loadError} Reload to retry.</p>}
       <p role="status" className="mt-3 text-sm text-ink-60 empty:hidden">{status}</p>
 
       {all.length === 0 && <p className="mt-6 text-ink-60">No companies yet. <a href="/manage/companies?new=1" className="underline">Add your first company</a>.</p>}

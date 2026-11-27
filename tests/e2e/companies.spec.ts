@@ -128,8 +128,11 @@ test('phones get rows with a + button and 44px edit and delete buttons', async (
   await expect(main.getByRole('link', { name: 'Add company' })).toHaveAttribute('href', '/manage/companies?new=1');
   await expect(main.getByRole('link', { name: '+ Add company' })).toBeHidden();
   await expect(main.getByRole('tab', { name: 'Med' })).toBeVisible();
-  const edit = await main.getByRole('link', { name: 'Edit Keep Co' }).boundingBox();
-  expect(edit?.height).toBe(44);
+  for (const control of [main.getByRole('link', { name: 'Edit Keep Co' }), main.getByRole('button', { name: 'Delete Keep Co' })]) {
+    const box = await control.boundingBox();
+    expect(box?.height).toBe(44);
+    expect(box?.width).toBe(44);
+  }
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 });
 

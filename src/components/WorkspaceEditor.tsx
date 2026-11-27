@@ -223,12 +223,13 @@ export function WorkspaceEditor({ kind, initialId }: { kind: EntryKind; initialI
   useEffect(() => {
     if (!entries || openedNew.current) return;
     openedNew.current = true;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('new') !== '1' || params.get('id') || initialId || recovered.current) return;
-    create();
     const url = new URL(window.location.href);
+    if (url.searchParams.get('new') !== '1') return;
+    // Drop the flag either way, so a later reload doesn't open another blank entry.
     url.searchParams.delete('new');
     window.history.replaceState(window.history.state, '', url);
+    if (url.searchParams.get('id') || initialId || recovered.current || entry) return;
+    create();
   }, [entries]);
 
   async function save() {

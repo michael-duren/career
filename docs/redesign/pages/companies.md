@@ -1,6 +1,6 @@
 # Companies
 
-**Current code:** src/pages/companies.astro → CompaniesView; manage at /manage/companies
+**Current code:** src/pages/companies.astro → CompanyGrid (company page: CompanyBoard); manage at /manage/companies
 **Reference:** desktop `reference/desktop/ARC-Companies.html` · mobile `reference/mobile/M-Companies.html`
 
 ## Purpose
@@ -10,6 +10,7 @@ Target companies as cards with logo, priority, featured mark, why, checklist pro
 ## Data
 
 `GET /api/entries/company` (and existing write paths used by edit/delete). Logos: derive from the company `url` domain via a logo/favicon service or a cached server-side fetch; render monochrome (CSS filter or SVG mask) so it matches the ink. Fallback: two-letter monogram.
+Built as `GET /api/companies/logo?domain=<host>` (server-side fetch, background removed, cached; see docs/developer.md).
 
 ## Desktop
 
@@ -19,7 +20,7 @@ Target companies as cards with logo, priority, featured mark, why, checklist pro
 
 ## Mobile
 
-Title + `+` button, search, priority segmented control, rows: logo spot, name (+◆, dot), category + ticks, edit and delete buttons (40px).
+Title + `+` button, search, priority segmented control, rows: logo spot, name (+◆, dot), category + ticks, edit and delete buttons (44px, the IconButton touch size).
 
 ## Acceptance criteria
 

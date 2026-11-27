@@ -39,7 +39,7 @@ test('company logo domain comes from the URL host, without www', () => {
   assert.equal(companyDomain('https://www.Grafana.com/careers?x=1'), 'grafana.com');
   assert.equal(companyDomain('http://jobs.example.co.uk'), 'jobs.example.co.uk');
   assert.equal(companyDomain('https://datadoghq.com.'), 'datadoghq.com');
-  for (const url of [undefined, '', 'not a url', 'mailto:hr@example.com', 'https://localhost:8080/', 'ftp://example.com']) assert.equal(companyDomain(url), undefined, String(url));
+  for (const url of [undefined, '', 'not a url', 'mailto:hr@example.com', 'https://localhost:8080/', 'ftp://example.com', 'http://192.168.1.1/', 'http://[::1]/']) assert.equal(companyDomain(url), undefined, String(url));
   assert.equal(companyLogoUrl('https://www.fly.io/jobs'), '/api/companies/logo?domain=fly.io');
   assert.equal(companyLogoUrl('nope'), undefined);
 });

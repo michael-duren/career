@@ -11,6 +11,7 @@ import (
 	_ "image/jpeg"
 	"image/png"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -57,12 +58,13 @@ func normalizeLogoHost(host string) (string, bool) {
 }
 
 type logoEntry struct {
-	png     []byte // nil when there is no usable logo
+	png     []byte // nil when err is set
+	err     error  // errNoLogo, or the fetch error (cached briefly)
 	expires time.Time
 }
 
 // logoCache keeps converted logos in memory. Browsers cache the responses
-// too (Cache-Control), so the server fetches a domain at most once per TTL.
+// too (Cache-Control), so the server normally fetches a domain once per TTL.
 type logoCache struct {
 	mu      sync.Mutex
 	entries map[string]logoEntry
@@ -92,7 +94,8 @@ func (c *logoCache) put(host string, e logoEntry) {
 
 // companyLogo serves GET /api/companies/logo?domain=<host>: the domain's icon
 // as a PNG whose alpha is the logo shape (pixels are black; the page paints
-// them in --ink with a mask), or 404 when there is no usable icon.
+// them in --ink with a mask), 404 when the domain has no usable icon, or 502
+// when the favicon service could not be reached.
 func (s *Server) companyLogo(w http.ResponseWriter, r *http.Request) {
 	host, ok := normalizeLogoHost(r.URL.Query().Get("domain"))
 	if !ok {
@@ -100,13 +103,18 @@ func (s *Server) companyLogo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data, err := s.logo(r.Context(), host)
-	if err != nil {
+	if errors.Is(err, errNoLogo) {
 		// Let the browser remember a missing logo for a while too, so a list
 		// re-render doesn't ask again for every monogram.
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.Header().Set("Cache-Control", "private, max-age=3600")
 		w.WriteHeader(404)
 		_, _ = w.Write([]byte(`{"error":"No logo for this domain"}` + "\n"))
+		return
+	}
+	if err != nil {
+		// Transient (network, rate limit, service error): the next load retries.
+		respond(w, 502, map[string]string{"error": "Logo service unavailable; showing the monogram"})
 		return
 	}
 	w.Header().Set("Content-Type", "image/png")
@@ -120,10 +128,7 @@ func (s *Server) companyLogo(w http.ResponseWriter, r *http.Request) {
 func (s *Server) logo(ctx context.Context, host string) ([]byte, error) {
 	now := s.clock()
 	if e, ok := s.logos.get(host, now); ok {
-		if e.png == nil {
-			return nil, errNoLogo
-		}
-		return e.png, nil
+		return e.png, e.err
 	}
 	v, err, _ := s.logos.group.Do(host, func() (any, error) {
 		// Detached from the request so one cancelled page load doesn't fail
@@ -137,8 +142,9 @@ func (s *Server) logo(ctx context.Context, host string) ([]byte, error) {
 			ttl = logoMissingTTL
 		case err != nil:
 			ttl = logoErrorTTL
+			log.Printf("company logo %s: %v", host, err)
 		}
-		s.logos.put(host, logoEntry{png: data, expires: s.clock().Add(ttl)})
+		s.logos.put(host, logoEntry{png: data, err: err, expires: s.clock().Add(ttl)})
 		return data, err
 	})
 	if err != nil {
@@ -165,12 +171,14 @@ func (s *Server) fetchLogo(ctx context.Context, host string) ([]byte, error) {
 		return nil, err
 	}
 	defer res.Body.Close()
-	// The service answers 404 (with a generic globe) for unknown domains.
-	if res.StatusCode != http.StatusOK {
-		if res.StatusCode >= 500 {
-			return nil, fmt.Errorf("logo service: HTTP %d", res.StatusCode)
-		}
+	// The service answers 404 (with a generic globe) for unknown domains. Any
+	// other failure (429, 403, 5xx, ...) is treated as transient.
+	switch res.StatusCode {
+	case http.StatusOK:
+	case http.StatusNotFound, http.StatusGone:
 		return nil, errNoLogo
+	default:
+		return nil, fmt.Errorf("logo service: HTTP %d", res.StatusCode)
 	}
 	raw, err := io.ReadAll(io.LimitReader(res.Body, maxLogoBytes+1))
 	if err != nil {

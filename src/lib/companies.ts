@@ -58,7 +58,8 @@ export function companyDomain(url: string | undefined): string | undefined {
   if (!url) return undefined;
   try {
     const { protocol, hostname } = new URL(url);
-    if (protocol !== 'http:' && protocol !== 'https:' || !hostname.includes('.')) return undefined;
+    // Host names only, like the server: no IP literals (all-digit last label, or [v6]).
+    if (protocol !== 'http:' && protocol !== 'https:' || !hostname.includes('.') || /^\d+$/.test(hostname.split('.').pop()!) || hostname.startsWith('[')) return undefined;
     return hostname.toLowerCase().replace(/^www\./, '').replace(/\.$/, '');
   } catch { return undefined; }
 }

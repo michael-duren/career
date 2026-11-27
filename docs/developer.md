@@ -160,8 +160,9 @@ exact configured `Origin` and a JSON content type.
   alpha = the logo shape) that the Companies page paints in `--ink`. The server fetches the icon from
   Google's favicon service (only the host name is sent), removes its background, and caches the result
   in memory for 7 days (a domain with no usable icon for 6 hours, a failed fetch for 5 minutes). It
-  answers 404 when there is no usable icon (the page shows a monogram), 400 for anything but a DNS
-  host name, and 404 like the rest of Companies while that module is off.
+  answers 404 (browser-cached for an hour) when there is no usable icon, 502 (not cached, logged) when
+  the service fails or rate-limits, 400 for anything but a DNS host name, and 404 like the rest of
+  Companies while that module is off. The page shows a monogram for anything but a logo.
 - `GET /api/counts` returns `{ counts: { <moduleId>: n } }`: saved entries per usable module that
   owns entry kinds (0 when none are saved; Journal sums weekly logs and personal entries), and saved
   attempts for Leetgrinder. Schedule and Agents are left out. Turned-off modules are left out unless
