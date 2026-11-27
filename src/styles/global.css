@@ -194,6 +194,21 @@
   .prose h6[id] {
     @apply scroll-mt-20;
   }
+
+  /* Ink prose: Markdown drawn in the Architect tokens (the workspace editor's reader and preview). */
+  .prose-ink :is(h1, h2, h3, h4, h5, h6, strong) { color: var(--ink); font-weight: 400; }
+  .prose-ink h1 { font-weight: 200; }
+  .prose-ink :is(p, ul, ol, td, em) { color: var(--ink); }
+  .prose-ink :is(blockquote, .lead) { color: var(--ink-60); border-color: var(--ink-30); }
+  .prose-ink a { color: var(--ink); text-decoration-color: var(--ink-50); }
+  .prose-ink a:hover { color: var(--ink-hover); }
+  .prose-ink code { background: var(--ink-07); color: var(--ink); border-radius: 0; }
+  .prose-ink pre { background: transparent; border-color: var(--ink-14); border-radius: 0; }
+  .prose-ink pre code { background: transparent; color: var(--ink); }
+  .prose-ink th { color: var(--ink); border-color: var(--ink); }
+  .prose-ink td { border-color: var(--ink-14); }
+  .prose-ink hr { border-color: var(--ink-30); }
+  .prose-ink img { border-radius: 0; }
 }
 /* Shared phone ergonomics, including landscape notches and standalone mode. */
 body { min-height: 100dvh; }

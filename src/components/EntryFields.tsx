@@ -5,7 +5,7 @@ import { JournalWeekHours } from './JournalWeekHours';
 import { Combobox } from './NoteInputs';
 import { isAutoTitle } from '../lib/audio-thoughts';
 
-const field = 'mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
+const field = 'mt-1 w-full border border-solid border-ink-30 bg-paper px-3 py-2 text-ink placeholder:text-ink-60 focus:border-ink';
 function Text({ label, value, onChange, required = false, type = 'text' }: { label: string; value?: string; onChange: (value: string) => void; required?: boolean; type?: string }) {
   return <label className="block text-sm">{label}<input className={field} type={type} value={value ?? ''} required={required} maxLength={1000} onChange={e => onChange(e.target.value)} /></label>;
 }
@@ -52,7 +52,7 @@ export default function EntryFields({ entry, change, topics = [] }: { entry: Wor
 export function EntryChecklist({ body, onChange }: { body: string; onChange: (body: string) => void }) {
   const items = checklist(body);
   if (!items.length) return null;
-  return <fieldset className="space-y-2 rounded-lg border border-zinc-700 p-3"><legend className="px-1 text-sm text-zinc-400">Checklist</legend>{items.map(item => <label key={item.index} className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={item.checked} onChange={e => {
+  return <fieldset className="space-y-2 border border-solid border-ink-30 p-3"><legend className="px-1 text-sm text-ink-60">Checklist</legend>{items.map(item => <label key={item.index} className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={item.checked} onChange={e => {
     onChange(toggleTask(body, item.index, e.target.checked));
   }} />{item.label}</label>)}</fieldset>;
 }

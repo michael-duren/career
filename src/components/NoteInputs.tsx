@@ -1,9 +1,9 @@
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import type { NoteTodo } from '../lib/workspace';
-import { tagChipClass } from '../lib/tag-colors';
+import { Checkbox, buttonClassName } from './ui';
 
-const field = 'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
-const button = 'rounded-lg border border-zinc-700 px-3 py-2 text-sm hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed';
+const field = 'w-full border border-solid border-ink-30 bg-paper px-3 py-2 text-ink placeholder:text-ink-60 focus:border-ink';
+const button = buttonClassName();
 
 /** Keyboard state for a suggestion popup; Enter only picks when a row is highlighted. */
 function useSuggestions(matches: string[], pick: (option: string) => void) {
@@ -25,9 +25,9 @@ function useSuggestions(matches: string[], pick: (option: string) => void) {
       setOpen(false); setActive(-1);
     }
   }
-  const list = open && matches.length > 0 && <ul id={listId} role="listbox" className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-900 py-1 shadow-lg">
+  const list = open && matches.length > 0 && <ul id={listId} role="listbox" className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto border border-solid border-ink-30 bg-paper py-1">
     {matches.map((option, index) => <li key={option} id={`${listId}-${index}`} role="option" aria-selected={index === active}
-      className={`cursor-pointer px-3 py-2 text-sm ${index === active ? 'bg-blue-600/30 text-blue-100' : 'text-zinc-200 hover:bg-zinc-800'}`}
+      className={`cursor-pointer px-3 py-2 text-sm ${index === active ? 'bg-ink text-paper' : 'text-ink hover:bg-ink-05'}`}
       // Keep focus in the input so blur does not close the list before the click lands.
       onMouseDown={event => event.preventDefault()} onClick={() => { pick(option); setActive(-1); }}>{option}</li>)}
   </ul>;
@@ -50,7 +50,7 @@ export function Combobox({ label, value, options, onChange, required = false, ma
   return <div className="block text-sm"><label htmlFor={inputId}>{label}</label><div className="relative mt-1">
     <input {...inputProps} id={inputId} className={`${field} pr-9`} value={value} required={required} maxLength={maxLength} autoComplete="off"
       onChange={e => { onChange(e.target.value); setOpen(true); setActive(-1); }} />
-    <button type="button" tabIndex={-1} aria-label={`Show ${label.toLowerCase()} options`} className="absolute inset-y-0 right-0 px-3 text-zinc-400 hover:text-zinc-100"
+    <button type="button" tabIndex={-1} aria-label={`Show ${label.toLowerCase()} options`} className="absolute inset-y-0 right-0 border-0 bg-transparent px-3 text-ink-60 hover:text-ink"
       onMouseDown={event => event.preventDefault()} onClick={() => setOpen(!open)}>▾</button>
     {list}
   </div></div>;
@@ -72,10 +72,10 @@ export function TagInput({ value, options, onChange }: { value: string[]; option
   const { list, inputProps, open, setOpen, setActive } = useSuggestions(matches, add);
   return <div className="block text-sm"><label htmlFor={`${inputProps['aria-controls']}-input`}>Tags</label>
     <div className="relative mt-1">
-      <div className={`${field} flex flex-wrap items-center gap-1.5 focus-within:ring-2 focus-within:ring-blue-500`}>
-        {value.map(tag => <span key={tag} className={`${tagChipClass(tag)} flex items-center gap-1 py-0.5 pl-2.5 pr-1 text-xs`}>{tag}
-          <button type="button" aria-label={`Remove tag ${tag}`} className="rounded-full px-1 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-100" onClick={() => onChange(value.filter(t => t !== tag))}>×</button></span>)}
-        <input {...inputProps} id={`${inputProps['aria-controls']}-input`} className="min-w-32 flex-1 bg-transparent py-0.5 focus:outline-none focus-visible:outline-none" value={text} maxLength={80} autoComplete="off"
+      <div className={`${field} flex flex-wrap items-center gap-1.5 focus-within:border-ink`}>
+        {value.map(tag => <span key={tag} className="flex items-center gap-1 border border-solid border-ink-30 py-0.5 pl-2 pr-0.5 font-mono text-[10px] uppercase tracking-[0.08em]">{tag}
+          <button type="button" aria-label={`Remove tag ${tag}`} className="border-0 bg-transparent px-1 text-sm text-ink-60 hover:text-ink" onClick={() => onChange(value.filter(t => t !== tag))}>×</button></span>)}
+        <input {...inputProps} id={`${inputProps['aria-controls']}-input`} className="min-w-32 flex-1 border-0 bg-transparent py-0.5 text-ink focus:outline-none focus-visible:outline-none" value={text} maxLength={80} autoComplete="off"
           placeholder={value.length ? '' : 'Type to search or add tags'}
           onChange={e => {
             const parts = e.target.value.split(',');
@@ -94,7 +94,7 @@ export function TagInput({ value, options, onChange }: { value: string[]; option
       </div>
       {list}
     </div>
-    {full && <p className="mt-1 text-xs text-amber-300">30 tag limit reached. Remove a tag to add another.</p>}
+    {full && <p className="mt-1 text-xs text-accent">30 tag limit reached. Remove a tag to add another.</p>}
   </div>;
 }
 
@@ -114,25 +114,25 @@ export function NoteTodos({ todos, onChange }: { todos: NoteTodo[]; onChange: (t
   // These actions unmount the focused control, so hand focus to the new-todo input.
   const replace = (next: NoteTodo[]) => { newTodo.current?.focus(); void onChange(next); };
   const toggle = (id: string, checked: boolean) => replace(todos.map(todo => todo.id === id ? { ...todo, done: checked } : todo));
-  const row = (todo: NoteTodo) => <li key={todo.id} className="group flex items-start gap-2 text-sm">
-    <input type="checkbox" className="mt-1" checked={todo.done} aria-label={`Mark ${todo.title} ${todo.done ? 'not done' : 'done'}`} onChange={e => toggle(todo.id, e.target.checked)} />
-    <span className={`flex-1 ${todo.done ? 'text-zinc-500 line-through' : ''}`}>{todo.title}</span>
-    <button type="button" aria-label={`Delete ${todo.title}`} className="px-1 text-zinc-600 hover:text-red-300" onClick={() => replace(todos.filter(t => t.id !== todo.id))}>×</button>
+  const row = (todo: NoteTodo) => <li key={todo.id} className="group flex min-h-11 items-center gap-3 border-0 border-b border-solid border-ink-14 text-sm last:border-b-0">
+    <Checkbox checked={todo.done} aria-label={`Mark ${todo.title} ${todo.done ? 'not done' : 'done'}`} onChange={e => toggle(todo.id, e.target.checked)} />
+    <span className={`flex-1 ${todo.done ? 'opacity-45 line-through' : ''}`}>{todo.title}</span>
+    <button type="button" aria-label={`Delete ${todo.title}`} className="min-h-11 min-w-11 border-0 bg-transparent px-1 text-base text-ink-60 hover:text-accent" onClick={() => replace(todos.filter(t => t.id !== todo.id))}>×</button>
   </li>;
-  return <fieldset className="space-y-2 rounded-lg border border-zinc-700 p-3">
-    <legend className="px-1 text-sm text-zinc-400">Todos</legend>
-    {open.length > 0 ? <ul className="space-y-1.5">{open.map(row)}</ul> : <p className="text-xs text-zinc-500">{done.length ? 'All done.' : 'No todos yet.'}</p>}
+  return <fieldset className="space-y-2 border border-solid border-ink-30 px-4 pb-3 pt-2">
+    <legend className="px-1 font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-60">Todos</legend>
+    {open.length > 0 ? <ul className="m-0 list-none p-0">{open.map(row)}</ul> : <p className="text-xs text-ink-60">{done.length ? 'All done.' : 'No todos yet.'}</p>}
     <div className="flex gap-2">
-      <input ref={newTodo} className={`${field} py-1.5 text-sm`} aria-label="New todo" placeholder="Add a todo" maxLength={500} value={text}
+      <input ref={newTodo} className={`${field} h-11 text-sm`} aria-label="New todo" placeholder="Add a todo" maxLength={500} value={text}
         onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void add(); } }} />
-      <button type="button" className={`${button} py-1.5`} disabled={!text.trim()} onClick={() => void add()}>Add</button>
+      <button type="button" className={button} disabled={!text.trim()} onClick={() => void add()}>Add</button>
     </div>
-    {done.length > 0 && <div className="space-y-1.5 border-t border-zinc-800 pt-2">
-      <div className="flex gap-3 text-xs text-zinc-400">
-        <button type="button" className="hover:text-zinc-100" aria-expanded={showDone} onClick={() => setShowDone(!showDone)}>{showDone ? 'Hide' : 'Show'} {done.length} completed</button>
-        <button type="button" className="hover:text-red-300" onClick={() => replace(open)}>Clear completed</button>
+    {done.length > 0 && <div className="space-y-1.5 border-0 border-t border-solid border-ink-14 pt-2">
+      <div className="flex gap-3 text-xs text-ink-60">
+        <button type="button" className="min-h-11 border-0 bg-transparent p-0 text-ink-60 hover:text-ink" aria-expanded={showDone} onClick={() => setShowDone(!showDone)}>{showDone ? 'Hide' : 'Show'} {done.length} completed</button>
+        <button type="button" className="min-h-11 border-0 bg-transparent p-0 text-ink-60 hover:text-accent" onClick={() => replace(open)}>Clear completed</button>
       </div>
-      {showDone && <ul className="space-y-1.5">{done.map(row)}</ul>}
+      {showDone && <ul className="m-0 list-none p-0">{done.map(row)}</ul>}
     </div>}
   </fieldset>;
 }

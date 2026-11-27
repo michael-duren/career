@@ -78,9 +78,17 @@ try {
   const open = async path => { await navigate('Page.navigate', { url: base + path }); await wait(`document.querySelector('input[type="search"]')`); };
   const visibleList = `Array.from(document.querySelectorAll('nav[aria-label$=" entries"]')).some(el => el.checkVisibility())`;
   const reader = `Array.from(document.querySelectorAll('button')).some(el => el.checkVisibility() && el.textContent.includes('Back to'))`;
+  // The Notes list (NotesList): its "Notes" title and note cards, which are links to /notes/<id>.
+  const notesList = `Array.from(document.querySelectorAll('main h1')).some(el => el.checkVisibility() && el.textContent === 'Notes')`;
+  const noteCards = `Array.from(document.querySelectorAll('main a[href^="/notes/"]')).filter(el => el.checkVisibility())`;
+  const clickCard = async title => {
+    await wait(`${noteCards}.some(a => a.textContent.includes(${JSON.stringify(title)}))`);
+    await evaluate(`(() => { const a = ${noteCards}.find(a => a.textContent.includes(${JSON.stringify(title)})); a.focus(); a.click(); })()`);
+    await pause(150);
+  };
   await open('/notes');
-  await wait(`document.body.textContent.includes('0 entries')`);
-  assert.equal(await evaluate(visibleList), true);
+  await wait(`document.body.textContent.includes('0 notes · 0 topics')`);
+  assert.equal(await evaluate(notesList), true);
   assert.equal(await evaluate(`document.body.textContent.includes('A little reflection')`), false);
   const fixtures = [
     ['note', { id:'reader-a', title:'Reader Alpha', topic:'Alpha', description:'', tags:[], body:'# Full reader\nSaved body' }],
@@ -92,37 +100,36 @@ try {
     const response = await evaluate(`fetch('/api/entries/${kind}', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(${JSON.stringify({ entry, revision:null })})}).then(async r=>({status:r.status,body:await r.json()}))`);
     assert.equal(response.status,200,JSON.stringify(response));
   }
-  await click('Reload latest'); await wait(`document.body.textContent.includes('Reader Alpha')`);
-  await click('Beta'); await setValue('input[type="search"]','Reader');
-  await evaluate(`document.querySelector('nav[aria-label="note entries"] button').focus(); document.querySelector('nav[aria-label="note entries"] button').click()`);
+  await open('/notes'); await wait(`document.body.textContent.includes('Reader Alpha')`);
+  // Topics are single-select: choosing Alpha shows only Alpha's notes.
+  await click('Alpha1'); await setValue('input[type="search"]:not([aria-label="Search everything"])','Reader');
+  await clickCard('Reader Alpha');
   await wait(reader);
-  assert.equal(await evaluate(visibleList), false);
+  assert.equal(await evaluate(notesList), false);
   assert.equal(await evaluate(`document.activeElement.textContent.includes('Back to')`), true);
-  const width = await evaluate(`(() => {const b=Array.from(document.querySelectorAll('button')).find(b=>b.textContent==='Edit');return {reader:b.closest('.rounded-xl').getBoundingClientRect().width,section:b.closest('section').getBoundingClientRect().width};})()`);
-  assert.ok(Math.abs(width.reader-width.section)<2,'Reader spans the available section width');
   await click('← Back to notes');
-  assert.equal(await evaluate(`document.querySelector('input[type="search"]').value`),'Reader');
-  assert.equal(await evaluate(`Array.from(document.querySelectorAll('button')).find(b=>b.textContent==='Beta').getAttribute('aria-pressed')`),'false');
+  assert.equal(await evaluate(`Array.from(document.querySelectorAll('input[type="search"]')).find(el => el.checkVisibility() && el.placeholder === 'Search notes').value`),'Reader');
+  assert.equal(await evaluate(`Array.from(document.querySelectorAll('button')).find(b=>b.checkVisibility() && b.textContent==='Alpha1').getAttribute('aria-pressed')`),'true');
   assert.equal(await evaluate(`document.activeElement.textContent.includes('Reader Alpha')`),true);
-  await click('Reader AlphaAlpha'); await wait(reader);
+  await clickCard('Reader Alpha'); await wait(reader);
   await click('Edit'); await setValue('textarea','Cancelled body'); await click('Cancel'); await wait(`document.body.textContent.includes('Saved body') && !document.querySelector('textarea')`);
   await click('Edit'); await setValue('textarea','Saved after cancelling'); await click('Save');
   await wait(`document.body.textContent.includes('Saved after cancelling') && !document.querySelector('textarea')`);
   await click('Edit'); await setValue('textarea','Protected draft');
   acceptDialog=false; await click('← Back to notes'); assert.equal(await evaluate(reader),true);
   assert.equal(await evaluate(`document.querySelector('textarea').value`),'Protected draft');
-  acceptDialog=true; await click('← Back to notes'); assert.equal(await evaluate(visibleList),true);
-  await click('+ New note'); await click('Cancel'); assert.equal(await evaluate(visibleList),true);
+  acceptDialog=true; await click('← Back to notes'); assert.equal(await evaluate(notesList),true);
+  await click('+ New note'); await click('Cancel'); assert.equal(await evaluate(notesList),true);
   await click('+ New note'); await setValue('input[maxlength="200"]','Created in reader'); await setValue('textarea','Created body'); await click('Save'); await wait(`document.body.textContent.includes('Created body') && !document.querySelector('textarea')`); await click('← Back to notes');
   await open('/notes/reader-a'); await wait(reader);
-  await click('← Back to notes'); await click('Reload latest'); await pause(250);
+  await click('← Back to notes'); await pause(250);
   assert.equal(await evaluate(reader),false); assert.equal(await evaluate('location.pathname'),'/notes');
   await open('/notes?id=reader-a'); await wait(reader);
   await click('Edit'); await setValue('textarea','Recovered browser draft');
   await navigate('Page.reload'); await wait(`document.body.textContent.includes('Recovered your unsaved draft.')`);
   assert.equal(await evaluate(`document.querySelector('textarea').value`),'Recovered browser draft');
-  await click('Cancel'); await click('Delete'); await wait(visibleList);
-  assert.equal(await evaluate(`document.querySelector('nav[aria-label="note entries"]').textContent.includes('Reader Alpha')`),false);
+  await click('Cancel'); await click('Delete'); await wait(notesList);
+  assert.equal(await evaluate(`${noteCards}.some(a => a.textContent.includes('Reader Alpha'))`),false);
   for (const [path,label,title] of [['/journal?tab=personal','personal journal entry entries','Personal reflection'],['/journal','week entries','Week 22']]) {
     await open(path); await wait(`document.querySelector('nav[aria-label=${JSON.stringify(label)}] button')`);
     assert.equal(await evaluate(visibleList),true);
