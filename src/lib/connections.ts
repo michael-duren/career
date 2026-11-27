@@ -214,8 +214,8 @@ export function snoozedPeople(connections: Connection[], today: string): Connect
 }
 
 /**
- * People who can join the queue: linked to a company on the board (what GET /api/connections?linked=1
- * returns) and not queued yet, most recently in touch first.
+ * People who can join the queue: linked to a company on the board (companySlug set, the same rows
+ * GET /api/connections?linked=1 returns: company_slug IS NOT NULL) and not queued yet, most recently in touch first.
  */
 export function queueCandidates(connections: Connection[]): Connection[] {
   return connections.filter(c => !!c.companySlug && !c.stage)
@@ -227,7 +227,7 @@ export function lastContactTag(c: Connection): string {
   return c.lastContactedOn ? `Last · ${formatDate(c.lastContactedOn)}`.toUpperCase() : 'NO CONTACT LOGGED';
 }
 
-/** "last contact Sep 11 · 75 days ago", or "never contacted". */
+/** "last contact Sep 11 · 14 days ago" (days counted to today), or "never contacted". */
 export function lastContactNote(c: Connection, today: string): string {
   if (!c.lastContactedOn) return 'never contacted';
   const days = daysBetween(c.lastContactedOn, today);

@@ -6,8 +6,8 @@ import { formatDate } from '../lib/format';
 import type { Goal } from '../lib/timeline';
 import { cn } from '../lib/utils';
 
-// The Catch-up queue tab (docs/redesign/pages/people.md; reference/desktop/ARC-CatchUp.html and
-// reference/mobile/M-Connections.html): a goal strip with this week's messages, the four stage
+// The Catch-up queue tab (docs/redesign/pages/people.md; docs/redesign/reference/desktop/ARC-CatchUp.html
+// and docs/redesign/reference/mobile/M-Connections.html): a goal strip with this week's messages, the four stage
 // columns (grouped lists on a phone) and a detail panel for the picked person.
 
 const CANDIDATE_PAGE = 12;
@@ -25,7 +25,7 @@ function writeDraft(id: string, text: string) {
 
 export interface CatchUpActions {
   onMove: (c: Connection, stage: ConnectionStage) => void;
-  onRemove: (c: Connection) => void;
+  onRemove: (c: Connection) => Promise<boolean>;
   onSent: (c: Connection) => Promise<boolean>;
   onSnooze: (c: Connection, until: string) => void;
   onTarget: (target: number) => Promise<boolean>;
@@ -49,6 +49,7 @@ export function CatchUpBoard({ connections, today, week, query, busy, drafting, 
   const [candidateLimit, setCandidateLimit] = useState(CANDIDATE_PAGE);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
+  // Board lanes: staged and not snoozed (queueLanes), then narrowed by the header search.
   const lanes = queueLanes(connections, today).map(lane => ({ ...lane, people: lane.people.filter(c => matchesQuery(c, query)) }));
   const visible = lanes.flatMap(lane => lane.people);
   const snoozed = snoozedPeople(connections, today).filter(c => matchesQuery(c, query));
@@ -73,6 +74,11 @@ export function CatchUpBoard({ connections, today, week, query, busy, drafting, 
   function back(c: Connection) {
     setSelectedId(undefined);
     requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-queue-person="${c.id}"]`)?.focus());
+  }
+
+  // Leaving the queue drops the person's draft too.
+  async function removeFromQueue(c: Connection) {
+    if (await actions.onRemove(c)) setDraft(c, '');
   }
 
   async function sent(c: Connection) {
@@ -106,7 +112,7 @@ export function CatchUpBoard({ connections, today, week, query, busy, drafting, 
 
   const detail = selected && <QueueDetail key={selected.id} person={selected} today={today} busy={busy} companyName={companyName(selected)}
     draft={draftFor(selected)} onDraft={text => setDraft(selected, text)} onSent={() => void sent(selected)}
-    onSnooze={() => actions.onSnooze(selected, addDays(today, 7))} onMove={stage => actions.onMove(selected, stage)} onRemove={() => actions.onRemove(selected)} />;
+    onSnooze={() => actions.onSnooze(selected, addDays(today, 7))} onMove={stage => actions.onMove(selected, stage)} onRemove={() => void removeFromQueue(selected)} />;
 
   return <div className="flex flex-col">
     <GoalStrip goal={goal} goals={goals} week={week} busy={busy} phone={phone} onTarget={actions.onTarget} onLink={actions.onLink} />
@@ -274,7 +280,8 @@ function GoalStrip({ goal, goals, week, busy, phone, onTarget, onLink }: {
       {steps.map((s, i) => {
         const x = steps.length === 1 ? 0 : (i / (steps.length - 1)) * 100;
         const align = i === 0 ? 'left-0' : i === steps.length - 1 ? 'right-0' : 'left-0 -translate-x-1/2';
-        // Labels only fit for a few steps on a wide strip; otherwise only the current one is named.
+        // Every step is labelled when there are 4 or fewer and the strip is at least lg (1024px) wide;
+        // otherwise only the current step is.
         const current = i + 1 === step;
         const label = steps.length <= 4 || current;
         return <span key={s.id} aria-hidden="true" title={s.title} className="absolute top-0 h-full w-0" style={{ left: `${x}%` }}>

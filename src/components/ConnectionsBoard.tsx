@@ -234,10 +234,16 @@ export function ConnectionsBoard() {
     return c.stage === stage ? `${c.name} is back in the queue.` : c.stage ? `${c.name} moved to ${STAGE_LABELS[stage]}.` : `${c.name} added to the queue.`;
   });
 
-  const unqueue = (c: Connection) => run('Saving', async () => {
-    await queueCall('', 'DELETE', { id: c.id, revision: revisions[c.id] });
-    return `${c.name} removed from the queue.`;
-  });
+  // Resolves true once saved (the catch-up panel then drops the draft).
+  async function unqueue(c: Connection): Promise<boolean> {
+    let ok = false;
+    await run('Saving', async () => {
+      await queueCall('', 'DELETE', { id: c.id, revision: revisions[c.id] });
+      ok = true;
+      return `${c.name} removed from the queue.`;
+    });
+    return ok;
+  }
 
   // Resolves true once saved, so the panel can clear the message draft.
   async function markSent(c: Connection): Promise<boolean> {
@@ -501,7 +507,7 @@ export function ConnectionsBoard() {
           phone={phone} wide={wide} companyName={companyName} goal={goals && linkedGoal(goals)} goals={goals && linkableGoals(goals)} due={due}
           actions={{
             onMove: (c, stage) => void moveTo(c, stage),
-            onRemove: c => void unqueue(c),
+            onRemove: unqueue,
             onSent: markSent,
             onSnooze: (c, until) => void snooze(c, until),
             onTarget: setTarget,

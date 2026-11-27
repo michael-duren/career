@@ -222,9 +222,9 @@ Only "sent" counts toward the week; editing `stage` or `lastContactedOn` directl
 are not part of `GET /api/export`.
 
 The Catch-up tab (`src/components/CatchUpBoard.tsx`) links one timeline goal to its strip through goal
-metadata (`catchUpQueue`, saved with `POST /api/goals`); linking another goal removes the key from the
+metadata (the goal metadata key `catchUpQueue`, `CATCH_UP_GOAL_KEY` in `src/lib/connections.ts`, saved with `POST /api/goals`); linking another goal removes the key from the
 old one. Message drafts live in `localStorage` (`career-catch-up-draft:<id>`) and are cleared by
-"sent". The older `queued` flag and cadence (`catchUpQueue` in `src/lib/connections.ts`) still drive
+"sent". The older `queued` flag and cadence (the cadence helper `catchUpQueue()` in `src/lib/connections.ts`, unrelated to the goal key) still drive
 the "Due for a catch-up" list under the board; the People tab's Queue button now uses the stage queue.
 
 Leetgrinder, weekly scheduler, connections and audio thought endpoints are described in their
